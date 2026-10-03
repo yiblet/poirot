@@ -1,0 +1,154 @@
+//! Inline Unicode and stateful STRING/CONTINUE decoding.
+use super::{PreflightError, ResourceBudget, Result};
+use crate::biff_preflight::Record;
+use poirot_model::ExcelText;
+
+/// Read a checked byte slice and advance the BIFF payload cursor.
+pub(super) fn take<'a>(b: &mut &'a [u8], n: usize) -> Result<&'a [u8]> {
+    let v = b
+        .get(..n)
+        .ok_or(PreflightError::Malformed("truncated overlay token/string"))?;
+    // SAFETY: The preceding get(..n) verifies n <= b.len() before advancing the same slice.
+    *b = &b[n..];
+    Ok(v)
+}
+/// Read a little-endian BIFF word from a checked payload.
+pub(super) fn word(b: &mut &[u8]) -> Result<u16> {
+    let v = take(b, 2)?;
+    // SAFETY: The immediately preceding take(b, 2) performs a checked two-byte read before either byte is selected.
+    Ok(u16::from_le_bytes([v[0], v[1]]))
+}
+/// Decode a BIFF string to formula/metadata text.
+pub(super) fn text(b: &mut &[u8], n: usize) -> Result<String> {
+    units(b, n)?
+        .to_utf8()
+        .map_err(|_| PreflightError::Representation("BIFF syntax text contains non-scalar UTF16"))
+}
+/// Decode BIFF character storage without repairing UTF-16 units.
+pub(super) fn units(b: &mut &[u8], n: usize) -> Result<ExcelText> {
+    let wide = *take(b, 1)?
+        .first()
+        .ok_or(PreflightError::Malformed("missing byte"))?
+        & 1
+        != 0;
+    let bytes = take(b, n * if wide { 2 } else { 1 })?;
+    let units: Vec<u16> = if wide {
+        // SAFETY: The chunk size is the nonzero literal 2.
+        let (pairs, remainder) = bytes.as_chunks::<2>();
+        if !remainder.is_empty() {
+            return Err(PreflightError::Malformed("split UTF16 code unit"));
+        }
+        pairs.iter().map(|v| u16::from_le_bytes(*v)).collect()
+    } else {
+        bytes.iter().map(|v| *v as u16).collect()
+    };
+    Ok(ExcelText::from_units(units))
+}
+
+/// Reconstructed cached formula string and the last continuation record it consumed.
+pub(super) struct CachedText {
+    /// Exact UTF-16 cached formula result.
+    pub(super) text: ExcelText,
+    /// Index of the final consumed STRING/CONTINUE record.
+    pub(super) last_record: usize,
+}
+
+/// Join a cached formula string across bounded continuation records.
+pub(super) fn cached_text(
+    rs: &[Record<'_>],
+    mut i: usize,
+    budget: ResourceBudget,
+) -> Result<CachedText> {
+    let mut b = rs
+        .get(i)
+        .ok_or(PreflightError::Malformed("missing cached STRING"))?
+        .data;
+    let n = word(&mut b)? as usize;
+    if n > budget.max_string_chars {
+        return Err(PreflightError::Resource {
+            resource: "cached string characters",
+            requested: n as u64,
+            limit: budget.max_string_chars as u64,
+        });
+    }
+    let flags = *take(&mut b, 1)?
+        .first()
+        .ok_or(PreflightError::Malformed("missing byte"))?;
+    if flags & 0x0c != 0 {
+        return Err(PreflightError::Representation(
+            "rich/extended cached STRING overlay not implemented",
+        ));
+    }
+    let mut wide = flags & 1 != 0;
+    let mut units = Vec::with_capacity(n);
+    let mut continuations = 0;
+    while units.len() < n {
+        if b.is_empty() {
+            i += 1;
+            continuations += 1;
+            if continuations > budget.max_continuations {
+                return Err(PreflightError::Resource {
+                    resource: "cached STRING continuations",
+                    requested: continuations as u64,
+                    limit: budget.max_continuations as u64,
+                });
+            }
+            let next = rs
+                .get(i)
+                .filter(|r| r.id == 0x3c)
+                .ok_or(PreflightError::Malformed(
+                    "missing cached STRING continuation",
+                ))?;
+            b = next.data;
+            wide = *take(&mut b, 1)?
+                .first()
+                .ok_or(PreflightError::Malformed("missing byte"))?
+                & 1
+                != 0;
+        }
+        units.push(if wide {
+            word(&mut b)?
+        } else {
+            *take(&mut b, 1)?
+                .first()
+                .ok_or(PreflightError::Malformed("missing byte"))? as u16
+        });
+    }
+    let text = ExcelText::from_units(units);
+    Ok(CachedText {
+        text,
+        last_record: i,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn consumed_index_stops_before_the_next_string() {
+        let rs = [
+            Record {
+                id: 0x207,
+                at: 0,
+                data: &[2, 0, 0, b'A'],
+            },
+            Record {
+                id: 0x3c,
+                at: 8,
+                data: &[1, b'B', 0],
+            },
+            Record {
+                id: 0x207,
+                at: 15,
+                data: &[1, 0, 0, b'C'],
+            },
+        ];
+        let cached = cached_text(&rs, 0, ResourceBudget::default()).unwrap();
+        assert_eq!(cached.text.units(), &[65, 66]);
+        assert_eq!(cached.last_record, 1);
+        let next = cached_text(&rs, cached.last_record + 1, ResourceBudget::default()).unwrap();
+        assert_eq!(next.text.units(), &[67]);
+        assert_eq!(next.last_record, 2);
+    }
+}

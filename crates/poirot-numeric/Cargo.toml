@@ -1,0 +1,12 @@
+[package]
+name = "poirot-numeric"
+version.workspace = true
+edition.workspace = true
+description = "Shared pinned Apache POI binary64 comparison and number text primitives"
+
+[dependencies]
+poirot-functions-core = { path = "../poirot-functions-core" }
+num-bigint.workspace = true
+
+[lints]
+workspace = true

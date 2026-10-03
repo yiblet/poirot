@@ -1,0 +1,4509 @@
+[
+  {
+    "url": "https://learn.microsoft.com/en-US/office/troubleshoot/excel/wrongly-assumes-1900-is-leap-year",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Excel inserts a fictitious leap day in 1900; other century leap rules remain Gregorian.",
+    "spec_ids": [
+      7,
+      17,
+      27,
+      37,
+      47,
+      57,
+      67,
+      77,
+      87,
+      97,
+      107,
+      117,
+      127,
+      137,
+      147,
+      157,
+      167,
+      177,
+      187,
+      197,
+      207,
+      217,
+      227,
+      237,
+      247,
+      257,
+      267,
+      277,
+      287,
+      297,
+      307,
+      317,
+      327,
+      337,
+      347,
+      357,
+      367,
+      387,
+      397,
+      407,
+      417,
+      427,
+      437,
+      447,
+      457,
+      467,
+      477,
+      487,
+      497,
+      507,
+      517,
+      527,
+      537,
+      547,
+      557,
+      567,
+      577,
+      587,
+      597,
+      607,
+      617,
+      627,
+      637,
+      647,
+      657,
+      667,
+      677,
+      687,
+      697,
+      707,
+      717,
+      727,
+      737,
+      747,
+      757,
+      767,
+      777,
+      787,
+      807,
+      817,
+      827,
+      836,
+      845,
+      854,
+      863,
+      872,
+      881,
+      890,
+      899,
+      908,
+      917,
+      926,
+      935,
+      944,
+      953,
+      962,
+      971
+    ]
+  },
+  {
+    "url": "https://learn.microsoft.com/en-us/office/client-developer/excel/excel-recalculation",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1891,
+      1896,
+      1901,
+      1906,
+      1911,
+      1916,
+      1921,
+      1926,
+      1931,
+      1936,
+      1941,
+      1946,
+      1951,
+      1956,
+      1961,
+      1966,
+      1971,
+      1976,
+      1981,
+      1986,
+      1991,
+      1996
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-gb/excel/compatibility-versions",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Workbook Versions 1/2 and surrogate-pair counting changes; combining components remain separate.",
+    "spec_ids": [
+      6,
+      16,
+      26,
+      36,
+      46,
+      56,
+      66,
+      76,
+      86,
+      96,
+      106,
+      116,
+      126,
+      136,
+      146,
+      156,
+      166,
+      176,
+      186,
+      196,
+      206,
+      216,
+      226,
+      236,
+      246,
+      256,
+      266,
+      276,
+      286,
+      296,
+      306,
+      316,
+      326,
+      336,
+      346,
+      356,
+      366,
+      376,
+      386,
+      396,
+      406,
+      416,
+      426,
+      436,
+      446,
+      456,
+      466,
+      476,
+      486,
+      496,
+      506,
+      516,
+      526,
+      536,
+      546,
+      556,
+      566,
+      576,
+      586,
+      596,
+      606,
+      616,
+      626,
+      636,
+      646,
+      656,
+      666,
+      676,
+      686,
+      696,
+      706,
+      716,
+      726,
+      736,
+      746,
+      756,
+      766,
+      776,
+      786,
+      796,
+      806,
+      816,
+      826,
+      835,
+      844,
+      853,
+      862,
+      871,
+      880,
+      889,
+      898,
+      907,
+      916,
+      925,
+      934,
+      943,
+      952,
+      961,
+      970,
+      979,
+      987,
+      995,
+      1892,
+      1897,
+      1902,
+      1907,
+      1912,
+      1917,
+      1922,
+      1927,
+      1992,
+      1997
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-gb/office/find-function-c7912941-af2a-4bdf-a553-d0d89b0a0628",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Case-sensitive search positions and Compatibility Version 2 counting.",
+    "spec_ids": [
+      5,
+      15,
+      25,
+      35,
+      55,
+      65,
+      75,
+      85,
+      105,
+      125,
+      145,
+      155,
+      185,
+      195,
+      205,
+      225,
+      255,
+      265,
+      305,
+      325,
+      365,
+      385,
+      415,
+      425,
+      435,
+      455,
+      465,
+      475,
+      495,
+      515,
+      535,
+      545,
+      555,
+      565,
+      575,
+      585,
+      595,
+      605,
+      655,
+      665,
+      695,
+      705,
+      725,
+      735,
+      755,
+      775,
+      785,
+      825,
+      861,
+      870,
+      906,
+      924,
+      933,
+      942,
+      951,
+      969,
+      978
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/calculation-operators-and-precedence-in-excel",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1895,
+      1905,
+      1945,
+      1960,
+      1965,
+      1970,
+      1975,
+      1985
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/change-formula-recalculation-iteration-or-precision-in-excel",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1897,
+      1902,
+      1907,
+      1917,
+      1922,
+      1927,
+      1957,
+      1972,
+      1977,
+      1992,
+      1997
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/count-numbers-or-dates-based-on-a-condition-in-excel",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented COUNT-NUMBERS-OR-DATES-BASED-ON-A-CONDITION-IN-EXCEL syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1001,
+      1009,
+      1012,
+      1013,
+      1016,
+      1026,
+      1030,
+      1033,
+      1037,
+      1049,
+      1051,
+      1053,
+      1061,
+      1067,
+      1068,
+      1072,
+      1078,
+      1080,
+      1085,
+      1089,
+      1091,
+      1092,
+      1096,
+      1099
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/create-a-3-d-reference-to-the-same-cell-range-on-multiple-worksheets",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1884,
+      1889,
+      1894,
+      1899,
+      1904,
+      1909
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/date-systems-in-excel",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1634,
+      1932,
+      1937,
+      1942,
+      1947,
+      1952
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/detect-formula-errors-in-excel",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Microsoft Evaluate Formula example explicitly leaves the unselected IF branch unevaluated.",
+    "spec_ids": [
+      3,
+      13,
+      23,
+      73,
+      83,
+      93,
+      123,
+      133,
+      163,
+      183,
+      193,
+      233,
+      243,
+      263,
+      303,
+      333,
+      353,
+      373,
+      383,
+      393,
+      403,
+      413,
+      423,
+      433,
+      443,
+      453,
+      463,
+      493,
+      503,
+      533,
+      543,
+      553,
+      573,
+      583,
+      603,
+      623,
+      633,
+      663,
+      673,
+      683,
+      693,
+      733,
+      763,
+      783,
+      793,
+      803,
+      813,
+      823,
+      850,
+      868,
+      877,
+      886,
+      895,
+      958,
+      967,
+      976,
+      984,
+      992,
+      1426,
+      1478
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/dynamic-array-formulas-and-spilled-array-behavior",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1556,
+      1576,
+      1587,
+      1599,
+      1656,
+      1687,
+      1972,
+      1976,
+      1977,
+      1981,
+      1982,
+      1987
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/abs-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1500,
+      1695,
+      1915
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/acos-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1501,
+      1601
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/acosh-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1502,
+      1602
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/address-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1503,
+      1603
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/and-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented AND syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      33,
+      43,
+      203,
+      213,
+      273,
+      313,
+      363,
+      483,
+      513,
+      523,
+      563,
+      593,
+      613,
+      723,
+      753,
+      841,
+      931,
+      1300,
+      1301,
+      1304,
+      1305,
+      1307,
+      1309,
+      1310,
+      1311,
+      1313,
+      1314,
+      1315,
+      1316,
+      1317,
+      1320,
+      1321,
+      1325,
+      1326,
+      1327,
+      1328,
+      1329,
+      1334,
+      1338,
+      1339,
+      1341,
+      1347
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/areas-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1504,
+      1604,
+      1949
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/asin-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1505,
+      1700
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/asinh-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1506,
+      1606,
+      1991
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/atan-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1507,
+      1607
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/atan2-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1508,
+      1608,
+      1893
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/atanh-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1509,
+      1609
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/avedev-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1510,
+      1705,
+      1965
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/average-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented AVERAGE syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      141,
+      261,
+      421,
+      431,
+      848,
+      947,
+      998
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/averagea-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1511,
+      1611
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/averageif-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented AVERAGEIF syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1000,
+      1002,
+      1007,
+      1015,
+      1017,
+      1018,
+      1019,
+      1021,
+      1023,
+      1025,
+      1031,
+      1036,
+      1038,
+      1040,
+      1042,
+      1045,
+      1046,
+      1050,
+      1055,
+      1056,
+      1057,
+      1058,
+      1062,
+      1064,
+      1066,
+      1074,
+      1075,
+      1076,
+      1079,
+      1082,
+      1083,
+      1084,
+      1093,
+      1094,
+      1098
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/averageifs-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1512,
+      1612
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/besselj-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1513,
+      1613
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/bin2dec-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1514,
+      1614
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/ceiling-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1515,
+      1710
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/ceiling-math-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1516,
+      1616,
+      1946
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/ceiling-precise-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1517,
+      1617
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/char-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1518,
+      1618
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/choose-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented CHOOSE syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1421,
+      1426,
+      1437,
+      1440,
+      1443,
+      1475,
+      1478,
+      1491,
+      1492
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/clean-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented CLEAN syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      84,
+      324,
+      364,
+      704,
+      714
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/code-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1519,
+      1619
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/column-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1520,
+      1715
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/columns-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1521,
+      1621,
+      1951
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/combin-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1522,
+      1622
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/complex-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1523,
+      1623,
+      1993
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/concat-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1524,
+      1624
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/concatenate-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1525,
+      1720
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/correl-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1526,
+      1626,
+      1966
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/cos-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1702,
+      1707
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/cosh-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1528,
+      1628,
+      1898
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/count-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented COUNT syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      31,
+      61,
+      101,
+      121,
+      161,
+      191,
+      271,
+      511,
+      631,
+      681,
+      801,
+      839,
+      875
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/counta-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented COUNTA syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      91,
+      111,
+      181,
+      251,
+      361,
+      401,
+      451,
+      481,
+      591,
+      671,
+      761,
+      884,
+      982
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/countblank-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented COUNTBLANK syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      11,
+      41,
+      51,
+      171,
+      371,
+      381,
+      491,
+      721,
+      741,
+      751,
+      893,
+      938
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/countifs-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented COUNTIFS syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1003,
+      1027,
+      1048,
+      1052,
+      1081,
+      1090
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/covar-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1529,
+      1629
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1530,
+      1725
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1531,
+      1631
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/date-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented DATE syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      7,
+      17,
+      27,
+      37,
+      47,
+      57,
+      67,
+      77,
+      87,
+      97,
+      107,
+      117,
+      127,
+      137,
+      147,
+      157,
+      167,
+      177,
+      187,
+      197,
+      207,
+      217,
+      227,
+      237,
+      247,
+      257,
+      267,
+      277,
+      287,
+      297,
+      307,
+      317,
+      327,
+      337,
+      347,
+      357,
+      367,
+      377,
+      387,
+      397,
+      407,
+      417,
+      427,
+      437,
+      447,
+      457,
+      467,
+      477,
+      487,
+      497,
+      507,
+      517,
+      527,
+      537,
+      547,
+      557,
+      567,
+      577,
+      587,
+      597,
+      607,
+      617,
+      627,
+      637,
+      647,
+      657,
+      667,
+      677,
+      687,
+      697,
+      707,
+      717,
+      727,
+      737,
+      747,
+      757,
+      767,
+      777,
+      787,
+      797,
+      807,
+      817,
+      827,
+      836,
+      845,
+      854,
+      863,
+      872,
+      881,
+      890,
+      899,
+      908,
+      917,
+      926,
+      935,
+      944,
+      953,
+      962,
+      971,
+      1350
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/datevalue-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1527,
+      1627,
+      1942
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/daverage-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1533,
+      1633
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/day-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1534,
+      1634
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/days-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1535,
+      1730
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/days360-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1536,
+      1636
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/dcount-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1532,
+      1632
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/dcounta-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1538,
+      1638
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/dec2bin-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1539,
+      1639
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/dec2hex-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1540,
+      1735
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/degrees-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1701,
+      1706
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/delta-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1537,
+      1637
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/devsq-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1543,
+      1643,
+      1923
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/dget-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1544,
+      1644
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/dmax-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1545,
+      1740
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/dmin-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1541,
+      1641,
+      1956
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/dollar-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1542,
+      1642
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/dollarde-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1548,
+      1648,
+      1948
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/dollarfr-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1549,
+      1649
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/dproduct-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1550,
+      1745,
+      1995
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/dstdev-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1546,
+      1646,
+      1961
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/dstdevp-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1547,
+      1647
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/dsum-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1553,
+      1653
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/dvar-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1554,
+      1654
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/dvarp-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1555,
+      1750
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/edate-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1551,
+      1651
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/eomonth-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1552,
+      1652,
+      1947,
+      1952
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/error-type-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1558,
+      1658
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/even-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1559,
+      1659
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/exact-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1560,
+      1755
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/exp-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1711,
+      1716,
+      1891,
+      1936
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/fact-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1712,
+      1717
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/factdouble-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1563,
+      1663,
+      1938
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/false-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1564,
+      1664
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/fixed-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1565,
+      1760
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/floor-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1721,
+      1726
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/floor-math-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1722,
+      1727
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/floor-precise-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1568,
+      1668,
+      1928,
+      1933
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/forecast-and-forecast-linear-functions",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1569,
+      1570,
+      1669,
+      1765,
+      1955
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/frequency-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1556,
+      1656,
+      1976
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/fv-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented FV syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1201,
+      1205,
+      1210,
+      1211,
+      1214,
+      1216,
+      1220,
+      1221,
+      1224,
+      1227,
+      1228,
+      1231,
+      1239,
+      1242,
+      1248,
+      1249,
+      1257,
+      1258,
+      1260,
+      1261,
+      1266,
+      1267,
+      1269,
+      1271,
+      1273,
+      1277,
+      1279,
+      1285,
+      1286,
+      1288,
+      1291,
+      1292,
+      1295,
+      1297,
+      1299
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/gcd-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1732,
+      1737
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/geomean-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1573,
+      1673,
+      1918
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/hex2dec-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1574,
+      1674
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/hlookup-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1575,
+      1770
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/hour-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1561,
+      1661
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/hyperlink-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1557,
+      1657
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/if-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented IF syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      3,
+      13,
+      23,
+      73,
+      83,
+      93,
+      123,
+      133,
+      163,
+      183,
+      193,
+      233,
+      243,
+      263,
+      303,
+      333,
+      353,
+      373,
+      383,
+      393,
+      403,
+      413,
+      423,
+      433,
+      443,
+      453,
+      463,
+      493,
+      503,
+      533,
+      543,
+      553,
+      573,
+      583,
+      603,
+      623,
+      633,
+      663,
+      673,
+      683,
+      693,
+      733,
+      763,
+      783,
+      793,
+      803,
+      813,
+      823,
+      850,
+      868,
+      877,
+      886,
+      895,
+      958,
+      967,
+      976,
+      984,
+      992,
+      1901,
+      1931,
+      1994,
+      1999
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/iferror-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented IFERROR syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      223,
+      253,
+      473,
+      653,
+      904,
+      1984,
+      1989
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/ifna-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented IFNA syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      53,
+      103,
+      153,
+      343,
+      643
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1578,
+      1678
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/imaginary-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1579,
+      1679
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/imreal-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1580,
+      1775
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/index-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented INDEX syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      79,
+      109,
+      119,
+      129,
+      149,
+      169,
+      179,
+      189,
+      249,
+      379,
+      409,
+      419,
+      459,
+      469,
+      479,
+      489,
+      529,
+      559,
+      569,
+      589,
+      659,
+      689,
+      769,
+      799,
+      819
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/indirect-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented INDIRECT syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1422,
+      1432,
+      1438,
+      1442,
+      1444,
+      1450,
+      1453,
+      1458,
+      1476,
+      1479,
+      1493,
+      1499
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/int-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented INT syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      190,
+      340,
+      530,
+      790,
+      955
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/intercept-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1566,
+      1666,
+      1971
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/ipmt-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1562,
+      1662
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/irr-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1583,
+      1683
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/is-functions",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Type predicates do not coerce numeric text; blank and error-kind distinctions.",
+    "spec_ids": [
+      2,
+      12,
+      22,
+      32,
+      42,
+      52,
+      62,
+      72,
+      82,
+      92,
+      102,
+      112,
+      122,
+      132,
+      142,
+      152,
+      162,
+      172,
+      182,
+      192,
+      202,
+      212,
+      222,
+      232,
+      242,
+      252,
+      262,
+      272,
+      282,
+      292,
+      302,
+      312,
+      322,
+      332,
+      342,
+      352,
+      362,
+      372,
+      382,
+      392,
+      402,
+      412,
+      422,
+      432,
+      442,
+      452,
+      462,
+      472,
+      482,
+      492,
+      502,
+      512,
+      522,
+      532,
+      542,
+      552,
+      562,
+      572,
+      582,
+      592,
+      602,
+      612,
+      622,
+      632,
+      642,
+      652,
+      662,
+      672,
+      682,
+      692,
+      702,
+      712,
+      722,
+      732,
+      742,
+      752,
+      762,
+      772,
+      782,
+      792,
+      802,
+      812,
+      822,
+      831,
+      840,
+      849,
+      858,
+      867,
+      876,
+      885,
+      894,
+      903,
+      912,
+      921,
+      930,
+      939,
+      948,
+      957,
+      966,
+      975,
+      983,
+      991,
+      999
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/iseven-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1584,
+      1684
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/isodd-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1585,
+      1780
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/large-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1731,
+      1736,
+      1896,
+      1916
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/lcm-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1742,
+      1747
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/left-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented LEFT syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      14,
+      74,
+      104,
+      134,
+      204,
+      214,
+      244,
+      284,
+      294,
+      304,
+      354,
+      404,
+      424,
+      464,
+      544,
+      594,
+      634,
+      694,
+      724,
+      734,
+      794,
+      905,
+      941,
+      950
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/len-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented LEN syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      106,
+      736,
+      826,
+      853
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/ln-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1588,
+      1688,
+      1908,
+      1913
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/log-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1589,
+      1689
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/log10-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1600,
+      1795
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/lookup-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1571,
+      1671,
+      1941
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/lower-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1567,
+      1667,
+      1907,
+      1927
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/match-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented MATCH syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      8,
+      18,
+      38,
+      48,
+      58,
+      88,
+      108,
+      118,
+      128,
+      168,
+      178,
+      198,
+      208,
+      238,
+      248,
+      268,
+      288,
+      298,
+      308,
+      338,
+      358,
+      368,
+      378,
+      408,
+      428,
+      438,
+      448,
+      478,
+      488,
+      568,
+      578,
+      598,
+      678,
+      698,
+      708,
+      738,
+      758,
+      778,
+      788,
+      864,
+      873,
+      900,
+      909,
+      918,
+      927,
+      936,
+      963,
+      972,
+      988,
+      996
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/max-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented MAX syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      151,
+      201,
+      311,
+      411,
+      471,
+      701,
+      731,
+      781,
+      821,
+      866,
+      902,
+      911
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/maxa-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1593,
+      1693
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/maxifs-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1594,
+      1694
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/mdeterm-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1590,
+      1785
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/median-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented MEDIAN syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1117,
+      1141,
+      1147,
+      1189,
+      1190
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/mid-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented MID syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      4,
+      6,
+      24,
+      26,
+      34,
+      36,
+      54,
+      56,
+      64,
+      66,
+      76,
+      86,
+      94,
+      96,
+      124,
+      126,
+      136,
+      144,
+      154,
+      156,
+      164,
+      176,
+      186,
+      194,
+      196,
+      206,
+      216,
+      224,
+      226,
+      234,
+      246,
+      264,
+      274,
+      276,
+      296,
+      306,
+      326,
+      334,
+      346,
+      366,
+      374,
+      386,
+      394,
+      396,
+      414,
+      416,
+      434,
+      444,
+      446,
+      456,
+      476,
+      486,
+      494,
+      496,
+      504,
+      506,
+      514,
+      524,
+      526,
+      534,
+      574,
+      576,
+      584,
+      586,
+      596,
+      604,
+      606,
+      614,
+      616,
+      636,
+      654,
+      664,
+      666,
+      684,
+      686,
+      706,
+      744,
+      746,
+      754,
+      764,
+      784,
+      786,
+      796,
+      804,
+      806,
+      814,
+      816,
+      833,
+      835,
+      842,
+      851,
+      860,
+      880,
+      887,
+      896,
+      898,
+      907,
+      914,
+      916,
+      925,
+      934,
+      959,
+      961,
+      968,
+      970,
+      979,
+      987,
+      1892,
+      1912
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/min-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented MIN syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      81,
+      211,
+      221,
+      281,
+      321,
+      331,
+      441,
+      601,
+      611,
+      621,
+      641,
+      651,
+      711,
+      771,
+      791,
+      974,
+      990
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/mina-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1741,
+      1746,
+      1906
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/minifs-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1572,
+      1672
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/minute-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1598,
+      1698,
+      1983
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/minverse-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1599,
+      1699
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/mirr-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1595,
+      1790
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/mmult-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1576,
+      1676,
+      1981
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/mod-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented MOD syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      20,
+      120,
+      220,
+      230,
+      330,
+      390,
+      400,
+      410,
+      440,
+      560,
+      570,
+      580,
+      630,
+      650,
+      720,
+      730,
+      740,
+      800,
+      829,
+      856,
+      883,
+      910,
+      937,
+      989
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/mode-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1752,
+      1757
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/month-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1703,
+      1708
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/mround-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1704,
+      1709
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/n-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1605,
+      1800
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/na-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      2000
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/networkdays-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1581,
+      1681
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/norm-dist-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1577,
+      1677
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/norm-inv-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1713,
+      1718,
+      1963
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/norm-s-dist-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1714,
+      1719
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/norm-s-inv-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1610,
+      1805
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/normdist-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1751,
+      1756
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/norminv-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1762,
+      1767
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/normsdist-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1723,
+      1728,
+      1958
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/normsinv-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1724,
+      1729
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/not-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1615,
+      1810
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/now-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1761,
+      1766,
+      1921
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/nper-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1772,
+      1777
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/npv-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1733,
+      1738,
+      1968
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1734,
+      1739
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/oct2dec-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1620,
+      1815
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/odd-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1771,
+      1776,
+      1931
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/offset-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented OFFSET syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1420,
+      1423,
+      1424,
+      1425,
+      1427,
+      1428,
+      1429,
+      1430,
+      1431,
+      1433,
+      1434,
+      1435,
+      1436,
+      1439,
+      1441,
+      1445,
+      1446,
+      1447,
+      1448,
+      1449,
+      1451,
+      1452,
+      1454,
+      1455,
+      1456,
+      1457,
+      1459,
+      1460,
+      1461,
+      1462,
+      1463,
+      1464,
+      1465,
+      1466,
+      1467,
+      1468,
+      1469,
+      1470,
+      1471,
+      1472,
+      1473,
+      1474,
+      1477,
+      1480,
+      1481,
+      1482,
+      1483,
+      1484,
+      1485,
+      1486,
+      1487,
+      1488,
+      1489,
+      1490,
+      1494,
+      1495,
+      1496,
+      1497,
+      1498
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/or-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented OR syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      63,
+      113,
+      143,
+      173,
+      283,
+      293,
+      323,
+      703,
+      713,
+      743,
+      773,
+      832,
+      859,
+      913,
+      922,
+      940,
+      949,
+      1302,
+      1303,
+      1306,
+      1308,
+      1312,
+      1318,
+      1319,
+      1322,
+      1323,
+      1324,
+      1330,
+      1331,
+      1332,
+      1333,
+      1335,
+      1336,
+      1337,
+      1340,
+      1342,
+      1343,
+      1344,
+      1345,
+      1346,
+      1348,
+      1349
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/pearson-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1582,
+      1682
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/percentile-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1743,
+      1748
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/percentile-inc-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented PERCENTILE-INC syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1100,
+      1105,
+      1109,
+      1113,
+      1115,
+      1121,
+      1122,
+      1124,
+      1126,
+      1130,
+      1143,
+      1145,
+      1148,
+      1154,
+      1155,
+      1156,
+      1157,
+      1160,
+      1162,
+      1168,
+      1169,
+      1172,
+      1173,
+      1174,
+      1178,
+      1180,
+      1192,
+      1195,
+      1197,
+      1198
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/percentrank-exc-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1625,
+      1820
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/percentrank-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1744,
+      1749
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/percentrank-inc-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1781,
+      1786
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/pi-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1597,
+      1697
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/pmt-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented PMT syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1202,
+      1204,
+      1207,
+      1208,
+      1212,
+      1213,
+      1215,
+      1217,
+      1222,
+      1223,
+      1229,
+      1230,
+      1233,
+      1234,
+      1236,
+      1240,
+      1243,
+      1245,
+      1250,
+      1251,
+      1255,
+      1259,
+      1263,
+      1265,
+      1268,
+      1272,
+      1278,
+      1280,
+      1287,
+      1289,
+      1298
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/poisson-dist-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1754,
+      1759
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/poisson-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1753,
+      1758,
+      1953
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/power-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1630,
+      1825,
+      1940,
+      1980
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/ppmt-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1586,
+      1686
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/product-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented PRODUCT syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1,
+      131,
+      291,
+      341,
+      461,
+      501,
+      521,
+      551,
+      561,
+      661,
+      830,
+      857,
+      956
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/proper-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1782,
+      1787
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/pv-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented PV syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1200,
+      1201,
+      1202,
+      1203,
+      1206,
+      1209,
+      1218,
+      1219,
+      1225,
+      1226,
+      1232,
+      1235,
+      1237,
+      1238,
+      1241,
+      1244,
+      1246,
+      1247,
+      1252,
+      1253,
+      1254,
+      1256,
+      1262,
+      1264,
+      1270,
+      1274,
+      1275,
+      1276,
+      1281,
+      1282,
+      1283,
+      1284,
+      1290,
+      1293,
+      1294,
+      1296
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/quartile-inc-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented QUARTILE-INC syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1103,
+      1106,
+      1107,
+      1110,
+      1112,
+      1116,
+      1123,
+      1127,
+      1128,
+      1129,
+      1131,
+      1134,
+      1135,
+      1146,
+      1149,
+      1150,
+      1161,
+      1163,
+      1171,
+      1176,
+      1183,
+      1184,
+      1185,
+      1187,
+      1188,
+      1196,
+      1199
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/quotient-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1763,
+      1768,
+      1943
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/radians-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1764,
+      1769
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/rand-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1635,
+      1830
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/randbetween-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1791,
+      1796,
+      1996
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/rank-eq-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented RANK-EQ syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1101,
+      1102,
+      1111,
+      1114,
+      1118,
+      1119,
+      1125,
+      1132,
+      1133,
+      1136,
+      1138,
+      1140,
+      1142,
+      1144,
+      1151,
+      1152,
+      1159,
+      1167,
+      1170,
+      1177,
+      1179,
+      1181,
+      1186,
+      1191,
+      1193
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/rank-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1792,
+      1797
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/rate-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1773,
+      1778
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/replace-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented REPLACE syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      16,
+      46,
+      116,
+      146,
+      166,
+      236,
+      256,
+      266,
+      286,
+      316,
+      336,
+      356,
+      376,
+      406,
+      426,
+      436,
+      466,
+      516,
+      536,
+      546,
+      556,
+      566,
+      626,
+      646,
+      656,
+      676,
+      696,
+      716,
+      726,
+      756,
+      766,
+      776,
+      844,
+      862,
+      871,
+      889,
+      943,
+      952,
+      995
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/rept-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1774,
+      1779
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/right-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented RIGHT syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      44,
+      114,
+      174,
+      184,
+      254,
+      314,
+      344,
+      384,
+      454,
+      474,
+      484,
+      554,
+      624,
+      674,
+      824,
+      869,
+      878,
+      932,
+      977,
+      985,
+      993
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/roman-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1640,
+      1835
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/round-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented ROUND syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      0,
+      10,
+      30,
+      50,
+      60,
+      70,
+      90,
+      100,
+      110,
+      130,
+      160,
+      170,
+      180,
+      210,
+      240,
+      250,
+      260,
+      270,
+      280,
+      290,
+      300,
+      310,
+      320,
+      360,
+      380,
+      420,
+      430,
+      450,
+      460,
+      470,
+      480,
+      500,
+      520,
+      540,
+      550,
+      590,
+      600,
+      610,
+      620,
+      640,
+      660,
+      670,
+      680,
+      690,
+      700,
+      710,
+      750,
+      760,
+      770,
+      820,
+      847,
+      865,
+      874,
+      901,
+      919,
+      946,
+      964,
+      981
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/row-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1801,
+      1806
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/rows-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1802,
+      1807
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/search-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented SEARCH syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      45,
+      95,
+      115,
+      135,
+      165,
+      175,
+      215,
+      235,
+      245,
+      275,
+      285,
+      295,
+      315,
+      335,
+      345,
+      355,
+      375,
+      395,
+      405,
+      445,
+      485,
+      505,
+      525,
+      615,
+      625,
+      635,
+      645,
+      675,
+      685,
+      715,
+      745,
+      765,
+      795,
+      805,
+      815,
+      834,
+      843,
+      852,
+      879,
+      888,
+      897,
+      915,
+      960,
+      986,
+      994
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/second-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1783,
+      1788,
+      1988
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/sheet-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1784,
+      1789
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/sign-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1645,
+      1840,
+      1985
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/sin-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1811,
+      1816,
+      1901
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/sinh-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1793,
+      1798,
+      1903
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/slope-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1794,
+      1799
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/small-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1650,
+      1845
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/sqrt-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      2001
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/sqrtpi-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1821,
+      1826,
+      1911
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/standardize-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1822,
+      1827
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/stdev-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1803,
+      1808
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/stdev-p-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented STDEV-P syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1108,
+      1164
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/stdev-s-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented STDEV-S syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1153,
+      1166,
+      1175
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1804,
+      1809
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/stdevp-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1655,
+      1850,
+      1970
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/stdevpa-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1831,
+      1836
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/substitute-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1832,
+      1837,
+      1902,
+      1922,
+      1992
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/subtotal-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1813,
+      1818
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/sumif-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented SUMIF syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1005,
+      1006,
+      1008,
+      1010,
+      1014,
+      1024,
+      1028,
+      1029,
+      1032,
+      1034,
+      1035,
+      1039,
+      1041,
+      1043,
+      1044,
+      1047,
+      1054,
+      1059,
+      1060,
+      1063,
+      1065,
+      1070,
+      1071,
+      1077,
+      1086,
+      1087,
+      1088,
+      1095,
+      1097
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/sumifs-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented SUMIFS syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1004,
+      1011,
+      1020,
+      1022,
+      1069,
+      1073
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/sumproduct-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1814,
+      1819
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/sumsq-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1660,
+      1855,
+      1900,
+      1960,
+      1975
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/sumx2my2-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1841,
+      1846
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/sumx2py2-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1842,
+      1847
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/sumxmy2-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1823,
+      1828
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/switch-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1824,
+      1829
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/t-dist-2t-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1852,
+      1857
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/t-dist-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1851,
+      1856
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/t-dist-rt-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1833,
+      1838
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/t-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1665,
+      1860
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/tan-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1834,
+      1839
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/tanh-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1670,
+      1865
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/tdist-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1861,
+      1866
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/text-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1862,
+      1867
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/textjoin-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1843,
+      1848,
+      1998
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/time-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1844,
+      1849
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/timevalue-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1675,
+      1870
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/today-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1871,
+      1876,
+      1926
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/transpose-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1587,
+      1687,
+      1972,
+      1977,
+      1982,
+      1987
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/trend-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1853,
+      1858
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/trim-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented TRIM syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      564,
+      644,
+      774,
+      923
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/true-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1854,
+      1859
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/trunc-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented TRUNC syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      40,
+      80,
+      140,
+      150,
+      200,
+      350,
+      370,
+      490,
+      510,
+      780,
+      810,
+      838,
+      892,
+      928,
+      973,
+      997
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/type-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1680,
+      1875,
+      1950,
+      1990
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/unichar-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1591,
+      1691,
+      1986
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/unicode-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1592,
+      1692,
+      1897,
+      1917,
+      1997
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/upper-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1863,
+      1868
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/value-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      2002
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/var-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1864,
+      1869
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/var-p-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented VAR-P syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1120,
+      1158,
+      1165,
+      1182,
+      1194
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/var-s-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented VAR-S syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1104,
+      1137,
+      1139
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/vara-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1685,
+      1880
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/varp-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1881,
+      1886
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/varpa-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1872,
+      1877
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/vlookup-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented VLOOKUP syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      28,
+      68,
+      78,
+      98,
+      138,
+      148,
+      158,
+      188,
+      218,
+      228,
+      258,
+      278,
+      318,
+      328,
+      348,
+      388,
+      398,
+      418,
+      458,
+      468,
+      498,
+      508,
+      518,
+      528,
+      538,
+      548,
+      558,
+      588,
+      608,
+      618,
+      628,
+      638,
+      648,
+      658,
+      668,
+      688,
+      718,
+      728,
+      748,
+      768,
+      798,
+      808,
+      818,
+      828,
+      837,
+      846,
+      855,
+      882,
+      891,
+      945,
+      954,
+      980
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/weekday-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented WEEKDAY syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1353,
+      1356,
+      1359,
+      1360,
+      1361,
+      1363,
+      1365,
+      1367,
+      1370,
+      1371,
+      1372,
+      1373,
+      1375,
+      1382,
+      1385,
+      1388,
+      1389,
+      1395,
+      1397,
+      1399,
+      1400,
+      1401,
+      1402,
+      1406,
+      1407,
+      1408,
+      1409,
+      1410,
+      1411,
+      1414,
+      1415,
+      1416,
+      1419
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/weeknum-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1873,
+      1878,
+      1978
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/workday-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Documented WORKDAY syntax, input boundaries, reference handling, and returned Excel result or error.",
+    "spec_ids": [
+      1350,
+      1351,
+      1352,
+      1354,
+      1355,
+      1357,
+      1358,
+      1362,
+      1364,
+      1366,
+      1368,
+      1369,
+      1374,
+      1376,
+      1377,
+      1378,
+      1379,
+      1380,
+      1381,
+      1383,
+      1384,
+      1386,
+      1387,
+      1390,
+      1391,
+      1392,
+      1393,
+      1394,
+      1396,
+      1398,
+      1403,
+      1404,
+      1405,
+      1412,
+      1413,
+      1417,
+      1418
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/workday-intl-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1874,
+      1879
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/xlookup-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1690,
+      1885
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/xmatch-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1596,
+      1696
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/year-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1882,
+      1887,
+      1932,
+      1937
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/functions/yearfrac-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1883,
+      1888,
+      1973
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/get-started/overview-of-formulas-in-excel",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1915,
+      1935,
+      1940,
+      1945,
+      1950,
+      1955
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/implicit-intersection-operator",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Scalarization of ranges by formula row or column, and explicit @ syntax.",
+    "spec_ids": [
+      9,
+      29,
+      69,
+      139,
+      209,
+      259,
+      269,
+      289,
+      329,
+      339,
+      449,
+      579,
+      599,
+      609,
+      619,
+      639,
+      669,
+      699,
+      709,
+      729,
+      749,
+      1812,
+      1817,
+      1957,
+      1962,
+      1967
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/names-in-formulas",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      1890,
+      1895,
+      1900,
+      1905,
+      1910,
+      1915,
+      1920,
+      1925,
+      1930,
+      1935,
+      1959,
+      1964,
+      1969,
+      1974,
+      1975,
+      1979,
+      1980
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/round-a-number",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Half-away-from-zero, toward-zero, and away-from-zero decimal rounding.",
+    "spec_ids": [
+      0,
+      10,
+      30,
+      40,
+      50,
+      60,
+      70,
+      80,
+      90,
+      100,
+      110,
+      130,
+      140,
+      150,
+      160,
+      170,
+      180,
+      200,
+      210,
+      240,
+      250,
+      260,
+      270,
+      280,
+      290,
+      300,
+      310,
+      320,
+      350,
+      360,
+      370,
+      380,
+      420,
+      430,
+      450,
+      460,
+      470,
+      480,
+      490,
+      500,
+      510,
+      520,
+      540,
+      550,
+      590,
+      600,
+      610,
+      620,
+      640,
+      660,
+      670,
+      680,
+      690,
+      700,
+      710,
+      750,
+      760,
+      770,
+      780,
+      810,
+      820,
+      838,
+      847,
+      865,
+      874,
+      892,
+      901,
+      919,
+      928,
+      946,
+      964,
+      973,
+      981,
+      997
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/use-the-sum-function-to-sum-numbers-in-a-range",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Direct argument coercion versus nonnumeric referenced-cell exclusion.",
+    "spec_ids": [
+      21,
+      71,
+      231,
+      241,
+      301,
+      351,
+      391,
+      531,
+      541,
+      571,
+      581,
+      691,
+      811,
+      920,
+      929,
+      965
+    ]
+  },
+  {
+    "url": "https://support.microsoft.com/en-us/excel/using-calculation-operators-in-excel-formulas",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Reference intersection syntax and common-cell semantics.",
+    "spec_ids": [
+      19,
+      39,
+      49,
+      59,
+      89,
+      99,
+      159,
+      199,
+      219,
+      229,
+      239,
+      279,
+      299,
+      309,
+      319,
+      349,
+      359,
+      369,
+      389,
+      399,
+      429,
+      439,
+      499,
+      509,
+      519,
+      539,
+      549,
+      629,
+      649,
+      679,
+      719,
+      739,
+      759,
+      779,
+      789,
+      809,
+      1914,
+      1919,
+      1924,
+      1929,
+      1934,
+      1939,
+      1944,
+      1954
+    ]
+  }
+]

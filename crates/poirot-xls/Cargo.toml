@@ -1,0 +1,17 @@
+[package]
+name = "poirot-xls"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+cfb.workspace = true
+poirot-model = { path = "../poirot-model" }
+poirot-formula = { path = "../poirot-formula" }
+
+[dev-dependencies]
+calamine.workspace = true
+poirot-eval = { path = "../poirot-eval" }
+poirot-io = { path = "../poirot-io" }
+
+[lints]
+workspace = true

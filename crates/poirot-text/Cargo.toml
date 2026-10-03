@@ -1,0 +1,12 @@
+[package]
+name = "poirot-text"
+version = "0.1.0"
+edition = "2024"
+description = "Source-versioned formula text units and non-normalizing slicing"
+
+
+[dependencies]
+serde.workspace = true
+
+[lints]
+workspace = true

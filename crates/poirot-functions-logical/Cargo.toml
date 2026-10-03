@@ -1,0 +1,10 @@
+[package]
+name = "poirot-functions-logical"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+poirot-functions-core = { path = "../poirot-functions-core" }
+
+[lints]
+workspace = true

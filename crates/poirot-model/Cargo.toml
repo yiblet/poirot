@@ -1,0 +1,16 @@
+[package]
+name = "poirot-model"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+foldhash = "0.1.5"
+
+serde.workspace = true
+poirot-functions-core = { path = "../poirot-functions-core" }
+
+[dev-dependencies]
+postcard.workspace = true
+
+[lints]
+workspace = true

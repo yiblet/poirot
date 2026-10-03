@@ -1,0 +1,12 @@
+[package]
+name = "poirot-functions-math"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+poirot-functions-core = { path = "../poirot-functions-core" }
+bigdecimal.workspace = true
+poirot-numeric = { path = "../poirot-numeric" }
+
+[lints]
+workspace = true

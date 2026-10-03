@@ -1,0 +1,15 @@
+[package]
+name = "poirot-workbook"
+version.workspace = true
+edition.workspace = true
+description = "Workbook editing, evaluation contexts and explicit save planning for poirot"
+
+[dependencies]
+poirot-model = { path = "../poirot-model" }
+poirot-formula = { path = "../poirot-formula" }
+poirot-eval = { path = "../poirot-eval" }
+poirot-io = { path = "../poirot-io" }
+poirot-xls = { path = "../poirot-xls" }
+
+[lints]
+workspace = true

@@ -1,0 +1,39 @@
+[package]
+name = "poirot-eval"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+poirot-model = { path = "../poirot-model" }
+poirot-formula = { path = "../poirot-formula" }
+foldhash = "0.1.5"
+poirot-format = { path = "../poirot-format" }
+nom.workspace = true
+poirot-numeric = { path = "../poirot-numeric" }
+poirot-functions-logical = { path = "../poirot-functions-logical" }
+poirot-functions-criteria = { path = "../poirot-functions-criteria" }
+poirot-functions-database = { path = "../poirot-functions-database" }
+poirot-functions-text = { path = "../poirot-functions-text" }
+poirot-functions-math = { path = "../poirot-functions-math" }
+poirot-functions-engineering = { path = "../poirot-functions-engineering" }
+poirot-functions-financial = { path = "../poirot-functions-financial" }
+poirot-functions-statistics = { path = "../poirot-functions-statistics" }
+poirot-functions-matrix = { path = "../poirot-functions-matrix" }
+poirot-functions-lookup = { path = "../poirot-functions-lookup" }
+poirot-text = { path = "../poirot-text" }
+
+rand_chacha = "0.9.0"
+rand_core = "0.9.5"
+
+poirot-coercion = { path = "../poirot-coercion" }
+
+serde.workspace = true
+serde_bytes = "0.11.19"
+poirot-functions-core = { path = "../poirot-functions-core" }
+
+[dev-dependencies]
+allocation-counter.workspace = true
+postcard.workspace = true
+
+[lints]
+workspace = true

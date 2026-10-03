@@ -1,0 +1,20 @@
+[package]
+name = "poirot-test-fods"
+version.workspace = true
+edition.workspace = true
+description = "Native Rust runner for LibreOffice FODS formula fixtures"
+
+[dependencies]
+poirot-model = { path = "../poirot-model" }
+poirot-formula = { path = "../poirot-formula" }
+poirot-eval = { path = "../poirot-eval" }
+rayon.workspace = true
+roxmltree.workspace = true
+regex.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+clap.workspace = true
+serde.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,142 @@
+//! Caller-owned bytecode plans with typed, owned inspection views.
+//! Raw syntax remains generic and is retained for serialization/diagnostics.
+//!
+//! ```
+//! use poirot_eval::{bound::{FormulaPlan, Expression}, registry::SearchFunction};
+//! use poirot_model::{Workbook, CellAddress, CellValue};
+//! let syntax = poirot_formula::parse_formula("VLOOKUP(2,{1,10;2,20},2,FALSE)")?;
+//! let plan = FormulaPlan::bind(&syntax)?;
+//! if let Expression::Search(search) = plan.expression() {
+//!     assert_eq!(search.function, SearchFunction::VLookup);
+//! }
+//! let mut workbook = Workbook::new();
+//! workbook.add_sheet("Sheet1")?;
+//! assert_eq!(match poirot_eval::run_plan(&workbook, 0, CellAddress::new(0,0)?, &plan, Default::default(), Default::default()) { poirot_eval::EvaluationOutcome::Complete { value, .. } => value, outcome => panic!("evaluation aborted: {outcome:?}"), }, CellValue::Number(20.));
+//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! ```
+
+mod admission;
+mod binding;
+mod domain;
+
+/// Structural admission failures for manually supplied syntax.
+pub use admission::BindingError;
+/// Bound inspection expressions, family metadata, and bytecode-backed formula plans.
+pub use domain::*;
+use poirot_formula::Expr as Syntax;
+
+/// Internal parser adapter bounds individual subtrees, keeping errors deferred in lazy branches.
+#[cfg(test)]
+pub(crate) fn bind(syntax: &Syntax) -> Expression {
+    bind_with_registry(syntax, None)
+}
+/// Compile an extension-aware executable subtree with selected-branch validation.
+#[cfg(test)]
+pub(crate) fn bind_with_extensions_deferred(
+    syntax: &Syntax,
+    registry: &crate::extensions::ExtensionRegistry,
+) -> Expression {
+    binding::bind_at(syntax, 0, Some(registry))
+}
+/// Bind syntax against an optional explicit extension namespace.
+#[cfg(test)]
+pub(crate) fn bind_with_registry(
+    syntax: &Syntax,
+    registry: Option<&crate::extensions::ExtensionRegistry>,
+) -> Expression {
+    match registry {
+        Some(registry) => bind_with_extensions_deferred(syntax, registry),
+        None => binding::bind_at(syntax, 0, None),
+    }
+}
+
+#[cfg(test)]
+mod tests;
+
+/// Binding-only resolver permits lazy compatibility trees without provider capture.
+pub(crate) trait BindingResolver {
+    /// Recover preserved external spelling before extension lookup.
+    fn external_name_lookup<'a>(
+        &'a self,
+        name: &'a str,
+    ) -> crate::external_namespace::ExternalNameLookup<'a>;
+    /// Resolve an exact extension binding without capturing its provider.
+    fn resolve(&self, name: &str) -> Option<crate::extensions::ExtensionBinding>;
+}
+impl BindingResolver for crate::extensions::ExtensionRegistry {
+    fn external_name_lookup<'a>(
+        &'a self,
+        name: &'a str,
+    ) -> crate::external_namespace::ExternalNameLookup<'a> {
+        self.external_name_lookup(name)
+    }
+    fn resolve(&self, name: &str) -> Option<crate::extensions::ExtensionBinding> {
+        self.resolve(name)
+    }
+}
+/// Reconstruct an introspection tree using call identities already captured in bytecode.
+pub(crate) fn bind_with_executable(
+    syntax: &Syntax,
+    executable: &crate::bytecode::Executable,
+) -> Expression {
+    binding::bind_at(syntax, 0, Some(executable))
+}
+impl BindingResolver for crate::bytecode::Executable {
+    fn external_name_lookup<'a>(
+        &'a self,
+        name: &'a str,
+    ) -> crate::external_namespace::ExternalNameLookup<'a> {
+        use crate::external_namespace::ExternalNameLookup;
+        self.calls
+            .iter()
+            .find_map(|call| {
+                let start = call.source_offset as usize;
+                let header_end = start.checked_add(4)?;
+                let length = u32::from_le_bytes(
+                    self.template
+                        .operands
+                        .get(start..header_end)?
+                        .try_into()
+                        .ok()?,
+                ) as usize;
+                let source = self
+                    .template
+                    .operands
+                    .get(header_end..header_end.checked_add(length)?)?;
+                (source == name.as_bytes()).then(|| {
+                    if matches!(call.target, crate::bytecode::CallTarget::Unresolved)
+                        && call.resolved_name.is_none()
+                    {
+                        ExternalNameLookup::UnsupportedName
+                    } else {
+                        ExternalNameLookup::Stored(call.resolved_name.as_deref().unwrap_or(name))
+                    }
+                })
+            })
+            .unwrap_or(ExternalNameLookup::UnsupportedName)
+    }
+    fn resolve(&self, name: &str) -> Option<crate::extensions::ExtensionBinding> {
+        self.calls.iter().find_map(|call| match &call.target {
+            crate::bytecode::CallTarget::Extension(binding) => {
+                let start = call.source_offset as usize;
+                let header_end = start.checked_add(4)?;
+                let length = u32::from_le_bytes(
+                    self.template
+                        .operands
+                        .get(start..header_end)?
+                        .try_into()
+                        .ok()?,
+                ) as usize;
+                let source_name = std::str::from_utf8(
+                    self.template
+                        .operands
+                        .get(header_end..header_end.checked_add(length)?)?,
+                )
+                .ok()?;
+                (call.resolved_name.as_deref().unwrap_or(source_name) == name)
+                    .then(|| binding.clone())
+            }
+            _ => None,
+        })
+    }
+}

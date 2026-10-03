@@ -1,0 +1,22 @@
+use poirot_model::{CellValue, Workbook};
+#[test]
+fn xlsx_round_trip_preserves_original_sheet_span_formula_text() {
+    let mut book = Workbook::new();
+    for name in ["O'Brien", "Middle", "Last Data"] {
+        book.add_sheet(name).unwrap();
+    }
+    let formula = "SUM('O''Brien:Last Data'!$A1:B$2)";
+    book.sheet_mut(0)
+        .unwrap()
+        .set_formula("C1".parse().unwrap(), formula, CellValue::Number(-999.))
+        .unwrap();
+    let bytes = poirot_io::write_xlsx_to_buffer(&book).unwrap();
+    let read = poirot_io::read_xlsx_bytes(&bytes).unwrap();
+    let cell = read
+        .workbook
+        .sheet(0)
+        .unwrap()
+        .get("C1".parse().unwrap())
+        .unwrap();
+    assert_eq!(cell.formula.as_deref(), Some(formula));
+}

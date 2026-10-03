@@ -1,0 +1,359 @@
+//! Bounded, row-major matrix algorithms for spreadsheet formula adapters.
+//! Coercion belongs to the adapter; operational limits are never formula errors.
+mod collection;
+mod linear_algebra;
+mod regression;
+use poirot_functions_core::CellError;
+
+/// Matrix formula error, resource-budget refusal, or unsupported reference-source behavior.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Error {
+    /// Catchable spreadsheet failure from matrix validation or arithmetic.
+    Formula(CellError),
+    /// Operational refusal before exceeding the matrix resource budget.
+    BudgetExceeded,
+    /// The pinned POI implementation explicitly throws NotImplementedException.
+    SourceUnsupported(&'static str),
+}
+/// Matrix result preserving formula errors, resource refusal, and unsupported source behavior.
+pub type Result<T> = std::result::Result<T, Error>;
+fn value<T>() -> Result<T> {
+    Err(Error::Formula(CellError::Value))
+}
+fn num<T>() -> Result<T> {
+    Err(Error::Formula(CellError::Num))
+}
+fn reference<T>() -> Result<T> {
+    Err(Error::Formula(CellError::Ref))
+}
+
+/// Maximum logical retained cells and algorithm work for a pure matrix operation.
+/// An overflowing estimate is refused rather than bypassing the limit.
+#[derive(Debug, Clone, Copy)]
+pub struct Budget {
+    /// Maximum logical elements admitted for one matrix operation.
+    pub max_cells: usize,
+    /// Maximum estimated kernel work admitted before execution.
+    pub max_work: usize,
+}
+impl Budget {
+    /// Reject overflowing estimates or requests above either resource limit.
+    pub fn check(self, cells: Option<usize>, work: Option<usize>) -> Result<()> {
+        match (cells, work) {
+            (Some(c), Some(w)) if c <= self.max_cells && w <= self.max_work => Ok(()),
+            _ => Err(Error::BudgetExceeded),
+        }
+    }
+}
+
+/// Nonempty rectangular row-major storage. [`Matrix::new`] validates dimensions;
+/// row and column indices are zero-based.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Matrix<T> {
+    rows: usize,
+    cols: usize,
+    values: Vec<T>,
+}
+impl<T> Matrix<T> {
+    /// Validate nonempty rectangular storage before exposing matrix indexing.
+    pub fn new(rows: usize, cols: usize, values: Vec<T>) -> Result<Self> {
+        if rows == 0 || cols == 0 || rows.checked_mul(cols) != Some(values.len()) {
+            return value();
+        }
+        Ok(Self { rows, cols, values })
+    }
+    /// Return the validated row count.
+    pub fn rows(&self) -> usize {
+        self.rows
+    }
+    /// Return the validated column count.
+    pub fn cols(&self) -> usize {
+        self.cols
+    }
+    /// Borrow flattened row-major elements.
+    pub fn values(&self) -> &[T] {
+        &self.values
+    }
+    /// Consume the matrix and return its row-major storage.
+    pub fn into_values(self) -> Vec<T> {
+        self.values
+    }
+    /// Read an element, returning a formula error for invalid coordinates.
+    pub fn get(&self, row: usize, col: usize) -> Result<&T> {
+        if row >= self.rows || col >= self.cols {
+            return value();
+        }
+        let index = row
+            .checked_mul(self.cols)
+            .and_then(|start| start.checked_add(col))
+            .ok_or(Error::Formula(CellError::Value))?;
+        self.values
+            .get(index)
+            .ok_or(Error::Formula(CellError::Value))
+    }
+}
+fn finite(values: &[f64]) -> Result<()> {
+    if values.iter().all(|x| x.is_finite()) {
+        Ok(())
+    } else {
+        num()
+    }
+}
+/// Swap rows and columns after admitting output size and work.
+pub fn transpose<T: Clone>(m: &Matrix<T>, budget: Budget) -> Result<Matrix<T>> {
+    linear_algebra::transpose(m, budget)
+}
+
+/// Multiply conformable numeric matrices under the supplied budget.
+pub fn multiply(a: &Matrix<f64>, b: &Matrix<f64>, budget: Budget) -> Result<Matrix<f64>> {
+    linear_algebra::multiply(a, b, budget)
+}
+
+/// Compute a square matrix determinant under the supplied budget.
+pub fn determinant(m: &Matrix<f64>, budget: Budget) -> Result<f64> {
+    linear_algebra::determinant(m, budget)
+}
+
+/// Compute a square matrix inverse, rejecting singular or invalid inputs.
+pub fn inverse(m: &Matrix<f64>, budget: Budget) -> Result<Matrix<f64>> {
+    linear_algebra::inverse(m, budget)
+}
+
+/// POI uses Java binarySearch directly, including its behavior for duplicate or
+/// unsorted bins. Do not sort or deduplicate bins in the adapter.
+pub fn frequency(data: &[f64], bins: &[f64], budget: Budget) -> Result<Matrix<f64>> {
+    linear_algebra::frequency(data, bins, budget)
+}
+
+/// Uncoerced matrix operand; adapters retain type information for collection rules.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Cell {
+    /// Numeric member available to numeric matrix collection.
+    Number(f64),
+    /// Boolean member retained for source-specific collection rules.
+    Bool(bool),
+    /// Blank member retained for source-specific collection rules.
+    Blank,
+    /// Text member retained until the selected collection rule handles it.
+    Text(String),
+    /// Spreadsheet error retained for source-specific error precedence.
+    Error(CellError),
+}
+/// Distinguish direct scalars, cell references, and areas during matrix collection.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Input {
+    /// Direct scalar argument.
+    Scalar(Cell),
+    /// Single-sheet cell reference; preserves first-argument error precedence.
+    Reference(Cell),
+    /// Rectangular area whose members use matrix collection rules.
+    Area(Matrix<Cell>),
+}
+
+/// Select source-specific cell coercion for the requested matrix operation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MatrixCollection {
+    /// Collect operands for MDETERM.
+    Determinant,
+    /// Collect operands for MINVERSE.
+    Inverse,
+    /// Collect operands for MMULT.
+    Multiply,
+    /// Preserve values for TRANSPOSE.
+    Transpose,
+}
+
+/// Source-specific AreaEval collection: skipped cells compact the numeric
+/// sequence, which is then zero-padded into the original rectangle. This is a
+/// pinned POI behavior, not ordinary element-wise spreadsheet coercion.
+pub fn collect_matrix(
+    area: &Matrix<Cell>,
+    policy: MatrixCollection,
+    budget: Budget,
+) -> Result<Matrix<f64>> {
+    collection::collect_matrix(area, policy, budget)
+}
+
+/// TREND rejects any non NumericValueEval (including source error values).
+pub fn collect_trend(area: &Matrix<Cell>, budget: Budget) -> Result<Matrix<f64>> {
+    collection::collect_trend(area, budget)
+}
+
+/// Multiply corresponding admitted elements and sum their products.
+pub fn sumproduct(args: &[Input], budget: Budget) -> Result<f64> {
+    collection::sumproduct(args, budget)
+}
+
+/// Least squares with Householder QR (never the unstable normal equations).
+/// Optional inputs represent missing arguments, not blank cells. The adapter
+/// must require numeric TREND elements and a literal boolean fourth argument.
+pub fn trend(
+    y: &Matrix<f64>,
+    known_x: Option<&Matrix<f64>>,
+    new_x: Option<&Matrix<f64>>,
+    constant: bool,
+    budget: Budget,
+) -> Result<Matrix<f64>> {
+    regression::trend(y, known_x, new_x, constant, budget)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    const B: Budget = Budget {
+        max_cells: 10000,
+        max_work: 100000,
+    };
+    fn m(r: usize, c: usize, v: &[f64]) -> Matrix<f64> {
+        Matrix::new(r, c, v.to_vec()).unwrap()
+    }
+    fn close(actual: f64, expected: f64) {
+        assert!((actual - expected).abs() < 1e-10, "{actual} != {expected}");
+    }
+    #[test]
+    fn matrix_access_rejects_invalid_and_overflowing_coordinates() {
+        let matrix = Matrix::new(2, 2, vec![1., 2., 3., 4.]).unwrap();
+        assert_eq!(matrix.get(1, 1), Ok(&4.));
+        for (row, column) in [(2, 0), (0, 2), (usize::MAX, 0), (0, usize::MAX)] {
+            assert_eq!(
+                matrix.get(row, column),
+                Err(Error::Formula(CellError::Value))
+            );
+        }
+    }
+    #[test]
+    fn rectangular_product_and_transpose() {
+        let a = m(2, 3, &[1., 2., 3., 4., 5., 6.]);
+        let b = m(3, 2, &[7., 8., 9., 10., 11., 12.]);
+        assert_eq!(
+            multiply(&a, &b, B).unwrap(),
+            m(2, 2, &[58., 64., 139., 154.])
+        );
+        assert_eq!(
+            transpose(&a, B).unwrap(),
+            m(3, 2, &[1., 4., 2., 5., 3., 6.])
+        );
+        assert_eq!(multiply(&a, &a, B), Err(Error::Formula(CellError::Value)));
+    }
+    #[test]
+    fn pivoted_inverse_and_determinant() {
+        let a = m(3, 3, &[0., 2., 1., 1., 1., 0., 2., 0., 1.]);
+        close(determinant(&a, B).unwrap(), -4.);
+        let identity = multiply(&a, &inverse(&a, B).unwrap(), B).unwrap();
+        for i in 0..9 {
+            close(identity.values[i], if i % 4 == 0 { 1. } else { 0. });
+        }
+        let singular = m(2, 2, &[1., 2., 2., 4.]);
+        assert_eq!(determinant(&singular, B), Ok(0.));
+        assert_eq!(inverse(&singular, B), Err(Error::Formula(CellError::Num)));
+    }
+    #[test]
+    fn histogram_boundaries_and_empty() {
+        assert_eq!(
+            frequency(&[0., 1., 2., 3., 4.], &[1., 3.], B).unwrap(),
+            m(3, 1, &[2., 2., 1.])
+        );
+        assert_eq!(
+            frequency(&[], &[1., 3.], B).unwrap(),
+            m(3, 1, &[0., 0., 0.])
+        );
+        assert_eq!(frequency(&[1., 2.], &[], B).unwrap(), m(1, 1, &[2.]));
+    }
+    #[test]
+    fn budgets_are_operational_errors() {
+        let b = Budget {
+            max_cells: 1,
+            max_work: 1,
+        };
+        assert_eq!(
+            inverse(&m(2, 2, &[1., 0., 0., 1.]), b),
+            Err(Error::BudgetExceeded)
+        );
+        assert_eq!(frequency(&[], &[1.], b), Err(Error::BudgetExceeded));
+    }
+    #[test]
+    fn sumproduct_area_text_and_error_precedence() {
+        let a =
+            Input::Area(Matrix::new(1, 2, vec![Cell::Number(2.), Cell::Text("3".into())]).unwrap());
+        let b = Input::Area(Matrix::new(1, 2, vec![Cell::Number(4.), Cell::Number(5.)]).unwrap());
+        assert_eq!(sumproduct(&[a.clone(), b], B), Ok(8.));
+        let error = Input::Area(Matrix::new(1, 1, vec![Cell::Error(CellError::NA)]).unwrap());
+        assert_eq!(
+            sumproduct(&[a, error], B),
+            Err(Error::Formula(CellError::NA))
+        );
+        assert_eq!(
+            sumproduct(
+                &[
+                    Input::Scalar(Cell::Number(2.)),
+                    Input::Scalar(Cell::Text("3".into()))
+                ],
+                B
+            ),
+            Err(Error::Formula(CellError::Value))
+        );
+    }
+    #[test]
+    fn pinned_area_collectors_preserve_compaction_and_error_rules() {
+        let a = Matrix::new(
+            2,
+            2,
+            vec![
+                Cell::Number(2.),
+                Cell::Text("8".into()),
+                Cell::Number(3.),
+                Cell::Blank,
+            ],
+        )
+        .unwrap();
+        assert_eq!(
+            collect_matrix(&a, MatrixCollection::Multiply, B).unwrap(),
+            m(2, 2, &[2., 3., 0., 0.])
+        );
+        assert_eq!(
+            collect_matrix(&a, MatrixCollection::Determinant, B),
+            Err(Error::Formula(CellError::Value))
+        );
+        assert_eq!(
+            collect_matrix(&a, MatrixCollection::Transpose, B).unwrap(),
+            m(2, 2, &[2., 3., 0., 0.])
+        );
+        assert_eq!(collect_trend(&a, B), Err(Error::Formula(CellError::Value)));
+        let one = Matrix::new(1, 1, vec![Cell::Number(2.)]).unwrap();
+        assert_eq!(
+            collect_matrix(&one, MatrixCollection::Inverse, B),
+            Err(Error::Formula(CellError::Value))
+        );
+        let error = Matrix::new(1, 1, vec![Cell::Error(CellError::NA)]).unwrap();
+        assert_eq!(
+            collect_trend(&error, B),
+            Err(Error::Formula(CellError::Value))
+        );
+    }
+    #[test]
+    fn trend_regression_orientation_and_origin() {
+        let y = m(1, 3, &[3., 5., 7.]);
+        assert_eq!(trend(&y, None, None, true, B).unwrap().rows(), 1);
+        let result = trend(&y, None, Some(&m(1, 2, &[4., 5.])), true, B).unwrap();
+        close(result.values[0], 9.);
+        close(result.values[1], 11.);
+        let result = trend(
+            &m(3, 1, &[2., 4., 6.]),
+            None,
+            Some(&m(1, 2, &[4., 5.])),
+            false,
+            B,
+        )
+        .unwrap();
+        close(result.values[0], 8.);
+        close(result.values[1], 10.);
+    }
+    #[test]
+    fn trend_multiple_predictors() {
+        // Independent full-rank design, y = 1 + 2*x1 + 3*x2.
+        let x = m(4, 2, &[0., 0., 1., 0., 0., 1., 1., 1.]);
+        let y = m(4, 1, &[1., 3., 4., 6.]);
+        let result = trend(&y, Some(&x), Some(&m(1, 2, &[2., 3.])), true, B).unwrap();
+        close(result.values[0], 14.);
+    }
+}

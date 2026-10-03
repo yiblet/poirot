@@ -1,0 +1,53 @@
+[workspace]
+members = ["crates/*"]
+default-members = [".", "crates/poirot-test-fods"]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.dependencies]
+allocation-counter = "0.8.1"
+smallvec = "1.16.2"
+num-bigint = "0.4.8"
+bigdecimal = "0.4.11"
+statrs = { version = "0.19.1", default-features = false }
+libm = "0.2.16"
+regex = "1.13.1"
+nom = "8.0.0"
+serde_json = "1.0.151"
+postcard = { version = "1.1.3", default-features = false, features = ["alloc"] }
+sha2 = "0.10.9"
+cfb = "0.15.0"
+quick-xml = "0.41.0"
+zip = { version = "8.6.0", default-features = false, features = ["deflate"] }
+calamine = "0.36.1"
+rust_xlsxwriter = "0.99.1"
+rayon = "1.12.0"
+roxmltree = "0.21.1"
+clap = { version = "4.6.7", features = ["derive"] }
+serde = { version = "1.0.229", features = ["derive"] }
+
+[package]
+name = "poirot"
+version.workspace = true
+edition.workspace = true
+description = "Read, edit, evaluate and write Excel workbooks"
+
+[dependencies]
+serde.workspace = true
+postcard.workspace = true
+poirot-workbook = { path = "crates/poirot-workbook" }
+poirot-model = { path = "crates/poirot-model" }
+poirot-formula = { path = "crates/poirot-formula" }
+poirot-eval = { path = "crates/poirot-eval" }
+poirot-io = { path = "crates/poirot-io" }
+poirot-format = { path = "crates/poirot-format" }
+poirot-xls = { path = "crates/poirot-xls" }
+
+[lints]
+workspace = true

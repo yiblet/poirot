@@ -1,0 +1,10 @@
+[package]
+name = "poirot-functions-criteria"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+nom.workspace = true
+
+[lints]
+workspace = true

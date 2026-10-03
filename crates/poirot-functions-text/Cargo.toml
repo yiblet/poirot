@@ -1,0 +1,12 @@
+[package]
+name = "poirot-functions-text"
+version = "0.1.0"
+edition = "2024"
+description = "Typed POI text evaluation plans and source-compatible algorithms"
+
+[dependencies]
+poirot-numeric = { path = "../poirot-numeric" }
+unicode-general-category = "1.1.0"
+
+[lints]
+workspace = true

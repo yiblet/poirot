@@ -1,0 +1,10 @@
+[package]
+name = "poirot-functions-financial"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+poirot-numeric = { path = "../poirot-numeric" }
+
+[lints]
+workspace = true
