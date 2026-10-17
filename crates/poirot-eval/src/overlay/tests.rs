@@ -966,3 +966,165 @@ fn lookup_index_invalidation_does_not_require_retained_formula_results() {
     assert_eq!(next.cell(at("E1")).unwrap(), CellValue::Number(1500.));
     assert_eq!(next.usage().lookup_prefix_scans, 150);
 }
+
+#[test]
+fn numeric_locale_invalidates_only_cells_that_consumed_numeric_text() {
+    let mut workbook = Workbook::new();
+    let sheet = workbook.add_sheet("S").unwrap();
+    sheet
+        .set_formula(at("A1").address, "\"1,234\"*1", CellValue::Blank)
+        .unwrap();
+    sheet
+        .set_formula(at("B1").address, "ABS(\"1,234\")", CellValue::Blank)
+        .unwrap();
+    sheet
+        .set_formula(at("C1").address, "VALUE(\"1,234\")", CellValue::Blank)
+        .unwrap();
+    sheet
+        .set_formula(at("D1").address, "1+2", CellValue::Blank)
+        .unwrap();
+    sheet
+        .set_formula(
+            at("E1").address,
+            "IF(TRUE,7,VALUE(\"1,234\"))",
+            CellValue::Blank,
+        )
+        .unwrap();
+    let mut overlay = Overlay::with_workbook(&workbook).build().unwrap();
+    let mut context = EvaluationContext::default();
+    let targets = [at("A1"), at("B1"), at("C1"), at("D1"), at("E1")];
+    {
+        let mut evaluation = overlay.evaluation(&context).unwrap();
+        let outputs = evaluation.outputs(&targets).unwrap();
+        assert_eq!(
+            outputs.iter().map(|r| r.value.clone()).collect::<Vec<_>>(),
+            vec![CellValue::Number(1234.); 3]
+                .into_iter()
+                .chain([CellValue::Number(3.), CellValue::Number(7.)])
+                .collect::<Vec<_>>()
+        );
+    }
+    context.number_locale =
+        crate::NumberLocaleV2::new(",", Some("."), Some("EUR"), "%", ":").unwrap();
+    let mut evaluation = overlay.evaluation(&context).unwrap();
+    let outputs = evaluation.outputs(&targets).unwrap();
+    assert_eq!(
+        outputs
+            .iter()
+            .take(3)
+            .map(|r| r.value.clone())
+            .collect::<Vec<_>>(),
+        vec![CellValue::Number(1.234); 3]
+    );
+    assert_eq!(evaluation.usage().formula_executions, 3);
+    assert_eq!(evaluation.usage().external_cache_hits, 2);
+}
+
+#[test]
+fn numeric_locale_identity_and_consumption_survive_retained_snapshot() {
+    let mut workbook = Workbook::new();
+    workbook
+        .add_sheet("S")
+        .unwrap()
+        .set_formula(at("A1").address, "VALUE(\"1,234\")", CellValue::Blank)
+        .unwrap();
+    let mut overlay = Overlay::with_workbook(&workbook).build().unwrap();
+    let mut context = EvaluationContext::default();
+    assert_eq!(
+        value(&mut overlay, "A1", &context),
+        CellValue::Number(1234.)
+    );
+    let bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
+    let (restored_workbook, restored_state) =
+        Overlay::from_snapshot(postcard::from_bytes(&bytes).unwrap()).unwrap();
+    let mut restored = restored_state.attach(&restored_workbook).unwrap();
+    {
+        let mut evaluation = restored.evaluation(&context).unwrap();
+        assert_eq!(evaluation.cell(at("A1")).unwrap(), CellValue::Number(1234.));
+        assert_eq!(evaluation.usage().formula_executions, 0);
+    }
+    context.number_locale =
+        crate::NumberLocaleV2::new(",", Some("."), Some("EUR"), "%", ":").unwrap();
+    let mut evaluation = restored.evaluation(&context).unwrap();
+    assert_eq!(evaluation.cell(at("A1")).unwrap(), CellValue::Number(1.234));
+    assert_eq!(evaluation.usage().formula_executions, 1);
+}
+
+#[test]
+fn raw_snapshot_restore_rejects_the_previous_numeric_semantics_version() {
+    let workbook = book();
+    let overlay = Overlay::with_workbook(&workbook).build().unwrap();
+    let mut bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
+    // Payload's first field is its small postcard varint version.
+    let version = bytes.first_mut().unwrap();
+    assert_eq!(*version, 6);
+    *version = 5;
+    let snapshot = postcard::from_bytes(&bytes).unwrap();
+    assert!(
+        matches!(Overlay::from_snapshot(snapshot), Err(OverlayError::Snapshot(detail)) if detail == "unsupported snapshot version")
+    );
+}
+
+#[test]
+fn numbervalue_locale_defaults_invalidate_only_consumers_after_snapshot_restore() {
+    let mut workbook = Workbook::new();
+    let sheet = workbook.add_sheet("S").unwrap();
+    for (cell, formula) in [
+        ("A1", r#"NUMBERVALUE("1,234")"#),
+        ("B1", r#"NUMBERVALUE("1,234",".",",")"#),
+        ("C1", "A1*2"),
+    ] {
+        sheet
+            .set_formula(at(cell).address, formula, CellValue::Blank)
+            .unwrap();
+    }
+    let mut overlay = Overlay::with_workbook(&workbook)
+        .with_policy(OverlayPolicy {
+            builtin: crate::BuiltinSemanticsPolicy::ExcelDocumentation,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
+    let targets = [at("A1"), at("B1"), at("C1")];
+    let mut context = EvaluationContext::default();
+    {
+        let mut evaluation = overlay.evaluation(&context).unwrap();
+        assert_eq!(
+            evaluation
+                .outputs(&targets)
+                .unwrap()
+                .iter()
+                .map(|o| o.value.clone())
+                .collect::<Vec<_>>(),
+            vec![
+                CellValue::Number(1234.),
+                CellValue::Number(1234.),
+                CellValue::Number(2468.)
+            ]
+        );
+    }
+    let bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
+    let (workbook, state) = Overlay::from_snapshot(postcard::from_bytes(&bytes).unwrap()).unwrap();
+    let mut restored = state.attach(&workbook).unwrap();
+    {
+        let mut evaluation = restored.evaluation(&context).unwrap();
+        evaluation.outputs(&targets).unwrap();
+        assert_eq!(evaluation.usage().formula_executions, 0);
+    }
+    context.number_locale = crate::NumberLocaleV2::new(",", Some("."), None, "%", ":").unwrap();
+    let mut evaluation = restored.evaluation(&context).unwrap();
+    assert_eq!(
+        evaluation
+            .outputs(&targets)
+            .unwrap()
+            .iter()
+            .map(|o| o.value.clone())
+            .collect::<Vec<_>>(),
+        vec![
+            CellValue::Number(1.234),
+            CellValue::Number(1234.),
+            CellValue::Number(2.468)
+        ]
+    );
+    assert_eq!(evaluation.usage().formula_executions, 2);
+}

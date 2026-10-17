@@ -156,9 +156,9 @@ pub trait EvaluationPort {
     /// Check text capacity before copying or allocating.
     fn check_text(&mut self, bytes: usize) -> Result<(), Self::Operational>;
     /// Engine Excel numeric grammar/date-time fallback, after a text budget check.
-    fn coerce_text_number(&mut self, text: &str) -> Result<f64, Failure<Self::Operational>>;
+    fn coercev2_text_number(&mut self, text: &str) -> Result<f64, Failure<Self::Operational>>;
     /// Apply explicit omitted-argument numeric coercion or reject the capability.
-    fn coerce_missing_number(&mut self) -> Result<f64, Failure<Self::Operational>> {
+    fn coercev2_missing_number(&mut self) -> Result<f64, Failure<Self::Operational>> {
         Err(Failure::UnsupportedCapability(
             "MissingArgEval numeric coercion",
         ))
@@ -174,7 +174,7 @@ pub trait EvaluationPort {
     /// Other collections preserve Reference origin for area members.
     fn is_area(&mut self, arg: &Self::Argument) -> Result<bool, Failure<Self::Operational>>;
 }
-mod coercion;
+mod coercionv2;
 mod collections;
 mod distributions;
 mod order;
@@ -236,7 +236,7 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
     if !f.accepts_with_policy(args.len(), policy) {
         return Err(CellError::Value.into());
     }
-    coercion::work(p, 1)?;
+    coercionv2::work(p, 1)?;
     if f == NormSDist && policy == SemanticsPolicy::ExcelDocumentation {
         return distributions::excel_standard_normal(p, args);
     }

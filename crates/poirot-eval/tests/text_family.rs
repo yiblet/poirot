@@ -227,3 +227,158 @@ fn unknown_name_remains_a_catchable_spreadsheet_error() {
         }
     ));
 }
+
+#[test]
+fn numbervalue_validates_explicit_separator_and_result_domains() {
+    use poirot_eval::{BuiltinSemanticsPolicy, RunConfiguration, run_formula_with_configuration};
+    let w = workbook();
+    let pinned = RunConfiguration::default();
+    let excel = pinned
+        .clone()
+        .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation);
+    let value = |source: &str, config: &RunConfiguration| match run_formula_with_configuration(
+        &w,
+        0,
+        AT,
+        source,
+        config,
+        EvaluationBudgets::default(),
+    ) {
+        EvaluationOutcome::Complete { value, .. } => value,
+        outcome => panic!("{source}: {outcome:?}"),
+    };
+    for source in [
+        r#"NUMBERVALUE("123.45",".",".")"#,
+        r#"NUMBERVALUE("123",".",".")"#,
+        r#"NUMBERVALUE("1", "", ",")"#,
+        r#"NUMBERVALUE("1,5", ".", "")"#,
+        r#"NUMBERVALUE("12..")"#,
+        r#"NUMBERVALUE("0x1p2")"#,
+        r#"NUMBERVALUE("7D")"#,
+        r#"NUMBERVALUE("1e+")"#,
+        r#"NUMBERVALUE("Infinity")"#,
+        r#"NUMBERVALUE("1e309%")"#,
+        r#"NUMBERVALUE("1e-999")"#,
+    ] {
+        assert_eq!(
+            value(source, &excel),
+            CellValue::Error(CellError::Value),
+            "{source}"
+        );
+    }
+    for (source, expected) in [
+        (r#"NUMBERVALUE("1.5", ".rest", ",rest")"#, 1.5),
+        (r#"NUMBERVALUE("1⛄234§5", "§rest", "⛄rest")"#, 1234.5),
+        (r#"NUMBERVALUE("1.5")"#, 1.5),
+        (r#"NUMBERVALUE("1.5", ".", "")"#, 1.5),
+        (r#"NUMBERVALUE("1.5",,",")"#, 1.5),
+        (r#"NUMBERVALUE("3.5%")"#, 0.035),
+        (r#"NUMBERVALUE("1e308%")"#, 1e306),
+        (r#"NUMBERVALUE("0e999")"#, 0.),
+        (r#"NUMBERVALUE("1e-320%%")"#, 0.),
+        (r#"NUMBERVALUE("")"#, 0.),
+    ] {
+        assert_eq!(
+            value(source, &excel),
+            CellValue::Number(expected),
+            "{source}"
+        );
+    }
+    for (source, expected) in [
+        (r#"NUMBERVALUE("12..")"#, 12.),
+        (r#"NUMBERVALUE("0x1p2")"#, 4.),
+        (r#"NUMBERVALUE("7D")"#, 7.),
+    ] {
+        assert_eq!(value(source, &pinned), CellValue::Number(expected));
+    }
+    assert_eq!(
+        value(r#"NUMBERVALUE("1^5","^",",")"#, &excel),
+        CellValue::Number(1.5)
+    );
+    {
+        let config = &excel;
+        assert!(matches!(
+            run_formula_with_configuration(
+                &w,
+                0,
+                AT,
+                r#"IFERROR(NUMBERVALUE("1💧5","💧",","),0)"#,
+                config,
+                EvaluationBudgets::default(),
+            ),
+            EvaluationOutcome::Aborted { .. }
+        ));
+    }
+    assert!(matches!(
+        run_formula_with_configuration(
+            &w,
+            0,
+            AT,
+            r#"IFERROR(NUMBERVALUE("1^5","^",","),0)"#,
+            &pinned,
+            EvaluationBudgets::default(),
+        ),
+        EvaluationOutcome::Aborted { .. }
+    ));
+    let mut malformed = workbook();
+    malformed
+        .sheet_mut(0)
+        .unwrap()
+        .set_value(
+            CellAddress { row: 0, col: 0 },
+            poirot_model::ExcelText::from_units(vec![0xD800]),
+        )
+        .unwrap();
+    assert!(matches!(
+        run_formula_with_configuration(
+            &malformed,
+            0,
+            AT,
+            r#"IFERROR(NUMBERVALUE("1",A1,","),0)"#,
+            &excel,
+            EvaluationBudgets::default(),
+        ),
+        EvaluationOutcome::Aborted { .. }
+    ));
+    let comma = excel.with_number_locale(
+        poirot_coercionv2::NumberLocaleV2::new(",", Some("."), None, "%", ":").unwrap(),
+    );
+    assert_eq!(
+        value(r#"NUMBERVALUE("1.234,5")"#, &comma),
+        CellValue::Number(1234.5)
+    );
+    assert_eq!(
+        value(r#"NUMBERVALUE("1.5",".",",")"#, &comma),
+        CellValue::Number(1.5)
+    );
+    assert_eq!(
+        value(r#"NUMBERVALUE("1.234,5",, ".")"#, &comma),
+        CellValue::Number(1234.5)
+    );
+    for source in [
+        r#"IFERROR(NUMBERVALUE("12345"),0)"#,
+        r#"IFERROR(NUMBERVALUE("1",""),0)"#,
+    ] {
+        assert!(
+            matches!(
+                run_formula_with_configuration(
+                    &w,
+                    0,
+                    AT,
+                    source,
+                    &comma,
+                    EvaluationBudgets {
+                        run_work: 5,
+                        ..Default::default()
+                    },
+                ),
+                EvaluationOutcome::Aborted { .. }
+            ),
+            "{source}"
+        );
+    }
+    assert_eq!(
+        value(r#"NUMBERVALUE(1/0,".",",")"#, &comma),
+        CellValue::Error(CellError::Div0)
+    );
+}

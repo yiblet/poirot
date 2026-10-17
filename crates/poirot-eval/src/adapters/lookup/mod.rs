@@ -103,6 +103,14 @@ impl Port<'_, '_> {
             }
             Value::Missing => helper::Value::Scalar(helper::Scalar::Missing),
             Value::Scalar(v) => helper::Value::Scalar(self.scalar(v)?),
+            Value::SelectedScalar(v, origin) => helper::Value::SelectedScalar(
+                self.scalar(v)?,
+                match origin {
+                    host::OperandOrigin::Direct => poirot_coercionv2::Origin::Direct,
+                    host::OperandOrigin::ReferencedCell => poirot_coercionv2::Origin::Reference,
+                    host::OperandOrigin::ArrayElement => poirot_coercionv2::Origin::Array,
+                },
+            ),
             Value::SheetSpan(areas) => {
                 let first = areas
                     .first()
@@ -182,8 +190,17 @@ impl Port<'_, '_> {
             }
         }
         Ok(match value {
-            helper::Value::Scalar(helper::Scalar::Missing) => Value::Missing,
+            helper::Value::Scalar(helper::Scalar::Missing)
+            | helper::Value::SelectedScalar(helper::Scalar::Missing, _) => Value::Missing,
             helper::Value::Scalar(v) => scalar(v).into(),
+            helper::Value::SelectedScalar(v, origin) => Value::SelectedScalar(
+                scalar(v),
+                match origin {
+                    poirot_coercionv2::Origin::Direct => host::OperandOrigin::Direct,
+                    poirot_coercionv2::Origin::Reference => host::OperandOrigin::ReferencedCell,
+                    poirot_coercionv2::Origin::Array => host::OperandOrigin::ArrayElement,
+                },
+            ),
             helper::Value::Array(a) => {
                 self.session.budget.allocation(a.values.len())?;
                 let mut values = a.values.into_iter();
@@ -300,14 +317,14 @@ impl helper::Workbook for Port<'_, '_> {
         }
         Ok(value)
     }
-    fn coerce_numeric_text(&mut self, text: &str) -> Result<f64, helper::Failure> {
+    fn coercev2_numeric_text(&mut self, text: &str) -> Result<f64, helper::Failure> {
         let result = CallHost::new(self.session, self.sheet, self.address, ArgumentsRef::Empty)
-            .coerce_number_text(text, NumericPolicy::PinnedPoi);
+            .coercev2_number_text(text, NumericPolicy::PinnedPoi);
         self.function(result)
     }
-    fn coerce_number_to_text(&mut self, number: f64) -> Result<String, helper::Failure> {
+    fn coercev2_number_to_text(&mut self, number: f64) -> Result<String, helper::Failure> {
         let result = CallHost::new(self.session, self.sheet, self.address, ArgumentsRef::Empty)
-            .coerce_number_to_text(number, NumericPolicy::PinnedPoi);
+            .coercev2_number_to_text(number, NumericPolicy::PinnedPoi);
         self.function(result)
     }
     fn cell(

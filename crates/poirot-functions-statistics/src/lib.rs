@@ -2,7 +2,6 @@
 use poirot_functions_core::CellError;
 
 mod aggregate;
-mod collection;
 mod commons_gamma;
 mod distribution;
 mod inverse_erf;
@@ -14,8 +13,6 @@ mod poisson_mass;
 
 /// Statistical reduction over already collected numeric operands.
 pub use aggregate::aggregate;
-/// Origin-sensitive admission of scalar and paired statistical inputs.
-pub use collection::{coerce_statistics_collection, coerce_statistics_pairs};
 /// Distribution probability/inverse kernels with optional host metering.
 pub use distribution::{
     legacy_t_dist, normal_dist, normal_dist_metered, normal_dist_source_metered, normal_inverse,
@@ -29,87 +26,17 @@ pub use order::{order_statistic, percentile, rank};
 pub use paired::{forecast, paired, regression};
 /// Percentile rank with an explicit inclusive/exclusive endpoint contract.
 pub use percent_rank::percent_rank;
+/// Origin-sensitive admission of scalar and paired statistical inputs.
+pub use poirot_coercionv2::statistics::{
+    coercev2_statistics_collection, coercev2_statistics_pairs,
+};
 
 /// Scalar statistical result or spreadsheet error for an unmetered kernel call.
 pub type Result = std::result::Result<f64, CellError>;
 
-/// Text parsing is performed by the adapter's Excel numeric parser, never by this crate.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Value {
-    /// Numeric input before statistical collection.
-    Number(f64),
-    /// Boolean input whose admission depends on origin and collection mode.
-    Boolean(bool),
-    /// Text with optional adapter-parsed numeric interpretation.
-    Text {
-        /// Numeric interpretation supplied by the adapter, if parsing succeeded.
-        numeric: Option<f64>,
-    },
-    /// Blank input, distinct from an omitted argument.
-    Blank,
-    /// Omitted argument slot.
-    Missing,
-    /// Spreadsheet error retained until collection applies error precedence.
-    Error(CellError),
-}
-/// Operand provenance controlling statistical text, boolean, and blank coercion.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Origin {
-    /// Direct scalar expression or literal.
-    Direct,
-    /// Value selected from a worksheet reference.
-    Reference,
-    /// Member selected from a materialized array.
-    Array,
-}
-/// A statistical value with its direct/reference/array origin. Origin controls
-/// whether text, booleans, and blanks are ignored, coerced, or rejected.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Operand {
-    /// Uncoerced value admitted by the host.
-    pub value: Value,
-    /// Provenance used to select collection rules.
-    pub origin: Origin,
-}
-/// Value-admission rules selected before a statistical aggregate runs.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Collection {
-    /// Ordinary numeric aggregate coercion and reference filtering.
-    NumericAggregate,
-    /// A-family aggregation admitting booleans and text as specified.
-    AggregateA,
-    /// A-family minimum/maximum collection rules.
-    ExtremaA,
-    /// Collection rules for geometric mean.
-    GeoMean,
-    /// Collection rules for most-frequent numeric value.
-    Mode,
-    /// Collection rules for percentile-rank input.
-    PercentRank,
-    /// Collection rules for ranking a value within a sample.
-    Rank,
-}
-
-/// Admission rule for positionally aligned X/Y operands.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PairCollection {
-    /// Retain pairs whose members are both numeric.
-    NumericOnly,
-    /// Apply numeric coercion before retaining aligned pairs.
-    NumericCoercion,
-}
-/// Positionally matched numeric X/Y vectors after pair filtering.
-/// `original_len` preserves the pre-filter length for source algorithms whose
-/// denominator includes skipped positions.
-#[derive(Clone, Debug, PartialEq)]
-pub struct NumericPairs {
-    /// Filtered X values, positionally aligned with Y.
-    pub x: Vec<f64>,
-    /// Filtered Y values, positionally aligned with X.
-    pub y: Vec<f64>,
-    /// Input pair count before filtering.
-    pub original_len: usize,
-}
+pub use poirot_coercionv2::statistics::{
+    Collection, NumericPairs, Operand, Origin, PairCollection, Value,
+};
 
 fn checked(value: f64) -> Result {
     if value.is_finite() {

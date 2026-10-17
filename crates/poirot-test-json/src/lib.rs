@@ -34,6 +34,8 @@ pub struct CheckResult {
 #[derive(Debug, Serialize)]
 pub struct ModeResult {
     pub mode: &'static str,
+    /// Builtin contract used consistently by both execution modes.
+    pub builtin_policy: poirot::eval::BuiltinSemanticsPolicy,
     pub checks: Vec<CheckResult>,
     pub changes: Vec<WorkbookChange>,
     pub error: Option<String>,
@@ -64,14 +66,24 @@ enum Session<'a> {
     Overlay(Box<Overlay<'a>>),
 }
 impl<'a> Session<'a> {
-    fn new(book: &'a Workbook, normal: bool) -> Result<Self, String> {
+    fn new(
+        book: &'a Workbook,
+        normal: bool,
+        builtin: poirot::eval::BuiltinSemanticsPolicy,
+    ) -> Result<Self, String> {
+        let policy = poirot::OverlayPolicy {
+            builtin,
+            ..Default::default()
+        };
         if normal {
             Evaluation::with_workbook(book)
+                .with_policy(policy)
                 .build(EvaluationContext::default())
                 .map(|e| Self::Normal(Box::new(e)))
                 .map_err(|e| format!("{e:?}"))
         } else {
             Overlay::with_workbook(book)
+                .with_policy(policy)
                 .build()
                 .map(|e| Self::Overlay(Box::new(e)))
                 .map_err(|e| format!("{e:?}"))
@@ -212,7 +224,7 @@ fn workbook(suite: &Suite) -> Result<Workbook, String> {
         book.add_sheet(sheet).map_err(|e| e.to_string())?;
     }
     let changes = {
-        let mut session = Session::new(&book, false)?;
+        let mut session = Session::new(&book, false, suite.builtin_policy)?;
         let mut cells = BTreeSet::new();
         for cell in &suite.workbook.cells {
             let target = session.target(&cell.cell)?;
@@ -237,15 +249,21 @@ fn equal(actual: &CellValue, expected: &CellValue, tolerance: f64) -> bool {
     }
 }
 
-fn run_mode(book: &Workbook, scenario: &Scenario, normal: bool) -> ModeResult {
+fn run_mode(
+    book: &Workbook,
+    scenario: &Scenario,
+    normal: bool,
+    builtin_policy: poirot::eval::BuiltinSemanticsPolicy,
+) -> ModeResult {
     let mut result = ModeResult {
         mode: if normal { "normal" } else { "overlay" },
+        builtin_policy,
         checks: Vec::new(),
         changes: Vec::new(),
         error: None,
     };
     let mut execute = || -> Result<(), String> {
-        let mut session = Session::new(book, normal)?;
+        let mut session = Session::new(book, normal, builtin_policy)?;
         for (index, action) in scenario.actions.iter().enumerate() {
             let action_result = (|| -> Result<(), String> {
                 match action {
@@ -348,8 +366,8 @@ pub fn run_suite(suite: &Suite, filter: Option<&str>) -> Result<Vec<ScenarioResu
         if filter.is_some_and(|s| !scenario.name.contains(s)) {
             continue;
         }
-        let normal = run_mode(&book, scenario, true);
-        let overlay = run_mode(&book, scenario, false);
+        let normal = run_mode(&book, scenario, true, suite.builtin_policy);
+        let overlay = run_mode(&book, scenario, false, suite.builtin_policy);
         results.push(compare_modes(scenario.name.clone(), normal, overlay));
     }
     Ok(results)
@@ -389,6 +407,7 @@ mod tests {
     fn mode(name: &'static str, changes: Vec<WorkbookChange>) -> ModeResult {
         ModeResult {
             mode: name,
+            builtin_policy: Default::default(),
             changes,
             checks: Vec::new(),
             error: None,

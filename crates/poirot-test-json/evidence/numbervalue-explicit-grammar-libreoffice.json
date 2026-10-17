@@ -1,0 +1,1053 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T19:37:06.651995+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-exploration-numbervalue-grammar.json": "ad2221dbcfde33e1b37bbcd09faa23e8f58a95d4436b92a00f97038214258ca1",
+    "closedxml-number-parsing.json": "b5b0de07ab28b590290d846a16abff179dac00118a0ad71a143b841fd46f135e"
+  },
+  "results": [
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: embedded spaces ignored",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 123.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: repeated percent scales repeatedly",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0025
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: grouping before decimal ignored",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1234.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: grouping after decimal invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: repeated decimal invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: identical separators invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: percent after trailing spaces",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.25
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: percent between digits invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: custom punctuation",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1234.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: group separator repeated accepted",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "NUMBERVALUE explicit grammar: trailing repeated decimal is invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "NUMBERVALUE explicit grammar: hexadecimal double spelling is invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "NUMBERVALUE explicit grammar: Java suffix double spelling is invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "NUMBERVALUE explicit grammar: explicit exponent overflow is invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "NUMBERVALUE explicit grammar: percent cannot rescue input overflow",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "NUMBERVALUE explicit grammar: explicit nonzero exponent underflow is invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "NUMBERVALUE explicit grammar: percent may underflow after input parsing",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "NUMBERVALUE explicit grammar: zero significand survives huge exponent",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "NUMBERVALUE explicit grammar: percent scales admitted large input",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1e+306
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "NUMBERVALUE explicit grammar: empty grouping disables group recognition",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "NUMBERVALUE explicit grammar: empty grouping permits ungrouped decimal",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "NUMBERVALUE explicit grammar: grouping before any decimal includes exponent text",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 100.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "NUMBERVALUE explicit grammar: grouping after decimal in exponent is invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "NUMBERVALUE explicit grammar: literal regex metacharacter decimal",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: NUMBERVALUE invalid grammar and range: Group separator same as decimal separator \u2014 NUMBERVALUE(\"123.45\", \".\", \".\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_Format9 \u2014 \"1%\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.01
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_Format10 \u2014 \"100.5%\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.005
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_UnlistedFormats \u2014 \"1,000.00%\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Fraction_Format12_13 \u2014 \"0 1/32767\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.05185094759972e-05
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format20: Minutes can be can be over 60 \u2014 \"90:00\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.75
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format21: Extra padding \u2014 \"  24   :  00  :   59  \"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.00068287037037
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format47: Minutes part can be outside of normal range \u2014 \"140:30.0\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0975694444444444
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Number_Format37_38 \u2014 \"(1,000)\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1000.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: NUMBERVALUE invalid grammar and range: Too large \u2014 NUMBERVALUE(\"1.234567890E+308\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_Format9 \u2014 \"+1%\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.01
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_Format10 \u2014 \".5%\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.005
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Fraction_Format12_13 \u2014 \"0 32767/1\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 32767.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format20: Even if looks like mm:ss, it is actually parsed as h:mm \u2014 \"59:59\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.49930555555556
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format21: Last part can be omitted \u2014 \"24:0:\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format47: Can specify 3 digit ms \u2014 \"00:57.180\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.000661805555555556
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Number_Format37_38 \u2014 \"(100)\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -100.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: NUMBERVALUE invalid grammar and range: Too tiny \u2014 NUMBERVALUE(\"1.234567890E-310\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_Format9 \u2014 \" -75 % \"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -0.75
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_Format10 \u2014 \"  -.375 % \"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -0.00375
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Fraction_Format12_13 \u2014 \"1 00100/025\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format20: Last part can be omitted and zero is used \u2014 \"10:\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.416666666666667
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_Format10 \u2014 \"100.%\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Fraction_Format12_13: can use minus sign \u2014 \"- 1 1/2\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format20: Upper limit of first part is parseable \u2014 \"9999:\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 416.625
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Fraction_Format12_13: or plus sign \u2014 \"+1 1/2\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format20: Hour part can be over 23 \u2014 \"30:59\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.29097222222222
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: NUMBERVALUE grammar \u2014 NUMBERVALUE(\"+ 1\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: NUMBERVALUE explicit separator grammar \u2014 NUMBERVALUE(\"1,234.56\",\".\",\",\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1234.56
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: NUMBERVALUE invalid grammar and range: Two decimal separators \u2014 NUMBERVALUE(\"1.234.5\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_Format10 \u2014 \"100 . 5%\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_UnlistedFormats: Can't have minus sign inside the brackets \u2014 \"(-100%)\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Fraction_Format12_13 \u2014 \"0 /20\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format20: Can't omit first part \u2014 \":5\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format21: Extra zeros. \u2014 \"000:01:01\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format47: Both hours and minutes are out of range \u2014 \"140:60.0\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Number_Format37_38 \u2014 \"(-1)\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: NUMBERVALUE grammar \u2014 NUMBERVALUE(\"75825%\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 758.25
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: NUMBERVALUE explicit separator grammar \u2014 NUMBERVALUE(\"1.234,56\",\",\",\".\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1234.56
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: NUMBERVALUE invalid grammar and range: Decimal separator before group separator \u2014 NUMBERVALUE(\"1.234,5\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_UnlistedFormats: Can't have minus sign outside the brackets \u2014 \"-(100%)\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Fraction_Format12_13: Fractions can't be negative \u2014 \"1 100/-2\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format20: Only one part can be outside of limit, here are both \u2014 \"24:60\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format21: Only one part can be over the limit, but here are minutes and seconds \u2014 \"00:60:60\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-number-parsing.json",
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format47: The minutes part starts with 0, but has over 2 digits \u2014 \"60:000.0\"*1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 69,
+    "checks": 69,
+    "corroborated_scenarios": 69,
+    "corroborated_checks": 69
+  }
+}

@@ -55,7 +55,7 @@ pub trait EvaluationPort {
     /// The 15-digit Excel view is required (2.9999999999999996 -> 3).
     /// This callback allows the common numeric policy to own conversion rather
     /// than duplicating approximate floating-point rounding in this family.
-    fn coerce_truncated_number(
+    fn coercev2_truncated_number(
         &mut self,
         index: usize,
     ) -> Result<f64, Failure<Self::OperationalError>>;
@@ -116,7 +116,7 @@ impl SelectionPlan {
         match self.0 {
             SelectionKind::Ifs { pairs } => {
                 for pair in 0..pairs {
-                    if coerce_logical_test(&port.scalar(pair * 2)?).map_err(Failure::Cell)? {
+                    if coercev2_logical_test(&port.scalar(pair * 2)?).map_err(Failure::Cell)? {
                         return Ok(pair * 2 + 1);
                     }
                 }
@@ -149,7 +149,7 @@ fn switch_scalar<E>(value: Result<CellValue, Failure<E>>) -> Result<CellValue, F
 
 /// POI coerceValueToBoolean(value, false): whitespace is not stripped from
 /// strings, numbers use nonzero truth, and blank is false.
-pub use poirot_functions_logical::{coerce_logical_test, error_type};
+pub use poirot_functions_logical::{coercev2_logical_test, error_type};
 
 /// Actual family adapter: validates shape, executes deferred callbacks, then
 /// returns the selected reference directly or constructs a scalar result.
@@ -180,7 +180,7 @@ pub fn evaluate<P: EvaluationPort>(
             Ok(P::value(CellValue::Number(f64::from(code))))
         }
         LogicalFunction::IsEven | LogicalFunction::IsOdd => {
-            let number = port.coerce_truncated_number(0)?;
+            let number = port.coercev2_truncated_number(0)?;
             let even = number.abs() % 2.0 == 0.0;
             Ok(P::value(CellValue::Boolean(
                 even == (function == LogicalFunction::IsEven),

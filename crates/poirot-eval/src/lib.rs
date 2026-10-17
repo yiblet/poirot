@@ -36,6 +36,8 @@ pub use configuration::{
     ArrayResultPolicy, BuiltinSemanticsPolicy, ComputationFingerprint, ConfigurationFingerprint,
     CurrencyContext, FormattingConfiguration, RunConfiguration,
 };
+/// Explicit numeric input tokens for locale-parametric argument parsing.
+pub use poirot_coercionv2::NumberLocaleV2;
 /// Formula compilation and immutable execution preparation.
 pub mod compiler;
 mod consumed_calls;
@@ -162,6 +164,8 @@ enum Value {
     /// Selected helper MissingArgEval, distinct from an actual blank cell.
     Missing,
     Scalar(CellValue),
+    /// Materialized selection retaining its original argument-admission provenance.
+    SelectedScalar(CellValue, host::OperandOrigin),
     Refs(Vec<Area>),
     /// One true ThreeDEval/RefEval, distinct from a RefListEval union.
     SheetSpan(Vec<Area>),
@@ -175,23 +179,13 @@ impl From<CellValue> for Value {
 fn err(e: CellError) -> Value {
     Error(e).into()
 }
-/// Normalize a completed worksheet/public formula result for publication.
-///
-/// Nested expressions, selection functions, operand reads and memoization must
-/// preserve `Blank`: only their consumer decides whether it means zero, empty
-/// text, false, or an ignored aggregate member. A separately evaluated formula
-/// cell publishes zero for a final blank, so later cell references see zero.
-/// Apply this only after final scalar selection or when publishing spill cells.
-// TODO(coercion-non-argument): [MEDIUM] Blank-to-zero publication can erase type information if reused before a true result boundary.
-fn coerce_cell_publication(v: CellValue) -> CellValue {
-    if v == Blank { Number(0.) } else { v }
-}
 /// Explicit legacy projection for consumers that intentionally collapse omission.
 /// Host operand APIs must retain the separate missing flag alongside this value.
 // TODO(coercion-non-argument): [MEDIUM] Collapsing omission to blank can change predicates and defaults unless the missing flag is retained.
 fn coerce_legacy_missing_blank() -> CellValue {
     Blank
 }
+// TODO(coercion-non-argument): [HIGH] Numeric result publication turns nonfinite results into NUM; argument admission must select its own policy.
 fn finite(n: f64) -> CellValue {
     if n.is_finite() { Number(n) } else { Error(Num) }
 }
@@ -199,7 +193,7 @@ const VALUE_ERROR: CellError = CellError::Value;
 mod core_projection;
 mod source_arithmetic;
 use core_projection::{
-    checked_text_view, coerce_arithmetic_number, coerce_formula_text, coerce_logical_boolean,
+    checked_text_view, coercev2_arithmetic_number, coercev2_formula_text, coercev2_logical_boolean,
     compare, remap_semantic, semantic,
 };
 /// Numeric slash-date parsing policy. Formula grammar remains canonical OOXML syntax.
@@ -291,6 +285,7 @@ fn execute_configuration<T>(
     let plan = FormulaCompiler::new().compile_workbook(workbook, &EvaluationPolicy::default());
     let mut session = Session::new(workbook, configuration.context(), meter);
     session.currency = configuration.formatting().currency();
+    session.number_locale = configuration.number_locale();
     session.text_policy = configuration.text_policy();
     session.numeric_policy = configuration.numeric_policy();
     session.builtin_policy = configuration.builtin_policy();
@@ -492,6 +487,7 @@ struct Session<'a> {
     inputs: Option<&'a run_overlay::RunInputs>,
     context: EvaluationInputs,
     currency: Option<&'a CurrencyContext>,
+    number_locale: &'a poirot_coercionv2::NumberLocaleV2,
     text_policy: poirot_text::TextSemanticsPolicy,
     numeric_policy: NumericOutcomePolicy,
     builtin_policy: BuiltinSemanticsPolicy,
@@ -505,7 +501,7 @@ struct Session<'a> {
     memo_usage: run::MemoRetentionUsage,
     visiting: CellSet,
     names: HashSet<(usize, usize)>,
-    numeric_date_effects: CellMap<poirot_coercion::Effects>,
+    numeric_date_effects: CellMap<poirot_coercionv2::date_time::Effects>,
     budget: BudgetMeter,
     plan: Option<&'a CompiledWorkbook>,
     lazy_compiler: Option<&'a std::cell::RefCell<FormulaCompiler>>,

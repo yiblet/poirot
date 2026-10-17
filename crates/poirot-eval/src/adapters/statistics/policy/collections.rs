@@ -1,10 +1,10 @@
 //! Collection provenance and the distinct sequential and numeric-only pair protocols.
-use super::coercion::{coerce_statistics_decimal_text, scalar, text_check, work};
+use super::coercionv2::{coercev2_statistics_decimal_text, scalar, text_check, work};
 use super::{EvaluationPort, Failure, Origin, Scalar};
 use poirot_functions_statistics as domain;
 use poirot_model::CellError;
 
-fn coerce_statistics_collection_member<P: EvaluationPort>(
+fn coercev2_statistics_collection_member<P: EvaluationPort>(
     p: &mut P,
     s: Scalar,
     parse: bool,
@@ -18,7 +18,7 @@ fn coerce_statistics_collection_member<P: EvaluationPort>(
         Scalar::Text(t) => {
             let numeric = if parse {
                 text_check(p, &t)?;
-                coerce_statistics_decimal_text(&t)
+                coercev2_statistics_decimal_text(&t)
             } else {
                 None
             };
@@ -27,7 +27,7 @@ fn coerce_statistics_collection_member<P: EvaluationPort>(
     })
 }
 /// Collect admitted numeric members using the selected origin-sensitive aggregation rules.
-pub(super) fn coerce_statistics_collection<P: EvaluationPort>(
+pub(super) fn coercev2_statistics_collection<P: EvaluationPort>(
     p: &mut P,
     args: &[P::Argument],
     policy: domain::Collection,
@@ -43,6 +43,7 @@ pub(super) fn coerce_statistics_collection<P: EvaluationPort>(
         work(p, (len as u64).saturating_mul(3))?;
         values.reserve(len);
         let area = policy == domain::Collection::Mode && p.is_area(a)?;
+        let scalar_channel = !p.is_reference(a)? && !p.is_array(a)?;
         for i in 0..len {
             let (s, o) = p.collection_cell(a, i)?;
             if policy == domain::Collection::Mode && s == Scalar::Missing {
@@ -50,6 +51,8 @@ pub(super) fn coerce_statistics_collection<P: EvaluationPort>(
             }
             let origin = if area {
                 domain::Origin::Array
+            } else if scalar_channel && o != Origin::Direct {
+                domain::Origin::SelectedScalar
             } else {
                 match o {
                     Origin::Direct => domain::Origin::Direct,
@@ -58,7 +61,7 @@ pub(super) fn coerce_statistics_collection<P: EvaluationPort>(
                 }
             };
             let parse = policy == domain::Collection::PercentRank
-                || (o == Origin::Direct
+                || ((o == Origin::Direct || scalar_channel)
                     && matches!(
                         policy,
                         domain::Collection::NumericAggregate
@@ -68,25 +71,21 @@ pub(super) fn coerce_statistics_collection<P: EvaluationPort>(
             let v = if parse {
                 if let Scalar::Text(t) = s {
                     text_check(p, &t)?;
-                    let n = if policy == domain::Collection::PercentRank {
-                        match p.coerce_text_number(&t) {
-                            Ok(n) => Some(n),
-                            Err(Failure::Spreadsheet(CellError::Value)) => None,
-                            Err(other) => return Err(other),
-                        }
-                    } else {
-                        coerce_statistics_decimal_text(&t)
+                    let n = match p.coercev2_text_number(&t) {
+                        Ok(n) => Some(n),
+                        Err(Failure::Spreadsheet(CellError::Value)) => None,
+                        Err(other) => return Err(other),
                     };
                     domain::Value::Text { numeric: n }
                 } else {
-                    coerce_statistics_collection_member(p, s, false)?
+                    coercev2_statistics_collection_member(p, s, false)?
                 }
             } else {
-                coerce_statistics_collection_member(p, s, false)?
+                coercev2_statistics_collection_member(p, s, false)?
             };
             // Domain single-cell collector may allocate one element; its allocation
             // and loop have already been checked/charged above. Errors stop traversal.
-            let one = domain::coerce_statistics_collection(
+            let one = domain::coercev2_statistics_collection(
                 policy,
                 &[domain::Operand { value: v, origin }],
             )
@@ -96,7 +95,7 @@ pub(super) fn coerce_statistics_collection<P: EvaluationPort>(
     }
     Ok(values)
 }
-fn coerce_statistics_vector<P: EvaluationPort>(
+fn coercev2_statistics_vector<P: EvaluationPort>(
     p: &mut P,
     a: &P::Argument,
     coerce: bool,
@@ -113,12 +112,12 @@ fn coerce_statistics_vector<P: EvaluationPort>(
         if let Scalar::Error(e) = s {
             return Err(e.into());
         }
-        result.push(coerce_statistics_collection_member(p, s, coerce)?)
+        result.push(coercev2_statistics_collection_member(p, s, coerce)?)
     }
     Ok(result)
 }
 /// Collect aligned operand pairs using the selected pinned pair coercion rules.
-pub(super) fn coerce_statistics_pairs<P: EvaluationPort>(
+pub(super) fn coercev2_statistics_pairs<P: EvaluationPort>(
     p: &mut P,
     a: &P::Argument,
     b: &P::Argument,
@@ -126,15 +125,15 @@ pub(super) fn coerce_statistics_pairs<P: EvaluationPort>(
 ) -> Result<domain::NumericPairs, Failure<P::Operational>> {
     // Source fully collects the first operand before the second, then validates
     // original lengths, and only then removes positional blanks/non-numeric pairs.
-    let x = coerce_statistics_vector(p, a, policy == domain::PairCollection::NumericCoercion)?;
+    let x = coercev2_statistics_vector(p, a, policy == domain::PairCollection::NumericCoercionV2)?;
     let y_len = p.collection_len(b)?;
     p.check_collection(x.len().saturating_add(y_len))
         .map_err(Failure::Operational)?;
-    let y = coerce_statistics_vector(p, b, policy == domain::PairCollection::NumericCoercion)?;
+    let y = coercev2_statistics_vector(p, b, policy == domain::PairCollection::NumericCoercionV2)?;
     p.check_collection(x.len().saturating_add(y.len()))
         .map_err(Failure::Operational)?;
     work(p, (x.len() as u64).saturating_mul(4))?;
-    domain::coerce_statistics_pairs(policy, &x, &y).map_err(Failure::Spreadsheet)
+    domain::coercev2_statistics_pairs(policy, &x, &y).map_err(Failure::Spreadsheet)
 }
 // XYNumericFunction and LinearRegressionFunction construct vector wrappers in
 // argument order, checking direct ErrorEval immediately without dereferencing
@@ -196,7 +195,10 @@ pub(super) fn numeric_only_pairs<P: EvaluationPort>(
             first_y_error = Some(error);
             continue;
         }
-        if let (Scalar::Number(x), Scalar::Number(y)) = (x, y) {
+        let x = coercev2_statistics_collection_member(p, x, false)?;
+        let y = coercev2_statistics_collection_member(p, y, false)?;
+        if let Some((x, y)) = poirot_coercionv2::statistics::coercev2_statistics_numeric_pair(x, y)
+        {
             // Store in original argument order for the pure algorithm boundary.
             result.x.push(if regression { y } else { x });
             result.y.push(if regression { x } else { y });

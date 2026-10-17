@@ -106,8 +106,10 @@ def violations(source):
         if not containing:
             continue
         name = max(containing, key=lambda item: item[1])[0]
-        if not name.startswith('coerce_'):
+        if not name.startswith(('coerce_', 'coercev2_')) and name != 'coercev2':
             result.append((code.count('\n', 0, match.start()) + 1, name, 'inline type change outside coerce_ helper'))
+        elif name.startswith('coerce_') and re.search(r'\bBlank\b', match[0]) and re.search(r'\b(?:Number|0)\b', match[0]):
+            result.append((code.count('\n', 0, match.start()) + 1, name, 'blank-to-zero conversion outside argument policy'))
     for match in re.finditer(r'\b(?:finalize_cell_result|operand_number|operand_boolean|logical_test|scalar_number|scalar_text)\s*\(', code):
         result.append((code.count('\n', 0, match.start()) + 1, '', 'legacy coercion helper name'))
     for match in re.finditer(r'\bcoerce_\w+\s+as\s+(?!coerce_)\w+', code):
@@ -118,13 +120,47 @@ def violations(source):
 class CoercionArchitectureTests(unittest.TestCase):
     def test_type_changes_live_in_named_coercion_helpers(self):
         failures = []
-        crates = [ROOT / 'crates' / 'poirot-eval', *sorted((ROOT / 'crates').glob('poirot-functions-*'))]
+        crates = [ROOT / 'crates' / 'poirot-eval', ROOT / 'crates' / 'poirot-coercionv2',
+                  *sorted((ROOT / 'crates').glob('poirot-functions-*'))]
         for crate in crates:
             for path in sorted((crate / 'src').rglob('*.rs')):
                 if any('test' in part for part in path.relative_to(crate / 'src').parts):
                     continue
                 for line, name, reason in violations(path.read_text()):
                     failures.append(f'{path.relative_to(ROOT)}:{line}: {name}: {reason}')
+        self.assertEqual(failures, [], '\n' + '\n'.join(failures))
+
+    def test_remaining_legacy_conversion_declarations_are_audited(self):
+        failures = []
+        for path in (ROOT / 'crates').rglob('*.rs'):
+            if 'test' in path.name:
+                continue
+            source = path.read_text()
+            code = production_code(source)
+            for match in re.finditer(r'\bfn\s+(coerce_\w+)\b', code):
+                line_start = source.rfind('\n', 0, match.start())
+                prefix = source[:line_start].splitlines()
+                adjacent = prefix[-1] if prefix else ''
+                if '// TODO(coercion-non-argument):' not in adjacent:
+                    failures.append(f'{path.relative_to(ROOT)}: {match[1]} lacks adjacent audit marker')
+        self.assertEqual(failures, [], '\n' + '\n'.join(failures))
+
+    def test_migrated_argument_helpers_do_not_keep_inline_conversions(self):
+        failures = []
+        for crate in [ROOT / 'crates' / 'poirot-eval',
+                      *sorted((ROOT / 'crates').glob('poirot-functions-*'))]:
+            for path in (crate / 'src').rglob('*.rs'):
+                if 'test' in path.name:
+                    continue
+                code = production_code(path.read_text())
+                spans = list(function_spans(code))
+                for match in INLINE_CHANGE.finditer(code):
+                    containing = [(name, start) for name, start, end in spans
+                                  if start <= match.start() < end]
+                    if containing:
+                        name = max(containing, key=lambda item: item[1])[0]
+                        if name.startswith('coercev2_'):
+                            failures.append(f'{path.relative_to(ROOT)}: {name} retains an inline argument conversion')
         self.assertEqual(failures, [], '\n' + '\n'.join(failures))
 
     def test_non_argument_todos_have_risk_ratings(self):
@@ -144,13 +180,19 @@ class CoercionArchitectureTests(unittest.TestCase):
         self.assertTrue(violations('fn select(v: V) { if v == Blank { Number(0.) } else { v } }'))
 
     def test_guard_preserves_typed_reads_algorithms_and_test_exemptions(self):
-        self.assertFalse(violations('fn coerce_publication(v: V) { match v { Blank => Number(0.), _ => v } }'))
+        self.assertFalse(violations('fn coercev2_input(v: V) { match v { Blank => Number(0.) } }'))
+        self.assertTrue(violations('fn coerce_publication(v: V) { match v { Blank => Number(0.), _ => v } }'))
         self.assertFalse(violations('fn read(v: V) { match v { Blank => Blank, _ => v } }'))
         self.assertFalse(violations('fn kernel(n: usize) { n as f64 }'))
         self.assertFalse(violations('#[cfg(test)] mod tests { fn sample() { match v { Blank => Number(0.) } } }'))
         self.assertFalse(violations('fn read() { /* nested /* Blank => Number(0.) */ comment */ let s = r#"Blank => Number(0.)"#; }'))
         # A production item after a test-only item is still checked.
         self.assertTrue(violations('#[cfg(test)] mod tests {} fn read() { match v { Blank => Number(0.) } }'))
+
+    def test_v2_crate_keeps_conversion_names_searchable(self):
+        crate = ROOT / 'crates' / 'poirot-coercionv2'
+        for path in [crate / 'Cargo.toml', crate / 'README.md', *crate.rglob('*.rs')]:
+            self.assertNotRegex(path.read_text(), r'(?i)\b(?:coercion|coerce)(?!v2)', str(path))
 
 
 if __name__ == '__main__':

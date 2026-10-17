@@ -561,7 +561,7 @@ mod tests {
     }
     fn snapshot(value: Value) -> String {
         match value {
-            Value::Scalar(v) => format!("scalar {v:?}"),
+            Value::Scalar(v) | Value::SelectedScalar(v, _) => format!("scalar {v:?}"),
             Value::Missing => "missing".into(),
             Value::Array(v) => format!("array {:?} {:?}", v.anchor, v.values),
             Value::Refs(v) | Value::SheetSpan(v) => format!(

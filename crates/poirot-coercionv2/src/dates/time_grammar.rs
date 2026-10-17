@@ -1,11 +1,11 @@
 //! Bounded TIMEVALUE DateParser plan; independent of DATEVALUE's date order.
 use super::calendar::{Date, month_days};
-use crate::{CellError, VALUE_ERROR};
 use nom::{IResult, Parser, bytes::complete::take_while_m_n, character::complete::char};
+use poirot_functions_core::{CellError, CellError::Value as VALUE_ERROR};
 
 /// Inspected TIMEVALUE date components before optional default-year resolution.
 #[derive(Clone, Copy)]
-pub(super) struct DatePlan<'a> {
+pub struct DatePlan<'a> {
     year: Option<i64>,
     month: &'a str,
     day: i64,
@@ -93,7 +93,7 @@ fn fields(input: &str, index: usize) -> IResult<&str, DatePlan<'_>> {
 }
 impl<'a> DatePlan<'a> {
     /// Parse TIMEVALUE's independent date grammar without consulting context.
-    pub(super) fn inspect(input: &'a str) -> Result<Self, CellError> {
+    pub fn inspect(input: &'a str) -> Result<Self, CellError> {
         for index in 0..6 {
             if let Ok((tail, plan)) = fields(input, index) {
                 let tail = tail
@@ -111,11 +111,11 @@ impl<'a> DatePlan<'a> {
         Err(VALUE_ERROR)
     }
     /// Whether the host must supply a captured current year.
-    pub(super) fn needs_year(self) -> bool {
+    pub fn needs_year(self) -> bool {
         self.year.is_none()
     }
     /// Resolve inspected fields with an explicit default year and Gregorian validation.
-    pub(super) fn resolve(self, year: i64) -> Result<Date, CellError> {
+    pub fn resolve(self, year: i64) -> Result<Date, CellError> {
         let date = Date {
             y: self.year.unwrap_or(year),
             m: month(self.month),

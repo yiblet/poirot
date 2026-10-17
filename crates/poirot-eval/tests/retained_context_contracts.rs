@@ -366,20 +366,19 @@ fn builtin_policy_switch_recomputes_semantics_and_unchanged_policy_reuses() {
 }
 
 #[test]
-fn text_coercion_policy_switch_exposes_capability_failure_without_source_publication() {
+fn formatted_argument_date_failure_is_operational_across_text_policy_changes() {
     let w = book(&["IFERROR(REPT(\"x\",\"1/02\"),7)"]);
     let before = w.clone();
     let mut overlay = Overlay::with_workbook(&w).build().unwrap();
     let mut context = context();
     context.as_of_time = UNIX_EPOCH + Duration::from_secs(300_000_000_000);
-    assert_eq!(
-        overlay
-            .evaluation(&context)
-            .unwrap()
-            .cell(target(0))
-            .unwrap(),
-        CellValue::Number(7.)
-    );
+    assert!(matches!(
+        overlay.evaluation(&context).unwrap().cell(target(0)),
+        Err(EvaluationFailure::UnsupportedCapability {
+            capability: CapabilityId::DateParsing,
+            ..
+        })
+    ));
     let mut policy = overlay.policy().clone();
     policy.text.source = TextSourceVersion::Poi7321209;
     overlay.set_policy(policy).unwrap();

@@ -54,19 +54,16 @@ fn compare_inner(
             }
         }
         (Scalar::Blank, _) if tolerant => {
-            // TODO(coercion-non-argument): [MEDIUM] Search comparison replaces a blank key with text or zero; incorrect mode selection can match a different key.
-            compare(&coerce_lookup_blank_key(true), item, true, wildcard, w)?
+            compare(&coercev2_lookup_blank_key(true), item, true, wildcard, w)?
         }
-        // TODO(coercion-non-argument): [MEDIUM] Search comparison replaces a blank key with text or zero; incorrect mode selection can match a different key.
-        (Scalar::Blank, _) => compare(&coerce_lookup_blank_key(false), item, false, false, w)?,
+        (Scalar::Blank, _) => compare(&coercev2_lookup_blank_key(false), item, false, false, w)?,
         // TolerantStringLookupComparer retains the StringEval class check on candidates.
         (Scalar::Number(_), Scalar::Text(b)) if tolerant && wildcard => {
             let Scalar::Number(number) = key else {
                 return Ok(None);
             };
             charge(w, Work::SearchText, 32)?;
-            // TODO(coercion-non-argument): [LOW] Wildcard comparison converts a numeric key to text; the converted key must not escape the search comparison.
-            let a = w.coerce_number_to_text(*number)?;
+            let a = w.coercev2_number_to_text(*number)?;
             {
                 charge(
                     w,
@@ -85,10 +82,6 @@ fn has_wildcards(pattern: &str) -> bool {
     pattern.contains(['*', '?', '~'])
 }
 
-fn coerce_lookup_blank_key(tolerant: bool) -> Scalar {
-    if tolerant {
-        Scalar::Text(String::new())
-    } else {
-        Scalar::Number(0.0)
-    }
+fn coercev2_lookup_blank_key(tolerant: bool) -> Scalar {
+    poirot_coercionv2::lookup::coercev2_lookup_blank_key(tolerant)
 }

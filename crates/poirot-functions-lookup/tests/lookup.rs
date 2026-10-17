@@ -12,12 +12,12 @@ impl Workbook for Book {
     fn argument(&mut self, _: usize, _: Context) -> Result<Value, Failure> {
         Err(Failure::Unsupported(Unsupported::DeferredArguments))
     }
-    fn coerce_numeric_text(&mut self, text: &str) -> Result<f64, Failure> {
+    fn coercev2_numeric_text(&mut self, text: &str) -> Result<f64, Failure> {
         text.trim()
             .parse()
             .map_err(|_| Failure::Spreadsheet(Error::Value))
     }
-    fn coerce_number_to_text(&mut self, number: f64) -> Result<String, Failure> {
+    fn coercev2_number_to_text(&mut self, number: f64) -> Result<String, Failure> {
         Ok(number.to_string())
     }
     fn cell(&mut self, _: &Reference, sheet: u32, row: u32, col: u32) -> Result<Scalar, Failure> {
@@ -241,11 +241,17 @@ fn offset_retains_identity_and_original_negative_endpoints() {
 fn single_intersects_areas_and_rejects_ambiguity() {
     assert_eq!(
         run(ReferenceFunction::Single, &[area(2, 2, 5, 8, 9)]),
-        Ok(n(238.))
+        Ok(Value::SelectedScalar(
+            Scalar::Number(238.),
+            poirot_coercionv2::Origin::Reference
+        ))
     );
     assert_eq!(
         run(ReferenceFunction::Single, &[area(2, 8, 9, 2, 5)]),
-        Ok(n(284.))
+        Ok(Value::SelectedScalar(
+            Scalar::Number(284.),
+            poirot_coercionv2::Origin::Reference
+        ))
     );
     assert_eq!(
         run(
@@ -315,7 +321,10 @@ fn lookup_array_orientation_and_last_duplicate() {
             C,
             &mut b
         ),
-        Ok(n(22.))
+        Ok(Value::SelectedScalar(
+            Scalar::Number(22.),
+            poirot_coercionv2::Origin::Array
+        ))
     );
     assert_eq!(
         evaluate(
@@ -324,7 +333,10 @@ fn lookup_array_orientation_and_last_duplicate() {
             C,
             &mut b
         ),
-        Ok(n(22.))
+        Ok(Value::SelectedScalar(
+            Scalar::Number(22.),
+            poirot_coercionv2::Origin::Array
+        ))
     );
     assert_eq!(
         approximate_index(

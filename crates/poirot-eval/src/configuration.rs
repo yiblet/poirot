@@ -72,6 +72,7 @@ pub enum ArrayResultPolicy {
 pub struct RunConfiguration {
     context: EvaluationInputs,
     formatting: FormattingConfiguration,
+    number_locale: poirot_coercionv2::NumberLocaleV2,
     text_policy: TextSemanticsPolicy,
     numeric_policy: crate::NumericOutcomePolicy,
     builtin_policy: BuiltinSemanticsPolicy,
@@ -84,6 +85,7 @@ impl RunConfiguration {
         Self {
             context,
             formatting,
+            number_locale: Default::default(),
             numeric_policy: crate::NumericOutcomePolicy::LegacyFinite,
             builtin_policy: BuiltinSemanticsPolicy::default(),
             array_result_policy: ArrayResultPolicy::default(),
@@ -100,6 +102,23 @@ impl RunConfiguration {
     /// Borrow configured value-formatting inputs.
     pub fn formatting(&self) -> &FormattingConfiguration {
         &self.formatting
+    }
+    /// Select explicit numeric input tokens, independently of display formatting.
+    ///
+    /// ```
+    /// use poirot_eval::{NumberLocaleV2, RunConfiguration};
+    /// let comma = NumberLocaleV2::new(",", Some("."), Some("EUR"), "%", ":")
+    ///     .ok_or("invalid numeric locale")?;
+    /// let configuration = RunConfiguration::default().with_number_locale(comma);
+    /// # Ok::<(), &str>(())
+    /// ```
+    pub fn with_number_locale(mut self, locale: poirot_coercionv2::NumberLocaleV2) -> Self {
+        self.number_locale = locale;
+        self
+    }
+    /// Numeric text input profile. No ambient locale is consulted.
+    pub fn number_locale(&self) -> &poirot_coercionv2::NumberLocaleV2 {
+        &self.number_locale
     }
     /// Select a source-version policy explicitly. Existing constructors preserve legacy ROI units.
     pub fn with_text_policy(mut self, text_policy: TextSemanticsPolicy) -> Self {
@@ -158,6 +177,7 @@ impl RunConfiguration {
         ConfigurationFingerprint {
             context: self.context.fingerprint(),
             formatting: self.formatting.clone(),
+            number_locale: self.number_locale.clone(),
             text_policy: self.text_policy,
             numeric_policy: self.numeric_policy,
             builtin_policy: self.builtin_policy,
@@ -185,6 +205,8 @@ pub struct ConfigurationFingerprint {
     pub context: ContextFingerprint,
     /// Exact formatting settings.
     pub formatting: FormattingConfiguration,
+    /// Exact numeric input token profile.
+    pub number_locale: poirot_coercionv2::NumberLocaleV2,
     /// Selected text source semantics.
     pub text_policy: TextSemanticsPolicy,
     /// Selected numeric result semantics.

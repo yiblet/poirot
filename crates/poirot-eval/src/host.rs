@@ -2,7 +2,7 @@
 //! This module does not resolve function names or select a family implementation.
 use super::*;
 
-mod coercion;
+mod coercionv2;
 mod numeric_policy;
 mod operand;
 mod readers;
@@ -47,6 +47,10 @@ impl poirot_functions_core::Input for ScalarInput<'_, '_, '_> {
 }
 
 impl<'call, 'workbook> CallHost<'call, 'workbook> {
+    /// Record an argument consumer's dependence on numeric locale defaults.
+    pub(crate) fn read_number_locale(&mut self) {
+        self.session.read(DependencyRead::NumberLocale);
+    }
     /// Borrow one deferred scalar input under an explicit omission policy.
     pub(crate) fn input(
         &mut self,
@@ -279,6 +283,9 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         Ok(match value {
             Value::Missing => Value::Missing,
             Value::Scalar(value) => Value::Scalar(Self::copy_cell(budget, value)?),
+            Value::SelectedScalar(value, origin) => {
+                Value::SelectedScalar(Self::copy_cell(budget, value)?, *origin)
+            }
             Value::SignedRefs(areas) => {
                 budget.allocation(areas.len())?;
                 Value::SignedRefs(areas.clone())
@@ -348,7 +355,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
                 .unwrap_or(false);
         if missing {
             return Ok(ScalarOperand {
-                value: coerce_missing_scalar(policy)?,
+                value: coercev2_missing_scalar(policy)?,
                 origin: if matches!(operand.value, Value::Array(_)) {
                     OperandOrigin::ArrayElement
                 } else {
@@ -362,6 +369,10 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             Value::Scalar(value) => (
                 Self::copy_cell(&mut self.session.budget, value)?.into(),
                 OperandOrigin::Direct,
+            ),
+            Value::SelectedScalar(value, origin) => (
+                Self::copy_cell(&mut self.session.budget, value)?.into(),
+                *origin,
             ),
             Value::Array(rows) => (
                 Self::copy_cell(
@@ -463,12 +474,14 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
 
 /// Explicit missing-argument projection. The caller retains omission metadata;
 /// this value is only the requested legacy scalar representation.
-fn coerce_missing_scalar(policy: MissingPolicy) -> FunctionResult<CellValue> {
-    Ok(match policy {
-        MissingPolicy::Blank => Blank,
+fn coercev2_missing_scalar(policy: MissingPolicy) -> FunctionResult<CellValue> {
+    use poirot_coercionv2::compatibility::MissingScalarPolicy;
+    let policy = match policy {
+        MissingPolicy::Blank => MissingScalarPolicy::Blank,
         #[cfg(test)]
-        MissingPolicy::Zero => Number(0.),
+        MissingPolicy::Zero => MissingScalarPolicy::Zero,
         #[cfg(test)]
-        MissingPolicy::Reject => return Err(VALUE_ERROR.into()),
-    })
+        MissingPolicy::Reject => MissingScalarPolicy::Reject,
+    };
+    poirot_coercionv2::compatibility::coercev2_missing_scalar(policy).map_err(Into::into)
 }

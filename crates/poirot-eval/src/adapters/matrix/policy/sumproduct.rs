@@ -1,14 +1,9 @@
 //! SUMPRODUCT selection, failure traversal, and arithmetic schedule.
 use super::*;
 
-fn coerce_sumproduct_term<O>(c: Cell, scalar: bool) -> Result<f64, Failure<O>> {
-    match c {
-        Cell::Number(n) => Ok(n),
-        Cell::Bool(b) => Ok(if b { 1.0 } else { 0.0 }),
-        Cell::Error(e) => Err(Failure::Spreadsheet(e)),
-        Cell::Text(_) | Cell::Blank if !scalar => Ok(0.0),
-        _ => value(),
-    }
+fn coercev2_sumproduct_term<O>(c: Cell, scalar: bool) -> Result<f64, Failure<O>> {
+    poirot_coercionv2::collections::coercev2_sumproduct_member((&c).into(), scalar)
+        .map_err(Into::into)
 }
 /// Execute SUMPRODUCT with source-specific shape checks and ordered member reads.
 pub(super) fn evaluate<P: EvaluationPort>(
@@ -30,7 +25,7 @@ pub(super) fn evaluate<P: EvaluationPort>(
             {
                 return value();
             }
-            result *= coerce_sumproduct_term(c, true)?;
+            result *= coercev2_sumproduct_term(c, true)?;
         }
         return if result.is_finite() {
             Ok(result)
@@ -75,7 +70,7 @@ pub(super) fn evaluate<P: EvaluationPort>(
         for c in 0..first.cols {
             let mut product = 1.0;
             for a in args {
-                product *= coerce_sumproduct_term(read(p, a, r, c)?, false)?;
+                product *= coercev2_sumproduct_term(read(p, a, r, c)?, false)?;
             }
             result += product;
         }

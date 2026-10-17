@@ -5,6 +5,7 @@ edition = "2024"
 description = "Typed POI text evaluation plans and source-compatible algorithms"
 
 [dependencies]
+poirot-coercionv2 = { path = "../poirot-coercionv2" }
 poirot-numeric = { path = "../poirot-numeric" }
 unicode-general-category = "1.1.0"
 

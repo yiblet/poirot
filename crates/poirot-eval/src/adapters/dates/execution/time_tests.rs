@@ -18,8 +18,8 @@ fn timevalue_dispatch_preserves_source_cancellation_and_permissive_date_fallback
             ("TIMEVALUE(\"2/29/1900 12:00\")", Error(VALUE_ERROR)),
             ("TIMEVALUE(\"bogus 12:00\")", Error(VALUE_ERROR)),
             ("TIMEVALUE(\"24:00\")", Number(1.)),
-            // WorkbookEvaluator dereferences a final BlankEval to numeric zero.
-            ("TIMEVALUE(\"\")", Number(0.)),
+            // Public evaluation retains the blank returned by this parser.
+            ("TIMEVALUE(\"\")", Blank),
             ("TIMEVALUE(FALSE)", Error(VALUE_ERROR)),
             ("TIMEVALUE(2.718281828459045)", Error(VALUE_ERROR)),
         ] {
@@ -56,7 +56,7 @@ fn timevalue_dispatch_preserves_source_cancellation_and_permissive_date_fallback
 }
 
 #[test]
-fn timevalue_empty_is_internal_blank_before_public_formula_zero() {
+fn timevalue_empty_remains_blank_through_public_evaluation() {
     let mut workbook = Workbook::new();
     workbook.add_sheet("Sheet1").unwrap();
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
@@ -81,6 +81,6 @@ fn timevalue_empty_is_internal_blank_before_public_formula_zero() {
             crate::EvaluationOutcome::Complete { value, .. } => value,
             outcome => panic!("evaluation aborted: {outcome:?}"),
         },
-        Number(0.)
+        Blank
     );
 }

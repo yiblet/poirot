@@ -182,7 +182,7 @@ fn explicit_numeric_policies_do_not_change_legacy_handlers() {
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
     let mut host = CallHost::new(&mut session, 0, AT, &arguments);
     let n = host
-        .coerce_argument_number(0, MissingPolicy::Reject, NumericPolicy::LegacyCompatible)
+        .coercev2_argument_number(0, MissingPolicy::Reject, NumericPolicy::LegacyCompatible)
         .unwrap();
     assert_eq!(
         n.to_bits(),
@@ -191,17 +191,17 @@ fn explicit_numeric_policies_do_not_change_legacy_handlers() {
     );
     assert_eq!(n.trunc(), 2.);
     assert_eq!(
-        poirot_numeric::coerce_number_to_text(n),
+        poirot_coercionv2::compatibility::coercev2_number_to_text(n),
         "3",
         "same dependency and exact host input"
     );
     assert_eq!(
-        host.coerce_number_to_text(n, NumericPolicy::PinnedPoi)
+        host.coercev2_number_to_text(n, NumericPolicy::PinnedPoi)
             .unwrap(),
         "3"
     );
     assert_eq!(
-        host.coerce_argument_number(1, MissingPolicy::Reject, NumericPolicy::PinnedPoi)
+        host.coercev2_argument_number(1, MissingPolicy::Reject, NumericPolicy::PinnedPoi)
             .unwrap(),
         100.
     );
@@ -230,22 +230,22 @@ fn numeric_datetime_host_preserves_results_failures_and_actual_effects() {
     {
         let mut host = CallHost::new(&mut session, 0, AT, &[]);
         assert_eq!(
-            host.coerce_number_text("1 Jan 2024", NumericPolicy::PinnedPoi)
+            host.coercev2_number_text("1 Jan 2024", NumericPolicy::PinnedPoi)
                 .unwrap(),
             45292.0
         );
         assert_eq!(
-            host.coerce_number_text("0:30 PM", NumericPolicy::PinnedPoi)
+            host.coercev2_number_text("0:30 PM", NumericPolicy::PinnedPoi)
                 .unwrap(),
             45000.0 / 86400.0
         );
         assert!(matches!(
-            host.coerce_number_text("garbage", NumericPolicy::PinnedPoi),
+            host.coercev2_number_text("garbage", NumericPolicy::PinnedPoi),
             Err(FunctionFailure::Spreadsheet(CellError::Value))
         ));
         assert!(!host.session.numeric_date_effects[&(0, AT)].default_year);
         assert!(matches!(
-            host.coerce_number_text("1 Jan", NumericPolicy::PinnedPoi),
+            host.coercev2_number_text("1 Jan", NumericPolicy::PinnedPoi),
             Err(FunctionFailure::Operational(
                 EvaluationFailure::UnsupportedCapability {
                     capability: CapabilityId::DateParsing,
@@ -256,7 +256,7 @@ fn numeric_datetime_host_preserves_results_failures_and_actual_effects() {
     }
     assert_eq!(
         session.numeric_date_effects[&(0, AT)],
-        poirot_coercion::Effects {
+        poirot_coercionv2::date_time::Effects {
             default_year: true,
             locale: true,
             timezone: true
@@ -271,7 +271,7 @@ fn numeric_datetime_host_preserves_results_failures_and_actual_effects() {
     );
     let mut host = CallHost::new(&mut session, 0, AT, &[]);
     assert_eq!(
-        host.coerce_number_text("1 Jan", NumericPolicy::PinnedPoi)
+        host.coercev2_number_text("1 Jan", NumericPolicy::PinnedPoi)
             .unwrap(),
         45292.0
     );
@@ -471,7 +471,7 @@ fn composed_numeric_effects_emit_actual_context_fields() {
             session.dependency_sink = Some(&mut reads);
             let mut host = CallHost::new(&mut session, 0, AT, &[]);
             assert_eq!(
-                host.coerce_number_text(text, NumericPolicy::PinnedPoi)
+                host.coercev2_number_text(text, NumericPolicy::PinnedPoi)
                     .unwrap(),
                 45292.
             );

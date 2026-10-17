@@ -59,8 +59,8 @@ impl Session<'_> {
                 Error(_) => 16.,
             })
             .into(),
-            N => coerce_information_n(value).into(),
-            T => coerce_information_t(value).into(),
+            N => coercev2_information_n(value).into(),
+            T => coercev2_information_t(value).into(),
             IsError | IsErr | IsNa | IsNumber | IsText | IsBlank | IsLogical | IsNonText => {
                 // SAFETY: The classifier-only match is guarded by those exact variants, and that branch returns before the later non-classifier match.
                 unreachable!("classifiers return before legacy coercion")
@@ -70,18 +70,11 @@ impl Session<'_> {
 }
 
 /// N converts booleans to numbers and other nonnumeric, nonerror values to zero.
-fn coerce_information_n(value: CellValue) -> CellValue {
-    match value {
-        Number(_) | Error(_) => value,
-        Boolean(b) => Number(u8::from(b).into()),
-        _ => Number(0.),
-    }
+fn coercev2_information_n(value: CellValue) -> CellValue {
+    poirot_coercionv2::compatibility::coercev2_information_n(value)
 }
 
 /// T retains text/errors and converts every other scalar to empty text.
-fn coerce_information_t(value: CellValue) -> CellValue {
-    match value {
-        Text(_) | CellValue::TextUtf16(_) | Error(_) => value,
-        _ => Text(String::new()),
-    }
+fn coercev2_information_t(value: CellValue) -> CellValue {
+    poirot_coercionv2::compatibility::coercev2_information_t(value)
 }

@@ -23,7 +23,7 @@ class FunctionArchitectureTests(unittest.TestCase):
             for dependency in manifests[name].get('dependencies', {}):
                 if dependency not in manifests:
                     continue
-                self.assertTrue(dependency in families or dependency == 'poirot-numeric',
+                self.assertTrue(dependency in families or dependency in {'poirot-numeric', 'poirot-coercionv2'},
                                 f'{name} imports engine dependency {dependency}')
                 pending.append(dependency)
 

@@ -61,7 +61,7 @@ impl CallHost<'_, '_> {
                         }
                     }
                 }
-                Value::Missing | Value::Scalar(_) => {}
+                Value::Missing | Value::Scalar(_) | Value::SelectedScalar(_, _) => {}
             }
         }
         let origin = match operand.value {
@@ -70,6 +70,7 @@ impl CallHost<'_, '_> {
             }
             Value::Array(_) => OperandOrigin::ArrayElement,
             Value::Missing | Value::Scalar(_) => OperandOrigin::Direct,
+            Value::SelectedScalar(_, origin) => origin,
         };
         let values = self
             .session

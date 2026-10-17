@@ -150,7 +150,7 @@ fn child_before_anchor_preserves_typed_outputs_and_selected_dependencies() {
     );
     assert_eq!(value(&ctx, "D2"), CellValue::Boolean(true));
     assert_eq!(value(&ctx, "D3"), CellValue::Error(CellError::NA));
-    assert_eq!(value(&ctx, "E3"), CellValue::Number(0.));
+    assert_eq!(value(&ctx, "E3"), CellValue::Blank);
     assert_eq!(value(&ctx, "H1"), CellValue::Error(CellError::NA));
     assert!(ctx.get(target("A3")).is_none());
     assert!(ctx.get(target("B3")).is_none());
@@ -882,6 +882,29 @@ fn retained_operator_results_match_fresh_evaluation_through_interleaved_edits() 
         complete(&mut fresh, &outputs);
         for at in outputs {
             assert_eq!(value(&retained, at), value(&fresh, at), "step {step}: {at}");
+        }
+    }
+}
+
+#[test]
+fn spill_anchor_children_and_retention_preserve_blank_zero_and_empty_text() {
+    let mut workbook = model(&[
+        ("D1", "TRANSPOSE(A1:A3)"),
+        ("H1", "ISBLANK(D1)"),
+        ("H2", "ISNUMBER(E1)"),
+        ("H3", "ISTEXT(F1)"),
+    ]);
+    let sheet = workbook.sheet_mut(0).unwrap();
+    sheet.set_value(target("A2").address, 0.).unwrap();
+    sheet.set_value(target("A3").address, "").unwrap();
+    let mut ctx = context(&workbook);
+    for _ in 0..2 {
+        complete(&mut ctx, &["F1", "D1", "E1", "H1", "H2", "H3"]);
+        assert_eq!(value(&ctx, "D1"), CellValue::Blank);
+        assert_eq!(value(&ctx, "E1"), CellValue::Number(0.));
+        assert_eq!(value(&ctx, "F1"), CellValue::Text(String::new()));
+        for at in ["H1", "H2", "H3"] {
+            assert_eq!(value(&ctx, at), CellValue::Boolean(true));
         }
     }
 }

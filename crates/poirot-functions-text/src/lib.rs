@@ -8,22 +8,7 @@ pub mod numeric;
 /// Allocation-free UTF-16 selection and output-reservation plans.
 pub mod units;
 
-/// Catchable spreadsheet failures from pure text kernels.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Error {
-    /// Invalid text-function argument (`#VALUE!`).
-    Value,
-    /// Numeric text-function argument is outside its supported domain (`#NUM!`).
-    Num,
-}
-/// Pinned source faults that must remain operational rather than spreadsheet errors.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum HostFault {
-    /// Source parser requires a nonempty separator.
-    EmptySeparator,
-    /// Separator spelling forms an invalid source parsing pattern.
-    InvalidSeparatorPattern,
-}
+pub use poirot_coercionv2::numeric_text::{Error, HostFault};
 /// Java processes UTF-16 `char`s. Supplementary letters retain their spelling
 /// and reset the next BMP character's word state instead of being case-mapped.
 pub fn proper_with<P: UnicodePolicy>(text: &str, policy: &P) -> String {

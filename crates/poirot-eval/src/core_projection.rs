@@ -38,16 +38,6 @@ pub(super) fn checked_text_view<'a>(
         }
     }
 }
-/// Preserve numeric inputs directly and coerce other scalar kinds under shared rules.
-pub(super) fn coerce_arithmetic_operand_number(
-    v: &CellValue,
-    budget: &mut BudgetMeter,
-) -> FunctionResult<f64> {
-    if let Number(number) = v {
-        return Ok(*number);
-    }
-    coerce_arithmetic_number(v, budget)
-}
 /// Compare scalars using source-compatible typed ordering and numeric precision.
 pub(super) fn source_compare(
     a: &CellValue,
@@ -76,10 +66,9 @@ pub(super) fn source_compare(
                 .into());
             }
         }
-        // TODO(coercion-non-argument): [LOW] Numeric comparison treats blank as zero; sharing this normalization with lookup matching would change key semantics.
         let (a, b) = (
-            coerce_arithmetic_number(a, budget)?,
-            coerce_arithmetic_number(b, budget)?,
+            coercev2_arithmetic_number(a, budget)?,
+            coercev2_arithmetic_number(b, budget)?,
         );
         if a == 0.0 && b == 0.0 {
             return Ok(b.is_sign_negative().cmp(&a.is_sign_negative()));
@@ -95,71 +84,48 @@ pub(super) fn source_compare(
     compare(a, b, budget)
 }
 /// Coerce a scalar to a number under shared metered conversion rules.
-pub(super) fn coerce_arithmetic_number(
+pub(super) fn coercev2_arithmetic_number(
     v: &CellValue,
     budget: &mut BudgetMeter,
 ) -> FunctionResult<f64> {
-    if let Some(text) = v.text_ref() {
-        let text = checked_text_view(text, budget)?;
-        return text
-            .trim()
-            .parse::<f64>()
-            .ok()
-            .filter(|n| n.is_finite())
-            .ok_or_else(|| VALUE_ERROR.into());
-    }
-    match v {
-        Number(n) if n.is_finite() => Ok(*n),
-        Number(_) => Err(Num.into()),
-        Blank => Ok(0.),
-        Boolean(b) => Ok(u8::from(*b).into()),
-        Error(e) => Err((*e).into()),
-        Text(_) | CellValue::TextUtf16(_) => Err(VALUE_ERROR.into()),
-    }
+    use poirot_coercionv2::compatibility::{
+        DeferredNumber, NumberPolicy, coercev2_arithmetic_text, coercev2_number,
+    };
+    coercev2_number(v.into(), NumberPolicy::Finite, |input| match input {
+        DeferredNumber::Text(t) => {
+            coercev2_arithmetic_text(&checked_text_view(t, budget)?).map_err(Into::into)
+        }
+        DeferredNumber::Missing => Err(VALUE_ERROR.into()),
+    })
 }
 /// Boolean text predicates operate on units; malformed UTF16 is an ordinary
 /// nonboolean string here, not a failed scalar projection.
-pub(super) fn coerce_logical_boolean(v: &CellValue) -> Result<bool, CellError> {
-    if let Some(text) = v.text_ref() {
-        let equal = |expected: &[u8]| {
-            let length = match text {
-                TextRef::Utf8(t) => t.len(),
-                TextRef::Utf16(u) => u.len(),
-            };
-            length == expected.len()
-                && text
-                    .units()
-                    .zip(expected)
-                    .all(|(unit, byte)| unit <= 127 && (unit as u8).eq_ignore_ascii_case(byte))
-        };
-        return if equal(b"TRUE") {
-            Ok(true)
-        } else if equal(b"FALSE") {
-            Ok(false)
-        } else {
-            Err(VALUE_ERROR)
-        };
-    }
-    match v {
-        Boolean(b) => Ok(*b),
-        Number(n) => Ok(*n != 0.),
-        Blank => Ok(false),
-        Error(e) => Err(*e),
-        _ => Err(VALUE_ERROR),
-    }
+pub(super) fn coercev2_logical_boolean(v: &CellValue) -> Result<bool, CellError> {
+    poirot_coercionv2::compatibility::coercev2_boolean(
+        v.into(),
+        poirot_coercionv2::compatibility::BooleanPolicy {
+            reject_nan: false,
+            blank: true,
+        },
+    )?
+    .ok_or(VALUE_ERROR)
 }
-/// Source OperandResolver consumers reject NaN; lookup range flags keep coerce_logical_boolean().
-pub(super) fn coerce_operand_boolean(
+/// Source OperandResolver consumers reject NaN; lookup range flags keep coercev2_logical_boolean().
+pub(super) fn coercev2_operand_boolean(
     v: &CellValue,
     policy: NumericOutcomePolicy,
 ) -> Result<bool, CellError> {
-    if policy == NumericOutcomePolicy::PinnedPoi7321209 && matches!(v, Number(n) if n.is_nan()) {
-        return Err(VALUE_ERROR);
-    }
-    coerce_logical_boolean(v)
+    poirot_coercionv2::compatibility::coercev2_boolean(
+        v.into(),
+        poirot_coercionv2::compatibility::BooleanPolicy {
+            reject_nan: policy == NumericOutcomePolicy::PinnedPoi7321209,
+            blank: true,
+        },
+    )?
+    .ok_or(VALUE_ERROR)
 }
 /// Render a scalar as checked helper text without replacing isolated UTF-16 surrogates.
-pub(super) fn coerce_formula_text(
+pub(super) fn coercev2_formula_text(
     v: &CellValue,
     budget: &mut BudgetMeter,
 ) -> FunctionResult<String> {
@@ -176,15 +142,11 @@ pub(super) fn coerce_formula_text(
     };
     budget.text(bytes)?;
     budget.charge(WorkKind::TextByte, bytes as u64)?;
-    Ok(match v {
-        Blank => String::new(),
-        // Coercion to formula text uses spreadsheet decimal precision; the
-        // underlying numeric value and any cell display format stay unchanged.
-        Number(n) => poirot_numeric::coerce_number_to_text(*n),
-        Boolean(true) => "TRUE".into(),
-        Boolean(false) => "FALSE".into(),
-        Error(e) => return Err((*e).into()),
-        _ => return Err(VALUE_ERROR.into()),
+    poirot_coercionv2::compatibility::coercev2_text_with(v.into(), |request| match request {
+        poirot_coercionv2::compatibility::DeferredText::Number(n) => {
+            Ok(poirot_coercionv2::compatibility::coercev2_number_to_text(n))
+        }
+        _ => Err(VALUE_ERROR.into()),
     })
 }
 fn rank(v: &CellValue) -> u8 {
@@ -226,10 +188,8 @@ pub(super) fn compare(
     let zero = Number(0.);
     let empty = Text(String::new());
     let false_value = Boolean(false);
-    // TODO(coercion-non-argument): [LOW] Comparison chooses blank type from its counterpart; persisting this normalized value would lose the original blank.
-    let a = coerce_comparison_blank(a, b, &zero, &empty, &false_value);
-    // TODO(coercion-non-argument): [LOW] Comparison chooses blank type from its counterpart; persisting this normalized value would lose the original blank.
-    let b = coerce_comparison_blank(b, a, &zero, &empty, &false_value);
+    let a = coercev2_comparison_blank(a, b, &zero, &empty, &false_value);
+    let b = coercev2_comparison_blank(b, a, &zero, &empty, &false_value);
     if let (Some(a), Some(b)) = (a.text_ref(), b.text_ref()) {
         let units = a
             .storage_bytes()
@@ -295,24 +255,191 @@ pub(super) fn format_failure(error: poirot_format::FormatError) -> FunctionFailu
 }
 
 /// Comparison converts blanks using the counterpart's type, without parsing text.
-fn coerce_comparison_blank<'a>(
+fn coercev2_comparison_blank<'a>(
     value: &'a CellValue,
     counterpart: &CellValue,
     zero: &'a CellValue,
     empty: &'a CellValue,
     false_value: &'a CellValue,
 ) -> &'a CellValue {
-    if matches!(value, Blank) {
-        match rank(counterpart) {
-            1 => empty,
-            2 => false_value,
-            _ => zero,
-        }
-    } else {
-        value
-    }
+    poirot_coercionv2::compatibility::coercev2_comparison_blank(
+        value,
+        counterpart,
+        zero,
+        empty,
+        false_value,
+    )
 }
 
 #[cfg(test)]
 #[path = "core_projection_tests.rs"]
 mod tests;
+
+impl Session<'_> {
+    /// Parse admitted numeric text with explicit locale and metered grammar work.
+    pub(super) fn coercev2_formatted_text(
+        &mut self,
+        text: &str,
+    ) -> FunctionResult<poirot_coercionv2::compatibility::NumericTextDecision> {
+        self.read(DependencyRead::NumberLocale);
+        poirot_coercionv2::coercev2_formatted_number(text, self.number_locale, |bytes, work| {
+            self.budget.text(bytes)?;
+            self.budget.charge(WorkKind::TextByte, work)?;
+            Ok::<_, FunctionFailure>(())
+        })
+    }
+    /// Scalar admission converts only when an argument requests a number.
+    pub(super) fn coercev2_scalar_number(&mut self, value: &CellValue) -> FunctionResult<f64> {
+        use poirot_coercionv2::compatibility::{
+            DeferredNumber, NumberPolicy, NumericTextDecision, coercev2_number,
+        };
+        coercev2_number(
+            value.into(),
+            NumberPolicy::Finite,
+            |request| match request {
+                DeferredNumber::Text(text) => {
+                    let text = checked_text_view(text, &mut self.budget)?;
+                    match self.coercev2_formatted_text(&text)? {
+                        NumericTextDecision::Number(result) => result.map_err(Into::into),
+                        NumericTextDecision::DateTime => self.coercev2_numeric_date_time(&text),
+                    }
+                }
+                DeferredNumber::Missing => Err(VALUE_ERROR.into()),
+            },
+        )
+    }
+    /// Existing numeric operator inputs retain their bits under the pinned policy.
+    pub(super) fn coercev2_operator_number(&mut self, value: &CellValue) -> FunctionResult<f64> {
+        if self.numeric_policy == NumericOutcomePolicy::PinnedPoi7321209
+            && let Number(n) = value
+        {
+            return Ok(*n);
+        }
+        self.coercev2_scalar_number(value)
+    }
+}
+
+impl Session<'_> {
+    fn record_numeric_date_effects(
+        &mut self,
+        effects: poirot_coercionv2::date_time::Effects,
+        key: Option<(usize, CellAddress)>,
+    ) -> FunctionResult<()> {
+        if effects == poirot_coercionv2::date_time::Effects::default() {
+            return Ok(());
+        }
+        use crate::run::{ContextRead, DependencyRead};
+        if effects.default_year {
+            self.read(DependencyRead::ContextField(ContextRead::AsOf));
+            self.read(DependencyRead::ContextField(ContextRead::UtcOffset));
+        }
+        if effects.timezone {
+            self.read(DependencyRead::ContextField(ContextRead::UtcOffset));
+        }
+        // Conservative locale category; coercion retains its pinned locale.
+        if effects.locale {
+            self.read(DependencyRead::ContextField(ContextRead::DateOrder));
+        }
+        let Some(key) = key else { return Ok(()) };
+        if !self.numeric_date_effects.contains_key(&key) {
+            self.budget.check_allocation(
+                self.numeric_date_effects
+                    .len()
+                    .checked_add(1)
+                    .ok_or_else(|| {
+                        unsupported_numeric_date(
+                            CapabilityId::DateParsing,
+                            "numeric date dependency size overflow",
+                        )
+                    })?,
+            )?;
+            self.budget.charge(WorkKind::Materialization, 1)?;
+        }
+        let accumulated = self.numeric_date_effects.entry(key).or_default();
+        accumulated.default_year |= effects.default_year;
+        accumulated.locale |= effects.locale;
+        accumulated.timezone |= effects.timezone;
+        Ok(())
+    }
+    pub(super) fn coercev2_numeric_date_time(&mut self, text: &str) -> FunctionResult<f64> {
+        self.coercev2_numeric_date_time_at(text, self.consumer.map(|t| (t.sheet, t.address)))
+    }
+    pub(super) fn coercev2_numeric_date_time_at(
+        &mut self,
+        text: &str,
+        key: Option<(usize, CellAddress)>,
+    ) -> FunctionResult<f64> {
+        use poirot_coercionv2::date_time::{Context, LocalePolicy, Outcome, TimezonePolicy};
+        let mut context = Context {
+            // Sentinel avoids even consulting the frozen clock for explicit-year
+            // dates, standalone times, and ordinary rejected strings.
+            default_year: 0,
+            locale: LocalePolicy::English,
+            timezone: TimezonePolicy::FixedOffsetSeconds(
+                self.context.localization.utc_offset_seconds,
+            ),
+        };
+        self.budget
+            .charge(WorkKind::HelperOperation, text.len() as u64)?;
+        let (mut outcome, effects) =
+            poirot_coercionv2::date_time::coercev2_date_time_with_effects(text, context);
+        self.record_numeric_date_effects(effects, key)?;
+        if matches!(
+            outcome,
+            Outcome::Unsupported("default year outside proven calendar range")
+        ) {
+            context.default_year = self.numeric_default_year()?;
+            self.budget
+                .charge(WorkKind::HelperOperation, text.len() as u64)?;
+            let (resolved, effects) =
+                poirot_coercionv2::date_time::coercev2_date_time_with_effects(text, context);
+            self.record_numeric_date_effects(effects, key)?;
+            outcome = resolved;
+        }
+        match outcome {
+            Outcome::Valid { value, .. } => Ok(value),
+            Outcome::Rejected => Err(VALUE_ERROR.into()),
+            Outcome::Unsupported(detail) => {
+                Err(unsupported_numeric_date(CapabilityId::DateParsing, detail))
+            }
+        }
+    }
+    fn numeric_default_year(&self) -> FunctionResult<i32> {
+        let context = self.context;
+        let seconds = crate::clock::unix_seconds(context.as_of_time)
+            + f64::from(context.localization.utc_offset_seconds);
+        let days = (seconds / 86400.0).floor();
+        // Bound the civil algorithm before any float/integer conversion.
+        // These endpoints are Gregorian 0001-01-01 and 10001-01-01.
+        if !(-719162.0..2933263.0).contains(&days) {
+            return Err(unsupported_numeric_date(
+                CapabilityId::DateParsing,
+                "numeric date default year requires a supported frozen clock",
+            ));
+        }
+        let z = days as i64 + 719468;
+        let era = z.div_euclid(146097);
+        let day_of_era = z - era * 146097;
+        let year_of_era =
+            (day_of_era - day_of_era / 1460 + day_of_era / 36524 - day_of_era / 146096) / 365;
+        let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
+        let month = (5 * day_of_year + 2) / 153;
+        let year = year_of_era + era * 400 + i64::from(month >= 10);
+        if !(1..=10000).contains(&year) {
+            return Err(unsupported_numeric_date(
+                CapabilityId::DateParsing,
+                "numeric date default year outside supported calendar",
+            ));
+        }
+        Ok(year as i32)
+    }
+}
+
+fn unsupported_numeric_date(capability: CapabilityId, detail: &'static str) -> FunctionFailure {
+    EvaluationFailure::UnsupportedCapability {
+        capability,
+        source: None,
+        detail: detail.into(),
+    }
+    .into()
+}

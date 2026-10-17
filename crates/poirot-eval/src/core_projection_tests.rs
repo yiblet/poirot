@@ -116,3 +116,42 @@ fn formatter_failure_causes_remain_distinct() {
             .contains("retained source resource ceiling")
     );
 }
+
+#[test]
+fn formatted_number_work_admission_is_operational_and_utf16_equivalent() {
+    let limits = EvaluationBudgets {
+        run_work: 100,
+        cell_work: 100,
+        ..EvaluationBudgets::default()
+    };
+    for formula in [
+        "IFERROR(A1+1,7)",
+        "IFERROR(VALUE(A1),7)",
+        "IFERROR(ABS(A1),7)",
+    ] {
+        assert!(
+            matches!(
+                eval(formula, Text("1,234.50%".into()), limits),
+                Err(EvaluationFailure::Budget(_))
+            ),
+            "{formula}"
+        );
+    }
+    for formula in ["A1+1", "VALUE(A1)", "ABS(A1)"] {
+        let expected = eval(
+            formula,
+            Text("1,234.50%".into()),
+            EvaluationBudgets::default(),
+        )
+        .unwrap();
+        assert_eq!(
+            eval(
+                formula,
+                CellValue::TextUtf16(poirot_model::ExcelText::from("1,234.50%")),
+                EvaluationBudgets::default()
+            )
+            .unwrap(),
+            expected
+        );
+    }
+}

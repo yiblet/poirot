@@ -46,6 +46,7 @@ impl<'a> Session<'a> {
             inputs: None,
             context,
             currency: None,
+            number_locale: &poirot_coercionv2::NumberLocaleV2::EN_US,
             numeric_policy: NumericOutcomePolicy::LegacyFinite,
             builtin_policy: BuiltinSemanticsPolicy::default(),
             array_result_policy: ArrayResultPolicy::default(),
@@ -145,9 +146,7 @@ impl<'a> Session<'a> {
         let result = (|| {
             self.budget.text(prepared.source().len())?;
             let value = self.prepared_expression(target.sheet, target.address, prepared)?;
-            let value =
-                // TODO(coercion-non-argument): [MEDIUM] Final blank becomes zero; moving this earlier would change nested consumers.
-                coerce_cell_publication(self.result_scalar(target.sheet, target.address, value)?);
+            let value = self.result_scalar(target.sheet, target.address, value)?;
             Ok(value)
         })();
         self.budget.pop_cell();
@@ -174,9 +173,7 @@ impl<'a> Session<'a> {
         self.run_usage.formula_executions += 1;
         let result = self
             .bytecode_expr(target.sheet, target.address, formula.bytecode())
-            .and_then(|v| self.result_scalar(target.sheet, target.address, v))
-            // TODO(coercion-non-argument): [MEDIUM] Final blank becomes zero; moving this earlier would change nested consumers.
-            .map(coerce_cell_publication);
+            .and_then(|v| self.result_scalar(target.sheet, target.address, v));
         self.budget.pop_cell();
         self.consumer = previous;
         result
@@ -408,10 +405,7 @@ impl<'a> Session<'a> {
                             }
                         };
                         let value = self.prepared_expression(sheet, address, prepared)?;
-                        // TODO(coercion-non-argument): [MEDIUM] Final blank becomes zero; moving this earlier would change nested consumers.
-                        Ok(coerce_cell_publication(
-                            self.result_scalar(sheet, address, value)?,
-                        ))
+                        self.result_scalar(sheet, address, value)
                     }
                 },
             }?;

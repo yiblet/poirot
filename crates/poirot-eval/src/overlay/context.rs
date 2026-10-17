@@ -10,6 +10,8 @@ pub struct EvaluationContext {
     pub localization: crate::Localization,
     /// Formatting inputs consumed by functions that render values as text.
     pub formatting: crate::FormattingConfiguration,
+    /// Explicit numeric argument input tokens.
+    pub number_locale: crate::NumberLocaleV2,
     /// Limits on work and allocation during this evaluation.
     pub budgets: crate::EvaluationBudgets,
     /// Limits on memoized values retained by the evaluation.
@@ -28,6 +30,7 @@ impl From<crate::EvaluationInputs> for EvaluationContext {
             randomness_seed: inputs.randomness_seed,
             localization: inputs.localization,
             formatting: Default::default(),
+            number_locale: Default::default(),
             budgets: Default::default(),
             retention: Default::default(),
         }
@@ -64,6 +67,7 @@ impl EvaluationContext {
         ContextKey {
             inputs: self.inputs().fingerprint(),
             formatting: self.formatting.clone(),
+            number_locale: self.number_locale.clone(),
         }
     }
 }
@@ -74,6 +78,9 @@ pub(crate) struct ContextKey {
     pub(super) inputs: crate::ContextFingerprint,
     /// Formatting identity, checked for cells that consumed formatting.
     pub(super) formatting: crate::FormattingConfiguration,
+    /// Numeric input token identity for cells that parsed text.
+    #[serde(default)]
+    pub(super) number_locale: crate::NumberLocaleV2,
 }
 
 /// Parsing and computation rules owned by Overlay or a direct Evaluation workspace.

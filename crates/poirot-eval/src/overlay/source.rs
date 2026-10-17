@@ -222,6 +222,7 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         session.preparation_policy = Some(&self.preparation);
         session.extensions = self.extensions.as_ref().map(Registry::get);
         session.currency = context.formatting.currency();
+        session.number_locale = &context.number_locale;
         session.text_policy = self.policy.text;
         session.numeric_policy = self.policy.numeric;
         session.builtin_policy = self.policy.builtin;

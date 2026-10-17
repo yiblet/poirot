@@ -211,10 +211,7 @@ impl<'a> Session<'a> {
             }
             return Ok(
                 // TODO(coercion-non-argument): [LOW] Unary numeric coercion can erase blank or text identity if applied before the operator consumes it.
-                match semantic(core_projection::coerce_arithmetic_operand_number(
-                    &value,
-                    &mut self.budget,
-                ))? {
+                match semantic(self.coercev2_operator_number(&value))? {
                     Ok(n) => match op {
                         // SAFETY: ImplicitIntersection returns before either numeric unary match in this function.
                         UnaryOp::ImplicitIntersection => unreachable!("selected above"),
@@ -238,7 +235,7 @@ impl<'a> Session<'a> {
         }
         Ok(
             // TODO(coercion-non-argument): [LOW] Unary numeric coercion must stay at the operator; applying it during operand acquisition would affect selectors.
-            match semantic(coerce_arithmetic_number(&value, &mut self.budget))? {
+            match semantic(self.coercev2_scalar_number(&value))? {
                 Ok(number) => finite(match op {
                     // SAFETY: ImplicitIntersection returns before either numeric unary match in this function.
                     UnaryOp::ImplicitIntersection => unreachable!("selected above"),

@@ -269,10 +269,14 @@ impl Session<'_> {
         left: Value,
         right: Value,
     ) -> EvalResult<Value> {
-        if let Value::Scalar(super::Error(error)) = &left {
+        if let Value::Scalar(super::Error(error)) | Value::SelectedScalar(super::Error(error), _) =
+            &left
+        {
             return Ok(err(*error));
         }
-        if let Value::Scalar(super::Error(error)) = &right {
+        if let Value::Scalar(super::Error(error)) | Value::SelectedScalar(super::Error(error), _) =
+            &right
+        {
             return Ok(err(*error));
         }
         let (Some(left), Some(right)) = (self.signed_areas(left)?, self.signed_areas(right)?)

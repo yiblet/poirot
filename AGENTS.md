@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-Poirot is a Rust 2024 workspace for reading, editing, evaluating, and writing Excel workbooks. `src/lib.rs` exposes the public facade; `src/artifact/` handles snapshot files. Component crates in `crates/` separate workbook models, formula parsing, evaluation, formatting, and XLS/XLSX I/O. Spreadsheet functions live in `poirot-functions-*` crates. Keep their algorithms independent of workbook and evaluator implementations; internal dependencies are limited to function-family crates and `poirot-numeric`.
+Poirot is a Rust 2024 workspace for reading, editing, evaluating, and writing Excel workbooks. `src/lib.rs` exposes the public facade; `src/artifact/` handles snapshot files. Component crates in `crates/` separate workbook models, formula parsing, evaluation, formatting, and XLS/XLSX I/O. Spreadsheet functions live in `poirot-functions-*` crates. Keep their algorithms independent of workbook and evaluator implementations; internal dependencies are limited to function-family crates, `poirot-numeric`, and the workbook-independent `poirot-coercionv2`.
 
 Root `tests/` exercises public workflows; individual crates contain unit and integration tests. Compatibility fixtures live in `crates/poirot-test-fods/corpus/`, authored JSON workbook scenarios in `crates/poirot-test-json/corpus/`, and Excel specifications in `crates/poirot-test-excel-specs/test-specs/`. See `examples/` for runnable workflows and `docs/` for API and persistence contracts.
 
@@ -35,8 +35,8 @@ Use rustfmt's standard formatting and four-space indentation. Use `snake_case` f
 ## Coercion Boundaries
 
 - Preserve scalar types through reads, selection, memoization, and lookup result forwarding. Convert only when the consuming operation requests a specific policy.
-- Name every semantic conversion function or method `coerce_<consumer_or_policy>...`; do not hide the prefix with import aliases or generic function-pointer names. Keep different grammars, origins, omission policies, and budget effects explicit.
-- Mark every coercion outside spreadsheet-function argument handling with an adjacent `// TODO(coercion-non-argument): [HIGH|MEDIUM|LOW] <potential issue>` comment.
+- Put argument conversion policies in `poirot-coercionv2` and name migrated conversion functions or methods `coercev2_<consumer_or_policy>...`; retain `coerce_...` only for audited non-argument conversions; do not hide the prefix with import aliases or generic function-pointer names. Keep different grammars, origins, omission policies, and budget effects explicit.
+- Mark every coercion outside spreadsheet-function and operator argument handling with an adjacent `// TODO(coercion-non-argument): [HIGH|MEDIUM|LOW] <potential issue>` comment.
 - Run `python3 tools/test_coercion_architecture.py` when changing conversion boundaries. See `docs/coercion-boundaries.md` for the conventions and existing policy inventory.
 
 ## Testing Guidelines

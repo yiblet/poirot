@@ -70,9 +70,9 @@ impl EvaluationPort for MatrixPort<'_, '_> {
     fn check_text(&mut self, bytes: usize) -> Result<(), EvaluationFailure> {
         self.host.check_text(bytes).map_err(operational_only)
     }
-    fn coerce_number_text(&mut self, text: &str) -> Result<f64, Failure<EvaluationFailure>> {
+    fn coercev2_number_text(&mut self, text: &str) -> Result<f64, Failure<EvaluationFailure>> {
         self.host
-            .coerce_number_text(text, NumericPolicy::PinnedPoi)
+            .coercev2_number_text(text, NumericPolicy::PinnedPoi)
             .map_err(port_failure)
     }
     fn budget_exceeded(&mut self) -> EvaluationFailure {
@@ -119,10 +119,7 @@ pub(crate) fn execute(
                     Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
                     Err(FunctionFailure::Operational(error)) => return Err(error),
                 };
-                output.push(coerce_transpose_reference_blank(
-                    value,
-                    shape.kind == OperandKind::Reference,
-                ));
+                output.push(value);
             }
         }
         return Ok(Value::Array(ArrayView::anchored(rows, Some(address))));
@@ -186,15 +183,6 @@ pub(crate) fn execute(
             CapabilityId::FunctionAdapter,
             format!("pinned matrix source capability: {capability:?}"),
         )),
-    }
-}
-
-/// The documented TRANSPOSE profile materializes referenced blanks as zero.
-fn coerce_transpose_reference_blank(value: CellValue, referenced: bool) -> CellValue {
-    if referenced && value == Blank {
-        Number(0.)
-    } else {
-        value
     }
 }
 

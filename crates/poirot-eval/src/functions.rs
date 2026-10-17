@@ -48,8 +48,8 @@ impl Session<'_> {
                 self.budget.allocation(1)?;
                 Ok(Ok(vec![vec![coerce_legacy_missing_blank()]]))
             }
-            Value::Scalar(Error(error)) => Ok(Err(error)),
-            Value::Scalar(value) => {
+            Value::Scalar(Error(error)) | Value::SelectedScalar(Error(error), _) => Ok(Err(error)),
+            Value::Scalar(value) | Value::SelectedScalar(value, _) => {
                 self.budget.allocation(1)?;
                 Ok(Ok(vec![vec![value]]))
             }

@@ -5,6 +5,9 @@ use serde::{Deserialize, Serialize};
 #[serde(deny_unknown_fields)]
 pub struct Suite {
     pub schema_version: u8,
+    /// Explicit suite contract; omitted metadata preserves pinned legacy behavior.
+    #[serde(default)]
+    pub builtin_policy: poirot::eval::BuiltinSemanticsPolicy,
     pub workbook: WorkbookDefinition,
     pub scenarios: Vec<Scenario>,
 }

@@ -12,42 +12,8 @@ fn port_failure(failure: FunctionFailure) -> Failure<EvaluationFailure> {
 }
 
 /// OperandResolver's decimal grammar deliberately excludes Java hex and suffixes.
-fn decimal_text(text: &str) -> Option<f64> {
-    let text = text.trim_matches(|c: char| (c as u32) <= 32);
-    let bytes = text.as_bytes();
-    let mut index = usize::from(matches!(bytes.first(), Some(b'+' | b'-')));
-    let mut digits = 0;
-    while bytes.get(index).is_some_and(u8::is_ascii_digit) {
-        index += 1;
-        digits += 1;
-    }
-    if bytes.get(index) == Some(&b'.') {
-        index += 1;
-        while bytes.get(index).is_some_and(u8::is_ascii_digit) {
-            index += 1;
-            digits += 1;
-        }
-    }
-    if digits == 0 {
-        return None;
-    }
-    if matches!(bytes.get(index), Some(b'e' | b'E')) {
-        index += 1;
-        if matches!(bytes.get(index), Some(b'+' | b'-')) {
-            index += 1;
-        }
-        let start = index;
-        while bytes.get(index).is_some_and(u8::is_ascii_digit) {
-            index += 1;
-        }
-        if start == index {
-            return None;
-        }
-    }
-    if index != bytes.len() {
-        return None;
-    }
-    poirot_numeric::parse_java_number(text).filter(|number| number.is_finite())
+fn coercev2_engineering_decimal_text(text: &str) -> Option<f64> {
+    poirot_coercionv2::compatibility::coercev2_financial_decimal_text(text)
 }
 
 impl EvaluationPort for CallHost<'_, '_> {
@@ -91,19 +57,22 @@ impl EvaluationPort for CallHost<'_, '_> {
     fn check_text(&mut self, bytes: usize) -> Result<(), EvaluationFailure> {
         CallHost::check_text(self, bytes).map_err(operational_only)
     }
-    fn coerce_number_to_text(&mut self, number: f64) -> Result<String, Failure<EvaluationFailure>> {
-        self.coerce_number_to_text(number, NumericPolicy::PinnedPoi)
+    fn coercev2_number_to_text(
+        &mut self,
+        number: f64,
+    ) -> Result<String, Failure<EvaluationFailure>> {
+        self.coercev2_number_to_text(number, NumericPolicy::PinnedPoi)
             .map_err(port_failure)
     }
-    fn coerce_decimal_text(
+    fn coercev2_decimal_text(
         &mut self,
         text: &str,
     ) -> Result<Option<f64>, Failure<EvaluationFailure>> {
         CallHost::check_text(self, text.len()).map_err(port_failure)?;
-        Ok(decimal_text(text))
+        Ok(coercev2_engineering_decimal_text(text))
     }
-    fn coerce_number_text(&mut self, text: &str) -> Result<f64, Failure<EvaluationFailure>> {
-        CallHost::coerce_number_text(self, text, NumericPolicy::PinnedPoi).map_err(port_failure)
+    fn coercev2_number_text(&mut self, text: &str) -> Result<f64, Failure<EvaluationFailure>> {
+        CallHost::coercev2_number_text(self, text, NumericPolicy::PinnedPoi).map_err(port_failure)
     }
 }
 
@@ -142,14 +111,17 @@ pub(crate) fn execute(
 
 #[cfg(test)]
 mod source_grammar_tests {
-    use super::decimal_text;
+    use super::coercev2_engineering_decimal_text;
 
     #[test]
     fn operand_resolver_decimal_grammar_has_no_java_literal_extensions() {
         // OperandResolver.java fpRegex and parseDouble: ASCII decimal grammar,
         // control-space trimming, finite results, and no date fallback here.
         for text in ["1", "1.", ".5", " +.5e1 ", "\t-0\r", "1e-400"] {
-            assert!(decimal_text(text).is_some(), "{text:?}");
+            assert!(
+                coercev2_engineering_decimal_text(text).is_some(),
+                "{text:?}"
+            );
         }
         for text in [
             "",
@@ -163,7 +135,7 @@ mod source_grammar_tests {
             "1e",
             "2020-01-01",
         ] {
-            assert_eq!(decimal_text(text), None, "{text:?}");
+            assert_eq!(coercev2_engineering_decimal_text(text), None, "{text:?}");
         }
     }
 }

@@ -1,7 +1,7 @@
 //! Normal, Poisson and Student-t scalar protocols.
-use super::coercion::{
-    coerce_statistics_argument_number, coerce_statistics_boolean,
-    coerce_statistics_required_boolean, coerce_statistics_text_number, collapse, work,
+use super::coercionv2::{
+    coercev2_statistics_argument_number, coercev2_statistics_boolean,
+    coercev2_statistics_required_boolean, coercev2_statistics_text_number, collapse, work,
 };
 use super::{EvaluationPort, Failure, StatisticsFunction};
 use poirot_functions_statistics as domain;
@@ -46,16 +46,17 @@ pub(super) fn execute<P: EvaluationPort>(
     use StatisticsFunction::*;
     let result = match f {
         Poisson | PoissonDist => {
-            let x = coerce_statistics_argument_number(p, args.first().ok_or(CellError::Value)?)
+            let x = coercev2_statistics_argument_number(p, args.first().ok_or(CellError::Value)?)
                 .map_err(|e| collapse(e, CellError::Value))?;
-            let mean = coerce_statistics_argument_number(p, args.get(1).ok_or(CellError::Value)?)?;
+            let mean =
+                coercev2_statistics_argument_number(p, args.get(1).ok_or(CellError::Value)?)?;
             if x == 0.0 && mean == 0.0 {
                 return Ok(1.0);
             }
             if x < 0.0 || mean < 0.0 {
                 return Err(CellError::Num.into());
             }
-            let c = coerce_statistics_boolean(p, args.get(2).ok_or(CellError::Value)?)?;
+            let c = coercev2_statistics_boolean(p, args.get(2).ok_or(CellError::Value)?)?;
             // POI reads cumulative before Commons constructs the distribution.
             // Its unchecked mean-zero constructor exception is not catchable NUM.
             if mean == 0.0 {
@@ -75,14 +76,17 @@ pub(super) fn execute<P: EvaluationPort>(
             );
         }
         NormDist | NormDistLegacy => {
-            let x = coerce_statistics_text_number(p, args.first().ok_or(CellError::Value)?)?;
-            let m = coerce_statistics_text_number(p, args.get(1).ok_or(CellError::Value)?)?;
-            let s = coerce_statistics_text_number(p, args.get(2).ok_or(CellError::Value)?)?;
+            let x = coercev2_statistics_text_number(p, args.first().ok_or(CellError::Value)?)?;
+            let m = coercev2_statistics_text_number(p, args.get(1).ok_or(CellError::Value)?)?;
+            let s = coercev2_statistics_text_number(p, args.get(2).ok_or(CellError::Value)?)?;
             if s <= 0.0 {
                 return Err(CellError::Num.into());
             }
-            let c =
-                coerce_statistics_required_boolean(p, args.get(3).ok_or(CellError::Value)?, true)?;
+            let c = coercev2_statistics_required_boolean(
+                p,
+                args.get(3).ok_or(CellError::Value)?,
+                true,
+            )?;
             work(p, 512)?;
             if p.pinned_numeric_outcomes() {
                 return kernel(
@@ -96,12 +100,12 @@ pub(super) fn execute<P: EvaluationPort>(
             );
         }
         NormInv | NormInvLegacy => {
-            let x = coerce_statistics_text_number(p, args.first().ok_or(CellError::Value)?)?;
+            let x = coercev2_statistics_text_number(p, args.first().ok_or(CellError::Value)?)?;
             if x <= 0.0 || x >= 1.0 {
                 return Err(CellError::Num.into());
             }
-            let m = coerce_statistics_text_number(p, args.get(1).ok_or(CellError::Value)?)?;
-            let s = coerce_statistics_text_number(p, args.get(2).ok_or(CellError::Value)?)?;
+            let m = coercev2_statistics_text_number(p, args.get(1).ok_or(CellError::Value)?)?;
+            let s = coercev2_statistics_text_number(p, args.get(2).ok_or(CellError::Value)?)?;
             if s <= 0.0 {
                 return Err(CellError::Num.into());
             }
@@ -113,7 +117,7 @@ pub(super) fn execute<P: EvaluationPort>(
             }
         }
         NormSInv | NormSInvLegacy => {
-            let x = coerce_statistics_text_number(p, args.first().ok_or(CellError::Value)?)?;
+            let x = coercev2_statistics_text_number(p, args.first().ok_or(CellError::Value)?)?;
             if x <= 0.0 || x >= 1.0 {
                 return Err(CellError::Num.into());
             }
@@ -125,7 +129,7 @@ pub(super) fn execute<P: EvaluationPort>(
             }
         }
         NormSDist | NormSDistLegacy => {
-            let x = coerce_statistics_text_number(p, args.first().ok_or(CellError::Value)?)?;
+            let x = coercev2_statistics_text_number(p, args.first().ok_or(CellError::Value)?)?;
             if x < 0.0 {
                 return Err(CellError::Num.into());
             }
@@ -144,30 +148,31 @@ pub(super) fn execute<P: EvaluationPort>(
             );
         }
         Standardize => {
-            let x = coerce_statistics_text_number(p, args.first().ok_or(CellError::Value)?)?;
-            let m = coerce_statistics_text_number(p, args.get(1).ok_or(CellError::Value)?)?;
-            let s = coerce_statistics_text_number(p, args.get(2).ok_or(CellError::Value)?)?;
+            let x = coercev2_statistics_text_number(p, args.first().ok_or(CellError::Value)?)?;
+            let m = coercev2_statistics_text_number(p, args.get(1).ok_or(CellError::Value)?)?;
+            let s = coercev2_statistics_text_number(p, args.get(2).ok_or(CellError::Value)?)?;
             domain::standardize(x, m, s)
         }
         TDistLegacy | TDist | TDistRt | TDist2T => {
-            let x = coerce_statistics_text_number(p, args.first().ok_or(CellError::Value)?)?;
+            let x = coercev2_statistics_text_number(p, args.first().ok_or(CellError::Value)?)?;
             if matches!(f, TDistLegacy | TDist2T) && x < 0.0 {
                 return Err(CellError::Num.into());
             }
-            let degrees = coerce_statistics_text_number(p, args.get(1).ok_or(CellError::Value)?)?;
+            let degrees = coercev2_statistics_text_number(p, args.get(1).ok_or(CellError::Value)?)?;
             if (degrees as i32) < 1 {
                 return Err(CellError::Num.into());
             }
             work(p, 512)?;
             if f == TDistLegacy {
-                let tails = coerce_statistics_text_number(p, args.get(2).ok_or(CellError::Value)?)?;
+                let tails =
+                    coercev2_statistics_text_number(p, args.get(2).ok_or(CellError::Value)?)?;
                 domain::legacy_t_dist(x, degrees, tails)
             } else {
                 let kind = match f {
                     TDistRt => domain::StudentTKind::RightTail,
                     TDist2T => domain::StudentTKind::TwoTails,
                     _ => {
-                        if coerce_statistics_required_boolean(
+                        if coercev2_statistics_required_boolean(
                             p,
                             args.get(2).ok_or(CellError::Value)?,
                             false,
@@ -191,8 +196,8 @@ pub(super) fn excel_standard_normal<P: EvaluationPort>(
     p: &mut P,
     args: &[P::Argument],
 ) -> Result<f64, Failure<P::Operational>> {
-    let x = coerce_statistics_argument_number(p, args.first().ok_or(CellError::Value)?)?;
-    let cumulative = super::coercion::coerce_statistics_documented_boolean(
+    let x = coercev2_statistics_argument_number(p, args.first().ok_or(CellError::Value)?)?;
+    let cumulative = super::coercionv2::coercev2_statistics_documented_boolean(
         p,
         args.get(1).ok_or(CellError::Value)?,
     )?;

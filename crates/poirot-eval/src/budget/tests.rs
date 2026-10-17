@@ -192,7 +192,7 @@ fn matrix_and_text_limits_abort_before_growth_and_dense_reads() {
     let EvaluationOutcome::Complete { value, usage } = outcome else {
         panic!("indexed reference must complete: {outcome:?}")
     };
-    assert_eq!(value, CellValue::Number(0.));
+    assert_eq!(value, CellValue::Blank);
     assert_eq!(usage.cell_reads, 2);
     // Two endpoint descriptors, one combined range, and two session memo entries.
     // No six-cell dense table reservation is admitted; each reservation fits cap 2.

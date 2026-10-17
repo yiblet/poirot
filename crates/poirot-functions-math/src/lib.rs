@@ -27,13 +27,16 @@ pub fn approximate(n: f64) -> f64 {
         return n;
     }
     // TODO(coercion-non-argument): [LOW] Decimal normalization round-trips a numeric intermediate through 15-digit text and can discard binary64 precision.
-    poirot_numeric::coerce_number_to_text(n)
+    poirot_coercionv2::compatibility::coercev2_number_to_text(n)
         .parse()
         .unwrap_or(f64::NAN)
 }
 fn decimal(n: f64) -> Result<BigDecimal, CellError> {
     // TODO(coercion-non-argument): [LOW] Decimal normalization round-trips a numeric intermediate through 15-digit text and can discard binary64 precision.
-    BigDecimal::from_str(&poirot_numeric::coerce_number_to_text(n)).map_err(|_| CellError::Num)
+    BigDecimal::from_str(&poirot_coercionv2::compatibility::coercev2_number_to_text(
+        n,
+    ))
+    .map_err(|_| CellError::Num)
 }
 fn truncate(n: f64) -> f64 {
     approximate(n).trunc()

@@ -1,6 +1,6 @@
 use crate::operands::{
-    charge, checked_product, coerce_lookup_boolean, coerce_lookup_integer, coerce_lookup_text,
-    missing, num, scalar, Arguments,
+    charge, checked_product, coercev2_lookup_boolean, coercev2_lookup_integer,
+    coercev2_lookup_text, missing, num, scalar, Arguments,
 };
 use crate::{
     parse_dynamic_reference, Context, Error, Failure, Reference, ReferenceKind, Scalar,
@@ -22,8 +22,8 @@ pub(super) fn address(
     if !(2..=5).contains(&args.len()) {
         return Err(Error::Value.into());
     }
-    let row = coerce_lookup_integer(scalar(&args.get(0, c, w)?, c, w)?, false, w)?;
-    let col = coerce_lookup_integer(scalar(&args.get(1, c, w)?, c, w)?, false, w)?;
+    let row = coercev2_lookup_integer(scalar(&args.get(0, c, w)?, c, w)?, false, w)?;
+    let col = coercev2_lookup_integer(scalar(&args.get(1, c, w)?, c, w)?, false, w)?;
     if row < 1 || col < 1 {
         return Err(Error::Value.into());
     }
@@ -32,7 +32,7 @@ pub(super) fn address(
         if missing(&value) {
             1
         } else {
-            coerce_lookup_integer(scalar(&value, c, w)?, false, w)?
+            coercev2_lookup_integer(scalar(&value, c, w)?, false, w)?
         }
     } else {
         1
@@ -46,7 +46,7 @@ pub(super) fn address(
         if missing(&value) {
             true
         } else {
-            coerce_lookup_boolean(scalar(&value, c, w)?)?
+            coercev2_lookup_boolean(scalar(&value, c, w)?)?
         }
     } else {
         true
@@ -56,7 +56,7 @@ pub(super) fn address(
     if args.len() == 5 {
         let value = args.get(4, c, w)?;
         if !missing(&value) {
-            let name = coerce_lookup_text(&scalar(&value, c, w)?, w)?;
+            let name = coercev2_lookup_text(&scalar(&value, c, w)?, w)?;
             if name.contains(['\n', '\r', '\t']) {
                 return Err(Failure::Unsupported(
                     Unsupported::AddressSheetNameControlCharacter,
@@ -117,7 +117,7 @@ pub(super) fn sheet(
         None => c.sheet,
         Some(Value::Reference(r)) => r.first_sheet,
         Some(Value::SignedReference(r)) => r.first_sheet,
-        Some(Value::Scalar(Scalar::Text(name))) => w
+        Some(Value::Scalar(Scalar::Text(name)) | Value::SelectedScalar(Scalar::Text(name), _)) => w
             .sheet_index(&name)?
             .ok_or(Failure::Spreadsheet(Error::Na))?,
         _ => return Err(Error::Na.into()),
@@ -153,7 +153,10 @@ pub(super) fn single(
                 if found.is_some() {
                     return Err(Error::Value.into());
                 }
-                found = Some(Value::Scalar(r.read(row, col, w)?));
+                found = Some(Value::SelectedScalar(
+                    r.read(row, col, w)?,
+                    poirot_coercionv2::Origin::Reference,
+                ));
             }
             continue;
         }
@@ -168,7 +171,10 @@ pub(super) fn single(
                 if found.is_some() {
                     return Err(Error::Value.into());
                 }
-                found = Some(Value::Scalar(w.cell(&r, r.first_sheet, row, col)?));
+                found = Some(Value::SelectedScalar(
+                    w.cell(&r, r.first_sheet, row, col)?,
+                    poirot_coercionv2::Origin::Reference,
+                ));
             }
         }
     }
@@ -212,20 +218,22 @@ pub(super) fn offset(
                 r.source_height(),
                 r.source_width(),
             ),
-            Value::Scalar(Scalar::Error(e)) => return Err((*e).into()),
+            Value::Scalar(Scalar::Error(e)) | Value::SelectedScalar(Scalar::Error(e), _) => {
+                return Err((*e).into())
+            }
             _ => return Err(Error::Value.into()),
         };
     let row_value = args.get(1, c, w)?;
     let row = if missing(&row_value) {
         0
     } else {
-        coerce_lookup_integer(scalar(&row_value, c, w)?, true, w)?
+        coercev2_lookup_integer(scalar(&row_value, c, w)?, true, w)?
     };
     let col_value = args.get(2, c, w)?;
     let col = if missing(&col_value) {
         0
     } else {
-        coerce_lookup_integer(scalar(&col_value, c, w)?, true, w)?
+        coercev2_lookup_integer(scalar(&col_value, c, w)?, true, w)?
     };
     // POI evaluates width before height.
     let width = if args.len() > 4 {
@@ -233,7 +241,7 @@ pub(super) fn offset(
         if missing(&value) {
             base_width
         } else {
-            coerce_lookup_integer(scalar(&value, c, w)?, true, w)?
+            coercev2_lookup_integer(scalar(&value, c, w)?, true, w)?
         }
     } else {
         base_width
@@ -243,7 +251,7 @@ pub(super) fn offset(
         if missing(&value) {
             base_height
         } else {
-            coerce_lookup_integer(scalar(&value, c, w)?, true, w)?
+            coercev2_lookup_integer(scalar(&value, c, w)?, true, w)?
         }
     } else {
         base_height
@@ -303,10 +311,10 @@ pub(super) fn indirect(
     if args.is_empty() {
         return Err(Error::Value.into());
     }
-    let text = coerce_lookup_text(&scalar(&args.get(0, c, w)?, c, w)?, w)?;
+    let text = coercev2_lookup_text(&scalar(&args.get(0, c, w)?, c, w)?, w)?;
     let a1 = match args.len() {
         1 => true,
-        2 => coerce_lookup_boolean(scalar(&args.get(1, c, w)?, c, w)?)?,
+        2 => coercev2_lookup_boolean(scalar(&args.get(1, c, w)?, c, w)?)?,
         _ => return Err(Error::Value.into()),
     };
     let query = parse_dynamic_reference(&text, a1, w)?;

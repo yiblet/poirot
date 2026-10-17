@@ -1,0 +1,14 @@
+[package]
+name = "poirot-coercionv2"
+version.workspace = true
+edition.workspace = true
+description = "Typed, consumer-requested spreadsheet value conversions"
+
+[dependencies]
+nom.workspace = true
+serde = { workspace = true, features = ["derive"] }
+poirot-functions-core = { path = "../poirot-functions-core" }
+poirot-numeric = { path = "../poirot-numeric" }
+
+[lints]
+workspace = true

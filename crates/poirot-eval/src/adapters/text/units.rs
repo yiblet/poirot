@@ -31,15 +31,15 @@ fn rendered(h: &mut TextHost<'_, '_>, s: &ScalarOperand) -> Result<Vec<u16>, Tex
     // Numeric renderer owns UTF8 buffer; reserve it before the renderer runs.
     h.check_text(512).map_err(Failure::Operational)?;
     h.charge_work(512).map_err(Failure::Operational)?;
-    let utf8 = h.coerce_text_scalar(s, false)?;
+    let utf8 = h.coercev2_text_scalar(s, false)?;
     let len = utf8.encode_utf16().count();
     let r = plan(h, units::Reservation::units(len, len))?;
     reserve(h, r)?;
     Ok(utf8.encode_utf16().collect())
 }
-fn coerce_text_integer(h: &mut TextHost<'_, '_>, index: usize) -> Result<i32, TextFailure> {
+fn coercev2_text_integer(h: &mut TextHost<'_, '_>, index: usize) -> Result<i32, TextFailure> {
     let s = h.single(&index)?;
-    h.coerce_text_integer(&s)
+    h.coercev2_text_integer(&s)
 }
 fn value(output: Vec<u16>) -> CellValue {
     // Do not allocate an implicit UTF8 projection through From<ExcelText>.
@@ -219,7 +219,7 @@ pub(crate) fn execute(
             }
             TextFunction::Left | TextFunction::Right => {
                 let count = if n == 2 {
-                    coerce_text_integer(&mut h, 1)?
+                    coercev2_text_integer(&mut h, 1)?
                 } else {
                     1
                 };
@@ -238,8 +238,8 @@ pub(crate) fn execute(
                 )
             }
             TextFunction::Mid => {
-                let start = coerce_text_integer(&mut h, 1)?;
-                let count = coerce_text_integer(&mut h, 2)?;
+                let start = coercev2_text_integer(&mut h, 1)?;
+                let count = coercev2_text_integer(&mut h, 2)?;
                 let range = plan(
                     &h,
                     if paired {
@@ -255,8 +255,8 @@ pub(crate) fn execute(
                 )
             }
             TextFunction::Replace => {
-                let start = coerce_text_integer(&mut h, 1)?;
-                let count = coerce_text_integer(&mut h, 2)?;
+                let start = coercev2_text_integer(&mut h, 1)?;
+                let count = coercev2_text_integer(&mut h, 2)?;
                 let removed = offsets(plan(&h, units::replace(length, start, count))?);
                 let replacement = h.single(&3)?;
                 let replacement = rendered(&mut h, &replacement)?;
@@ -300,7 +300,7 @@ pub(crate) fn execute(
                 let second = h.single(&1)?;
                 let hay = rendered(&mut h, &second)?;
                 let start = if n == 3 {
-                    coerce_text_integer(&mut h, 2)?
+                    coercev2_text_integer(&mut h, 2)?
                 } else {
                     1
                 };
@@ -339,12 +339,12 @@ pub(crate) fn execute(
                     Text(t) => h
                         .host
                         .get_mut()
-                        .coerce_number_text(t, NumericPolicy::PinnedPoi)
+                        .coercev2_number_text(t, NumericPolicy::PinnedPoi)
                         .map_err(failure),
                     v => h
                         .host
                         .get_mut()
-                        .coerce_scalar_number(v, NumericPolicy::PinnedPoi)
+                        .coercev2_scalar_number(v, NumericPolicy::PinnedPoi)
                         .map_err(failure),
                 }
                 .map_err(|e| match e {

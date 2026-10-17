@@ -36,10 +36,22 @@ impl<'a> Table<'a> {
                 let (rows, cols) = (checked.array().rows, checked.array().cols);
                 (Source::Array(checked), rows, cols)
             }
-            Value::Scalar(Scalar::Error(e)) => return Err((*e).into()),
+            Value::Scalar(Scalar::Error(e)) | Value::SelectedScalar(Scalar::Error(e), _) => {
+                return Err((*e).into())
+            }
             _ => return Err(Error::Value.into()),
         };
         Ok(Self { source, rows, cols })
+    }
+    /// Retain source provenance when forwarding a table member as a scalar.
+    pub(super) fn selected(&self, value: Scalar) -> Value {
+        Value::SelectedScalar(
+            value,
+            match &self.source {
+                Source::Array(_) => poirot_coercionv2::Origin::Array,
+                _ => poirot_coercionv2::Origin::Reference,
+            },
+        )
     }
     /// Read one logical table member through its backing channel.
     pub(super) fn get(

@@ -179,8 +179,8 @@ fn mutations_and_recalculation() {
 #[test]
 fn empty_reference_and_zero_argument_aggregates() {
     let w = book();
+    assert_eq!(eval(&w, "A1"), Blank);
     for f in [
-        "A1",
         "SUM()",
         "COUNT()",
         "COUNTA()",
@@ -237,7 +237,7 @@ fn resource_and_function_contracts() {
             ..
         }
     ));
-    assert_eq!(eval(&w, "INDEX(A:A,0)"), Number(0.));
+    assert_eq!(eval(&w, "INDEX(A:A,0)"), Blank);
     assert!(matches!(
         crate::run_formula(
             &w,
@@ -320,7 +320,7 @@ fn arrays_statistics_text_and_lookup() {
 }
 
 #[test]
-fn lookup_blanks_reach_consumers_before_formula_cell_normalization() {
+fn lookup_blanks_preserve_identity_through_consumers_and_formula_cells() {
     let mut w = book();
     let sheet = w.sheet_mut(0).unwrap();
     for (address, value) in [
@@ -354,7 +354,7 @@ fn lookup_blanks_reach_consumers_before_formula_cell_normalization() {
         "INDEX(A2:C2,1,1)",
     ] {
         for (formula, expected) in [
-            (lookup.to_string(), Number(0.)),
+            (lookup.to_string(), Blank),
             (format!("MIN({lookup},0.03)"), Number(0.03)),
             (format!("MAX({lookup},-0.03)"), Number(-0.03)),
             (format!("ISBLANK({lookup})"), Boolean(true)),
@@ -374,9 +374,7 @@ fn lookup_blanks_reach_consumers_before_formula_cell_normalization() {
                 execute_configuration(&w, &Default::default(), Default::default(), |session| {
                     let at = "Z20".parse().unwrap();
                     let value = session.expr(0, at, &plan.expression())?;
-                    session
-                        .result_scalar(0, at, value)
-                        .map(coerce_cell_publication)
+                    session.result_scalar(0, at, value)
                 });
             match tree {
                 EvaluationOutcome::Complete { value, .. } => {
@@ -419,9 +417,9 @@ fn lookup_blanks_reach_consumers_before_formula_cell_normalization() {
     ] {
         assert_eq!(eval(&w, lookup), Error(NA));
     }
-    // A reference to an already finalized formula cell observes numeric zero.
-    assert_eq!(eval(&w, "ISBLANK(H1)"), Boolean(false));
-    assert_eq!(eval(&w, "MIN(H1,0.03)"), Number(0.));
+    // Formula publication and subsequent references retain the selected blank.
+    assert_eq!(eval(&w, "ISBLANK(H1)"), Boolean(true));
+    assert_eq!(eval(&w, "MIN(H1,0.03)"), Number(0.03));
 }
 
 #[test]
@@ -472,9 +470,9 @@ fn selection_preserves_types_until_the_selected_consumer() {
         ("IFERROR(A5,7)", Number(7.)),
         ("IFNA(A5,7)", Number(7.)),
         ("IFNA(1/0,7)", Error(Div0)),
-        // Omitted branch syntax has an IF-defined numeric default, unlike A1.
-        ("ISBLANK(IF(TRUE,,7))", Boolean(false)),
-        ("ISNUMBER(IF(TRUE,,7))", Boolean(true)),
+        // Explicitly omitted selected results remain blank until consumed.
+        ("ISBLANK(IF(TRUE,,7))", Boolean(true)),
+        ("ISNUMBER(IF(TRUE,,7))", Boolean(false)),
         ("IF(FALSE,7)", Boolean(false)),
         // Explicit conversion functions intentionally replace types.
         ("N(A2)", Number(1.)),
@@ -485,5 +483,63 @@ fn selection_preserves_types_until_the_selected_consumer() {
         ("ISLOGICAL(INDEX({\"12\",TRUE},1,2))", Boolean(true)),
     ] {
         assert_eq!(eval(&w, formula), expected, "{formula}");
+    }
+}
+
+#[test]
+fn blank_argument_rules_distinguish_inline_values_from_selected_cells() {
+    let mut workbook = book();
+    workbook
+        .sheet_mut(0)
+        .unwrap()
+        .set_value("A1".parse().unwrap(), "key")
+        .unwrap();
+    for consumer in ["AVERAGE", "AVERAGEA", "MEDIAN", "MIN", "MINA"] {
+        assert_eq!(
+            eval(&workbook, &format!("{consumer}(IF(TRUE,),1)")),
+            Number(if matches!(consumer, "MIN" | "MINA") {
+                0.
+            } else {
+                0.5
+            }),
+            "{consumer}"
+        );
+        assert_eq!(
+            eval(&workbook, &format!("{consumer}(INDEX(A2:A2,1),1)")),
+            Number(1.),
+            "{consumer}"
+        );
+    }
+    for selected in [
+        "HLOOKUP(\"key\",A1:A2,2,FALSE)",
+        "LOOKUP(\"key\",A1:A1,A2:A2)",
+    ] {
+        assert_eq!(eval(&workbook, selected), Blank);
+        assert_eq!(
+            eval(&workbook, &format!("ISREF({selected})")),
+            Boolean(false)
+        );
+        assert_eq!(eval(&workbook, &format!("MIN({selected},1)")), Number(1.));
+        workbook
+            .sheet_mut(0)
+            .unwrap()
+            .set_value("A2".parse().unwrap(), true)
+            .unwrap();
+        assert_eq!(eval(&workbook, &format!("SUM({selected})")), Number(1.));
+        assert_eq!(eval(&workbook, &format!("COUNT({selected})")), Number(1.));
+        workbook
+            .sheet_mut(0)
+            .unwrap()
+            .set_value("A2".parse().unwrap(), "abc")
+            .unwrap();
+        assert_eq!(
+            eval(&workbook, &format!("SUM({selected})")),
+            Error(VALUE_ERROR)
+        );
+        workbook
+            .sheet_mut(0)
+            .unwrap()
+            .set_value("A2".parse().unwrap(), Blank)
+            .unwrap();
     }
 }

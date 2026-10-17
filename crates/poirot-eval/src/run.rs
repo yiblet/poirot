@@ -218,6 +218,7 @@ impl<'a> EvaluationRun<'a> {
         configuration.validate()?;
         let mut run = Self::new(view, configuration.context(), budgets)?;
         run.session.currency = configuration.formatting().currency();
+        run.session.number_locale = configuration.number_locale();
         run.session.text_policy = configuration.text_policy();
         run.session.numeric_policy = configuration.numeric_policy();
         run.session.builtin_policy = configuration.builtin_policy();
@@ -234,6 +235,7 @@ impl<'a> EvaluationRun<'a> {
         configuration.validate()?;
         let mut run = Self::new_with_extensions(view, configuration.context(), budgets, registry)?;
         run.session.currency = configuration.formatting().currency();
+        run.session.number_locale = configuration.number_locale();
         run.session.text_policy = configuration.text_policy();
         run.session.numeric_policy = configuration.numeric_policy();
         run.session.builtin_policy = configuration.builtin_policy();

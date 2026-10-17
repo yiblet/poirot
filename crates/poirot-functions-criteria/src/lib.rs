@@ -7,38 +7,7 @@ pub mod subtotal;
 #[cfg(test)]
 mod tests;
 
-/// Spreadsheet error vocabulary used by criteria matching and aggregation.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Error {
-    /// Empty reference intersection (`#NULL!`).
-    Null,
-    /// Zero denominator (`#DIV/0!`).
-    DivZero,
-    /// Invalid criterion or operand (`#VALUE!`).
-    Value,
-    /// Invalid reference (`#REF!`).
-    Ref,
-    /// Unresolved name (`#NAME?`).
-    Name,
-    /// Invalid numeric result (`#NUM!`).
-    Num,
-    /// Unavailable value (`#N/A`).
-    Na,
-}
-/// Borrowed cell projection used to match criteria without workbook ownership.
-#[derive(Clone, Debug, PartialEq)]
-pub enum Cell {
-    /// Blank criterion candidate.
-    Blank,
-    /// Numeric criterion candidate.
-    Number(f64),
-    /// Text candidate consumed by comparison or wildcard matching.
-    Text(String),
-    /// Boolean criterion candidate.
-    Bool(bool),
-    /// Spreadsheet error retained for family-specific handling.
-    Error(Error),
-}
+pub use poirot_coercionv2::criteria::{Cell, Error};
 /// Comparison prefix parsed from a criteria operand.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Comparison {
@@ -96,13 +65,8 @@ pub fn parse_comparison(s: &str) -> (Comparison, &str) {
     }
 }
 /// Parse numeric criterion text using the family's supported grammar.
-pub fn coerce_criteria_number_text(s: &str) -> Option<f64> {
-    let s = s.trim_matches(|c: char| c <= '\u{20}');
-    let parsed: nom::IResult<&str, f64> = nom::number::complete::double(s);
-    match parsed {
-        Ok(("", n)) if n.is_finite() => Some(n),
-        _ => None,
-    }
+pub fn coercev2_criteria_number_text(s: &str) -> Option<f64> {
+    poirot_coercionv2::compatibility::coercev2_criteria_number_text(s)
 }
 fn parse_error(s: &str) -> Option<Error> {
     Some(match s {
@@ -134,7 +98,7 @@ impl Criterion {
                 Cell::Bool(true)
             } else if s.eq_ignore_ascii_case("false") {
                 Cell::Bool(false)
-            } else if let Some(n) = coerce_criteria_number_text(s) {
+            } else if let Some(n) = coercev2_criteria_number_text(s) {
                 Cell::Number(n)
             } else if let Some(e) = parse_error(s) {
                 Cell::Error(e)
@@ -156,7 +120,7 @@ impl Criterion {
             (Cell::Blank, _) => false,
             (Cell::Number(a), Cell::Number(b)) => op.test(b.total_cmp(a)),
             (Cell::Number(a), Cell::Text(b)) => match op {
-                Comparison::None | Comparison::Eq => coerce_criteria_number_text(b) == Some(*a),
+                Comparison::None | Comparison::Eq => coercev2_criteria_number_text(b) == Some(*a),
                 Comparison::Ne => true,
                 _ => false,
             },

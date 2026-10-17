@@ -1,5 +1,5 @@
+use super::DateOrder;
 use super::calendar::{Date, month_days};
-use crate::{CellError, DateOrder, VALUE_ERROR};
 use nom::{
     IResult, Parser,
     bytes::complete::take_while1,
@@ -8,6 +8,7 @@ use nom::{
     multi::separated_list1,
     sequence::{preceded, terminated},
 };
+use poirot_functions_core::{CellError, CellError::Value as VALUE_ERROR};
 
 fn parse_month(s: &str) -> Option<i64> {
     if let Ok(n) = s.parse() {
@@ -54,16 +55,16 @@ fn date_parts(input: &str) -> Result<Vec<&str>, CellError> {
 }
 /// Inspection precedes the host's optional current-year/context reads.
 /// Resolution retains the same grammar pass and explicit localization input.
-pub(super) struct DateTextPlan<'a> {
+pub struct DateTextPlan<'a> {
     input: &'a str,
     /// Whether execution must supply the current year from captured context.
-    pub(super) needs_default_year: bool,
+    pub needs_default_year: bool,
     /// Whether numeric slash-date ordering affects interpretation.
-    pub(super) reads_date_order: bool,
+    pub reads_date_order: bool,
 }
 impl<'a> DateTextPlan<'a> {
     /// Inspect date grammar before the host reads optional context inputs.
-    pub(super) fn inspect(input: &'a str) -> Result<Self, CellError> {
+    pub fn inspect(input: &'a str) -> Result<Self, CellError> {
         let parts = date_parts(input)?;
         Ok(Self {
             input,
@@ -73,12 +74,12 @@ impl<'a> DateTextPlan<'a> {
         })
     }
     /// Resolve inspected date text under explicit year and numeric component ordering.
-    pub(super) fn resolve(self, default_year: i64, order: DateOrder) -> Result<Date, CellError> {
+    pub fn resolve(self, default_year: i64, order: DateOrder) -> Result<Date, CellError> {
         parse_date(self.input, default_year, order)
     }
 }
 /// Parse supported date spellings using caller-supplied default year and date order.
-pub(super) fn parse_date(s: &str, year: i64, order: DateOrder) -> Result<Date, CellError> {
+pub fn parse_date(s: &str, year: i64, order: DateOrder) -> Result<Date, CellError> {
     let slash = s.split(' ').next().unwrap_or("").contains('/');
     let parts = date_parts(s)?;
     let (y, m, d) = match parts.as_slice() {

@@ -150,33 +150,22 @@ pub enum Input {
     Area(Matrix<Cell>),
 }
 
-/// Select source-specific cell coercion for the requested matrix operation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum MatrixCollection {
-    /// Collect operands for MDETERM.
-    Determinant,
-    /// Collect operands for MINVERSE.
-    Inverse,
-    /// Collect operands for MMULT.
-    Multiply,
-    /// Preserve values for TRANSPOSE.
-    Transpose,
-}
+pub use poirot_coercionv2::collections::MatrixCollection;
 
 /// Source-specific AreaEval collection: skipped cells compact the numeric
 /// sequence, which is then zero-padded into the original rectangle. This is a
 /// pinned POI behavior, not ordinary element-wise spreadsheet coercion.
-pub fn coerce_matrix_collection(
+pub fn coercev2_matrix_collection(
     area: &Matrix<Cell>,
     policy: MatrixCollection,
     budget: Budget,
 ) -> Result<Matrix<f64>> {
-    collection::coerce_matrix_collection(area, policy, budget)
+    collection::coercev2_matrix_collection(area, policy, budget)
 }
 
 /// TREND rejects any non NumericValueEval (including source error values).
-pub fn coerce_trend_collection(area: &Matrix<Cell>, budget: Budget) -> Result<Matrix<f64>> {
-    collection::coerce_trend_collection(area, budget)
+pub fn coercev2_trend_collection(area: &Matrix<Cell>, budget: Budget) -> Result<Matrix<f64>> {
+    collection::coercev2_trend_collection(area, budget)
 }
 
 /// Multiply corresponding admitted elements and sum their products.
@@ -195,6 +184,18 @@ pub fn trend(
     budget: Budget,
 ) -> Result<Matrix<f64>> {
     regression::trend(y, known_x, new_x, constant, budget)
+}
+
+impl<'a> From<&'a Cell> for poirot_coercionv2::compatibility::ScalarRef<'a> {
+    fn from(value: &'a Cell) -> Self {
+        match value {
+            Cell::Number(n) => Self::Number(*n),
+            Cell::Bool(b) => Self::Boolean(*b),
+            Cell::Text(t) => Self::Text(poirot_coercionv2::TextRef::Utf8(t)),
+            Cell::Blank => Self::Blank,
+            Cell::Error(e) => Self::Error(*e),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -307,29 +308,29 @@ mod tests {
         )
         .unwrap();
         assert_eq!(
-            coerce_matrix_collection(&a, MatrixCollection::Multiply, B).unwrap(),
+            coercev2_matrix_collection(&a, MatrixCollection::Multiply, B).unwrap(),
             m(2, 2, &[2., 3., 0., 0.])
         );
         assert_eq!(
-            coerce_matrix_collection(&a, MatrixCollection::Determinant, B),
+            coercev2_matrix_collection(&a, MatrixCollection::Determinant, B),
             Err(Error::Formula(CellError::Value))
         );
         assert_eq!(
-            coerce_matrix_collection(&a, MatrixCollection::Transpose, B).unwrap(),
+            coercev2_matrix_collection(&a, MatrixCollection::Transpose, B).unwrap(),
             m(2, 2, &[2., 3., 0., 0.])
         );
         assert_eq!(
-            coerce_trend_collection(&a, B),
+            coercev2_trend_collection(&a, B),
             Err(Error::Formula(CellError::Value))
         );
         let one = Matrix::new(1, 1, vec![Cell::Number(2.)]).unwrap();
         assert_eq!(
-            coerce_matrix_collection(&one, MatrixCollection::Inverse, B),
+            coercev2_matrix_collection(&one, MatrixCollection::Inverse, B),
             Err(Error::Formula(CellError::Value))
         );
         let error = Matrix::new(1, 1, vec![Cell::Error(CellError::NA)]).unwrap();
         assert_eq!(
-            coerce_trend_collection(&error, B),
+            coercev2_trend_collection(&error, B),
             Err(Error::Formula(CellError::Value))
         );
     }

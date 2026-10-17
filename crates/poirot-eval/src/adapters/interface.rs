@@ -318,9 +318,7 @@ impl crate::EvaluationRun<'_> {
         .and_then(|value| {
             self.session
                 .result_scalar(target.sheet, target.address, value)
-        })
-        // TODO(coercion-non-argument): [MEDIUM] Standalone function results lose blank identity; nested calls must not use this publication path.
-        .map(crate::coerce_cell_publication);
+        });
         self.session.budget.pop_cell();
         self.session.consumer = previous;
         result

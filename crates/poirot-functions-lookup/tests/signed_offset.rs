@@ -11,10 +11,10 @@ impl Workbook for Book {
     fn argument(&mut self, _: usize, _: Context) -> Result<Value, Failure> {
         Err(Error::Value.into())
     }
-    fn coerce_numeric_text(&mut self, _: &str) -> Result<f64, Failure> {
+    fn coercev2_numeric_text(&mut self, _: &str) -> Result<f64, Failure> {
         Err(Error::Value.into())
     }
-    fn coerce_number_to_text(&mut self, n: f64) -> Result<String, Failure> {
+    fn coercev2_number_to_text(&mut self, n: f64) -> Result<String, Failure> {
         Ok(n.to_string())
     }
     fn cell(&mut self, r: &Reference, _: u32, row: u32, col: u32) -> Result<Scalar, Failure> {

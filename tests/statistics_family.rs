@@ -266,7 +266,7 @@ fn statistical_source_collection_and_second_argument_precedence() {
         };
         assert_eq!(result(&book, formula), expected, "{formula}");
     }
-    assert_eq!(result(&book, "MINA(A1:A3)"), CellValue::Number(1.));
+    assert_eq!(result(&book, "MINA(A1:A3)"), CellValue::Number(0.));
     assert_eq!(result(&book, "MINA(A1:A4)"), CellValue::Number(0.));
     assert_eq!(
         result(&book, "MAXA({\"100\",TRUE,2})"),

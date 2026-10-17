@@ -1,8 +1,8 @@
 //! Aggregate, order-statistic and rank execution with ordered prerequisite reads.
-use super::coercion::{
-    coerce_statistics_argument_number, coerce_statistics_floor_i32, collapse, work,
+use super::coercionv2::{
+    coercev2_statistics_argument_number, coercev2_statistics_floor_i32, collapse, work,
 };
-use super::collections::coerce_statistics_collection;
+use super::collections::coercev2_statistics_collection;
 use super::{EvaluationPort, Failure, StatisticsFunction};
 use domain::{Aggregate as A, Collection as C};
 use poirot_functions_statistics as domain;
@@ -30,7 +30,7 @@ pub(super) fn execute<P: EvaluationPort>(
         _ => None,
     };
     if let Some((operation, policy)) = aggregate {
-        let v = coerce_statistics_collection(p, args, policy)?;
+        let v = coercev2_statistics_collection(p, args, policy)?;
         p.check_collection(v.len()).map_err(Failure::Operational)?;
         work(p, (v.len() as u64).saturating_mul(8))?;
         return domain::aggregate(operation, &v).map_err(Failure::Spreadsheet);
@@ -39,9 +39,9 @@ pub(super) fn execute<P: EvaluationPort>(
         Large | Small | Percentile | QuartileInc => {
             // AggregateFunction coerces and range-checks k before reading array.
             let mut k = if f == QuartileInc {
-                coerce_statistics_argument_number(p, args.get(1).ok_or(CellError::Value)?)?
+                coercev2_statistics_argument_number(p, args.get(1).ok_or(CellError::Value)?)?
             } else {
-                coerce_statistics_argument_number(p, args.get(1).ok_or(CellError::Value)?)
+                coercev2_statistics_argument_number(p, args.get(1).ok_or(CellError::Value)?)
                     .map_err(|e| collapse(e, CellError::Value))?
             };
             if f == QuartileInc {
@@ -57,7 +57,7 @@ pub(super) fn execute<P: EvaluationPort>(
             {
                 return Err(CellError::Num.into());
             }
-            let v = coerce_statistics_collection(
+            let v = coercev2_statistics_collection(
                 p,
                 args.get(..1).ok_or(CellError::Value)?,
                 C::NumericAggregate,
@@ -72,12 +72,12 @@ pub(super) fn execute<P: EvaluationPort>(
             }
         }
         Rank | RankEq => {
-            let n = coerce_statistics_argument_number(p, args.first().ok_or(CellError::Value)?)?;
+            let n = coercev2_statistics_argument_number(p, args.first().ok_or(CellError::Value)?)?;
             let order = if args.len() > 2 {
                 let order =
-                    coerce_statistics_argument_number(p, args.get(2).ok_or(CellError::Value)?)?;
+                    coercev2_statistics_argument_number(p, args.get(2).ok_or(CellError::Value)?)?;
                 if f == Rank {
-                    coerce_statistics_floor_i32(order)? as f64
+                    coercev2_statistics_floor_i32(order)? as f64
                 } else {
                     order
                 }
@@ -92,8 +92,11 @@ pub(super) fn execute<P: EvaluationPort>(
             {
                 return Err(CellError::Value.into());
             }
-            let v =
-                coerce_statistics_collection(p, args.get(1..2).ok_or(CellError::Value)?, C::Rank)?;
+            let v = coercev2_statistics_collection(
+                p,
+                args.get(1..2).ok_or(CellError::Value)?,
+                C::Rank,
+            )?;
             work(
                 p,
                 (v.len() as u64).saturating_mul(if f == RankEq { 2 } else { 1 }),
@@ -104,9 +107,9 @@ pub(super) fn execute<P: EvaluationPort>(
             domain::rank(&v, n, order != 0.0)
         }
         PercentRank | PercentRankInc | PercentRankExc => {
-            let n = coerce_statistics_argument_number(p, args.get(1).ok_or(CellError::Value)?)
+            let n = coercev2_statistics_argument_number(p, args.get(1).ok_or(CellError::Value)?)
                 .map_err(|e| collapse(e, CellError::Num))?;
-            let v = coerce_statistics_collection(
+            let v = coercev2_statistics_collection(
                 p,
                 args.get(..1).ok_or(CellError::Value)?,
                 C::PercentRank,
@@ -115,7 +118,7 @@ pub(super) fn execute<P: EvaluationPort>(
                 return Err(CellError::Num.into());
             }
             let significance = if args.len() > 2 {
-                coerce_statistics_floor_i32(coerce_statistics_argument_number(
+                coercev2_statistics_floor_i32(coercev2_statistics_argument_number(
                     p,
                     args.get(2).ok_or(CellError::Value)?,
                 )?)? as f64

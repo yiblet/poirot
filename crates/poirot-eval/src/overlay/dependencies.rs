@@ -24,6 +24,9 @@ pub(crate) struct Dependencies {
     pub context: crate::context_dependencies::ContextMask,
     /// Whether formatting configuration affected the result.
     pub formatting: bool,
+    /// Numeric input locale was consumed.
+    #[serde(default)]
+    pub number_locale: bool,
     /// Whether text semantics affected the result.
     pub text_policy: bool,
     /// Legal committed ownership and extent; independent of dependency recording.
@@ -188,6 +191,7 @@ impl crate::DependencyReadSink for Reads {
                 crate::run::ContextRead::DateSystem => trace.context.date_system = true,
             },
             DependencyRead::Formatting => trace.formatting = true,
+            DependencyRead::NumberLocale => trace.number_locale = true,
             DependencyRead::TextPolicy => trace.text_policy = true,
             _ => {}
         }
@@ -352,6 +356,8 @@ impl Cache {
                                     .is_empty()
                                     || (trace.formatting
                                         && previous.formatting != context.formatting)
+                                    || (trace.number_locale
+                                        && previous.number_locale != context.number_locale)
                             })
                     })
                     .map(move |(at, _)| (*sheet, *at))

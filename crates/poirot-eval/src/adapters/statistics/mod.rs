@@ -69,8 +69,8 @@ impl EvaluationPort for CallHost<'_, '_> {
     fn check_text(&mut self, bytes: usize) -> Result<(), EvaluationFailure> {
         CallHost::check_text(self, bytes).map_err(operational_only)
     }
-    fn coerce_text_number(&mut self, text: &str) -> Result<f64, Failure<EvaluationFailure>> {
-        self.coerce_number_text(text, NumericPolicy::PinnedPoi)
+    fn coercev2_text_number(&mut self, text: &str) -> Result<f64, Failure<EvaluationFailure>> {
+        self.coercev2_number_text(text, NumericPolicy::PinnedPoi)
             .map_err(failure)
     }
     fn is_reference(&mut self, index: &usize) -> Result<bool, Failure<EvaluationFailure>> {

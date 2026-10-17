@@ -315,7 +315,7 @@ impl Session<'_> {
 /// Borrow scalar evidence or summarize the shape of a nonscalar value.
 pub(super) fn observed_value(value: &Value) -> ObservedValue<'_> {
     match value {
-        Value::Scalar(value) => ObservedValue::Scalar(value),
+        Value::Scalar(value) | Value::SelectedScalar(value, _) => ObservedValue::Scalar(value),
         Value::Missing => ObservedValue::Missing,
         Value::Array(array) => ObservedValue::Array {
             rows: array.values.len(),

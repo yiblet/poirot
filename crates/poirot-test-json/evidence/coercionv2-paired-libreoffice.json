@@ -1,0 +1,1019 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T17:25:01.105754+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-exploration-paired-statistics.json": "0bf9eabf9eda9b6b2dc7946fb1a95f09d4f597496b972a836f58214cf39f9fa3"
+  },
+  "results": [
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL single pair",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON single pair",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE single pair",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT single pair",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST single pair",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: zero is included contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.33333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 1.33333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: text rejects the whole pair contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: numeric text is still excluded contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: blank pair rejected contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: nonnumeric opposite coordinate contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: constant x contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: constant y contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: single pair contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: error is not missing contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 62,
+    "checks": 71,
+    "corroborated_scenarios": 62,
+    "corroborated_checks": 71
+  }
+}

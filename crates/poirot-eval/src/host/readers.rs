@@ -12,7 +12,7 @@ impl CallHost<'_, '_> {
             // SAFETY: Short-circuit evaluation checks the vector length is exactly one before reading element zero.
             Value::Refs(areas) => areas.len() == 1 && areas[0].kind == AreaKind::Area,
             Value::SheetSpan(areas) => areas.first().is_some_and(|a| a.kind == AreaKind::Area),
-            Value::Missing | Value::Scalar(_) => false,
+            Value::Missing | Value::Scalar(_) | Value::SelectedScalar(_, _) => false,
         })
     }
     /// Inspect operand shape, channel, sheet count, and omission without member reads.
@@ -64,12 +64,17 @@ impl CallHost<'_, '_> {
                 (coerce_legacy_missing_blank(), OperandOrigin::Direct, true)
             }
             Value::Missing => return Err(Ref.into()),
+            Value::SelectedScalar(value, origin) if row == 0 && column == 0 => (
+                Self::copy_cell(&mut self.session.budget, value)?,
+                *origin,
+                operand.missing,
+            ),
             Value::Scalar(value) if row == 0 && column == 0 => (
                 Self::copy_cell(&mut self.session.budget, value)?,
                 OperandOrigin::Direct,
                 operand.missing,
             ),
-            Value::Scalar(_) => return Err(Ref.into()),
+            Value::Scalar(_) | Value::SelectedScalar(_, _) => return Err(Ref.into()),
             Value::Array(rows) => {
                 let value = rows.get(row).and_then(|row| row.get(column)).ok_or(Ref)?;
                 (
@@ -177,7 +182,7 @@ impl CallHost<'_, '_> {
     pub(crate) fn collection_len(&mut self, index: usize) -> FunctionResult<usize> {
         self.prepare(index)?;
         let count = match &self.memo.get(&index).ok_or(VALUE_ERROR)?.value {
-            Value::Missing | Value::Scalar(_) => 1,
+            Value::Missing | Value::Scalar(_) | Value::SelectedScalar(_, _) => 1,
             Value::Array(rows) => rows
                 .iter()
                 .try_fold(0u64, |count, row| count.checked_add(row.len() as u64))
@@ -214,7 +219,9 @@ impl CallHost<'_, '_> {
     ) -> FunctionResult<ScalarOperand> {
         self.prepare(index)?;
         match &self.memo.get(&index).ok_or(VALUE_ERROR)?.value {
-            Value::Missing | Value::Scalar(_) => self.read_cell(index, 0, offset),
+            Value::Missing | Value::Scalar(_) | Value::SelectedScalar(_, _) => {
+                self.read_cell(index, 0, offset)
+            }
             Value::Array(rows) => {
                 let columns = rows.first().map_or(0, Vec::len);
                 if columns == 0 {
@@ -266,7 +273,7 @@ impl CallHost<'_, '_> {
     pub(crate) fn shape(&mut self, index: usize) -> FunctionResult<(usize, usize)> {
         self.prepare(index)?;
         match &self.memo.get(&index).ok_or(VALUE_ERROR)?.value {
-            Value::Missing | Value::Scalar(_) => Ok((1, 1)),
+            Value::Missing | Value::Scalar(_) | Value::SelectedScalar(_, _) => Ok((1, 1)),
             Value::Array(rows) => {
                 let columns = rows.first().ok_or(VALUE_ERROR)?.len();
                 if columns == 0 || rows.iter().any(|row| row.len() != columns) {

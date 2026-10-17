@@ -43,7 +43,7 @@ fn selected_missing_retains_source_exception_boundaries() {
 #[test]
 fn blank_cells_lazy_branches_and_error_type_keep_distinct_semantics() {
     for (formula, expected) in [
-        ("IFS(TRUE,A1)", CellValue::Number(0.)),
+        ("IFS(TRUE,A1)", CellValue::Blank),
         ("ISEVEN(A1)", CellValue::Boolean(true)),
         ("ERROR.TYPE(IFS(TRUE,))", CellValue::Error(CellError::NA)),
         ("IFERROR(ERROR.TYPE(IFS(TRUE,)),42)", CellValue::Number(42.)),

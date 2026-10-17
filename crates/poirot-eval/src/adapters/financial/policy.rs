@@ -6,19 +6,20 @@ pub use poirot_functions_core::Scalar;
 use poirot_functions_financial as domain;
 use poirot_model::CellError;
 
-mod coercion;
+mod coercionv2;
 mod collections;
 mod formatting;
 #[cfg(test)]
 mod tests;
 
 #[cfg(test)]
-use coercion::coerce_financial_decimal_text;
-use coercion::{
-    coerce_financial_argument_number, coerce_financial_floor_i32, coerce_financial_optional_number,
-    coerce_financial_scalar_number, coerce_financial_text_number, resolve_operands, work,
+use coercionv2::coercev2_financial_decimal_text;
+use coercionv2::{
+    coercev2_financial_argument_number, coercev2_financial_floor_i32,
+    coercev2_financial_optional_number, coercev2_financial_scalar_number,
+    coercev2_financial_text_number, resolve_operands, work,
 };
-use collections::coerce_financial_cashflows;
+use collections::coercev2_financial_cashflows;
 
 /// Cash flow, loan, and monetary formatting operations.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -145,9 +146,9 @@ pub trait EvaluationPort {
     /// Check text capacity before copying or allocating.
     fn check_text(&mut self, bytes: usize) -> Result<(), Self::Operational>;
     /// Engine Excel numeric grammar/date-time fallback, after a text budget check.
-    fn coerce_text_number(&mut self, text: &str) -> Result<f64, Failure<Self::Operational>>;
+    fn coercev2_text_number(&mut self, text: &str) -> Result<f64, Failure<Self::Operational>>;
     /// Apply the host's explicit numeric coercion for an omitted argument.
-    fn coerce_missing_number(&mut self) -> Result<f64, Failure<Self::Operational>> {
+    fn coercev2_missing_number(&mut self) -> Result<f64, Failure<Self::Operational>> {
         Err(Failure::UnsupportedCapability(
             "MissingArgEval numeric coercion",
         ))
@@ -220,15 +221,15 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
     work(p, 1)?;
     let result = match f {
         Npv => {
-            let r = coerce_financial_argument_number(p, args.first().ok_or(CellError::Value)?)?;
-            let v = coerce_financial_cashflows(p, args.get(1..).ok_or(CellError::Value)?)?;
+            let r = coercev2_financial_argument_number(p, args.first().ok_or(CellError::Value)?)?;
+            let v = coercev2_financial_cashflows(p, args.get(1..).ok_or(CellError::Value)?)?;
             work(p, v.len() as u64)?;
             domain::npv(r, &v)
         }
         Irr => {
-            let v = coerce_financial_cashflows(p, args.get(..1).ok_or(CellError::Value)?)?;
+            let v = coercev2_financial_cashflows(p, args.get(..1).ok_or(CellError::Value)?)?;
             let g = if args.len() > 1 {
-                coerce_financial_argument_number(p, args.get(1).ok_or(CellError::Value)?)?
+                coercev2_financial_argument_number(p, args.get(1).ok_or(CellError::Value)?)?
             } else {
                 0.1
             };
@@ -247,7 +248,7 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
             domain::irr(&v, g)
         }
         Mirr => {
-            let mut v = coerce_financial_cashflows(p, args)?;
+            let mut v = coercev2_financial_cashflows(p, args)?;
             if v.len() < 2 {
                 return Err(CellError::Value.into());
             }
@@ -257,8 +258,8 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
             domain::mirr(&v, q, r)
         }
         DollarDe | DollarFr => {
-            let n = coerce_financial_text_number(p, args.first().ok_or(CellError::Value)?)?;
-            let d = coerce_financial_text_number(p, args.get(1).ok_or(CellError::Value)?)?;
+            let n = coercev2_financial_text_number(p, args.first().ok_or(CellError::Value)?)?;
+            let d = coercev2_financial_text_number(p, args.get(1).ok_or(CellError::Value)?)?;
             if f == DollarDe {
                 domain::dollar_de(n, d)
             } else {
@@ -274,7 +275,7 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
                 *numbers.get_mut(i).ok_or(CellError::Value)? = if value == Scalar::Missing {
                     0.0
                 } else {
-                    coerce_financial_scalar_number(p, value)?
+                    coercev2_financial_scalar_number(p, value)?
                 };
             }
             let [rate, period, periods, present, future, timing] = numbers;
@@ -290,16 +291,16 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
         Ipmt | Ppmt => {
             let mut values =
                 resolve_operands(p, args.get(..4).ok_or(CellError::Value)?)?.into_iter();
-            let r = coerce_financial_scalar_number(p, values.next().ok_or(CellError::Value)?)?;
-            let t = coerce_financial_floor_i32(coerce_financial_scalar_number(
+            let r = coercev2_financial_scalar_number(p, values.next().ok_or(CellError::Value)?)?;
+            let t = coercev2_financial_floor_i32(coercev2_financial_scalar_number(
                 p,
                 values.next().ok_or(CellError::Value)?,
             )?)?;
-            let n = coerce_financial_floor_i32(coerce_financial_scalar_number(
+            let n = coercev2_financial_floor_i32(coercev2_financial_scalar_number(
                 p,
                 values.next().ok_or(CellError::Value)?,
             )?)?;
-            let pv = coerce_financial_scalar_number(p, values.next().ok_or(CellError::Value)?)?;
+            let pv = coercev2_financial_scalar_number(p, values.next().ok_or(CellError::Value)?)?;
             if f == Ipmt {
                 domain::ipmt(r, t, n, pv)
             } else {
@@ -312,7 +313,7 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
             let mut numbers = [0.0, 0.0, 0.0, 0.0, 0.0, 0.1];
             for (i, v) in resolved.into_iter().enumerate() {
                 *numbers.get_mut(i).ok_or(CellError::Value)? =
-                    coerce_financial_scalar_number(p, v)?;
+                    coercev2_financial_scalar_number(p, v)?;
             }
             work(p, 100)?;
             domain::rate(
@@ -320,11 +321,11 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
             )
         }
         Fv | Pv | Pmt | Nper => {
-            let r = coerce_financial_argument_number(p, args.first().ok_or(CellError::Value)?)?;
-            let n = coerce_financial_argument_number(p, args.get(1).ok_or(CellError::Value)?)?;
-            let a = coerce_financial_argument_number(p, args.get(2).ok_or(CellError::Value)?)?;
-            let b = coerce_financial_optional_number(p, args, 3, 0.0)?;
-            let t = coerce_financial_optional_number(p, args, 4, 0.0)? != 0.0;
+            let r = coercev2_financial_argument_number(p, args.first().ok_or(CellError::Value)?)?;
+            let n = coercev2_financial_argument_number(p, args.get(1).ok_or(CellError::Value)?)?;
+            let a = coercev2_financial_argument_number(p, args.get(2).ok_or(CellError::Value)?)?;
+            let b = coercev2_financial_optional_number(p, args, 3, 0.0)?;
+            let t = coercev2_financial_optional_number(p, args, 4, 0.0)? != 0.0;
             match f {
                 Fv => domain::fv(r, n, a, b, t),
                 Pv => domain::pv(r, n, a, b, t),

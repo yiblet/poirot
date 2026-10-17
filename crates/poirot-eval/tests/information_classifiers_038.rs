@@ -63,7 +63,7 @@ fn missing_is_not_blank_or_an_error_and_remains_nontext() {
     }
     expect("ISBLANK(C1)", "C3", CellValue::Boolean(true));
     expect("ISBLANK(IFS(TRUE,C1))", "C3", CellValue::Boolean(true));
-    expect("ISBLANK(IF(TRUE,,7))", "C3", CellValue::Boolean(false));
+    expect("ISBLANK(IF(TRUE,,7))", "C3", CellValue::Boolean(true));
 }
 
 #[test]

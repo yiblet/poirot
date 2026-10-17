@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+poirot-coercionv2 = { path = "../poirot-coercionv2" }
 poirot-model = { path = "../poirot-model" }
 poirot-formula = { path = "../poirot-formula" }
 foldhash = "0.1.5"
@@ -25,7 +26,7 @@ poirot-text = { path = "../poirot-text" }
 rand_chacha = "0.9.0"
 rand_core = "0.9.5"
 
-poirot-coercion = { path = "../poirot-coercion" }
+
 
 serde.workspace = true
 serde_bytes = "0.11.19"

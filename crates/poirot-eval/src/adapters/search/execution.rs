@@ -89,7 +89,7 @@ impl Session<'_> {
             if value == Blank {
                 SearchMode::Ascending
             } else {
-                match semantic(coerce_arithmetic_number(&value, &mut self.budget))? {
+                match semantic(self.coercev2_scalar_number(&value))? {
                     Ok(n) => SearchMode::from_number(n),
                     Err(_) => return Ok(err(Ref)),
                 }
@@ -103,10 +103,10 @@ impl Session<'_> {
         }
         let table_value = self.expr(s, at, args.get(1).ok_or(EvaluationFailure::StalePlan)?)?;
         if is_match
-            && let Value::Scalar(value) = &table_value
+            && let Value::Scalar(value) | Value::SelectedScalar(value, _) = &table_value
             && value.text_ref().is_some()
         {
-            let parsed = semantic(coerce_arithmetic_number(value, &mut self.budget))?;
+            let parsed = semantic(self.coercev2_scalar_number(value))?;
             return Ok(err(if parsed.is_ok() { NA } else { VALUE_ERROR }));
         }
         let table = match LookupTable::admit(table_value, is_match) {
@@ -134,7 +134,7 @@ impl Session<'_> {
         let mode = if is_match {
             match_mode
         } else if args.len() == 4 {
-            match coerce_logical_boolean(&self.argument(s, at, args, 3)?) {
+            match coercev2_logical_boolean(&self.argument(s, at, args, 3)?) {
                 Ok(true) => SearchMode::Ascending,
                 Ok(false) => SearchMode::Exact,
                 Err(e) => return Ok(err(e)),
@@ -189,7 +189,7 @@ impl Session<'_> {
         }
         // Vlookup.java/Hlookup.java defer the result index until selection succeeds.
         let value = self.argument(s, at, args, 2)?;
-        let result_index = match semantic(coerce_arithmetic_number(&value, &mut self.budget))? {
+        let result_index = match semantic(self.coercev2_scalar_number(&value))? {
             Ok(n) if n.floor() >= 1. => n.floor() as usize - 1,
             Ok(_) => return Ok(err(VALUE_ERROR)),
             Err(_) => return Ok(err(Ref)),
@@ -198,9 +198,14 @@ impl Session<'_> {
             Ok(v) => v,
             Err(e) => return Ok(err(e)),
         };
-        // Preserve the selected type for the enclosing consumer. Only the final
-        // formula-cell boundary normalizes a standalone blank result to zero.
-        Ok(self.lookup_read(&table, result, index)?.into())
+        let origin = match &table {
+            LookupTable::Array(_) => host::OperandOrigin::ArrayElement,
+            _ => host::OperandOrigin::ReferencedCell,
+        };
+        Ok(Value::SelectedScalar(
+            self.lookup_read(&table, result, index)?,
+            origin,
+        ))
     }
 }
 /// Exact matching or approximate matching against an ordered vector.
@@ -402,7 +407,7 @@ mod tests {
         for (formula, expected) in [
             ("MATCH(7,A:A,0)", Number(1.)),
             ("VLOOKUP(7,A:B,2,FALSE)", Number(42.)),
-            ("HLOOKUP(7,1:3,3,FALSE)", Number(0.)),
+            ("HLOOKUP(7,1:3,3,FALSE)", Blank),
             ("VLOOKUP(8,A1:B1,1/0,FALSE)", Error(NA)),
             ("VLOOKUP(7,A1:B1,1/0,FALSE)", Error(Ref)),
         ] {

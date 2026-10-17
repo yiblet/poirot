@@ -43,6 +43,11 @@ pub enum Failure<X, O = ()> {
     /// Exceptional pinned-source coercion behavior.
     SourceException(HostFault),
 }
+impl<X, O> From<X> for Failure<X, O> {
+    fn from(error: X) -> Self {
+        Self::Spreadsheet(error)
+    }
+}
 /// Typed adapter result retaining spreadsheet and operational failure domains.
 pub type TextResult<T, X, O = ()> = Result<T, Failure<X, O>>;
 /// Reasons text output capacity cannot be safely admitted.
@@ -70,17 +75,20 @@ pub enum AreaSelection {
     LastRow,
 }
 #[derive(Clone, Debug)]
-/// Default decimal and grouping separators for NUMBERVALUE as UTF-16 units.
-/// Defaults are `.` and `,`; explicit formula arguments can select other separators.
-pub struct Policy {
+/// Explicit numeric locale plus pinned NUMBERVALUE UTF-16 separator defaults.
+/// Documented semantics use the locale; pinned defaults remain `.` and `,`.
+pub struct Policy<'a> {
+    /// Numeric locale for documented argument parsing.
+    pub number_locale: &'a poirot_coercionv2::NumberLocaleV2,
     /// Default decimal separator as one UTF-16 unit.
     pub decimal_separator: u16,
     /// Default grouping separator as one UTF-16 unit.
     pub grouping_separator: u16,
 }
-impl Default for Policy {
+impl Default for Policy<'_> {
     fn default() -> Self {
         Self {
+            number_locale: &poirot_coercionv2::NumberLocaleV2::EN_US,
             decimal_separator: b'.' as u16,
             grouping_separator: b',' as u16,
         }
@@ -112,6 +120,12 @@ pub trait Host<E> {
         &mut self,
         expression: &E,
     ) -> TextResult<Self::Scalar, Self::Error, Self::Operational>;
+    /// Inspect omitted arguments without applying scalar conversion.
+    fn is_missing(&self, _scalar: &Self::Scalar) -> bool {
+        false
+    }
+    /// Record consumption of the configured numeric locale.
+    fn read_number_locale(&mut self) {}
     /// Bound selected member count without materializing its values.
     fn values_bound(&self, expression: &E, selection: AreaSelection) -> Option<usize>;
     /// Bound text conversion storage before constructing the string.
@@ -123,17 +137,17 @@ pub trait Host<E> {
         selection: AreaSelection,
     ) -> TextResult<Vec<Self::Scalar>, Self::Error, Self::Operational>;
     /// Convert a text item using source-compatible scalar formatting.
-    fn coerce_text_string(
+    fn coercev2_text_string(
         &self,
         scalar: &Self::Scalar,
     ) -> TextResult<String, Self::Error, Self::Operational>;
     /// Convert a delimiter, treating omitted delimiters according to source rules.
-    fn coerce_text_delimiter(
+    fn coercev2_text_delimiter(
         &self,
         scalar: &Self::Scalar,
     ) -> TextResult<String, Self::Error, Self::Operational>;
     /// Coerce a scalar to the source's integer argument representation.
-    fn coerce_text_integer(
+    fn coercev2_text_integer(
         &self,
         scalar: &Self::Scalar,
     ) -> TextResult<i32, Self::Error, Self::Operational>;
@@ -142,7 +156,7 @@ pub trait Host<E> {
         None
     }
     /// Apply logical coercion for text operation options.
-    fn coerce_text_boolean(
+    fn coercev2_text_boolean(
         &self,
         scalar: &Self::Scalar,
     ) -> TextResult<bool, Self::Error, Self::Operational>;
@@ -196,7 +210,7 @@ pub fn evaluate_with_policy<E, H: Host<E>>(
             let number = h
                 // SAFETY: Each argument branch checks its count locally; scalars is filled once per argument, separator checks index < scalars.len(), and delimiter indexing is guarded by nonempty and uses modulo its length.
                 .single(&a[0])
-                .and_then(|v| h.coerce_text_integer(&v))
+                .and_then(|v| h.coercev2_text_integer(&v))
                 .map_err(|e| match e {
                     Failure::Spreadsheet(_) => fail(h.error(Error::Value)),
                     other => other,
@@ -216,7 +230,7 @@ pub fn evaluate_with_policy<E, H: Host<E>>(
                     {
                         Ok(if boolean { 0 } else { 4 })
                     } else {
-                        h.coerce_text_integer(&v)
+                        h.coercev2_text_integer(&v)
                     }
                 })
                 .map_err(|e| match e {
@@ -243,6 +257,48 @@ pub fn evaluate_with_policy<E, H: Host<E>>(
             }
             // SAFETY: Each argument branch checks its count locally; scalars is filled once per argument, separator checks index < scalars.len(), and delimiter indexing is guarded by nonempty and uses modulo its length.
             let text = checked_string(h, &scalars[0], false)?;
+            if semantics == SemanticsPolicy::ExcelDocumentation {
+                let decimal = scalars
+                    .get(1)
+                    .filter(|s| !h.is_missing(s))
+                    .map(|s| checked_string(h, s, false))
+                    .transpose()?;
+                let grouping = scalars
+                    .get(2)
+                    .filter(|s| !h.is_missing(s))
+                    .map(|s| checked_string(h, s, false))
+                    .transpose()?;
+                if decimal.is_none() || grouping.is_none() {
+                    h.read_number_locale();
+                }
+                let bound = text
+                    .len()
+                    .checked_add(1)
+                    .ok_or(Failure::Unsupported(Unsupported::SizeOverflow))?;
+                h.check_text(bound).map_err(Failure::Operational)?;
+                h.check_collection(
+                    bound
+                        .checked_mul(3)
+                        .ok_or(Failure::Unsupported(Unsupported::SizeOverflow))?,
+                )
+                .map_err(Failure::Operational)?;
+                h.charge_work(
+                    bound
+                        .checked_mul(8)
+                        .ok_or(Failure::Unsupported(Unsupported::SizeOverflow))?,
+                )
+                .map_err(Failure::Operational)?;
+                return match numeric::coercev2_number_value_excel(
+                    &text,
+                    policy.number_locale,
+                    decimal.as_deref(),
+                    grouping.as_deref(),
+                ) {
+                    Ok(number) => Ok(Value::Number(number)),
+                    Err(numeric::ParseFailure::Spreadsheet(e)) => Err(fail(h.error(e))),
+                    Err(numeric::ParseFailure::Source(e)) => Err(Failure::SourceException(e)),
+                };
+            }
             let mut separator =
                 |index: usize, default: u16| -> TextResult<u16, H::Error, H::Operational> {
                     if index >= scalars.len() {
@@ -273,7 +329,7 @@ pub fn evaluate_with_policy<E, H: Host<E>>(
                     .ok_or(Failure::Unsupported(Unsupported::SizeOverflow))?,
             )
             .map_err(Failure::Operational)?;
-            match numeric::number_value(&text, dec, group) {
+            match numeric::coercev2_number_value(&text, dec, group) {
                 Ok(n) => Ok(Value::Number(n)),
                 Err(numeric::ParseFailure::Spreadsheet(e)) => Err(fail(h.error(e))),
                 Err(numeric::ParseFailure::Source(e)) => Err(Failure::SourceException(e)),
@@ -287,7 +343,7 @@ pub fn evaluate_with_policy<E, H: Host<E>>(
             let delimiters = checked_values(h, &a[0], AreaSelection::LastRow)?;
             // SAFETY: Each argument branch checks its count locally; scalars is filled once per argument, separator checks index < scalars.len(), and delimiter indexing is guarded by nonempty and uses modulo its length.
             let ignore = h.single(&a[1])?;
-            let ignore = h.coerce_text_boolean(&ignore)?;
+            let ignore = h.coercev2_text_boolean(&ignore)?;
             let mut texts = Vec::new();
             let mut text_bytes = 0usize;
             // SAFETY: Each argument branch checks its count locally; scalars is filled once per argument, separator checks index < scalars.len(), and delimiter indexing is guarded by nonempty and uses modulo its length.
@@ -356,9 +412,9 @@ fn checked_string<E, H: Host<E>>(
     h.check_text(bytes).map_err(Failure::Operational)?;
     h.charge_work(bytes).map_err(Failure::Operational)?;
     if delimiter {
-        h.coerce_text_delimiter(v)
+        h.coercev2_text_delimiter(v)
     } else {
-        h.coerce_text_string(v)
+        h.coercev2_text_string(v)
     }
 }
 fn checked_values<E, H: Host<E>>(
@@ -452,17 +508,17 @@ mod tests {
                 _ => Ok(vec![self.single(e)?]),
             }
         }
-        fn coerce_text_string(&self, s: &S) -> Result<String, Failure<Error>> {
+        fn coercev2_text_string(&self, s: &S) -> Result<String, Failure<Error>> {
             match s {
                 S::Text(t) => Ok((*t).into()),
                 S::Int(n) => Ok(n.to_string()),
                 _ => Err(Failure::Spreadsheet(Error::Value)),
             }
         }
-        fn coerce_text_delimiter(&self, s: &S) -> Result<String, Failure<Error>> {
-            self.coerce_text_string(s)
+        fn coercev2_text_delimiter(&self, s: &S) -> Result<String, Failure<Error>> {
+            self.coercev2_text_string(s)
         }
-        fn coerce_text_integer(&self, s: &S) -> Result<i32, Failure<Error>> {
+        fn coercev2_text_integer(&self, s: &S) -> Result<i32, Failure<Error>> {
             match s {
                 S::Int(n) => Ok(*n),
                 S::Bool(b) => Ok(i32::from(*b)),
@@ -475,7 +531,7 @@ mod tests {
                 _ => None,
             }
         }
-        fn coerce_text_boolean(&self, s: &S) -> Result<bool, Failure<Error>> {
+        fn coercev2_text_boolean(&self, s: &S) -> Result<bool, Failure<Error>> {
             match s {
                 S::Bool(b) => Ok(*b),
                 _ => Err(Failure::Spreadsheet(Error::Value)),

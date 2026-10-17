@@ -60,20 +60,18 @@ pub(super) fn read<P: EvaluationPort>(
     p.read_cell(a, r, c)
 }
 /// Coerce a matrix member using shared host text and omission rules.
-pub(super) fn coerce_matrix_number<P: EvaluationPort>(
+pub(super) fn coercev2_matrix_number<P: EvaluationPort>(
     p: &mut P,
     c: Cell,
 ) -> Result<f64, Failure<P::Operational>> {
-    match c {
-        Cell::Number(n) => Ok(n),
-        Cell::Bool(b) => Ok(if b { 1.0 } else { 0.0 }),
-        Cell::Blank => Ok(0.0),
-        Cell::Missing => p.missing_number(),
-        Cell::Error(e) => Err(Failure::Spreadsheet(e)),
-        Cell::Text(s) => {
-            p.check_text(s.len()).map_err(Failure::Operational)?;
-            work(p, s.len())?;
-            p.coerce_number_text(&s)
+    use poirot_coercionv2::compatibility::{DeferredNumber, NumberPolicy, coercev2_number};
+    coercev2_number((&c).into(), NumberPolicy::Preserve, |input| match input {
+        DeferredNumber::Missing => p.missing_number(),
+        DeferredNumber::Text(poirot_coercionv2::TextRef::Utf8(text)) => {
+            p.check_text(text.len()).map_err(Failure::Operational)?;
+            work(p, text.len())?;
+            p.coercev2_number_text(text)
         }
-    }
+        DeferredNumber::Text(_) => Err(CellError::Value.into()),
+    })
 }

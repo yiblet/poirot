@@ -57,7 +57,9 @@ pub(super) fn preflight_value(
     work: Work,
 ) -> Result<(), Failure> {
     match value {
-        Value::Scalar(Scalar::Text(s)) => charge(w, work, s.len())?,
+        Value::Scalar(Scalar::Text(s)) | Value::SelectedScalar(Scalar::Text(s), _) => {
+            charge(w, work, s.len())?
+        }
         Value::Reference(r) => {
             if let Some(name) = &r.workbook {
                 charge(w, work, name.len())?;
@@ -104,7 +106,7 @@ pub(super) fn scalar(
 ) -> Result<Scalar, Failure> {
     preflight_value(value, workbook, Work::InputMaterialization)?;
     let result = match value {
-        Value::Scalar(v) => v.clone(),
+        Value::Scalar(v) | Value::SelectedScalar(v, _) => v.clone(),
         Value::Reference(r) => {
             let checked =
                 crate::domain::CheckedReference::new(r).ok_or(Failure::Spreadsheet(Error::Ref))?;
@@ -127,60 +129,38 @@ pub(super) fn scalar(
     }
 }
 /// Coerce an admitted operand to a lookup numeric value.
-pub(super) fn coerce_lookup_number(v: Scalar, w: &mut impl Workbook) -> Result<f64, Failure> {
-    match v {
-        Scalar::Number(n) => Ok(n),
-        Scalar::Bool(b) => Ok(if b { 1.0 } else { 0.0 }),
-        Scalar::Blank => Ok(0.0),
-        Scalar::Missing => Err(Error::Value.into()),
-        Scalar::Text(s) => w.coerce_numeric_text(&s),
-        Scalar::Error(e) => Err(e.into()),
-    }
+pub(super) fn coercev2_lookup_number(v: Scalar, w: &mut impl Workbook) -> Result<f64, Failure> {
+    poirot_coercionv2::lookup::coercev2_lookup_number(v, |text| w.coercev2_numeric_text(text))
 }
 /// Apply the family's integer conversion and range checks.
-pub(super) fn coerce_lookup_integer(
+pub(super) fn coercev2_lookup_integer(
     v: Scalar,
     floor: bool,
     w: &mut impl Workbook,
 ) -> Result<i32, Failure> {
-    let n = coerce_lookup_number(v, w)?;
-    let n = if floor { n.floor() } else { n };
-    if !n.is_finite() || n < i32::MIN as f64 || n > i32::MAX as f64 {
-        return Err(Error::Num.into());
-    }
-    Ok(n as i32)
+    let number = coercev2_lookup_number(v, w)?;
+    poirot_coercionv2::lookup::coercev2_lookup_integer(number, floor).map_err(Into::into)
 }
 /// Convert an admitted operand to lookup text.
-pub(super) fn coerce_lookup_text(v: &Scalar, w: &mut impl Workbook) -> Result<String, Failure> {
-    match v {
-        Scalar::Text(s) => {
-            charge(w, Work::SearchText, s.len())?;
-            Ok(s.clone())
-        }
-        Scalar::Number(n) => {
-            charge(w, Work::SearchText, 32)?;
-            w.coerce_number_to_text(*n)
-        }
-        Scalar::Bool(b) => Ok(if *b { "TRUE" } else { "FALSE" }.into()),
-        Scalar::Blank | Scalar::Missing => Ok(String::new()),
-        Scalar::Error(e) => Err((*e).into()),
+pub(super) fn coercev2_lookup_text(v: &Scalar, w: &mut impl Workbook) -> Result<String, Failure> {
+    if let Scalar::Text(text) = v {
+        charge(w, Work::SearchText, text.len())?;
     }
+    poirot_coercionv2::lookup::coercev2_lookup_text(v, |number| {
+        charge(w, Work::SearchText, 32)?;
+        w.coercev2_number_to_text(number)
+    })
 }
 /// Coerce an admitted operand into a logical option.
-pub(super) fn coerce_lookup_boolean(v: Scalar) -> Result<bool, Failure> {
-    match v {
-        Scalar::Bool(b) => Ok(b),
-        Scalar::Number(n) => Ok(n != 0.0),
-        Scalar::Blank | Scalar::Missing => Ok(false),
-        Scalar::Text(s) if s.eq_ignore_ascii_case("TRUE") => Ok(true),
-        Scalar::Text(s) if s.eq_ignore_ascii_case("FALSE") => Ok(false),
-        Scalar::Error(e) => Err(e.into()),
-        _ => Err(Error::Value.into()),
-    }
+pub(super) fn coercev2_lookup_boolean(v: Scalar) -> Result<bool, Failure> {
+    poirot_coercionv2::lookup::coercev2_lookup_boolean(v).map_err(Into::into)
 }
 /// Test the omitted-argument channel without collapsing it to blank.
 pub(super) fn missing(v: &Value) -> bool {
-    matches!(v, Value::Scalar(Scalar::Missing))
+    matches!(
+        v,
+        Value::Scalar(Scalar::Missing) | Value::SelectedScalar(Scalar::Missing, _)
+    )
 }
 /// Construct a numeric output with the family's nonfinite checks.
 pub(super) fn num(n: f64) -> Value {

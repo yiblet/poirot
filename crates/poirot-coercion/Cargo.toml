@@ -5,6 +5,7 @@ edition.workspace = true
 description = "Source-specific numeric and datetime coercion policies"
 
 [dependencies]
+poirot-coercionv2 = { path = "../poirot-coercionv2" }
 nom.workspace = true
 
 [lints]

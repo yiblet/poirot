@@ -39,7 +39,7 @@ impl Session<'_> {
             }
             let mut values = Vec::with_capacity(args.len());
             for index in 0..args.len() {
-                match host.coerce_argument_number(
+                match host.coercev2_argument_number(
                     index,
                     MissingPolicy::Blank,
                     NumericPolicy::PinnedPoi,

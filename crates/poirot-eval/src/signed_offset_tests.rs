@@ -131,7 +131,7 @@ fn formula_at(w: &Workbook, expression: &str, address: &str, sheet: usize) -> Ce
     }
 }
 #[test]
-fn signed_contained_rectangle_final_and_operator_scalars_follow_poi() {
+fn signed_contained_rectangle_preserves_blank_until_numeric_operators() {
     let w = fixture();
     assert_eq!(formula_at(&w, "OFFSET(B3,0,0,-2,-2)", "A2", 0), Number(2.));
     assert_eq!(
@@ -143,7 +143,7 @@ fn signed_contained_rectangle_final_and_operator_scalars_follow_poi() {
         Error(VALUE_ERROR)
     );
     // A logical selected reference wholly outside the grid remains a referenced blank.
-    assert_eq!(formula(&w, "INDEX(OFFSET(B3,0,0,-2,-2),1,1)"), Number(0.));
+    assert_eq!(formula(&w, "INDEX(OFFSET(B3,0,0,-2,-2),1,1)"), Blank);
 }
 #[test]
 fn indirect_transports_signed_workbook_and_sheet_scoped_named_references() {

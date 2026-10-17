@@ -75,7 +75,7 @@ pub fn percent_rank(
     let high_rank = endpoint(values, above, intermediate, kind)?;
     let result = decimal_value(low_rank)?
         // TODO(coercion-non-argument): [LOW] Numeric interpolation precision depends on the text spelling of an intermediate rank difference.
-        + poirot_numeric::coerce_number_to_text(high_rank - low_rank)
+        + poirot_coercionv2::compatibility::coercev2_number_to_text(high_rank - low_rank)
             .parse::<BigDecimal>()
             .map_err(|_| CellError::Num)?
             * decimal_value((number - below) / (above - below))?;

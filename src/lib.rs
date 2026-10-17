@@ -5,6 +5,8 @@ pub mod artifact;
 
 /// Formula compilation, overlay evaluation, and bounded execution contracts.
 pub use poirot_eval as eval;
+/// Validated numeric input tokens, independent of value display formatting.
+pub use poirot_eval::NumberLocaleV2;
 /// Pure compilation and rendering of Excel number/date formats.
 pub use poirot_format as format;
 /// Workbook-independent formula parsing, syntax, and reference translation.

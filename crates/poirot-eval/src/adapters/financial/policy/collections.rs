@@ -1,9 +1,9 @@
 //! Lazy, origin-sensitive cash-flow collection.
-use super::coercion::{coerce_financial_decimal_text, text_check, work};
-use super::{CellError, EvaluationPort, Failure, Origin, Scalar};
+use super::coercionv2::{coercev2_financial_decimal_text, text_check, work};
+use super::{CellError, EvaluationPort, Failure};
 
 /// Collect financial cash flows lazily with origin-sensitive coercion and admission.
-pub(super) fn coerce_financial_cashflows<P: EvaluationPort>(
+pub(super) fn coercev2_financial_cashflows<P: EvaluationPort>(
     p: &mut P,
     args: &[P::Argument],
 ) -> Result<Vec<f64>, Failure<P::Operational>> {
@@ -19,20 +19,21 @@ pub(super) fn coerce_financial_cashflows<P: EvaluationPort>(
         values.reserve(len);
         for i in 0..len {
             let (s, o) = p.collection_cell(a, i)?;
-            let n = match s {
-                Scalar::Number(n) => Some(n),
-                Scalar::Error(e) => return Err(e.into()),
-                Scalar::Boolean(b) if o == Origin::Direct => Some(u8::from(b) as f64),
-                Scalar::Text(t) if o == Origin::Direct => {
-                    text_check(p, &t)?;
-                    Some(coerce_financial_decimal_text(&t).ok_or(CellError::Value)?)
-                }
-                _ => None,
-            };
+            let n = poirot_coercionv2::collections::coercev2_cashflow_member(
+                (&s).into(),
+                o,
+                |input| match input {
+                    poirot_coercionv2::compatibility::DeferredNumber::Text(
+                        poirot_coercionv2::TextRef::Utf8(text),
+                    ) => {
+                        text_check(p, text)?;
+                        coercev2_financial_decimal_text(text)
+                            .ok_or(Failure::Spreadsheet(CellError::Value))
+                    }
+                    _ => Err(Failure::Spreadsheet(CellError::Value)),
+                },
+            )?;
             if let Some(n) = n {
-                if !n.is_finite() {
-                    return Err(CellError::Num.into());
-                }
                 values.push(n)
             }
         }

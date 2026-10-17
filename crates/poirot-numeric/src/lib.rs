@@ -164,6 +164,7 @@ fn decimal(bits: u64, exponent: i32) -> Result<(i32, u64), CellError> {
 
 /// POI NumberToTextConverter representation, including the 20-character
 /// scientific-notation boundary and Excel's zero display for subnormals.
+// TODO(coercion-non-argument): [LOW] Source decimal spelling is a representation primitive also used for display; argument policy belongs in poirot-coercionv2.
 pub fn coerce_number_to_text(value: f64) -> String {
     // POI toText uses Double.doubleToLongBits, which canonicalizes every NaN.
     let raw = if value.is_nan() {
@@ -175,6 +176,7 @@ pub fn coerce_number_to_text(value: f64) -> String {
 }
 
 /// POI's package-private rawDoubleBitsToText, distinct from its public toText.
+// TODO(coercion-non-argument): [LOW] Raw-bit source formatting preserves IEEE payload behavior; using it as general argument admission would bypass finite-value policies.
 pub fn coerce_number_bits_to_text(raw: u64) -> String {
     let negative = raw >> 63 != 0;
     let exponent = ((raw >> 52) & 2047) as i32;

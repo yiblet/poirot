@@ -239,3 +239,10 @@ Reproduce just the new tranche:
 Modern function names used by the oracle are written with their OOXML `_xlfn.`
 prefix where required (including MINIFS/MAXIFS and COVARIANCE.P/S). A failed
 import of a function name is not evidence of its worksheet semantics.
+
+
+Suites may set `"builtin_policy": "ExcelDocumentation"` to test that explicit
+public contract. Omitted policy metadata retains `PinnedPoi`; both normal and
+overlay execution use the same selected policy, reported in each mode result.
+This is suite metadata, not an override on individual expected values. Unknown
+policy names are rejected during schema parsing.

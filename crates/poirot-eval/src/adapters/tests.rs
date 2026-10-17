@@ -115,7 +115,7 @@ fn direct_calls_preserve_references_missing_values_and_short_circuiting() {
             "IF",
             &["TRUE", "IF(TRUE,,1)", "1/0"]
         ),
-        CellValue::Number(0.)
+        CellValue::Blank
     );
 }
 

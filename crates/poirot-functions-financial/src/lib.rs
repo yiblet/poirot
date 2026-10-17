@@ -427,7 +427,7 @@ fn decimal_parts(number: f64, places: i32) -> Result<(bool, String, String)> {
     // ExcelArithmetic.toBigDecimal uses exactly NumberToTextConverter.toText.
     // Normalize that source-backed decimal without a second float conversion.
     // TODO(coercion-non-argument): [LOW] Formatting rounds through numeric text before producing output; boundary values can lose significant digits.
-    let visible = poirot_numeric::coerce_number_to_text(number.abs());
+    let visible = poirot_coercionv2::compatibility::coercev2_number_to_text(number.abs());
     if visible.len() > 1024 {
         return Err(FinancialError::Num);
     }

@@ -1,5 +1,5 @@
 use crate::operands::{
-    charge, checked_product, coerce_lookup_integer, num, preflight_value, scalar, Arguments,
+    charge, checked_product, coercev2_lookup_integer, num, preflight_value, scalar, Arguments,
 };
 use crate::table::Table;
 use crate::{
@@ -18,7 +18,7 @@ fn modes(
         None
     } {
         None => 0,
-        Some(v) => coerce_lookup_integer(scalar(&v, c, w)?, true, w)?,
+        Some(v) => coercev2_lookup_integer(scalar(&v, c, w)?, true, w)?,
     };
     let mode = match mode {
         -1 => MatchMode::Smaller,
@@ -33,7 +33,7 @@ fn modes(
         None
     } {
         None => 1,
-        Some(v) => coerce_lookup_integer(scalar(&v, c, w)?, true, w)?,
+        Some(v) => coercev2_lookup_integer(scalar(&v, c, w)?, true, w)?,
     };
     let search = match search {
         -2 => SearchMode::BinaryDescending,
@@ -82,14 +82,14 @@ pub(super) fn search(
                     return Err(Failure::Unsupported(Unsupported::LookupShortResult));
                 }
                 let index = approximate_index(&key, &vector, w)?;
-                Ok(Value::Scalar(if result.cols == 1 {
+                Ok(result.selected(if result.cols == 1 {
                     result.get(index, 0, w)?
                 } else {
                     result.get(0, index, w)?
                 }))
             } else {
                 let index = approximate_index(&key, &vector, w)?;
-                Ok(Value::Scalar(if column {
+                Ok(table.selected(if column {
                     table.get(index, table.cols - 1, w)?
                 } else {
                     table.get(table.rows - 1, index, w)?
@@ -112,7 +112,7 @@ pub(super) fn search(
             let key = match key {
                 Scalar::Number(n) if mode == MatchMode::Wildcard => {
                     charge(w, Work::SearchText, 32)?;
-                    Scalar::Text(w.coerce_number_to_text(n)?)
+                    Scalar::Text(w.coercev2_number_to_text(n)?)
                 }
                 value => value,
             };

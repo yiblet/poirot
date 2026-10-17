@@ -105,10 +105,10 @@ pub trait EvaluationPort {
     fn check_text(&mut self, bytes: usize) -> Result<(), Self::Operational>;
     /// Existing engine numeric coercion: numeric grammar incl Java hexadecimal
     /// parsing, then POI date/time fallback. Called only after text budget check.
-    fn coerce_text_number(&mut self, text: &str) -> Result<f64, Failure<Self::Operational>>;
+    fn coercev2_text_number(&mut self, text: &str) -> Result<f64, Failure<Self::Operational>>;
     /// MissingArgEval is not BlankEval in POI's OperandResolver. The engine owns
     /// independently observed missing-argument compatibility (do not assume zero).
-    fn coerce_missing_number(&mut self) -> Result<f64, Failure<Self::Operational>> {
+    fn coercev2_missing_number(&mut self) -> Result<f64, Failure<Self::Operational>> {
         Err(Failure::UnsupportedCapability(
             UnsupportedCapability::MissingNumericArgument,
         ))
@@ -136,35 +136,26 @@ pub trait EvaluationPort {
 fn work<P: EvaluationPort>(p: &mut P, n: u64) -> Result<(), Failure<P::Operational>> {
     p.charge_work(n).map_err(Failure::Operational)
 }
-fn coerce_math_number<P: EvaluationPort>(
+fn coercev2_math_number<P: EvaluationPort>(
     p: &mut P,
     arg: &P::Argument,
 ) -> Result<f64, Failure<P::Operational>> {
+    use poirot_coercionv2::compatibility::{DeferredNumber, NumberPolicy, coercev2_number};
     work(p, 1)?;
     let scalar = p.resolve_scalar(arg)?;
-    let n = match scalar.value {
-        Scalar::Number(n) => n,
-        Scalar::Boolean(b) => {
-            if b {
-                1.0
-            } else {
-                0.0
+    coercev2_number(
+        (&scalar.value).into(),
+        NumberPolicy::Finite,
+        |input| match input {
+            DeferredNumber::Missing => p.coercev2_missing_number(),
+            DeferredNumber::Text(poirot_functions_core::TextRef::Utf8(text)) => {
+                p.check_text(text.len()).map_err(Failure::Operational)?;
+                work(p, text.len() as u64)?;
+                p.coercev2_text_number(text)
             }
-        }
-        Scalar::Blank => 0.0,
-        Scalar::Missing => p.coerce_missing_number()?,
-        Scalar::Error(e) => return Err(Failure::Spreadsheet(e)),
-        Scalar::Text(text) => {
-            p.check_text(text.len()).map_err(Failure::Operational)?;
-            work(p, text.len() as u64)?;
-            p.coerce_text_number(&text)?
-        }
-    };
-    if n.is_finite() {
-        Ok(n)
-    } else {
-        Err(Failure::Spreadsheet(CellError::Num))
-    }
+            DeferredNumber::Text(_) => Err(CellError::Value.into()),
+        },
+    )
 }
 fn collapse_operand_error<O>(f: Failure<O>) -> Failure<O> {
     match f {
@@ -226,7 +217,7 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
     }
     let collapse = matches!(function, Gcd | Lcm | Quotient | Randbetween);
     let read = |p: &mut P, index: usize| {
-        let r = coerce_math_number(p, args.get(index).ok_or(CellError::Value)?);
+        let r = coercev2_math_number(p, args.get(index).ok_or(CellError::Value)?);
         if collapse {
             r.map_err(collapse_operand_error)
         } else {
@@ -396,7 +387,7 @@ mod adapter_tests {
                 Ok(())
             }
         }
-        fn coerce_text_number(&mut self, t: &str) -> Result<f64, Failure<Self::Operational>> {
+        fn coercev2_text_number(&mut self, t: &str) -> Result<f64, Failure<Self::Operational>> {
             t.trim()
                 .parse()
                 .map_err(|_| Failure::Spreadsheet(CellError::Value))

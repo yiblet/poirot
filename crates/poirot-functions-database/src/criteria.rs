@@ -1,10 +1,10 @@
 //! Lazy OR-row/AND-column criteria traversal and database condition matching.
 use super::selection::{
-    coerce_database_number, coerce_database_text, criteria_header_index, equal_ignore_case,
-    header_column,
+    coercev2_database_criteria_header_index, coercev2_database_number, coercev2_database_text,
+    equal_ignore_case, header_column,
 };
 use super::{CellError, CellValue, DatabaseError, Grid, number};
-use poirot_numeric::parse_java_number;
+use poirot_coercionv2::compatibility::coercev2_java_number_text;
 
 /// Compiled header bindings and condition rows; conditions OR across rows and AND within a row.
 #[derive(Clone, Copy)]
@@ -31,15 +31,15 @@ impl<'a> CriteriaPlan<'a> {
                     CellValue::Text(header) => header_column(self.database, header)?,
                     CellValue::TextUtf16(_) => header_column(
                         self.database,
-                        &coerce_database_text(self.criteria.get(0, cc))?,
+                        &coercev2_database_text(self.criteria.get(0, cc))?,
                     )?,
-                    header if coerce_database_number(header).is_some() => {
-                        criteria_header_index(header, self.database.columns)?
+                    header if coercev2_database_number(header).is_some() => {
+                        coercev2_database_criteria_header_index(header, self.database.columns)?
                     }
                     _ => return Err(CellError::Value.into()),
                 };
                 let Some(column) = selected else {
-                    if coerce_database_text(condition)?.is_empty() {
+                    if coercev2_database_text(condition)?.is_empty() {
                         return Err(CellError::Value.into());
                     }
                     return Err(DatabaseError::FormulaCriteria);
@@ -61,19 +61,19 @@ impl<'a> CriteriaPlan<'a> {
 pub fn condition_matches(value: &CellValue, condition: &CellValue) -> Result<bool, DatabaseError> {
     match condition {
         CellValue::Number(_) | CellValue::Boolean(_) => {
-            let number = if let Some(number) = coerce_database_number(value) {
+            let number = if let Some(number) = coercev2_database_number(value) {
                 Some(number)
             } else if value.text_ref().is_some() {
-                parse_java_number(&coerce_database_text(value)?)
+                coercev2_java_number_text(&coercev2_database_text(value)?)
             } else {
                 None
             };
-            Ok(number == coerce_database_number(condition))
+            Ok(number == coercev2_database_number(condition))
         }
         CellValue::Error(e) => Ok(matches!(value,CellValue::Error(v) if v == e)),
         CellValue::Blank => Ok(true),
         CellValue::Text(condition) => string_condition(value, condition),
-        CellValue::TextUtf16(_) => string_condition(value, &coerce_database_text(condition)?),
+        CellValue::TextUtf16(_) => string_condition(value, &coercev2_database_text(condition)?),
     }
 }
 fn string_condition(value: &CellValue, condition: &str) -> Result<bool, DatabaseError> {
@@ -83,7 +83,7 @@ fn string_condition(value: &CellValue, condition: &str) -> Result<bool, Database
         if operand.is_empty() {
             return Ok(value.text_ref().is_some());
         }
-        let actual = coerce_database_text(value)?.to_lowercase();
+        let actual = coercev2_database_text(value)?.to_lowercase();
         let expected = operand.to_lowercase();
         // Shared wildcard implementation is installed by the criteria family.
         return Ok(wildcard_or_prefix(&expected, &actual));
@@ -91,9 +91,9 @@ fn string_condition(value: &CellValue, condition: &str) -> Result<bool, Database
     if operator == Eq && operand.is_empty() {
         return Ok(matches!(value, CellValue::Blank));
     }
-    let parsed = parse_java_number(operand);
+    let parsed = coercev2_java_number_text(operand);
     if matches!(operator, Lt | Le | Gt | Ge) || parsed.is_some() {
-        let Some(actual) = coerce_database_number(value) else {
+        let Some(actual) = coercev2_database_number(value) else {
             return Ok(false);
         };
         let expected = parsed.ok_or(CellError::Value)?;
@@ -108,7 +108,7 @@ fn string_condition(value: &CellValue, condition: &str) -> Result<bool, Database
             None => false,
         });
     }
-    let equal = equal_ignore_case(&coerce_database_text(value)?, operand);
+    let equal = equal_ignore_case(&coercev2_database_text(value)?, operand);
     Ok(if operator == Ne { !equal } else { equal })
 }
 fn wildcard_or_prefix(pattern: &str, value: &str) -> bool {

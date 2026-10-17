@@ -75,40 +75,7 @@ pub struct BudgetRequest {
     /// Number of units requested before execution.
     pub units: usize,
 }
-/// Spreadsheet error vocabulary shared by lookup kernels and host adapters.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Error {
-    /// Invalid operand or argument shape (`#VALUE!`).
-    Value,
-    /// Invalid reference (`#REF!`).
-    Ref,
-    /// No matching value (`#N/A`).
-    Na,
-    /// Invalid numeric argument or result (`#NUM!`).
-    Num,
-    /// Zero denominator (`#DIV/0!`).
-    Div0,
-    /// Unresolved name (`#NAME?`).
-    Name,
-    /// Empty intersection (`#NULL!`).
-    Null,
-}
-/// Workbook-independent scalar channel used by lookup and reference kernels.
-#[derive(Clone, Debug, PartialEq)]
-pub enum Scalar {
-    /// Numeric operand.
-    Number(f64),
-    /// Owned text operand.
-    Text(String),
-    /// Boolean operand.
-    Bool(bool),
-    /// Blank operand, retaining empty-cell semantics.
-    Blank,
-    /// Omitted argument slot.
-    Missing,
-    /// Catchable spreadsheet error operand.
-    Error(Error),
-}
+pub use poirot_coercionv2::lookup::{Error, Scalar};
 /// Inclusive workbook/sheet/row/column bounds for a logical lookup reference.
 /// Coordinates and sheet indices are zero-based; cell versus area identity is retained
 /// even for a one-cell rectangle. Validate before using its dimensions.
@@ -190,6 +157,8 @@ impl Array {
 pub enum Value {
     /// Already materialized scalar.
     Scalar(Scalar),
+    /// Materialized member whose original source still controls argument admission.
+    SelectedScalar(Scalar, poirot_coercionv2::Origin),
     /// Validated-on-use unsigned worksheet reference.
     Reference(Reference),
     /// Pinned-source reference retaining signed endpoints.

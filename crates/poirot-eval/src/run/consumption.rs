@@ -62,6 +62,8 @@ pub enum DependencyRead {
     OpaqueProvider(String),
     /// Formatting settings consumed by execution.
     Formatting,
+    /// Numeric input tokens consumed while parsing a text argument.
+    NumberLocale,
     /// Text semantics consumed by execution.
     TextPolicy,
     /// Execution-time builtin contracts; guarded globally by computation identity.

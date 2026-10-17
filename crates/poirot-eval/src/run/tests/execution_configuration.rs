@@ -353,3 +353,53 @@ fn dollar_and_rand_have_independent_dependency_categories_and_consumption() {
         assert!(!reads.0.iter().any(|event| matches!(event.read, DependencyRead::Context(mask) if mask.contains(if formatting { DependencyPolicy::SEED } else { DependencyPolicy::CURRENCY }))));
     }
 }
+
+#[test]
+fn formatted_number_locale_is_exact_configuration_and_lazy_consumption() {
+    let workbook = workbook();
+    let policy = EvaluationPolicy::default();
+    let mut compiler = FormulaCompiler::new();
+    let formula = compiler.compile_formula("\"1,234\"*1", &policy);
+    let configuration = crate::RunConfiguration::from(context());
+    let changed = configuration.clone().with_number_locale(
+        crate::NumberLocaleV2::new(",", Some("."), Some("EUR"), "%", ":").unwrap(),
+    );
+    assert_ne!(configuration.fingerprint(), changed.fingerprint());
+    for (configuration, expected) in [(&configuration, 1234.), (&changed, 1.234)] {
+        let mut reads = Reads::default();
+        let outcome = crate::run_formula_with_configuration(
+            &workbook,
+            0,
+            A1,
+            "\"1,234\"*1",
+            configuration,
+            EvaluationBudgets::default(),
+        );
+        assert!(
+            matches!(outcome, crate::EvaluationOutcome::Complete { value: CellValue::Number(n), .. } if n == expected)
+        );
+        let plan = compiler.compile_workbook(&workbook, &policy);
+        let probe = EvaluationProbe::Formula {
+            target: target(A1),
+            formula: &formula,
+        };
+        let run = EvaluationRun::new_with_configuration(
+            WorkbookView::new(&workbook, &plan, &policy).unwrap(),
+            configuration,
+            EvaluationBudgets::default(),
+        )
+        .unwrap()
+        .with_dependency_sink(&mut reads);
+        let _ = run.evaluate_probes(&[probe]);
+        assert!(
+            reads
+                .0
+                .iter()
+                .any(|e| e.read == DependencyRead::NumberLocale)
+        );
+        assert!(!reads.0.iter().any(|e| matches!(
+            e.read,
+            DependencyRead::ContextField(ContextRead::AsOf | ContextRead::UtcOffset)
+        )));
+    }
+}

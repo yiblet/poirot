@@ -2,7 +2,7 @@
 use super::calendar::{Date, epoch};
 
 /// Convert a date using TIMEVALUE's pinned 1900-calendar arithmetic.
-pub(super) fn source_day(date: Date) -> f64 {
+pub fn source_day(date: Date) -> f64 {
     if date.y < 1900 && !(date.y == 1899 && date.m == 12 && date.d == 31) {
         return -1.;
     }
@@ -11,7 +11,7 @@ pub(super) fn source_day(date: Date) -> f64 {
 }
 
 /// Collapse source-recognized whitespace runs before time parsing.
-pub(super) fn normalize(input: &str) -> String {
+pub fn normalize(input: &str) -> String {
     let mut output = String::with_capacity(input.len());
     let mut whitespace = false;
     for character in input.chars() {
@@ -27,27 +27,27 @@ pub(super) fn normalize(input: &str) -> String {
 // DateUtil adds second-of-day to its resolved date, then TimeValue subtracts
 // DateParser's independently resolved date. Keep these operations ordered.
 /// Preserve source operation order when subtracting a resolved date from date-time.
-pub(super) fn fraction(date_time_day: f64, seconds: u32, date_day: f64) -> f64 {
+pub fn fraction(date_time_day: f64, seconds: u32, date_day: f64) -> f64 {
     (date_time_day + f64::from(seconds) / 86400.) - date_day
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{CellError, VALUE_ERROR};
+    use poirot_functions_core::{CellError, CellError::Value as VALUE_ERROR};
 
     /// Test parser result retaining optional date text and midnight rollover.
-    pub(super) struct ParsedTime<'a> {
+    pub struct ParsedTime<'a> {
         /// Date prefix preceding the clock, if supplied.
-        pub(super) date_text: Option<&'a str>,
+        pub date_text: Option<&'a str>,
         /// Parsed seconds since midnight.
-        pub(super) seconds: u32,
+        pub seconds: u32,
         /// Whether a valid 24:00 spelling advances the date.
-        pub(super) next_day: bool,
+        pub next_day: bool,
     }
 
     /// Parse the controlled clock spellings used by TIMEVALUE source-order tests.
-    pub(super) fn parse(input: &str) -> Result<ParsedTime<'_>, CellError> {
+    pub fn parse(input: &str) -> Result<ParsedTime<'_>, CellError> {
         let (raw, marker) = if let Some(raw) = input.strip_suffix(" AM") {
             (raw, Some(false))
         } else if let Some(raw) = input.strip_suffix(" PM") {

@@ -12,7 +12,7 @@ pub(crate) enum AggregateFunction {
 }
 /// Pending statistical aggregate operand retaining reference traversal state.
 enum AggregateItem {
-    Value(CellValue, bool),
+    Value(CellValue, bool, poirot_coercionv2::Origin),
     Cell(usize, CellAddress),
 }
 impl Session<'_> {
@@ -91,6 +91,12 @@ impl Session<'_> {
                 }
                 continue;
             }
+            if name == AggregateFunction::Statistics(StatisticsFunction::CountBlank) {
+                return Ok(match self.scalar(at, v)? {
+                    Error(error) => err(error),
+                    _ => err(VALUE_ERROR),
+                });
+            }
             // Keep true sheet spans deferred until each ordered value is consumed.
             // A spreadsheet error on an earlier sheet must win over a later cell's
             // operational failure, as MultiOperandNumericFunction.collectValues does.
@@ -111,16 +117,49 @@ impl Session<'_> {
                     }
                     items
                 }
+                Value::SelectedScalar(value, origin) => {
+                    self.budget.allocation(1)?;
+                    vec![AggregateItem::Value(
+                        value,
+                        false,
+                        match origin {
+                            host::OperandOrigin::Direct => poirot_coercionv2::Origin::Direct,
+                            host::OperandOrigin::ReferencedCell => {
+                                poirot_coercionv2::Origin::Reference
+                            }
+                            host::OperandOrigin::ArrayElement => poirot_coercionv2::Origin::Array,
+                        },
+                    )]
+                }
                 other => self
                     .items(other)?
                     .into_iter()
-                    .map(|(value, referenced)| AggregateItem::Value(value, referenced))
+                    .map(|(value, referenced)| {
+                        AggregateItem::Value(
+                            value,
+                            referenced,
+                            if referenced {
+                                poirot_coercionv2::Origin::Reference
+                            } else {
+                                poirot_coercionv2::Origin::Direct
+                            },
+                        )
+                    })
                     .collect(),
             };
             for item in items {
-                let (v, indirect) = match item {
-                    AggregateItem::Value(value, referenced) => (value, referenced),
-                    AggregateItem::Cell(sheet, address) => (self.cell(sheet, address)?, true),
+                let (v, indirect, origin) = match item {
+                    AggregateItem::Value(value, referenced, origin) => (value, referenced, origin),
+                    AggregateItem::Cell(sheet, address) => (
+                        self.cell(sheet, address)?,
+                        true,
+                        poirot_coercionv2::Origin::Reference,
+                    ),
+                };
+                let v = if matches!(name, AggregateFunction::Statistics(_)) && !e.is_missing() {
+                    poirot_coercionv2::collections::coercev2_aggregate_argument(v, origin)
+                } else {
+                    v
                 };
                 if name == AggregateFunction::Statistics(StatisticsFunction::CountA) {
                     count += u64::from(v != Blank);
@@ -134,7 +173,7 @@ impl Session<'_> {
                     if matches!(v, Number(_))
                         || (!indirect
                             && !matches!(v, Blank | Error(_))
-                            && semantic(coerce_arithmetic_number(&v, &mut self.budget))?.is_ok())
+                            && semantic(self.coercev2_scalar_number(&v))?.is_ok())
                     {
                         count += 1
                     }
@@ -144,7 +183,7 @@ impl Session<'_> {
                     if indirect && matches!(v, Text(_) | CellValue::TextUtf16(_) | Blank) {
                         continue;
                     }
-                    match core_projection::coerce_operand_boolean(&v, self.numeric_policy) {
+                    match core_projection::coercev2_operand_boolean(&v, self.numeric_policy) {
                         Ok(b) => {
                             self.budget.check_allocation(truth.len() + 1)?;
                             self.budget.charge(WorkKind::Materialization, 1)?;
@@ -172,12 +211,12 @@ impl Session<'_> {
                         detail: "pinned special-number aggregate algorithm is not implemented for this handler".into(),
                     });
                 }
-                let coerce_number = if raw_sum {
-                    core_projection::coerce_arithmetic_operand_number
+                let number = if raw_sum {
+                    self.coercev2_operator_number(&v)
                 } else {
-                    coerce_arithmetic_number
+                    self.coercev2_scalar_number(&v)
                 };
-                match semantic(coerce_number(&v, &mut self.budget))? {
+                match semantic(number)? {
                     Ok(n) => {
                         self.budget.check_allocation(nums.len() + 1)?;
                         self.budget.charge(WorkKind::Materialization, 1)?;

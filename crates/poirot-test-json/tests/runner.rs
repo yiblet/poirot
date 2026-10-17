@@ -171,3 +171,53 @@ fn clap_filters_and_empty_selections_fail() {
     let mut output = Vec::new();
     assert!(!args.run(&mut output).unwrap());
 }
+
+#[test]
+fn suites_select_one_builtin_contract_for_both_modes() {
+    let fixture = |policy, expected| {
+        let mut value = suite(json!([scenario(
+            "numeric grammar",
+            json!([
+                {"action":"set","cell":"S!A1","content":{"formula":"NUMBERVALUE(\"12..\")"}},
+                check(expected)
+            ])
+        )]));
+        if let Some(policy) = policy {
+            value["builtin_policy"] = policy;
+        }
+        value
+    };
+    for (policy, expected, selected) in [
+        (
+            None,
+            json!({"type":"number","value":12}),
+            poirot::eval::BuiltinSemanticsPolicy::PinnedPoi,
+        ),
+        (
+            Some(json!("PinnedPoi")),
+            json!({"type":"number","value":12}),
+            poirot::eval::BuiltinSemanticsPolicy::PinnedPoi,
+        ),
+        (
+            Some(json!("ExcelDocumentation")),
+            json!({"type":"error","value":"#VALUE!"}),
+            poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation,
+        ),
+    ] {
+        let results = run(fixture(policy, expected));
+        assert_eq!(results[0].status, Status::Passed);
+        assert_eq!(results[0].normal.builtin_policy, selected);
+        assert_eq!(results[0].overlay.builtin_policy, selected);
+        assert!(results[0].outputs_equal && results[0].changes_equal);
+    }
+    assert!(
+        parse_suite(
+            &fixture(
+                Some(json!("UnknownPolicy")),
+                json!({"type":"number","value":0})
+            )
+            .to_string()
+        )
+        .is_err()
+    );
+}

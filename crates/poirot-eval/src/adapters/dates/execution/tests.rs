@@ -90,7 +90,6 @@ fn time_and_deterministic_clock() {
         ("TIMEVALUE(\"1/1/2008 12:00\")", 0.),
         ("TIMEVALUE(\"1/01/2008 12:00\")", 0.5),
         ("TIMEVALUE(\"1:30 PM\")", 13.5 / 24.),
-        ("TIMEVALUE(\"\")", 0.),
         ("DATEVALUE(\"8/22/2011\")", 40777.),
         ("DATEVALUE(\"1/1\")", 44197.),
         ("TODAY()", 44197.),
@@ -98,6 +97,7 @@ fn time_and_deterministic_clock() {
     ] {
         num(&w, f, n);
     }
+    assert_eq!(evaluate(&w, "TIMEVALUE(\"\")"), Blank);
     assert_eq!(evaluate(&w, "TIME(32768,0,0)"), Error(VALUE_ERROR));
     assert_eq!(evaluate(&w, "TIME(-1,0,0)"), Error(VALUE_ERROR));
     let options = EvaluationInputs {

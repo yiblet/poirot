@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+poirot-coercionv2 = { path = "../poirot-coercionv2" }
 
 [lints]
 workspace = true

@@ -31,9 +31,10 @@ be literal arrays, bounded cell ranges, scalar literals/expressions, or nested
 bounded producers. Geometry discovery uses bounds captured during compilation, not expected values, and
 does not evaluate unrelated producers with a known disjoint footprint. Lazy
 branch selection remains in the evaluator. Under `ExcelDocumentation`, TRANSPOSE
-preserves numbers, exact text/UTF-16 units, booleans, and individual errors;
-reference blanks become numeric zero. Numeric matrix functions retain their
-existing separate kernels and admission/coercion contracts.
+preserves numbers, exact text/UTF-16 units, booleans, individual errors and
+reference blanks. Spill publication and cached children preserve blanks too.
+Numeric matrix functions retain their existing separate kernels and
+admission/coercion contracts.
 
 Names, extension arrays, TREND, and computed-reference producers without a
 supported static footprint bound are unsupported. Publication refuses a result

@@ -74,22 +74,22 @@ pub trait EvaluationPort {
     /// Check text capacity before copying or allocating.
     fn check_text(&mut self, bytes: usize) -> Result<(), Self::Operational>;
     /// Exact POI NumberToTextConverter spelling, shared poirot-numeric formatter.
-    fn coerce_number_to_text(&mut self, n: f64) -> Result<String, Failure<Self::Operational>>;
+    fn coercev2_number_to_text(&mut self, n: f64) -> Result<String, Failure<Self::Operational>>;
     /// OperandResolver.parseDouble only: no date fallback.
-    fn coerce_decimal_text(
+    fn coercev2_decimal_text(
         &mut self,
         text: &str,
     ) -> Result<Option<f64>, Failure<Self::Operational>>;
     /// Ordinary OperandResolver.coerceValueToDouble (includes date fallback).
-    fn coerce_number_text(&mut self, text: &str) -> Result<f64, Failure<Self::Operational>>;
+    fn coercev2_number_text(&mut self, text: &str) -> Result<f64, Failure<Self::Operational>>;
     /// Apply explicit omitted-argument text coercion or reject the capability.
-    fn coerce_missing_text(&mut self) -> Result<String, Failure<Self::Operational>> {
+    fn coercev2_missing_text(&mut self) -> Result<String, Failure<Self::Operational>> {
         Err(Failure::UnsupportedCapability(
             UnsupportedCapability::MissingStringCoercion,
         ))
     }
     /// Apply explicit omitted-argument numeric coercion or reject the capability.
-    fn coerce_missing_number(&mut self) -> Result<f64, Failure<Self::Operational>> {
+    fn coercev2_missing_number(&mut self) -> Result<f64, Failure<Self::Operational>> {
         Err(Failure::UnsupportedCapability(
             UnsupportedCapability::MissingNumericCoercion,
         ))
@@ -116,52 +116,53 @@ fn scalar<P: EvaluationPort>(
         v => Ok(v),
     }
 }
-fn coerce_engineering_argument_text<P: EvaluationPort>(
+fn coercev2_engineering_argument_text<P: EvaluationPort>(
     p: &mut P,
     a: &P::Argument,
 ) -> Result<String, Failure<P::Operational>> {
     let v = scalar(p, a)?;
-    coerce_engineering_scalar_text(p, v)
+    coercev2_engineering_scalar_text(p, v)
 }
-fn coerce_engineering_scalar_text<P: EvaluationPort>(
+fn coercev2_engineering_scalar_text<P: EvaluationPort>(
     p: &mut P,
     v: Scalar,
 ) -> Result<String, Failure<P::Operational>> {
-    // NumberToTextConverter is bounded; preflight before its allocation.
+    use poirot_coercionv2::compatibility::{OwnedDeferredText, coercev2_owned_text};
     p.check_text(64).map_err(Failure::Operational)?;
-    let s = match v {
-        Scalar::Number(n) => p.coerce_number_to_text(n)?,
-        Scalar::Boolean(b) => if b { "TRUE" } else { "FALSE" }.into(),
-        Scalar::Blank => String::new(),
-        Scalar::Missing => p.coerce_missing_text()?,
-        Scalar::Text(s) => s,
-        Scalar::Error(error) => return Err(Failure::Spreadsheet(error)),
-    };
-    checked_text(p, s)
+    let text = coercev2_owned_text(v, |request| match request {
+        OwnedDeferredText::Number(n) => p.coercev2_number_to_text(n),
+        OwnedDeferredText::Text(t) => Ok(t),
+        OwnedDeferredText::Missing => p.coercev2_missing_text(),
+    })?;
+    checked_text(p, text)
 }
-fn coerce_engineering_decimal_number<P: EvaluationPort>(
+fn coercev2_engineering_decimal_number<P: EvaluationPort>(
     p: &mut P,
     a: &P::Argument,
 ) -> Result<f64, Failure<P::Operational>> {
-    let s = coerce_engineering_argument_text(p, a)?;
-    p.coerce_decimal_text(&s)?
+    let s = coercev2_engineering_argument_text(p, a)?;
+    p.coercev2_decimal_text(&s)?
         .ok_or(Failure::Spreadsheet(CellError::Value))
 }
-fn coerce_engineering_number<P: EvaluationPort>(
+fn coercev2_engineering_number<P: EvaluationPort>(
     p: &mut P,
     a: &P::Argument,
 ) -> Result<f64, Failure<P::Operational>> {
-    match scalar(p, a)? {
-        Scalar::Number(n) => Ok(n),
-        Scalar::Boolean(b) => Ok(if b { 1.0 } else { 0.0 }),
-        Scalar::Blank => Ok(0.0),
-        Scalar::Missing => p.coerce_missing_number(),
-        Scalar::Text(s) => {
-            let s = checked_text(p, s)?;
-            p.coerce_number_text(&s)
-        }
-        Scalar::Error(error) => Err(Failure::Spreadsheet(error)),
-    }
+    use poirot_coercionv2::compatibility::{DeferredNumber, NumberPolicy, coercev2_number};
+    let value = scalar(p, a)?;
+    coercev2_number(
+        (&value).into(),
+        NumberPolicy::Preserve,
+        |input| match input {
+            DeferredNumber::Missing => p.coercev2_missing_number(),
+            DeferredNumber::Text(poirot_functions_core::TextRef::Utf8(text)) => {
+                p.check_text(text.len()).map_err(Failure::Operational)?;
+                work(p, text.len() as u64)?;
+                p.coercev2_number_text(text)
+            }
+            DeferredNumber::Text(_) => Err(CellError::Value.into()),
+        },
+    )
 }
 fn domain_error<O>(e: domain::EngineeringError) -> Failure<O> {
     Failure::Spreadsheet(match e {
@@ -211,7 +212,7 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
     work(p, 1)?;
     let out = match f {
         Bin2dec | Hex2dec | Oct2dec | Imaginary | Imreal => {
-            let s = coerce_engineering_argument_text(p, args.first().ok_or(CellError::Value)?)?;
+            let s = coercev2_engineering_argument_text(p, args.first().ok_or(CellError::Value)?)?;
             // Regex/output allocation bounded by the input plus a sign/digit.
             p.check_text(s.len().saturating_add(2))
                 .map_err(Failure::Operational)?;
@@ -235,7 +236,7 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
                     if excel {
                         // Only the shared complex parser's selected coefficient is numeric.
                         Output::Number(
-                            p.coerce_decimal_text(&coefficient)?
+                            p.coercev2_decimal_text(&coefficient)?
                                 .ok_or(Failure::Spreadsheet(CellError::Num))?,
                         )
                     } else {
@@ -246,7 +247,7 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
             }
         }
         Dec2bin | Dec2hex => {
-            let n = coerce_engineering_decimal_number(p, args.first().ok_or(CellError::Value)?)?;
+            let n = coercev2_engineering_decimal_number(p, args.first().ok_or(CellError::Value)?)?;
             // Validate range BEFORE resolving places, including out-of-domain n.
             let half = if f == Dec2bin { 512.0 } else { 549755813888.0 };
             if !n.is_finite() || n <= -half - 1.0 || n >= half {
@@ -255,7 +256,7 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
             let places = if n.trunc() < 0.0 || args.len() == 1 {
                 None
             } else {
-                Some(coerce_engineering_decimal_number(
+                Some(coercev2_engineering_decimal_number(
                     p,
                     args.get(1).ok_or(CellError::Value)?,
                 )?)
@@ -272,7 +273,7 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
             )
         }
         Delta | Besselj => {
-            let x = coerce_engineering_decimal_number(p, args.first().ok_or(CellError::Value)?)?;
+            let x = coercev2_engineering_decimal_number(p, args.first().ok_or(CellError::Value)?)?;
             let y = if args.len() == 1 {
                 0.0
             } else if excel && f == Delta {
@@ -280,12 +281,12 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
                 if value == Scalar::Missing {
                     0.0
                 } else {
-                    let s = coerce_engineering_scalar_text(p, value)?;
-                    p.coerce_decimal_text(&s)?
+                    let s = coercev2_engineering_scalar_text(p, value)?;
+                    p.coercev2_decimal_text(&s)?
                         .ok_or(Failure::Spreadsheet(CellError::Value))?
                 }
             } else {
-                coerce_engineering_decimal_number(p, args.get(1).ok_or(CellError::Value)?)?
+                coercev2_engineering_decimal_number(p, args.get(1).ok_or(CellError::Value)?)?
             };
             if f == Delta {
                 Output::Number(domain::delta(x, y))
@@ -301,10 +302,10 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
             }
         }
         Complex => {
-            let r = coerce_engineering_number(p, args.first().ok_or(CellError::Value)?)?;
-            let i = coerce_engineering_number(p, args.get(1).ok_or(CellError::Value)?)?;
+            let r = coercev2_engineering_number(p, args.first().ok_or(CellError::Value)?)?;
+            let i = coercev2_engineering_number(p, args.get(1).ok_or(CellError::Value)?)?;
             let suffix = if args.len() == 3 {
-                coerce_engineering_argument_text(p, args.get(2).ok_or(CellError::Value)?)?
+                coercev2_engineering_argument_text(p, args.get(2).ok_or(CellError::Value)?)?
             } else {
                 "i".into()
             };
@@ -316,13 +317,13 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
             // Format only components actually emitted by the pinned source.
             let rt = if r != 0.0 {
                 // TODO(coercion-non-argument): [LOW] Rendering a computed complex component at spreadsheet precision can discard digits in the returned text.
-                p.coerce_number_to_text(r)?
+                p.coercev2_number_to_text(r)?
             } else {
                 String::new()
             };
             let it = if i != 0.0 && i != 1.0 && i != -1.0 {
                 // TODO(coercion-non-argument): [LOW] Rendering a computed complex component at spreadsheet precision can discard digits in the returned text.
-                p.coerce_number_to_text(i)?
+                p.coercev2_number_to_text(i)?
             } else {
                 String::new()
             };
@@ -374,16 +375,19 @@ mod tests {
         fn check_text(&mut self, _: usize) -> Result<(), Self::Operational> {
             Ok(())
         }
-        fn coerce_number_to_text(&mut self, n: f64) -> Result<String, Failure<Self::Operational>> {
+        fn coercev2_number_to_text(
+            &mut self,
+            n: f64,
+        ) -> Result<String, Failure<Self::Operational>> {
             Ok(n.to_string())
         }
-        fn coerce_decimal_text(
+        fn coercev2_decimal_text(
             &mut self,
             s: &str,
         ) -> Result<Option<f64>, Failure<Self::Operational>> {
             Ok(s.parse().ok())
         }
-        fn coerce_number_text(&mut self, s: &str) -> Result<f64, Failure<Self::Operational>> {
+        fn coercev2_number_text(&mut self, s: &str) -> Result<f64, Failure<Self::Operational>> {
             s.parse()
                 .map_err(|_| Failure::Spreadsheet(CellError::Value))
         }

@@ -32,7 +32,7 @@ impl<'a> Session<'a> {
         match value {
             // TODO(coercion-non-argument): [MEDIUM] Generic scalar projection drops omission identity rather than leaving the consumer to choose a default.
             Value::Missing => Ok(coerce_legacy_missing_blank()),
-            Value::Scalar(value) => Ok(value),
+            Value::Scalar(value) | Value::SelectedScalar(value, _) => Ok(value),
             Value::Array(rows) => Ok(rows
                 .into_iter()
                 .next()
@@ -113,7 +113,8 @@ impl<'a> Session<'a> {
                 Value::Refs(left) | Value::SheetSpan(left),
                 Value::Refs(right) | Value::SheetSpan(right),
             ) => (left, right),
-            (Value::Scalar(Error(error)), _) | (_, Value::Scalar(Error(error))) => {
+            (Value::Scalar(Error(error)) | Value::SelectedScalar(Error(error), _), _)
+            | (_, Value::Scalar(Error(error)) | Value::SelectedScalar(Error(error), _)) => {
                 return Ok(err(error));
             }
             _ => return Ok(err(VALUE_ERROR)),
@@ -212,15 +213,8 @@ impl<'a> Session<'a> {
                 _ => !c.is_lt(),
             }));
         }
-        let coerce_number = if self.numeric_policy == NumericOutcomePolicy::PinnedPoi7321209 {
-            core_projection::coerce_arithmetic_operand_number
-        } else {
-            coerce_arithmetic_number
-        };
-        // TODO(coercion-non-argument): [LOW] Binary arithmetic conversion must not leak into raw operand reads or type-sensitive consumers.
-        let l = coerce_number(&l, &mut self.budget)?;
-        // TODO(coercion-non-argument): [LOW] Binary arithmetic conversion must not leak into raw operand reads or type-sensitive consumers.
-        let r = coerce_number(&r, &mut self.budget)?;
+        let l = self.coercev2_operator_number(&l)?;
+        let r = self.coercev2_operator_number(&r)?;
         let result = match op {
             BinaryOp::Add => {
                 if self.numeric_policy == NumericOutcomePolicy::PinnedPoi7321209 {
@@ -273,7 +267,7 @@ impl<'a> Session<'a> {
                 self.budget.allocation(1)?;
                 Ok(vec![(Blank, false)])
             }
-            Value::Scalar(value) => {
+            Value::Scalar(value) | Value::SelectedScalar(value, _) => {
                 self.budget.allocation(1)?;
                 Ok(vec![(value, false)])
             }

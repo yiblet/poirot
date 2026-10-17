@@ -1,6 +1,6 @@
 //! Streaming aggregation with repeated lazy matching for two-pass statistics.
 use super::criteria::CriteriaPlan;
-use super::selection::{coerce_database_number, selected};
+use super::selection::{coercev2_database_number, selected};
 use super::{CellError, CellValue, DatabaseError, DatabaseFunction, DatabasePlan};
 
 /// Aggregate the records selected by a validated database plan.
@@ -31,7 +31,7 @@ pub(super) fn execute(plan: &DatabasePlan<'_>) -> Result<CellValue, DatabaseErro
             }
             continue;
         }
-        if let Some(number) = coerce_database_number(value) {
+        if let Some(number) = coercev2_database_number(value) {
             count += 1;
             sum += number;
             product = if count == 1 { number } else { product * number };
@@ -39,9 +39,9 @@ pub(super) fn execute(plan: &DatabasePlan<'_>) -> Result<CellValue, DatabaseErro
                 None => value,
                 Some(old) => {
                     if (plan.function == DatabaseFunction::Min
-                        && number < coerce_database_number(old).ok_or(CellError::Value)?)
+                        && number < coercev2_database_number(old).ok_or(CellError::Value)?)
                         || (plan.function == DatabaseFunction::Max
-                            && number > coerce_database_number(old).ok_or(CellError::Value)?)
+                            && number > coercev2_database_number(old).ok_or(CellError::Value)?)
                     {
                         value
                     } else {
@@ -83,7 +83,7 @@ pub(super) fn execute(plan: &DatabasePlan<'_>) -> Result<CellValue, DatabaseErro
             for row in 1..plan.database.rows {
                 if criteria.matches_row(row)?
                     && let Some(value) =
-                        coerce_database_number(selected(plan.database, plan.field, row))
+                        coercev2_database_number(selected(plan.database, plan.field, row))
                 {
                     squared += (value - mean) * (value - mean);
                 }

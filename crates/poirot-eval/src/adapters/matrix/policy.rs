@@ -8,8 +8,10 @@ mod plans;
 mod sumproduct;
 mod trend;
 
-use access::{UNLIMITED, coerce_matrix_number, describe, err, preflight, read, value, work};
-use collection::{coerce_frequency_collection, coerce_matrix_collection, coerce_trend_collection};
+use access::{UNLIMITED, coercev2_matrix_number, describe, err, preflight, read, value, work};
+use collection::{
+    coercev2_frequency_collection, coercev2_matrix_collection, coercev2_trend_collection,
+};
 use plans::ResourcePlan;
 /// Matrix algebra and array aggregation operations supported by this adapter.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -122,7 +124,7 @@ pub trait EvaluationPort {
     /// Check text capacity before copying or allocating.
     fn check_text(&mut self, bytes: usize) -> Result<(), Self::Operational>;
     /// Coerce numeric text using the engine's shared conversion policy.
-    fn coerce_number_text(&mut self, text: &str) -> Result<f64, Failure<Self::Operational>>;
+    fn coercev2_number_text(&mut self, text: &str) -> Result<f64, Failure<Self::Operational>>;
     /// A concrete engine operational budget failure; never manufacture #VALUE!.
     fn budget_exceeded(&mut self) -> Self::Operational;
     /// Apply explicit omitted-argument numeric coercion or reject the capability.
@@ -167,8 +169,8 @@ pub fn evaluate<P: EvaluationPort>(
         return sumproduct::evaluate(p, args).map(Output::Number);
     }
     if f == Frequency {
-        let data = coerce_frequency_collection(p, args.first().ok_or(CellError::Value)?)?;
-        let bins = coerce_frequency_collection(p, args.get(1).ok_or(CellError::Value)?)?;
+        let data = coercev2_frequency_collection(p, args.first().ok_or(CellError::Value)?)?;
+        let bins = coercev2_frequency_collection(p, args.get(1).ok_or(CellError::Value)?)?;
         ResourcePlan::frequency(data.len(), bins.len()).admit(p)?;
         return domain::frequency(&data, &bins, UNLIMITED)
             .map(Output::Array)
@@ -184,9 +186,9 @@ pub fn evaluate<P: EvaluationPort>(
         Transpose => domain::MatrixCollection::Transpose,
         _ => return Err(CellError::Value.into()),
     };
-    let a = coerce_matrix_collection(p, args.first().ok_or(CellError::Value)?, policy)?;
+    let a = coercev2_matrix_collection(p, args.first().ok_or(CellError::Value)?, policy)?;
     if f == Mmult {
-        let b = coerce_matrix_collection(p, args.get(1).ok_or(CellError::Value)?, policy)?;
+        let b = coercev2_matrix_collection(p, args.get(1).ok_or(CellError::Value)?, policy)?;
         ResourcePlan::multiply(&a, &b).admit(p)?;
         return domain::multiply(&a, &b, UNLIMITED)
             .map(matrix_output)
@@ -206,6 +208,19 @@ pub fn evaluate<P: EvaluationPort>(
         _ => Err(CellError::Value.into()),
     }
 }
+impl<'a> From<&'a Cell> for poirot_coercionv2::compatibility::ScalarRef<'a> {
+    fn from(value: &'a Cell) -> Self {
+        match value {
+            Cell::Number(n) => Self::Number(*n),
+            Cell::Bool(b) => Self::Boolean(*b),
+            Cell::Text(t) => Self::Text(poirot_coercionv2::TextRef::Utf8(t)),
+            Cell::Blank => Self::Blank,
+            Cell::Error(e) => Self::Error(*e),
+            Cell::Missing => Self::Missing,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -250,7 +265,7 @@ mod tests {
         fn check_text(&mut self, _: usize) -> Result<(), Self::Operational> {
             Ok(())
         }
-        fn coerce_number_text(&mut self, s: &str) -> Result<f64, Failure<Self::Operational>> {
+        fn coercev2_number_text(&mut self, s: &str) -> Result<f64, Failure<Self::Operational>> {
             s.parse()
                 .map_err(|_| Failure::Spreadsheet(CellError::Value))
         }

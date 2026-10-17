@@ -1,4 +1,4 @@
-use super::{EvaluationPort, Failure, LogicalFunction, coerce_logical_test, evaluate};
+use super::{EvaluationPort, Failure, LogicalFunction, coercev2_logical_test, evaluate};
 use poirot_functions_core::{CellError, CellValue};
 
 /// Test outcome distinguishing selected values from operational failures.
@@ -46,7 +46,7 @@ impl EvaluationPort for Port {
         self.visits.push(('r', index));
         Ok(matches!(self.inputs[index].clone()?, Output::Reference(_)))
     }
-    fn coerce_truncated_number(&mut self, index: usize) -> Result<f64, Failure<&'static str>> {
+    fn coercev2_truncated_number(&mut self, index: usize) -> Result<f64, Failure<&'static str>> {
         self.visits.push(('n', index));
         Ok(self.truncated)
     }
@@ -113,20 +113,20 @@ fn ifs_shape_and_condition_precedence() {
 #[test]
 fn boolean_coercion_keeps_poi_string_and_nan_quirks() {
     assert_eq!(
-        coerce_logical_test(&CellValue::Text("tRuE".into())),
+        coercev2_logical_test(&CellValue::Text("tRuE".into())),
         Ok(true)
     );
     assert_eq!(
-        coerce_logical_test(&CellValue::Text(" TRUE ".into())),
+        coercev2_logical_test(&CellValue::Text(" TRUE ".into())),
         Err(CellError::Value)
     );
     assert_eq!(
-        coerce_logical_test(&CellValue::Text("1".into())),
+        coercev2_logical_test(&CellValue::Text("1".into())),
         Err(CellError::Value)
     );
-    assert_eq!(coerce_logical_test(&CellValue::Blank), Ok(false));
+    assert_eq!(coercev2_logical_test(&CellValue::Blank), Ok(false));
     assert_eq!(
-        coerce_logical_test(&CellValue::Number(f64::NAN)),
+        coercev2_logical_test(&CellValue::Number(f64::NAN)),
         Err(CellError::Value)
     );
 }

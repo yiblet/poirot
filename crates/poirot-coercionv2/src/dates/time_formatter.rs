@@ -2,8 +2,8 @@
 //! Optional sections commit on success and restore fields/input on failure;
 //! there is no global choice/backtracking between the four appendPattern calls.
 use super::calendar::{Date, civil, epoch, month_days};
-use crate::{CellError, VALUE_ERROR};
 use nom::{Parser, bytes::complete::take_while_m_n};
+use poirot_functions_core::{CellError, CellError::Value as VALUE_ERROR};
 const PATTERNS: [&str; 4] = [
     "[d[.] [MMMM][MMM][ yyyy]][[ ]h:m[:s][.SSS] a][[ ]H:m[:s][.SSS]]",
     "[[yyyy ]d-[MMMM][MMM][-yyyy]][[ ]h:m[:s][.SSS] a][[ ]H:m[:s][.SSS]]",
@@ -27,14 +27,14 @@ const MONTHS: [&str; 12] = [
 /// Source profile uses explicit English names and a fixed timezone.
 /// Other locale/zone profiles require additional token tables/bridge policy.
 #[derive(Clone, Copy)]
-pub(super) enum SourceProfile {
+pub enum SourceProfile {
     /// English month names and a fixed UTC timezone.
     EnglishUtc,
 }
 // year/month/day/hour/clock-hour/minute/second/nanos/ampm
 /// Parsed formatter fields accumulated across committed optional pattern sections.
 #[derive(Clone, Copy, Default)]
-pub(super) struct Plan {
+pub struct Plan {
     fields: [Option<i64>; 9],
 }
 fn set(plan: &mut Plan, key: usize, value: i64) -> Result<(), ()> {
@@ -168,15 +168,15 @@ fn section<'a>(
 }
 /// Resolved optional date and seconds of day after formatter field validation.
 #[derive(Clone, Copy)]
-pub(super) struct Resolved {
+pub struct Resolved {
     /// Resolved Gregorian date, including accepted midnight rollover.
-    pub(super) date: Option<Date>,
+    pub date: Option<Date>,
     /// Seconds since midnight, with subsecond fields discarded.
-    pub(super) seconds: u32,
+    pub seconds: u32,
 }
 impl Plan {
     /// Parse all concatenated source patterns while retaining optional-section commits.
-    pub(super) fn inspect(_profile: SourceProfile, mut input: &str) -> Result<Self, CellError> {
+    pub fn inspect(_profile: SourceProfile, mut input: &str) -> Result<Self, CellError> {
         let mut plan = Self::default();
         for pattern in PATTERNS {
             input = section(input, pattern.as_bytes(), 0, pattern.len(), &mut plan)
@@ -188,11 +188,11 @@ impl Plan {
         Ok(plan)
     }
     /// Whether a month/day spelling requires a year from evaluation context.
-    pub(super) fn needs_year(self) -> bool {
+    pub fn needs_year(self) -> bool {
         self.fields[0].is_none() && self.fields[1].is_some() && self.fields[2].is_some()
     }
     /// Validate parsed fields and supply the caller's default year when needed.
-    pub(super) fn resolve(self, default_year: i64) -> Result<Resolved, CellError> {
+    pub fn resolve(self, default_year: i64) -> Result<Resolved, CellError> {
         let f = self.fields;
         let year = f[0].unwrap_or(default_year);
         if !(1..=999_999_999).contains(&year) {

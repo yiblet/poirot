@@ -65,7 +65,7 @@ impl LookupTable {
                 }
                 Ok(Self::Array(a))
             }
-            Value::Scalar(_) if is_match => Err(NA),
+            Value::Scalar(_) | Value::SelectedScalar(_, _) if is_match => Err(NA),
             _ => Err(VALUE_ERROR),
         }
     }

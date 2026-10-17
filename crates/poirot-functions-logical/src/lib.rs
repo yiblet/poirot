@@ -2,35 +2,8 @@
 use poirot_functions_core::{CellError, CellValue};
 
 /// Coerce an admitted scalar into a logical condition under the kernel rules.
-pub fn coerce_logical_test(value: &CellValue) -> Result<bool, CellError> {
-    if let Some(text) = value.text_ref() {
-        let equal = |expected: &[u8]| {
-            let length = match text {
-                poirot_functions_core::TextRef::Utf8(t) => t.len(),
-                poirot_functions_core::TextRef::Utf16(u) => u.len(),
-            };
-            length == expected.len()
-                && text
-                    .units()
-                    .zip(expected)
-                    .all(|(unit, byte)| unit <= 127 && (unit as u8).eq_ignore_ascii_case(byte))
-        };
-        return if equal(b"true") {
-            Ok(true)
-        } else if equal(b"false") {
-            Ok(false)
-        } else {
-            Err(CellError::Value)
-        };
-    }
-    match value {
-        CellValue::Blank => Ok(false),
-        CellValue::Boolean(value) => Ok(*value),
-        CellValue::Number(value) if value.is_nan() => Err(CellError::Value),
-        CellValue::Number(value) => Ok(*value != 0.0),
-        CellValue::Error(error) => Err(*error),
-        _ => Err(CellError::Value),
-    }
+pub fn coercev2_logical_test(value: &CellValue) -> Result<bool, CellError> {
+    poirot_coercionv2::compatibility::coercev2_logical_test(value)
 }
 
 /// Return the ERROR.TYPE code for a supported spreadsheet error.

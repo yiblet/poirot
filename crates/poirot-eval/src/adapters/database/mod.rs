@@ -2,8 +2,9 @@
 use crate::host::{CallHost, MissingPolicy};
 use crate::*;
 use poirot_functions_database::{
-    DatabaseError, DatabaseFunction, DatabasePlan, Grid, coerce_database_number,
-    coerce_database_text, condition_matches, criteria_header_index, equal_ignore_case, field_index,
+    DatabaseError, DatabaseFunction, DatabasePlan, Grid, coercev2_database_criteria_header_index,
+    coercev2_database_field_index, coercev2_database_number, coercev2_database_text,
+    condition_matches, equal_ignore_case,
 };
 
 /// Execute database aggregation through bounded criteria-table and record reads.
@@ -29,14 +30,14 @@ fn database_failure(host: &CallHost<'_, '_>, error: DatabaseError) -> FunctionFa
         ),
     }
 }
-fn coerce_database_header_text(
+fn coercev2_database_header_text(
     host: &mut CallHost<'_, '_>,
     value: &CellValue,
 ) -> FunctionResult<String> {
     if let CellValue::TextUtf16(text) = value {
         return host.project_text(poirot_model::TextRef::Utf16(text.units()));
     }
-    coerce_database_text(value).map_err(|error| database_failure(host, error))
+    coercev2_database_text(value).map_err(|error| database_failure(host, error))
 }
 fn header(
     host: &mut CallHost<'_, '_>,
@@ -49,7 +50,7 @@ fn header(
         if matches!(value, Blank | Error(_)) {
             continue;
         }
-        if equal_ignore_case(&coerce_database_header_text(host, &value)?, name) {
+        if equal_ignore_case(&coercev2_database_header_text(host, &value)?, name) {
             return Ok(Some(col));
         }
     }
@@ -79,19 +80,19 @@ fn row_matches(
             let selected = match &heading {
                 Text(name) => header(host, columns, name)?,
                 CellValue::TextUtf16(_) => {
-                    let name = coerce_database_header_text(host, &heading)?;
+                    let name = coercev2_database_header_text(host, &heading)?;
                     header(host, columns, &name)?
                 }
                 // NumberEval and BoolEval also implement StringValueEval,
                 // passing DStarRunner's header guard before positional lookup.
-                heading if coerce_database_number(heading).is_some() => {
-                    criteria_header_index(heading, columns)?
+                heading if coercev2_database_number(heading).is_some() => {
+                    coercev2_database_criteria_header_index(heading, columns)?
                 }
                 _ => return Err(VALUE_ERROR.into()),
             };
             scratch(host, &condition)?;
             let Some(selected) = selected else {
-                if coerce_database_header_text(host, &condition)?.is_empty() {
+                if coercev2_database_header_text(host, &condition)?.is_empty() {
                     return Err(VALUE_ERROR.into());
                 }
                 return Err(
@@ -139,13 +140,13 @@ fn evaluate(host: &mut CallHost<'_, '_>, function: DatabaseFunction) -> Function
         match &field {
             Error(e) if !empty => return Err((*e).into()),
             Error(_) => None,
-            value if coerce_database_number(value).is_some() => {
-                field_index(value, database.columns)
+            value if coercev2_database_number(value).is_some() => {
+                coercev2_database_field_index(value, database.columns)
             }
             Text(name) => header(host, database.columns, name)?,
             Blank => header(host, database.columns, "")?,
             value => {
-                let name = coerce_database_header_text(host, value)?;
+                let name = coercev2_database_header_text(host, value)?;
                 header(host, database.columns, &name)?
             }
         }

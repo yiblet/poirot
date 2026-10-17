@@ -193,13 +193,11 @@ impl Session<'_> {
                 }
             }
         }
-        // TODO(coercion-non-argument): [MEDIUM] Publishing an array member as zero can hide a blank if this value is reused before cell publication.
-        let first = coerce_cell_publication(
-            rows.first()
-                .and_then(|row| row.first())
-                .ok_or(EvaluationFailure::StalePlan)?
-                .clone(),
-        );
+        let first = rows
+            .first()
+            .and_then(|row| row.first())
+            .ok_or(EvaluationFailure::StalePlan)?
+            .clone();
         self.pending_spills.insert((sheet, at), rows);
         Ok(first)
     }
@@ -304,9 +302,7 @@ impl Session<'_> {
                         row: at.row + r as u32,
                         col: at.col + c as u32,
                     };
-                    self.cache
-                        // TODO(coercion-non-argument): [MEDIUM] Publishing an array member as zero can hide a blank if this value is reused before cell publication.
-                        .insert((sheet, child), coerce_cell_publication(value));
+                    self.cache.insert((sheet, child), value);
                     self.spill_owners.insert((sheet, child), at);
                 }
             }

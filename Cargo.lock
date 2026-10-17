@@ -561,6 +561,17 @@ name = "poirot-coercion"
 version = "0.1.0"
 dependencies = [
  "nom",
+ "poirot-coercionv2",
+]
+
+[[package]]
+name = "poirot-coercionv2"
+version = "0.1.0"
+dependencies = [
+ "nom",
+ "poirot-functions-core",
+ "poirot-numeric",
+ "serde",
 ]
 
 [[package]]
@@ -570,7 +581,7 @@ dependencies = [
  "allocation-counter",
  "foldhash",
  "nom",
- "poirot-coercion",
+ "poirot-coercionv2",
  "poirot-format",
  "poirot-formula",
  "poirot-functions-core",
@@ -624,12 +635,14 @@ name = "poirot-functions-criteria"
 version = "0.1.0"
 dependencies = [
  "nom",
+ "poirot-coercionv2",
 ]
 
 [[package]]
 name = "poirot-functions-database"
 version = "0.1.0"
 dependencies = [
+ "poirot-coercionv2",
  "poirot-functions-core",
  "poirot-functions-criteria",
  "poirot-numeric",
@@ -647,6 +660,7 @@ dependencies = [
 name = "poirot-functions-financial"
 version = "0.1.0"
 dependencies = [
+ "poirot-coercionv2",
  "poirot-numeric",
 ]
 
@@ -654,18 +668,23 @@ dependencies = [
 name = "poirot-functions-logical"
 version = "0.1.0"
 dependencies = [
+ "poirot-coercionv2",
  "poirot-functions-core",
 ]
 
 [[package]]
 name = "poirot-functions-lookup"
 version = "0.1.0"
+dependencies = [
+ "poirot-coercionv2",
+]
 
 [[package]]
 name = "poirot-functions-math"
 version = "0.1.0"
 dependencies = [
  "bigdecimal",
+ "poirot-coercionv2",
  "poirot-functions-core",
  "poirot-numeric",
 ]
@@ -674,6 +693,7 @@ dependencies = [
 name = "poirot-functions-matrix"
 version = "0.1.0"
 dependencies = [
+ "poirot-coercionv2",
  "poirot-functions-core",
 ]
 
@@ -682,6 +702,7 @@ name = "poirot-functions-statistics"
 version = "0.1.0"
 dependencies = [
  "bigdecimal",
+ "poirot-coercionv2",
  "poirot-functions-core",
  "poirot-numeric",
  "statrs",
@@ -691,6 +712,7 @@ dependencies = [
 name = "poirot-functions-text"
 version = "0.1.0"
 dependencies = [
+ "poirot-coercionv2",
  "poirot-numeric",
  "unicode-general-category",
 ]

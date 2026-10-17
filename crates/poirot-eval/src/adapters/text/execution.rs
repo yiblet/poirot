@@ -74,11 +74,11 @@ impl Session<'_> {
             if let Error(e) = value {
                 return Ok(err(e));
             }
-            let pattern = match semantic(coerce_formula_text(&pattern, &mut self.budget))? {
+            let pattern = match semantic(coercev2_formula_text(&pattern, &mut self.budget))? {
                 Ok(t) => t,
                 Err(e) => return Ok(err(e)),
             };
-            let (value, format_value) = self.coerce_text_format_value(value)?;
+            let (value, format_value) = self.coercev2_text_format_value(value)?;
             if !format_value {
                 return Ok(value.into());
             }
@@ -132,7 +132,7 @@ impl Session<'_> {
         }
 
         if matches!(name, TextFunction::Char | TextFunction::UniChar) {
-            let code = self.coerce_text_argument_number(a, 0)?;
+            let code = self.coercev2_text_argument_number(a, 0)?;
             if code < 1.
                 || code
                     > if name == TextFunction::Char {
@@ -148,10 +148,20 @@ impl Session<'_> {
             return Ok(Text(character.to_string()));
         }
         if name == TextFunction::Value {
-            return Ok(Number(coerce_arithmetic_number(
-                &Text(self.coerce_text_argument(a, 0)?),
-                &mut self.budget,
-            )?));
+            let value = a.first().ok_or(VALUE_ERROR)?;
+            let number =
+                poirot_coercionv2::compatibility::coercev2_value_number(value.into(), |text| {
+                    let text = checked_text_view(text, &mut self.budget)?;
+                    match self.coercev2_formatted_text(&text)? {
+                        poirot_coercionv2::compatibility::NumericTextDecision::Number(result) => {
+                            result.map_err(FunctionFailure::from)
+                        }
+                        poirot_coercionv2::compatibility::NumericTextDecision::DateTime => {
+                            self.coercev2_numeric_date_time(&text)
+                        }
+                    }
+                })?;
+            return Ok(Number(number));
         }
         if matches!(name, TextFunction::Concatenate | TextFunction::Concat) {
             let policy = self
@@ -169,7 +179,7 @@ impl Session<'_> {
             self.budget.allocation(a.len())?;
             let mut parts = Vec::with_capacity(a.len());
             for value in a {
-                parts.push(self.coerce_text_render(value)?);
+                parts.push(self.coercev2_text_render(value)?);
             }
             let bytes = parts.iter().try_fold(0usize, |total, part| {
                 poirot_text::checked_total(total, part.len()).map_err(text_unsupported)
@@ -201,31 +211,31 @@ impl Session<'_> {
                 .operation(operation)
                 .map_err(text_unsupported)?
                 .units;
-            let value = self.coerce_text_render(a.first().ok_or(VALUE_ERROR)?)?;
+            let value = self.coercev2_text_render(a.first().ok_or(VALUE_ERROR)?)?;
             self.budget
                 .charge(WorkKind::TextByte, value.len().saturating_mul(3) as u64)?;
             if name == TextFunction::Len {
                 return Ok(Number(poirot_text::length(&value, units) as f64));
             }
             let poi = self.text_policy.source == TextSourceVersion::Poi7321209;
-            let coerce_text_integer = |number: f64| -> FunctionResult<usize> {
-                if poi
-                    && (!number.is_finite()
-                        || number.floor() > i32::MAX as f64
-                        || number.floor() < i32::MIN as f64)
-                {
-                    return Err(Num.into());
-                }
-                Ok(number as usize)
+            let coercev2_text_integer = |number: f64| -> FunctionResult<usize> {
+                let policy = if poi {
+                    poirot_coercionv2::compatibility::TextIntegerPolicy::PinnedPoi
+                } else {
+                    poirot_coercionv2::compatibility::TextIntegerPolicy::Checked
+                };
+                poirot_coercionv2::compatibility::coercev2_text_integer_number(number, policy)
+                    .map(|number| number as usize)
+                    .map_err(Into::into)
             };
             let selected = match name {
                 TextFunction::Left | TextFunction::Right => {
                     let count = if n == 2 {
-                        self.coerce_text_argument_number(a, 1)?
+                        self.coercev2_text_argument_number(a, 1)?
                     } else {
                         1.
                     };
-                    let count_int = coerce_text_integer(count)?;
+                    let count_int = coercev2_text_integer(count)?;
                     if count < 0. {
                         return Err(VALUE_ERROR.into());
                     }
@@ -236,10 +246,10 @@ impl Session<'_> {
                     }
                 }
                 TextFunction::Mid => {
-                    let start = self.coerce_text_argument_number(a, 1)?;
-                    let count = self.coerce_text_argument_number(a, 2)?;
-                    let start_int = coerce_text_integer(start)?;
-                    let count_int = coerce_text_integer(count)?;
+                    let start = self.coercev2_text_argument_number(a, 1)?;
+                    let count = self.coercev2_text_argument_number(a, 2)?;
+                    let start_int = coercev2_text_integer(start)?;
+                    let count_int = coercev2_text_integer(count)?;
                     if start < 1. || count < 0. {
                         return Err(VALUE_ERROR.into());
                     }
@@ -256,7 +266,7 @@ impl Session<'_> {
             self.budget.text(selected.len())?;
             return Ok(Text(selected.to_owned()));
         }
-        let t = self.coerce_text_argument(a, 0)?;
+        let t = self.coercev2_text_argument(a, 0)?;
         self.budget.text(t.len())?;
         self.budget.allocation(t.chars().count())?;
         if matches!(
@@ -331,10 +341,10 @@ impl Session<'_> {
                 }
                 Number(code as f64)
             }
-            TextFunction::Exact => Boolean(t == self.coerce_text_argument(a, 1)?),
+            TextFunction::Exact => Boolean(t == self.coercev2_text_argument(a, 1)?),
             TextFunction::Left | TextFunction::Right => {
                 let count = if n == 2 {
-                    self.coerce_text_argument_number(a, 1)?
+                    self.coercev2_text_argument_number(a, 1)?
                 } else {
                     1.
                 };
@@ -351,8 +361,8 @@ impl Session<'_> {
                 })
             }
             TextFunction::Mid => {
-                let start = self.coerce_text_argument_number(a, 1)?;
-                let count = self.coerce_text_argument_number(a, 2)?;
+                let start = self.coercev2_text_argument_number(a, 1)?;
+                let count = self.coercev2_text_argument_number(a, 2)?;
                 if start < 1. || count < 0. {
                     return Err(VALUE_ERROR.into());
                 }
@@ -365,7 +375,7 @@ impl Session<'_> {
                 )
             }
             TextFunction::Rept => {
-                let count = self.coerce_text_argument_number(a, 1)?;
+                let count = self.coercev2_text_argument_number(a, 1)?;
                 if count < 0. || len as f64 * count.trunc() > 32767. {
                     return Err(VALUE_ERROR.into());
                 }
@@ -380,13 +390,13 @@ impl Session<'_> {
                 Text(t.repeat(repeats))
             }
             TextFunction::Replace => {
-                let start = self.coerce_text_argument_number(a, 1)?;
-                let count = self.coerce_text_argument_number(a, 2)?;
+                let start = self.coercev2_text_argument_number(a, 1)?;
+                let count = self.coercev2_text_argument_number(a, 2)?;
                 if start < 1. || count < 0. {
                     return Err(VALUE_ERROR.into());
                 }
                 let start = (start as usize - 1).min(len);
-                let new = self.coerce_text_argument(a, 3)?;
+                let new = self.coercev2_text_argument(a, 3)?;
                 let tail = (start.saturating_add(count as usize)).min(len);
                 // SAFETY: The local count/start/tail values are clamped to chars.len(); suffix scan i is bounded by h.len(), so the requested character slices are in bounds.
                 let bytes = chars[..start]
@@ -406,15 +416,15 @@ impl Session<'_> {
                 Text(result)
             }
             TextFunction::Substitute => {
-                let old = self.coerce_text_argument(a, 1)?;
-                let new = self.coerce_text_argument(a, 2)?;
+                let old = self.coercev2_text_argument(a, 1)?;
+                let new = self.coercev2_text_argument(a, 2)?;
                 if old.is_empty() {
                     Text(t)
                 } else {
                     let nth = if n == 3 {
                         None
                     } else {
-                        let nth = self.coerce_text_argument_number(a, 3)?;
+                        let nth = self.coercev2_text_argument_number(a, 3)?;
                         if nth < 1. {
                             return Err(VALUE_ERROR.into());
                         }
@@ -447,9 +457,9 @@ impl Session<'_> {
                 }
             }
             TextFunction::Find | TextFunction::Search => {
-                let hay = self.coerce_text_argument(a, 1)?;
+                let hay = self.coercev2_text_argument(a, 1)?;
                 let start = if n == 3 {
-                    self.coerce_text_argument_number(a, 2)?
+                    self.coercev2_text_argument_number(a, 2)?
                 } else {
                     1.
                 };
@@ -499,54 +509,47 @@ fn text_unsupported(reason: poirot_text::Unsupported) -> FunctionFailure {
 }
 
 impl Session<'_> {
-    fn coerce_text_argument(
+    fn coercev2_text_argument(
         &mut self,
         arguments: &[CellValue],
         index: usize,
     ) -> FunctionResult<String> {
-        coerce_formula_text(arguments.get(index).ok_or(VALUE_ERROR)?, &mut self.budget)
+        coercev2_formula_text(arguments.get(index).ok_or(VALUE_ERROR)?, &mut self.budget)
     }
-    fn coerce_text_argument_number(
+    fn coercev2_text_argument_number(
         &mut self,
         arguments: &[CellValue],
         index: usize,
     ) -> FunctionResult<f64> {
+        use poirot_coercionv2::compatibility::{
+            NumericTextDecision, TextIntegerPolicy, coercev2_text_integer_number,
+        };
         let value = arguments.get(index).ok_or(VALUE_ERROR)?;
-        if value.text_ref().is_some() {
-            self.read(DependencyRead::TextPolicy);
-            if matches!(
-                self.text_policy.source,
-                TextSourceVersion::Poi7321209 | TextSourceVersion::Poi7321209OpenJdk21Unicode15
-            ) {
-                let projected =
-                    checked_text_view(value.text_ref().ok_or(VALUE_ERROR)?, &mut self.budget)?;
-                use nom::Parser;
-                let trimmed = projected.trim_matches(|c: char| (c as u32) <= 32);
-                if nom::combinator::all_consuming(
-                    nom::number::complete::recognize_float::<_, nom::error::Error<_>>,
-                )
-                .parse(trimmed)
-                .is_err()
-                {
-                    return Err(EvaluationFailure::UnsupportedCapability {
-                        capability: CapabilityId::DateParsing,
-                        source: None,
-                        detail:
-                            "text integer date/time fallback requires an installed parsing policy"
-                                .into(),
-                    }
-                    .into());
-                }
-                return poirot_numeric::parse_java_number(trimmed)
-                    .filter(|n| n.is_finite())
-                    .ok_or_else(|| VALUE_ERROR.into());
+        self.read(DependencyRead::TextPolicy);
+        let policy = if matches!(
+            self.text_policy.source,
+            TextSourceVersion::Poi7321209 | TextSourceVersion::Poi7321209OpenJdk21Unicode15
+        ) {
+            TextIntegerPolicy::PinnedPoi
+        } else {
+            TextIntegerPolicy::Checked
+        };
+        let number = if let Some(text) = value.text_ref()
+            && matches!(policy, TextIntegerPolicy::PinnedPoi)
+        {
+            let projected = checked_text_view(text, &mut self.budget)?;
+            match self.coercev2_formatted_text(&projected)? {
+                NumericTextDecision::Number(result) => result?,
+                NumericTextDecision::DateTime => self.coercev2_numeric_date_time(&projected)?,
             }
-        }
-        coerce_arithmetic_number(value, &mut self.budget)
+        } else {
+            self.coercev2_scalar_number(value)?
+        };
+        coercev2_text_integer_number(number, policy).map_err(Into::into)
     }
 
     // Reserve before coercion clones or number rendering allocate.
-    fn coerce_text_render(&mut self, value: &CellValue) -> FunctionResult<String> {
+    fn coercev2_text_render(&mut self, value: &CellValue) -> FunctionResult<String> {
         let bound = match value {
             Text(value) => value.len(),
             Number(_) => poirot_numeric::number_text::ALLOCATION_BOUND,
@@ -560,13 +563,13 @@ impl Session<'_> {
                 self.text_policy.source,
                 TextSourceVersion::Poi7321209 | TextSourceVersion::Poi7321209OpenJdk21Unicode15
             ) {
-                return Ok(poirot_numeric::number_text::render(
+                return Ok(poirot_coercionv2::compatibility::coercev2_render_number(
                     *value,
                     poirot_numeric::number_text::SourceVersion::Poi7321209,
                 ));
             }
         }
-        coerce_formula_text(value, &mut self.budget)
+        coercev2_formula_text(value, &mut self.budget)
     }
     /// Execute concatenation with selected text-unit semantics and metered storage.
     pub(crate) fn text_concat_operator(
@@ -588,10 +591,8 @@ impl Session<'_> {
         if policy.units == poirot_text::Units::Utf16CodeUnits {
             return self.text_unit_operator(&left, &right);
         }
-        // TODO(coercion-non-argument): [LOW] Concatenation text conversion must remain local to the operator and preserve underlying numeric inputs.
-        let left = self.coerce_text_render(&left)?;
-        // TODO(coercion-non-argument): [LOW] Concatenation text conversion must remain local to the operator and preserve underlying numeric inputs.
-        let right = self.coerce_text_render(&right)?;
+        let left = self.coercev2_text_render(&left)?;
+        let right = self.coercev2_text_render(&right)?;
         let bytes =
             poirot_text::checked_total(left.len(), right.len()).map_err(text_unsupported)?;
         self.budget.charge(WorkKind::TextByte, bytes as u64)?;
@@ -611,38 +612,20 @@ impl Session<'_> {
 impl Session<'_> {
     /// TEXT's pinned numeric policy preserves nonnumeric text, renders booleans
     /// directly, and admits numeric text and blanks to the formatting consumer.
-    fn coerce_text_format_value(&mut self, value: CellValue) -> EvalResult<(CellValue, bool)> {
-        let value = match value {
-            Blank => Number(0.),
-            Text(ref t) => match t.trim().parse::<f64>() {
-                Ok(n) if n.is_finite() => Number(n),
-                _ => return Ok((value, false)),
-            },
-            CellValue::TextUtf16(ref units) => {
-                self.budget
-                    .charge(WorkKind::TextByte, units.units().len() as u64)?;
-                let view = poirot_model::TextRef::Utf16(units.units());
-                // A malformed scalar string cannot be numeric. Source TEXT
-                // preserves nonnumeric text without any display projection.
-                if view.utf8_len().is_err() {
-                    return Ok((value, false));
-                }
-                let projected =
-                    checked_text_view(view, &mut self.budget).map_err(|error| match error {
-                        FunctionFailure::Operational(error) => error,
-                        FunctionFailure::Spreadsheet(_) => EvaluationFailure::StalePlan,
-                    })?;
-                let numeric = projected.trim().parse::<f64>();
-                drop(projected);
-                match numeric {
-                    Ok(n) if n.is_finite() => Number(n),
-                    _ => return Ok((value, false)),
-                }
+    fn coercev2_text_format_value(&mut self, value: CellValue) -> EvalResult<(CellValue, bool)> {
+        poirot_coercionv2::compatibility::coercev2_text_format_value(value, |view| {
+            self.budget
+                .charge(WorkKind::TextByte, view.len_units() as u64)?;
+            if view.utf8_len().is_err() {
+                return Ok(None);
             }
-            Boolean(b) => return Ok((Text(if b { "TRUE" } else { "FALSE" }.into()), false)),
-            v => v,
-        };
-        Ok((value, true))
+            let projected =
+                checked_text_view(view, &mut self.budget).map_err(|error| match error {
+                    FunctionFailure::Operational(error) => error,
+                    FunctionFailure::Spreadsheet(_) => EvaluationFailure::StalePlan,
+                })?;
+            Ok(poirot_coercionv2::compatibility::coercev2_arithmetic_text(&projected).ok())
+        })
     }
 }
 

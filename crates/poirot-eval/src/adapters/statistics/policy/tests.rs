@@ -140,7 +140,7 @@ impl EvaluationPort for Port {
             Ok(())
         }
     }
-    fn coerce_text_number(&mut self, t: &str) -> Result<f64, Failure<Self::Operational>> {
+    fn coercev2_text_number(&mut self, t: &str) -> Result<f64, Failure<Self::Operational>> {
         poirot_numeric::parse_java_number(t).ok_or(CellError::Value.into())
     }
     fn is_reference(&mut self, a: &Arg) -> Result<bool, Failure<Self::Operational>> {
@@ -495,5 +495,92 @@ fn rank_array_admission_preserves_pinned_reference_guard_and_budgeted_collection
             &[n(4.), array]
         ),
         Err(Failure::Spreadsheet(CellError::Value))
+    );
+}
+
+#[test]
+fn statistical_consumers_share_numeric_pair_membership_and_retained_sample_size() {
+    // The retained points (0,1), (2,5) lie on y=2*x+1. Keeping either half of
+    // the excluded middle pair, or dividing means by three, changes the answer.
+    for origin in [Origin::Reference, Origin::Array] {
+        for excluded in [
+            Scalar::Blank,
+            Scalar::Text("1000".into()),
+            Scalar::Text("".into()),
+            Scalar::Text("not a number".into()),
+            Scalar::Boolean(true),
+            Scalar::Boolean(false),
+        ] {
+            for exclude_x in [true, false] {
+                let (x, y) = if exclude_x {
+                    (excluded.clone(), Scalar::Number(999.))
+                } else {
+                    (Scalar::Number(999.), excluded.clone())
+                };
+                let mut x = area(vec![Scalar::Number(0.), x, Scalar::Number(2.)]);
+                let mut y = area(vec![Scalar::Number(1.), y, Scalar::Number(5.)]);
+                x.origin = origin;
+                y.origin = origin;
+                for (function, expected) in [
+                    (StatisticsFunction::Correl, 1.),
+                    (StatisticsFunction::Pearson, 1.),
+                    (StatisticsFunction::Covar, 2.),
+                    (StatisticsFunction::CovarianceP, 2.),
+                    (StatisticsFunction::CovarianceS, 4.),
+                ] {
+                    assert_eq!(
+                        evaluate(&mut Port::default(), function, &[x.clone(), y.clone()]),
+                        Ok(expected),
+                        "{function:?} {excluded:?} {origin:?}"
+                    );
+                }
+                for (function, expected) in [
+                    (StatisticsFunction::Slope, 2.),
+                    (StatisticsFunction::Intercept, 1.),
+                ] {
+                    assert_eq!(
+                        evaluate(&mut Port::default(), function, &[y.clone(), x.clone()]),
+                        Ok(expected),
+                        "{function:?} {excluded:?} {origin:?}"
+                    );
+                }
+                for function in [
+                    StatisticsFunction::Forecast,
+                    StatisticsFunction::ForecastLinear,
+                ] {
+                    assert_eq!(
+                        evaluate(
+                            &mut Port::default(),
+                            function,
+                            &[n(3.), y.clone(), x.clone()]
+                        ),
+                        Ok(7.),
+                        "{function:?} {excluded:?} {origin:?}"
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn ignored_pair_text_never_requests_numeric_text_admission() {
+    let x = area(vec![
+        Scalar::Number(0.),
+        Scalar::Text("1000".into()),
+        Scalar::Number(2.),
+    ]);
+    let y = area(vec![
+        Scalar::Number(1.),
+        Scalar::Number(999.),
+        Scalar::Number(5.),
+    ]);
+    let mut port = Port {
+        text_limit: Some(0),
+        ..Port::default()
+    };
+    assert_eq!(
+        evaluate(&mut port, StatisticsFunction::Correl, &[x, y]),
+        Ok(1.)
     );
 }

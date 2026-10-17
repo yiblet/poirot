@@ -1,63 +1,39 @@
 //! Field admission, header lookup, and POI cell representation policies.
-use super::{CellError, CellValue, DatabaseError, DatabaseFunction, Grid, number};
+use super::{CellError, CellValue, DatabaseError, DatabaseFunction, Grid};
 
 /// Project a scalar into the numeric channel accepted by database aggregates.
-pub fn coerce_database_number(value: &CellValue) -> Option<f64> {
-    match value {
-        CellValue::Number(n) => Some(*n),
-        CellValue::Boolean(b) => Some(u8::from(*b) as f64),
-        _ => None,
-    }
+pub fn coercev2_database_number(value: &CellValue) -> Option<f64> {
+    poirot_coercionv2::compatibility::coercev2_database_number(value)
 }
 /// Convert a cell to owned header/criteria text, refusing unsupported UTF-16 projection.
-pub fn coerce_database_text(value: &CellValue) -> Result<String, DatabaseError> {
-    Ok(match value {
-        CellValue::Blank => String::new(),
-        CellValue::Text(s) => s.clone(),
-        CellValue::TextUtf16(s) => s
-            .to_utf8()
-            .map_err(|_| DatabaseError::UnsupportedTextProjection)?,
-        CellValue::Number(n) => number::coerce_number_to_text(*n),
-        CellValue::Boolean(b) => if *b { "TRUE" } else { "FALSE" }.into(),
-        CellValue::Error(e) => return Err((*e).into()),
+pub fn coercev2_database_text(value: &CellValue) -> Result<String, DatabaseError> {
+    use poirot_coercionv2::compatibility::TextFailure;
+    poirot_coercionv2::compatibility::coercev2_text(
+        value.into(),
+        poirot_coercionv2::compatibility::coercev2_number_to_text,
+    )
+    .map_err(|error| match error {
+        TextFailure::Worksheet(e) => e.into(),
+        TextFailure::UnsupportedText | TextFailure::Missing => {
+            DatabaseError::UnsupportedTextProjection
+        }
     })
 }
 /// Math.round uses nearest integer, with ties towards positive infinity.
 /// Adding 0.5 first loses the distinction immediately below a half-integer.
 /// Out-of-area indices retain this crate's explicit bounded-input boundary.
-pub fn field_index(value: &CellValue, columns: usize) -> Option<usize> {
-    let value = coerce_database_number(value)?;
-    if !value.is_finite() {
-        return None;
-    }
-    let lower = value.floor();
-    let rounded = lower + if value - lower >= 0.5 { 1. } else { 0. };
-    let column = rounded - 1.;
-    if rounded < i32::MIN as f64 || rounded > i32::MAX as f64 {
-        return None;
-    }
-    (column >= 0. && column < columns as f64).then_some(column as usize)
+pub fn coercev2_database_field_index(value: &CellValue, columns: usize) -> Option<usize> {
+    poirot_coercionv2::compatibility::coercev2_database_field_index(value, columns)
 }
 
 /// DStarRunner.getColumnForName applies coerceValueToInt to numeric criteria
 /// headings. Unlike the rounded field argument, this floors and checks Java int
 /// bounds. The runner converts the resulting EvaluationException to VALUE.
-pub fn criteria_header_index(
+pub fn coercev2_database_criteria_header_index(
     value: &CellValue,
     columns: usize,
 ) -> Result<Option<usize>, CellError> {
-    let index = coerce_database_number(value)
-        .ok_or(CellError::Value)?
-        .floor();
-    if !index.is_finite() || index < i32::MIN as f64 || index > i32::MAX as f64 {
-        return Err(CellError::Value);
-    }
-    let column = index - 1.;
-    Ok(if column >= 0. && column < columns as f64 {
-        Some(column as usize)
-    } else {
-        None
-    })
+    poirot_coercionv2::compatibility::coercev2_database_criteria_header_index(value, columns)
 }
 /// Resolve a criteria header against the database's header row.
 pub(super) fn header_column(
@@ -69,7 +45,7 @@ pub(super) fn header_column(
         if matches!(value, CellValue::Blank | CellValue::Error(_)) {
             continue;
         }
-        if equal_ignore_case(&coerce_database_text(value)?, name) {
+        if equal_ignore_case(&coercev2_database_text(value)?, name) {
             return Ok(Some(col));
         }
     }
@@ -113,10 +89,12 @@ pub(super) fn select_field(
     let selected = match field {
         CellValue::Error(error) if !function.empty_field() => return Err((*error).into()),
         CellValue::Error(_) => None,
-        value if coerce_database_number(value).is_some() => field_index(value, database.columns),
+        value if coercev2_database_number(value).is_some() => {
+            coercev2_database_field_index(value, database.columns)
+        }
         CellValue::Text(name) => header_column(database, name)?,
         CellValue::Blank => header_column(database, "")?,
-        value => header_column(database, &coerce_database_text(value)?)?,
+        value => header_column(database, &coercev2_database_text(value)?)?,
     };
     if selected.is_none() && !function.empty_field() {
         return Err(CellError::Value.into());

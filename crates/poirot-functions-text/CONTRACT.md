@@ -36,6 +36,18 @@ NUMBERVALUE's Java regex class split drops trailing empty fields, so `12..` yiel
 Java `Double.parseDouble` routes through shared `poirot_numeric::parse_java_number`,
 shared with database criteria parsing.
 
+
+The central module also exposes `coercev2_number_value_excel` for the evaluator's
+explicit `ExcelDocumentation` policy. It uses decimal/exponent syntax and
+literal separator tokens with locale defaults, rather than Java split/double
+extensions. Empty decimal and conflicting separators are worksheet VALUE errors;
+an empty grouping argument disables grouping (Calc agrees; ClosedXML differs).
+The pinned entry point above retains its source faults and numeric spellings.
+Supplementary explicit separators remain an operational unsupported contract
+until native UTF-16 admission is established. The two disputed ClosedXML numeric
+range expectations remain visible; no source-specific magnitude cutoffs are
+applied to the documented kernel.
+
 ## Resource and failure boundary
 
 `Failure<SpreadsheetError, OperationalError>` separates spreadsheet results,

@@ -2,7 +2,7 @@
 use super::*;
 
 /// Materialize a numeric matrix under the operation's source collection rules.
-pub(super) fn coerce_matrix_collection<P: EvaluationPort>(
+pub(super) fn coercev2_matrix_collection<P: EvaluationPort>(
     p: &mut P,
     a: &P::Argument,
     policy: domain::MatrixCollection,
@@ -10,7 +10,7 @@ pub(super) fn coerce_matrix_collection<P: EvaluationPort>(
     let s = describe(p, a)?;
     if MatrixSelection::from(s) == MatrixSelection::FirstCell {
         let c = read(p, a, 0, 0)?;
-        let n = coerce_matrix_number(p, c)?;
+        let n = coercev2_matrix_number(p, c)?;
         preflight(p, Some(1), Some(1))?;
         return domain::Matrix::new(1, 1, vec![n]).map_err(|e| err(p, e));
     }
@@ -19,12 +19,11 @@ pub(super) fn coerce_matrix_collection<P: EvaluationPort>(
     let mut values = Vec::with_capacity(n.ok_or_else(|| err(p, domain::Error::BudgetExceeded))?);
     for r in 0..s.rows {
         for c in 0..s.cols {
-            match read(p, a, r, c)? {
-                Cell::Number(n) => values.push(n),
-                Cell::Error(e) => return Err(Failure::Spreadsheet(e)),
-                Cell::Blank if policy == domain::MatrixCollection::Determinant => return value(),
-                Cell::Blank if policy == domain::MatrixCollection::Transpose => values.push(0.0),
-                _ => {}
+            let member = read(p, a, r, c)?;
+            if let Some(number) =
+                poirot_coercionv2::collections::coercev2_matrix_member((&member).into(), policy)?
+            {
+                values.push(number);
             }
         }
     }
@@ -35,7 +34,7 @@ pub(super) fn coerce_matrix_collection<P: EvaluationPort>(
     domain::Matrix::new(s.rows, s.cols, values).map_err(|e| err(p, e))
 }
 /// Collect a TREND operand, preserving omitted inputs as `None`.
-pub(super) fn coerce_trend_collection<P: EvaluationPort>(
+pub(super) fn coercev2_trend_collection<P: EvaluationPort>(
     p: &mut P,
     a: &P::Argument,
 ) -> Result<Option<domain::Matrix<f64>>, Failure<P::Operational>> {
@@ -51,17 +50,10 @@ pub(super) fn coerce_trend_collection<P: EvaluationPort>(
     let mut v = Vec::with_capacity(n.ok_or_else(|| err(p, domain::Error::BudgetExceeded))?);
     for r in 0..s.rows {
         for c in 0..s.cols {
-            v.push(match read(p, a, r, c)? {
-                Cell::Number(n) => n,
-                Cell::Bool(b) => {
-                    if b {
-                        1.0
-                    } else {
-                        0.0
-                    }
-                }
-                _ => return value(),
-            });
+            let member = read(p, a, r, c)?;
+            v.push(poirot_coercionv2::collections::coercev2_trend_member(
+                (&member).into(),
+            )?);
         }
     }
     domain::Matrix::new(s.rows, s.cols, v)
@@ -69,7 +61,7 @@ pub(super) fn coerce_trend_collection<P: EvaluationPort>(
         .map_err(|e| err(p, e))
 }
 /// Collect numeric FREQUENCY members while preserving source filtering and errors.
-pub(super) fn coerce_frequency_collection<P: EvaluationPort>(
+pub(super) fn coercev2_frequency_collection<P: EvaluationPort>(
     p: &mut P,
     a: &P::Argument,
 ) -> Result<Vec<f64>, Failure<P::Operational>> {
@@ -79,14 +71,28 @@ pub(super) fn coerce_frequency_collection<P: EvaluationPort>(
     let mut v = Vec::with_capacity(n.ok_or_else(|| err(p, domain::Error::BudgetExceeded))?);
     for r in 0..s.rows {
         for c in 0..s.cols {
-            match read(p, a, r, c)? {
-                Cell::Number(n) => v.push(n),
-                Cell::Error(e) => return Err(Failure::Spreadsheet(e)),
-                Cell::Bool(b) if s.origin == Origin::Direct => v.push(if b { 1.0 } else { 0.0 }),
-                Cell::Text(t) if s.origin == Origin::Direct => {
-                    v.push(coerce_matrix_number(p, Cell::Text(t))?)
-                }
-                _ => {}
+            let member = read(p, a, r, c)?;
+            let origin = match s.origin {
+                Origin::Direct => poirot_coercionv2::Origin::Direct,
+                Origin::Reference => poirot_coercionv2::Origin::Reference,
+                Origin::Array => poirot_coercionv2::Origin::Array,
+            };
+            let number = poirot_coercionv2::collections::coercev2_frequency_member(
+                (&member).into(),
+                origin,
+                |input| match input {
+                    poirot_coercionv2::compatibility::DeferredNumber::Text(
+                        poirot_coercionv2::TextRef::Utf8(text),
+                    ) => {
+                        p.check_text(text.len()).map_err(Failure::Operational)?;
+                        work(p, text.len())?;
+                        p.coercev2_number_text(text)
+                    }
+                    _ => Err(Failure::Spreadsheet(CellError::Value)),
+                },
+            )?;
+            if let Some(number) = number {
+                v.push(number);
             }
         }
     }

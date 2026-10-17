@@ -30,36 +30,37 @@ impl TextHost<'_, '_> {
             Err(_) => Failure::Operational(EvaluationFailure::StalePlan),
         }
     }
-    fn coerce_text_scalar(
+    fn coercev2_text_scalar(
         &self,
         scalar: &ScalarOperand,
         delimiter: bool,
     ) -> Result<String, TextFailure> {
-        if scalar.missing {
-            return if delimiter {
-                Ok(String::new())
-            } else {
-                Err(self.source_fault("POI string coercion rejects MissingArgEval"))
-            };
-        }
-        match &scalar.value {
-            Text(text) => Ok(text.clone()),
-            CellValue::TextUtf16(text) => self
-                .host
-                .try_borrow_mut()
-                .map_err(|_| Failure::Operational(EvaluationFailure::StalePlan))?
-                .project_text(poirot_model::TextRef::Utf16(text.units()))
-                .map_err(failure),
-            Number(number) => self
-                .host
-                .try_borrow_mut()
-                .map_err(|_| Failure::Operational(EvaluationFailure::StalePlan))?
-                .coerce_number_to_text(*number, NumericPolicy::PinnedPoi)
-                .map_err(failure),
-            Boolean(value) => Ok(if *value { "TRUE" } else { "FALSE" }.into()),
-            Blank => Ok(String::new()),
-            Error(error) => Err(Failure::Spreadsheet(*error)),
-        }
+        use poirot_coercionv2::compatibility::{DeferredText, ScalarRef};
+        let input = if scalar.missing {
+            ScalarRef::Missing
+        } else {
+            (&scalar.value).into()
+        };
+        poirot_coercionv2::compatibility::coercev2_text_argument(input, delimiter, |request| {
+            match request {
+                DeferredText::Missing => {
+                    Err(self.source_fault("POI string conversion rejects MissingArgEval"))
+                }
+                DeferredText::Number(n) => self
+                    .host
+                    .try_borrow_mut()
+                    .map_err(|_| Failure::Operational(EvaluationFailure::StalePlan))?
+                    .coercev2_number_to_text(n, NumericPolicy::PinnedPoi)
+                    .map_err(failure),
+                DeferredText::Text(poirot_model::TextRef::Utf8(t)) => Ok(t.into()),
+                DeferredText::Text(t) => self
+                    .host
+                    .try_borrow_mut()
+                    .map_err(|_| Failure::Operational(EvaluationFailure::StalePlan))?
+                    .project_text(t)
+                    .map_err(failure),
+            }
+        })
     }
 }
 impl Host<usize> for TextHost<'_, '_> {
@@ -92,6 +93,12 @@ impl Host<usize> for TextHost<'_, '_> {
             poirot_functions_text::Error::Value => VALUE_ERROR,
             poirot_functions_text::Error::Num => Num,
         }
+    }
+    fn is_missing(&self, scalar: &ScalarOperand) -> bool {
+        scalar.missing
+    }
+    fn read_number_locale(&mut self) {
+        self.host.get_mut().read_number_locale();
     }
     fn single(&mut self, index: &usize) -> Result<ScalarOperand, TextFailure> {
         let scalar = self
@@ -165,13 +172,13 @@ impl Host<usize> for TextHost<'_, '_> {
         }
         Ok(values)
     }
-    fn coerce_text_string(&self, scalar: &ScalarOperand) -> Result<String, TextFailure> {
-        self.coerce_text_scalar(scalar, false)
+    fn coercev2_text_string(&self, scalar: &ScalarOperand) -> Result<String, TextFailure> {
+        self.coercev2_text_scalar(scalar, false)
     }
-    fn coerce_text_delimiter(&self, scalar: &ScalarOperand) -> Result<String, TextFailure> {
-        self.coerce_text_scalar(scalar, true)
+    fn coercev2_text_delimiter(&self, scalar: &ScalarOperand) -> Result<String, TextFailure> {
+        self.coercev2_text_scalar(scalar, true)
     }
-    fn coerce_text_integer(&self, scalar: &ScalarOperand) -> Result<i32, TextFailure> {
+    fn coercev2_text_integer(&self, scalar: &ScalarOperand) -> Result<i32, TextFailure> {
         if scalar.missing {
             return Err(self.source_fault("POI integer coercion rejects MissingArgEval"));
         }
@@ -180,45 +187,43 @@ impl Host<usize> for TextHost<'_, '_> {
                 .host
                 .try_borrow_mut()
                 .map_err(|_| Failure::Operational(EvaluationFailure::StalePlan))?
-                .coerce_number_text(text, NumericPolicy::PinnedPoi)
+                .coercev2_number_text(text, NumericPolicy::PinnedPoi)
                 .map_err(failure)?,
             value => self
                 .host
                 .try_borrow_mut()
                 .map_err(|_| Failure::Operational(EvaluationFailure::StalePlan))?
-                .coerce_scalar_number(value, NumericPolicy::PinnedPoi)
+                .coercev2_scalar_number(value, NumericPolicy::PinnedPoi)
                 .map_err(failure)?,
-        }
-        .floor();
-        if !number.is_finite() || number < i32::MIN as f64 || number > i32::MAX as f64 {
-            Err(Failure::Spreadsheet(Num))
-        } else {
-            Ok(number as i32)
-        }
+        };
+        poirot_coercionv2::compatibility::coercev2_integer(number, true)
+            .map_err(Failure::Spreadsheet)
     }
+
     fn boolean_value(&self, scalar: &ScalarOperand) -> Option<bool> {
         match scalar.value {
             Boolean(value) if !scalar.missing => Some(value),
             _ => None,
         }
     }
-    fn coerce_text_boolean(&self, scalar: &ScalarOperand) -> Result<bool, TextFailure> {
+    fn coercev2_text_boolean(&self, scalar: &ScalarOperand) -> Result<bool, TextFailure> {
         if scalar.missing {
-            return Err(self.source_fault("POI boolean coercion rejects MissingArgEval"));
+            return Err(self.source_fault("POI boolean conversion rejects MissingArgEval"));
         }
-        match &scalar.value {
-            Blank => Err(self
-                .source_fault("TEXTJOIN unboxes a null Boolean for a blank ignore_empty argument")),
-            Boolean(value) => Ok(*value),
-            Number(value) if !value.is_nan() => Ok(*value != 0.),
-            Text(value) if value.eq_ignore_ascii_case("true") => Ok(true),
-            Text(value) if value.eq_ignore_ascii_case("false") => Ok(false),
-            CellValue::TextUtf16(_) => {
-                coerce_logical_boolean(&scalar.value).map_err(Failure::Spreadsheet)
-            }
-            Error(error) => Err(Failure::Spreadsheet(*error)),
-            _ => Err(Failure::Spreadsheet(VALUE_ERROR)),
+        if matches!(&scalar.value, Blank) {
+            return Err(self.source_fault(
+                "TEXTJOIN unboxes a null Boolean for a blank ignore_empty argument",
+            ));
         }
+        poirot_coercionv2::compatibility::coercev2_boolean(
+            (&scalar.value).into(),
+            poirot_coercionv2::compatibility::BooleanPolicy {
+                reject_nan: true,
+                blank: false,
+            },
+        )
+        .map_err(Failure::Spreadsheet)?
+        .ok_or(Failure::Spreadsheet(VALUE_ERROR))
     }
 }
 
@@ -244,6 +249,10 @@ pub(crate) fn execute(
     } else {
         crate::adapters::text::policy::SemanticsPolicy::PinnedPoi
     };
+    let policy = crate::adapters::text::policy::Policy {
+        number_locale: session.number_locale,
+        ..Default::default()
+    };
     let mut host = TextHost {
         host: RefCell::new(CallHost::new(session, sheet, address, arguments)),
         pending: RefCell::new(None),
@@ -254,12 +263,8 @@ pub(crate) fn execute(
         function,
         arguments: (0..arguments.len()).collect(),
     };
-    match crate::adapters::text::policy::evaluate_with_policy(
-        &call,
-        &crate::adapters::text::policy::Policy::default(),
-        &mut host,
-        semantics,
-    ) {
+    match crate::adapters::text::policy::evaluate_with_policy(&call, &policy, &mut host, semantics)
+    {
         Ok(crate::adapters::text::policy::Value::Number(value)) => Ok(Number(value).into()),
         Ok(crate::adapters::text::policy::Value::Text(value)) => Ok(Text(value).into()),
         Err(Failure::Spreadsheet(error)) => Ok(err(error)),

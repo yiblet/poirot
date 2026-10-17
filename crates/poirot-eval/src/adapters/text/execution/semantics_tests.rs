@@ -103,3 +103,39 @@ fn source_concatenation_ceiling_is_independent_of_host_budget() {
         Err(EvaluationFailure::UnsupportedCapability { .. })
     ));
 }
+
+#[test]
+fn text_integer_admission_precedes_empty_text_and_index_clamping() {
+    let source = TextSourceVersion::PoirotF6c572d;
+    for formula in [
+        "LEFT(\"\",2147483648)",
+        "RIGHT(\"abc\",2147483648)",
+        "MID(\"abc\",2147483648,1)",
+        "MID(\"abc\",1,2147483648)",
+        "REPT(\"\",2147483648)",
+        "REPLACE(\"abc\",1,2147483648,\"x\")",
+        "MID(\"abc\",1,\"2147483648\")",
+    ] {
+        assert_eq!(
+            evaluate(source, formula).unwrap(),
+            Error(VALUE_ERROR),
+            "{formula}"
+        );
+    }
+    for (formula, expected) in [
+        ("LEFT(\"abc\",2147483647)", "abc"),
+        ("LEFT(\"abc\",2147483647.5)", "abc"),
+        ("REPT(\"\",2147483647.5)", ""),
+        ("MID(\"abc\",1.9,2.9)", "ab"),
+        ("REPT(\"\",2147483647)", ""),
+    ] {
+        assert_eq!(
+            evaluate(source, formula).unwrap(),
+            Text(expected.into()),
+            "{formula}"
+        );
+    }
+    // Range admission must not move a function's negative-start validation ahead
+    // of conversion of the following count argument.
+    assert_eq!(evaluate(source, "MID(\"abc\",-1,#N/A)").unwrap(), Error(NA));
+}

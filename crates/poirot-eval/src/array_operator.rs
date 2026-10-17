@@ -10,7 +10,7 @@ struct Shape {
 impl Shape {
     fn inspect(value: &Value) -> Option<Self> {
         let (rows, columns) = match value {
-            Value::Scalar(_) | Value::Missing => (1, 1),
+            Value::Scalar(_) | Value::SelectedScalar(_, _) | Value::Missing => (1, 1),
             Value::Array(array) => {
                 let columns = array.first()?.len();
                 if columns == 0 || array.iter().any(|row| row.len() != columns) {
@@ -41,7 +41,7 @@ pub(super) fn is_array_operand(value: &Value) -> bool {
         Value::Refs(areas) | Value::SheetSpan(areas) => areas.len() != 1 || areas[0].size() != 1,
         // SAFETY: Short-circuit evaluation reaches element zero only when areas.len() == 1.
         Value::SignedRefs(areas) => areas.len() != 1 || areas[0].size() != 1,
-        Value::Scalar(_) | Value::Missing => false,
+        Value::Scalar(_) | Value::SelectedScalar(_, _) | Value::Missing => false,
     }
 }
 
@@ -148,7 +148,7 @@ impl Session<'_> {
         let value = match value {
             // TODO(coercion-non-argument): [MEDIUM] Selecting a missing array operand as blank discards omission identity before its eventual consumer.
             Value::Missing => return Ok(coerce_legacy_missing_blank()),
-            Value::Scalar(value) => value,
+            Value::Scalar(value) | Value::SelectedScalar(value, _) => value,
             Value::Array(array) => array
                 .get(row)
                 .and_then(|values| values.get(column))

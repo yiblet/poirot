@@ -1,42 +1,20 @@
 //! Pure numeric grammar decisions. Context lookup and admission stay in CallHost.
-use super::{CellError, NumericPolicy, VALUE_ERROR};
-use nom::Parser;
+#[cfg(test)]
+use super::NumericPolicy;
+#[cfg(test)]
+use super::VALUE_ERROR;
 
 /// Pure grammar result deciding whether numeric date fallback is required.
-pub(super) enum CoercionDecision {
-    /// Numeric grammar accepted the text, with its finite parse result.
-    Number(Result<f64, CellError>),
-    /// Text requires context-aware date-time coercion.
-    DateTime,
-}
+pub(super) use poirot_coercionv2::compatibility::NumericTextDecision as CoercionV2Decision;
 /// Classify numeric text without reading context or consuming host resources.
-pub(super) fn decide(text: &str, policy: NumericPolicy) -> CoercionDecision {
+#[cfg(test)]
+pub(super) fn decide(text: &str, policy: NumericPolicy) -> CoercionV2Decision {
     match policy {
         #[cfg(test)]
-        NumericPolicy::LegacyCompatible => CoercionDecision::Number(
-            text.trim()
-                .parse::<f64>()
-                .ok()
-                .filter(|number| number.is_finite())
-                .ok_or(VALUE_ERROR),
+        NumericPolicy::LegacyCompatible => CoercionV2Decision::Number(
+            poirot_coercionv2::compatibility::coercev2_arithmetic_text(text),
         ),
-        NumericPolicy::PinnedPoi => {
-            let trimmed = text.trim_matches(|c: char| (c as u32) <= 32);
-            if nom::combinator::all_consuming(
-                nom::number::complete::recognize_float::<_, nom::error::Error<_>>,
-            )
-            .parse(trimmed)
-            .is_ok()
-            {
-                CoercionDecision::Number(
-                    poirot_numeric::parse_java_number(trimmed)
-                        .filter(|number| number.is_finite())
-                        .ok_or(VALUE_ERROR),
-                )
-            } else {
-                CoercionDecision::DateTime
-            }
-        }
+        NumericPolicy::PinnedPoi => poirot_coercionv2::compatibility::coercev2_numeric_text(text),
     }
 }
 
@@ -46,18 +24,18 @@ mod tests {
     #[test]
     fn java_control_trim_and_finite_grammar_keep_date_fallback_distinct() {
         assert!(matches!(decide("\u{1f}1.5\u{0}", NumericPolicy::PinnedPoi),
-            CoercionDecision::Number(Ok(value)) if value == 1.5));
+            CoercionV2Decision::Number(Ok(value)) if value == 1.5));
         assert!(matches!(
             decide("1e999", NumericPolicy::PinnedPoi),
-            CoercionDecision::Number(Err(VALUE_ERROR))
+            CoercionV2Decision::Number(Err(VALUE_ERROR))
         ));
         assert!(matches!(
             decide("\u{a0}1\u{a0}", NumericPolicy::PinnedPoi),
-            CoercionDecision::DateTime
+            CoercionV2Decision::DateTime
         ));
         assert!(matches!(
             decide("2020/01/02", NumericPolicy::PinnedPoi),
-            CoercionDecision::DateTime
+            CoercionV2Decision::DateTime
         ));
     }
 }
