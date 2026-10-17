@@ -152,9 +152,8 @@ pub enum Input {
 
 pub use poirot_coercionv2::collections::MatrixCollection;
 
-/// Source-specific AreaEval collection: skipped cells compact the numeric
-/// sequence, which is then zero-padded into the original rectangle. This is a
-/// pinned POI behavior, not ordinary element-wise spreadsheet coercion.
+/// Admit a numeric matrix without changing coordinates under `SquareNumeric`. Other
+/// policies preserve pinned POI compaction and padding of skipped members.
 pub fn coercev2_matrix_collection(
     area: &Matrix<Cell>,
     policy: MatrixCollection,
@@ -173,6 +172,15 @@ pub fn sumproduct(args: &[Input], budget: Budget) -> Result<f64> {
     collection::sumproduct(args, budget)
 }
 
+/// Observation requirement for regression prediction, independent of residual statistics.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TrendFitPolicy {
+    /// Preserve the pinned POI minimum sizes and constant-predictor shortcut.
+    PinnedPoi,
+    /// Permit a full-rank determined fit without residual degrees of freedom.
+    Determined,
+}
+
 /// Least squares with Householder QR (never the unstable normal equations).
 /// Optional inputs represent missing arguments, not blank cells. The adapter
 /// must require numeric TREND elements and a literal boolean fourth argument.
@@ -183,7 +191,26 @@ pub fn trend(
     constant: bool,
     budget: Budget,
 ) -> Result<Matrix<f64>> {
-    regression::trend(y, known_x, new_x, constant, budget)
+    regression::trend(
+        y,
+        known_x,
+        new_x,
+        constant,
+        budget,
+        TrendFitPolicy::PinnedPoi,
+    )
+}
+
+/// Fit a trend under an explicit prediction sample requirement.
+pub fn trend_with_policy(
+    y: &Matrix<f64>,
+    known_x: Option<&Matrix<f64>>,
+    new_x: Option<&Matrix<f64>>,
+    constant: bool,
+    budget: Budget,
+    policy: TrendFitPolicy,
+) -> Result<Matrix<f64>> {
+    regression::trend(y, known_x, new_x, constant, budget, policy)
 }
 
 impl<'a> From<&'a Cell> for poirot_coercionv2::compatibility::ScalarRef<'a> {
@@ -333,6 +360,136 @@ mod tests {
             coercev2_trend_collection(&error, B),
             Err(Error::Formula(CellError::Value))
         );
+    }
+    #[test]
+    fn numeric_matrix_admission_preserves_coordinates_and_rejects_nonnumbers() {
+        let valid = Matrix::new(
+            2,
+            2,
+            vec![
+                Cell::Number(0.),
+                Cell::Number(2.),
+                Cell::Number(3.),
+                Cell::Number(4.),
+            ],
+        )
+        .unwrap();
+        let admitted =
+            coercev2_matrix_collection(&valid, MatrixCollection::SquareNumeric, B).unwrap();
+        assert_eq!(admitted, m(2, 2, &[0., 2., 3., 4.]));
+        assert_eq!(determinant(&admitted, B), Ok(-6.));
+        for invalid in [
+            Cell::Blank,
+            Cell::Text("2".into()),
+            Cell::Text("x".into()),
+            Cell::Bool(true),
+            Cell::Bool(false),
+        ] {
+            for index in 0..4 {
+                let mut cells = valid.values.clone();
+                cells[index] = invalid.clone();
+                let input = Matrix::new(2, 2, cells).unwrap();
+                assert_eq!(
+                    coercev2_matrix_collection(&input, MatrixCollection::SquareNumeric, B),
+                    Err(Error::Formula(CellError::Value))
+                );
+            }
+        }
+        let singleton = Matrix::new(1, 1, vec![Cell::Number(2.)]).unwrap();
+        let admitted =
+            coercev2_matrix_collection(&singleton, MatrixCollection::SquareNumeric, B).unwrap();
+        assert_eq!(determinant(&admitted, B), Ok(2.));
+        assert_eq!(inverse(&admitted, B), Ok(m(1, 1, &[0.5])));
+        for policy in [MatrixCollection::Determinant, MatrixCollection::Inverse] {
+            assert_eq!(
+                coercev2_matrix_collection(&singleton, policy, B),
+                Err(Error::Formula(CellError::Value))
+            );
+        }
+        for (rows, cols, values) in [
+            (0, 2, vec![]),
+            (2, 2, vec![1., 2., 3.]),
+            (usize::MAX, 2, vec![]),
+        ] {
+            assert_eq!(
+                Matrix::new(rows, cols, values),
+                Err(Error::Formula(CellError::Value))
+            );
+        }
+        let nonsquare = m(1, 2, &[1., 2.]);
+        assert_eq!(
+            determinant(&nonsquare, B),
+            Err(Error::Formula(CellError::Value))
+        );
+        assert_eq!(
+            inverse(&nonsquare, B),
+            Err(Error::Formula(CellError::Value))
+        );
+        assert_eq!(
+            coercev2_matrix_collection(
+                &valid,
+                MatrixCollection::SquareNumeric,
+                Budget {
+                    max_cells: 3,
+                    max_work: 100
+                }
+            ),
+            Err(Error::BudgetExceeded)
+        );
+        assert_eq!(
+            coercev2_matrix_collection(
+                &valid,
+                MatrixCollection::SquareNumeric,
+                Budget {
+                    max_cells: 4,
+                    max_work: 3
+                }
+            ),
+            Err(Error::BudgetExceeded)
+        );
+    }
+    #[test]
+    fn numeric_matrix_admission_rejects_invalid_members_before_first_embedded_error() {
+        for cells in [
+            vec![
+                Cell::Number(1.),
+                Cell::Text("x".into()),
+                Cell::Number(3.),
+                Cell::Error(CellError::NA),
+            ],
+            vec![
+                Cell::Number(1.),
+                Cell::Error(CellError::NA),
+                Cell::Number(3.),
+                Cell::Blank,
+            ],
+        ] {
+            let input = Matrix::new(2, 2, cells).unwrap();
+            assert_eq!(
+                coercev2_matrix_collection(&input, MatrixCollection::SquareNumeric, B),
+                Err(Error::Formula(CellError::Value))
+            );
+        }
+        for (first, second) in [
+            (CellError::Div0, CellError::NA),
+            (CellError::NA, CellError::Div0),
+        ] {
+            let input = Matrix::new(
+                2,
+                2,
+                vec![
+                    Cell::Number(1.),
+                    Cell::Error(first),
+                    Cell::Number(3.),
+                    Cell::Error(second),
+                ],
+            )
+            .unwrap();
+            assert_eq!(
+                coercev2_matrix_collection(&input, MatrixCollection::SquareNumeric, B),
+                Err(Error::Formula(first))
+            );
+        }
     }
     #[test]
     fn trend_regression_orientation_and_origin() {

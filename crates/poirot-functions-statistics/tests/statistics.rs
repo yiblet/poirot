@@ -325,3 +325,61 @@ fn extrema_a_blank_and_text_observations_are_distinct() {
         Ok(vec![0.])
     );
 }
+
+#[test]
+fn explicit_sample_requirements_distinguish_population_and_sample() {
+    use SamplePolicy::{ExcelDocumentation as Excel, PinnedPoi as Pinned};
+    for operation in [Aggregate::VarianceSample, Aggregate::StdevSample] {
+        for values in [&[][..], &[0.][..], &[2.][..]] {
+            assert_eq!(
+                aggregate_with_policy(operation, values, Excel),
+                Err(CellError::Div0)
+            );
+        }
+        assert_eq!(
+            aggregate_with_policy(operation, &[0.], Pinned),
+            Err(CellError::Num)
+        );
+        assert_eq!(aggregate_with_policy(operation, &[0., 0.], Excel), Ok(0.));
+    }
+    for operation in [Aggregate::VariancePopulation, Aggregate::StdevPopulation] {
+        assert_eq!(
+            aggregate_with_policy(operation, &[], Excel),
+            Err(CellError::Div0)
+        );
+        assert_eq!(aggregate_with_policy(operation, &[0.], Excel), Ok(0.));
+        assert_eq!(
+            aggregate_with_policy(operation, &[2.], Pinned),
+            Err(CellError::Num)
+        );
+    }
+    for operation in [
+        PairOperation::CovariancePopulation,
+        PairOperation::CovarianceSample,
+    ] {
+        assert_eq!(
+            paired_with_policy(operation, &[], &[], Excel),
+            Err(CellError::Div0)
+        );
+        assert_eq!(
+            paired_with_policy(operation, &[2.], &[5., 7.], Excel),
+            Err(CellError::NA)
+        );
+        assert_eq!(
+            paired_with_policy(operation, &[2.], &[5.], Pinned),
+            Err(CellError::NA)
+        );
+    }
+    assert_eq!(
+        paired_with_policy(PairOperation::CovariancePopulation, &[2.], &[5.], Excel),
+        Ok(0.)
+    );
+    assert_eq!(
+        paired_with_policy(PairOperation::CovarianceSample, &[2.], &[5.], Excel),
+        Err(CellError::Div0)
+    );
+    assert_eq!(
+        paired_with_policy(PairOperation::Correlation, &[2.], &[5.], Excel),
+        Err(CellError::Div0)
+    );
+}

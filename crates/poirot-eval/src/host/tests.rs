@@ -489,3 +489,118 @@ fn composed_numeric_effects_emit_actual_context_fields() {
         );
     }
 }
+
+#[test]
+fn array_consumer_memo_is_independent_of_projection_order_and_draws_once() {
+    let mut workbook = workbook();
+    workbook.sheet_mut(0).unwrap().set_value(AT, 2.).unwrap();
+    workbook
+        .sheet_mut(0)
+        .unwrap()
+        .set_value(CellAddress { row: 1, col: 0 }, 3.)
+        .unwrap();
+    let arguments = [expression("A1:A2*RAND()")];
+    for scalar_first in [false, true] {
+        let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+        let mut host = CallHost::new_array(&mut session, 0, AT, &arguments, arguments.len());
+        let first = if scalar_first {
+            host.scalar_data(0, MissingPolicy::Blank).unwrap().value
+        } else {
+            assert_eq!(host.kind(0).unwrap(), OperandKind::Array);
+            host.read_cell(0, 0, 0).unwrap().value
+        };
+        let evaluated = host.session.budget.usage.expressions;
+        assert_eq!(host.shape(0).unwrap(), (2, 1));
+        assert_eq!(
+            host.scalar_data(0, MissingPolicy::Blank).unwrap().value,
+            first
+        );
+        let Number(first) = first else {
+            panic!("expected number")
+        };
+        let Number(second) = host.read_cell(0, 1, 0).unwrap().value else {
+            panic!("expected number")
+        };
+        assert_eq!(second, first * 1.5);
+        assert_eq!(host.session.budget.usage.expressions, evaluated);
+        assert_eq!(
+            host.session
+                .budget
+                .usage
+                .random_accesses
+                .iter()
+                .map(|access| access.draws)
+                .sum::<u64>(),
+            1
+        );
+        assert!(matches!(
+            host.session.expression_demand,
+            expression_execution::ExpressionDemand::Scalar
+        ));
+    }
+}
+
+#[test]
+fn array_demand_restores_after_operational_failure() {
+    let workbook = workbook();
+    let arguments = [expression("A1:B2*2")];
+    let mut session = Session::new(
+        &workbook,
+        EvaluationInputs::default(),
+        BudgetMeter::new(EvaluationBudgets {
+            materialized_values: 3,
+            ..Default::default()
+        })
+        .unwrap(),
+    );
+    {
+        let mut host = CallHost::new_array(&mut session, 0, AT, &arguments, arguments.len());
+        assert!(matches!(
+            host.kind(0),
+            Err(FunctionFailure::Operational(EvaluationFailure::Budget(_)))
+        ));
+        assert!(host.memo.is_empty());
+    }
+    assert!(matches!(
+        session.expression_demand,
+        expression_execution::ExpressionDemand::Scalar
+    ));
+}
+
+#[test]
+fn scalar_argument_roles_do_not_inherit_an_outer_array_request() {
+    let mut workbook = workbook();
+    workbook.sheet_mut(0).unwrap().set_value(AT, 1.).unwrap();
+    workbook
+        .sheet_mut(0)
+        .unwrap()
+        .set_value(CellAddress { row: 1, col: 0 }, 3.)
+        .unwrap();
+    let arguments = [expression("A1:A2>2")];
+    for scalar_first in [false, true] {
+        let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+        session.expression_demand = expression_execution::ExpressionDemand::Array;
+        let at = CellAddress { row: 1, col: 5 };
+        let mut host = CallHost::new_array(&mut session, 0, at, &arguments, 0);
+        if scalar_first {
+            assert_eq!(
+                host.scalar_data(0, MissingPolicy::Blank).unwrap().value,
+                Boolean(true)
+            );
+        } else {
+            assert_eq!(host.kind(0).unwrap(), OperandKind::Scalar);
+        }
+        let expressions = host.session.budget.usage.expressions;
+        assert_eq!(host.shape(0).unwrap(), (1, 1));
+        assert_eq!(
+            host.scalar_data(0, MissingPolicy::Blank).unwrap().value,
+            Boolean(true)
+        );
+        assert_eq!(host.session.budget.usage.expressions, expressions);
+        assert_eq!(host.session.budget.usage.cell_reads, 1);
+        assert!(matches!(
+            host.session.expression_demand,
+            expression_execution::ExpressionDemand::Array
+        ));
+    }
+}

@@ -220,7 +220,12 @@ impl Session<'_> {
         )?;
         let result = match expression {
             Some(expression) => self
-                .expr(sheet, at, expression)
+                .expr_with_demand(
+                    sheet,
+                    at,
+                    expression,
+                    crate::expression_execution::ExpressionDemand::Scalar,
+                )
                 .and_then(|v| self.scalar(at, v)),
             None => Ok(CellValue::Blank),
         };

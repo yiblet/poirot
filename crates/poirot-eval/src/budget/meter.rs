@@ -137,9 +137,13 @@ impl BudgetMeter {
         self.admit_reservation(Reservation::Values(count))?;
         self.allocation(count as usize)
     }
+    /// Admit text-buffer capacity when incremental copies charge work separately.
+    pub fn check_text(&self, bytes: usize) -> EvalResult<()> {
+        self.admit_reservation(Reservation::TextBytes(bytes))
+    }
     /// Admit text-buffer capacity and charge text processing work.
     pub fn text(&mut self, bytes: usize) -> EvalResult<()> {
-        self.admit_reservation(Reservation::TextBytes(bytes))?;
+        self.check_text(bytes)?;
         self.charge(WorkKind::TextByte, bytes as u64)
     }
     /// Admit per-match wildcard state count and charge matching work.

@@ -298,3 +298,43 @@ fn aggregate_blank_admission_depends_on_origin_without_rewriting_other_types() {
         }
     }
 }
+
+#[test]
+fn kth_rank_admission_handles_fractional_boundaries() {
+    for policy in [KthRankPolicy::PinnedPoi, KthRankPolicy::DocumentedLarge] {
+        for number in [
+            0.,
+            -0.,
+            -0.1,
+            -1.,
+            f64::NAN,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            i32::MAX as f64 + 0.1,
+        ] {
+            assert_eq!(
+                coercev2_statistics_kth_rank(number, policy),
+                Err(CellError::Num)
+            );
+        }
+        for (number, expected) in [
+            (1., 1.),
+            (1.000001, 2.),
+            (2.999999, 3.),
+            (3., 3.),
+            (i32::MAX as f64, i32::MAX as f64),
+        ] {
+            assert_eq!(coercev2_statistics_kth_rank(number, policy), Ok(expected));
+        }
+        for number in [f64::MIN_POSITIVE, f64::from_bits(1), 0.1, 0.999999] {
+            assert_eq!(
+                coercev2_statistics_kth_rank(number, policy),
+                if policy == KthRankPolicy::DocumentedLarge {
+                    Ok(1.)
+                } else {
+                    Err(CellError::Num)
+                }
+            );
+        }
+    }
+}

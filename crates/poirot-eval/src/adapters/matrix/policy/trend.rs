@@ -31,8 +31,14 @@ pub(super) fn evaluate<P: EvaluationPort>(
         true
     };
     ResourcePlan::trend(&y, x.as_ref(), nx.as_ref(), constant).admit(p)?;
+    let fit_policy = if p.determined_trend_fit() {
+        domain::TrendFitPolicy::Determined
+    } else {
+        domain::TrendFitPolicy::PinnedPoi
+    };
     let result =
-        domain::trend(&y, x.as_ref(), nx.as_ref(), constant, UNLIMITED).map_err(|e| err(p, e))?;
+        domain::trend_with_policy(&y, x.as_ref(), nx.as_ref(), constant, UNLIMITED, fit_policy)
+            .map_err(|e| err(p, e))?;
     // Trend.java resultSize is original new_x/known_x/y, while vals is
     // newX.length. CacheAreaEval reads row*resultWidth+column without a
     // length check. One prediction bypasses CacheAreaEval entirely.

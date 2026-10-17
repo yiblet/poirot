@@ -492,6 +492,7 @@ struct Session<'a> {
     numeric_policy: NumericOutcomePolicy,
     builtin_policy: BuiltinSemanticsPolicy,
     array_result_policy: ArrayResultPolicy,
+    expression_demand: expression_execution::ExpressionDemand,
     spill_owners: CellMap<CellAddress>,
     pending_spills: CellMap<ArrayView>,
     spill_read_ranges: CellMap<Vec<Area>>,

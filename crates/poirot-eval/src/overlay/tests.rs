@@ -1051,18 +1051,20 @@ fn numeric_locale_identity_and_consumption_survive_retained_snapshot() {
 }
 
 #[test]
-fn raw_snapshot_restore_rejects_the_previous_numeric_semantics_version() {
+fn raw_snapshot_restore_rejects_previous_kth_rank_semantics_versions() {
     let workbook = book();
     let overlay = Overlay::with_workbook(&workbook).build().unwrap();
-    let mut bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
-    // Payload's first field is its small postcard varint version.
-    let version = bytes.first_mut().unwrap();
-    assert_eq!(*version, 6);
-    *version = 5;
-    let snapshot = postcard::from_bytes(&bytes).unwrap();
-    assert!(
-        matches!(Overlay::from_snapshot(snapshot), Err(OverlayError::Snapshot(detail)) if detail == "unsupported snapshot version")
-    );
+    for previous in [8, 9, 10, 11] {
+        let mut bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
+        // Payload's first field is its small postcard varint version.
+        let version = bytes.first_mut().unwrap();
+        assert_eq!(*version, 12);
+        *version = previous;
+        let snapshot = postcard::from_bytes(&bytes).unwrap();
+        assert!(
+            matches!(Overlay::from_snapshot(snapshot), Err(OverlayError::Snapshot(detail)) if detail == "unsupported snapshot version")
+        );
+    }
 }
 
 #[test]

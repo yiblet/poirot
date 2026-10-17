@@ -50,6 +50,7 @@ impl<'a> Session<'a> {
             numeric_policy: NumericOutcomePolicy::LegacyFinite,
             builtin_policy: BuiltinSemanticsPolicy::default(),
             array_result_policy: ArrayResultPolicy::default(),
+            expression_demand: Default::default(),
             spill_owners: Default::default(),
             pending_spills: Default::default(),
             blank_reads: Default::default(),
@@ -183,8 +184,15 @@ impl<'a> Session<'a> {
         let consumer = self.consumer;
         let mut provenance = CellProvenance::Evaluated;
         let mut completion_candidate = false;
+        // A dependency formula has its own worksheet consumer. Its caller's collection
+        // demand must never change the dependency's value or memoized result.
+        let previous_demand = std::mem::replace(
+            &mut self.expression_demand,
+            expression_execution::ExpressionDemand::Scalar,
+        );
         let mut result =
             self.cell_value(sheet, address, &mut provenance, &mut completion_candidate);
+        self.expression_demand = previous_demand;
         if self.array_result_policy == ArrayResultPolicy::DynamicSpill
             && matches!(result, Ok(Blank))
             && let Some(consumer) = consumer

@@ -1,8 +1,17 @@
-use crate::{PairOperation, Regression, Result, checked, finite};
+use crate::{PairOperation, Regression, Result, SamplePolicy, SampleRequirement, checked, finite};
 use poirot_functions_core::CellError;
 
 /// Adapters preserve positions while filtering a pair whenever either member is excluded.
 pub fn paired(operation: PairOperation, x: &[f64], y: &[f64]) -> Result {
+    paired_with_policy(operation, x, y, SamplePolicy::PinnedPoi)
+}
+/// Reduce aligned admitted observations under an explicit sample-size contract.
+pub fn paired_with_policy(
+    operation: PairOperation,
+    x: &[f64],
+    y: &[f64],
+    policy: SamplePolicy,
+) -> Result {
     if x.len() != y.len() {
         return Err(CellError::NA);
     }
@@ -26,13 +35,23 @@ pub fn paired(operation: PairOperation, x: &[f64], y: &[f64]) -> Result {
                 .sum(),
         );
     }
-    if x.len() < 2 {
-        return Err(if operation == PairOperation::Correlation {
+    SampleRequirement {
+        minimum: if policy == SamplePolicy::ExcelDocumentation
+            && operation == PairOperation::CovariancePopulation
+        {
+            1
+        } else {
+            2
+        },
+        insufficient: if policy == SamplePolicy::ExcelDocumentation
+            || operation == PairOperation::Correlation
+        {
             CellError::Div0
         } else {
             CellError::NA
-        });
+        },
     }
+    .validate(x.len())?;
     let mx = x.iter().sum::<f64>() / x.len() as f64;
     let my = y.iter().sum::<f64>() / y.len() as f64;
     let cross = x

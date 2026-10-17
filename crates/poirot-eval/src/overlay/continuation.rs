@@ -53,6 +53,7 @@ impl Continuation {
             numeric_policy: _,
             builtin_policy: _,
             array_result_policy: _,
+            expression_demand: _,
             memo_limits: _,
             plan: _,
             lazy_compiler: _,

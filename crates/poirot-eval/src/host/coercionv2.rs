@@ -32,6 +32,29 @@ impl CallHost<'_, '_> {
     pub(crate) fn coercev2_scalar_text(&mut self, value: &CellValue) -> FunctionResult<String> {
         coercev2_formula_text(value, &mut self.session.budget)
     }
+    /// Render one legacy CONCAT member after preserving omission and origin.
+    pub(crate) fn coercev2_concat_member_text(
+        &mut self,
+        scalar: &ScalarOperand,
+    ) -> FunctionResult<String> {
+        use poirot_coercionv2::compatibility::{DeferredText, ScalarRef};
+        if matches!(scalar.value, Boolean(_)) {
+            self.check_text(5)?;
+        }
+        let input = if scalar.missing {
+            ScalarRef::Missing
+        } else {
+            (&scalar.value).into()
+        };
+        poirot_coercionv2::compatibility::coercev2_concat_member_text(
+            input,
+            |request| match request {
+                DeferredText::Number(number) => self.coercev2_scalar_text(&Number(number)),
+                DeferredText::Text(text) => self.project_text(text),
+                DeferredText::Missing => Err(VALUE_ERROR.into()),
+            },
+        )
+    }
     /// Project model text into a checked owned helper string.
     pub(crate) fn project_text(
         &mut self,

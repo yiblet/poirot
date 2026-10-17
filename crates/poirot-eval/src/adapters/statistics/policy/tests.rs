@@ -584,3 +584,99 @@ fn ignored_pair_text_never_requests_numeric_text_admission() {
         Ok(1.)
     );
 }
+
+#[test]
+fn statistical_sample_requirements_use_admitted_observations() {
+    use StatisticsFunction::*;
+    let excel = SemanticsPolicy::ExcelDocumentation;
+    let text = Scalar::Text("hello".into());
+    let cases = [
+        (
+            CovarianceP,
+            vec![
+                area(vec![text.clone(), Scalar::Number(0.)]),
+                area(vec![Scalar::Number(4.), Scalar::Number(7.)]),
+            ],
+            Ok(0.),
+        ),
+        (
+            CovarianceS,
+            vec![
+                area(vec![text.clone(), Scalar::Number(0.)]),
+                area(vec![Scalar::Number(4.), Scalar::Number(7.)]),
+            ],
+            Err(Failure::Spreadsheet(CellError::Div0)),
+        ),
+        (
+            CovarianceP,
+            vec![area(vec![text.clone()]), area(vec![Scalar::Number(7.)])],
+            Err(Failure::Spreadsheet(CellError::Div0)),
+        ),
+        (
+            VarA,
+            vec![area(vec![Scalar::Blank, Scalar::Number(0.)])],
+            Err(Failure::Spreadsheet(CellError::Div0)),
+        ),
+        (
+            VarA,
+            vec![area(vec![text.clone(), Scalar::Number(2.)])],
+            Ok(2.),
+        ),
+        (VarPA, vec![area(vec![text.clone()])], Ok(0.)),
+        (
+            StdevA,
+            vec![area(vec![text])],
+            Err(Failure::Spreadsheet(CellError::Div0)),
+        ),
+        (
+            VarA,
+            vec![area(vec![Scalar::Boolean(false), Scalar::Boolean(true)])],
+            Ok(0.5),
+        ),
+    ];
+    for (function, args, expected) in cases {
+        assert_eq!(
+            evaluate_with_policy(&mut Port::default(), function, &args, excel),
+            expected,
+            "{function:?}"
+        );
+    }
+    let args = [
+        area(vec![Scalar::Number(1.), Scalar::Error(CellError::Ref)]),
+        area(vec![Scalar::Error(CellError::NA)]),
+    ];
+    let mut port = Port::default();
+    assert_eq!(
+        evaluate_with_policy(&mut port, CovarianceP, &args, excel),
+        Err(Failure::Spreadsheet(CellError::Ref))
+    );
+    assert_eq!(
+        port.cells, 2,
+        "first input error precedes later operand and shape validation"
+    );
+    let args = [
+        area(vec![Scalar::Number(1.), Scalar::Number(2.)]),
+        area(vec![Scalar::Error(CellError::NA)]),
+    ];
+    assert_eq!(
+        evaluate_with_policy(&mut Port::default(), CovarianceP, &args, excel),
+        Err(Failure::Spreadsheet(CellError::NA))
+    );
+    for (limit, expected) in [(Some(1), "collection"), (None, "work")] {
+        let mut port = Port {
+            collection_limit: limit,
+            work_limit: Some(1),
+            ..Port::default()
+        };
+        assert_eq!(
+            evaluate_with_policy(
+                &mut port,
+                VarA,
+                &[area(vec![Scalar::Number(0.), Scalar::Number(0.)])],
+                excel
+            ),
+            Err(Failure::Operational(expected))
+        );
+        assert_eq!(port.cells, 0);
+    }
+}

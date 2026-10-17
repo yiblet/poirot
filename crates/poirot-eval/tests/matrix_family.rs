@@ -656,3 +656,100 @@ fn retained_poi_coordinate_observations_preserve_typed_results() {
         );
     }
 }
+
+#[test]
+fn documented_numeric_matrix_admission_preserves_types_and_pinned_collectors() {
+    use poirot_eval::{BuiltinSemanticsPolicy, RunConfiguration, run_formula_with_configuration};
+    let mut w = workbook();
+    for invalid in [
+        CellValue::Blank,
+        CellValue::Text("2".into()),
+        CellValue::Text("x".into()),
+        CellValue::Boolean(true),
+        CellValue::Boolean(false),
+    ] {
+        w.sheet_mut(0)
+            .unwrap()
+            .set_value(CellAddress { row: 0, col: 1 }, invalid)
+            .unwrap();
+        for f in ["MDETERM(A1:B2)", "MINVERSE(A1:B2)"] {
+            let c = RunConfiguration::default()
+                .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation);
+            assert!(
+                matches!(
+                    run_formula_with_configuration(&w, 0, AT, f, &c, EvaluationBudgets::default()),
+                    EvaluationOutcome::Complete {
+                        value: CellValue::Error(CellError::Value),
+                        ..
+                    }
+                ),
+                "{f}"
+            );
+        }
+    }
+    for (formula, expected) in [
+        (
+            r#"MDETERM({1,"2";3,4})"#,
+            CellValue::Error(CellError::Value),
+        ),
+        (
+            r#"MINVERSE({1,TRUE;3,4})"#,
+            CellValue::Error(CellError::Value),
+        ),
+        ("MDETERM({0,1;1,0})", CellValue::Number(-1.)),
+        ("MDETERM({2})", CellValue::Number(2.)),
+        ("MINVERSE({2})", CellValue::Number(0.5)),
+        ("MDETERM({1,2,3})", CellValue::Error(CellError::Value)),
+        ("MINVERSE({1,#N/A})", CellValue::Error(CellError::Value)),
+        ("MINVERSE({1,2;2,4})", CellValue::Error(CellError::Num)),
+        (
+            "MDETERM({1,#N/A;3,#DIV/0!})",
+            CellValue::Error(CellError::NA),
+        ),
+        (
+            r#"MDETERM({1,#N/A;3,"x"})"#,
+            CellValue::Error(CellError::Value),
+        ),
+    ] {
+        let c = RunConfiguration::default()
+            .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation);
+        match run_formula_with_configuration(&w, 0, AT, formula, &c, EvaluationBudgets::default()) {
+            EvaluationOutcome::Complete { value, .. } => assert_eq!(value, expected, "{formula}"),
+            other => panic!("{formula}: {other:?}"),
+        }
+    }
+    // Pin the source-specific compaction contract independently of strict admission.
+    for (formula, expected) in [
+        (r#"MDETERM({1,"x";3,4})"#, -12.),
+        (r#"INDEX(MINVERSE({1,"2";8,4}),1,1)"#, 0.),
+    ] {
+        let c = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
+        match run_formula_with_configuration(&w, 0, AT, formula, &c, EvaluationBudgets::default()) {
+            EvaluationOutcome::Complete {
+                value: CellValue::Number(value),
+                ..
+            } => assert!((value - expected).abs() < 1e-12),
+            other => panic!("{formula}: {other:?}"),
+        }
+    }
+    let c =
+        RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation);
+    for budgets in [
+        EvaluationBudgets {
+            materialized_values: 3,
+            ..EvaluationBudgets::default()
+        },
+        EvaluationBudgets {
+            run_work: 10,
+            ..EvaluationBudgets::default()
+        },
+    ] {
+        assert!(matches!(
+            run_formula_with_configuration(&w, 0, AT, "IFERROR(MINVERSE(A1:B2),99)", &c, budgets),
+            EvaluationOutcome::Aborted {
+                failure: EvaluationFailure::Budget(_),
+                ..
+            }
+        ));
+    }
+}

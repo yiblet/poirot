@@ -12,7 +12,12 @@ impl Session<'_> {
         if self.execution_observer.is_none() {
             return match args.get(index) {
                 Some(expression) => {
-                    let value = self.expr(s, at, expression)?;
+                    let value = self.expr_with_demand(
+                        s,
+                        at,
+                        expression,
+                        expression_execution::ExpressionDemand::Scalar,
+                    )?;
                     self.scalar(at, value)
                 }
                 None => Ok(Blank),

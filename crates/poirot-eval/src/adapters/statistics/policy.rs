@@ -251,6 +251,7 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
                 f
             },
             args,
+            policy,
         ),
         Correl | Pearson | Covar | CovarianceP | CovarianceS | Forecast | ForecastLinear
         | Intercept | Slope | SumX2MY2 | SumX2PY2 | SumXMY2 => paired::execute(p, f, args, policy),

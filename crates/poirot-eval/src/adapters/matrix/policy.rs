@@ -108,6 +108,14 @@ pub trait EvaluationPort {
     type Argument;
     /// Host operational failure type.
     type Operational;
+    /// Select documented numeric matrix admission instead of pinned collection.
+    fn strict_numeric_matrices(&self) -> bool {
+        false
+    }
+    /// Select determined prediction fits while preserving pinned regression defaults.
+    fn determined_trend_fit(&self) -> bool {
+        false
+    }
     /// Resolve operand shape without reading its member cells.
     fn describe(&mut self, arg: &Self::Argument) -> Result<Shape, Failure<Self::Operational>>;
     /// Read one member at zero-based offsets, retaining typed failures.
@@ -180,6 +188,9 @@ pub fn evaluate<P: EvaluationPort>(
         return trend::evaluate(p, args);
     }
     let policy = match f {
+        Mdeterm | Minverse if p.strict_numeric_matrices() => {
+            domain::MatrixCollection::SquareNumeric
+        }
         Mdeterm => domain::MatrixCollection::Determinant,
         Minverse => domain::MatrixCollection::Inverse,
         Mmult => domain::MatrixCollection::Multiply,
@@ -233,12 +244,16 @@ mod tests {
     struct Port {
         reads: Vec<(usize, usize)>,
         remaining: u64,
+        strict: bool,
     }
     impl EvaluationPort for Port {
         /// Deferred argument identity supplied to the family's host port.
         type Argument = Arg;
         /// Host abort channel kept outside catchable spreadsheet values.
         type Operational = &'static str;
+        fn strict_numeric_matrices(&self) -> bool {
+            self.strict
+        }
         fn describe(&mut self, a: &Arg) -> Result<Shape, Failure<Self::Operational>> {
             Ok(a.shape)
         }
@@ -289,6 +304,7 @@ mod tests {
         Port {
             reads: vec![],
             remaining: 100000,
+            strict: false,
         }
     }
     #[test]
@@ -360,5 +376,28 @@ mod tests {
             Err(Failure::Operational("budget"))
         );
         assert!(p.reads.is_empty());
+    }
+    #[test]
+    fn strict_matrix_admission_scans_row_major_and_preserves_operational_failure() {
+        let mut p = port();
+        p.strict = true;
+        let mut a = area(2, 2, &[1., 2., 3., 4.]);
+        a.cells[1] = Cell::Blank;
+        a.cells[2] = Cell::Error(CellError::NA);
+        assert_eq!(
+            evaluate(&mut p, MatrixFunction::Mdeterm, &[a]),
+            Err(Failure::Spreadsheet(CellError::Value))
+        );
+        assert_eq!(p.reads, vec![(0, 0), (0, 1), (1, 0), (1, 1)]);
+        let mut p = port();
+        p.strict = true;
+        p.remaining = 8;
+        let mut a = area(2, 2, &[1., 2., 3., 4.]);
+        a.cells[0] = Cell::Blank;
+        assert_eq!(
+            evaluate(&mut p, MatrixFunction::Minverse, &[a]),
+            Err(Failure::Operational("budget"))
+        );
+        assert_eq!(p.reads, vec![(0, 0), (0, 1)]);
     }
 }

@@ -8,7 +8,9 @@ pub(super) fn coercev2_matrix_collection<P: EvaluationPort>(
     policy: domain::MatrixCollection,
 ) -> Result<domain::Matrix<f64>, Failure<P::Operational>> {
     let s = describe(p, a)?;
-    if MatrixSelection::from(s) == MatrixSelection::FirstCell {
+    if policy != domain::MatrixCollection::SquareNumeric
+        && MatrixSelection::from(s) == MatrixSelection::FirstCell
+    {
         let c = read(p, a, 0, 0)?;
         let n = coercev2_matrix_number(p, c)?;
         preflight(p, Some(1), Some(1))?;
@@ -17,20 +19,20 @@ pub(super) fn coercev2_matrix_collection<P: EvaluationPort>(
     let n = s.rows.checked_mul(s.cols);
     preflight(p, n, n)?;
     let mut values = Vec::with_capacity(n.ok_or_else(|| err(p, domain::Error::BudgetExceeded))?);
+    let mut admission =
+        poirot_coercionv2::collections::MatrixAdmission::new(policy, s.rows, s.cols);
     for r in 0..s.rows {
         for c in 0..s.cols {
             let member = read(p, a, r, c)?;
-            if let Some(number) =
-                poirot_coercionv2::collections::coercev2_matrix_member((&member).into(), policy)?
-            {
+            if let Some(number) = admission.coercev2_matrix_member((&member).into())? {
                 values.push(number);
             }
         }
     }
-    if values.is_empty() || (values.len() == 1 && policy != domain::MatrixCollection::Transpose) {
-        return value();
+    admission.coercev2_finish()?;
+    if policy != domain::MatrixCollection::SquareNumeric {
+        values.resize(n.ok_or_else(|| err(p, domain::Error::BudgetExceeded))?, 0.0);
     }
-    values.resize(n.ok_or_else(|| err(p, domain::Error::BudgetExceeded))?, 0.0);
     domain::Matrix::new(s.rows, s.cols, values).map_err(|e| err(p, e))
 }
 /// Collect a TREND operand, preserving omitted inputs as `None`.

@@ -12,7 +12,7 @@ mod percent_rank;
 mod poisson_mass;
 
 /// Statistical reduction over already collected numeric operands.
-pub use aggregate::aggregate;
+pub use aggregate::{aggregate, aggregate_with_policy};
 /// Distribution probability/inverse kernels with optional host metering.
 pub use distribution::{
     legacy_t_dist, normal_dist, normal_dist_metered, normal_dist_source_metered, normal_inverse,
@@ -23,7 +23,7 @@ pub use iteration::{KernelFailure, KernelResult, SourceConvergenceFailure};
 /// Ordered sample selection, percentile interpolation, and ranking.
 pub use order::{order_statistic, percentile, rank};
 /// Aligned-pair statistics and fitted-line prediction.
-pub use paired::{forecast, paired, regression};
+pub use paired::{forecast, paired, paired_with_policy, regression};
 /// Percentile rank with an explicit inclusive/exclusive endpoint contract.
 pub use percent_rank::percent_rank;
 /// Origin-sensitive admission of scalar and paired statistical inputs.
@@ -50,6 +50,29 @@ fn finite(values: &[f64]) -> std::result::Result<(), CellError> {
         Ok(())
     } else {
         Err(CellError::Num)
+    }
+}
+
+/// Minimum-observation contract, selected independently of value admission.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SamplePolicy {
+    /// Preserve the pinned POI/StatsLib minimum sizes and errors.
+    PinnedPoi,
+    /// Use the documented sample or population denominator requirements.
+    ExcelDocumentation,
+}
+
+struct SampleRequirement {
+    minimum: usize,
+    insufficient: CellError,
+}
+impl SampleRequirement {
+    fn validate(self, admitted: usize) -> std::result::Result<(), CellError> {
+        if admitted < self.minimum {
+            Err(self.insufficient)
+        } else {
+            Ok(())
+        }
     }
 }
 

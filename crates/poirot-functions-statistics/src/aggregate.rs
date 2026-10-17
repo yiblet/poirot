@@ -1,10 +1,15 @@
-use crate::{Aggregate, Result, checked, finite};
+use crate::{Aggregate, Result, SamplePolicy, SampleRequirement, checked, finite};
 use poirot_functions_core::CellError;
 use std::collections::HashMap;
 
 /// The slice must already contain values admitted by the function's coercion policy.
 /// A variants use the same calculation after their distinct collection policy.
 pub fn aggregate(operation: Aggregate, values: &[f64]) -> Result {
+    aggregate_with_policy(operation, values, SamplePolicy::PinnedPoi)
+}
+
+/// Reduce admitted values under an explicit minimum-observation contract.
+pub fn aggregate_with_policy(operation: Aggregate, values: &[f64], policy: SamplePolicy) -> Result {
     finite(values)?;
     let n = values.len();
     if operation == Aggregate::Maximum || operation == Aggregate::Minimum {
@@ -70,14 +75,23 @@ pub fn aggregate(operation: Aggregate, values: &[f64]) -> Result {
         | Aggregate::VariancePopulation
         | Aggregate::StdevSample
         | Aggregate::StdevPopulation => {
-            // StatsLib requires >1 even for population variance/deviation.
-            if n < 2 {
-                return Err(CellError::Num);
-            }
             let sample = matches!(
                 operation,
                 Aggregate::VarianceSample | Aggregate::StdevSample
             );
+            SampleRequirement {
+                minimum: if policy == SamplePolicy::PinnedPoi || sample {
+                    2
+                } else {
+                    1
+                },
+                insufficient: if policy == SamplePolicy::PinnedPoi {
+                    CellError::Num
+                } else {
+                    CellError::Div0
+                },
+            }
+            .validate(n)?;
             let variance = deviation() / (n - usize::from(sample)) as f64;
             if matches!(
                 operation,

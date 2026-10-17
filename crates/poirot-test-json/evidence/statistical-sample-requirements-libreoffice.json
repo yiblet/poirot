@@ -1,0 +1,2011 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T20:29:20.270280+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "statistical-sample-requirements.json": "c51c48b139b387aed856d7029153675b8e461c63d88936cdc0fc3ab2a100fc82",
+    "closedxml-exploration-paired-statistics.json": "db1f20c52e8eaef27c80863e1bae35af9c22c7904d8e3655ab6986d3df0f81e6",
+    "closedxml-extension-aggregate-policies.json": "2f88ce81fbf2848a0388d58d83d1c08f4630e58b9b7951274af8a96512c8d120"
+  },
+  "results": [
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "singleton population \u2014 COVAR({2},{5})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "retained singleton \u2014 COVAR({\"a\",2},{5,6})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "zero retained \u2014 COVAR({0,2},{1,5})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "paired exclusion \u2014 COVAR({0,\"a\",2},{1,8,5})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "singleton population \u2014 COVARIANCE.P({2},{5})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "retained singleton \u2014 COVARIANCE.P({\"a\",2},{5,6})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "zero retained \u2014 COVARIANCE.P({0,2},{1,5})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "paired exclusion \u2014 COVARIANCE.P({0,\"a\",2},{1,8,5})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 VARA({\"hello\"})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 VARA({0})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 VARA({TRUE})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 VARA(A1:A2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 VARA({\"hello\",FALSE})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 STDEVA({\"hello\"})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 STDEVA({0})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 STDEVA({TRUE})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 STDEVA(A1:A2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 STDEVA({\"hello\",FALSE})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 VARPA({\"hello\"})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 VARPA({0})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 VARPA({TRUE})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 VARPA(A1:A2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 VARPA({\"hello\",FALSE})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 STDEVPA({\"hello\"})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 STDEVPA({0})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 STDEVPA({TRUE})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 STDEVPA(A1:A2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "sample/population admitted count \u2014 STDEVPA({\"hello\",FALSE})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "text counts as zero \u2014 VARA({\"hello\",2})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "population text counts as zero \u2014 VARPA({\"hello\",2})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "logical values count \u2014 VARA({FALSE,TRUE})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "logical population \u2014 VARPA({FALSE,TRUE})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.25
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "reference blanks ignored \u2014 VARA(A1:A3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "reference retained singleton \u2014 VARPA(A1:A3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "ordered errors \u2014 VARA({#N/A,#DIV/0!})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "determined intercept \u2014 TREND({3;5},{1;2},{3},TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "determined row orientation \u2014 TREND({3,5},{1,2},{3},TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "determined origin \u2014 TREND({3},{1},{3},FALSE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "zero origin fit \u2014 TREND({0},{1},{3},FALSE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "overdetermined origin \u2014 TREND({3;6},{1;2},{3},FALSE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "overdetermined intercept \u2014 TREND({3;5;7},{1;2;3},{4},TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "overdetermined origin three \u2014 TREND({3;6;9},{1;2;3},{4},FALSE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "constant nonzero predictor origin \u2014 TREND({3;5},{1;1},{3},FALSE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "underdetermined intercept \u2014 TREND({3},{1},{3},TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "zero rank predictor \u2014 TREND({3;5},{0;0},{3},FALSE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "determined prediction consumed \u2014 TREND({3;5},{1;2},{3},TRUE)+1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "reference determined intercept",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "reference determined origin",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "reference overdetermined intercept",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "statistical-sample-requirements.json",
+      "name": "determined two predictors",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL single pair",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON single pair",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE single pair",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT single pair",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST single pair",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: zero is included contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.33333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 1.33333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: text rejects the whole pair contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: numeric text is still excluded contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: blank pair rejected contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: nonnumeric opposite coordinate contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: constant x contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: constant y contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: single pair contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: error is not missing contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: MinA \u2014 MINA({\"ABC\", TRUE})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: StDevA \u2014 STDEVA({\"hello\"})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: VarA \u2014 VARA({\"hello\"})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: AverageA \u2014 AVERAGEA({4, 2, \"hello\", \"10\" })",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: Count \u2014 COUNT(1, #NULL!)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: CountA on examples from spec \u2014 COUNTA({1,2,3,4,5},6,\"7\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: Geomean \u2014 GEOMEAN(\"Hello\", 5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: Devsq is calculated from numbers \u2014 DEVSQ({ 5.6, 8.2, 9.2})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.90666666666666
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: MaxA \u2014 MAXA(10.4,{-3.5,12.6})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.6
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: Median uses only numbers \u2014 MEDIAN({ -3.5,1.4,6.9},-4.5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.05
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: Min \u2014 MIN({\"hello\"})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: MinA \u2014 MINA(10.4, {-3.5, 12.6})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -3.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: StDevP \u2014 STDEVP({0, 1, \"Hello\", FALSE, TRUE})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: Var \u2014 VAR({\"hello\"})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: VarP \u2014 VARP({\"hello\"})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: Devsq is calculated from numbers \u2014 DEVSQ({2, 1, 1, 0, 0})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.8
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 128,
+    "checks": 137,
+    "corroborated_scenarios": 128,
+    "corroborated_checks": 137
+  }
+}

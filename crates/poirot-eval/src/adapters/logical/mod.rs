@@ -78,7 +78,18 @@ pub(crate) fn execute(
     function: HelperFunction,
     arguments: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
-    let mut host = CallHost::new(session, sheet, address, arguments);
+    let mut host = match function {
+        HelperFunction::Ifs => CallHost::new_selecting(session, sheet, address, arguments, 1, None),
+        HelperFunction::Switch => {
+            let default = if arguments.len().is_multiple_of(2) {
+                arguments.len().checked_sub(1)
+            } else {
+                None
+            };
+            CallHost::new_selecting(session, sheet, address, arguments, 2, default)
+        }
+        _ => CallHost::new(session, sheet, address, arguments),
+    };
     // Errortype only resolves the value and reports NA for every non-error,
     // including MissingArgEval; it does not numerically/boolean-coerce Missing.
     if function == HelperFunction::ErrorType && host.len() == 1 {

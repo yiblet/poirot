@@ -202,6 +202,29 @@ pub fn coercev2_logical_test(value: &CellValue) -> Result<bool, CellError> {
 pub fn coercev2_number_to_text(number: f64) -> String {
     render(number, SourceVersion::Poi7321209)
 }
+/// Minimum rank admission for the existing ceiling-based kth selection consumer.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum KthRankPolicy {
+    /// Apache POI rejects ranks below one before rounding upward.
+    PinnedPoi,
+    /// Documented LARGE accepts every positive rank before rounding upward.
+    DocumentedLarge,
+}
+
+/// Admit a finite kth rank before collection acquisition, retaining the source bound.
+/// This policy does not apply to percentile interpolation or other integer arguments.
+pub fn coercev2_statistics_kth_rank(number: f64, policy: KthRankPolicy) -> Result<f64, CellError> {
+    let invalid_minimum = match policy {
+        KthRankPolicy::PinnedPoi => number < 1.0,
+        KthRankPolicy::DocumentedLarge => number <= 0.0,
+    };
+    let rank = number.ceil();
+    if !number.is_finite() || invalid_minimum || rank > i32::MAX as f64 {
+        return Err(CellError::Num);
+    }
+    Ok(rank)
+}
+
 /// Source floor-to-int conversion, retaining Java's NaN-to-zero cast behavior.
 pub fn coercev2_floor_i32(number: f64) -> Result<i32, CellError> {
     let number = number.floor();
@@ -400,6 +423,23 @@ pub fn coercev2_text_argument<'a, E: From<CellError>>(
         coercev2_text_with(value, deferred)
     }
 }
+/// Legacy CONCAT renders omitted members like blank, after traversal preserves
+/// omission separately from the stored value. Other text consumers keep their
+/// own omission policy (including pinned POI's unsupported MissingArgEval).
+pub fn coercev2_concat_member_text<'a, E: From<CellError>>(
+    value: ScalarRef<'a>,
+    deferred: impl FnMut(DeferredText<'a>) -> Result<String, E>,
+) -> Result<String, E> {
+    coercev2_text_with(
+        if matches!(value, ScalarRef::Missing) {
+            ScalarRef::Blank
+        } else {
+            value
+        },
+        deferred,
+    )
+}
+
 /// TEXT retains nonnumeric strings, converts blank to zero, and spells booleans directly.
 /// The projection continuation preserves host admission and malformed-UTF16 handling.
 pub fn coercev2_text_format_value<E>(

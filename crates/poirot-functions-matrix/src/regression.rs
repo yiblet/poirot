@@ -1,4 +1,4 @@
-use super::{Budget, Error, Matrix, Result, finite, reference, transpose};
+use super::{Budget, Error, Matrix, Result, TrendFitPolicy, finite, reference, transpose};
 
 /// Least squares with Householder QR (never the unstable normal equations).
 /// Optional inputs represent missing arguments, not blank cells. The adapter
@@ -9,9 +9,10 @@ pub(super) fn trend(
     new_x: Option<&Matrix<f64>>,
     constant: bool,
     budget: Budget,
+    policy: TrendFitPolicy,
 ) -> Result<Matrix<f64>> {
     let n = y.values.len();
-    if n == 1 {
+    if n == 1 && policy == TrendFitPolicy::PinnedPoi {
         return Err(Error::SourceUnsupported("Sample size too small"));
     }
     let p = known_x.map_or(1, |x| {
@@ -64,7 +65,7 @@ pub(super) fn trend(
     {
         return reference();
     }
-    if x.cols >= x.rows {
+    if x.cols >= x.rows && policy == TrendFitPolicy::PinnedPoi {
         return Err(Error::SourceUnsupported("Sample size too small"));
     }
     if x.rows != n {
@@ -107,20 +108,28 @@ pub(super) fn trend(
             all_same &= x.get(row, col)? == x.get(0, col)?;
         }
     }
-    if all_same {
+    // Retain the existing constant/intercept fit (a mean) without requiring a
+    // rank-revealing QR rewrite. Origin-only fits must solve their coefficient.
+    if all_same && (policy == TrendFitPolicy::PinnedPoi || (constant && n >= 2)) {
         let mean = y.values.iter().sum::<f64>() / n as f64;
         finite(&[mean])?;
         return Matrix::new(rows, cols, vec![mean; prediction.rows]);
     }
-    if n <= q {
-        return reference();
+    // Prediction needs enough observations to solve for q coefficients. Unlike
+    // residual statistics, it does not require an additional degree of freedom.
+    if n < q || (n == q && policy == TrendFitPolicy::PinnedPoi) {
+        return if policy == TrendFitPolicy::PinnedPoi {
+            reference()
+        } else {
+            Err(Error::Formula(poirot_functions_core::CellError::Value))
+        };
     }
     // Reuse x's storage as the design matrix after preflight.
     if constant {
         let mut design = Vec::with_capacity(n * q);
         for row in 0..n {
             design.push(1.0);
-            // SAFETY: Local shape checks require n * p input and n * q design entries; n > q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
+            // SAFETY: Local shape checks require n * p input and n * q design entries; n >= q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
             design.extend_from_slice(&x.values[row * p..(row + 1) * p]);
         }
         x = Matrix::new(n, q, design)?;
@@ -136,48 +145,52 @@ pub(super) fn trend(
         })?;
         let a = if *x.get(col, col)? > 0.0 { -norm } else { norm };
         if a == 0.0 {
-            return Err(Error::SourceUnsupported("Singular matrix in input"));
+            return Err(if policy == TrendFitPolicy::PinnedPoi {
+                Error::SourceUnsupported("Singular matrix in input")
+            } else {
+                Error::Formula(poirot_functions_core::CellError::Value)
+            });
         }
         *diagonal = a;
-        // SAFETY: Local shape checks require n * p input and n * q design entries; n > q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
+        // SAFETY: Local shape checks require n * p input and n * q design entries; n >= q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
         x.values[col * q + col] -= a;
         for j in col + 1..q {
             let dot = (col..n)
-                // SAFETY: Local shape checks require n * p input and n * q design entries; n > q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
+                // SAFETY: Local shape checks require n * p input and n * q design entries; n >= q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
                 .map(|row| x.values[row * q + j] * x.values[row * q + col])
                 .sum::<f64>();
-            // SAFETY: Local shape checks require n * p input and n * q design entries; n > q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
+            // SAFETY: Local shape checks require n * p input and n * q design entries; n >= q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
             let alpha = -dot / (a * x.values[col * q + col]);
             for row in col..n {
-                // SAFETY: Local shape checks require n * p input and n * q design entries; n > q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
+                // SAFETY: Local shape checks require n * p input and n * q design entries; n >= q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
                 x.values[row * q + j] -= alpha * x.values[row * q + col];
             }
         }
         let dot = (col..n)
-            // SAFETY: Local shape checks require n * p input and n * q design entries; n > q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
+            // SAFETY: Local shape checks require n * p input and n * q design entries; n >= q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
             .map(|row| rhs[row] * x.values[row * q + col])
             .sum::<f64>();
-        // SAFETY: Local shape checks require n * p input and n * q design entries; n > q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
+        // SAFETY: Local shape checks require n * p input and n * q design entries; n >= q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
         let alpha = -dot / (a * x.values[col * q + col]);
         for (row, value) in rhs.iter_mut().enumerate().skip(col) {
-            // SAFETY: Local shape checks require n * p input and n * q design entries; n > q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
+            // SAFETY: Local shape checks require n * p input and n * q design entries; n >= q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
             *value -= alpha * x.values[row * q + col];
         }
     }
     for col in (0..q).rev() {
-        // SAFETY: Local shape checks require n * p input and n * q design entries; n > q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
+        // SAFETY: Local shape checks require n * p input and n * q design entries; n >= q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
         rhs[col] /= diag[col];
         for row in 0..col {
-            // SAFETY: Local shape checks require n * p input and n * q design entries; n > q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
+            // SAFETY: Local shape checks require n * p input and n * q design entries; n >= q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
             rhs[row] -= rhs[col] * x.values[row * q + col];
         }
     }
     let mut out = Vec::with_capacity(prediction.rows);
     for row in 0..prediction.rows {
-        // SAFETY: Local shape checks require n * p input and n * q design entries; n > q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
+        // SAFETY: Local shape checks require n * p input and n * q design entries; n >= q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
         let mut sum = if constant { rhs[0] } else { 0.0 };
         for col in 0..p {
-            // SAFETY: Local shape checks require n * p input and n * q design entries; n > q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
+            // SAFETY: Local shape checks require n * p input and n * q design entries; n >= q, and loop row/column bounds stay within these dimensions and rhs/diag lengths.
             sum += rhs[col + usize::from(constant)] * prediction.get(row, col)?;
         }
         out.push(sum);

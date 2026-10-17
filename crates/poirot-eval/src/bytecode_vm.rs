@@ -702,6 +702,11 @@ mod tests {
             "@({1,2}+1)",
             "IF(TRUE,{1,2},UNKNOWN())+1",
             "TRANSPOSE({1,2})*2",
+            "SUMPRODUCT(A1:B2*{1,2})",
+            "SUMPRODUCT(--((A1:B2&\"x\")=\"2x\"))",
+            "SUM(A1:B2*{1,2})",
+            "COLUMNS({1,2}+\"A\")",
+            "SUMPRODUCT(IF(TRUE,A1:B2*2,UNKNOWN()))",
         ] {
             let syntax = poirot_formula::parse_formula(source).unwrap();
             for numeric in [
@@ -723,14 +728,12 @@ mod tests {
                             ..Default::default()
                         },
                     ] {
-                        compare_configured(
-                            &syntax,
-                            budgets,
-                            None,
-                            numeric,
-                            builtin,
+                        for arrays in [
+                            ArrayResultPolicy::ScalarIntersection,
                             ArrayResultPolicy::DynamicSpill,
-                        );
+                        ] {
+                            compare_configured(&syntax, budgets, None, numeric, builtin, arrays);
+                        }
                     }
                 }
             }

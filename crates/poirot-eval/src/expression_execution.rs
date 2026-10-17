@@ -2,7 +2,31 @@
 use super::*;
 use crate::executable::ReferenceRef;
 
+/// The consuming operation selects reference expansion independently of worksheet publication.
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+pub(super) enum ExpressionDemand {
+    /// Ordinary argument and worksheet formulas retain reference implicit intersection.
+    #[default]
+    Scalar,
+    /// Array consumers retain rectangular operator inputs.
+    Array,
+}
+
 impl<'a> Session<'a> {
+    /// Evaluate a deferred operand under its consumer's demand, restoring it on failure too.
+    pub(super) fn expr_with_demand<'expression>(
+        &mut self,
+        sheet: usize,
+        at: CellAddress,
+        expression: impl Into<ExecutableRef<'expression>>,
+        demand: ExpressionDemand,
+    ) -> EvalResult<Value> {
+        let previous = std::mem::replace(&mut self.expression_demand, demand);
+        let result = self.expr(sheet, at, expression);
+        self.expression_demand = previous;
+        result
+    }
+
     /// Execute a deferred bytecode block (or the unit-test-only tree oracle).
     pub(super) fn expr<'expression>(
         &mut self,
@@ -186,6 +210,17 @@ impl<'a> Session<'a> {
             }
         }
     }
+    /// Explicit arrays retain shape; references expand only for an array consumer or dynamic execution.
+    fn operator_retains_array(&self, value: &Value) -> bool {
+        matches!(value, Value::Array(_))
+            || (self.expands_operator_references() && array_operator::is_array_operand(value))
+    }
+
+    fn expands_operator_references(&self) -> bool {
+        self.expression_demand == ExpressionDemand::Array
+            || self.array_result_policy == ArrayResultPolicy::DynamicSpill
+    }
+
     /// Apply a unary operation to an already evaluated value channel.
     pub(super) fn unary_value(
         &mut self,
@@ -195,14 +230,15 @@ impl<'a> Session<'a> {
         value: Value,
     ) -> EvalResult<Value> {
         let op = &operation;
-        if *op != UnaryOp::ImplicitIntersection
-            && self.array_result_policy == ArrayResultPolicy::DynamicSpill
-            && array_operator::is_array_operand(&value)
-        {
+        if *op != UnaryOp::ImplicitIntersection && self.operator_retains_array(&value) {
             return self.array_unary(s, at, operation, value);
         }
         let value = self.scalar(at, value)?;
-        if *op == UnaryOp::ImplicitIntersection {
+        // Selection above materializes references while preserving the scalar type.
+        // The pinned POI numeric contract retains its text-only plus exception.
+        if *op == UnaryOp::ImplicitIntersection
+            || (*op == UnaryOp::Plus && self.numeric_policy == NumericOutcomePolicy::LegacyFinite)
+        {
             return Ok(value.into());
         }
         if self.numeric_policy == NumericOutcomePolicy::PinnedPoi7321209 {
@@ -264,9 +300,11 @@ impl<'a> Session<'a> {
         ) {
             return self.references(*op, left, right);
         }
-        if self.array_result_policy == ArrayResultPolicy::DynamicSpill
-            && (array_operator::is_array_operand(&left) || array_operator::is_array_operand(&right))
-        {
+        if self.operator_retains_array(&left) || self.operator_retains_array(&right) {
+            // Literal arrays retain shape in legacy formulas, but do not turn an
+            // ordinary reference operand into an array-formula request.
+            let left = self.operator_reference_operand(at, left)?;
+            let right = self.operator_reference_operand(at, right)?;
             return self.array_binary(s, at, operation, left, right);
         }
         let left = self.scalar(at, left)?;
@@ -296,6 +334,19 @@ impl<'a> Session<'a> {
         }
         self.budget.charge(WorkKind::ScalarOperator, 1)?;
         function_value(self.binary(*op, left, right))
+    }
+
+    fn operator_reference_operand(&mut self, at: CellAddress, value: Value) -> EvalResult<Value> {
+        if !self.expands_operator_references()
+            && matches!(
+                value,
+                Value::Refs(_) | Value::SignedRefs(_) | Value::SheetSpan(_)
+            )
+        {
+            self.scalar(at, value).map(Value::Scalar)
+        } else {
+            Ok(value)
+        }
     }
 
     /// Resolve borrowed reference geometry against workbook sheets into a value channel.

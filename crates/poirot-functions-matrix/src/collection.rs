@@ -2,9 +2,8 @@ use super::{
     Budget, Cell, CellError, Error, Input, Matrix, MatrixCollection, Result, finite, value,
 };
 
-/// Source-specific AreaEval collection: skipped cells compact the numeric
-/// sequence, which is then zero-padded into the original rectangle. This is a
-/// pinned POI behavior, not ordinary element-wise spreadsheet coercion.
+/// Admit a numeric matrix without changing coordinates under `SquareNumeric`. Other
+/// policies preserve pinned POI compaction and padding of skipped members.
 pub(super) fn coercev2_matrix_collection(
     area: &Matrix<Cell>,
     policy: MatrixCollection,
@@ -12,18 +11,20 @@ pub(super) fn coercev2_matrix_collection(
 ) -> Result<Matrix<f64>> {
     budget.check(Some(area.values.len()), Some(area.values.len()))?;
     let mut numbers = Vec::with_capacity(area.values.len());
+    let mut admission =
+        poirot_coercionv2::collections::MatrixAdmission::new(policy, area.rows, area.cols);
     for cell in &area.values {
-        if let Some(number) =
-            poirot_coercionv2::collections::coercev2_matrix_member(cell.into(), policy)
-                .map_err(Error::Formula)?
+        if let Some(number) = admission
+            .coercev2_matrix_member(cell.into())
+            .map_err(Error::Formula)?
         {
             numbers.push(number);
         }
     }
-    if numbers.is_empty() || (numbers.len() == 1 && policy != MatrixCollection::Transpose) {
-        return value();
+    admission.coercev2_finish().map_err(Error::Formula)?;
+    if policy != MatrixCollection::SquareNumeric {
+        numbers.resize(area.values.len(), 0.0);
     }
-    numbers.resize(area.values.len(), 0.0);
     Matrix::new(area.rows, area.cols, numbers)
 }
 

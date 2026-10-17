@@ -25,7 +25,6 @@ pub(super) fn execute<P: EvaluationPort>(
             } else {
                 None
             };
-            let excel_sample = f == CovarianceS && semantics == SemanticsPolicy::ExcelDocumentation;
             // Every statistical observation consists of two existing numeric coordinates.
             // Text/logical inputs cannot add observations or enter the means' divisor.
             let policy = PC::NumericOnly;
@@ -46,9 +45,6 @@ pub(super) fn execute<P: EvaluationPort>(
                 coercev2_statistics_pairs(p, a, b, policy)?
             };
             work(p, (v.original_len as u64).saturating_mul(12))?;
-            if excel_sample && v.x.len() < 2 {
-                return Err(poirot_model::CellError::Div0.into());
-            }
             if let Some(n) = number {
                 domain::forecast(n, &v.y, &v.x)
             } else if matches!(f, Intercept | Slope) {
@@ -66,7 +62,17 @@ pub(super) fn execute<P: EvaluationPort>(
                     SumXMY2 => Q::SumXMinusYSquared,
                     _ => return Err(poirot_model::CellError::Value.into()),
                 };
-                domain::paired(op, &v.x, &v.y)
+                domain::paired_with_policy(
+                    op,
+                    &v.x,
+                    &v.y,
+                    match semantics {
+                        SemanticsPolicy::ExcelDocumentation => {
+                            domain::SamplePolicy::ExcelDocumentation
+                        }
+                        SemanticsPolicy::PinnedPoi => domain::SamplePolicy::PinnedPoi,
+                    },
+                )
             }
         }
         _ => return Err(poirot_model::CellError::Value.into()),

@@ -12,12 +12,19 @@ fn port_failure(failure: FunctionFailure) -> Failure<EvaluationFailure> {
 /// Matrix host bridge exposing lazy shape inspection and individual member reads.
 struct MatrixPort<'call, 'workbook> {
     host: CallHost<'call, 'workbook>,
+    strict_numeric_matrices: bool,
 }
 impl EvaluationPort for MatrixPort<'_, '_> {
     /// Deferred argument identity supplied to the family's host port.
     type Argument = usize;
     /// Host abort channel kept outside catchable spreadsheet values.
     type Operational = EvaluationFailure;
+    fn strict_numeric_matrices(&self) -> bool {
+        self.strict_numeric_matrices
+    }
+    fn determined_trend_fit(&self) -> bool {
+        self.strict_numeric_matrices
+    }
     fn describe(&mut self, index: &usize) -> Result<Shape, Failure<EvaluationFailure>> {
         let description = self.host.describe(*index).map_err(port_failure)?;
         Ok(Shape {
@@ -95,7 +102,7 @@ pub(crate) fn execute(
     if function == helper::MatrixFunction::Transpose
         && session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
     {
-        let mut host = CallHost::new(session, sheet, address, args);
+        let mut host = CallHost::new_array(session, sheet, address, args, args.len());
         let shape = match host.describe(0) {
             Ok(shape) => shape,
             Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
@@ -124,8 +131,16 @@ pub(crate) fn execute(
         }
         return Ok(Value::Array(ArrayView::anchored(rows, Some(address))));
     }
+    let array_count = if function == helper::MatrixFunction::Trend {
+        3
+    } else {
+        args.len()
+    };
+    let strict_numeric_matrices =
+        session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation;
     let mut port = MatrixPort {
-        host: CallHost::new(session, sheet, address, args),
+        strict_numeric_matrices,
+        host: CallHost::new_array(session, sheet, address, args, array_count),
     };
     port.host
         .check_values(args.len())

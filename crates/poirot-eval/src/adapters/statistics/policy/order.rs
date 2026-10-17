@@ -5,6 +5,7 @@ use super::coercionv2::{
 use super::collections::coercev2_statistics_collection;
 use super::{EvaluationPort, Failure, StatisticsFunction};
 use domain::{Aggregate as A, Collection as C};
+use poirot_coercionv2::compatibility::{KthRankPolicy, coercev2_statistics_kth_rank};
 use poirot_functions_statistics as domain;
 use poirot_model::CellError;
 
@@ -13,6 +14,7 @@ pub(super) fn execute<P: EvaluationPort>(
     p: &mut P,
     f: StatisticsFunction,
     args: &[P::Argument],
+    semantics: super::SemanticsPolicy,
 ) -> Result<f64, Failure<P::Operational>> {
     use StatisticsFunction::*;
     let aggregate = match f {
@@ -33,7 +35,17 @@ pub(super) fn execute<P: EvaluationPort>(
         let v = coercev2_statistics_collection(p, args, policy)?;
         p.check_collection(v.len()).map_err(Failure::Operational)?;
         work(p, (v.len() as u64).saturating_mul(8))?;
-        return domain::aggregate(operation, &v).map_err(Failure::Spreadsheet);
+        return domain::aggregate_with_policy(
+            operation,
+            &v,
+            match semantics {
+                super::SemanticsPolicy::ExcelDocumentation => {
+                    domain::SamplePolicy::ExcelDocumentation
+                }
+                super::SemanticsPolicy::PinnedPoi => domain::SamplePolicy::PinnedPoi,
+            },
+        )
+        .map_err(Failure::Spreadsheet);
     }
     let result = match f {
         Large | Small | Percentile | QuartileInc => {
@@ -51,11 +63,20 @@ pub(super) fn execute<P: EvaluationPort>(
                 }
                 k /= 4.0;
             }
-            if (matches!(f, Percentile | QuartileInc) && !(0.0..=1.0).contains(&k))
-                || (!matches!(f, Percentile | QuartileInc)
-                    && (k < 1.0 || k.ceil() > i32::MAX as f64))
-            {
-                return Err(CellError::Num.into());
+            if matches!(f, Percentile | QuartileInc) {
+                if !(0.0..=1.0).contains(&k) {
+                    return Err(CellError::Num.into());
+                }
+            } else {
+                // SMALL retains its existing admission: Calc's distinct floor rule
+                // does not establish that documented SMALL shares LARGE's rule.
+                let rank_policy =
+                    if f == Large && semantics == super::SemanticsPolicy::ExcelDocumentation {
+                        KthRankPolicy::DocumentedLarge
+                    } else {
+                        KthRankPolicy::PinnedPoi
+                    };
+                k = coercev2_statistics_kth_rank(k, rank_policy)?;
             }
             let v = coercev2_statistics_collection(
                 p,

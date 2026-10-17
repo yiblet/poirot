@@ -1,0 +1,621 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T20:22:43.469339+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-extension-matrix-inputs.json": "57052c161b6f1e18a84c1e0c5da85ddcc745fb021d632eb795a141ff5e8b4c6b",
+    "matrix-numeric-admission.json": "1f138a8b2bca712a1b09a10c1a084302e837effac61d166bb1aed8bbcc95176d"
+  },
+  "results": [
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MDETERM rejects or propagates text matrix member \u2014 MDETERM(A1:B2)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": -2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MINVERSE rejects or propagates blank matrix member \u2014 MINVERSE(A1:B2)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": -0.333333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MINVERSE rejects or propagates text matrix member \u2014 MINVERSE(A1:B2)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": -0.333333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MDETERM rejects or propagates blank matrix member \u2014 MDETERM(A1:B2)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": -2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MINVERSE rejects or propagates error matrix member \u2014 MINVERSE(A1:B2)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": -0.333333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MMULT requires inner dimensions to agree: 1x3 and 1x3 \u2014 MMULT(A2:C2,A3:C3)",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MDETERM rejects or propagates error matrix member \u2014 MDETERM(A1:B2)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#NAME?"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": -2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MMULT requires inner dimensions to agree: 3x3 and 1x3 \u2014 MMULT(A2:C4,A5:C5)",
+      "checks": [
+        {
+          "action": 13,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MMULT requires inner dimensions to agree: 3x4 and 1x4 \u2014 MMULT(A2:C5,A6:D6)",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MDETERM rejects blank at coordinate 1",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MDETERM rejects blank at coordinate 3",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MDETERM rejects text at coordinate 1",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MDETERM rejects text at coordinate 3",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MDETERM rejects numeric text at coordinate 1",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MDETERM rejects numeric text at coordinate 3",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MDETERM reference precedence #N/A then x",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MDETERM reference precedence x then #N/A",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MDETERM reference precedence #N/A then #DIV/0!",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MDETERM reference precedence #DIV/0! then #N/A",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MDETERM keeps numeric zero coordinates",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MDETERM accepts singleton array",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MDETERM rejects nonsquare numeric array",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MINVERSE rejects blank at coordinate 1",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MINVERSE rejects blank at coordinate 3",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MINVERSE rejects text at coordinate 1",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MINVERSE rejects text at coordinate 3",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MINVERSE rejects numeric text at coordinate 1",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MINVERSE rejects numeric text at coordinate 3",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MINVERSE reference precedence #N/A then x",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MINVERSE reference precedence x then #N/A",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MINVERSE reference precedence #N/A then #DIV/0!",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MINVERSE reference precedence #DIV/0! then #N/A",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MINVERSE keeps numeric zero coordinates",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MINVERSE accepts singleton array",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MINVERSE rejects nonsquare numeric array",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MDETERM rejects nonsquare reference despite embedded error",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "matrix-numeric-admission.json",
+      "name": "MINVERSE rejects nonsquare reference despite embedded error",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 37,
+    "checks": 43,
+    "corroborated_scenarios": 37,
+    "corroborated_checks": 43
+  }
+}

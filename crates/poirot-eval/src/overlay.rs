@@ -270,6 +270,13 @@ fn result_change(
     value: &CellValue,
     materialization: crate::FormulaCacheMaterializationPolicy,
 ) -> Option<WorkbookChange> {
+    // An implicit blank is an evaluation value, not authored source. Reads may
+    // memoize it, but only source edits or spill publication can create a cell.
+    // Authored blank edits are emitted separately by source_changes; formula
+    // cells remain present here and can still publish a genuinely blank cache.
+    if source.is_none() && matches!(value, CellValue::Blank) {
+        return None;
+    }
     // TODO(coercion-non-argument): [MEDIUM] Cache publication can replace a computed number with an error; storing the converted value as a live result would change subsequent evaluation.
     let stored = materialization.coerce_stored_value(value.clone());
     if source.is_some_and(|c| same_stored_value(&c.value, &stored)) {

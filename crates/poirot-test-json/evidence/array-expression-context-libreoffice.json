@@ -1,0 +1,1011 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T19:56:07.947197+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "array-expression-context.json": "f11662bf4a9dc62aeaa5bea900a0317f68b14738ed8cd9854edb904e6b295fb6",
+    "closedxml-arrays.json": "f7655472e5c3ab6ba6a80d77dd18de542d7fa5d50f9334a8d60964ced9917d22",
+    "closedxml-exploration-sumproduct-policies.json": "fd75917ab06fd3a8741960cbb7b85b34e32ef88f1b47246e97749e185710bc65",
+    "closedxml-extension-operators.json": "a3c536bd568de7f9e25d979b8b4c690a834d5aaa707607a57e12dd671935db6c"
+  },
+  "results": [
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: reference products reach SUMPRODUCT",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 31.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: ordinary SUM intersects reference products",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 21.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: ordinary SUM intersects reference before literal broadcast",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 36.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: ordinary SUM intersects reversed reference operand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 36.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: row and column broadcast",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 66.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: column and row broadcast",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 66.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: ordinary SUM rejects unmatched two-dimensional reference intersection",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: ordinary SUM rejects reversed unmatched reference intersection",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: comparison members feed numeric unary",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: concatenation members survive comparison",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: ordinary SUM unary minus intersects reference",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: ordinary SUM percent intersects reference",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.03
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: ordinary COLUMNS does not request array evaluation",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: ordinary ROWS does not request array evaluation",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: scalar consumer requests reference intersection",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: scalar sibling does not inherit aggregate demand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 37.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: ordinary SUM selected branch keeps scalar demand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 21.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: member division error propagates",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: matrix branch inherits array demand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 31.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: matrix unary minus retains reference shape",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: matrix singleton scales full reference",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 34.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: matrix reference scales singleton",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 34.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: matrix reference and column literal broadcast",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 35.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: matrix column literal and reference broadcast",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 35.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: explicit error members preserve observed shape",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: TREND scalar true const intersects reference expression",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: TREND scalar false const admits numeric prediction",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: IFS result inherits array demand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 31.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: SWITCH result inherits array demand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 31.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "array-expression-context.json",
+      "name": "Array expression context: SWITCH default inherits array demand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 31.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-arrays.json",
+      "name": "ClosedXML arrays: ArrayOperation RowOnlyArrayIsRepeatedToHaveSameNumberOfRowsAsOtherArray in both operand orders",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 14.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 14.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-arrays.json",
+      "name": "ClosedXML arrays: ArrayOperation ColumnOnlyArrayIsRepeatedToHaveSameNumberOfColumnsAsOtherArray in both operand orders",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 16.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 16.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-arrays.json",
+      "name": "ClosedXML arrays: ArrayOperation 1x1ArrayIsScaledToOtherArray \u2014 SUM({2}*{1,2;3,4})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: numeric text ignored",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 38.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: text ignored",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 38.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: same count different shape rejected",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: different width rejected",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: zero does not mask error",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: arithmetic forces numeric text",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 56.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: arithmetic forces booleans",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 44.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: arithmetic rejects ordinary text",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: two dimensional correspondence",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 70.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: subtraction before sum",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -16.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: ArrayOperation SameSizeArrayPerformsOperationIndividually \u2014 SUM({1,2,3;4,5,6} + {6,5,4;3,2,1})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 42.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: ArrayOperation ArrayPlusScalarUpscalesScalarToSizeOfArray \u2014 SUM({1,1,1;1,1,1} * 3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 18.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: ArrayOperation 1x1ArrayIsScaledToOtherArray \u2014 SUM({1,2;3,4}*{2})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: ArrayOperation SameSizeArrayPerformsOperationIndividually \u2014 COLUMNS({1,2} + \"A\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: ArrayOperation ArrayPlusScalarUpscalesScalarToSizeOfArray \u2014 SUM(6 / {2,2,2;3,3,3})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 TRUE>-1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: Comparison TextIsAlwaysGreaterThanAnyNumber \u2014 \"\">10",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryPercent ConvertsArgumentBeforePercentOperator \u2014 1%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.01
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryMinus ConvertsArgumentBeforeNegating \u2014 -1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 FALSE>-1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: Comparison TextIsAlwaysGreaterThanAnyNumber \u2014 \"1\">10",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryPercent ConvertsArgumentBeforePercentOperator \u2014 100%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryMinus ConvertsArgumentBeforeNegating \u2014 -125.45",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -125.45
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 -1<TRUE",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: Comparison TextIsAlwaysGreaterThanAnyNumber \u2014 10<\"\"",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryPercent ConvertsArgumentBeforePercentOperator \u2014 25.7%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.257
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryMinus ConvertsArgumentBeforeNegating \u2014 -#DIV/0!",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 -1<FALSE",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: Comparison TextIsAlwaysGreaterThanAnyNumber \u2014 10<\"1\"",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryPercent ConvertsArgumentBeforePercentOperator \u2014 125.45%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.2545
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryMinus ConvertsArgumentBeforeNegating \u2014 -A1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryPercent ConvertsArgumentBeforePercentOperator \u2014 \"1\"%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.01
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 65,
+    "checks": 67,
+    "corroborated_scenarios": 65,
+    "corroborated_checks": 67
+  }
+}

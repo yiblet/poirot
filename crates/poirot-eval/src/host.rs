@@ -22,6 +22,38 @@ use resolution::ScalarSelectionPolicy;
 #[cfg(test)]
 use traversal::TraversalPolicy;
 
+/// Argument roles are fixed by the consumer before inspecting or projecting a value.
+#[derive(Clone, Copy)]
+enum ArgumentDemand {
+    Scalar,
+    ArrayPrefix(usize),
+    SelectedResults {
+        first: usize,
+        default: Option<usize>,
+        inherited: expression_execution::ExpressionDemand,
+    },
+}
+impl ArgumentDemand {
+    fn at(self, index: usize) -> expression_execution::ExpressionDemand {
+        use expression_execution::ExpressionDemand;
+        match self {
+            Self::ArrayPrefix(count) if index < count => ExpressionDemand::Array,
+            Self::SelectedResults {
+                first,
+                default,
+                inherited,
+            } if default == Some(index)
+                || index
+                    .checked_sub(first)
+                    .is_some_and(|offset| offset.is_multiple_of(2)) =>
+            {
+                inherited
+            }
+            _ => ExpressionDemand::Scalar,
+        }
+    }
+}
+
 /// The memo stores only requested arguments. Preparation never evaluates a subtree.
 pub(crate) struct CallHost<'call, 'workbook> {
     session: &'call mut Session<'workbook>,
@@ -29,6 +61,7 @@ pub(crate) struct CallHost<'call, 'workbook> {
     address: CellAddress,
     arguments: ArgumentsRef<'call>,
     memo: HashMap<usize, HostOperand>,
+    argument_demand: ArgumentDemand,
 }
 /// One deferred operand. The host memoizes argument evaluation across projections.
 struct ScalarInput<'input, 'call, 'workbook> {
@@ -78,7 +111,38 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             address,
             arguments: arguments.into(),
             memo: HashMap::new(),
+            argument_demand: ArgumentDemand::Scalar,
         }
+    }
+    /// Matrix consumers request array expression execution before any operand inspection.
+    pub(crate) fn new_array(
+        session: &'call mut Session<'workbook>,
+        sheet: usize,
+        address: CellAddress,
+        arguments: impl Into<ArgumentsRef<'call>>,
+        array_count: usize,
+    ) -> Self {
+        let mut host = Self::new(session, sheet, address, arguments);
+        host.argument_demand = ArgumentDemand::ArrayPrefix(array_count);
+        host
+    }
+    /// Selection results inherit the caller's demand; tests and keys remain scalar.
+    pub(crate) fn new_selecting(
+        session: &'call mut Session<'workbook>,
+        sheet: usize,
+        address: CellAddress,
+        arguments: impl Into<ArgumentsRef<'call>>,
+        first: usize,
+        default: Option<usize>,
+    ) -> Self {
+        let inherited = session.expression_demand;
+        let mut host = Self::new(session, sheet, address, arguments);
+        host.argument_demand = ArgumentDemand::SelectedResults {
+            first,
+            default,
+            inherited,
+        };
+        host
     }
     /// Return the run's numeric result construction policy.
     pub(crate) fn numeric_outcome_policy(&self) -> NumericOutcomePolicy {
@@ -236,6 +300,10 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
     pub(crate) fn check_text(&mut self, bytes: usize) -> FunctionResult<()> {
         Ok(self.session.budget.text(bytes)?)
     }
+    /// Admit a growing text buffer; its appended bytes are charged separately.
+    pub(crate) fn check_text_capacity(&mut self, bytes: usize) -> FunctionResult<()> {
+        Ok(self.session.budget.check_text(bytes)?)
+    }
     /// Charge helper work against active run and formula limits.
     pub(crate) fn charge_work(&mut self, units: u64) -> FunctionResult<()> {
         Ok(self
@@ -255,7 +323,12 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         let expression = self.arguments.get(index).ok_or(VALUE_ERROR)?;
         let missing = expression.is_missing();
         let array_missing = expression.array_missing(&mut self.session.budget)?;
-        let value = self.session.expr(self.sheet, self.address, expression)?;
+        let value = self.session.expr_with_demand(
+            self.sheet,
+            self.address,
+            expression,
+            self.argument_demand.at(index),
+        )?;
         let missing = missing || matches!(value, Value::Missing);
         self.session
             .budget

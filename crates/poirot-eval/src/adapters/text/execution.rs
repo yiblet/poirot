@@ -54,6 +54,9 @@ impl Session<'_> {
                 return adapters::text::execute_units(self, s, at, name, args, full_case);
             }
         }
+        if name == TextFunction::Concat {
+            return self.text_concat_members(s, at, args);
+        }
         if let Some(function) = name.helper() {
             return adapters::text::execute(self, s, at, function, args);
         }
@@ -125,6 +128,55 @@ impl Session<'_> {
             }
         }
     }
+    /// CONCAT consumes each member lazily; expression demand remains scalar, as
+    /// with other legacy collection consumers. Array-valued expressions retain
+    /// their shape, while reference expressions retain implicit intersection.
+    fn text_concat_members(
+        &mut self,
+        sheet: usize,
+        address: CellAddress,
+        arguments: ArgumentsRef<'_>,
+    ) -> EvalResult<Value> {
+        let policy = self.text_policy;
+        let mut host = crate::host::CallHost::new(self, sheet, address, arguments);
+        let result = (|| -> FunctionResult<CellValue> {
+            let policy = policy
+                .operation(poirot_text::Operation::Concatenate)
+                .map_err(text_unsupported)?;
+            let mut output = String::new();
+            let mut units = 0usize;
+            for index in 0..arguments.len() {
+                let count = host.collection_len(index)?;
+                for offset in 0..count {
+                    host.charge_work(1)?;
+                    let scalar = host.collection_cell(index, offset)?;
+                    // The legacy formula-text consumer admits omission as blank;
+                    // the host retains both states until this conversion boundary.
+                    let part = host.coercev2_concat_member_text(&scalar)?;
+                    host.charge_work(part.len() as u64)?;
+                    units =
+                        poirot_text::checked_total(units, poirot_text::length(&part, policy.units))
+                            .map_err(text_unsupported)?;
+                    if policy.limit.is_some_and(|limit| units > limit) {
+                        return Err(VALUE_ERROR.into());
+                    }
+                    let bytes = poirot_text::checked_total(output.len(), part.len())
+                        .map_err(text_unsupported)?;
+                    host.check_text_capacity(bytes)?;
+                    output.push_str(&part);
+                }
+            }
+            if !FunctionId::Text(TextFunction::Concat)
+                .descriptor()
+                .arity
+                .accepts(arguments.len())
+            {
+                return Err(VALUE_ERROR.into());
+            }
+            Ok(Text(output))
+        })();
+        function_value(result)
+    }
     fn text_scalar(&mut self, name: TextFunction, a: &[CellValue]) -> FunctionResult<CellValue> {
         let n = a.len();
         if !FunctionId::Text(name).descriptor().arity.accepts(n) {
@@ -163,18 +215,10 @@ impl Session<'_> {
                 })?;
             return Ok(Number(number));
         }
-        if matches!(name, TextFunction::Concatenate | TextFunction::Concat) {
+        if name == TextFunction::Concatenate {
             let policy = self
                 .text_policy
-                .operation(
-                    if name == TextFunction::Concat
-                        && self.text_policy.source != TextSourceVersion::PoirotF6c572d
-                    {
-                        poirot_text::Operation::Concat
-                    } else {
-                        poirot_text::Operation::Concatenate
-                    },
-                )
+                .operation(poirot_text::Operation::Concatenate)
                 .map_err(text_unsupported)?;
             self.budget.allocation(a.len())?;
             let mut parts = Vec::with_capacity(a.len());

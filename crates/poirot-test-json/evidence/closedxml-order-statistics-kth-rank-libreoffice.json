@@ -1,0 +1,227 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T20:34:09.325147+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-exploration-order-statistics.json": "051de6212d2fba25f91e00d8bf20f3174e86b073194c96e3081ea503e06e429c"
+  },
+  "results": [
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: LARGE fractional rank rounds upward",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: LARGE ties occupy separate positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: LARGE numeric array text excluded",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: LARGE array logical excluded",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: LARGE positive rank below one",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: SMALL fractional rank rounds upward",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: SMALL ties occupy separate positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: SMALL numeric array text excluded",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: PERCENTILE interpolated between adjacent ranks",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: PERCENTILE endpoints include minimum",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: PERCENTILE endpoints include maximum",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: PERCENTILE single point all probabilities same",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: PERCENTILE text values filtered",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: PERCENTILE error propagated",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 14,
+    "checks": 14,
+    "corroborated_scenarios": 14,
+    "corroborated_checks": 14
+  }
+}
