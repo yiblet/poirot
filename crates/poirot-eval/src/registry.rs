@@ -677,3 +677,15 @@ pub use policy::{Arity, DependencyPolicy, EvaluationStrategy};
 
 #[cfg(test)]
 mod tests;
+
+/// Builtins available under the selected semantics policy, including aliases.
+/// External/ATP registrations are not advertised by this builtin-only catalog.
+pub fn descriptors_for_policy(
+    policy: crate::BuiltinSemanticsPolicy,
+) -> impl Iterator<Item = &'static FunctionDescriptor> {
+    FUNCTION_DESCRIPTORS.iter().chain(
+        EXCEL_DESCRIPTORS
+            .iter()
+            .filter(move |_| policy == crate::BuiltinSemanticsPolicy::ExcelDocumentation),
+    )
+}

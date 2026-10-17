@@ -81,7 +81,7 @@ impl From<EvaluationFailure> for OverlayError {
     }
 }
 
-/// Sparse edits and dependency-aware retained results over an immutable workbook handle.
+/// Sparse edits and dependency-aware retained results over a stable workbook handle.
 pub struct Overlay<'a, W = &'a Workbook> {
     source: Source<'a, W>,
     cache: RefCell<Cache>,
@@ -93,7 +93,7 @@ pub struct OverlayBuilder<'a, W> {
     extensions: Option<Registry<'a>>,
 }
 impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
-    /// Begin an overlay over a borrowed or shared immutable workbook.
+    /// Begin an overlay over a borrowed, shared, or owned workbook.
     pub fn with_workbook(workbook: W) -> OverlayBuilder<'a, W> {
         OverlayBuilder {
             workbook,
@@ -186,6 +186,49 @@ impl Overlay<'static, &'static Workbook> {
         snapshot: snapshot::Snapshot<'_>,
     ) -> Result<(Workbook, snapshot::WorkspaceState), OverlayError> {
         snapshot.restore()
+    }
+}
+impl<W: Borrow<Workbook> + std::borrow::BorrowMut<Workbook>> Overlay<'_, W> {
+    /// Commit authored edits into the baseline without discarding prepared work.
+    ///
+    /// Validation failure leaves both baseline and edits untouched. Successful
+    /// publication clears the authored diff, retaining compiled programs, cached
+    /// results, dependency indexes and context identity. Edits already invalidate
+    /// affected results when authored; flushing does not invalidate them again.
+    ///
+    /// This stages only edited cells, never a workbook clone. Evaluated values
+    /// remain in the overlay. Baseline saved results may therefore be stale;
+    /// evaluate required outputs and apply `changes()` to a detached workbook
+    /// before file export. A workspace `snapshot()` includes retained results.
+    /// Edited spill anchors lose their saved children; edits to saved children
+    /// replace that child's derived ownership with authored content. Other saved
+    /// caches are left alone and never authorize evaluator reuse.
+    ///
+    /// Requires an owned or exclusively borrowed baseline (`BorrowMut<Workbook>`).
+    /// Shared immutable handles continue to support edits and change export.
+    pub fn flush(&mut self) -> Result<usize, ModelError> {
+        let count = self.edited_cells();
+        if count == 0 {
+            return Ok(0);
+        }
+        let mut cells = self
+            .source
+            .inputs
+            .deleted
+            .iter()
+            .map(|&(sheet, address)| (sheet, address, None))
+            .collect::<Vec<_>>();
+        for (&sheet, overrides) in &self.source.inputs.sheets {
+            cells.extend(
+                overrides
+                    .cells()
+                    .iter()
+                    .map(|(&address, cell)| (sheet, address, Some(cell.clone()))),
+            );
+        }
+        self.source.workbook.borrow_mut().replace_cells(cells)?;
+        self.source.inputs = crate::run_overlay::RunInputs::empty();
+        Ok(count)
     }
 }
 impl<'a, W: Borrow<Workbook>> OverlayBuilder<'a, W> {
@@ -299,3 +342,6 @@ fn result_change(
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod tests_flush;

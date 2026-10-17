@@ -3,10 +3,13 @@ mod backend;
 mod budget;
 mod metadata;
 mod package;
+mod spill;
 mod text;
 mod text_overlay;
 mod workbook;
 mod worksheet;
+pub(crate) use spill::bounds as spill_bounds;
+pub(crate) use spill::{apply_spills, validate_spills};
 mod xml;
 /// Checked OOXML package overlays used around backend conversion.
 pub(crate) use text_overlay::apply_text;

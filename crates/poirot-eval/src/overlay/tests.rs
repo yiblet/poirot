@@ -1,12 +1,12 @@
 use super::*;
 use std::time::Duration;
-fn at(reference: &str) -> EvaluationTarget {
+pub(super) fn at(reference: &str) -> EvaluationTarget {
     EvaluationTarget {
         sheet: 0,
         address: reference.parse().unwrap(),
     }
 }
-fn book() -> Workbook {
+pub(super) fn book() -> Workbook {
     let mut book = Workbook::new();
     let s = book.add_sheet("S").unwrap();
     s.set_value(at("A1").address, 2.).unwrap();
@@ -18,7 +18,7 @@ fn book() -> Workbook {
         .unwrap();
     book
 }
-fn value<W: Borrow<Workbook>>(
+pub(super) fn value<W: Borrow<Workbook>>(
     overlay: &mut Overlay<'_, W>,
     cell: &str,
     context: &EvaluationContext,
@@ -281,7 +281,7 @@ fn compiler_and_cache_stay_empty_before_use() {
     assert!(!bytes.is_empty());
 }
 
-fn dynamic() -> OverlayPolicy {
+pub(super) fn dynamic() -> OverlayPolicy {
     OverlayPolicy {
         builtin: crate::BuiltinSemanticsPolicy::ExcelDocumentation,
         arrays: crate::ArrayResultPolicy::DynamicSpill,
@@ -1253,4 +1253,89 @@ fn search_start_policy_switch_invalidates_restored_values_for_both_text_routes()
         assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(1.));
         assert_eq!(value(&mut overlay, "F1", &context), CellValue::Number(4.));
     }
+}
+
+#[test]
+fn retained_scalar_named_producer_does_not_block_child_discovery_and_invalidates_before_array_change()
+ {
+    let mut workbook = Workbook::new();
+    let sheet = workbook.add_sheet("S").unwrap();
+    sheet.set_value(at("C1").address, false).unwrap();
+    sheet
+        .set_formula(at("A1").address, "Choice", CellValue::Blank)
+        .unwrap();
+    workbook
+        .define_name("Choice", "IF(C1,{10,20},10)", None)
+        .unwrap();
+    workbook
+        .sheet_mut(0)
+        .unwrap()
+        .set_formula(at("B2").address, "SUM(B1)", CellValue::Blank)
+        .unwrap();
+    let mut overlay = Overlay::with_workbook(workbook)
+        .with_policy(dynamic())
+        .build()
+        .unwrap();
+    let context = EvaluationContext::default();
+    assert_eq!(value(&mut overlay, "A1", &context), CellValue::Number(10.));
+    overlay.flush().unwrap();
+    let mut warm = overlay.evaluation(&context).unwrap();
+    assert_eq!(warm.cell(at("B1")).unwrap(), CellValue::Blank);
+    assert_eq!(warm.usage().formula_executions, 0);
+    drop(warm);
+    assert_eq!(value(&mut overlay, "B2", &context), CellValue::Number(0.));
+    overlay.set_value(at("D5"), 99.).unwrap();
+    overlay.flush().unwrap();
+    let mut unrelated = overlay.evaluation(&context).unwrap();
+    assert_eq!(unrelated.cell(at("B2")).unwrap(), CellValue::Number(0.));
+    assert_eq!(unrelated.usage().formula_executions, 0);
+    drop(unrelated);
+    overlay.set_value(at("C1"), true).unwrap();
+    assert!(overlay.cached_value(at("A1")).is_none());
+    assert!(overlay.cached_value(at("B2")).is_none());
+    // This producer can now occupy B1. The existing conservative unsupported
+    // result must remain rather than treating a stale scalar memo as proof.
+    assert!(
+        overlay
+            .evaluation(&context)
+            .unwrap()
+            .cell(at("B1"))
+            .is_err()
+    );
+}
+#[test]
+fn same_session_scalar_named_producer_tracks_future_footprint_dependency() {
+    let mut workbook = Workbook::new();
+    let sheet = workbook.add_sheet("S").unwrap();
+    sheet.set_value(at("C1").address, false).unwrap();
+    sheet
+        .set_formula(at("A1").address, "Choice", CellValue::Blank)
+        .unwrap();
+    sheet
+        .set_formula(at("B2").address, "SUM(B1)", CellValue::Blank)
+        .unwrap();
+    workbook
+        .define_name("Choice", "IF(C1,{10,20},10)", None)
+        .unwrap();
+    let mut overlay = Overlay::with_workbook(workbook)
+        .with_policy(dynamic())
+        .build()
+        .unwrap();
+    let context = EvaluationContext::default();
+    let outputs = overlay
+        .evaluation(&context)
+        .unwrap()
+        .outputs(&[at("A1"), at("B2")])
+        .unwrap();
+    assert_eq!(outputs[1].value, CellValue::Number(0.));
+    assert!(overlay.cached_value(at("B2")).is_some());
+    overlay.set_value(at("C1"), true).unwrap();
+    assert!(overlay.cached_value(at("B2")).is_none());
+    assert!(
+        overlay
+            .evaluation(&context)
+            .unwrap()
+            .cell(at("B1"))
+            .is_err()
+    );
 }

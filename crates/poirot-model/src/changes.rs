@@ -139,6 +139,70 @@ pub enum WorkbookChange {
     },
 }
 impl Workbook {
+    /// Atomically replace sparse authored cells without cloning the workbook.
+    ///
+    /// `None` removes a cell. Repeated coordinates use the last replacement.
+    /// All addresses, sheets and formulas are validated before any mutation.
+    /// Only changed payloads are staged; saved spill children conflicting with
+    /// replacements are cleared in the same way as ordinary worksheet edits.
+    pub fn replace_cells(
+        &mut self,
+        cells: impl IntoIterator<Item = (usize, CellAddress, Option<Cell>)>,
+    ) -> Result<(), ModelError> {
+        let mut prepared = BTreeMap::<usize, BTreeMap<CellAddress, Option<Cell>>>::new();
+        for (sheet, address, mut cell) in cells {
+            address.validate()?;
+            if sheet >= self.sheets.len() {
+                return Err(ModelError("worksheet index out of bounds".into()));
+            }
+            if let Some(cell) = &mut cell
+                && let Some(formula) = cell.formula.take()
+            {
+                cell.formula = Some(normalize_formula(formula)?);
+            }
+            prepared.entry(sheet).or_default().insert(address, cell);
+        }
+        // All fallible work precedes publication. Each changed sheet's saved
+        // spill index is scanned once, rather than once per replacement.
+        for (index, cells) in prepared {
+            // SAFETY: Each index was checked against self.sheets.len() above. No sheets
+            // are added or removed between validation and this lookup.
+            let sheet = &mut self.sheets[index];
+            let children = sheet
+                .spill_cache
+                .iter()
+                .filter(|(address, cached)| {
+                    cells.contains_key(address) || cells.contains_key(&cached.owner)
+                })
+                .map(|(address, _)| *address)
+                .collect::<Vec<_>>();
+            for child in children {
+                if let Some(cached) = sheet.spill_cache.remove(&child) {
+                    match cached.source {
+                        Some(source) => {
+                            sheet.cells.insert(child, source);
+                        }
+                        None => {
+                            sheet.cells.remove(&child);
+                        }
+                    }
+                }
+            }
+            for (address, cell) in cells {
+                match cell {
+                    Some(cell) => {
+                        sheet.rows.insert(address.row);
+                        sheet.cells.insert(address, cell);
+                    }
+                    None => {
+                        sheet.cells.remove(&address);
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// Apply an owned batch atomically. Validation failure leaves the source untouched.
     pub fn apply(
         &mut self,
@@ -274,6 +338,97 @@ mod tests {
     fn at(s: &str) -> CellAddress {
         s.parse().unwrap()
     }
+    #[test]
+    fn sparse_replacements_validate_the_entire_batch_before_publication() {
+        let mut w = Workbook::new();
+        w.add_sheet("S").unwrap().set_value(at("A1"), 1.).unwrap();
+        let before = w.clone();
+        let valid = (0, at("A1"), Some(Cell::new(2.)));
+        for invalid in [
+            (1, at("B1"), None),
+            (
+                0,
+                CellAddress {
+                    row: u32::MAX,
+                    col: 0,
+                },
+                None,
+            ),
+            (
+                0,
+                at("B1"),
+                Some(Cell {
+                    formula: Some("= ".into()),
+                    ..Default::default()
+                }),
+            ),
+        ] {
+            assert!(w.replace_cells([valid.clone(), invalid]).is_err());
+            assert_eq!(w, before);
+        }
+        w.replace_cells([
+            valid.clone(),
+            (
+                0,
+                at("A1"),
+                Some(Cell::with_formula("= 2+3", CellValue::Blank).unwrap()),
+            ),
+            (0, at("C1"), Some(Cell::new(9.))),
+            (0, at("C1"), None),
+        ])
+        .unwrap();
+        assert_eq!(
+            w.sheet(0)
+                .unwrap()
+                .get(at("A1"))
+                .unwrap()
+                .formula
+                .as_deref(),
+            Some("2+3")
+        );
+        assert!(w.sheet(0).unwrap().get(at("C1")).is_none());
+        let before = w.clone();
+        w.replace_cells([]).unwrap();
+        assert_eq!(w, before);
+    }
+
+    #[test]
+    fn sparse_replacements_restore_spill_metadata_before_publishing_all_sources() {
+        let mut w = Workbook::new();
+        let s = w.add_sheet("S").unwrap();
+        s.set_formula(at("A1"), "{1,2,3}", 1.0.into()).unwrap();
+        let style = CellStyle {
+            number_format: Some("0.00".into()),
+        };
+        s.set(
+            at("C1"),
+            Cell {
+                style: style.clone(),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        for (child, result) in [("B1", 2.), ("C1", 3.)] {
+            s.set_spill_cached_value(at(child), at("A1"), "{1,2,3}", result.into())
+                .unwrap();
+        }
+        w.replace_cells([
+            (
+                0,
+                at("A1"),
+                Some(Cell::with_formula("{4}", CellValue::Blank).unwrap()),
+            ),
+            (0, at("B1"), Some(Cell::new(99.))),
+        ])
+        .unwrap();
+        let s = w.sheet(0).unwrap();
+        assert_eq!(s.get(at("B1")).unwrap().value, CellValue::Number(99.));
+        assert!(s.spill_owner(at("B1")).is_none());
+        assert_eq!(s.get(at("C1")).unwrap().value, CellValue::Blank);
+        assert_eq!(s.source_cell(at("C1")).unwrap().style, style);
+        assert!(s.spill_owner(at("C1")).is_none());
+    }
+
     #[test]
     fn failed_batches_leave_source_and_saved_values_untouched() {
         let mut w = Workbook::new();

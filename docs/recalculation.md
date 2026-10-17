@@ -60,3 +60,12 @@ would add little value. Both modes share the same calculation engine.
 
 For engine integration details, see the component's
 [dependency semantics](../crates/poirot-eval/docs/incremental-cache.md).
+
+Owned or exclusively borrowed overlays can `flush()` authored edits into their
+baseline without changing the effective source or the retained computation. The
+operation stages only changed cell payloads, validates the entire sparse batch,
+and leaves compiler, dependency graph, context and valid result allocations intact.
+Saved spill metadata on changed sheets is scanned once per batch to clear affected
+ownership; untouched workbook cells are not cloned. Saved workbook caches remain
+file data and may be stale until explicitly materialized with `changes()` at save
+time. Workspace snapshots preserve the complete retained state across a flush.

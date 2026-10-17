@@ -97,6 +97,7 @@ pub fn plan_xlsx_export(
             "cannot export workbook without worksheets".into(),
         ));
     }
+    crate::ooxml::validate_spills(workbook)?;
     let mut source_bytes = 0u64;
     let mut cell_count = 0usize;
     let mut row_count = 0usize;

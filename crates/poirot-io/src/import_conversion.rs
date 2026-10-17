@@ -119,6 +119,7 @@ pub fn read_xlsx_bytes_with_policy(
     ooxml::apply_rows(&package, &plan, &mut workbook)?;
     ooxml::apply_text(&package, &plan, &mut workbook)?;
     ooxml::apply_metadata(&package, &plan, &mut workbook, &mut warnings)?;
+    ooxml::apply_spills(&package, &plan, &mut workbook)?;
     identifier_warnings(&workbook, &mut warnings);
     Ok(ImportReport { workbook, warnings })
 }

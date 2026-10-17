@@ -46,13 +46,13 @@ impl CellEncoding {
     }
 }
 
-fn style_map(bytes: &[u8]) -> Result<BTreeMap<CellAddress, String>, IoError> {
+fn style_map(bytes: &[u8], key: &[u8]) -> Result<BTreeMap<CellAddress, String>, IoError> {
     let mut result = BTreeMap::new();
     let mut reader = events(bytes);
     loop {
         match reader.read_event().map_err(xml)? {
             Event::Start(e) if e.local_name().as_ref() == b"c" => {
-                if let (Some(r), Some(s)) = (attr(&reader, &e, b"r")?, attr(&reader, &e, b"s")?) {
+                if let (Some(r), Some(s)) = (attr(&reader, &e, b"r")?, attr(&reader, &e, key)?) {
                     result.insert(r.parse()?, s);
                 }
             }
@@ -66,7 +66,9 @@ fn write_cells<W: Write>(
     writer: &mut Writer<W>,
     sheet: &Worksheet,
     styles: &BTreeMap<CellAddress, String>,
+    metadata: &BTreeMap<CellAddress, String>,
 ) -> Result<(), IoError> {
+    let spills = super::spill::bounds(sheet)?;
     for index in sheet.row_indices() {
         let mut start = BytesStart::new("row");
         let number = (index + 1).to_string();
@@ -87,6 +89,9 @@ fn write_cells<W: Write>(
             if let Some(style) = styles.get(address) {
                 start.push_attribute(("s", style.as_str()));
             }
+            if let Some(index) = metadata.get(address) {
+                start.push_attribute(("cm", index.as_str()));
+            }
             let CellEncoding { kind, value } =
                 CellEncoding::new(&cell.value, cell.formula.is_some())?;
             if let Some(kind) = kind {
@@ -94,7 +99,20 @@ fn write_cells<W: Write>(
             }
             write_event(writer, Event::Start(start))?;
             if let Some(formula) = &cell.formula {
-                element(writer, "f", formula.trim_start_matches('='))?;
+                if let Some(last) = spills.get(address) {
+                    let mut start = BytesStart::new("f");
+                    start.push_attribute(("t", "array"));
+                    let range = format!("{address}:{last}");
+                    start.push_attribute(("ref", range.as_str()));
+                    write_event(writer, Event::Start(start))?;
+                    write_event(
+                        writer,
+                        Event::Text(BytesText::new(formula.trim_start_matches('='))),
+                    )?;
+                    write_event(writer, Event::End(BytesEnd::new("f")))?;
+                } else {
+                    element(writer, "f", formula.trim_start_matches('='))?;
+                }
             }
             if let Some(value) = value {
                 if kind == Some("inlineStr") {
@@ -119,7 +137,8 @@ impl SheetPatch<'_> {
     /// Rewrite worksheet XML using canonical cell types and saved results.
     pub(super) fn execute<W: Write>(&self, output: W) -> Result<W, IoError> {
         let Self { bytes, sheet } = *self;
-        let styles = style_map(bytes)?;
+        let styles = style_map(bytes, b"s")?;
+        let metadata = style_map(bytes, b"cm")?;
         let mut reader = events(bytes);
         let mut writer = Writer::new(output);
         loop {
@@ -128,7 +147,7 @@ impl SheetPatch<'_> {
                 Event::Start(e) if e.local_name().as_ref() == b"sheetData" => {
                     write_event(&mut writer, Event::Start(e.clone().into_owned()))?;
                     reader.read_to_end(e.name()).map_err(xml)?;
-                    write_cells(&mut writer, sheet, &styles)?;
+                    write_cells(&mut writer, sheet, &styles, &metadata)?;
                     write_event(&mut writer, Event::End(BytesEnd::new("sheetData")))?;
                 }
                 Event::Eof => break,

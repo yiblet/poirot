@@ -38,3 +38,10 @@ reconstruction and raw number formats have explicit limitations and warnings.
 Unsupported numeric/text fidelity can refuse an operation rather than silently
 changing a value. Export size limits are not a peak-memory cap, and equal cell
 data need not produce byte-identical file metadata.
+
+XLSX array caches carry a bounded rectangle plus dynamic-array metadata on export.
+Import restores ownership only for stored children within validated, disjoint array
+ranges; it never expands implicit blank coordinates. Blank source formatting is
+retained behind cached children. Export rejects array rectangles that would claim
+unrelated authored content or conflicting owners. Modern `#SPILL!` and `#CALC!`
+values/caches are restored from original XML around the legacy backend decoder.

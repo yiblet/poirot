@@ -213,3 +213,49 @@ fn lookup_blank_consumers_survive_overlay_reset_materialization_and_xlsx() {
         );
     }
 }
+
+#[test]
+fn flushed_sources_export_materialized_formula_and_spill_caches_to_xlsx() {
+    let mut model = Workbook::new();
+    model
+        .add_sheet("S")
+        .unwrap()
+        .set_value(at("A1").address, 2.)
+        .unwrap();
+    let mut overlay = Overlay::with_workbook(model)
+        .with_policy(poirot::OverlayPolicy {
+            builtin: eval::BuiltinSemanticsPolicy::ExcelDocumentation,
+            arrays: eval::ArrayResultPolicy::DynamicSpill,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
+    overlay.set_formula(at("B1"), "A1*3").unwrap();
+    overlay.set_formula(at("D1"), "{4,5;6,7}").unwrap();
+    let context = EvaluationContext::default();
+    overlay.evaluation(&context).unwrap().all().unwrap();
+    assert_eq!(overlay.flush().unwrap(), 2);
+    let mut saved = overlay.workbook().clone();
+    saved.apply(overlay.changes()).unwrap();
+    let bytes = Spreadsheet::from_workbook(saved)
+        .plan_xlsx_save(io::WriteOptions::default())
+        .unwrap()
+        .to_buffer()
+        .unwrap();
+    let reopened = Spreadsheet::from_bytes(&bytes).unwrap();
+    let sheet = reopened.workbook().sheet(0).unwrap();
+    assert_eq!(
+        sheet.get(at("B1").address).unwrap().formula.as_deref(),
+        Some("A1*3")
+    );
+    assert_eq!(
+        sheet.get(at("B1").address).unwrap().value,
+        CellValue::Number(6.)
+    );
+    assert_eq!(
+        sheet.get(at("E2").address).unwrap().value,
+        CellValue::Number(7.)
+    );
+    // File-format spill ownership fidelity is separate from the workspace snapshot;
+    // exported visible values must still be correct.
+}

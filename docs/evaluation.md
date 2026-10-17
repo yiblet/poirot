@@ -144,3 +144,43 @@ calculate formula results. For retained results and invalidation, see
 Runtime function providers use `with_extensions` or `with_shared_extensions`.
 See [extension hosts](../crates/poirot-eval/docs/extensions.md) for registration
 and cacheability requirements.
+
+## Publishing edits without losing calculation state
+
+Use `Overlay::with_workbook(workbook)` for an owned baseline or
+`Overlay::with_workbook(&mut workbook)` for exclusive borrowing. `flush()`
+atomically publishes authored overrides and deletions to that baseline, returns
+the number of published coordinates, and clears the source diff. No-op flushes
+return zero. It stages only edited cell payloads, without cloning the workbook.
+Formula normalization, address validation and sheet validation finish before any
+publication; failure leaves both source and staging intact. Formula syntax errors
+remain valid authored source and evaluate to spreadsheet errors as usual.
+
+Flush retains compiled programs, valid cached results, dependency indexes, policy
+and context identity. Edits already invalidate their consumers at authoring time;
+publication does not invalidate them again. Later edits use the retained dependency
+graph normally. `reset()` after a flush returns to the newly published baseline.
+Shared `&Workbook` and `Arc<Workbook>` overlays still support authoring and change
+export; flush requires a `BorrowMut<Workbook>` handle.
+
+Source publication and saved result materialization are separate. Flush does not
+copy evaluated values into saved formula caches, so `overlay.workbook()` may have
+stale or blank saved results. Replacing a saved spill anchor clears its derived
+children and restores underlying authored metadata. Replacing a saved spill child
+makes that coordinate authored content. Retained calculated spills remain owned
+by the overlay and survive flushing.
+
+For persistence, evaluate the outputs whose saved values you need, clone the
+baseline at the save boundary, and apply `overlay.changes()` to that detached
+workbook before XLS/XLSX export. This publishes retained valid formula values,
+spill cleanup and children with ownership. Unevaluated formulas may retain old
+saved results; evaluate `all()` when a complete recalculation is required. An
+overlay `snapshot()` directly preserves source and retained prepared state,
+including spill ownership. See `cargo run --example flush_overlay`.
+
+`Workbook::replace_cells` is the lower-level atomic sparse publication operation.
+It accepts `(sheet, address, Option<Cell>)` tuples (`None` deletes); repeated
+coordinates use the last replacement, while every supplied tuple is validated.
+It does not perform evaluator invalidation. Use overlay setters and flush when
+retaining computation; never mutate an attached baseline behind the overlay.
+

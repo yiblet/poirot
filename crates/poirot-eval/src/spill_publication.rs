@@ -439,7 +439,6 @@ impl Session<'_> {
                 if Some(anchor) == point
                     || before.is_some_and(|before| anchor >= before)
                     || cell.formula.is_none()
-                    || self.cache.contains_key(&(sheet, anchor))
                 {
                     continue;
                 }
@@ -470,7 +469,30 @@ impl Session<'_> {
                         && u64::from(anchor.col).saturating_add(cols) > u64::from(area.c0)
                 });
                 if unknown && !covers {
+                    // A resolved scalar has no generated footprint. Preserve a
+                    // producer dependency so changes to its inputs invalidate
+                    // consumers of the currently empty spill region. Retained
+                    // anchors/children still require full footprint restoration.
+                    let scalar_memo = self.cache.contains_key(&(sheet, anchor))
+                        && !self.spill_owners.contains_key(&(sheet, anchor))
+                        || self.overlay_cache.is_some_and(|cache| {
+                            cache.try_borrow().ok().is_some_and(|cache| {
+                                cache.get((sheet, anchor)).is_some_and(|entry| {
+                                    matches!(entry.dependencies.spill, SpillRole::None)
+                                })
+                            })
+                        });
+                    if scalar_memo {
+                        self.read(DependencyRead::Cell(EvaluationTarget {
+                            sheet,
+                            address: anchor,
+                        }));
+                        continue;
+                    }
                     return Err(self.spill_unsupported(sheet,anchor,"child-first discovery cannot bound this dynamic producer (names, extensions and computed references are unsupported)"));
+                }
+                if self.cache.contains_key(&(sheet, anchor)) {
+                    continue;
                 }
                 if self.visiting.contains(&(sheet, anchor)) {
                     if before.is_some() && covers {

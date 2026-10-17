@@ -141,3 +141,20 @@ fn descriptor_contracts_and_family_owned_execution_are_not_stubs() {
         }
     );
 }
+
+#[test]
+fn policy_catalog_adds_only_excel_policy_registrations() {
+    let pinned: Vec<_> =
+        super::descriptors_for_policy(crate::BuiltinSemanticsPolicy::default()).collect();
+    assert_eq!(
+        pinned,
+        super::FUNCTION_DESCRIPTORS.iter().collect::<Vec<_>>()
+    );
+    let excel: Vec<_> =
+        super::descriptors_for_policy(crate::BuiltinSemanticsPolicy::ExcelDocumentation).collect();
+    assert_eq!(excel.len(), pinned.len() + super::EXCEL_DESCRIPTORS.len());
+    for d in super::EXCEL_DESCRIPTORS {
+        assert!(excel.contains(&d));
+        assert!(!pinned.contains(&d));
+    }
+}

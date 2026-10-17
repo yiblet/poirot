@@ -29,6 +29,7 @@ pub(super) fn serialize_xlsx(
     for sheet in workbook.sheets() {
         let out = writer.add_worksheet();
         out.set_name(sheet.name())?;
+        let spills = ooxml::spill_bounds(sheet)?;
         for (address, cell) in sheet.cells() {
             address.validate()?;
             crate::numeric_representation::check(sheet.name(), *address, cell)?;
@@ -39,12 +40,23 @@ pub(super) fn serialize_xlsx(
                 .as_ref()
                 .map_or_else(Format::new, |f| Format::new().set_num_format(f));
             if let Some(formula) = &cell.formula {
-                out.write_formula_with_format(
-                    address.row,
-                    col,
-                    Formula::new(formula).set_result("0"),
-                    &format,
-                )?;
+                if let Some(last) = spills.get(address) {
+                    out.write_dynamic_array_formula_with_format(
+                        address.row,
+                        col,
+                        last.row,
+                        last.col as u16,
+                        Formula::new(formula).set_result("0"),
+                        &format,
+                    )?;
+                } else {
+                    out.write_formula_with_format(
+                        address.row,
+                        col,
+                        Formula::new(formula).set_result("0"),
+                        &format,
+                    )?;
+                }
             } else {
                 match &cell.value {
                     CellValue::Number(n) => {

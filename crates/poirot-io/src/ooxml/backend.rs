@@ -1,7 +1,7 @@
 //! Transient checked-part adaptation for the pinned reader backend.
 use super::{
     package::Package,
-    xml::{part, write_event, xml},
+    xml::{attr, element, events, part, text, write_event, xml},
 };
 use crate::IoError;
 use quick_xml::{
@@ -30,6 +30,39 @@ pub(crate) fn backend_package(
         if let Some(source) = source {
             adapted.insert(target.into(), part(package, source)?.to_vec());
         }
+    }
+    // Calamine's legacy error enum cannot decode modern #SPILL!/#CALC!.
+    // Substitute only in this transient backend package; authoritative original
+    // error spellings are restored by apply_spills after decoding.
+    for sheet in plan.sheets.iter().filter(|s| s.supported) {
+        let bytes = part(package, &sheet.part)?;
+        let mut reader = events(bytes);
+        let mut writer = Writer::new(Vec::new());
+        let mut error_cell = false;
+        loop {
+            let event = reader.read_event().map_err(xml)?;
+            match event {
+                Event::Start(ref e) if e.local_name().as_ref() == b"c" => {
+                    error_cell = attr(&reader, e, b"t")?.as_deref() == Some("e");
+                    write_event(&mut writer, event.into_owned())?;
+                }
+                Event::Start(ref e) if error_cell && e.local_name().as_ref() == b"v" => {
+                    let raw = text(&mut reader, e.name())?;
+                    element(
+                        &mut writer,
+                        "v",
+                        if matches!(raw.as_str(), "#SPILL!" | "#CALC!") {
+                            "#VALUE!"
+                        } else {
+                            &raw
+                        },
+                    )?;
+                }
+                Event::Eof => break,
+                _ => write_event(&mut writer, event.into_owned())?,
+            }
+        }
+        adapted.insert(sheet.part.clone(), writer.into_inner());
     }
     let mut writer = Writer::new(Vec::new());
     let mut root = BytesStart::new("Relationships");
