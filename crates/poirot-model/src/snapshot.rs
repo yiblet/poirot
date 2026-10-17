@@ -6,7 +6,7 @@ use std::borrow::Cow;
 /// Source snapshot wire revision, checked by the public artifact envelope before decoding.
 /// Bump whenever the serialized source layout changes; provide an explicit migration or
 /// reject older revisions. Prepared engine compatibility is versioned separately.
-pub const SCHEMA_VERSION: u16 = 1;
+pub const SCHEMA_VERSION: u16 = 2;
 
 /// Borrowed-or-owned Serde transport for source state, separate from runtime workbook types.
 #[derive(Serialize, Deserialize)]
@@ -27,10 +27,47 @@ type SnapshotCell<'a> = (
 #[derive(Serialize, Deserialize)]
 struct Sheet<'a> {
     name: Cow<'a, str>,
+    presentation: SheetPresentation,
     rows: Vec<u32>,
     visibility: Vec<(u32, RowVisibility)>,
     cells: Vec<SnapshotCell<'a>>,
     spill_cache: Vec<(CellAddress, CellAddress, Option<Cow<'a, Cell>>)>,
+}
+/// Historical schema1 wire layout. Decode only through a schema-aware bounded envelope.
+#[derive(Deserialize)]
+pub struct LegacySnapshot<'a> {
+    sheets: Vec<LegacySheet<'a>>,
+    date_system: DateSystem,
+    names: Cow<'a, [NamedRange]>,
+}
+#[derive(Deserialize)]
+struct LegacySheet<'a> {
+    name: Cow<'a, str>,
+    rows: Vec<u32>,
+    visibility: Vec<(u32, RowVisibility)>,
+    cells: Vec<SnapshotCell<'a>>,
+    spill_cache: Vec<(CellAddress, CellAddress, Option<Cow<'a, Cell>>)>,
+}
+impl<'a> LegacySnapshot<'a> {
+    /// Add explicit visible/no-color defaults without decoding old bytes as schema2.
+    pub fn migrate(self) -> Snapshot<'a> {
+        Snapshot {
+            sheets: self
+                .sheets
+                .into_iter()
+                .map(|s| Sheet {
+                    name: s.name,
+                    presentation: SheetPresentation::default(),
+                    rows: s.rows,
+                    visibility: s.visibility,
+                    cells: s.cells,
+                    spill_cache: s.spill_cache,
+                })
+                .collect(),
+            date_system: self.date_system,
+            names: self.names,
+        }
+    }
 }
 /// Lossless snapshot value encoding numeric bits and exact UTF-16 units.
 #[derive(PartialEq, Eq, Serialize, Deserialize)]
@@ -58,6 +95,7 @@ impl<'a> Snapshot<'a> {
             && self.sheets.len() == other.sheets.len()
             && self.sheets.iter().zip(&other.sheets).all(|(a, b)| {
                 a.name == b.name
+                    && a.presentation == b.presentation
                     && a.rows == b.rows
                     && a.visibility == b.visibility
                     && a.cells == b.cells
@@ -85,6 +123,7 @@ impl<'a> Snapshot<'a> {
                 .iter()
                 .map(|s| Sheet {
                     name: Cow::Borrowed(s.name()),
+                    presentation: s.presentation(),
                     rows: s.row_indices().collect(),
                     visibility: s.row_visibility_entries().collect(),
                     spill_cache: s
@@ -129,6 +168,7 @@ impl<'a> Snapshot<'a> {
                 .into_iter()
                 .map(|s| Sheet {
                     name: Cow::Owned(s.name.into_owned()),
+                    presentation: s.presentation,
                     rows: s.rows,
                     visibility: s.visibility,
                     spill_cache: s
@@ -178,6 +218,7 @@ impl<'a> Snapshot<'a> {
                 return Err(ModelError("snapshot sheet count limit".into()));
             }
             let sheet = workbook.import_sheet(s.name.into_owned())?;
+            sheet.set_presentation(s.presentation);
             for row in s.rows {
                 sheet.create_row(row)?;
             }

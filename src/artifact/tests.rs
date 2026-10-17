@@ -373,3 +373,100 @@ fn restored_execution_keeps_operational_failure_separate_from_spreadsheet_error(
         CellValue::Error(crate::CellError::Num)
     );
 }
+
+#[test]
+fn historical_schema1_recovers_authored_source_and_discards_prepared5() {
+    for (bytes, expected, status) in [
+        (
+            include_bytes!("../../tests/fixtures/schema1-source.poirot").as_slice(),
+            3.,
+            PreparedStatus::Absent,
+        ),
+        (
+            include_bytes!("../../tests/fixtures/schema1-prepared5.poirot").as_slice(),
+            7.,
+            PreparedStatus::DiscardedIncompatible,
+        ),
+    ] {
+        let restored = decode_default(bytes).unwrap();
+        assert_eq!(restored.import_warnings, ["historical schema1 fixture"]);
+        assert_eq!(restored.prepared_status, status);
+        assert!(restored.workspace.is_none());
+        let mut book = restored.workbook;
+        assert_eq!(
+            book.sheets().iter().map(|s| s.name()).collect::<Vec<_>>(),
+            ["Legacy", "Other"]
+        );
+        assert!(
+            book.sheets()
+                .iter()
+                .all(|s| s.presentation() == Default::default())
+        );
+        let sheet = book.sheet(0).unwrap();
+        assert_eq!(
+            sheet.get("A1".parse().unwrap()).unwrap().value,
+            CellValue::Number(expected)
+        );
+        assert_eq!(
+            sheet.get("B1".parse().unwrap()).unwrap().formula.as_deref(),
+            Some("A1*2")
+        );
+        assert_eq!(
+            sheet.get("D1".parse().unwrap()).unwrap().value,
+            CellValue::Text("λ😀".into())
+        );
+        assert_eq!(sheet.get("C1".parse().unwrap()).is_none(), expected == 7.);
+        let changes = {
+            let mut evaluation = Evaluation::with_workbook(&book)
+                .build(EvaluationContext::default())
+                .unwrap();
+            evaluation.all().unwrap();
+            evaluation.changes()
+        };
+        book.apply(changes).unwrap();
+        assert_eq!(
+            book.sheet(0)
+                .unwrap()
+                .get("B1".parse().unwrap())
+                .unwrap()
+                .value,
+            CellValue::Number(expected * 2.)
+        );
+        assert!(
+            decode(
+                bytes,
+                SnapshotLimits {
+                    max_decoded_values: 4,
+                    ..Default::default()
+                },
+                PreparedPolicy::ReuseCompatible
+            )
+            .is_err()
+        );
+    }
+    assert!(
+        decode(
+            include_bytes!("../../tests/fixtures/schema1-prepared5.poirot"),
+            SnapshotLimits::default(),
+            PreparedPolicy::RequireCompatible
+        )
+        .is_err()
+    );
+}
+
+#[test]
+fn presentation_roundtrip_and_prepared_identity_are_complete() {
+    let mut book = workbook();
+    let mut p = crate::SheetPresentation {
+        visibility: crate::SheetVisibility::VeryHidden,
+        tab_color: Some([1, 127, 255]),
+    };
+    book.sheet_mut(0).unwrap().set_presentation(p);
+    let bytes = encode_workbook(&book, &[], Default::default()).unwrap();
+    assert_eq!(&bytes[10..12], &2u16.to_le_bytes());
+    let restored = decode_default(&bytes).unwrap().workbook;
+    assert!(restored.snapshot().matches(&book));
+    p.tab_color = None;
+    book.sheet_mut(0).unwrap().set_presentation(p);
+    assert!(!restored.snapshot().matches(&book));
+}

@@ -25,10 +25,35 @@ pub(super) fn serialize_xlsx(
             "cannot export workbook without worksheets".into(),
         ));
     }
+    let active = workbook
+        .sheets()
+        .iter()
+        .position(|s| s.presentation().visibility == poirot_model::SheetVisibility::Visible)
+        .ok_or_else(|| {
+            IoError::Unsupported("cannot export workbook without a visible worksheet".into())
+        })?;
     let mut writer = rust_xlsxwriter::Workbook::new();
-    for sheet in workbook.sheets() {
+    for (index, sheet) in workbook.sheets().iter().enumerate() {
         let out = writer.add_worksheet();
         out.set_name(sheet.name())?;
+        if index == active {
+            out.set_active(true);
+            out.set_first_tab(true);
+        }
+        match sheet.presentation().visibility {
+            poirot_model::SheetVisibility::Visible => {}
+            poirot_model::SheetVisibility::Hidden => {
+                out.set_hidden(true);
+            }
+            poirot_model::SheetVisibility::VeryHidden => {
+                out.set_very_hidden(true);
+            }
+        }
+        if let Some([r, g, b]) = sheet.presentation().tab_color {
+            out.set_tab_color(rust_xlsxwriter::Color::RGB(
+                (u32::from(r) << 16) | (u32::from(g) << 8) | u32::from(b),
+            ));
+        }
         let spills = ooxml::spill_bounds(sheet)?;
         for (address, cell) in sheet.cells() {
             address.validate()?;

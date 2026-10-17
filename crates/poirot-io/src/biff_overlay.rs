@@ -25,6 +25,7 @@ pub(crate) struct Overlay {
     pub backend: Vec<u8>,
     /// Source sheet names in workbook order.
     pub sheet_names: Vec<String>,
+    visibility: Vec<poirot_model::SheetVisibility>,
     names: Vec<NamedRange>,
     formulas: Vec<Formula>,
     caches: Vec<(usize, CellAddress, ExcelText)>,
@@ -44,16 +45,35 @@ impl Overlay {
             return Ok(Self {
                 backend: bytes.to_vec(),
                 sheet_names: Vec::new(),
+                visibility: Vec::new(),
                 names: Vec::new(),
                 formulas: Vec::new(),
                 caches: Vec::new(),
                 warnings: vec!["BIFF fidelity overlay supports BIFF8 only".into()],
             });
         }
-        let plan = reconstruct::reconstruct(&rs, budget)?;
+        let visibility = rs
+            .iter()
+            .take_while(|r| r.id != 0xa)
+            .filter(|r| r.id == 0x85)
+            .map(|r| match r.data.get(4).map(|v| v & 3) {
+                Some(0) => Ok(poirot_model::SheetVisibility::Visible),
+                Some(1) => Ok(poirot_model::SheetVisibility::Hidden),
+                Some(2) => Ok(poirot_model::SheetVisibility::VeryHidden),
+                _ => Err(PreflightError::Malformed(
+                    "invalid BIFF worksheet visibility",
+                )),
+            })
+            .collect::<Result<Vec<_>>>()?;
+        let mut plan = reconstruct::reconstruct(&rs, budget)?;
+        plan.warnings.push(
+            "XLS tab colors are not retained; palette and extension tab colors remain unsupported"
+                .into(),
+        );
         Ok(Self {
             backend: backend::backend_view(bytes, &stream, &plan.patches)?,
             sheet_names: plan.sheets,
+            visibility,
             names: plan.names,
             formulas: plan.formulas,
             caches: plan.caches,
@@ -65,6 +85,13 @@ impl Overlay {
         self,
         workbook: &mut Workbook,
     ) -> std::result::Result<(), poirot_model::ModelError> {
+        for (index, visibility) in self.visibility.into_iter().enumerate() {
+            if let Some(sheet) = workbook.sheet_mut(index) {
+                let mut p = sheet.presentation();
+                p.visibility = visibility;
+                sheet.set_presentation(p);
+            }
+        }
         for f in self.formulas {
             if let Some(sheet) = workbook.sheet_mut(f.sheet) {
                 let cached = sheet
@@ -137,6 +164,39 @@ mod tests {
             .write_all(&stream)
             .unwrap();
         c.into_inner().into_inner()
+    }
+    #[test]
+    fn independent_boundsheet_flags_preserve_hidden_and_very_hidden() {
+        for (flag, expected) in [
+            (0, poirot_model::SheetVisibility::Visible),
+            (1, poirot_model::SheetVisibility::Hidden),
+            (2, poirot_model::SheetVisibility::VeryHidden),
+        ] {
+            let original = compound(&[0x1e, 1, 0], None);
+            let mut c = cfb::CompoundFile::open(Cursor::new(original)).unwrap();
+            let mut bytes = Vec::new();
+            std::io::Read::read_to_end(&mut c.open_stream("/Workbook").unwrap(), &mut bytes)
+                .unwrap();
+            let records = records(&bytes, ResourceBudget::default()).unwrap();
+            let at = records.iter().find(|r| r.id == 0x85).unwrap().at;
+            // BoundSheet8: four-byte stream offset, then hsState, then dt.
+            bytes[at + 4 + 4] = flag;
+            c.create_stream("/Workbook")
+                .unwrap()
+                .write_all(&bytes)
+                .unwrap();
+            let report = crate::read_xls_bytes(&c.into_inner().into_inner()).unwrap();
+            assert_eq!(
+                report.workbook.sheet(0).unwrap().presentation().visibility,
+                expected
+            );
+            assert!(
+                report
+                    .warnings
+                    .iter()
+                    .any(|w| w.contains("XLS tab colors are not retained"))
+            );
+        }
     }
     #[test]
     fn actual_import_keeps_unicode_name_identity_and_local_scopes() {

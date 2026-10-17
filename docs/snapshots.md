@@ -24,8 +24,17 @@ under a configured size bound; `decode` accepts existing bytes under the same bo
 The fixed header is inspected before payload decoding. It identifies the file
 format version, source schema, source-only versus prepared kind, engine preparation
 compatibility revision, and exact section lengths. Unknown source schemas and file
-versions fail. Only source schema 1 is supported; other source schemas are rejected. Raw Serde snapshots remain
-available for applications that already own their encoding and compatibility policy.
+versions fail. Current source schema 2 adds worksheet visibility and explicit RGB
+tab colors. Historical schema 1 is decoded through its separate positional wire
+layout under the same cumulative budget, then migrated with visible/no-color
+defaults. Its effective authored edits and warnings survive; prepared revision 5
+is explicitly discarded (or rejected by `RequireCompatible`). Current prepared
+compatibility revision is 40 and inner version is 39 because the embedded source
+layout changed on top of the current evaluator semantics.
+The existing raw Serde snapshots remain available for applications that own their
+encoding and compatibility policy. Raw positional bytes have no automatic version
+detection: decode schema1 with `model::snapshot::LegacySnapshot` and call `migrate`,
+or use this versioned artifact envelope.
 
 Source and prepared data are separate sections. Prepared files retain an independent
 effective source, including authored cell edits and deletions, so rejecting compiled

@@ -195,10 +195,10 @@ impl TestSuite for JsonSuite {
                 _ => Outcome::Mismatch,
             };
             let fingerprint = if category.is_none() { None } else {
-                Some(model::digest(&serde_json::to_vec(&serde_json::json!({
+                Some(json_observation_fingerprint(serde_json::json!({
                     "checks": facts, "normal_error":native.normal.error, "overlay_error":native.overlay.error,
                     "changes": if native.changes_equal { serde_json::Value::Null } else { serde_json::json!([native.normal.changes, native.overlay.changes]) }
-                }))?))
+                }))?)
             };
             Ok(CaseResult { case, observation: Observation { outcome, category: category.map(str::to_owned), fingerprint },
                 reason: lines.join("\n"), details, change: Change::Unchanged, baseline: None })
@@ -403,4 +403,34 @@ pub(crate) fn json(root: &Path) -> Result<Vec<Box<dyn TestSuite>>, Error> {
         })
         .collect::<Result<Vec<_>, _>>()
         .map(|suites| suites.into_iter().flatten().collect())
+}
+
+// Fingerprints are persisted observations, independent of serde_json feature
+// unification (GPUI enables preserve_order). Keep the original sorted-key bytes.
+fn json_observation_fingerprint(mut value: serde_json::Value) -> Result<String, Error> {
+    value.sort_all_objects();
+    Ok(model::digest(&serde_json::to_vec(&value)?))
+}
+
+#[cfg(test)]
+mod fingerprint_tests {
+    use super::*;
+
+    #[test]
+    fn json_fingerprints_sort_nested_objects_without_changing_array_or_scalar_identity() {
+        let inserted = serde_json::from_str(r#"{"z":false,"a":[{"z":2,"a":1},"1"]}"#).unwrap();
+        let canonical = br#"{"a":[{"a":1,"z":2},"1"],"z":false}"#;
+        let expected = model::digest(canonical);
+        assert_eq!(json_observation_fingerprint(inserted).unwrap(), expected);
+        for changed in [
+            r#"{"a":["1",{"a":1,"z":2}],"z":false}"#,
+            r#"{"a":[{"a":1,"z":2},1],"z":false}"#,
+            r#"{"a":[{"a":1,"z":2},"1"],"z":true}"#,
+        ] {
+            assert_ne!(
+                json_observation_fingerprint(serde_json::from_str(changed).unwrap()).unwrap(),
+                expected
+            );
+        }
+    }
 }

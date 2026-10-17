@@ -48,6 +48,69 @@ pub(crate) fn apply_metadata(
     workbook: &mut Workbook,
     warnings: &mut Vec<String>,
 ) -> Result<(), IoError> {
+    // Read workbook sheet states independently of the cell backend.
+    let mut states = events(part(package, &plan.workbook_part)?);
+    loop {
+        match states.read_event().map_err(xml)? {
+            Event::Start(e) | Event::Empty(e) if e.local_name().as_ref() == b"sheet" => {
+                let Some(name) = attr(&states, &e, b"name")? else {
+                    continue;
+                };
+                let visibility = match attr(&states, &e, b"state")?.as_deref() {
+                    None | Some("visible") => poirot_model::SheetVisibility::Visible,
+                    Some("hidden") => poirot_model::SheetVisibility::Hidden,
+                    Some("veryHidden") => poirot_model::SheetVisibility::VeryHidden,
+                    Some(_) => return Err(IoError::Read("invalid worksheet visibility".into())),
+                };
+                if let Some(sheet) = workbook.sheet_by_name_mut(&name) {
+                    let mut p = sheet.presentation();
+                    p.visibility = visibility;
+                    sheet.set_presentation(p);
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+    }
+    for identity in plan.sheets.iter().filter(|s| s.supported) {
+        let mut reader = events(part(package, &identity.part)?);
+        let mut in_properties = false;
+        loop {
+            match reader.read_event().map_err(xml)? {
+                Event::Start(e) if e.local_name().as_ref() == b"sheetPr" => in_properties = true,
+                Event::End(e) if e.local_name().as_ref() == b"sheetPr" => in_properties = false,
+                Event::Start(e) | Event::Empty(e)
+                    if in_properties && e.local_name().as_ref() == b"tabColor" =>
+                {
+                    let rgb = attr(&reader, &e, b"rgb")?;
+                    let other = [b"theme".as_slice(), b"indexed", b"auto", b"tint"]
+                        .into_iter()
+                        .map(|key| attr(&reader, &e, key))
+                        .collect::<Result<Vec<_>, _>>()?
+                        .iter()
+                        .any(Option::is_some);
+                    let channels = rgb
+                        .as_deref()
+                        .filter(|_| !other)
+                        .filter(|v| v.len() == 8)
+                        .and_then(|v| u32::from_str_radix(v, 16).ok())
+                        .filter(|n| n >> 24 == 0xff)
+                        .map(|n| [(n >> 16) as u8, (n >> 8) as u8, n as u8]);
+                    if let Some(color) = channels {
+                        if let Some(sheet) = workbook.sheet_by_name_mut(&identity.name) {
+                            let mut p = sheet.presentation();
+                            p.tab_color = Some(color);
+                            sheet.set_presentation(p);
+                        }
+                    } else {
+                        warnings.push(format!("{}: unsupported tab color representation omitted (only opaque RGB is retained)", identity.name));
+                    }
+                }
+                Event::Eof => break,
+                _ => {}
+            }
+        }
+    }
     let mut reader = events(part(package, &plan.workbook_part)?);
     loop {
         match reader.read_event().map_err(xml)? {

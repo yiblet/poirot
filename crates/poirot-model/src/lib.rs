@@ -170,12 +170,32 @@ fn validate_sheet_name(name: &str) -> Result<(), ModelError> {
         Ok(())
     }
 }
+/// Persisted worksheet visibility; imports may retain very-hidden sheets.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
+pub enum SheetVisibility {
+    /// Ordinary visible worksheet.
+    #[default]
+    Visible,
+    /// Hidden worksheet, available to an unhide control.
+    Hidden,
+    /// Workbook author restricted visibility, preserved on import/export.
+    VeryHidden,
+}
+/// Workbook-owned presentation independent of row visibility.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
+pub struct SheetPresentation {
+    /// Saved sheet visibility.
+    pub visibility: SheetVisibility,
+    /// Explicit sRGB channels; no palette/theme approximation is performed.
+    pub tab_color: Option<[u8; 3]>,
+}
 /// A named sparse grid of cells and explicitly present rows.
 /// Missing coordinates allocate no cell; [`Worksheet::get`] returns `None` for them.
 /// Setting a value clears its formula; setting a formula requires a saved result.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Worksheet {
     name: String,
+    presentation: SheetPresentation,
     cells: cell_pages::CellStore,
     rows: std::collections::BTreeSet<u32>,
     visibility: BTreeMap<u32, RowVisibility>,
@@ -188,6 +208,7 @@ impl Worksheet {
         validate_sheet_name(&name)?;
         Ok(Self {
             name,
+            presentation: SheetPresentation::default(),
             cells: cell_pages::CellStore::default(),
             rows: std::collections::BTreeSet::new(),
             visibility: BTreeMap::new(),
@@ -197,6 +218,14 @@ impl Worksheet {
     /// Borrow the validated worksheet name.
     pub fn name(&self) -> &str {
         &self.name
+    }
+    /// Read durable sheet metadata.
+    pub fn presentation(&self) -> SheetPresentation {
+        self.presentation
+    }
+    /// Replace durable metadata. Importers may preserve all-hidden workbooks.
+    pub fn set_presentation(&mut self, presentation: SheetPresentation) {
+        self.presentation = presentation;
     }
     /// Borrow the coordinate-ordered view of stored cells.
     pub fn cells(&self) -> WorksheetCells<'_> {
@@ -358,6 +387,7 @@ impl Workbook {
         }
         self.sheets.push(Worksheet {
             name,
+            presentation: SheetPresentation::default(),
             cells: cell_pages::CellStore::default(),
             rows: std::collections::BTreeSet::new(),
             visibility: BTreeMap::new(),
@@ -417,6 +447,90 @@ impl Workbook {
             .ok_or_else(|| ModelError("worksheet index out of bounds".into()))?;
         sheet.name = name;
         Ok(())
+    }
+    /// Remove worksheet metadata and its local defined names; adjust later scopes.
+    /// Callers must rewrite surviving formulas before publishing this mutation.
+    pub fn remove_sheet(&mut self, index: usize) -> Result<Worksheet, ModelError> {
+        if index >= self.sheets.len() {
+            return Err(ModelError("worksheet index out of bounds".into()));
+        }
+        // SAFETY: The explicit check above proves index is in the current vector.
+        let removed = self.sheets.remove(index);
+        self.named_ranges.retain(|n| n.sheet_scope != Some(index));
+        for name in &mut self.named_ranges {
+            if let Some(scope) = &mut name.sheet_scope
+                && *scope > index
+            {
+                *scope -= 1;
+            }
+        }
+        Ok(removed)
+    }
+    /// Move a sheet to a final zero-based position, remapping local name scopes.
+    /// Callers must rebuild compiled references so 3D spans follow the new order.
+    pub fn move_sheet(&mut self, from: usize, to: usize) -> Result<(), ModelError> {
+        if from >= self.sheets.len() || to >= self.sheets.len() {
+            return Err(ModelError("worksheet index out of bounds".into()));
+        }
+        if from == to {
+            return Ok(());
+        }
+        // SAFETY: from was checked against this vector's current length.
+        let sheet = self.sheets.remove(from);
+        // SAFETY: to was less than the original length; removal decreased it by one.
+        self.sheets.insert(to, sheet);
+        for name in &mut self.named_ranges {
+            if let Some(scope) = &mut name.sheet_scope {
+                *scope = if *scope == from {
+                    to
+                } else if from < to && *scope > from && *scope <= to {
+                    scope.saturating_sub(1)
+                } else if to < from && *scope >= to && *scope < from {
+                    scope.saturating_add(1)
+                } else {
+                    *scope
+                };
+            }
+        }
+        Ok(())
+    }
+    /// Append a typed sheet copy and copies of its local names. Unqualified formulas
+    /// bind the copy; explicitly qualified references keep their named-sheet identity.
+    /// Evaluator caches must be rebuilt by the caller.
+    pub fn duplicate_sheet(
+        &mut self,
+        index: usize,
+        name: impl Into<String>,
+    ) -> Result<usize, ModelError> {
+        let name = name.into();
+        validate_sheet_name(&name)?;
+        if self
+            .try_sheet_index_by_name(&name)
+            .map_err(|e| ModelError(e.to_string()))?
+            .is_some()
+        {
+            return Err(ModelError("duplicate worksheet name".into()));
+        }
+        let mut copy = self
+            .sheet(index)
+            .ok_or_else(|| ModelError("worksheet index out of bounds".into()))?
+            .clone();
+        copy.name = name;
+        copy.presentation.visibility = SheetVisibility::Visible;
+        let target = self.sheets.len();
+        let names: Vec<_> = self
+            .named_ranges
+            .iter()
+            .filter(|n| n.sheet_scope == Some(index))
+            .cloned()
+            .map(|mut n| {
+                n.sheet_scope = Some(target);
+                n
+            })
+            .collect();
+        self.sheets.push(copy);
+        self.named_ranges.extend(names);
+        Ok(target)
     }
     /// Normalize and store a defined-name formula in the selected scope.
     pub fn define_name(
@@ -756,5 +870,58 @@ impl Worksheet {
         self.spill_cache
             .insert(address, SpillCell { owner, source });
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod sheet_management_tests {
+    use super::*;
+    #[test]
+    fn reorder_remaps_scopes_and_duplicate_retains_typed_sources_and_presentation() {
+        let mut w = Workbook::new();
+        for name in ["A", "B", "C"] {
+            w.add_sheet(name).unwrap();
+        }
+        w.define_name("local", "A1", Some(0)).unwrap();
+        w.sheet_mut(0)
+            .unwrap()
+            .set_value("A1".parse().unwrap(), ExcelText::from_units(vec![0xd800]))
+            .unwrap();
+        w.sheet_mut(0).unwrap().set_presentation(SheetPresentation {
+            visibility: SheetVisibility::VeryHidden,
+            tab_color: Some([1, 2, 3]),
+        });
+        let copy = w.duplicate_sheet(0, "Copy").unwrap();
+        assert_eq!(copy, 3);
+        assert_eq!(
+            w.sheet(copy).unwrap().presentation(),
+            SheetPresentation {
+                visibility: SheetVisibility::Visible,
+                tab_color: Some([1, 2, 3])
+            }
+        );
+        assert_eq!(
+            w.sheet(copy).unwrap().get("A1".parse().unwrap()),
+            w.sheet(0).unwrap().get("A1".parse().unwrap())
+        );
+        assert!(w.named_ranges.iter().any(|n| n.sheet_scope == Some(3)));
+        w.move_sheet(0, 3).unwrap();
+        assert_eq!(
+            w.sheets().iter().map(|s| s.name()).collect::<Vec<_>>(),
+            ["B", "C", "Copy", "A"]
+        );
+        assert_eq!(
+            w.named_ranges
+                .iter()
+                .map(|n| n.sheet_scope)
+                .collect::<Vec<_>>(),
+            [Some(3), Some(2)]
+        );
+        w.move_sheet(3, 0).unwrap();
+        let original = w.clone();
+        assert!(w.move_sheet(0, 99).is_err());
+        assert!(w.duplicate_sheet(0, "a").is_err());
+        assert!(w.duplicate_sheet(0, "bad/name").is_err());
+        assert_eq!(w, original);
     }
 }

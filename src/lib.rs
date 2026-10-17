@@ -22,8 +22,8 @@ pub use poirot_xls as xls;
 
 /// Common model types exposed directly for source construction and mutation.
 pub use poirot_model::{
-    Cell, CellAddress, CellError, CellStyle, CellValue, DateSystem, ExcelText, TextRef, TextUnits,
-    TextUnitsError, Workbook, WorkbookChange, Worksheet,
+    Cell, CellAddress, CellError, CellStyle, CellValue, DateSystem, ExcelText, SheetPresentation,
+    SheetVisibility, TextRef, TextUnits, TextUnitsError, Workbook, WorkbookChange, Worksheet,
 };
 /// Primary overlay/evaluation workflow, snapshot views, and checked file operations.
 pub use poirot_workbook::{
