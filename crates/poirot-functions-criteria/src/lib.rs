@@ -96,7 +96,7 @@ pub fn parse_comparison(s: &str) -> (Comparison, &str) {
     }
 }
 /// Parse numeric criterion text using the family's supported grammar.
-pub fn parse_number(s: &str) -> Option<f64> {
+pub fn coerce_criteria_number_text(s: &str) -> Option<f64> {
     let s = s.trim_matches(|c: char| c <= '\u{20}');
     let parsed: nom::IResult<&str, f64> = nom::number::complete::double(s);
     match parsed {
@@ -134,7 +134,7 @@ impl Criterion {
                 Cell::Bool(true)
             } else if s.eq_ignore_ascii_case("false") {
                 Cell::Bool(false)
-            } else if let Some(n) = parse_number(s) {
+            } else if let Some(n) = coerce_criteria_number_text(s) {
                 Cell::Number(n)
             } else if let Some(e) = parse_error(s) {
                 Cell::Error(e)
@@ -156,7 +156,7 @@ impl Criterion {
             (Cell::Blank, _) => false,
             (Cell::Number(a), Cell::Number(b)) => op.test(b.total_cmp(a)),
             (Cell::Number(a), Cell::Text(b)) => match op {
-                Comparison::None | Comparison::Eq => parse_number(b) == Some(*a),
+                Comparison::None | Comparison::Eq => coerce_criteria_number_text(b) == Some(*a),
                 Comparison::Ne => true,
                 _ => false,
             },

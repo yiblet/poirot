@@ -91,11 +91,14 @@ impl EvaluationPort for CallHost<'_, '_> {
     fn check_text(&mut self, bytes: usize) -> Result<(), EvaluationFailure> {
         CallHost::check_text(self, bytes).map_err(operational_only)
     }
-    fn number_to_text(&mut self, number: f64) -> Result<String, Failure<EvaluationFailure>> {
-        self.number_text(number, NumericPolicy::PinnedPoi)
+    fn coerce_number_to_text(&mut self, number: f64) -> Result<String, Failure<EvaluationFailure>> {
+        self.coerce_number_to_text(number, NumericPolicy::PinnedPoi)
             .map_err(port_failure)
     }
-    fn parse_number_text(&mut self, text: &str) -> Result<Option<f64>, Failure<EvaluationFailure>> {
+    fn coerce_decimal_text(
+        &mut self,
+        text: &str,
+    ) -> Result<Option<f64>, Failure<EvaluationFailure>> {
         CallHost::check_text(self, text.len()).map_err(port_failure)?;
         Ok(decimal_text(text))
     }

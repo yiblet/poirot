@@ -30,20 +30,8 @@ pub fn subtotal(code: i32, cells: &[SubtotalCell<'_>]) -> Result<f64, Error> {
         if !matches!(c.value, Cell::Blank) {
             nonblank += 1;
         }
-        match c.value {
-            Cell::Number(n) => nums.push(*n),
-            Cell::Bool(b) if !c.referenced && kind != 2 && kind != 3 => {
-                nums.push(if *b { 1.0 } else { 0.0 })
-            }
-            Cell::Text(s) if !c.referenced && kind != 2 && kind != 3 => {
-                if let Some(n) = crate::parse_number(s) {
-                    nums.push(n);
-                } else {
-                    return Err(Error::Value);
-                }
-            }
-            Cell::Error(e) if kind != 2 && kind != 3 => return Err(*e),
-            _ => {}
+        if let Some(number) = coerce_subtotal_member(c, kind)? {
+            nums.push(number);
         }
     }
     let n = nums.len();
@@ -89,4 +77,19 @@ pub fn subtotal(code: i32, cells: &[SubtotalCell<'_>]) -> Result<f64, Error> {
     } else {
         Err(Error::Num)
     }
+}
+
+/// Origin-sensitive admission and conversion for one eligible SUBTOTAL member.
+fn coerce_subtotal_member(cell: &SubtotalCell<'_>, kind: i32) -> Result<Option<f64>, Error> {
+    Ok(match cell.value {
+        Cell::Number(n) => Some(*n),
+        Cell::Bool(b) if !cell.referenced && kind != 2 && kind != 3 => {
+            Some(if *b { 1.0 } else { 0.0 })
+        }
+        Cell::Text(s) if !cell.referenced && kind != 2 && kind != 3 => {
+            Some(crate::coerce_criteria_number_text(s).ok_or(Error::Value)?)
+        }
+        Cell::Error(e) if kind != 2 && kind != 3 => return Err(*e),
+        _ => None,
+    })
 }

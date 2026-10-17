@@ -1,5 +1,7 @@
 //! Complete FIXED/DOLLAR coercion, admission, and locale formatting workflow.
-use super::coercion::{boolean, int, number, work};
+use super::coercion::{
+    coerce_financial_argument_number, coerce_financial_boolean, coerce_financial_floor_i32, work,
+};
 use super::{CellError, EvaluationPort, Failure, FinancialFunction, Output, domain, domain_error};
 
 /// Render FIXED or DOLLAR after admitting output storage and explicit currency inputs.
@@ -9,13 +11,17 @@ pub(super) fn evaluate<P: EvaluationPort>(
     args: &[P::Argument],
 ) -> Result<Output, Failure<P::Operational>> {
     use FinancialFunction::{Dollar, Fixed};
-    let n = number(p, args.first().ok_or(CellError::Value)?)?;
+    let n = coerce_financial_argument_number(p, args.first().ok_or(CellError::Value)?)?;
     let places = if args.len() > 1 {
-        number(p, args.get(1).ok_or(CellError::Value)?)?
+        coerce_financial_argument_number(p, args.get(1).ok_or(CellError::Value)?)?
     } else {
         2.0
     };
-    let fixed_places = if f == Fixed { Some(int(places)?) } else { None };
+    let fixed_places = if f == Fixed {
+        Some(coerce_financial_floor_i32(places)?)
+    } else {
+        None
+    };
     if (f == Fixed && fixed_places.ok_or(CellError::Value)? > 127)
         || (f == Dollar && places > 127.0)
     {
@@ -27,7 +33,7 @@ pub(super) fn evaluate<P: EvaluationPort>(
     work(p, 4096)?;
     let output = if f == Fixed {
         let commas = if args.len() > 2 {
-            boolean(p, args.get(2).ok_or(CellError::Value)?)?
+            coerce_financial_boolean(p, args.get(2).ok_or(CellError::Value)?)?
         } else {
             false
         };

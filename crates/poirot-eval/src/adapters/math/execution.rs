@@ -39,7 +39,11 @@ impl Session<'_> {
             }
             let mut values = Vec::with_capacity(args.len());
             for index in 0..args.len() {
-                match host.number(index, MissingPolicy::Blank, NumericPolicy::PinnedPoi) {
+                match host.coerce_argument_number(
+                    index,
+                    MissingPolicy::Blank,
+                    NumericPolicy::PinnedPoi,
+                ) {
                     Ok(value) => values.push(Number(value)),
                     Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
                     Err(FunctionFailure::Operational(failure)) => return Err(failure),
@@ -157,21 +161,12 @@ impl Session<'_> {
             | MathFunction::Round
             | MathFunction::RoundUp
             | MathFunction::RoundDown => {
-                let digits = if n == 2 { num(1)?.trunc() } else { 0. };
-                if digits > 308. {
-                    return Ok(Number(x));
+                let digits = if n == 2 { num(1)? } else { 0. };
+                match name {
+                    MathFunction::Round => poirot_functions_math::round(x, digits)?,
+                    MathFunction::RoundUp => poirot_functions_math::round_up(x, digits)?,
+                    _ => poirot_functions_math::round_down(x, digits)?,
                 }
-                if digits < -308. {
-                    return Ok(Number(0.));
-                }
-                let factor = 10f64.powf(digits);
-                let scaled = x * factor;
-                let rounded = match name {
-                    MathFunction::Round => scaled.round(),
-                    MathFunction::RoundUp => scaled.abs().ceil() * scaled.signum(),
-                    _ => scaled.trunc(),
-                };
-                rounded / factor
             }
         };
         Ok(finite(result))

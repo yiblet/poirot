@@ -60,7 +60,7 @@ pub(super) fn read<P: EvaluationPort>(
     p.read_cell(a, r, c)
 }
 /// Coerce a matrix member using shared host text and omission rules.
-pub(super) fn numeric<P: EvaluationPort>(
+pub(super) fn coerce_matrix_number<P: EvaluationPort>(
     p: &mut P,
     c: Cell,
 ) -> Result<f64, Failure<P::Operational>> {

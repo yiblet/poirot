@@ -60,7 +60,9 @@ impl CallHost<'_, '_> {
         self.prepare(index)?;
         let operand = &self.memo.get(&index).ok_or(VALUE_ERROR)?;
         let (value, origin, missing) = match &operand.value {
-            Value::Missing if row == 0 && column == 0 => (Blank, OperandOrigin::Direct, true),
+            Value::Missing if row == 0 && column == 0 => {
+                (coerce_legacy_missing_blank(), OperandOrigin::Direct, true)
+            }
             Value::Missing => return Err(Ref.into()),
             Value::Scalar(value) if row == 0 && column == 0 => (
                 Self::copy_cell(&mut self.session.budget, value)?,

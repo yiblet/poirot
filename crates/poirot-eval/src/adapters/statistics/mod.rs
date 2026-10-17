@@ -124,12 +124,14 @@ pub(crate) fn execute(
                     | NormSDist
                     | NormSDistLegacy
             ) {
-                policy.at(
+                // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+                policy.coerce_numeric_stage(
                     numeric_outcome::NumericConstruction::NumberEvalResult,
                     number,
                 )
             } else {
-                policy.checked_result(number)
+                // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+                policy.coerce_checked_numeric_result(number)
             };
             Ok(value.into())
         }

@@ -29,9 +29,12 @@ fn actual_days360_nan_is_value_infinities_are_true_and_legacy_helper_is_unchange
         );
     }
     // Legacy finite ingress cannot produce raw NaN; test its unchanged pure coercion explicitly.
-    assert_eq!(logical(&Number(f64::NAN)), Ok(true));
+    assert_eq!(coerce_logical_boolean(&Number(f64::NAN)), Ok(true));
     assert_eq!(
-        core_projection::operand_boolean(&Number(f64::NAN), NumericOutcomePolicy::LegacyFinite),
+        core_projection::coerce_operand_boolean(
+            &Number(f64::NAN),
+            NumericOutcomePolicy::LegacyFinite
+        ),
         Ok(true)
     );
 }

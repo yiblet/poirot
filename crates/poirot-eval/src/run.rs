@@ -65,6 +65,10 @@ pub struct RunUsage {
     pub compiled_lookups: u64,
     /// Reads satisfied by this run's memo.
     pub session_memo_hits: u64,
+    /// Exact lookup selections satisfied without scanning candidate cells.
+    pub lookup_prefix_hits: u64,
+    /// Candidate cells scanned while extending eligible exact lookup indexes.
+    pub lookup_prefix_scans: u64,
     /// Reads satisfied by a validated cross-run cache.
     pub external_cache_hits: u64,
 }
@@ -329,7 +333,7 @@ impl<'a> EvaluationRun<'a> {
                         (*target, self.evaluate_bound(*target, formula)?)
                     }
                 };
-                values.push(CellEvaluation { target, value });
+                values.push(self.session.output(target, value));
             }
             Ok(values)
         })();

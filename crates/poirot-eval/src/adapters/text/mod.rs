@@ -30,7 +30,11 @@ impl TextHost<'_, '_> {
             Err(_) => Failure::Operational(EvaluationFailure::StalePlan),
         }
     }
-    fn render(&self, scalar: &ScalarOperand, delimiter: bool) -> Result<String, TextFailure> {
+    fn coerce_text_scalar(
+        &self,
+        scalar: &ScalarOperand,
+        delimiter: bool,
+    ) -> Result<String, TextFailure> {
         if scalar.missing {
             return if delimiter {
                 Ok(String::new())
@@ -50,7 +54,7 @@ impl TextHost<'_, '_> {
                 .host
                 .try_borrow_mut()
                 .map_err(|_| Failure::Operational(EvaluationFailure::StalePlan))?
-                .number_text(*number, NumericPolicy::PinnedPoi)
+                .coerce_number_to_text(*number, NumericPolicy::PinnedPoi)
                 .map_err(failure),
             Boolean(value) => Ok(if *value { "TRUE" } else { "FALSE" }.into()),
             Blank => Ok(String::new()),
@@ -161,13 +165,13 @@ impl Host<usize> for TextHost<'_, '_> {
         }
         Ok(values)
     }
-    fn string(&self, scalar: &ScalarOperand) -> Result<String, TextFailure> {
-        self.render(scalar, false)
+    fn coerce_text_string(&self, scalar: &ScalarOperand) -> Result<String, TextFailure> {
+        self.coerce_text_scalar(scalar, false)
     }
-    fn delimiter(&self, scalar: &ScalarOperand) -> Result<String, TextFailure> {
-        self.render(scalar, true)
+    fn coerce_text_delimiter(&self, scalar: &ScalarOperand) -> Result<String, TextFailure> {
+        self.coerce_text_scalar(scalar, true)
     }
-    fn integer(&self, scalar: &ScalarOperand) -> Result<i32, TextFailure> {
+    fn coerce_text_integer(&self, scalar: &ScalarOperand) -> Result<i32, TextFailure> {
         if scalar.missing {
             return Err(self.source_fault("POI integer coercion rejects MissingArgEval"));
         }
@@ -182,7 +186,7 @@ impl Host<usize> for TextHost<'_, '_> {
                 .host
                 .try_borrow_mut()
                 .map_err(|_| Failure::Operational(EvaluationFailure::StalePlan))?
-                .scalar_number(value, NumericPolicy::PinnedPoi)
+                .coerce_scalar_number(value, NumericPolicy::PinnedPoi)
                 .map_err(failure)?,
         }
         .floor();
@@ -198,7 +202,7 @@ impl Host<usize> for TextHost<'_, '_> {
             _ => None,
         }
     }
-    fn boolean(&self, scalar: &ScalarOperand) -> Result<bool, TextFailure> {
+    fn coerce_text_boolean(&self, scalar: &ScalarOperand) -> Result<bool, TextFailure> {
         if scalar.missing {
             return Err(self.source_fault("POI boolean coercion rejects MissingArgEval"));
         }
@@ -209,7 +213,9 @@ impl Host<usize> for TextHost<'_, '_> {
             Number(value) if !value.is_nan() => Ok(*value != 0.),
             Text(value) if value.eq_ignore_ascii_case("true") => Ok(true),
             Text(value) if value.eq_ignore_ascii_case("false") => Ok(false),
-            CellValue::TextUtf16(_) => logical(&scalar.value).map_err(Failure::Spreadsheet),
+            CellValue::TextUtf16(_) => {
+                coerce_logical_boolean(&scalar.value).map_err(Failure::Spreadsheet)
+            }
             Error(error) => Err(Failure::Spreadsheet(*error)),
             _ => Err(Failure::Spreadsheet(VALUE_ERROR)),
         }

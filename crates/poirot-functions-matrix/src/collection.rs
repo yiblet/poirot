@@ -5,7 +5,7 @@ use super::{
 /// Source-specific AreaEval collection: skipped cells compact the numeric
 /// sequence, which is then zero-padded into the original rectangle. This is a
 /// pinned POI behavior, not ordinary element-wise spreadsheet coercion.
-pub(super) fn collect_matrix(
+pub(super) fn coerce_matrix_collection(
     area: &Matrix<Cell>,
     policy: MatrixCollection,
     budget: Budget,
@@ -29,7 +29,7 @@ pub(super) fn collect_matrix(
 }
 
 /// TREND rejects any non NumericValueEval (including source error values).
-pub(super) fn collect_trend(area: &Matrix<Cell>, budget: Budget) -> Result<Matrix<f64>> {
+pub(super) fn coerce_trend_collection(area: &Matrix<Cell>, budget: Budget) -> Result<Matrix<f64>> {
     budget.check(Some(area.values.len()), Some(area.values.len()))?;
     let mut numbers = Vec::with_capacity(area.values.len());
     for cell in &area.values {
@@ -41,7 +41,7 @@ pub(super) fn collect_trend(area: &Matrix<Cell>, budget: Budget) -> Result<Matri
     }
     Matrix::new(area.rows, area.cols, numbers)
 }
-fn product_term(c: &Cell, scalar: bool) -> Result<f64> {
+fn coerce_sumproduct_term(c: &Cell, scalar: bool) -> Result<f64> {
     match c {
         Cell::Number(n) => Ok(*n),
         Cell::Bool(b) => Ok(if *b { 1.0 } else { 0.0 }),
@@ -68,7 +68,7 @@ pub(super) fn sumproduct(args: &[Input], budget: Budget) -> Result<f64> {
                 Input::Area(m) if m.values.len() == 1 => &m.values[0],
                 _ => return value(),
             };
-            product *= product_term(c, true)?;
+            product *= coerce_sumproduct_term(c, true)?;
         }
         finite(&[product])?;
         return Ok(product);
@@ -109,7 +109,7 @@ pub(super) fn sumproduct(args: &[Input], budget: Budget) -> Result<f64> {
         let mut p = 1.0;
         for arg in args {
             let Input::Area(m) = arg else { return value() };
-            p *= product_term(
+            p *= coerce_sumproduct_term(
                 m.values.get(i).ok_or(Error::Formula(CellError::Value))?,
                 false,
             )?;

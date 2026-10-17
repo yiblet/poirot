@@ -2,7 +2,7 @@
 use super::*;
 impl Session<'_> {
     /// Render a scalar into admitted UTF-16 units without replacing surrogate values.
-    pub(super) fn text_unit_render(&mut self, value: &CellValue) -> FunctionResult<Vec<u16>> {
+    pub(super) fn coerce_concat_utf16(&mut self, value: &CellValue) -> FunctionResult<Vec<u16>> {
         if let Some(text) = value.text_ref() {
             let units = text.len_units();
             let bytes = units
@@ -18,8 +18,8 @@ impl Session<'_> {
         self.budget.allocation(512)?;
         self.budget.charge(WorkKind::TextByte, 512)?;
         let rendered = match value {
-            Number(value) => poirot_numeric::to_text(*value),
-            _ => text(value, &mut self.budget)?,
+            Number(value) => poirot_numeric::coerce_number_to_text(*value),
+            _ => coerce_formula_text(value, &mut self.budget)?,
         };
         Ok(rendered.encode_utf16().collect())
     }
@@ -29,8 +29,10 @@ impl Session<'_> {
         left: &CellValue,
         right: &CellValue,
     ) -> FunctionResult<CellValue> {
-        let left = self.text_unit_render(left)?;
-        let right = self.text_unit_render(right)?;
+        // TODO(coercion-non-argument): [LOW] Concatenation converts operand types to text; retaining those strings as source values would change later evaluation.
+        let left = self.coerce_concat_utf16(left)?;
+        // TODO(coercion-non-argument): [LOW] Concatenation converts operand types to text; retaining those strings as source values would change later evaluation.
+        let right = self.coerce_concat_utf16(right)?;
         let units = left
             .len()
             .checked_add(right.len())

@@ -8,8 +8,8 @@ mod plans;
 mod sumproduct;
 mod trend;
 
-use access::{UNLIMITED, describe, err, numeric, preflight, read, value, work};
-use collection::{frequency_values, matrix, trend_matrix};
+use access::{UNLIMITED, coerce_matrix_number, describe, err, preflight, read, value, work};
+use collection::{coerce_frequency_collection, coerce_matrix_collection, coerce_trend_collection};
 use plans::ResourcePlan;
 /// Matrix algebra and array aggregation operations supported by this adapter.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -167,8 +167,8 @@ pub fn evaluate<P: EvaluationPort>(
         return sumproduct::evaluate(p, args).map(Output::Number);
     }
     if f == Frequency {
-        let data = frequency_values(p, args.first().ok_or(CellError::Value)?)?;
-        let bins = frequency_values(p, args.get(1).ok_or(CellError::Value)?)?;
+        let data = coerce_frequency_collection(p, args.first().ok_or(CellError::Value)?)?;
+        let bins = coerce_frequency_collection(p, args.get(1).ok_or(CellError::Value)?)?;
         ResourcePlan::frequency(data.len(), bins.len()).admit(p)?;
         return domain::frequency(&data, &bins, UNLIMITED)
             .map(Output::Array)
@@ -184,9 +184,9 @@ pub fn evaluate<P: EvaluationPort>(
         Transpose => domain::MatrixCollection::Transpose,
         _ => return Err(CellError::Value.into()),
     };
-    let a = matrix(p, args.first().ok_or(CellError::Value)?, policy)?;
+    let a = coerce_matrix_collection(p, args.first().ok_or(CellError::Value)?, policy)?;
     if f == Mmult {
-        let b = matrix(p, args.get(1).ok_or(CellError::Value)?, policy)?;
+        let b = coerce_matrix_collection(p, args.get(1).ok_or(CellError::Value)?, policy)?;
         ResourcePlan::multiply(&a, &b).admit(p)?;
         return domain::multiply(&a, &b, UNLIMITED)
             .map(matrix_output)

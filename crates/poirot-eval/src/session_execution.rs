@@ -145,7 +145,9 @@ impl<'a> Session<'a> {
         let result = (|| {
             self.budget.text(prepared.source().len())?;
             let value = self.prepared_expression(target.sheet, target.address, prepared)?;
-            let value = formula_result(self.result_scalar(target.sheet, target.address, value)?);
+            let value =
+                // TODO(coercion-non-argument): [MEDIUM] Final blank becomes zero; moving this earlier would change nested consumers.
+                coerce_cell_publication(self.result_scalar(target.sheet, target.address, value)?);
             Ok(value)
         })();
         self.budget.pop_cell();
@@ -173,7 +175,8 @@ impl<'a> Session<'a> {
         let result = self
             .bytecode_expr(target.sheet, target.address, formula.bytecode())
             .and_then(|v| self.result_scalar(target.sheet, target.address, v))
-            .map(formula_result);
+            // TODO(coercion-non-argument): [MEDIUM] Final blank becomes zero; moving this earlier would change nested consumers.
+            .map(coerce_cell_publication);
         self.budget.pop_cell();
         self.consumer = previous;
         result
@@ -382,7 +385,8 @@ impl<'a> Session<'a> {
                             self.budget.text(text.storage_bytes())?;
                         }
                         Ok(match &cell.value {
-                            Number(value) => self.numeric_policy.at(
+                            // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+                            Number(value) => self.numeric_policy.coerce_numeric_stage(
                                 numeric_outcome::NumericConstruction::CellNumericInput,
                                 *value,
                             ),
@@ -404,7 +408,10 @@ impl<'a> Session<'a> {
                             }
                         };
                         let value = self.prepared_expression(sheet, address, prepared)?;
-                        Ok(formula_result(self.result_scalar(sheet, address, value)?))
+                        // TODO(coercion-non-argument): [MEDIUM] Final blank becomes zero; moving this earlier would change nested consumers.
+                        Ok(coerce_cell_publication(
+                            self.result_scalar(sheet, address, value)?,
+                        ))
                     }
                 },
             }?;

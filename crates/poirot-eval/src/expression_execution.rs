@@ -86,14 +86,16 @@ impl<'a> Session<'a> {
             );
         }
         match expression {
-            Expr::Number(value) => Ok(self.numeric_policy.number_ptg(*value)?.into()),
+            // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+            Expr::Number(value) => Ok(self.numeric_policy.coerce_numeric_literal(*value)?.into()),
             Expr::String(text) => {
                 self.budget.text(text.len())?;
                 Ok(Text(text.clone()).into())
             }
             Expr::Bool(value) => Ok(Boolean(*value).into()),
             Expr::Error(error) => Ok(Error(error.parse().unwrap_or(VALUE_ERROR)).into()),
-            Expr::Missing => Ok(Blank.into()),
+            // TODO(coercion-non-argument): [MEDIUM] Legacy expression evaluation loses omission identity when it represents missing syntax as blank.
+            Expr::Missing => Ok(coerce_legacy_missing_blank().into()),
             Expr::SheetSpan(span) => self.reference_atom(
                 s,
                 at,
@@ -208,18 +210,25 @@ impl<'a> Session<'a> {
                 return Ok(value.into());
             }
             return Ok(
-                match semantic(core_projection::operand_number(&value, &mut self.budget))? {
+                // TODO(coercion-non-argument): [LOW] Unary numeric coercion can erase blank or text identity if applied before the operator consumes it.
+                match semantic(core_projection::coerce_arithmetic_operand_number(
+                    &value,
+                    &mut self.budget,
+                ))? {
                     Ok(n) => match op {
                         // SAFETY: ImplicitIntersection returns before either numeric unary match in this function.
                         UnaryOp::ImplicitIntersection => unreachable!("selected above"),
-                        UnaryOp::Plus => self.numeric_policy.construct(n),
+                        // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+                        UnaryOp::Plus => self.numeric_policy.coerce_numeric_outcome(n),
                         UnaryOp::Minus => {
                             self.numeric_policy
-                                .construct(if n == 0.0 { 0.0 } else { -n })
+                                // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+                                .coerce_numeric_outcome(if n == 0.0 { 0.0 } else { -n })
                         }
                         UnaryOp::Percent => {
                             self.numeric_policy
-                                .construct(if n == 0.0 { 0.0 } else { n / 100.0 })
+                                // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+                                .coerce_numeric_outcome(if n == 0.0 { 0.0 } else { n / 100.0 })
                         }
                     }
                     .into(),
@@ -227,17 +236,20 @@ impl<'a> Session<'a> {
                 },
             );
         }
-        Ok(match semantic(number(&value, &mut self.budget))? {
-            Ok(number) => finite(match op {
-                // SAFETY: ImplicitIntersection returns before either numeric unary match in this function.
-                UnaryOp::ImplicitIntersection => unreachable!("selected above"),
-                UnaryOp::Plus => number,
-                UnaryOp::Minus => -number,
-                UnaryOp::Percent => number / 100.,
-            })
-            .into(),
-            Err(error) => err(error),
-        })
+        Ok(
+            // TODO(coercion-non-argument): [LOW] Unary numeric coercion must stay at the operator; applying it during operand acquisition would affect selectors.
+            match semantic(coerce_arithmetic_number(&value, &mut self.budget))? {
+                Ok(number) => finite(match op {
+                    // SAFETY: ImplicitIntersection returns before either numeric unary match in this function.
+                    UnaryOp::ImplicitIntersection => unreachable!("selected above"),
+                    UnaryOp::Plus => number,
+                    UnaryOp::Minus => -number,
+                    UnaryOp::Percent => number / 100.,
+                })
+                .into(),
+                Err(error) => err(error),
+            },
+        )
     }
     /// Apply a binary operation while preserving reference and array semantics.
     pub(super) fn binary_values(

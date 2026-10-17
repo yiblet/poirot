@@ -31,7 +31,7 @@ pub(crate) fn cell(host: &mut CallHost<'_, '_>, v: &CellValue) -> FunctionResult
         CellValue::Number(n) => Cell::Number(*n),
         CellValue::Boolean(b) => Cell::Bool(*b),
         CellValue::Text(s) => Cell::Text(s.clone()),
-        CellValue::TextUtf16(_) => Cell::Text(host.scalar_text(v)?),
+        CellValue::TextUtf16(_) => Cell::Text(host.coerce_scalar_text(v)?),
         CellValue::Error(e) => Cell::Error(match e {
             CellError::Null => Error::Null,
             CellError::Div0 => Error::DivZero,

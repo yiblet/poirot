@@ -30,7 +30,8 @@ impl<'a> Session<'a> {
     /// Apply legacy scalar selection, dereferencing only the selected reference cell.
     pub(super) fn scalar(&mut self, at: CellAddress, value: Value) -> EvalResult<CellValue> {
         match value {
-            Value::Missing => Ok(Blank),
+            // TODO(coercion-non-argument): [MEDIUM] Generic scalar projection drops omission identity rather than leaving the consumer to choose a default.
+            Value::Missing => Ok(coerce_legacy_missing_blank()),
             Value::Scalar(value) => Ok(value),
             Value::Array(rows) => Ok(rows
                 .into_iter()
@@ -211,13 +212,15 @@ impl<'a> Session<'a> {
                 _ => !c.is_lt(),
             }));
         }
-        let extract = if self.numeric_policy == NumericOutcomePolicy::PinnedPoi7321209 {
-            core_projection::operand_number
+        let coerce_number = if self.numeric_policy == NumericOutcomePolicy::PinnedPoi7321209 {
+            core_projection::coerce_arithmetic_operand_number
         } else {
-            number
+            coerce_arithmetic_number
         };
-        let l = extract(&l, &mut self.budget)?;
-        let r = extract(&r, &mut self.budget)?;
+        // TODO(coercion-non-argument): [LOW] Binary arithmetic conversion must not leak into raw operand reads or type-sensitive consumers.
+        let l = coerce_number(&l, &mut self.budget)?;
+        // TODO(coercion-non-argument): [LOW] Binary arithmetic conversion must not leak into raw operand reads or type-sensitive consumers.
+        let r = coerce_number(&r, &mut self.budget)?;
         let result = match op {
             BinaryOp::Add => {
                 if self.numeric_policy == NumericOutcomePolicy::PinnedPoi7321209 {
@@ -259,7 +262,8 @@ impl<'a> Session<'a> {
         } else {
             result
         };
-        Ok(self.numeric_policy.checked_result(result))
+        // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+        Ok(self.numeric_policy.coerce_checked_numeric_result(result))
     }
     // A reference or array supplies only stored cells; aggregate functions ignore blanks.
     /// Collect aggregation members, retaining reference origin and sparse traversal behavior.

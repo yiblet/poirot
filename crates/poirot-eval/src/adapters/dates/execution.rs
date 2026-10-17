@@ -13,8 +13,10 @@ mod time;
 mod time_formatter;
 mod time_grammar;
 use business_days::{WorkdayPlan, WorkdayState, advance, network, weekend_policy};
-use calendar::{Date, calendar_date, civil, date, epoch, integer, max_serial, serial, valid};
-use components::{component, construct, month, week};
+use calendar::{
+    Date, calendar_date, civil, coerce_date_integer, date, epoch, max_serial, serial, valid,
+};
+use components::{coerce_numeric_outcome, component, month, week};
 use day_count::{days360, yearfrac};
 use text::DateTextPlan;
 
@@ -39,7 +41,7 @@ impl Session<'_> {
             self.workbook.date_system,
         )
     }
-    fn parse_date_text(&mut self, t: &str) -> Result<Date, CellError> {
+    fn coerce_date_text(&mut self, t: &str) -> Result<Date, CellError> {
         let plan = DateTextPlan::inspect(t)?;
         let year = if plan.needs_default_year {
             date(self.clock_serial()?, self.workbook.date_system)?.y
@@ -93,7 +95,7 @@ impl Session<'_> {
             time::source_day(date),
         )))
     }
-    fn time_value_text(&mut self, input: &str) -> FunctionResult<f64> {
+    fn coerce_time_text(&mut self, input: &str) -> FunctionResult<f64> {
         self.budget.text(input.len())?;
         let normalized = time::normalize(input);
         if let Some(value) = self.time_value_stage(input, &normalized)? {
@@ -125,37 +127,37 @@ impl Session<'_> {
         };
         Ok(plan.resolve(year).map(|_| 0.)?)
     }
-    fn date_arg(&mut self, v: &CellValue) -> FunctionResult<f64> {
+    fn coerce_date_argument(&mut self, v: &CellValue) -> FunctionResult<f64> {
         let n = if let Some(text) = v.text_ref() {
             let text = checked_text_view(text, &mut self.budget)?;
             match text.trim().parse::<f64>() {
                 Ok(n) if n.is_finite() => n,
                 Ok(_) => return Err(VALUE_ERROR.into()),
-                Err(_) => serial(self.parse_date_text(&text)?, self.workbook.date_system)?,
+                Err(_) => serial(self.coerce_date_text(&text)?, self.workbook.date_system)?,
             }
         } else {
-            number(v, &mut self.budget)?
+            coerce_arithmetic_number(v, &mut self.budget)?
         };
         Ok(valid(n, self.workbook.date_system)?)
     }
-    fn yearfrac_date_arg(&mut self, v: &CellValue) -> FunctionResult<f64> {
+    fn coerce_yearfrac_date_argument(&mut self, v: &CellValue) -> FunctionResult<f64> {
         // Numeric text bypasses checkDate as in the pinned source.
         if let Some(text) = v.text_ref() {
             let text = checked_text_view(text, &mut self.budget)?;
             if let Ok(n) = text.trim().parse::<f64>()
                 && n.is_finite()
             {
-                integer(n.floor())?;
+                coerce_date_integer(n.floor())?;
                 return Ok(n);
             }
         }
-        self.date_arg(v)
+        self.coerce_date_argument(v)
     }
     fn holiday_values(&mut self, value: Value) -> EvalResult<Vec<CellValue>> {
         match value {
             Value::Missing => {
                 self.budget.allocation(1)?;
-                Ok(vec![Blank])
+                Ok(vec![coerce_legacy_missing_blank()])
             }
             Value::Scalar(value) => {
                 self.budget.allocation(1)?;
@@ -262,46 +264,49 @@ impl Session<'_> {
         }
         let yearfrac_basis = if name == DateFunction::YearFrac && n == 3 {
             let c = self.argument(s, at, args, 2)?;
-            Some(integer(number(&c, &mut self.budget)?.floor())?)
+            Some(coerce_date_integer(
+                coerce_arithmetic_number(&c, &mut self.budget)?.floor(),
+            )?)
         } else {
             None
         };
         let a = self.argument(s, at, args, 0)?;
         if name == DateFunction::DateValue || name == DateFunction::TimeValue {
-            let t = text(&a, &mut self.budget)?;
+            let t = coerce_formula_text(&a, &mut self.budget)?;
             if name == DateFunction::TimeValue && t.is_empty() {
                 return Ok(Blank);
             }
             return Ok(Number(if name == DateFunction::DateValue {
-                serial(self.parse_date_text(&t)?, system)?
+                serial(self.coerce_date_text(&t)?, system)?
             } else {
-                self.time_value_text(&t)?
+                self.coerce_time_text(&t)?
             }));
         }
         if name == DateFunction::Date || name == DateFunction::Time {
-            let x = integer(if name == DateFunction::Time {
-                number(&a, &mut self.budget)?.floor()
+            let x = coerce_date_integer(if name == DateFunction::Time {
+                coerce_arithmetic_number(&a, &mut self.budget)?.floor()
             } else {
-                number(&a, &mut self.budget)?
+                coerce_arithmetic_number(&a, &mut self.budget)?
             })?;
             let b = self.argument(s, at, args, 1)?;
             let y = if name == DateFunction::Time {
-                integer(number(&b, &mut self.budget)?.floor())?
+                coerce_date_integer(coerce_arithmetic_number(&b, &mut self.budget)?.floor())?
             } else if excel {
-                integer(number(&b, &mut self.budget)?)?
+                coerce_date_integer(coerce_arithmetic_number(&b, &mut self.budget)?)?
             } else {
-                integer(number(&b, &mut self.budget)? - 1.)? + 1
+                coerce_date_integer(coerce_arithmetic_number(&b, &mut self.budget)? - 1.)? + 1
             };
             let c = self.argument(s, at, args, 2)?;
-            let z = integer(if name == DateFunction::Time {
-                number(&c, &mut self.budget)?.floor()
+            let z = coerce_date_integer(if name == DateFunction::Time {
+                coerce_arithmetic_number(&c, &mut self.budget)?.floor()
             } else {
-                number(&c, &mut self.budget)?
+                coerce_arithmetic_number(&c, &mut self.budget)?
             })?;
             return Ok(Number(if excel && name == DateFunction::Date {
                 components::excel_date(x, y, z, system)?
             } else {
-                construct(name, x, y, z, system)?
+                // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+                coerce_numeric_outcome(name, x, y, z, system)?
             }));
         }
         let edate_offset = if name == DateFunction::EDate {
@@ -312,7 +317,7 @@ impl Session<'_> {
             if !matches!(b, Number(_) | Blank) {
                 return Err(VALUE_ERROR.into());
             }
-            Some(number(&b, &mut self.budget)?)
+            Some(coerce_arithmetic_number(&b, &mut self.budget)?)
         } else {
             None
         };
@@ -326,22 +331,23 @@ impl Session<'_> {
                 | DateFunction::YearFrac
         );
         let start = if name == DateFunction::YearFrac {
-            self.yearfrac_date_arg(&a)?
+            self.coerce_yearfrac_date_argument(&a)?
         } else if textual_date {
-            self.date_arg(&a)?
+            self.coerce_date_argument(&a)?
         } else {
             valid(
                 if name == DateFunction::WeekNum {
-                    number(&a, &mut self.budget).map_err(|e| remap_semantic(e, VALUE_ERROR))?
+                    coerce_arithmetic_number(&a, &mut self.budget)
+                        .map_err(|e| remap_semantic(e, VALUE_ERROR))?
                 } else {
-                    number(&a, &mut self.budget)?
+                    coerce_arithmetic_number(&a, &mut self.budget)?
                 },
                 system,
             )?
         };
         if excel && name == DateFunction::Days {
             let b = self.argument(s, at, args, 1)?;
-            return Ok(Number(start - self.date_arg(&b)?));
+            return Ok(Number(start - self.coerce_date_argument(&b)?));
         }
         let d = if name == DateFunction::YearFrac {
             calendar_date(start, system)?
@@ -367,7 +373,10 @@ impl Session<'_> {
             Number(1.)
         };
         if name == DateFunction::WeekDay || name == DateFunction::WeekNum {
-            let mode = integer(number(&b, &mut self.budget).map_err(|e| remap_semantic(e, Num))?)?;
+            let mode = coerce_date_integer(
+                coerce_arithmetic_number(&b, &mut self.budget)
+                    .map_err(|e| remap_semantic(e, Num))?,
+            )?;
             if excel && name == DateFunction::WeekNum && mode == 21 {
                 return Ok(Number(components::iso_week(d)));
             }
@@ -378,19 +387,19 @@ impl Session<'_> {
             if name == DateFunction::EDate && !matches!(a, Number(_) | Blank) {
                 return Err(VALUE_ERROR.into());
             }
-            let months = integer(number(&b, &mut self.budget)?)?;
+            let months = coerce_date_integer(coerce_arithmetic_number(&b, &mut self.budget)?)?;
             return Ok(Number(month(name, start, d, months, system)?));
         }
         if name == DateFunction::Days {
             return Ok(Number(
-                (epoch(d) - epoch(date(self.date_arg(&b)?, system)?)) as f64,
+                (epoch(d) - epoch(date(self.coerce_date_argument(&b)?, system)?)) as f64,
             ));
         }
         if name == DateFunction::Days360 || name == DateFunction::YearFrac {
             let end = if name == DateFunction::YearFrac {
-                self.yearfrac_date_arg(&b)?
+                self.coerce_yearfrac_date_argument(&b)?
             } else {
-                self.date_arg(&b)?
+                self.coerce_date_argument(&b)?
             };
             let e = if name == DateFunction::YearFrac {
                 calendar_date(end, system)?
@@ -406,7 +415,7 @@ impl Session<'_> {
                 return Ok(Number(days360(
                     d,
                     e,
-                    core_projection::operand_boolean(&c, self.numeric_policy)?,
+                    core_projection::coerce_operand_boolean(&c, self.numeric_policy)?,
                 ) as f64));
             }
             let basis = yearfrac_basis.unwrap_or(0);
@@ -419,7 +428,7 @@ impl Session<'_> {
             if matches!(c, Blank) {
                 1
             } else {
-                integer(number(&c, &mut self.budget)?)?
+                coerce_date_integer(coerce_arithmetic_number(&c, &mut self.budget)?)?
             }
         } else {
             1
@@ -433,7 +442,7 @@ impl Session<'_> {
                 self.budget
                     .check_allocation(holidays.len().saturating_add(1))?;
                 self.budget.charge(WorkKind::Materialization, 1)?;
-                holidays.push(self.date_arg(&v)?);
+                holidays.push(self.coerce_date_argument(&v)?);
             }
         }
         self.budget.allocation(holidays.len())?;
@@ -442,7 +451,7 @@ impl Session<'_> {
             .map(|h| h.round() as i64 - start.fract().round() as i64)
             .collect();
         if name == DateFunction::NetworkDays {
-            let raw_end = self.date_arg(&b)?;
+            let raw_end = self.coerce_date_argument(&b)?;
             if start > raw_end {
                 return Err(Name.into());
             }
@@ -450,8 +459,8 @@ impl Session<'_> {
                 start, raw_end, system, &weekends, &holidays,
             )));
         }
-        let raw_count = number(&b, &mut self.budget)?;
-        let mut count = integer(if excel { raw_count } else { raw_count.floor() })?;
+        let raw_count = coerce_arithmetic_number(&b, &mut self.budget)?;
+        let mut count = coerce_date_integer(if excel { raw_count } else { raw_count.floor() })?;
         let direction = if count < 0 { -1 } else { 1 };
         count = count.abs();
         if count > max_serial(system) {

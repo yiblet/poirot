@@ -6,15 +6,15 @@ pub(super) fn evaluate<P: EvaluationPort>(
     p: &mut P,
     args: &[P::Argument],
 ) -> Result<Output, Failure<P::Operational>> {
-    let y = trend_matrix(p, args.first().ok_or(CellError::Value)?)?
+    let y = coerce_trend_collection(p, args.first().ok_or(CellError::Value)?)?
         .ok_or(Failure::Spreadsheet(CellError::Value))?;
     let x = if args.len() > 1 {
-        trend_matrix(p, args.get(1).ok_or(CellError::Value)?)?
+        coerce_trend_collection(p, args.get(1).ok_or(CellError::Value)?)?
     } else {
         None
     };
     let nx = if args.len() > 2 {
-        trend_matrix(p, args.get(2).ok_or(CellError::Value)?)?
+        coerce_trend_collection(p, args.get(2).ok_or(CellError::Value)?)?
     } else {
         None
     };

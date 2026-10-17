@@ -97,13 +97,16 @@ impl Session<'_> {
             }
         })
     }
-    fn index_ordinal(
+    fn coerce_index_ordinal(
         &mut self,
         at: CellAddress,
         value: Value,
     ) -> EvalResult<Result<usize, CellError>> {
         let value = self.scalar(at, value)?;
-        Ok(semantic(number(&value, &mut self.budget))?.and_then(index_ordinal))
+        Ok(
+            semantic(coerce_arithmetic_number(&value, &mut self.budget))?
+                .and_then(coerce_index_ordinal),
+        )
     }
     fn index(&mut self, s: usize, at: CellAddress, args: ArgumentsRef<'_>) -> EvalResult<Value> {
         if !FunctionId::Reference(ReferenceFunction::Index)
@@ -153,13 +156,13 @@ impl Session<'_> {
             return Ok(err(*error));
         }
         let col = match col_value {
-            Some(value) => match self.index_ordinal(at, value)? {
+            Some(value) => match self.coerce_index_ordinal(at, value)? {
                 Ok(index) => index,
                 Err(error) => return Ok(err(error)),
             },
             None => 1,
         };
-        let row = match self.index_ordinal(at, row_value)? {
+        let row = match self.coerce_index_ordinal(at, row_value)? {
             Ok(index) => index,
             Err(error) => return Ok(err(error)),
         };
@@ -167,7 +170,7 @@ impl Session<'_> {
             let area = if args.len() == 4 {
                 match semantic({
                     let value = self.scalar(at, area_value.ok_or(EvaluationFailure::StalePlan)?)?;
-                    number(&value, &mut self.budget)
+                    coerce_arithmetic_number(&value, &mut self.budget)
                 })? {
                     Ok(n) if n >= 1. && n.trunc() <= areas.len() as f64 => *areas
                         .get(
@@ -202,7 +205,7 @@ impl Session<'_> {
             let area = if args.len() == 4 {
                 match semantic({
                     let value = self.scalar(at, area_value.ok_or(EvaluationFailure::StalePlan)?)?;
-                    number(&value, &mut self.budget)
+                    coerce_arithmetic_number(&value, &mut self.budget)
                 })? {
                     Ok(n) if n >= 1. && n.trunc() <= areas.len() as f64 => *areas
                         .get(
@@ -318,7 +321,7 @@ impl Session<'_> {
 }
 
 /// Pinned OperandResolver floors numeric indices, then rejects negatives.
-fn index_ordinal(number: f64) -> Result<usize, CellError> {
+fn coerce_index_ordinal(number: f64) -> Result<usize, CellError> {
     let number = number.floor();
     if !number.is_finite() || number < i32::MIN as f64 || number > i32::MAX as f64 {
         Err(Num)
@@ -409,9 +412,9 @@ mod tests {
             Ok((2, 0))
         );
         assert_eq!(index_selection(IndexForm::RowColumn, 3, 2, 4, 0), Err(Ref));
-        assert_eq!(index_ordinal(-0.1), Err(VALUE_ERROR));
-        assert_eq!(index_ordinal(2.9), Ok(2));
-        assert_eq!(index_ordinal(2147483648.), Err(Num));
+        assert_eq!(coerce_index_ordinal(-0.1), Err(VALUE_ERROR));
+        assert_eq!(coerce_index_ordinal(2.9), Ok(2));
+        assert_eq!(coerce_index_ordinal(2147483648.), Err(Num));
     }
     #[test]
     fn index_keeps_reference_coordinates_and_whole_selected_areas() {

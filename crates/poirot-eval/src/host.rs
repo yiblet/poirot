@@ -348,13 +348,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
                 .unwrap_or(false);
         if missing {
             return Ok(ScalarOperand {
-                value: match policy {
-                    MissingPolicy::Blank => Blank,
-                    #[cfg(test)]
-                    MissingPolicy::Zero => Number(0.),
-                    #[cfg(test)]
-                    MissingPolicy::Reject => return Err(VALUE_ERROR.into()),
-                },
+                value: coerce_missing_scalar(policy)?,
                 origin: if matches!(operand.value, Value::Array(_)) {
                     OperandOrigin::ArrayElement
                 } else {
@@ -465,4 +459,16 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         self.charge_work(bytes as u64)?;
         Ok(context.clone())
     }
+}
+
+/// Explicit missing-argument projection. The caller retains omission metadata;
+/// this value is only the requested legacy scalar representation.
+fn coerce_missing_scalar(policy: MissingPolicy) -> FunctionResult<CellValue> {
+    Ok(match policy {
+        MissingPolicy::Blank => Blank,
+        #[cfg(test)]
+        MissingPolicy::Zero => Number(0.),
+        #[cfg(test)]
+        MissingPolicy::Reject => return Err(VALUE_ERROR.into()),
+    })
 }

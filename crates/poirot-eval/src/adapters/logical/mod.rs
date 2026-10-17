@@ -37,7 +37,7 @@ impl EvaluationPort for CallHost<'_, '_> {
             .map(|kind| matches!(kind, OperandKind::Reference | OperandKind::Array))
             .map_err(port_failure)
     }
-    fn truncated_number(&mut self, index: usize) -> Result<f64, Failure<EvaluationFailure>> {
+    fn coerce_truncated_number(&mut self, index: usize) -> Result<f64, Failure<EvaluationFailure>> {
         let scalar = self
             .scalar_data(index, MissingPolicy::Blank)
             .map_err(port_failure)?;
@@ -48,10 +48,10 @@ impl EvaluationPort for CallHost<'_, '_> {
             )));
         }
         let number = self
-            .scalar_number(&scalar.value, NumericPolicy::PinnedPoi)
+            .coerce_scalar_number(&scalar.value, NumericPolicy::PinnedPoi)
             .map_err(port_failure)?;
         let rendered = self
-            .number_text(number, NumericPolicy::PinnedPoi)
+            .coerce_number_to_text(number, NumericPolicy::PinnedPoi)
             .map_err(port_failure)?;
         rendered
             .parse::<f64>()

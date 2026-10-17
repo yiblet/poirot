@@ -15,7 +15,7 @@ mod poisson_mass;
 /// Statistical reduction over already collected numeric operands.
 pub use aggregate::aggregate;
 /// Origin-sensitive admission of scalar and paired statistical inputs.
-pub use collection::{collect, collect_pairs};
+pub use collection::{coerce_statistics_collection, coerce_statistics_pairs};
 /// Distribution probability/inverse kernels with optional host metering.
 pub use distribution::{
     legacy_t_dist, normal_dist, normal_dist_metered, normal_dist_source_metered, normal_inverse,

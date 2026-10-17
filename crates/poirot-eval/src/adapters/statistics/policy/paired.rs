@@ -1,6 +1,6 @@
 //! Paired operations, forecast and regression execution.
-use super::coercion::{string_number, work};
-use super::collections::{numeric_only_pairs, pairs};
+use super::coercion::{coerce_statistics_text_number, work};
+use super::collections::{coerce_statistics_pairs, numeric_only_pairs};
 use super::{EvaluationPort, Failure, SemanticsPolicy, StatisticsFunction};
 use domain::{PairCollection as PC, PairOperation as Q};
 use poirot_functions_statistics as domain;
@@ -18,7 +18,7 @@ pub(super) fn execute<P: EvaluationPort>(
         | Intercept | Slope | Forecast | ForecastLinear => {
             let forecasting = matches!(f, Forecast | ForecastLinear);
             let number = if forecasting {
-                Some(string_number(
+                Some(coerce_statistics_text_number(
                     p,
                     args.first().ok_or(poirot_model::CellError::Value)?,
                 )?)
@@ -46,7 +46,7 @@ pub(super) fn execute<P: EvaluationPort>(
             let v = if policy == PC::NumericOnly && !excel_sample {
                 numeric_only_pairs(p, a, b, matches!(f, Intercept | Slope))?
             } else {
-                pairs(p, a, b, policy)?
+                coerce_statistics_pairs(p, a, b, policy)?
             };
             work(p, (v.original_len as u64).saturating_mul(12))?;
             if excel_sample && v.x.len() < 2 {

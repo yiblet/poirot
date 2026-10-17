@@ -1,5 +1,6 @@
 use crate::operands::{
-    boolean, charge, checked_product, integer, missing, num, scalar, text, Arguments,
+    charge, checked_product, coerce_lookup_boolean, coerce_lookup_integer, coerce_lookup_text,
+    missing, num, scalar, Arguments,
 };
 use crate::{
     parse_dynamic_reference, Context, Error, Failure, Reference, ReferenceKind, Scalar,
@@ -21,8 +22,8 @@ pub(super) fn address(
     if !(2..=5).contains(&args.len()) {
         return Err(Error::Value.into());
     }
-    let row = integer(scalar(&args.get(0, c, w)?, c, w)?, false, w)?;
-    let col = integer(scalar(&args.get(1, c, w)?, c, w)?, false, w)?;
+    let row = coerce_lookup_integer(scalar(&args.get(0, c, w)?, c, w)?, false, w)?;
+    let col = coerce_lookup_integer(scalar(&args.get(1, c, w)?, c, w)?, false, w)?;
     if row < 1 || col < 1 {
         return Err(Error::Value.into());
     }
@@ -31,7 +32,7 @@ pub(super) fn address(
         if missing(&value) {
             1
         } else {
-            integer(scalar(&value, c, w)?, false, w)?
+            coerce_lookup_integer(scalar(&value, c, w)?, false, w)?
         }
     } else {
         1
@@ -45,7 +46,7 @@ pub(super) fn address(
         if missing(&value) {
             true
         } else {
-            boolean(scalar(&value, c, w)?)?
+            coerce_lookup_boolean(scalar(&value, c, w)?)?
         }
     } else {
         true
@@ -55,7 +56,7 @@ pub(super) fn address(
     if args.len() == 5 {
         let value = args.get(4, c, w)?;
         if !missing(&value) {
-            let name = text(&scalar(&value, c, w)?, w)?;
+            let name = coerce_lookup_text(&scalar(&value, c, w)?, w)?;
             if name.contains(['\n', '\r', '\t']) {
                 return Err(Failure::Unsupported(
                     Unsupported::AddressSheetNameControlCharacter,
@@ -218,13 +219,13 @@ pub(super) fn offset(
     let row = if missing(&row_value) {
         0
     } else {
-        integer(scalar(&row_value, c, w)?, true, w)?
+        coerce_lookup_integer(scalar(&row_value, c, w)?, true, w)?
     };
     let col_value = args.get(2, c, w)?;
     let col = if missing(&col_value) {
         0
     } else {
-        integer(scalar(&col_value, c, w)?, true, w)?
+        coerce_lookup_integer(scalar(&col_value, c, w)?, true, w)?
     };
     // POI evaluates width before height.
     let width = if args.len() > 4 {
@@ -232,7 +233,7 @@ pub(super) fn offset(
         if missing(&value) {
             base_width
         } else {
-            integer(scalar(&value, c, w)?, true, w)?
+            coerce_lookup_integer(scalar(&value, c, w)?, true, w)?
         }
     } else {
         base_width
@@ -242,7 +243,7 @@ pub(super) fn offset(
         if missing(&value) {
             base_height
         } else {
-            integer(scalar(&value, c, w)?, true, w)?
+            coerce_lookup_integer(scalar(&value, c, w)?, true, w)?
         }
     } else {
         base_height
@@ -302,10 +303,10 @@ pub(super) fn indirect(
     if args.is_empty() {
         return Err(Error::Value.into());
     }
-    let text = text(&scalar(&args.get(0, c, w)?, c, w)?, w)?;
+    let text = coerce_lookup_text(&scalar(&args.get(0, c, w)?, c, w)?, w)?;
     let a1 = match args.len() {
         1 => true,
-        2 => boolean(scalar(&args.get(1, c, w)?, c, w)?)?,
+        2 => coerce_lookup_boolean(scalar(&args.get(1, c, w)?, c, w)?)?,
         _ => return Err(Error::Value.into()),
     };
     let query = parse_dynamic_reference(&text, a1, w)?;

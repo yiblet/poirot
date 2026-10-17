@@ -119,11 +119,10 @@ pub(crate) fn execute(
                     Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
                     Err(FunctionFailure::Operational(error)) => return Err(error),
                 };
-                output.push(if value == Blank && shape.kind == OperandKind::Reference {
-                    Number(0.)
-                } else {
-                    value
-                });
+                output.push(coerce_transpose_reference_blank(
+                    value,
+                    shape.kind == OperandKind::Reference,
+                ));
             }
         }
         return Ok(Value::Array(ArrayView::anchored(rows, Some(address))));
@@ -187,6 +186,15 @@ pub(crate) fn execute(
             CapabilityId::FunctionAdapter,
             format!("pinned matrix source capability: {capability:?}"),
         )),
+    }
+}
+
+/// The documented TRANSPOSE profile materializes referenced blanks as zero.
+fn coerce_transpose_reference_blank(value: CellValue, referenced: bool) -> CellValue {
+    if referenced && value == Blank {
+        Number(0.)
+    } else {
+        value
     }
 }
 

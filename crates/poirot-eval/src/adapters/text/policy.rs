@@ -123,20 +123,29 @@ pub trait Host<E> {
         selection: AreaSelection,
     ) -> TextResult<Vec<Self::Scalar>, Self::Error, Self::Operational>;
     /// Convert a text item using source-compatible scalar formatting.
-    fn string(&self, scalar: &Self::Scalar) -> TextResult<String, Self::Error, Self::Operational>;
+    fn coerce_text_string(
+        &self,
+        scalar: &Self::Scalar,
+    ) -> TextResult<String, Self::Error, Self::Operational>;
     /// Convert a delimiter, treating omitted delimiters according to source rules.
-    fn delimiter(
+    fn coerce_text_delimiter(
         &self,
         scalar: &Self::Scalar,
     ) -> TextResult<String, Self::Error, Self::Operational>;
     /// Coerce a scalar to the source's integer argument representation.
-    fn integer(&self, scalar: &Self::Scalar) -> TextResult<i32, Self::Error, Self::Operational>;
+    fn coerce_text_integer(
+        &self,
+        scalar: &Self::Scalar,
+    ) -> TextResult<i32, Self::Error, Self::Operational>;
     /// Inspect the source scalar without numeric or text coercion.
     fn boolean_value(&self, _scalar: &Self::Scalar) -> Option<bool> {
         None
     }
     /// Apply logical coercion for text operation options.
-    fn boolean(&self, scalar: &Self::Scalar) -> TextResult<bool, Self::Error, Self::Operational>;
+    fn coerce_text_boolean(
+        &self,
+        scalar: &Self::Scalar,
+    ) -> TextResult<bool, Self::Error, Self::Operational>;
     /// Locale.ROOT per-UTF16-unit case mapping and Character.isLetter category.
     /// Engine supplies a policy pinned to its Java Unicode baseline.
     fn proper_output_bound(&self, text: &str) -> Option<usize> {
@@ -187,7 +196,7 @@ pub fn evaluate_with_policy<E, H: Host<E>>(
             let number = h
                 // SAFETY: Each argument branch checks its count locally; scalars is filled once per argument, separator checks index < scalars.len(), and delimiter indexing is guarded by nonempty and uses modulo its length.
                 .single(&a[0])
-                .and_then(|v| h.integer(&v))
+                .and_then(|v| h.coerce_text_integer(&v))
                 .map_err(|e| match e {
                     Failure::Spreadsheet(_) => fail(h.error(Error::Value)),
                     other => other,
@@ -207,7 +216,7 @@ pub fn evaluate_with_policy<E, H: Host<E>>(
                     {
                         Ok(if boolean { 0 } else { 4 })
                     } else {
-                        h.integer(&v)
+                        h.coerce_text_integer(&v)
                     }
                 })
                 .map_err(|e| match e {
@@ -278,7 +287,7 @@ pub fn evaluate_with_policy<E, H: Host<E>>(
             let delimiters = checked_values(h, &a[0], AreaSelection::LastRow)?;
             // SAFETY: Each argument branch checks its count locally; scalars is filled once per argument, separator checks index < scalars.len(), and delimiter indexing is guarded by nonempty and uses modulo its length.
             let ignore = h.single(&a[1])?;
-            let ignore = h.boolean(&ignore)?;
+            let ignore = h.coerce_text_boolean(&ignore)?;
             let mut texts = Vec::new();
             let mut text_bytes = 0usize;
             // SAFETY: Each argument branch checks its count locally; scalars is filled once per argument, separator checks index < scalars.len(), and delimiter indexing is guarded by nonempty and uses modulo its length.
@@ -347,9 +356,9 @@ fn checked_string<E, H: Host<E>>(
     h.check_text(bytes).map_err(Failure::Operational)?;
     h.charge_work(bytes).map_err(Failure::Operational)?;
     if delimiter {
-        h.delimiter(v)
+        h.coerce_text_delimiter(v)
     } else {
-        h.string(v)
+        h.coerce_text_string(v)
     }
 }
 fn checked_values<E, H: Host<E>>(
@@ -443,17 +452,17 @@ mod tests {
                 _ => Ok(vec![self.single(e)?]),
             }
         }
-        fn string(&self, s: &S) -> Result<String, Failure<Error>> {
+        fn coerce_text_string(&self, s: &S) -> Result<String, Failure<Error>> {
             match s {
                 S::Text(t) => Ok((*t).into()),
                 S::Int(n) => Ok(n.to_string()),
                 _ => Err(Failure::Spreadsheet(Error::Value)),
             }
         }
-        fn delimiter(&self, s: &S) -> Result<String, Failure<Error>> {
-            self.string(s)
+        fn coerce_text_delimiter(&self, s: &S) -> Result<String, Failure<Error>> {
+            self.coerce_text_string(s)
         }
-        fn integer(&self, s: &S) -> Result<i32, Failure<Error>> {
+        fn coerce_text_integer(&self, s: &S) -> Result<i32, Failure<Error>> {
             match s {
                 S::Int(n) => Ok(*n),
                 S::Bool(b) => Ok(i32::from(*b)),
@@ -466,7 +475,7 @@ mod tests {
                 _ => None,
             }
         }
-        fn boolean(&self, s: &S) -> Result<bool, Failure<Error>> {
+        fn coerce_text_boolean(&self, s: &S) -> Result<bool, Failure<Error>> {
             match s {
                 S::Bool(b) => Ok(*b),
                 _ => Err(Failure::Spreadsheet(Error::Value)),

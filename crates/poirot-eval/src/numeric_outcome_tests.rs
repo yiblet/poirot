@@ -157,7 +157,7 @@ fn construction_stages_flush_both_subnormal_signs_preserve_existing_negative_zer
         .unwrap();
     assert_eq!(session.scalar(at(1), admitted).unwrap(), Error(Num));
     assert_eq!(
-        bits(p.at(
+        bits(p.coerce_numeric_stage(
             numeric_outcome::NumericConstruction::NumberEvalResult,
             f64::from_bits(1)
         )),

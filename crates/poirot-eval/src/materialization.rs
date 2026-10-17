@@ -131,7 +131,8 @@ impl FormulaCacheMaterializationPolicy {
         }
     }
     /// Predict saved-result normalization from a scalar summary.
-    pub(crate) fn stored_summary(
+    // TODO(coercion-non-argument): [MEDIUM] Cache publication can replace a computed number with an error; storing the converted value as a live result would change subsequent evaluation.
+    pub(crate) fn coerce_stored_summary(
         self,
         computed: MaterializedScalarSummary,
     ) -> MaterializedScalarSummary {
@@ -149,8 +150,10 @@ impl FormulaCacheMaterializationPolicy {
         computed
     }
     /// Apply only at prepared formula-cache writes; ordinary setters/imports unchanged.
-    pub(crate) fn store(self, value: CellValue) -> CellValue {
-        match self.stored_summary(MaterializedScalarSummary::from_value(&value)) {
+    // TODO(coercion-non-argument): [MEDIUM] Cache publication can replace a computed number with an error; storing the converted value as a live result would change subsequent evaluation.
+    pub(crate) fn coerce_stored_value(self, value: CellValue) -> CellValue {
+        // TODO(coercion-non-argument): [MEDIUM] Cache publication can replace a computed number with an error; storing the converted value as a live result would change subsequent evaluation.
+        match self.coerce_stored_summary(MaterializedScalarSummary::from_value(&value)) {
             MaterializedScalarSummary::Error(e) => CellValue::Error(e),
             _ => value,
         }
@@ -166,7 +169,8 @@ impl FormulaCacheMaterializationPolicy {
             target,
             identity: self.identity(),
             computed,
-            stored: self.stored_summary(computed),
+            // TODO(coercion-non-argument): [MEDIUM] Cache publication can replace a computed number with an error; storing the converted value as a live result would change subsequent evaluation.
+            stored: self.coerce_stored_summary(computed),
             formula_retained: true,
         }
     }
@@ -204,10 +208,8 @@ pub(crate) fn formula_updates(
     session.budget.allocation(targets.len())?;
     let mut results = Vec::with_capacity(targets.len());
     for target in targets {
-        results.push(crate::CellEvaluation {
-            target,
-            value: session.cell(target.sheet, target.address)?,
-        });
+        let value = session.cell(target.sheet, target.address)?;
+        results.push(session.output(target, value));
     }
     Ok(results)
 }
@@ -266,7 +268,10 @@ pub fn run_recalculation_with_receipts(
                         usage,
                     };
                 };
-                cell.value = configuration.materialization_policy().store(update.value);
+                // TODO(coercion-non-argument): [MEDIUM] Cache publication can replace a computed number with an error; storing the converted value as a live result would change subsequent evaluation.
+                cell.value = configuration
+                    .materialization_policy()
+                    .coerce_stored_value(update.value);
             }
             crate::EvaluationOutcome::Complete {
                 value: receipt,

@@ -39,11 +39,14 @@ pub(super) fn checked_text_view<'a>(
     }
 }
 /// Preserve numeric inputs directly and coerce other scalar kinds under shared rules.
-pub(super) fn operand_number(v: &CellValue, budget: &mut BudgetMeter) -> FunctionResult<f64> {
+pub(super) fn coerce_arithmetic_operand_number(
+    v: &CellValue,
+    budget: &mut BudgetMeter,
+) -> FunctionResult<f64> {
     if let Number(number) = v {
         return Ok(*number);
     }
-    number(v, budget)
+    coerce_arithmetic_number(v, budget)
 }
 /// Compare scalars using source-compatible typed ordering and numeric precision.
 pub(super) fn source_compare(
@@ -73,8 +76,11 @@ pub(super) fn source_compare(
                 .into());
             }
         }
-        let value = |v: &CellValue| if let Number(n) = v { *n } else { 0.0 };
-        let (a, b) = (value(a), value(b));
+        // TODO(coercion-non-argument): [LOW] Numeric comparison treats blank as zero; sharing this normalization with lookup matching would change key semantics.
+        let (a, b) = (
+            coerce_arithmetic_number(a, budget)?,
+            coerce_arithmetic_number(b, budget)?,
+        );
         if a == 0.0 && b == 0.0 {
             return Ok(b.is_sign_negative().cmp(&a.is_sign_negative()));
         }
@@ -89,7 +95,10 @@ pub(super) fn source_compare(
     compare(a, b, budget)
 }
 /// Coerce a scalar to a number under shared metered conversion rules.
-pub(super) fn number(v: &CellValue, budget: &mut BudgetMeter) -> FunctionResult<f64> {
+pub(super) fn coerce_arithmetic_number(
+    v: &CellValue,
+    budget: &mut BudgetMeter,
+) -> FunctionResult<f64> {
     if let Some(text) = v.text_ref() {
         let text = checked_text_view(text, budget)?;
         return text
@@ -110,7 +119,7 @@ pub(super) fn number(v: &CellValue, budget: &mut BudgetMeter) -> FunctionResult<
 }
 /// Boolean text predicates operate on units; malformed UTF16 is an ordinary
 /// nonboolean string here, not a failed scalar projection.
-pub(super) fn logical(v: &CellValue) -> Result<bool, CellError> {
+pub(super) fn coerce_logical_boolean(v: &CellValue) -> Result<bool, CellError> {
     if let Some(text) = v.text_ref() {
         let equal = |expected: &[u8]| {
             let length = match text {
@@ -139,18 +148,21 @@ pub(super) fn logical(v: &CellValue) -> Result<bool, CellError> {
         _ => Err(VALUE_ERROR),
     }
 }
-/// Source OperandResolver consumers reject NaN; lookup range flags keep logical().
-pub(super) fn operand_boolean(
+/// Source OperandResolver consumers reject NaN; lookup range flags keep coerce_logical_boolean().
+pub(super) fn coerce_operand_boolean(
     v: &CellValue,
     policy: NumericOutcomePolicy,
 ) -> Result<bool, CellError> {
     if policy == NumericOutcomePolicy::PinnedPoi7321209 && matches!(v, Number(n) if n.is_nan()) {
         return Err(VALUE_ERROR);
     }
-    logical(v)
+    coerce_logical_boolean(v)
 }
 /// Render a scalar as checked helper text without replacing isolated UTF-16 surrogates.
-pub(super) fn text(v: &CellValue, budget: &mut BudgetMeter) -> FunctionResult<String> {
+pub(super) fn coerce_formula_text(
+    v: &CellValue,
+    budget: &mut BudgetMeter,
+) -> FunctionResult<String> {
     if let Some(text) = v.text_ref() {
         let text = checked_text_view(text, budget)?;
         // Borrowed UTF8 clones only after the same checked bound. Owned projected
@@ -166,7 +178,9 @@ pub(super) fn text(v: &CellValue, budget: &mut BudgetMeter) -> FunctionResult<St
     budget.charge(WorkKind::TextByte, bytes as u64)?;
     Ok(match v {
         Blank => String::new(),
-        Number(n) => n.to_string(),
+        // Coercion to formula text uses spreadsheet decimal precision; the
+        // underlying numeric value and any cell display format stay unchanged.
+        Number(n) => poirot_numeric::coerce_number_to_text(*n),
         Boolean(true) => "TRUE".into(),
         Boolean(false) => "FALSE".into(),
         Error(e) => return Err((*e).into()),
@@ -212,24 +226,10 @@ pub(super) fn compare(
     let zero = Number(0.);
     let empty = Text(String::new());
     let false_value = Boolean(false);
-    let a = if matches!(a, Blank) {
-        match rank(b) {
-            1 => &empty,
-            2 => &false_value,
-            _ => &zero,
-        }
-    } else {
-        a
-    };
-    let b = if matches!(b, Blank) {
-        match rank(a) {
-            1 => &empty,
-            2 => &false_value,
-            _ => &zero,
-        }
-    } else {
-        b
-    };
+    // TODO(coercion-non-argument): [LOW] Comparison chooses blank type from its counterpart; persisting this normalized value would lose the original blank.
+    let a = coerce_comparison_blank(a, b, &zero, &empty, &false_value);
+    // TODO(coercion-non-argument): [LOW] Comparison chooses blank type from its counterpart; persisting this normalized value would lose the original blank.
+    let b = coerce_comparison_blank(b, a, &zero, &empty, &false_value);
     if let (Some(a), Some(b)) = (a.text_ref(), b.text_ref()) {
         let units = a
             .storage_bytes()
@@ -291,6 +291,25 @@ pub(super) fn format_failure(error: poirot_format::FormatError) -> FunctionFailu
             detail: error.to_string(),
         }
         .into(),
+    }
+}
+
+/// Comparison converts blanks using the counterpart's type, without parsing text.
+fn coerce_comparison_blank<'a>(
+    value: &'a CellValue,
+    counterpart: &CellValue,
+    zero: &'a CellValue,
+    empty: &'a CellValue,
+    false_value: &'a CellValue,
+) -> &'a CellValue {
+    if matches!(value, Blank) {
+        match rank(counterpart) {
+            1 => empty,
+            2 => false_value,
+            _ => zero,
+        }
+    } else {
+        value
     }
 }
 

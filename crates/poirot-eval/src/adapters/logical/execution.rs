@@ -21,10 +21,13 @@ impl Session<'_> {
                     return Ok(err(VALUE_ERROR));
                 }
                 let condition = self.argument(s, at, args, 0)?;
-                match core_projection::operand_boolean(&condition, self.numeric_policy) {
+                match core_projection::coerce_operand_boolean(&condition, self.numeric_policy) {
                     Err(e) => err(e),
                     Ok(condition) => match args.get(if condition { 1 } else { 2 }) {
-                        Some(expression) if expression.is_missing() => Number(0.).into(),
+                        Some(expression) if expression.is_missing() => {
+                            // TODO(coercion-non-argument): [HIGH] IF replaces an omitted selected result with zero, causing ISBLANK(IF(TRUE,,)) to return FALSE.
+                            coerce_if_missing_branch().into()
+                        }
                         Some(expression) => {
                             self.observed_value_argument(
                                 s,
@@ -72,7 +75,7 @@ impl Session<'_> {
                     return Ok(err(VALUE_ERROR));
                 }
                 let value = self.argument(s, at, args, 0)?;
-                match semantic(number(&value, &mut self.budget))? {
+                match semantic(coerce_arithmetic_number(&value, &mut self.budget))? {
                     Ok(index) if index >= 1. && index.trunc() < (args.len() as f64) => {
                         self.observed_value_argument(
                             s,
@@ -99,7 +102,7 @@ impl Session<'_> {
             Not => match self.eager_arguments(s, at, args)? {
                 Err(e) => err(e),
                 Ok(values) if arity.accepts(values.len()) => {
-                    match core_projection::operand_boolean(
+                    match core_projection::coerce_operand_boolean(
                         values.first().ok_or(EvaluationFailure::StalePlan)?,
                         self.numeric_policy,
                     ) {
@@ -111,4 +114,10 @@ impl Session<'_> {
             },
         })
     }
+}
+
+/// Pinned IF policy: an explicitly omitted selected result becomes zero.
+/// This intentionally records the existing compatibility gap with nested ISBLANK.
+fn coerce_if_missing_branch() -> CellValue {
+    Number(0.)
 }

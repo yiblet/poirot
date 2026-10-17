@@ -42,11 +42,15 @@ the runner does not invent an expected error type.
 pass/gap verdicts or accepting regressions. `refresh` rebuilds the observation
 baseline from source; see the separate refresh instructions before using it.
 
-The retained baseline has 516 fixtures and 16,114 extracted cases: 1,958 passes
-and 14,156 known gaps. Those gaps include 4,450 matrix cases requiring Calc's
+The retained baseline has 516 fixtures and 16,114 extracted cases: 1,957 passes
+and 14,157 known gaps. Those gaps include 4,450 matrix cases requiring Calc's
 array-entry context. They are recorded limitations of the evaluator or harness,
 not skipped tests. Original upstream expectations are preserved. Agreement with
 Calc is compatibility evidence, not verification against Microsoft Excel.
+
+The COUNTIF text-criterion precision gap is a confirmed POI/LibreOffice
+difference; see [the evidence and reproduction](COUNTIF_PRECISION.md). Its
+LibreOffice expectation remains intact.
 
 ## Structure
 

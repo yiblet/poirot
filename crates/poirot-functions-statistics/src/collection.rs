@@ -2,7 +2,7 @@ use crate::{Collection, NumericPairs, Operand, Origin, PairCollection, Value, ch
 use poirot_functions_core::CellError;
 
 /// Row-major operands preserve source kind even after reference resolution.
-pub fn collect(
+pub fn coerce_statistics_collection(
     policy: Collection,
     operands: &[Operand],
 ) -> std::result::Result<Vec<f64>, CellError> {
@@ -87,7 +87,7 @@ pub fn collect(
     Ok(values)
 }
 /// Fully inspect X before Y, matching POI's pair error precedence.
-pub fn collect_pairs(
+pub fn coerce_statistics_pairs(
     policy: PairCollection,
     x: &[Value],
     y: &[Value],
@@ -100,7 +100,7 @@ pub fn collect_pairs(
             return Err(*error);
         }
     }
-    fn number(policy: PairCollection, value: Value) -> Option<f64> {
+    fn coerce_pair_number(policy: PairCollection, value: Value) -> Option<f64> {
         match value {
             Value::Number(n) => Some(n),
             Value::Boolean(b) if policy == PairCollection::NumericCoercion => {
@@ -116,7 +116,7 @@ pub fn collect_pairs(
         original_len: x.len(),
     };
     for (&a, &b) in x.iter().zip(y) {
-        if let (Some(a), Some(b)) = (number(policy, a), number(policy, b)) {
+        if let (Some(a), Some(b)) = (coerce_pair_number(policy, a), coerce_pair_number(policy, b)) {
             finite(&[a, b])?;
             pairs.x.push(a);
             pairs.y.push(b);

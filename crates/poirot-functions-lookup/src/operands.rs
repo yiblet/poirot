@@ -127,19 +127,23 @@ pub(super) fn scalar(
     }
 }
 /// Coerce an admitted operand to a lookup numeric value.
-pub(super) fn number(v: Scalar, w: &mut impl Workbook) -> Result<f64, Failure> {
+pub(super) fn coerce_lookup_number(v: Scalar, w: &mut impl Workbook) -> Result<f64, Failure> {
     match v {
         Scalar::Number(n) => Ok(n),
         Scalar::Bool(b) => Ok(if b { 1.0 } else { 0.0 }),
         Scalar::Blank => Ok(0.0),
         Scalar::Missing => Err(Error::Value.into()),
-        Scalar::Text(s) => w.numeric_text(&s),
+        Scalar::Text(s) => w.coerce_numeric_text(&s),
         Scalar::Error(e) => Err(e.into()),
     }
 }
 /// Apply the family's integer conversion and range checks.
-pub(super) fn integer(v: Scalar, floor: bool, w: &mut impl Workbook) -> Result<i32, Failure> {
-    let n = number(v, w)?;
+pub(super) fn coerce_lookup_integer(
+    v: Scalar,
+    floor: bool,
+    w: &mut impl Workbook,
+) -> Result<i32, Failure> {
+    let n = coerce_lookup_number(v, w)?;
     let n = if floor { n.floor() } else { n };
     if !n.is_finite() || n < i32::MIN as f64 || n > i32::MAX as f64 {
         return Err(Error::Num.into());
@@ -147,7 +151,7 @@ pub(super) fn integer(v: Scalar, floor: bool, w: &mut impl Workbook) -> Result<i
     Ok(n as i32)
 }
 /// Convert an admitted operand to lookup text.
-pub(super) fn text(v: &Scalar, w: &mut impl Workbook) -> Result<String, Failure> {
+pub(super) fn coerce_lookup_text(v: &Scalar, w: &mut impl Workbook) -> Result<String, Failure> {
     match v {
         Scalar::Text(s) => {
             charge(w, Work::SearchText, s.len())?;
@@ -155,7 +159,7 @@ pub(super) fn text(v: &Scalar, w: &mut impl Workbook) -> Result<String, Failure>
         }
         Scalar::Number(n) => {
             charge(w, Work::SearchText, 32)?;
-            w.number_text(*n)
+            w.coerce_number_to_text(*n)
         }
         Scalar::Bool(b) => Ok(if *b { "TRUE" } else { "FALSE" }.into()),
         Scalar::Blank | Scalar::Missing => Ok(String::new()),
@@ -163,7 +167,7 @@ pub(super) fn text(v: &Scalar, w: &mut impl Workbook) -> Result<String, Failure>
     }
 }
 /// Coerce an admitted operand into a logical option.
-pub(super) fn boolean(v: Scalar) -> Result<bool, Failure> {
+pub(super) fn coerce_lookup_boolean(v: Scalar) -> Result<bool, Failure> {
     match v {
         Scalar::Bool(b) => Ok(b),
         Scalar::Number(n) => Ok(n != 0.0),

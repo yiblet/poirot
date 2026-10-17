@@ -1,6 +1,6 @@
 //! Typed database aggregation, following POI DStarRunner and its twelve algorithms.
 //! All grid cells have reference origin: blanks remain blanks, and numeric text
-//! is ignored by aggregators. Boolean cells are numeric (POI NumericValueEval).
+//! is ignored by aggregators. Boolean cells are coerce_database_number (POI NumericValueEval).
 use poirot_functions_core::{CellError, CellValue};
 #[cfg(test)]
 use poirot_numeric::parse_java_number;
@@ -14,7 +14,10 @@ mod selection;
 /// Database criteria and field-selection helpers shared with host adapters.
 pub use criteria::condition_matches;
 /// Database criteria and field-selection helpers shared with host adapters.
-pub use selection::{criteria_header_index, equal_ignore_case, field_index, numeric, text};
+pub use selection::{
+    coerce_database_number, coerce_database_text, criteria_header_index, equal_ignore_case,
+    field_index,
+};
 
 /// D-function aggregate applied after header and row selection.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

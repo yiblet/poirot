@@ -19,7 +19,7 @@ pub const ALLOCATION_BOUND: usize = 512;
 pub fn render(value: f64, source: SourceVersion) -> String {
     match source {
         SourceVersion::PoirotF6c572d => value.to_string(),
-        SourceVersion::Poi7321209 => super::to_text(value),
+        SourceVersion::Poi7321209 => super::coerce_number_to_text(value),
     }
 }
 
@@ -52,7 +52,7 @@ mod tests {
             (0xffff_ffff_ffff_ffff, "3.5953862697246E+308"),
             (0x7ff8_0000_0000_0000, "2.6965397022935E+308"),
         ] {
-            assert_eq!(super::super::raw_bits_to_text(bits), expected);
+            assert_eq!(super::super::coerce_number_bits_to_text(bits), expected);
         }
         for bits in [
             0xffff_ffff_ffff_ffff,

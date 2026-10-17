@@ -13,7 +13,8 @@ pub(super) fn lookup_compare(
 ) -> FunctionResult<Option<Ordering>> {
     budget.charge(WorkKind::Comparison, 1)?;
     let zero = Number(0.);
-    let key = if *key == Blank { &zero } else { key };
+    // TODO(coercion-non-argument): [MEDIUM] Blank search keys become numeric zero; applying this to candidates or selected results would change blank lookup behavior.
+    let key = coerce_classic_lookup_blank_key(key, &zero);
     let same = (key.text_ref().is_some() && value.text_ref().is_some())
         || matches!(
             (key, value),
@@ -74,6 +75,10 @@ fn comparison_failure(detail: &'static str) -> FunctionFailure {
         detail: detail.into(),
     }
     .into()
+}
+
+fn coerce_classic_lookup_blank_key<'a>(key: &'a CellValue, zero: &'a CellValue) -> &'a CellValue {
+    if *key == Blank { zero } else { key }
 }
 
 #[cfg(test)]

@@ -2,7 +2,7 @@
 use poirot_functions_core::{CellError, CellValue};
 
 /// Coerce an admitted scalar into a logical condition under the kernel rules.
-pub fn logical_test(value: &CellValue) -> Result<bool, CellError> {
+pub fn coerce_logical_test(value: &CellValue) -> Result<bool, CellError> {
     if let Some(text) = value.text_ref() {
         let equal = |expected: &[u8]| {
             let length = match text {

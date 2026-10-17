@@ -2,7 +2,7 @@
 use super::*;
 
 /// Materialize a numeric matrix under the operation's source collection rules.
-pub(super) fn matrix<P: EvaluationPort>(
+pub(super) fn coerce_matrix_collection<P: EvaluationPort>(
     p: &mut P,
     a: &P::Argument,
     policy: domain::MatrixCollection,
@@ -10,7 +10,7 @@ pub(super) fn matrix<P: EvaluationPort>(
     let s = describe(p, a)?;
     if MatrixSelection::from(s) == MatrixSelection::FirstCell {
         let c = read(p, a, 0, 0)?;
-        let n = numeric(p, c)?;
+        let n = coerce_matrix_number(p, c)?;
         preflight(p, Some(1), Some(1))?;
         return domain::Matrix::new(1, 1, vec![n]).map_err(|e| err(p, e));
     }
@@ -35,7 +35,7 @@ pub(super) fn matrix<P: EvaluationPort>(
     domain::Matrix::new(s.rows, s.cols, values).map_err(|e| err(p, e))
 }
 /// Collect a TREND operand, preserving omitted inputs as `None`.
-pub(super) fn trend_matrix<P: EvaluationPort>(
+pub(super) fn coerce_trend_collection<P: EvaluationPort>(
     p: &mut P,
     a: &P::Argument,
 ) -> Result<Option<domain::Matrix<f64>>, Failure<P::Operational>> {
@@ -69,7 +69,7 @@ pub(super) fn trend_matrix<P: EvaluationPort>(
         .map_err(|e| err(p, e))
 }
 /// Collect numeric FREQUENCY members while preserving source filtering and errors.
-pub(super) fn frequency_values<P: EvaluationPort>(
+pub(super) fn coerce_frequency_collection<P: EvaluationPort>(
     p: &mut P,
     a: &P::Argument,
 ) -> Result<Vec<f64>, Failure<P::Operational>> {
@@ -83,7 +83,9 @@ pub(super) fn frequency_values<P: EvaluationPort>(
                 Cell::Number(n) => v.push(n),
                 Cell::Error(e) => return Err(Failure::Spreadsheet(e)),
                 Cell::Bool(b) if s.origin == Origin::Direct => v.push(if b { 1.0 } else { 0.0 }),
-                Cell::Text(t) if s.origin == Origin::Direct => v.push(numeric(p, Cell::Text(t))?),
+                Cell::Text(t) if s.origin == Origin::Direct => {
+                    v.push(coerce_matrix_number(p, Cell::Text(t))?)
+                }
                 _ => {}
             }
         }

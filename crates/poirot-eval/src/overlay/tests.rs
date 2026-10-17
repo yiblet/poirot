@@ -732,3 +732,237 @@ fn conflicting_compiler_borrow_returns_snapshot_error() {
     assert!(postcard::to_allocvec(&overlay.snapshot()).is_err());
     assert!(overlay.snapshot().into_owned().is_err());
 }
+
+fn indexed_lookup_book() -> Workbook {
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("S").unwrap();
+    for row in 0..200 {
+        sheet
+            .set_value(CellAddress { row, col: 0 }, f64::from(row + 1))
+            .unwrap();
+        sheet
+            .set_value(CellAddress { row, col: 1 }, f64::from((row + 1) * 10))
+            .unwrap();
+    }
+    sheet.set_value(at("D1").address, 150.).unwrap();
+    sheet
+        .set_formula(
+            at("E1").address,
+            "VLOOKUP(D1,A1:B200,2,FALSE)",
+            CellValue::Blank,
+        )
+        .unwrap();
+    book
+}
+
+#[test]
+fn lookup_indices_survive_new_evaluations_needle_and_return_value_edits() {
+    let book = indexed_lookup_book();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let context = EvaluationContext::default();
+    let mut first = overlay.evaluation(&context).unwrap();
+    assert_eq!(first.cell(at("E1")).unwrap(), CellValue::Number(1500.));
+    assert_eq!(first.usage().lookup_prefix_scans, 150);
+    drop(first);
+    overlay.set_value(at("D1"), 100.).unwrap();
+    let mut next = overlay.evaluation(&context).unwrap();
+    assert_eq!(next.cell(at("E1")).unwrap(), CellValue::Number(1000.));
+    assert_eq!(next.usage().formula_executions, 1);
+    assert_eq!(next.usage().lookup_prefix_hits, 1);
+    assert_eq!(next.usage().lookup_prefix_scans, 0);
+    drop(next);
+    overlay.set_value(at("B100"), 77.).unwrap();
+    overlay.set_value(at("G1"), 55.).unwrap();
+    let mut next = overlay.evaluation(&context).unwrap();
+    assert_eq!(next.cell(at("E1")).unwrap(), CellValue::Number(77.));
+    assert_eq!(next.usage().lookup_prefix_hits, 1);
+    assert_eq!(next.usage().lookup_prefix_scans, 0);
+    drop(next);
+    overlay.set_value(at("A50"), 100.).unwrap();
+    let mut next = overlay.evaluation(&context).unwrap();
+    assert_eq!(next.cell(at("E1")).unwrap(), CellValue::Number(500.));
+    assert_eq!(next.usage().lookup_prefix_scans, 50);
+}
+
+#[test]
+fn lookup_indices_expire_for_transitively_changed_formula_candidates() {
+    let mut book = indexed_lookup_book();
+    let sheet = book.sheet_mut(0).unwrap();
+    sheet.set_value(at("G1").address, 50.).unwrap();
+    sheet
+        .set_formula(at("A50").address, "G1", CellValue::Blank)
+        .unwrap();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let context = EvaluationContext::default();
+    value(&mut overlay, "E1", &context);
+    overlay.set_value(at("G1"), 100.).unwrap();
+    overlay.set_value(at("D1"), 100.).unwrap();
+    let mut next = overlay.evaluation(&context).unwrap();
+    assert_eq!(next.cell(at("E1")).unwrap(), CellValue::Number(500.));
+    assert_eq!(next.usage().lookup_prefix_scans, 50);
+}
+
+#[test]
+fn lookup_indices_expire_for_sparse_gap_insertions_and_overlapping_ranges() {
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("S").unwrap();
+    sheet.set_value(at("A100").address, 9.).unwrap();
+    sheet.set_value(at("D1").address, 9.).unwrap();
+    for (cell, formula) in [
+        ("E1", "MATCH(D1,A1:A200,0)"),
+        ("E2", "MATCH(D1,A20:A200,0)"),
+    ] {
+        sheet
+            .set_formula(at(cell).address, formula, CellValue::Blank)
+            .unwrap();
+    }
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let context = EvaluationContext::default();
+    overlay
+        .evaluation(&context)
+        .unwrap()
+        .outputs(&[at("E1"), at("E2")])
+        .unwrap();
+    // A previously absent coordinate belongs to both consumed search prefixes.
+    overlay.set_value(at("A50"), 9.).unwrap();
+    let mut next = overlay.evaluation(&context).unwrap();
+    let results = next.outputs(&[at("E1"), at("E2")]).unwrap();
+    assert_eq!(results[0].value, CellValue::Number(50.));
+    assert_eq!(results[1].value, CellValue::Number(31.));
+    assert_eq!(next.usage().lookup_prefix_scans, 2);
+    drop(next);
+    // Removing the overlapping axes must also clear their old membership flags.
+    overlay.set_value(at("A50"), 8.).unwrap();
+    assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(100.));
+}
+
+#[test]
+fn retained_lookup_indices_revalidate_smaller_materialization_limits() {
+    let book = indexed_lookup_book();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let context = EvaluationContext::default();
+    value(&mut overlay, "E1", &context);
+    overlay.set_value(at("D1"), 100.).unwrap();
+    let small = EvaluationContext {
+        budgets: crate::EvaluationBudgets {
+            materialized_values: 10,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let mut next = overlay.evaluation(&small).unwrap();
+    assert!(matches!(
+        next.cell(at("E1")),
+        Err(EvaluationFailure::Budget(crate::BudgetFailure {
+            kind: crate::BudgetKind::Materialization,
+            ..
+        }))
+    ));
+    assert!(next.usage().lookup_prefix_scans > 0);
+    assert_eq!(next.usage().lookup_prefix_hits, 0);
+}
+
+#[test]
+fn failed_output_batch_does_not_publish_lookup_indices() {
+    let mut book = indexed_lookup_book();
+    book.sheet_mut(0)
+        .unwrap()
+        .set_formula(at("F1").address, "REPT(\"x\",100)", CellValue::Blank)
+        .unwrap();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let limited = EvaluationContext {
+        budgets: crate::EvaluationBudgets {
+            text_bytes: 50,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    assert!(
+        overlay
+            .evaluation(&limited)
+            .unwrap()
+            .outputs(&[at("E1"), at("F1")])
+            .is_err()
+    );
+    let context = EvaluationContext::default();
+    let mut next = overlay.evaluation(&context).unwrap();
+    assert_eq!(next.cell(at("E1")).unwrap(), CellValue::Number(1500.));
+    assert_eq!(next.usage().lookup_prefix_scans, 150);
+    assert_eq!(next.usage().lookup_prefix_hits, 0);
+}
+
+#[test]
+fn lookup_indices_expire_for_context_sensitive_formula_candidates() {
+    let mut book = indexed_lookup_book();
+    book.sheet_mut(0)
+        .unwrap()
+        .set_formula(at("A50").address, "IF(NOW()>0,100,50)", CellValue::Blank)
+        .unwrap();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let context = EvaluationContext::default();
+    value(&mut overlay, "E1", &context);
+    overlay.set_value(at("D1"), 100.).unwrap();
+    let mut next = overlay.evaluation(&context).unwrap();
+    assert_eq!(next.cell(at("E1")).unwrap(), CellValue::Number(500.));
+    assert_eq!(next.usage().lookup_prefix_scans, 50);
+    assert_eq!(next.usage().lookup_prefix_hits, 0);
+}
+
+#[test]
+fn horizontal_lookup_indices_preserve_untouched_suffixes_and_reset_on_snapshot() {
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("S").unwrap();
+    for col in 0..100 {
+        sheet
+            .set_value(CellAddress { row: 0, col }, f64::from(col + 1))
+            .unwrap();
+        sheet
+            .set_value(CellAddress { row: 1, col }, f64::from((col + 1) * 10))
+            .unwrap();
+    }
+    sheet.set_value(at("D4").address, 50.).unwrap();
+    sheet
+        .set_formula(
+            at("E4").address,
+            "HLOOKUP(D4,A1:CV2,2,FALSE)",
+            CellValue::Blank,
+        )
+        .unwrap();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let context = EvaluationContext::default();
+    assert_eq!(value(&mut overlay, "E4", &context), CellValue::Number(500.));
+    // An unconsumed suffix remains outside the retained prefix.
+    overlay.set_value(at("CV1"), 3.).unwrap();
+    overlay.set_value(at("D4"), 25.).unwrap();
+    let mut next = overlay.evaluation(&context).unwrap();
+    assert_eq!(next.cell(at("E4")).unwrap(), CellValue::Number(250.));
+    assert_eq!(next.usage().lookup_prefix_scans, 0);
+    assert_eq!(next.usage().lookup_prefix_hits, 1);
+    drop(next);
+    let snapshot = overlay.snapshot().into_owned().unwrap();
+    let (restored_workbook, restored_state) = Overlay::from_snapshot(snapshot).unwrap();
+    let mut restored = restored_state.attach(&restored_workbook).unwrap();
+    restored.set_value(at("D4"), 24.).unwrap();
+    let mut next = restored.evaluation(&context).unwrap();
+    assert_eq!(next.cell(at("E4")).unwrap(), CellValue::Number(240.));
+    assert_eq!(next.usage().lookup_prefix_scans, 24);
+    drop(next);
+    overlay.set_value(at("C1"), 25.).unwrap();
+    assert_eq!(value(&mut overlay, "E4", &context), CellValue::Number(30.));
+}
+
+#[test]
+fn lookup_index_invalidation_does_not_require_retained_formula_results() {
+    let book = indexed_lookup_book();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let context = EvaluationContext::default();
+    value(&mut overlay, "E1", &context);
+    overlay.cache.get_mut().remove((0, at("E1").address));
+    assert!(overlay.cache.get_mut().sheets.is_empty());
+    overlay.set_value(at("A50"), 150.).unwrap();
+    assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(500.));
+    overlay.reset();
+    let mut next = overlay.evaluation(&context).unwrap();
+    assert_eq!(next.cell(at("E1")).unwrap(), CellValue::Number(1500.));
+    assert_eq!(next.usage().lookup_prefix_scans, 150);
+}

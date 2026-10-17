@@ -61,10 +61,10 @@ impl Workbook for Guard {
             .cloned()
             .ok_or(Failure::Unsupported(Unsupported::DeferredArguments))
     }
-    fn numeric_text(&mut self, value: &str) -> Result<f64, Failure> {
+    fn coerce_numeric_text(&mut self, value: &str) -> Result<f64, Failure> {
         value.parse().map_err(|_| Error::Value.into())
     }
-    fn number_text(&mut self, value: f64) -> Result<String, Failure> {
+    fn coerce_number_to_text(&mut self, value: f64) -> Result<String, Failure> {
         Ok(value.to_string())
     }
     fn cell(&mut self, _: &Reference, _: u32, _: u32, _: u32) -> Result<Scalar, Failure> {

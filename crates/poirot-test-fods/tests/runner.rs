@@ -119,6 +119,42 @@ fn cli(arguments: &[&str]) -> Output {
 }
 
 #[test]
+fn countif_precision_gap_retains_libreoffice_oracle_and_is_still_executed() {
+    use poirot_test_fods::{
+        corpus::{Corpus, default_corpus, load_fixture},
+        fods::model::InputValue,
+        gaps::GapKind,
+    };
+    let root = default_corpus();
+    let corpus = Corpus::open(&root).unwrap();
+    let id = "statistical__fods__countif2__00008";
+    let baseline = corpus.baseline.get(id).unwrap();
+    assert_eq!(baseline.classification, BaselineStatus::Gap);
+    assert_eq!(baseline.gap_type, Some(GapKind::NumericMismatch));
+    assert!(baseline.reason.as_deref().unwrap().contains("POI 5.4.1"));
+    let fixture = corpus
+        .manifest
+        .fixtures
+        .iter()
+        .find(|entry| entry.fixture == baseline.fixture)
+        .unwrap();
+    // Loading also verifies the native fixture against its retained SHA-256.
+    let source = load_fixture(&root, fixture).unwrap();
+    let case = source.cases.iter().find(|case| case.id == id).unwrap();
+    assert_eq!(case.formula, "COUNTIF(J10:J10,\"=\"&J10)");
+    assert_eq!(case.expected.value, InputValue::number(1.0));
+    let report =
+        execute::execute(&plan::build(&options(&root, 1, Some("countif2"))).unwrap()).unwrap();
+    let result = report.cases.iter().find(|case| case.id == id).unwrap();
+    assert_eq!(result.status, CaseStatus::KnownGap);
+    assert_eq!(
+        result.failure.as_ref().unwrap().gap_type,
+        GapKind::NumericMismatch
+    );
+    assert!(!report.successful(true));
+}
+
+#[test]
 fn serial_and_rayon_results_match_and_distinguish_all_outcomes() {
     let scratch = Scratch::new();
     corpus(&scratch.0);

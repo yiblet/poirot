@@ -46,7 +46,7 @@ impl Session<'_> {
             Value::Array(rows) => Ok(Ok(rows.values)),
             Value::Missing => {
                 self.budget.allocation(1)?;
-                Ok(Ok(vec![vec![Blank]]))
+                Ok(Ok(vec![vec![coerce_legacy_missing_blank()]]))
             }
             Value::Scalar(Error(error)) => Ok(Err(error)),
             Value::Scalar(value) => {

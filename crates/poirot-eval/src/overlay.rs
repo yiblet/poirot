@@ -270,7 +270,8 @@ fn result_change(
     value: &CellValue,
     materialization: crate::FormulaCacheMaterializationPolicy,
 ) -> Option<WorkbookChange> {
-    let stored = materialization.store(value.clone());
+    // TODO(coercion-non-argument): [MEDIUM] Cache publication can replace a computed number with an error; storing the converted value as a live result would change subsequent evaluation.
+    let stored = materialization.coerce_stored_value(value.clone());
     if source.is_some_and(|c| same_stored_value(&c.value, &stored)) {
         return None;
     }

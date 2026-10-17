@@ -134,7 +134,7 @@ impl Session<'_> {
                     if matches!(v, Number(_))
                         || (!indirect
                             && !matches!(v, Blank | Error(_))
-                            && semantic(number(&v, &mut self.budget))?.is_ok())
+                            && semantic(coerce_arithmetic_number(&v, &mut self.budget))?.is_ok())
                     {
                         count += 1
                     }
@@ -144,7 +144,7 @@ impl Session<'_> {
                     if indirect && matches!(v, Text(_) | CellValue::TextUtf16(_) | Blank) {
                         continue;
                     }
-                    match core_projection::operand_boolean(&v, self.numeric_policy) {
+                    match core_projection::coerce_operand_boolean(&v, self.numeric_policy) {
                         Ok(b) => {
                             self.budget.check_allocation(truth.len() + 1)?;
                             self.budget.charge(WorkKind::Materialization, 1)?;
@@ -172,12 +172,12 @@ impl Session<'_> {
                         detail: "pinned special-number aggregate algorithm is not implemented for this handler".into(),
                     });
                 }
-                let extract = if raw_sum {
-                    core_projection::operand_number
+                let coerce_number = if raw_sum {
+                    core_projection::coerce_arithmetic_operand_number
                 } else {
-                    number
+                    coerce_arithmetic_number
                 };
-                match semantic(extract(&v, &mut self.budget))? {
+                match semantic(coerce_number(&v, &mut self.budget))? {
                     Ok(n) => {
                         self.budget.check_allocation(nums.len() + 1)?;
                         self.budget.charge(WorkKind::Materialization, 1)?;
@@ -349,6 +349,10 @@ impl Session<'_> {
                 // SAFETY: The median branch rejects len == 0 before selecting middle elements; the count/logical branches return before the final numeric match.
             ) => unreachable!("handled before numeric aggregation"),
         };
-        Ok(self.numeric_policy.checked_result(result).into())
+        // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+        Ok(self
+            .numeric_policy
+            .coerce_checked_numeric_result(result)
+            .into())
     }
 }

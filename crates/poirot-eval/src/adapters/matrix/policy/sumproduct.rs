@@ -1,7 +1,7 @@
 //! SUMPRODUCT selection, failure traversal, and arithmetic schedule.
 use super::*;
 
-fn term<O>(c: Cell, scalar: bool) -> Result<f64, Failure<O>> {
+fn coerce_sumproduct_term<O>(c: Cell, scalar: bool) -> Result<f64, Failure<O>> {
     match c {
         Cell::Number(n) => Ok(n),
         Cell::Bool(b) => Ok(if b { 1.0 } else { 0.0 }),
@@ -30,7 +30,7 @@ pub(super) fn evaluate<P: EvaluationPort>(
             {
                 return value();
             }
-            result *= term(c, true)?;
+            result *= coerce_sumproduct_term(c, true)?;
         }
         return if result.is_finite() {
             Ok(result)
@@ -75,7 +75,7 @@ pub(super) fn evaluate<P: EvaluationPort>(
         for c in 0..first.cols {
             let mut product = 1.0;
             for a in args {
-                product *= term(read(p, a, r, c)?, false)?;
+                product *= coerce_sumproduct_term(read(p, a, r, c)?, false)?;
             }
             result += product;
         }

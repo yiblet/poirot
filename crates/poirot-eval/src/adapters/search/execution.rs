@@ -13,7 +13,7 @@ mod selection;
 mod sparse;
 use comparison::lookup_compare;
 use plan::{LookupTable, LookupVector};
-/// Run-local cache of validated approximate-lookup prefixes.
+/// Bounded exact-lookup prefixes, retained across successful overlay evaluations.
 pub(crate) use prefix::Prefixes as LookupPrefixes;
 #[cfg(test)]
 use selection::select_index;
@@ -89,7 +89,7 @@ impl Session<'_> {
             if value == Blank {
                 SearchMode::Ascending
             } else {
-                match semantic(number(&value, &mut self.budget))? {
+                match semantic(coerce_arithmetic_number(&value, &mut self.budget))? {
                     Ok(n) => SearchMode::from_number(n),
                     Err(_) => return Ok(err(Ref)),
                 }
@@ -106,7 +106,7 @@ impl Session<'_> {
             && let Value::Scalar(value) = &table_value
             && value.text_ref().is_some()
         {
-            let parsed = semantic(number(value, &mut self.budget))?;
+            let parsed = semantic(coerce_arithmetic_number(value, &mut self.budget))?;
             return Ok(err(if parsed.is_ok() { NA } else { VALUE_ERROR }));
         }
         let table = match LookupTable::admit(table_value, is_match) {
@@ -134,7 +134,7 @@ impl Session<'_> {
         let mode = if is_match {
             match_mode
         } else if args.len() == 4 {
-            match logical(&self.argument(s, at, args, 3)?) {
+            match coerce_logical_boolean(&self.argument(s, at, args, 3)?) {
                 Ok(true) => SearchMode::Ascending,
                 Ok(false) => SearchMode::Exact,
                 Err(e) => return Ok(err(e)),
@@ -189,7 +189,7 @@ impl Session<'_> {
         }
         // Vlookup.java/Hlookup.java defer the result index until selection succeeds.
         let value = self.argument(s, at, args, 2)?;
-        let result_index = match semantic(number(&value, &mut self.budget))? {
+        let result_index = match semantic(coerce_arithmetic_number(&value, &mut self.budget))? {
             Ok(n) if n.floor() >= 1. => n.floor() as usize - 1,
             Ok(_) => return Ok(err(VALUE_ERROR)),
             Err(_) => return Ok(err(Ref)),
@@ -198,7 +198,9 @@ impl Session<'_> {
             Ok(v) => v,
             Err(e) => return Ok(err(e)),
         };
-        Ok(formula_result(self.lookup_read(&table, result, index)?).into())
+        // Preserve the selected type for the enclosing consumer. Only the final
+        // formula-cell boundary normalizes a standalone blank result to zero.
+        Ok(self.lookup_read(&table, result, index)?.into())
     }
 }
 /// Exact matching or approximate matching against an ordered vector.

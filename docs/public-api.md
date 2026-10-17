@@ -27,7 +27,7 @@ budgets and retention bounds. It owns no edits or cache. Create a fresh instance
 with `overlay.evaluation(&context)`, returning `OverlayEvaluation`:
 
 - `cell(target)` returns a single `CellValue`.
-- `outputs(&targets)` returns `CellEvaluation` records in caller order, including duplicates.
+- `outputs(&targets)` returns `CellEvaluation` records in caller order, including duplicates. Each record carries its raw typed `value` and optional `formatting` (`CellStyle`) from the effective source cell, including overlay style edits. Formatting is independent of arithmetic and preserves full numeric precision; render it separately with `poirot::format` and the workbook date system. Missing formatting selects the consumer's default display. `TEXT()` results remain text.
 - `all()` returns effective stored values and materialized spill children, in coordinate order.
 
 `all()` does not expand the worksheet's implicit blank coordinates.

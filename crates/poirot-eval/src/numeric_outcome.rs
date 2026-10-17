@@ -118,11 +118,18 @@ impl NumericOutcomePolicy {
         }
     }
     /// Construct a number at an identified source stage under this policy.
-    pub(crate) fn at(self, _stage: NumericConstruction, number: f64) -> CellValue {
-        self.construct(number)
+    // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+    pub(crate) fn coerce_numeric_stage(
+        self,
+        _stage: NumericConstruction,
+        number: f64,
+    ) -> CellValue {
+        // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+        self.coerce_numeric_outcome(number)
     }
     /// Apply selected non-finite and subnormal number construction behavior.
-    pub(crate) fn construct(self, number: f64) -> CellValue {
+    // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+    pub(crate) fn coerce_numeric_outcome(self, number: f64) -> CellValue {
         match self {
             Self::LegacyFinite => crate::finite(number),
             Self::PinnedPoi7321209 => {
@@ -135,16 +142,20 @@ impl NumericOutcomePolicy {
         }
     }
     /// Construct a parsed numeric token, rejecting non-finite pinned literals.
-    pub(crate) fn number_ptg(self, number: f64) -> crate::EvalResult<CellValue> {
+    // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+    pub(crate) fn coerce_numeric_literal(self, number: f64) -> crate::EvalResult<CellValue> {
         if self == Self::PinnedPoi7321209 && !number.is_finite() {
             return Ok(CellValue::Error(CellError::Num));
         }
-        Ok(self.construct(number))
+        // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+        Ok(self.coerce_numeric_outcome(number))
     }
     /// Require a finite result before applying policy-specific construction.
-    pub(crate) fn checked_result(self, number: f64) -> CellValue {
+    // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+    pub(crate) fn coerce_checked_numeric_result(self, number: f64) -> CellValue {
         if number.is_finite() {
-            self.construct(number)
+            // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+            self.coerce_numeric_outcome(number)
         } else {
             CellValue::Error(CellError::Num)
         }

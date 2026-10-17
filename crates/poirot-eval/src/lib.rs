@@ -175,8 +175,22 @@ impl From<CellValue> for Value {
 fn err(e: CellError) -> Value {
     Error(e).into()
 }
-fn formula_result(v: CellValue) -> CellValue {
+/// Normalize a completed worksheet/public formula result for publication.
+///
+/// Nested expressions, selection functions, operand reads and memoization must
+/// preserve `Blank`: only their consumer decides whether it means zero, empty
+/// text, false, or an ignored aggregate member. A separately evaluated formula
+/// cell publishes zero for a final blank, so later cell references see zero.
+/// Apply this only after final scalar selection or when publishing spill cells.
+// TODO(coercion-non-argument): [MEDIUM] Blank-to-zero publication can erase type information if reused before a true result boundary.
+fn coerce_cell_publication(v: CellValue) -> CellValue {
     if v == Blank { Number(0.) } else { v }
+}
+/// Explicit legacy projection for consumers that intentionally collapse omission.
+/// Host operand APIs must retain the separate missing flag alongside this value.
+// TODO(coercion-non-argument): [MEDIUM] Collapsing omission to blank can change predicates and defaults unless the missing flag is retained.
+fn coerce_legacy_missing_blank() -> CellValue {
+    Blank
 }
 fn finite(n: f64) -> CellValue {
     if n.is_finite() { Number(n) } else { Error(Num) }
@@ -185,7 +199,8 @@ const VALUE_ERROR: CellError = CellError::Value;
 mod core_projection;
 mod source_arithmetic;
 use core_projection::{
-    checked_text_view, compare, logical, number, remap_semantic, semantic, text,
+    checked_text_view, coerce_arithmetic_number, coerce_formula_text, coerce_logical_boolean,
+    compare, remap_semantic, semantic,
 };
 /// Numeric slash-date parsing policy. Formula grammar remains canonical OOXML syntax.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
@@ -364,6 +379,23 @@ pub struct CellEvaluation {
     pub target: EvaluationTarget,
     /// Computed value, including semantic spreadsheet errors.
     pub value: CellValue,
+    /// Optional source-cell presentation, independent of the computed value.
+    /// Explicit TEXT() results remain text; this metadata never coerces values.
+    pub formatting: Option<poirot_model::CellStyle>,
+}
+impl Session<'_> {
+    fn output(&self, target: EvaluationTarget, value: CellValue) -> CellEvaluation {
+        let formatting = run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs)
+            .cell(target.sheet, target.address)
+            .map(|cell| &cell.style)
+            .filter(|style| style.number_format.is_some())
+            .cloned();
+        CellEvaluation {
+            target,
+            value,
+            formatting,
+        }
+    }
 }
 /// Evaluate stored workbook formulas without applying their results to the model.
 pub fn run_workbook(
@@ -437,7 +469,10 @@ pub fn run_recalculation_with_configuration(
                         usage,
                     };
                 };
-                cell.value = configuration.materialization_policy().store(update.value);
+                // TODO(coercion-non-argument): [MEDIUM] Cache publication can replace a computed number with an error; storing the converted value as a live result would change subsequent evaluation.
+                cell.value = configuration
+                    .materialization_policy()
+                    .coerce_stored_value(update.value);
             }
             EvaluationOutcome::Complete {
                 value: count,

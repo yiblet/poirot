@@ -136,7 +136,10 @@ pub trait EvaluationPort {
 fn work<P: EvaluationPort>(p: &mut P, n: u64) -> Result<(), Failure<P::Operational>> {
     p.charge_work(n).map_err(Failure::Operational)
 }
-fn number<P: EvaluationPort>(p: &mut P, arg: &P::Argument) -> Result<f64, Failure<P::Operational>> {
+fn coerce_math_number<P: EvaluationPort>(
+    p: &mut P,
+    arg: &P::Argument,
+) -> Result<f64, Failure<P::Operational>> {
     work(p, 1)?;
     let scalar = p.resolve_scalar(arg)?;
     let n = match scalar.value {
@@ -223,7 +226,7 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
     }
     let collapse = matches!(function, Gcd | Lcm | Quotient | Randbetween);
     let read = |p: &mut P, index: usize| {
-        let r = number(p, args.get(index).ok_or(CellError::Value)?);
+        let r = coerce_math_number(p, args.get(index).ok_or(CellError::Value)?);
         if collapse {
             r.map_err(collapse_operand_error)
         } else {

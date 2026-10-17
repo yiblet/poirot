@@ -164,18 +164,18 @@ fn decimal(bits: u64, exponent: i32) -> Result<(i32, u64), CellError> {
 
 /// POI NumberToTextConverter representation, including the 20-character
 /// scientific-notation boundary and Excel's zero display for subnormals.
-pub fn to_text(value: f64) -> String {
+pub fn coerce_number_to_text(value: f64) -> String {
     // POI toText uses Double.doubleToLongBits, which canonicalizes every NaN.
     let raw = if value.is_nan() {
         0x7ff8_0000_0000_0000
     } else {
         value.to_bits()
     };
-    raw_bits_to_text(raw)
+    coerce_number_bits_to_text(raw)
 }
 
 /// POI's package-private rawDoubleBitsToText, distinct from its public toText.
-pub fn raw_bits_to_text(raw: u64) -> String {
+pub fn coerce_number_bits_to_text(raw: u64) -> String {
     let negative = raw >> 63 != 0;
     let exponent = ((raw >> 52) & 2047) as i32;
     let sign = if negative && exponent != 2047 {
@@ -568,7 +568,11 @@ mod tests {
             (0xBC32725DD1D243ABu64, "-0.000000000000000001"),
             (0xBBFD83C94FB6D2ABu64, "-1E-19"),
         ] {
-            assert_eq!(to_text(f64::from_bits(bits)), expected, "bits={bits:016x}");
+            assert_eq!(
+                coerce_number_to_text(f64::from_bits(bits)),
+                expected,
+                "bits={bits:016x}"
+            );
         }
     }
     #[test]

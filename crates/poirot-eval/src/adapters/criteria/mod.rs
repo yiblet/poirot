@@ -253,7 +253,7 @@ fn subtotal(host: &mut CallHost<'_, '_>) -> FunctionResult<Value> {
     }
     let code = match scalar.value {
         Text(text) => host.coerce_number_text(&text, NumericPolicy::PinnedPoi)?,
-        value => host.scalar_number(&value, NumericPolicy::PinnedPoi)?,
+        value => host.coerce_scalar_number(&value, NumericPolicy::PinnedPoi)?,
     }
     .floor();
     if code.is_nan() || code > i32::MAX as f64 || code < i32::MIN as f64 {

@@ -1,5 +1,8 @@
 //! Lazy OR-row/AND-column criteria traversal and database condition matching.
-use super::selection::{criteria_header_index, equal_ignore_case, header_column, numeric, text};
+use super::selection::{
+    coerce_database_number, coerce_database_text, criteria_header_index, equal_ignore_case,
+    header_column,
+};
 use super::{CellError, CellValue, DatabaseError, Grid, number};
 use poirot_numeric::parse_java_number;
 
@@ -26,16 +29,17 @@ impl<'a> CriteriaPlan<'a> {
                 }
                 let selected = match self.criteria.get(0, cc) {
                     CellValue::Text(header) => header_column(self.database, header)?,
-                    CellValue::TextUtf16(_) => {
-                        header_column(self.database, &text(self.criteria.get(0, cc))?)?
-                    }
-                    header if numeric(header).is_some() => {
+                    CellValue::TextUtf16(_) => header_column(
+                        self.database,
+                        &coerce_database_text(self.criteria.get(0, cc))?,
+                    )?,
+                    header if coerce_database_number(header).is_some() => {
                         criteria_header_index(header, self.database.columns)?
                     }
                     _ => return Err(CellError::Value.into()),
                 };
                 let Some(column) = selected else {
-                    if text(condition)?.is_empty() {
+                    if coerce_database_text(condition)?.is_empty() {
                         return Err(CellError::Value.into());
                     }
                     return Err(DatabaseError::FormulaCriteria);
@@ -57,19 +61,19 @@ impl<'a> CriteriaPlan<'a> {
 pub fn condition_matches(value: &CellValue, condition: &CellValue) -> Result<bool, DatabaseError> {
     match condition {
         CellValue::Number(_) | CellValue::Boolean(_) => {
-            let number = if let Some(number) = numeric(value) {
+            let number = if let Some(number) = coerce_database_number(value) {
                 Some(number)
             } else if value.text_ref().is_some() {
-                parse_java_number(&text(value)?)
+                parse_java_number(&coerce_database_text(value)?)
             } else {
                 None
             };
-            Ok(number == numeric(condition))
+            Ok(number == coerce_database_number(condition))
         }
         CellValue::Error(e) => Ok(matches!(value,CellValue::Error(v) if v == e)),
         CellValue::Blank => Ok(true),
         CellValue::Text(condition) => string_condition(value, condition),
-        CellValue::TextUtf16(_) => string_condition(value, &text(condition)?),
+        CellValue::TextUtf16(_) => string_condition(value, &coerce_database_text(condition)?),
     }
 }
 fn string_condition(value: &CellValue, condition: &str) -> Result<bool, DatabaseError> {
@@ -79,7 +83,7 @@ fn string_condition(value: &CellValue, condition: &str) -> Result<bool, Database
         if operand.is_empty() {
             return Ok(value.text_ref().is_some());
         }
-        let actual = text(value)?.to_lowercase();
+        let actual = coerce_database_text(value)?.to_lowercase();
         let expected = operand.to_lowercase();
         // Shared wildcard implementation is installed by the criteria family.
         return Ok(wildcard_or_prefix(&expected, &actual));
@@ -89,7 +93,7 @@ fn string_condition(value: &CellValue, condition: &str) -> Result<bool, Database
     }
     let parsed = parse_java_number(operand);
     if matches!(operator, Lt | Le | Gt | Ge) || parsed.is_some() {
-        let Some(actual) = numeric(value) else {
+        let Some(actual) = coerce_database_number(value) else {
             return Ok(false);
         };
         let expected = parsed.ok_or(CellError::Value)?;
@@ -104,7 +108,7 @@ fn string_condition(value: &CellValue, condition: &str) -> Result<bool, Database
             None => false,
         });
     }
-    let equal = equal_ignore_case(&text(value)?, operand);
+    let equal = equal_ignore_case(&coerce_database_text(value)?, operand);
     Ok(if operator == Ne { !equal } else { equal })
 }
 fn wildcard_or_prefix(pattern: &str, value: &str) -> bool {

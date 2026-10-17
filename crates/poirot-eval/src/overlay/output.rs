@@ -12,10 +12,7 @@ pub(super) fn outputs(
         .map(|target| {
             session
                 .cell(target.sheet, target.address)
-                .map(|value| crate::CellEvaluation {
-                    target: *target,
-                    value,
-                })
+                .map(|value| session.output(*target, value))
         })
         .collect()
 }
@@ -39,9 +36,6 @@ pub(super) fn all(
     session.budget.allocation(values.len())?;
     Ok(values
         .into_iter()
-        .map(|((sheet, address), value)| crate::CellEvaluation {
-            target: EvaluationTarget { sheet, address },
-            value,
-        })
+        .map(|((sheet, address), value)| session.output(EvaluationTarget { sheet, address }, value))
         .collect())
 }

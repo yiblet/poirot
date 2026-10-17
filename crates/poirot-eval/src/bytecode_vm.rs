@@ -93,7 +93,8 @@ impl Session<'_> {
                     }
                     Opcode::Number => values.push(
                         self.numeric_policy
-                            .number_ptg(f64::from_bits(
+                            // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+                            .coerce_numeric_literal(f64::from_bits(
                                 u64::from(instruction.a) | u64::from(instruction.b) << 32,
                             ))?
                             .into(),
@@ -113,7 +114,8 @@ impl Session<'_> {
                         )
                         .into(),
                     ),
-                    Opcode::Missing => values.push(Blank.into()),
+                    // TODO(coercion-non-argument): [MEDIUM] VM omission-to-blank projection can diverge from deferred calls that preserve missing syntax.
+                    Opcode::Missing => values.push(coerce_legacy_missing_blank().into()),
                     Opcode::Reference => values.push(self.bytecode_reference(
                         sheet,
                         at,

@@ -21,7 +21,7 @@ pub(super) fn text_check<P: EvaluationPort>(
     work(p, t.len() as u64)
 }
 /// Coerce a resolved scalar to a finite number under financial argument rules.
-pub(super) fn numeric<P: EvaluationPort>(
+pub(super) fn coerce_financial_scalar_number<P: EvaluationPort>(
     p: &mut P,
     s: Scalar,
 ) -> Result<f64, Failure<P::Operational>> {
@@ -43,15 +43,15 @@ pub(super) fn numeric<P: EvaluationPort>(
     }
 }
 /// Resolve one scalar and apply financial numeric coercion.
-pub(super) fn number<P: EvaluationPort>(
+pub(super) fn coerce_financial_argument_number<P: EvaluationPort>(
     p: &mut P,
     a: &P::Argument,
 ) -> Result<f64, Failure<P::Operational>> {
     let s = scalar(p, a)?;
-    numeric(p, s)
+    coerce_financial_scalar_number(p, s)
 }
 /// Use a default for absent or omitted syntax, otherwise coerce the selected operand.
-pub(super) fn optional<P: EvaluationPort>(
+pub(super) fn coerce_financial_optional_number<P: EvaluationPort>(
     p: &mut P,
     args: &[P::Argument],
     i: usize,
@@ -64,11 +64,11 @@ pub(super) fn optional<P: EvaluationPort>(
     if s == Scalar::Missing {
         Ok(default)
     } else {
-        numeric(p, s)
+        coerce_financial_scalar_number(p, s)
     }
 }
 /// Resolve and coerce a financial boolean option without masking operational failures.
-pub(super) fn boolean<P: EvaluationPort>(
+pub(super) fn coerce_financial_boolean<P: EvaluationPort>(
     p: &mut P,
     a: &P::Argument,
 ) -> Result<bool, Failure<P::Operational>> {
@@ -93,7 +93,7 @@ pub(super) fn boolean<P: EvaluationPort>(
     }
 }
 /// Floor a numeric argument and reject values outside signed 32-bit bounds.
-pub(super) fn int<O>(n: f64) -> Result<i32, Failure<O>> {
+pub(super) fn coerce_financial_floor_i32<O>(n: f64) -> Result<i32, Failure<O>> {
     let n = n.floor();
     if n < i32::MIN as f64 || n > i32::MAX as f64 {
         Err(CellError::Num.into())
@@ -102,14 +102,14 @@ pub(super) fn int<O>(n: f64) -> Result<i32, Failure<O>> {
     }
 }
 /// Render a scalar as text before applying the financial numeric parser.
-pub(super) fn string_number<P: EvaluationPort>(
+pub(super) fn coerce_financial_text_number<P: EvaluationPort>(
     p: &mut P,
     a: &P::Argument,
 ) -> Result<f64, Failure<P::Operational>> {
     let t = match scalar(p, a)? {
         Scalar::Number(n) => {
             p.check_text(32).map_err(Failure::Operational)?;
-            poirot_numeric::to_text(n)
+            poirot_numeric::coerce_number_to_text(n)
         }
         Scalar::Text(t) => t,
         Scalar::Blank => String::new(),
@@ -128,11 +128,11 @@ pub(super) fn string_number<P: EvaluationPort>(
         }
     };
     text_check(p, &t)?;
-    parse_operand_number(&t).ok_or(CellError::Value.into())
+    coerce_financial_decimal_text(&t).ok_or(CellError::Value.into())
 }
 /// OperandResolver.parseDouble deliberately excludes Java hex numbers, type
 /// suffixes and nonfinite values, and does not attempt date/time parsing.
-pub(super) fn parse_operand_number(text: &str) -> Option<f64> {
+pub(super) fn coerce_financial_decimal_text(text: &str) -> Option<f64> {
     let text = text.trim_matches(|c: char| c <= '\u{20}');
     let bytes = text.as_bytes();
     let mut at = usize::from(matches!(bytes.first(), Some(b'+' | b'-')));

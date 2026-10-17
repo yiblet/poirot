@@ -175,7 +175,9 @@ impl Port<'_, '_> {
                 helper::Scalar::Number(n) => Number(n),
                 helper::Scalar::Text(s) => Text(s),
                 helper::Scalar::Bool(b) => Boolean(b),
-                helper::Scalar::Blank | helper::Scalar::Missing => Blank,
+                helper::Scalar::Blank => Blank,
+                // TODO(coercion-non-argument): [MEDIUM] Missing members in lookup result arrays become blank and can lose omission-sensitive behavior.
+                helper::Scalar::Missing => coerce_legacy_missing_blank(),
                 helper::Scalar::Error(e) => Error(cell_error(e)),
             }
         }
@@ -298,14 +300,14 @@ impl helper::Workbook for Port<'_, '_> {
         }
         Ok(value)
     }
-    fn numeric_text(&mut self, text: &str) -> Result<f64, helper::Failure> {
+    fn coerce_numeric_text(&mut self, text: &str) -> Result<f64, helper::Failure> {
         let result = CallHost::new(self.session, self.sheet, self.address, ArgumentsRef::Empty)
             .coerce_number_text(text, NumericPolicy::PinnedPoi);
         self.function(result)
     }
-    fn number_text(&mut self, number: f64) -> Result<String, helper::Failure> {
+    fn coerce_number_to_text(&mut self, number: f64) -> Result<String, helper::Failure> {
         let result = CallHost::new(self.session, self.sheet, self.address, ArgumentsRef::Empty)
-            .number_text(number, NumericPolicy::PinnedPoi);
+            .coerce_number_to_text(number, NumericPolicy::PinnedPoi);
         self.function(result)
     }
     fn cell(

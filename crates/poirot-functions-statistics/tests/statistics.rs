@@ -56,11 +56,11 @@ fn reference_direct_and_array_collection_are_distinct() {
         ..reference_text
     };
     assert_eq!(
-        collect(Collection::NumericAggregate, &[reference_text, direct_text]),
+        coerce_statistics_collection(Collection::NumericAggregate, &[reference_text, direct_text]),
         Ok(vec![8.])
     );
     assert_eq!(
-        collect(Collection::AggregateA, &[reference_text, direct_text]),
+        coerce_statistics_collection(Collection::AggregateA, &[reference_text, direct_text]),
         Ok(vec![0., 0.])
     );
     let reference_bool = Operand {
@@ -68,19 +68,19 @@ fn reference_direct_and_array_collection_are_distinct() {
         origin: Origin::Reference,
     };
     assert_eq!(
-        collect(Collection::NumericAggregate, &[reference_bool]),
+        coerce_statistics_collection(Collection::NumericAggregate, &[reference_bool]),
         Ok(vec![])
     );
     assert_eq!(
-        collect(Collection::AggregateA, &[reference_bool]),
+        coerce_statistics_collection(Collection::AggregateA, &[reference_bool]),
         Ok(vec![1.])
     );
     assert_eq!(
-        collect(Collection::Mode, &[reference_text]),
+        coerce_statistics_collection(Collection::Mode, &[reference_text]),
         Err(CellError::Value)
     );
     assert_eq!(
-        collect(
+        coerce_statistics_collection(
             Collection::Mode,
             &[Operand {
                 origin: Origin::Array,
@@ -90,7 +90,7 @@ fn reference_direct_and_array_collection_are_distinct() {
         Ok(vec![])
     );
     assert_eq!(
-        collect(
+        coerce_statistics_collection(
             Collection::PercentRank,
             &[Operand {
                 value: Value::Error(CellError::NA),
@@ -100,7 +100,7 @@ fn reference_direct_and_array_collection_are_distinct() {
         Err(CellError::Num)
     );
     assert_eq!(
-        collect(
+        coerce_statistics_collection(
             Collection::GeoMean,
             &[Operand {
                 value: Value::Missing,
@@ -148,12 +148,12 @@ fn pair_alignment_coercion_and_error_precedence() {
         Value::Number(3.),
     ];
     let y = [Value::Number(2.), Value::Number(4.), Value::Number(6.)];
-    let pairs = collect_pairs(PairCollection::NumericCoercion, &x, &y).unwrap();
+    let pairs = coerce_statistics_pairs(PairCollection::NumericCoercion, &x, &y).unwrap();
     assert_eq!(pairs.original_len, 3);
     assert_eq!(pairs.x, vec![1., 3.]);
     assert_eq!(pairs.y, vec![2., 6.]);
     assert_eq!(
-        collect_pairs(
+        coerce_statistics_pairs(
             PairCollection::NumericOnly,
             &[Value::Error(CellError::Ref)],
             &[Value::Error(CellError::Div0)]
@@ -161,10 +161,10 @@ fn pair_alignment_coercion_and_error_precedence() {
         Err(CellError::Ref)
     );
     assert_eq!(
-        collect_pairs(PairCollection::NumericOnly, &x, &y[..2]),
+        coerce_statistics_pairs(PairCollection::NumericOnly, &x, &y[..2]),
         Err(CellError::NA)
     );
-    let bools = collect_pairs(
+    let bools = coerce_statistics_pairs(
         PairCollection::NumericCoercion,
         &[Value::Boolean(true)],
         &[Value::Text { numeric: Some(2.) }],
@@ -268,13 +268,16 @@ fn extrema_a_counts_blank_but_ignores_reference_text() {
             origin: Origin::Array,
         },
     ];
-    assert_eq!(collect(Collection::ExtremaA, &input), Ok(vec![4., 0., 1.]));
     assert_eq!(
-        collect(Collection::AggregateA, &input),
+        coerce_statistics_collection(Collection::ExtremaA, &input),
         Ok(vec![4., 0., 1.])
     );
     assert_eq!(
-        collect(
+        coerce_statistics_collection(Collection::AggregateA, &input),
+        Ok(vec![4., 0., 1.])
+    );
+    assert_eq!(
+        coerce_statistics_collection(
             Collection::ExtremaA,
             &[Operand {
                 value: Value::Text { numeric: None },

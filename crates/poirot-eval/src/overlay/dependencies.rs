@@ -211,6 +211,8 @@ pub(crate) struct Cache {
     pub retained_bytes: usize,
     /// Spill anchors whose previously exported children must be cleared.
     pub spill_resets: BTreeSet<Key>,
+    /// Derived exact lookup prefixes; intentionally absent from snapshots.
+    pub lookup_prefixes: crate::adapters::search::execution::LookupPrefixes,
     reverse: CellMap<CellSet>,
     always_dirty: CellSet,
     ranges: RangeIndex,
@@ -308,9 +310,6 @@ impl Cache {
     }
     /// Iterative traversal handles arbitrary chain lengths and cycles without stack recursion.
     pub fn invalidate(&mut self, seeds: impl IntoIterator<Item = Key>) {
-        if self.sheets.is_empty() {
-            return;
-        }
         let mut pending: Vec<_> = seeds.into_iter().collect();
         let mut seen = CellSet::default();
         while let Some(key) = pending.pop() {
@@ -323,6 +322,7 @@ impl Cache {
             self.ranges.readers(key, &mut pending);
             self.remove(key);
         }
+        self.lookup_prefixes.invalidate(&seen);
     }
 
     /// Invalidate volatile, opaque, and context-sensitive results for a new evaluation.

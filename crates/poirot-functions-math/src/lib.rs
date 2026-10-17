@@ -26,13 +26,59 @@ pub fn approximate(n: f64) -> f64 {
     if !n.is_finite() || n == n.trunc() || n * 2048.0 == (n * 2048.0).trunc() {
         return n;
     }
-    poirot_numeric::to_text(n).parse().unwrap_or(f64::NAN)
+    // TODO(coercion-non-argument): [LOW] Decimal normalization round-trips a numeric intermediate through 15-digit text and can discard binary64 precision.
+    poirot_numeric::coerce_number_to_text(n)
+        .parse()
+        .unwrap_or(f64::NAN)
 }
 fn decimal(n: f64) -> Result<BigDecimal, CellError> {
-    BigDecimal::from_str(&poirot_numeric::to_text(n)).map_err(|_| CellError::Num)
+    // TODO(coercion-non-argument): [LOW] Decimal normalization round-trips a numeric intermediate through 15-digit text and can discard binary64 precision.
+    BigDecimal::from_str(&poirot_numeric::coerce_number_to_text(n)).map_err(|_| CellError::Num)
 }
 fn truncate(n: f64) -> f64 {
     approximate(n).trunc()
+}
+fn round_decimal(n: f64, digits: f64, mode: RoundingMode) -> MathResult {
+    inputs(&[n, digits])?;
+    let value = decimal(n)?;
+    // Finite binary64 numbers need fewer than 400 decimal places. Bound both
+    // scales locally before BigDecimal performs scale subtraction or allocates
+    // powers of ten; huge user-provided digit counts must not allocate huge ints.
+    if !(-400..=400).contains(&value.fractional_digit_count()) {
+        return Err(CellError::Num);
+    }
+    let digits = digits.trunc();
+    let rounded = if digits > 400.0 {
+        value
+    } else if digits < -400.0 {
+        return if mode == RoundingMode::Up && value != 0 {
+            Err(CellError::Num)
+        } else {
+            Ok(0.0)
+        };
+    } else {
+        // SAFETY: Both scales are locally bounded to -400..=400, so scale
+        // arithmetic cannot overflow and at most 800 powers of ten are needed.
+        value.with_scale_round(digits as i64, mode)
+    };
+    // Parse the final decimal once: BigDecimal's ToPrimitive conversion scales
+    // binary intermediates and introduces extra ULPs at extreme exponents.
+    let result = finite(rounded.to_string().parse().map_err(|_| CellError::Num)?)?;
+    // Spreadsheet decimal rounding has one zero, including negative inputs
+    // rounded to zero; do not leak a binary signed zero into later comparisons.
+    Ok(if result == 0.0 { 0.0 } else { result })
+}
+/// Round Excel's decimal view to the nearest place, with ties away from zero.
+pub fn round(n: f64, digits: f64) -> MathResult {
+    round_decimal(n, digits, RoundingMode::HalfUp)
+}
+/// Round Excel's decimal view away from zero at the requested decimal place.
+pub fn round_up(n: f64, digits: f64) -> MathResult {
+    round_decimal(n, digits, RoundingMode::Up)
+}
+/// Round Excel's decimal view toward zero; also implements TRUNC.
+pub fn round_down(n: f64, digits: f64) -> MathResult {
+    round_decimal(n, digits, RoundingMode::Down)
 }
 /// Compute inverse hyperbolic cosine with spreadsheet domain checks.
 pub fn acosh(n: f64) -> MathResult {
@@ -346,6 +392,58 @@ mod tests {
         assert_eq!(mround(0.7 + 0.1, 1.6), Ok(1.6));
         assert_eq!(mround(0.45, 0.1 * 3.0), Ok(0.6));
         assert_eq!(ceiling_precise(0.1 * 3.0, 0.1), Ok(0.3));
+    }
+    #[test]
+    fn round_uses_decimal_ties_and_truncates_digit_counts() {
+        // POI 5.4.1 MathX.round: NumberToTextConverter then BigDecimal HALF_UP.
+        // LibreOffice 26.2.6.3 independently agrees on the computed near-half.
+        for (n, digits, expected) in [
+            (0.7 * 3.5, 1.0, 2.5),
+            (-0.7 * 3.5, 1.0, -2.5),
+            (2.4999999999999996, 0.0, 3.0),
+            (-2.4999999999999996, 0.0, -3.0),
+            (2.4999999999999, 0.0, 2.0),
+            (-2.4999999999999, 0.0, -2.0),
+            (249.99999999999997, -2.0, 300.0),
+            (-249.99999999999997, -2.0, -300.0),
+            (1.25, 1.9, 1.3),
+            (125.0, -1.9, 130.0),
+        ] {
+            assert_eq!(round(n, digits), Ok(expected), "{n}, {digits}");
+        }
+    }
+    #[test]
+    fn directed_rounding_uses_decimal_values_and_distinct_modes() {
+        // POI MathX UP/DOWN and NumericFunction.TRUNC share this decimal view.
+        for sign in [-1.0, 1.0] {
+            assert_eq!(round_up(sign * (0.1 * 3.0), 1.0), Ok(sign * 0.3));
+            assert_eq!(round_down(sign * (0.3 * 3.0), 1.0), Ok(sign * 0.9));
+            assert_eq!(round_up(sign * 1.21, 1.0), Ok(sign * 1.3));
+            assert_eq!(round_down(sign * 1.29, 1.0), Ok(sign * 1.2));
+            assert_eq!(round_up(sign * 121.0, -1.0), Ok(sign * 130.0));
+            assert_eq!(round_down(sign * 129.0, -1.0), Ok(sign * 120.0));
+        }
+    }
+    #[test]
+    fn decimal_rounding_bounds_extreme_scales_without_float_scaling() {
+        assert_eq!(round(1e300, 300.0), Ok(1e300));
+        assert_eq!(round(1e-300, 300.0), Ok(1e-300));
+        assert_eq!(round(1e308, -308.0), Ok(1e308));
+        assert_eq!(round(f64::MAX, -308.0), Err(CellError::Num));
+        assert_eq!(round(1e308, -309.0), Ok(0.0));
+        assert_eq!(round_up(1.0, -309.0), Err(CellError::Num));
+        assert_eq!(round(1.25, f64::MAX), Ok(1.25));
+        assert_eq!(round(1.25, -f64::MAX), Ok(0.0));
+        assert_eq!(round_up(-1.25, -f64::MAX), Err(CellError::Num));
+        assert_eq!(round_down(-1.25, -f64::MAX), Ok(0.0));
+        for f in [round, round_up, round_down] {
+            assert_eq!(f(f64::INFINITY, 0.0), Err(CellError::Num));
+            assert_eq!(f(1.0, f64::NAN), Err(CellError::Num));
+            assert_eq!(f(-0.0, 0.0).unwrap().to_bits(), 0.0f64.to_bits());
+            assert_eq!(f(0.0, -f64::MAX).unwrap().to_bits(), 0.0f64.to_bits());
+        }
+        assert_eq!(round(-0.01, 0.0).unwrap().to_bits(), 0.0f64.to_bits());
+        assert_eq!(round_down(-0.01, 0.0).unwrap().to_bits(), 0.0f64.to_bits());
     }
     #[test]
     fn integral_arithmetic_and_errors() {

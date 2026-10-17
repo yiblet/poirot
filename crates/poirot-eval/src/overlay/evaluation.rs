@@ -117,8 +117,25 @@ impl<'a> OverlayEvaluation<'a> {
         if let Some(failure) = &self.failure {
             return Err(failure.clone());
         }
+        // Move rather than clone the retained index. Only a successfully published
+        // dependency batch may return it to the overlay; aborted work is discarded.
+        self.session.lookup_prefixes = std::mem::take(
+            &mut self
+                .cache
+                .try_borrow_mut()
+                .map_err(|_| EvaluationFailure::StalePlan)?
+                .lookup_prefixes,
+        );
+        self.session
+            .lookup_prefixes
+            .admit(self.session.budget.limits.materialized_values);
         let result = evaluate(&mut self.session).and_then(|value| {
             self.publish()?;
+            self.session.lookup_prefixes.publish();
+            self.cache
+                .try_borrow_mut()
+                .map_err(|_| EvaluationFailure::StalePlan)?
+                .lookup_prefixes = std::mem::take(&mut self.session.lookup_prefixes);
             Ok(value)
         });
         if let Err(failure) = &result {
@@ -235,7 +252,8 @@ pub(super) fn evaluated_change(
             address: key.1,
             anchor,
             expected_formula: formula,
-            value: policy.store(value.clone()),
+            // TODO(coercion-non-argument): [MEDIUM] Cache publication can replace a computed number with an error; storing the converted value as a live result would change subsequent evaluation.
+            value: policy.coerce_stored_value(value.clone()),
         });
     }
     result_change(effective.cell(key.0, key.1), key, value, policy)

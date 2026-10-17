@@ -166,17 +166,17 @@ pub enum MatrixCollection {
 /// Source-specific AreaEval collection: skipped cells compact the numeric
 /// sequence, which is then zero-padded into the original rectangle. This is a
 /// pinned POI behavior, not ordinary element-wise spreadsheet coercion.
-pub fn collect_matrix(
+pub fn coerce_matrix_collection(
     area: &Matrix<Cell>,
     policy: MatrixCollection,
     budget: Budget,
 ) -> Result<Matrix<f64>> {
-    collection::collect_matrix(area, policy, budget)
+    collection::coerce_matrix_collection(area, policy, budget)
 }
 
 /// TREND rejects any non NumericValueEval (including source error values).
-pub fn collect_trend(area: &Matrix<Cell>, budget: Budget) -> Result<Matrix<f64>> {
-    collection::collect_trend(area, budget)
+pub fn coerce_trend_collection(area: &Matrix<Cell>, budget: Budget) -> Result<Matrix<f64>> {
+    collection::coerce_trend_collection(area, budget)
 }
 
 /// Multiply corresponding admitted elements and sum their products.
@@ -307,26 +307,29 @@ mod tests {
         )
         .unwrap();
         assert_eq!(
-            collect_matrix(&a, MatrixCollection::Multiply, B).unwrap(),
+            coerce_matrix_collection(&a, MatrixCollection::Multiply, B).unwrap(),
             m(2, 2, &[2., 3., 0., 0.])
         );
         assert_eq!(
-            collect_matrix(&a, MatrixCollection::Determinant, B),
+            coerce_matrix_collection(&a, MatrixCollection::Determinant, B),
             Err(Error::Formula(CellError::Value))
         );
         assert_eq!(
-            collect_matrix(&a, MatrixCollection::Transpose, B).unwrap(),
+            coerce_matrix_collection(&a, MatrixCollection::Transpose, B).unwrap(),
             m(2, 2, &[2., 3., 0., 0.])
         );
-        assert_eq!(collect_trend(&a, B), Err(Error::Formula(CellError::Value)));
+        assert_eq!(
+            coerce_trend_collection(&a, B),
+            Err(Error::Formula(CellError::Value))
+        );
         let one = Matrix::new(1, 1, vec![Cell::Number(2.)]).unwrap();
         assert_eq!(
-            collect_matrix(&one, MatrixCollection::Inverse, B),
+            coerce_matrix_collection(&one, MatrixCollection::Inverse, B),
             Err(Error::Formula(CellError::Value))
         );
         let error = Matrix::new(1, 1, vec![Cell::Error(CellError::NA)]).unwrap();
         assert_eq!(
-            collect_trend(&error, B),
+            coerce_trend_collection(&error, B),
             Err(Error::Formula(CellError::Value))
         );
     }

@@ -240,7 +240,7 @@ mod adapter_tests {
         for text in [
             "NaN", "Infinity", "0x1p0", "16d", "1E400", "1e", "", "\u{a0}16",
         ] {
-            assert_eq!(parse_operand_number(text), None, "{text:?}");
+            assert_eq!(coerce_financial_decimal_text(text), None, "{text:?}");
         }
         for (text, expected) in [
             ("\t +16.0 \n", 16.0),
@@ -248,7 +248,7 @@ mod adapter_tests {
             ("1.", 1.0),
             ("-2e-3", -0.002),
         ] {
-            assert_eq!(parse_operand_number(text), Some(expected));
+            assert_eq!(coerce_financial_decimal_text(text), Some(expected));
         }
     }
     #[test]

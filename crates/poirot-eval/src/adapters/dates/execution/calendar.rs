@@ -106,7 +106,7 @@ pub(super) fn date(n: f64, system: DateSystem) -> Result<Date, CellError> {
 // the shared display/calculation bounds do not erase that operand exception.
 /// Resolve YEARFRAC's numeric-text serial outside the bounded calculation calendar.
 pub(super) fn calendar_date(n: f64, system: DateSystem) -> Result<Date, CellError> {
-    let n = integer(n.floor())?;
+    let n = coerce_date_integer(n.floor())?;
     if system == DateSystem::Excel1900 && n == 60 {
         return Ok(Date {
             y: 1900,
@@ -132,7 +132,7 @@ pub(super) fn weekday(n: i64, system: DateSystem) -> i64 {
     (e + 4).rem_euclid(7)
 }
 /// Truncate a finite value within the source's signed 32-bit argument range.
-pub(super) fn integer(n: f64) -> Result<i64, CellError> {
+pub(super) fn coerce_date_integer(n: f64) -> Result<i64, CellError> {
     if n.is_finite() && n >= f64::from(i32::MIN) && n <= f64::from(i32::MAX) {
         Ok(n.trunc() as i64)
     } else {

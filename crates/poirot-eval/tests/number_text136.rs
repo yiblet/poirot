@@ -1,4 +1,4 @@
-//! Policy-specific number text does not change arithmetic or core defaults.
+//! Spreadsheet numeric text preserves arithmetic values across text policies.
 use poirot_eval::{
     EvaluationOutcome, RunConfiguration, TextSemanticsPolicy, TextSourceVersion,
     run_formula_with_configuration,
@@ -6,7 +6,7 @@ use poirot_eval::{
 use poirot_model::{CellAddress, CellValue, Workbook};
 
 #[test]
-fn d431_numeric_projection_is_explicit_and_preserves_numeric_bits() {
+fn numeric_projection_uses_spreadsheet_precision_and_preserves_numeric_bits() {
     let mut workbook = Workbook::new();
     workbook.add_sheet("Projection").unwrap();
     let input = CellAddress { row: 0, col: 0 };
@@ -23,7 +23,7 @@ fn d431_numeric_projection_is_explicit_and_preserves_numeric_bits() {
         TextSourceVersion::PoirotF6c572d
     );
     for (source, expected) in [
-        (TextSourceVersion::PoirotF6c572d, "-14.000000000000002"),
+        (TextSourceVersion::PoirotF6c572d, "-14"),
         (TextSourceVersion::Poi7321209, "-14"),
         (TextSourceVersion::Poi7321209OpenJdk21Unicode15, "-14"),
     ] {

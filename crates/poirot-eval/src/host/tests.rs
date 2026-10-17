@@ -182,7 +182,7 @@ fn explicit_numeric_policies_do_not_change_legacy_handlers() {
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
     let mut host = CallHost::new(&mut session, 0, AT, &arguments);
     let n = host
-        .number(0, MissingPolicy::Reject, NumericPolicy::LegacyCompatible)
+        .coerce_argument_number(0, MissingPolicy::Reject, NumericPolicy::LegacyCompatible)
         .unwrap();
     assert_eq!(
         n.to_bits(),
@@ -191,13 +191,17 @@ fn explicit_numeric_policies_do_not_change_legacy_handlers() {
     );
     assert_eq!(n.trunc(), 2.);
     assert_eq!(
-        poirot_numeric::to_text(n),
+        poirot_numeric::coerce_number_to_text(n),
         "3",
         "same dependency and exact host input"
     );
-    assert_eq!(host.number_text(n, NumericPolicy::PinnedPoi).unwrap(), "3");
     assert_eq!(
-        host.number(1, MissingPolicy::Reject, NumericPolicy::PinnedPoi)
+        host.coerce_number_to_text(n, NumericPolicy::PinnedPoi)
+            .unwrap(),
+        "3"
+    );
+    assert_eq!(
+        host.coerce_argument_number(1, MissingPolicy::Reject, NumericPolicy::PinnedPoi)
             .unwrap(),
         100.
     );

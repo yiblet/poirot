@@ -74,41 +74,14 @@ impl Session<'_> {
             if let Error(e) = value {
                 return Ok(err(e));
             }
-            let pattern = match semantic(text(&pattern, &mut self.budget))? {
+            let pattern = match semantic(coerce_formula_text(&pattern, &mut self.budget))? {
                 Ok(t) => t,
                 Err(e) => return Ok(err(e)),
             };
-            // POI TEXT preserves nonnumeric text and booleans; numeric text is coerced.
-            let value = match value {
-                Blank => Number(0.),
-                Text(ref t) => match t.trim().parse::<f64>() {
-                    Ok(n) if n.is_finite() => Number(n),
-                    _ => return Ok(value.into()),
-                },
-                CellValue::TextUtf16(ref units) => {
-                    self.budget
-                        .charge(WorkKind::TextByte, units.units().len() as u64)?;
-                    let view = poirot_model::TextRef::Utf16(units.units());
-                    // A malformed scalar string cannot be numeric. Source TEXT
-                    // preserves nonnumeric text without any display projection.
-                    if view.utf8_len().is_err() {
-                        return Ok(value.into());
-                    }
-                    let projected =
-                        checked_text_view(view, &mut self.budget).map_err(|error| match error {
-                            FunctionFailure::Operational(error) => error,
-                            FunctionFailure::Spreadsheet(_) => EvaluationFailure::StalePlan,
-                        })?;
-                    let numeric = projected.trim().parse::<f64>();
-                    drop(projected);
-                    match numeric {
-                        Ok(n) if n.is_finite() => Number(n),
-                        _ => return Ok(value.into()),
-                    }
-                }
-                Boolean(b) => return Ok(Text(if b { "TRUE" } else { "FALSE" }.into()).into()),
-                v => v,
-            };
+            let (value, format_value) = self.coerce_text_format_value(value)?;
+            if !format_value {
+                return Ok(value.into());
+            }
             self.budget.text(pattern.len())?;
             self.budget.allocation(pattern.chars().count())?;
             let format = match poirot_format::compile_format_with_source(
@@ -159,7 +132,7 @@ impl Session<'_> {
         }
 
         if matches!(name, TextFunction::Char | TextFunction::UniChar) {
-            let code = self.text_number(a, 0)?;
+            let code = self.coerce_text_argument_number(a, 0)?;
             if code < 1.
                 || code
                     > if name == TextFunction::Char {
@@ -175,8 +148,8 @@ impl Session<'_> {
             return Ok(Text(character.to_string()));
         }
         if name == TextFunction::Value {
-            return Ok(Number(number(
-                &Text(self.text_at(a, 0)?),
+            return Ok(Number(coerce_arithmetic_number(
+                &Text(self.coerce_text_argument(a, 0)?),
                 &mut self.budget,
             )?));
         }
@@ -196,7 +169,7 @@ impl Session<'_> {
             self.budget.allocation(a.len())?;
             let mut parts = Vec::with_capacity(a.len());
             for value in a {
-                parts.push(self.text_render(value)?);
+                parts.push(self.coerce_text_render(value)?);
             }
             let bytes = parts.iter().try_fold(0usize, |total, part| {
                 poirot_text::checked_total(total, part.len()).map_err(text_unsupported)
@@ -228,14 +201,14 @@ impl Session<'_> {
                 .operation(operation)
                 .map_err(text_unsupported)?
                 .units;
-            let value = self.text_render(a.first().ok_or(VALUE_ERROR)?)?;
+            let value = self.coerce_text_render(a.first().ok_or(VALUE_ERROR)?)?;
             self.budget
                 .charge(WorkKind::TextByte, value.len().saturating_mul(3) as u64)?;
             if name == TextFunction::Len {
                 return Ok(Number(poirot_text::length(&value, units) as f64));
             }
             let poi = self.text_policy.source == TextSourceVersion::Poi7321209;
-            let integer = |number: f64| -> FunctionResult<usize> {
+            let coerce_text_integer = |number: f64| -> FunctionResult<usize> {
                 if poi
                     && (!number.is_finite()
                         || number.floor() > i32::MAX as f64
@@ -247,8 +220,12 @@ impl Session<'_> {
             };
             let selected = match name {
                 TextFunction::Left | TextFunction::Right => {
-                    let count = if n == 2 { self.text_number(a, 1)? } else { 1. };
-                    let count_int = integer(count)?;
+                    let count = if n == 2 {
+                        self.coerce_text_argument_number(a, 1)?
+                    } else {
+                        1.
+                    };
+                    let count_int = coerce_text_integer(count)?;
                     if count < 0. {
                         return Err(VALUE_ERROR.into());
                     }
@@ -259,10 +236,10 @@ impl Session<'_> {
                     }
                 }
                 TextFunction::Mid => {
-                    let start = self.text_number(a, 1)?;
-                    let count = self.text_number(a, 2)?;
-                    let start_int = integer(start)?;
-                    let count_int = integer(count)?;
+                    let start = self.coerce_text_argument_number(a, 1)?;
+                    let count = self.coerce_text_argument_number(a, 2)?;
+                    let start_int = coerce_text_integer(start)?;
+                    let count_int = coerce_text_integer(count)?;
                     if start < 1. || count < 0. {
                         return Err(VALUE_ERROR.into());
                     }
@@ -279,7 +256,7 @@ impl Session<'_> {
             self.budget.text(selected.len())?;
             return Ok(Text(selected.to_owned()));
         }
-        let t = self.text_at(a, 0)?;
+        let t = self.coerce_text_argument(a, 0)?;
         self.budget.text(t.len())?;
         self.budget.allocation(t.chars().count())?;
         if matches!(
@@ -354,9 +331,13 @@ impl Session<'_> {
                 }
                 Number(code as f64)
             }
-            TextFunction::Exact => Boolean(t == self.text_at(a, 1)?),
+            TextFunction::Exact => Boolean(t == self.coerce_text_argument(a, 1)?),
             TextFunction::Left | TextFunction::Right => {
-                let count = if n == 2 { self.text_number(a, 1)? } else { 1. };
+                let count = if n == 2 {
+                    self.coerce_text_argument_number(a, 1)?
+                } else {
+                    1.
+                };
                 if count < 0. {
                     return Err(VALUE_ERROR.into());
                 }
@@ -370,8 +351,8 @@ impl Session<'_> {
                 })
             }
             TextFunction::Mid => {
-                let start = self.text_number(a, 1)?;
-                let count = self.text_number(a, 2)?;
+                let start = self.coerce_text_argument_number(a, 1)?;
+                let count = self.coerce_text_argument_number(a, 2)?;
                 if start < 1. || count < 0. {
                     return Err(VALUE_ERROR.into());
                 }
@@ -384,7 +365,7 @@ impl Session<'_> {
                 )
             }
             TextFunction::Rept => {
-                let count = self.text_number(a, 1)?;
+                let count = self.coerce_text_argument_number(a, 1)?;
                 if count < 0. || len as f64 * count.trunc() > 32767. {
                     return Err(VALUE_ERROR.into());
                 }
@@ -399,13 +380,13 @@ impl Session<'_> {
                 Text(t.repeat(repeats))
             }
             TextFunction::Replace => {
-                let start = self.text_number(a, 1)?;
-                let count = self.text_number(a, 2)?;
+                let start = self.coerce_text_argument_number(a, 1)?;
+                let count = self.coerce_text_argument_number(a, 2)?;
                 if start < 1. || count < 0. {
                     return Err(VALUE_ERROR.into());
                 }
                 let start = (start as usize - 1).min(len);
-                let new = self.text_at(a, 3)?;
+                let new = self.coerce_text_argument(a, 3)?;
                 let tail = (start.saturating_add(count as usize)).min(len);
                 // SAFETY: The local count/start/tail values are clamped to chars.len(); suffix scan i is bounded by h.len(), so the requested character slices are in bounds.
                 let bytes = chars[..start]
@@ -425,15 +406,15 @@ impl Session<'_> {
                 Text(result)
             }
             TextFunction::Substitute => {
-                let old = self.text_at(a, 1)?;
-                let new = self.text_at(a, 2)?;
+                let old = self.coerce_text_argument(a, 1)?;
+                let new = self.coerce_text_argument(a, 2)?;
                 if old.is_empty() {
                     Text(t)
                 } else {
                     let nth = if n == 3 {
                         None
                     } else {
-                        let nth = self.text_number(a, 3)?;
+                        let nth = self.coerce_text_argument_number(a, 3)?;
                         if nth < 1. {
                             return Err(VALUE_ERROR.into());
                         }
@@ -466,8 +447,12 @@ impl Session<'_> {
                 }
             }
             TextFunction::Find | TextFunction::Search => {
-                let hay = self.text_at(a, 1)?;
-                let start = if n == 3 { self.text_number(a, 2)? } else { 1. };
+                let hay = self.coerce_text_argument(a, 1)?;
+                let start = if n == 3 {
+                    self.coerce_text_argument_number(a, 2)?
+                } else {
+                    1.
+                };
                 self.budget.text(hay.len())?;
                 self.budget.allocation(hay.chars().count())?;
                 let h: Vec<_> = hay.chars().collect();
@@ -514,10 +499,18 @@ fn text_unsupported(reason: poirot_text::Unsupported) -> FunctionFailure {
 }
 
 impl Session<'_> {
-    fn text_at(&mut self, arguments: &[CellValue], index: usize) -> FunctionResult<String> {
-        text(arguments.get(index).ok_or(VALUE_ERROR)?, &mut self.budget)
+    fn coerce_text_argument(
+        &mut self,
+        arguments: &[CellValue],
+        index: usize,
+    ) -> FunctionResult<String> {
+        coerce_formula_text(arguments.get(index).ok_or(VALUE_ERROR)?, &mut self.budget)
     }
-    fn text_number(&mut self, arguments: &[CellValue], index: usize) -> FunctionResult<f64> {
+    fn coerce_text_argument_number(
+        &mut self,
+        arguments: &[CellValue],
+        index: usize,
+    ) -> FunctionResult<f64> {
         let value = arguments.get(index).ok_or(VALUE_ERROR)?;
         if value.text_ref().is_some() {
             self.read(DependencyRead::TextPolicy);
@@ -549,11 +542,11 @@ impl Session<'_> {
                     .ok_or_else(|| VALUE_ERROR.into());
             }
         }
-        number(value, &mut self.budget)
+        coerce_arithmetic_number(value, &mut self.budget)
     }
 
     // Reserve before coercion clones or number rendering allocate.
-    fn text_render(&mut self, value: &CellValue) -> FunctionResult<String> {
+    fn coerce_text_render(&mut self, value: &CellValue) -> FunctionResult<String> {
         let bound = match value {
             Text(value) => value.len(),
             Number(_) => poirot_numeric::number_text::ALLOCATION_BOUND,
@@ -573,7 +566,7 @@ impl Session<'_> {
                 ));
             }
         }
-        text(value, &mut self.budget)
+        coerce_formula_text(value, &mut self.budget)
     }
     /// Execute concatenation with selected text-unit semantics and metered storage.
     pub(crate) fn text_concat_operator(
@@ -595,8 +588,10 @@ impl Session<'_> {
         if policy.units == poirot_text::Units::Utf16CodeUnits {
             return self.text_unit_operator(&left, &right);
         }
-        let left = self.text_render(&left)?;
-        let right = self.text_render(&right)?;
+        // TODO(coercion-non-argument): [LOW] Concatenation text conversion must remain local to the operator and preserve underlying numeric inputs.
+        let left = self.coerce_text_render(&left)?;
+        // TODO(coercion-non-argument): [LOW] Concatenation text conversion must remain local to the operator and preserve underlying numeric inputs.
+        let right = self.coerce_text_render(&right)?;
         let bytes =
             poirot_text::checked_total(left.len(), right.len()).map_err(text_unsupported)?;
         self.budget.charge(WorkKind::TextByte, bytes as u64)?;
@@ -610,6 +605,44 @@ impl Session<'_> {
         output.push_str(&left);
         output.push_str(&right);
         Ok(Text(output))
+    }
+}
+
+impl Session<'_> {
+    /// TEXT's pinned numeric policy preserves nonnumeric text, renders booleans
+    /// directly, and admits numeric text and blanks to the formatting consumer.
+    fn coerce_text_format_value(&mut self, value: CellValue) -> EvalResult<(CellValue, bool)> {
+        let value = match value {
+            Blank => Number(0.),
+            Text(ref t) => match t.trim().parse::<f64>() {
+                Ok(n) if n.is_finite() => Number(n),
+                _ => return Ok((value, false)),
+            },
+            CellValue::TextUtf16(ref units) => {
+                self.budget
+                    .charge(WorkKind::TextByte, units.units().len() as u64)?;
+                let view = poirot_model::TextRef::Utf16(units.units());
+                // A malformed scalar string cannot be numeric. Source TEXT
+                // preserves nonnumeric text without any display projection.
+                if view.utf8_len().is_err() {
+                    return Ok((value, false));
+                }
+                let projected =
+                    checked_text_view(view, &mut self.budget).map_err(|error| match error {
+                        FunctionFailure::Operational(error) => error,
+                        FunctionFailure::Spreadsheet(_) => EvaluationFailure::StalePlan,
+                    })?;
+                let numeric = projected.trim().parse::<f64>();
+                drop(projected);
+                match numeric {
+                    Ok(n) if n.is_finite() => Number(n),
+                    _ => return Ok((value, false)),
+                }
+            }
+            Boolean(b) => return Ok((Text(if b { "TRUE" } else { "FALSE" }.into()), false)),
+            v => v,
+        };
+        Ok((value, true))
     }
 }
 

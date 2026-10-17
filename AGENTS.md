@@ -31,6 +31,13 @@ Use rustfmt's standard formatting and four-space indentation. Use `snake_case` f
 - If the proof requires such outside context, use a fallible operation, validate the condition within the function and return an error on failure, or restructure the code to eliminate the panic. Do not use `assert!`, `panic!`, `unreachable!`, or `todo!` as substitutes for handling an invalid input or operational failure.
 - Tests may use assertions and panic-capable helpers without `// SAFETY:` comments. The unsafe-code ban still applies to tests.
 
+## Coercion Boundaries
+
+- Preserve scalar types through reads, selection, memoization, and lookup result forwarding. Convert only when the consuming operation requests a specific policy.
+- Name every semantic conversion function or method `coerce_<consumer_or_policy>...`; do not hide the prefix with import aliases or generic function-pointer names. Keep different grammars, origins, omission policies, and budget effects explicit.
+- Mark every coercion outside spreadsheet-function argument handling with an adjacent `// TODO(coercion-non-argument): [HIGH|MEDIUM|LOW] <potential issue>` comment.
+- Run `python3 tools/test_coercion_architecture.py` when changing conversion boundaries. See `docs/coercion-boundaries.md` for the conventions and existing policy inventory.
+
 ## Testing Guidelines
 
 Use Rust's built-in `#[test]` framework with descriptive behavior-based names. Add focused regression tests alongside the affected module or in its crate's `tests/`; cover public behavior in root integration tests. No numeric coverage threshold is configured. For Excel specifications, derive expected results from documented evidence, never Poirot's output. Distinguish compatibility gaps from regressions.

@@ -36,6 +36,39 @@ fn precedence_coercion_and_errors() {
     assert_eq!(eval(&w, "\"3\"=3"), Boolean(false));
 }
 #[test]
+fn decimal_rounding_matches_spreadsheet_modes_and_zero_branches() {
+    let w = book();
+    for (formula, expected) in [
+        ("ROUND(0.7*3.5,1)", 2.5),
+        ("ROUND(-0.7*3.5,1)", -2.5),
+        ("ROUND(249.99999999999997,-2)", 300.0),
+        ("ROUNDUP(0.1*3,1)", 0.3),
+        ("ROUNDDOWN(0.3*3,1)", 0.9),
+        ("TRUNC(0.3*3,1)", 0.9),
+        ("TRUNC(-1.9)", -1.0),
+        ("ROUND(1E300,300)", 1e300),
+    ] {
+        assert_eq!(eval(&w, formula), Number(expected), "{formula}");
+    }
+    assert_eq!(eval(&w, "ROUNDUP(1,-309)"), Error(Num));
+    for formula in [
+        "ROUND(-0.01,0)",
+        "ROUNDUP(-0.0,0)",
+        "ROUNDDOWN(-0.01,0)",
+        "TRUNC(-0.01)",
+    ] {
+        let Number(value) = eval(&w, formula) else {
+            panic!("expected a number: {formula}")
+        };
+        assert_eq!(value.to_bits(), 0.0f64.to_bits(), "{formula}");
+        assert_eq!(eval(&w, &format!("{formula}=0")), Boolean(true));
+        assert_eq!(
+            eval(&w, &format!("IF({formula}=0,\"\",\"nonzero\")")),
+            Text("".into())
+        );
+    }
+}
+#[test]
 fn references_names_and_sparse_columns() {
     let mut w = book();
     let s = w.sheet_mut(0).unwrap();
@@ -283,5 +316,174 @@ fn arrays_statistics_text_and_lookup() {
         ("INDEX({1,2;3,4},2,2)", Number(4.)),
     ] {
         assert_eq!(eval(&w, f), v, "{f}")
+    }
+}
+
+#[test]
+fn lookup_blanks_reach_consumers_before_formula_cell_normalization() {
+    let mut w = book();
+    let sheet = w.sheet_mut(0).unwrap();
+    for (address, value) in [
+        ("A1", "blank"),
+        ("B1", "zero"),
+        ("C1", "text"),
+        ("E1", "blank"),
+        ("E2", "zero"),
+        ("E3", "text"),
+    ] {
+        sheet.set_value(address.parse().unwrap(), value).unwrap();
+    }
+    for address in ["B2", "F2"] {
+        sheet.set_value(address.parse().unwrap(), 0.).unwrap();
+    }
+    for address in ["C2", "F3"] {
+        sheet.set_value(address.parse().unwrap(), "").unwrap();
+    }
+    sheet
+        .set_formula(
+            "H1".parse().unwrap(),
+            "HLOOKUP(\"blank\",A1:C2,2,FALSE)",
+            Blank,
+        )
+        .unwrap();
+    for lookup in [
+        "HLOOKUP(\"blank\",A1:C2,2,FALSE)",
+        "VLOOKUP(\"blank\",E1:F3,2,FALSE)",
+        "LOOKUP(\"blank\",A1:A1,A2:A2)",
+        "XLOOKUP(\"blank\",A1:C1,A2:C2)",
+        "INDEX(A2:C2,1,1)",
+    ] {
+        for (formula, expected) in [
+            (lookup.to_string(), Number(0.)),
+            (format!("MIN({lookup},0.03)"), Number(0.03)),
+            (format!("MAX({lookup},-0.03)"), Number(-0.03)),
+            (format!("ISBLANK({lookup})"), Boolean(true)),
+            (format!("ISNUMBER({lookup})"), Boolean(false)),
+            (format!("{lookup}+2"), Number(2.)),
+            (format!("\"x\"&{lookup}"), Text("x".into())),
+            (format!("MIN(IF(TRUE,{lookup},7),0.03)"), Number(0.03)),
+            (
+                format!("IF(ISBLANK({lookup}),\"empty\",\"filled\")"),
+                Text("empty".into()),
+            ),
+        ] {
+            assert_eq!(eval(&w, &formula), expected, "prepared: {formula}");
+            let plan = bound::FormulaPlan::bind(&poirot_formula::parse_formula(&formula).unwrap())
+                .unwrap();
+            let tree =
+                execute_configuration(&w, &Default::default(), Default::default(), |session| {
+                    let at = "Z20".parse().unwrap();
+                    let value = session.expr(0, at, &plan.expression())?;
+                    session
+                        .result_scalar(0, at, value)
+                        .map(coerce_cell_publication)
+                });
+            match tree {
+                EvaluationOutcome::Complete { value, .. } => {
+                    assert_eq!(value, expected, "tree: {formula}")
+                }
+                outcome => panic!("{formula}: {outcome:?}"),
+            }
+            match crate::run_plan(
+                &w,
+                0,
+                "Z20".parse().unwrap(),
+                &plan,
+                Default::default(),
+                Default::default(),
+            ) {
+                EvaluationOutcome::Complete { value, .. } => {
+                    assert_eq!(value, expected, "bound: {formula}")
+                }
+                outcome => panic!("{formula}: {outcome:?}"),
+            }
+        }
+    }
+    for lookup in [
+        "HLOOKUP(\"zero\",A1:C2,2,FALSE)",
+        "VLOOKUP(\"zero\",E1:F3,2,FALSE)",
+    ] {
+        assert_eq!(eval(&w, &format!("ISBLANK({lookup})")), Boolean(false));
+        assert_eq!(eval(&w, &format!("MIN({lookup},0.03)")), Number(0.));
+    }
+    for lookup in [
+        "HLOOKUP(\"text\",A1:C2,2,FALSE)",
+        "VLOOKUP(\"text\",E1:F3,2,FALSE)",
+    ] {
+        assert_eq!(eval(&w, lookup), Text("".into()));
+        assert_eq!(eval(&w, &format!("ISBLANK({lookup})")), Boolean(false));
+    }
+    for lookup in [
+        "HLOOKUP(\"absent\",A1:C2,2,FALSE)",
+        "VLOOKUP(\"absent\",E1:F3,2,FALSE)",
+    ] {
+        assert_eq!(eval(&w, lookup), Error(NA));
+    }
+    // A reference to an already finalized formula cell observes numeric zero.
+    assert_eq!(eval(&w, "ISBLANK(H1)"), Boolean(false));
+    assert_eq!(eval(&w, "MIN(H1,0.03)"), Number(0.));
+}
+
+#[test]
+fn selection_preserves_types_until_the_selected_consumer() {
+    let mut w = book();
+    let sheet = w.sheet_mut(0).unwrap();
+    sheet.set_value("A2".parse().unwrap(), true).unwrap();
+    sheet.set_value("A3".parse().unwrap(), "12").unwrap();
+    sheet.set_value("A4".parse().unwrap(), "").unwrap();
+    sheet.set_value("A5".parse().unwrap(), Error(NA)).unwrap();
+    // A1 is a real blank. Each selector must forward its selected value/reference
+    // before the outer predicate, aggregate, arithmetic, or text consumer runs.
+    for selected in [
+        "IF(TRUE,{value},1/0)",
+        "IFERROR({value},99)",
+        "IFNA({value},99)",
+        "CHOOSE(1,{value},1/0)",
+        "IFS(TRUE,{value},FALSE,1/0)",
+        "SWITCH(1,1,{value},2,1/0)",
+    ] {
+        for (template, expected) in [
+            ("ISBLANK({selected})", Boolean(true)),
+            ("MIN({selected},0.03)", Number(0.03)),
+            ("{selected}+2", Number(2.)),
+            ("\"x\"&{selected}", Text("x".into())),
+        ] {
+            let formula = template.replace("{selected}", &selected.replace("{value}", "A1"));
+            assert_eq!(eval(&w, &formula), expected, "{formula}");
+        }
+        for (cell, predicate, expected) in [
+            ("A2", "ISLOGICAL", true),
+            ("A2", "ISNUMBER", false),
+            ("A3", "ISTEXT", true),
+            ("A3", "ISNUMBER", false),
+            ("A4", "ISTEXT", true),
+            ("A4", "ISBLANK", false),
+        ] {
+            let formula = format!("{predicate}({})", selected.replace("{value}", cell));
+            assert_eq!(eval(&w, &formula), Boolean(expected), "{formula}");
+        }
+        let numeric_text = selected.replace("{value}", "A3");
+        assert_eq!(eval(&w, &format!("{numeric_text}+1")), Number(13.));
+        assert_eq!(eval(&w, &format!("SUM({numeric_text})")), Number(0.));
+    }
+    // Error handlers consume only their designated error kinds, not other values.
+    for (formula, expected) in [
+        ("ISNA(CHOOSE(1,A5,7))", Boolean(true)),
+        ("IFERROR(A5,7)", Number(7.)),
+        ("IFNA(A5,7)", Number(7.)),
+        ("IFNA(1/0,7)", Error(Div0)),
+        // Omitted branch syntax has an IF-defined numeric default, unlike A1.
+        ("ISBLANK(IF(TRUE,,7))", Boolean(false)),
+        ("ISNUMBER(IF(TRUE,,7))", Boolean(true)),
+        ("IF(FALSE,7)", Boolean(false)),
+        // Explicit conversion functions intentionally replace types.
+        ("N(A2)", Number(1.)),
+        ("N(A3)", Number(0.)),
+        ("T(A2)", Text("".into())),
+        ("T(A3)", Text("12".into())),
+        ("ISNUMBER(INDEX({\"12\",TRUE},1,1))", Boolean(false)),
+        ("ISLOGICAL(INDEX({\"12\",TRUE},1,2))", Boolean(true)),
+    ] {
+        assert_eq!(eval(&w, formula), expected, "{formula}");
     }
 }

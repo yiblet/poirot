@@ -41,6 +41,47 @@ fn formulas_select_units_without_normalizing_text() {
     ));
 }
 #[test]
+fn concatenation_uses_spreadsheet_numeric_text_without_rounding_values() {
+    for source in [
+        TextSourceVersion::PoirotF6c572d,
+        TextSourceVersion::Poi7321209,
+    ] {
+        for (expression, expected) in [
+            ("(-0.02-0.02-0.1)*100", "-14"),
+            ("123456789012345.6", "123456789012346"),
+            ("1E21", "1E+21"),
+            ("1E-19", "1E-19"),
+            ("-0.0", "-0"),
+            ("1.7976931348623157E308", "1.7976931348623E+308"),
+            ("2.2250738585072014E-308", "2.2250738585072E-308"),
+        ] {
+            for formula in [
+                format!("\"T\"&({expression})"),
+                format!("CONCAT(\"T\",{expression})"),
+                format!("CONCATENATE(\"T\",{expression})"),
+            ] {
+                assert_eq!(
+                    evaluate(source, &formula).unwrap(),
+                    Text(format!("T{expected}")),
+                    "{source:?}: {formula}"
+                );
+            }
+        }
+        assert_eq!(
+            evaluate(source, "(-0.02-0.02-0.1)*100").unwrap(),
+            Number(-14.000000000000002)
+        );
+        assert_eq!(
+            evaluate(source, "\"T\"&TEXT(1.25,\"0.000\")").unwrap(),
+            Text("T1.250".into())
+        );
+        assert_eq!(
+            evaluate(source, "\"T\"&\"-14.000000000000002\"").unwrap(),
+            Text("T-14.000000000000002".into())
+        );
+    }
+}
+#[test]
 fn source_concatenation_ceiling_is_independent_of_host_budget() {
     let operand = "😀".repeat(8192);
     let operator = format!("\"{operand}\"&\"\"");

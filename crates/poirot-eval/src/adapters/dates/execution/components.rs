@@ -38,7 +38,8 @@ pub(super) fn iso_week(d: Date) -> f64 {
 }
 
 /// Construct DATE or TIME using pinned source normalization and error rules.
-pub(super) fn construct(
+// TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+pub(super) fn coerce_numeric_outcome(
     name: DateFunction,
     x: i64,
     y: i64,

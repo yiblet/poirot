@@ -1,9 +1,9 @@
 //! Lazy, origin-sensitive cash-flow collection.
-use super::coercion::{parse_operand_number, text_check, work};
+use super::coercion::{coerce_financial_decimal_text, text_check, work};
 use super::{CellError, EvaluationPort, Failure, Origin, Scalar};
 
 /// Collect financial cash flows lazily with origin-sensitive coercion and admission.
-pub(super) fn collect<P: EvaluationPort>(
+pub(super) fn coerce_financial_cashflows<P: EvaluationPort>(
     p: &mut P,
     args: &[P::Argument],
 ) -> Result<Vec<f64>, Failure<P::Operational>> {
@@ -25,7 +25,7 @@ pub(super) fn collect<P: EvaluationPort>(
                 Scalar::Boolean(b) if o == Origin::Direct => Some(u8::from(b) as f64),
                 Scalar::Text(t) if o == Origin::Direct => {
                     text_check(p, &t)?;
-                    Some(parse_operand_number(&t).ok_or(CellError::Value)?)
+                    Some(coerce_financial_decimal_text(&t).ok_or(CellError::Value)?)
                 }
                 _ => None,
             };

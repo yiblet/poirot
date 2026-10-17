@@ -3,7 +3,7 @@ use super::*;
 
 impl CallHost<'_, '_> {
     /// Resolve and numerically coerce one argument under explicit missing and numeric rules.
-    pub(crate) fn number(
+    pub(crate) fn coerce_argument_number(
         &mut self,
         index: usize,
         missing: MissingPolicy,
@@ -12,11 +12,11 @@ impl CallHost<'_, '_> {
         let value = self.scalar(index, missing)?;
         match value {
             Text(text) => self.coerce_number_text(&text, policy),
-            value => self.scalar_number(&value, policy),
+            value => self.coerce_scalar_number(&value, policy),
         }
     }
     /// Coerce a scalar using shared numeric conversion and attributed date fallback.
-    pub(crate) fn scalar_number(
+    pub(crate) fn coerce_scalar_number(
         &mut self,
         value: &CellValue,
         policy: NumericPolicy,
@@ -25,12 +25,12 @@ impl CallHost<'_, '_> {
             let text = checked_text_view(text, &mut self.session.budget)?;
             self.coerce_number_text(&text, policy)
         } else {
-            number(value, &mut self.session.budget)
+            coerce_arithmetic_number(value, &mut self.session.budget)
         }
     }
     /// Render a scalar under shared text coercion and allocation limits.
-    pub(crate) fn scalar_text(&mut self, value: &CellValue) -> FunctionResult<String> {
-        text(value, &mut self.session.budget)
+    pub(crate) fn coerce_scalar_text(&mut self, value: &CellValue) -> FunctionResult<String> {
+        coerce_formula_text(value, &mut self.session.budget)
     }
     /// Project model text into a checked owned helper string.
     pub(crate) fn project_text(
@@ -48,7 +48,7 @@ impl CallHost<'_, '_> {
         self.check_text(text.len())?;
         match numeric_policy::decide(text, policy) {
             numeric_policy::CoercionDecision::Number(result) => result.map_err(Into::into),
-            numeric_policy::CoercionDecision::DateTime => self.numeric_date_time(text),
+            numeric_policy::CoercionDecision::DateTime => self.coerce_numeric_date_time(text),
         }
     }
     fn record_numeric_date_effects(
@@ -87,7 +87,7 @@ impl CallHost<'_, '_> {
         accumulated.timezone |= effects.timezone;
         Ok(())
     }
-    fn numeric_date_time(&mut self, text: &str) -> FunctionResult<f64> {
+    fn coerce_numeric_date_time(&mut self, text: &str) -> FunctionResult<f64> {
         use poirot_coercion::{Context, LocalePolicy, Outcome, TimezonePolicy};
         let mut context = Context {
             // Sentinel avoids even consulting the frozen clock for explicit-year
@@ -149,7 +149,7 @@ impl CallHost<'_, '_> {
         Ok(year as i32)
     }
     /// Render a number with the selected source-compatible numeric formatter.
-    pub(crate) fn number_text(
+    pub(crate) fn coerce_number_to_text(
         &mut self,
         value: f64,
         policy: NumericPolicy,
@@ -188,12 +188,8 @@ impl CallHost<'_, '_> {
                     return Err((*error).into());
                 }
             }
-            let numeric = match (left, right) {
-                (Number(left), Number(right)) => Some((*left, *right)),
-                (Blank, Number(right)) => Some((0., *right)),
-                (Number(left), Blank) => Some((*left, 0.)),
-                _ => None,
-            };
+            // TODO(coercion-non-argument): [LOW] Equality collapses numeric/blank pairs; reusing those values outside comparison would alter type-sensitive behavior.
+            let numeric = coerce_equality_numeric_pair(left, right);
             if let Some((left, right)) = numeric {
                 self.charge_work(1)?;
                 return Ok(poirot_numeric::compare(left, right)?.is_eq());
@@ -221,5 +217,15 @@ impl CallHost<'_, '_> {
         }
         self.charge_work(1)?;
         Ok(compare(left, right, &mut self.session.budget)?.is_eq())
+    }
+}
+
+/// Pinned numeric equality admits blanks as zero; other type pairs remain typed.
+fn coerce_equality_numeric_pair(left: &CellValue, right: &CellValue) -> Option<(f64, f64)> {
+    match (left, right) {
+        (Number(left), Number(right)) => Some((*left, *right)),
+        (Blank, Number(right)) => Some((0., *right)),
+        (Number(left), Blank) => Some((*left, 0.)),
+        _ => None,
     }
 }

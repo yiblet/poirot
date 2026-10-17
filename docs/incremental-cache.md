@@ -61,3 +61,30 @@ Direct `Evaluation` uses the same source/compiler/spill engine without the retai
 read graph or indexes. Its memo has ordinary values and runtime spill ownership;
 every effective source edit clears derived results. This is an intentional cache
 strategy alongside Overlay, not a second formula execution implementation.
+
+Overlay also retains bounded search indexes for unobserved numeric/boolean exact
+MATCH, HLOOKUP, and VLOOKUP calls over physical reference axes. These indexes
+survive ordinary evaluation boundaries and changes to the needle or return-value
+cells. They store the first matching position and only the prefix actually
+scanned. Text and approximate searches continue using the ordinary search path.
+
+Index storage uses a dedicated BTreeMap partitioned by sheet and physical column
+or row, then by range endpoints. Overlay-owned reverse memberships act as each
+consumed cell's in-index flag; a cell can belong to several overlapping indexes.
+The normal transitive invalidation walk removes every index containing a changed
+candidate, including changed formula candidates and volatile/context-sensitive
+candidates. Insertions into previously absent gaps query only the changed cell's
+column and row partitions. Unrelated partitions and unconsumed suffixes survive.
+The shared immutable workbook needs no mutable flags or per-absent-cell entries.
+
+Successful output batches publish only newly scanned cell memberships with their
+dependency traces; unchanged indexes retain their existing flags. Removing or
+discarding an index removes its memberships while preserving overlapping indexes.
+Aborted batches discard their search indexes. Candidate memberships and
+numeric keys both count toward bounded index storage, and each new evaluation
+revalidates retained storage against its materialization limit. Observed execution
+keeps its ordinary read callbacks. Search indexes are derived runtime state and
+are rebuilt after snapshot restoration or an explicit overlay reset. RunUsage
+reports lookup_prefix_hits and lookup_prefix_scans separately from formula memo
+hits, so actual search reuse can be measured even when a lookup formula executes
+again.

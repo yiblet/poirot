@@ -2,7 +2,7 @@
 use super::{CellError, CellValue, DatabaseError, DatabaseFunction, Grid, number};
 
 /// Project a scalar into the numeric channel accepted by database aggregates.
-pub fn numeric(value: &CellValue) -> Option<f64> {
+pub fn coerce_database_number(value: &CellValue) -> Option<f64> {
     match value {
         CellValue::Number(n) => Some(*n),
         CellValue::Boolean(b) => Some(u8::from(*b) as f64),
@@ -10,14 +10,14 @@ pub fn numeric(value: &CellValue) -> Option<f64> {
     }
 }
 /// Convert a cell to owned header/criteria text, refusing unsupported UTF-16 projection.
-pub fn text(value: &CellValue) -> Result<String, DatabaseError> {
+pub fn coerce_database_text(value: &CellValue) -> Result<String, DatabaseError> {
     Ok(match value {
         CellValue::Blank => String::new(),
         CellValue::Text(s) => s.clone(),
         CellValue::TextUtf16(s) => s
             .to_utf8()
             .map_err(|_| DatabaseError::UnsupportedTextProjection)?,
-        CellValue::Number(n) => number::to_text(*n),
+        CellValue::Number(n) => number::coerce_number_to_text(*n),
         CellValue::Boolean(b) => if *b { "TRUE" } else { "FALSE" }.into(),
         CellValue::Error(e) => return Err((*e).into()),
     })
@@ -26,7 +26,7 @@ pub fn text(value: &CellValue) -> Result<String, DatabaseError> {
 /// Adding 0.5 first loses the distinction immediately below a half-integer.
 /// Out-of-area indices retain this crate's explicit bounded-input boundary.
 pub fn field_index(value: &CellValue, columns: usize) -> Option<usize> {
-    let value = numeric(value)?;
+    let value = coerce_database_number(value)?;
     if !value.is_finite() {
         return None;
     }
@@ -46,7 +46,9 @@ pub fn criteria_header_index(
     value: &CellValue,
     columns: usize,
 ) -> Result<Option<usize>, CellError> {
-    let index = numeric(value).ok_or(CellError::Value)?.floor();
+    let index = coerce_database_number(value)
+        .ok_or(CellError::Value)?
+        .floor();
     if !index.is_finite() || index < i32::MIN as f64 || index > i32::MAX as f64 {
         return Err(CellError::Value);
     }
@@ -67,7 +69,7 @@ pub(super) fn header_column(
         if matches!(value, CellValue::Blank | CellValue::Error(_)) {
             continue;
         }
-        if equal_ignore_case(&text(value)?, name) {
+        if equal_ignore_case(&coerce_database_text(value)?, name) {
             return Ok(Some(col));
         }
     }
@@ -111,10 +113,10 @@ pub(super) fn select_field(
     let selected = match field {
         CellValue::Error(error) if !function.empty_field() => return Err((*error).into()),
         CellValue::Error(_) => None,
-        value if numeric(value).is_some() => field_index(value, database.columns),
+        value if coerce_database_number(value).is_some() => field_index(value, database.columns),
         CellValue::Text(name) => header_column(database, name)?,
         CellValue::Blank => header_column(database, "")?,
-        value => header_column(database, &text(value)?)?,
+        value => header_column(database, &coerce_database_text(value)?)?,
     };
     if selected.is_none() && !function.empty_field() {
         return Err(CellError::Value.into());

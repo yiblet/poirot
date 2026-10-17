@@ -146,7 +146,8 @@ impl Session<'_> {
             return Ok(Error(VALUE_ERROR));
         }
         let value = match value {
-            Value::Missing => return Ok(Blank),
+            // TODO(coercion-non-argument): [MEDIUM] Selecting a missing array operand as blank discards omission identity before its eventual consumer.
+            Value::Missing => return Ok(coerce_legacy_missing_blank()),
             Value::Scalar(value) => value,
             Value::Array(array) => array
                 .get(row)
