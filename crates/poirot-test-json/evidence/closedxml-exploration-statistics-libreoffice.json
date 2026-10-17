@@ -1,0 +1,3457 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T16:54:33.233345+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-exploration-database-criteria.json": "8df0e530eba6870526a482387412e82d91f93132918843554a4d090b5340b1b2",
+    "closedxml-exploration-database-field-types.json": "0c4a8d6638f134e04a9e48ae19957478474f76519adee9c35df008d4131d98bc",
+    "closedxml-exploration-engineering-complex.json": "9057f3e13edd3a20302626fb151531180cddd6f5c70d15e28bda5048c701e8f8",
+    "closedxml-exploration-engineering-radix.json": "f3ce876d3d6e36e11b0c12ce438fd3166e03fbb4dba805961bae6a67db74a4a0",
+    "closedxml-exploration-financial-fractions.json": "1f51d0eb1eb7f019153e1ef2b52988d61cd48772fe46871b98173bf59c4fb844",
+    "closedxml-exploration-financial-periods.json": "88d80e2e18960d919ebff9064f4527ef29781aa511aec44bbbb770aac044ad8f",
+    "closedxml-exploration-frequency-buckets.json": "4a02bb29cc250329c9bfbe06741c6c3f900aa8b3a4f16ec482f54542e6239a28",
+    "closedxml-exploration-order-statistics.json": "ec1f648e2ecd2b43b51b8bf59c5bb158d1cec6c7bdecdcef90723d134b5e0486",
+    "closedxml-exploration-paired-statistics.json": "a2554db520f4262d5a0e7e1f7c4f5885357b966ff6facaf8b9d24e1ace8db3fc"
+  },
+  "results": [
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSUM duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSUM columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSUM different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSUM repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSUM blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSUM no records match differs from zero result",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSUM wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 16.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSUM numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DCOUNT duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DCOUNT columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DCOUNT different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DCOUNT repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DCOUNT blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DCOUNT no records match differs from zero result",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DCOUNT wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DCOUNT numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DGET columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DGET no records match differs from zero result",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DAVERAGE duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DAVERAGE columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DAVERAGE different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DAVERAGE repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DAVERAGE blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DAVERAGE no records match differs from zero result",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DAVERAGE wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 5.33333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DAVERAGE numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMIN duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMIN columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMIN different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMIN repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMIN blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMIN no records match differs from zero result",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMIN wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMIN numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMAX duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMAX columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMAX different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMAX repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMAX blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMAX no records match differs from zero result",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMAX wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMAX numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DPRODUCT duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DPRODUCT columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DPRODUCT different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 32.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DPRODUCT repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 24.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DPRODUCT blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 384.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DPRODUCT no records match differs from zero result",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DPRODUCT wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 96.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DPRODUCT numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEV duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.82842712474619
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEV different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.82842712474619
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEV repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 1.4142135623731
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEV blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.58198889747161
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEV wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 3.05505046330389
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEV numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.82842712474619
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEVP duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEVP columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEVP different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEVP repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEVP blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.23606797749979
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEVP wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.49443825784929
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEVP numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVAR duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVAR different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVAR repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVAR blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 6.66666666666667
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVAR wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 9.33333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVAR numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVARP duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVARP columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVARP different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVARP repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVARP blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVARP wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 6.22222222222222
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVARP numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-field-types.json",
+      "name": "ClosedXML exploration database-field-types: DCOUNTA includes empty text but skips blank",
+      "checks": [
+        {
+          "action": 11,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-field-types.json",
+      "name": "ClosedXML exploration database-field-types: DSUM referenced numeric text is not a number",
+      "checks": [
+        {
+          "action": 11,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 14,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-field-types.json",
+      "name": "ClosedXML exploration database-field-types: DGET retains selected numeric text type",
+      "checks": [
+        {
+          "action": 11,
+          "actual": {
+            "type": "text",
+            "value": "19"
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-field-types.json",
+      "name": "ClosedXML exploration database-field-types: DAVERAGE zero contributes to denominator",
+      "checks": [
+        {
+          "action": 11,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 14,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-field-types.json",
+      "name": "ClosedXML exploration database-field-types: DCOUNT record count versus numeric field count contrasts",
+      "checks": [
+        {
+          "action": 11,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 25,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 27,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-complex.json",
+      "name": "ClosedXML exploration engineering-complex: unit imaginary coefficient omitted",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "i"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-complex.json",
+      "name": "ClosedXML exploration engineering-complex: minus unit imaginary coefficient omitted",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "-i"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-complex.json",
+      "name": "ClosedXML exploration engineering-complex: zero imaginary omits suffix",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "3"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-complex.json",
+      "name": "ClosedXML exploration engineering-complex: both zero is text zero",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "0"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-complex.json",
+      "name": "ClosedXML exploration engineering-complex: negative imaginary sign",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "2-3j"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-complex.json",
+      "name": "ClosedXML exploration engineering-complex: uppercase suffix invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-complex.json",
+      "name": "ClosedXML exploration engineering-complex: unrelated suffix invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-complex.json",
+      "name": "ClosedXML exploration engineering-complex: invalid suffix even zero imaginary",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-complex.json",
+      "name": "ClosedXML exploration engineering-complex: IMREAL contrasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-complex.json",
+      "name": "ClosedXML exploration engineering-complex: IMAGINARY contrasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": -1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": -3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": -2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: BIN2DEC all ones means minus one",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: BIN2DEC minimum signed value",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -512.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: BIN2DEC largest positive value",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 511.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: BIN2DEC leading zeros keep short value positive",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: BIN2DEC empty input zero",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: HEX2DEC all ones means minus one",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: HEX2DEC minimum signed value",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -549755813888.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: HEX2DEC largest positive value",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 549755813887.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: HEX2DEC leading zeros keep short value positive",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 16.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: HEX2DEC empty input zero",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: OCT2DEC all ones means minus one",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: OCT2DEC minimum signed value",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -536870912.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: OCT2DEC largest positive value",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 536870911.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: OCT2DEC leading zeros keep short value positive",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: OCT2DEC empty input zero",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN fraction truncates toward zero",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "101"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN negative fraction truncates toward zero",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "1111111111"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN minimum negative accepted",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "1000000000"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN largest positive accepted",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "111111111"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN negative ignores small padding",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "1111111111"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN padding width fractional truncates",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "0101"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN nonnumeric places invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX fraction truncates toward zero",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "5"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX minimum negative accepted",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "8000000000"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX largest positive accepted",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "7FFFFFFFFF"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX negative ignores small padding",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "FFFFFFFFFF"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX positive insufficient padding",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "F"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX padding width fractional truncates",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "0005"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-engineering-radix.json",
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX nonnumeric places invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-financial-fractions.json",
+      "name": "ClosedXML exploration financial-fractions: DOLLARDE truncate denominator",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.125
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-financial-fractions.json",
+      "name": "ClosedXML exploration financial-fractions: DOLLARFR truncate denominator",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0032
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-financial-periods.json",
+      "name": "ClosedXML exploration financial-periods: NPV numeric text ignored",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "number",
+            "value": 150.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-financial-periods.json",
+      "name": "ClosedXML exploration financial-periods: NPV blank ignored",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "number",
+            "value": 150.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-financial-periods.json",
+      "name": "ClosedXML exploration financial-periods: NPV zero occupies a period",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "number",
+            "value": 100.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-financial-periods.json",
+      "name": "ClosedXML exploration financial-periods: NPV negative flow keeps sign",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-financial-periods.json",
+      "name": "ClosedXML exploration financial-periods: NPV initial flow discounted",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-frequency-buckets.json",
+      "name": "ClosedXML exploration frequency-buckets: upper endpoints are inclusive",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-frequency-buckets.json",
+      "name": "ClosedXML exploration frequency-buckets: overflow bucket is retained",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-frequency-buckets.json",
+      "name": "ClosedXML exploration frequency-buckets: duplicate bin creates zero width interval",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-frequency-buckets.json",
+      "name": "ClosedXML exploration frequency-buckets: negative endpoints use signed ordering",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-frequency-buckets.json",
+      "name": "ClosedXML exploration frequency-buckets: text observations excluded",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: LARGE fractional rank rounds upward",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: LARGE ties occupy separate positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: LARGE numeric array text excluded",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: LARGE array logical excluded",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: LARGE positive rank below one",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: SMALL fractional rank rounds upward",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: SMALL ties occupy separate positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: SMALL numeric array text excluded",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: PERCENTILE interpolated between adjacent ranks",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: PERCENTILE endpoints include minimum",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: PERCENTILE endpoints include maximum",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: PERCENTILE single point all probabilities same",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: PERCENTILE text values filtered",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-order-statistics.json",
+      "name": "ClosedXML exploration order-statistics: PERCENTILE error propagated",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL single pair",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: CORREL error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON single pair",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: PEARSON error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE single pair",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: SLOPE error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT single pair",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST zero is included",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST text rejects the whole pair",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST numeric text is still excluded",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST blank pair rejected",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST nonnumeric opposite coordinate",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST constant x",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST constant y",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST single pair",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: FORECAST error is not missing",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: zero is included contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.33333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 1.33333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: text rejects the whole pair contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: numeric text is still excluded contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: blank pair rejected contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: nonnumeric opposite coordinate contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: constant x contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: constant y contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: single pair contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-paired-statistics.json",
+      "name": "ClosedXML exploration paired-statistics: error is not missing contrasts",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 208,
+    "checks": 247,
+    "corroborated_scenarios": 208,
+    "corroborated_checks": 247
+  }
+}

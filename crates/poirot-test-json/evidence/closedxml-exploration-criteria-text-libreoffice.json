@@ -1,0 +1,3462 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T16:54:33.188443+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-exploration-criteria-alignment.json": "5f97b4f3d1f89b2316e220bcdef7b882384cd81ff8a8fd53d6814e3f1cc97782",
+    "closedxml-exploration-criteria-geometry.json": "650caf5c4d680c27518d2fd698ab34bd5afc896d2301e938bd717b5ade466b3d",
+    "closedxml-exploration-criteria-siblings.json": "27cd71fea9dec4cda24d227231f2af9a64af549cbc24537c3e7c862f950227ee",
+    "closedxml-exploration-numbervalue-grammar.json": "84551d30bd4e8c7aab20da2152003c4002f2d49877b1b312b9138a27dbc18a22",
+    "closedxml-exploration-sumproduct-policies.json": "1343fb092bbaebfcc515661f08b5c58b32485c3bd4190ec9096a1710e32bfa33",
+    "closedxml-exploration-text-doc-boundaries.json": "6707fb7d6737c02e17dd0d6e924e69db9d931e85bceb83bd7c5b3d5ebc22312c"
+  },
+  "results": [
+    {
+      "suite": "closedxml-exploration-criteria-alignment.json",
+      "name": "ClosedXML exploration criteria-alignment: COUNTIFS aligns multiple criteria through edits",
+      "checks": [
+        {
+          "action": 12,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-alignment.json",
+      "name": "ClosedXML exploration criteria-alignment: COUNTIFS contradictory conditions share a range",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-alignment.json",
+      "name": "ClosedXML exploration criteria-alignment: SUMIFS aligns multiple criteria through edits",
+      "checks": [
+        {
+          "action": 12,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-alignment.json",
+      "name": "ClosedXML exploration criteria-alignment: SUMIFS contradictory conditions share a range",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-alignment.json",
+      "name": "ClosedXML exploration criteria-alignment: AVERAGEIFS aligns multiple criteria through edits",
+      "checks": [
+        {
+          "action": 12,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 18,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-alignment.json",
+      "name": "ClosedXML exploration criteria-alignment: AVERAGEIFS contradictory conditions share a range",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-alignment.json",
+      "name": "ClosedXML exploration criteria-alignment: MINIFS aligns multiple criteria through edits",
+      "checks": [
+        {
+          "action": 12,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-alignment.json",
+      "name": "ClosedXML exploration criteria-alignment: MINIFS contradictory conditions share a range",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-alignment.json",
+      "name": "ClosedXML exploration criteria-alignment: MAXIFS aligns multiple criteria through edits",
+      "checks": [
+        {
+          "action": 12,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-alignment.json",
+      "name": "ClosedXML exploration criteria-alignment: MAXIFS contradictory conditions share a range",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-geometry.json",
+      "name": "ClosedXML exploration criteria-geometry: SUMIF single top-left expands to criteria shape",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 60.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-geometry.json",
+      "name": "ClosedXML exploration criteria-geometry: SUMIF undersized column expands to criteria shape",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 60.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-geometry.json",
+      "name": "ClosedXML exploration criteria-geometry: SUMIF oversized rectangle expands to criteria shape",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 60.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-geometry.json",
+      "name": "ClosedXML exploration criteria-geometry: AVERAGEIF single top-left expands to criteria shape",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-geometry.json",
+      "name": "ClosedXML exploration criteria-geometry: AVERAGEIF undersized column expands to criteria shape",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-geometry.json",
+      "name": "ClosedXML exploration criteria-geometry: AVERAGEIF oversized rectangle expands to criteria shape",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-geometry.json",
+      "name": "ClosedXML exploration criteria-geometry: SUMIFS different length",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-geometry.json",
+      "name": "ClosedXML exploration criteria-geometry: SUMIFS same count wrong orientation",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-geometry.json",
+      "name": "ClosedXML exploration criteria-geometry: AVERAGEIFS different length",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-geometry.json",
+      "name": "ClosedXML exploration criteria-geometry: AVERAGEIFS same count wrong orientation",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-geometry.json",
+      "name": "ClosedXML exploration criteria-geometry: MINIFS different length",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-geometry.json",
+      "name": "ClosedXML exploration criteria-geometry: MINIFS same count wrong orientation",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-geometry.json",
+      "name": "ClosedXML exploration criteria-geometry: MAXIFS different length",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-geometry.json",
+      "name": "ClosedXML exploration criteria-geometry: MAXIFS same count wrong orientation",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-geometry.json",
+      "name": "ClosedXML exploration criteria-geometry: COUNTIFS different length",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-geometry.json",
+      "name": "ClosedXML exploration criteria-geometry: COUNTIFS same count wrong orientation",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF empty text matches blank and empty text",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF numeric relation skips text even numeric text",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF not equal includes unmatched text",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF case insensitive equality",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF question mark is exactly one character",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF escaped asterisk is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF escaped question mark is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF escaped tilde is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF prefix wildcard includes empty suffix",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF infix wildcard includes empty middle",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF literal numeric comparison in criteria",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF no match count and sum versus mean",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF trailing spaces remain significant",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF not equal wildcard negation",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS empty text matches blank and empty text",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS numeric relation skips text even numeric text",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS not equal includes unmatched text",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS case insensitive equality",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS question mark is exactly one character",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS escaped asterisk is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS escaped question mark is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS escaped tilde is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS prefix wildcard includes empty suffix",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS infix wildcard includes empty middle",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS literal numeric comparison in criteria",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS no match count and sum versus mean",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS trailing spaces remain significant",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS not equal wildcard negation",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIF empty text matches blank and empty text",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIF numeric relation skips text even numeric text",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIF not equal includes unmatched text",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIF case insensitive equality",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIF question mark is exactly one character",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 40.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIF escaped asterisk is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIF escaped question mark is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIF escaped tilde is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIF prefix wildcard includes empty suffix",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIF infix wildcard includes empty middle",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 60.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIF literal numeric comparison in criteria",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIF no match count and sum versus mean",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIF trailing spaces remain significant",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIF not equal wildcard negation",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS empty text matches blank and empty text",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS numeric relation skips text even numeric text",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS not equal includes unmatched text",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS case insensitive equality",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS question mark is exactly one character",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 40.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS escaped asterisk is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS escaped question mark is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS escaped tilde is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS prefix wildcard includes empty suffix",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS infix wildcard includes empty middle",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 60.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS literal numeric comparison in criteria",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS no match count and sum versus mean",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS trailing spaces remain significant",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS not equal wildcard negation",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF empty text matches blank and empty text",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF numeric relation skips text even numeric text",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF not equal includes unmatched text",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF case insensitive equality",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF question mark is exactly one character",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF escaped asterisk is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF escaped question mark is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF escaped tilde is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF prefix wildcard includes empty suffix",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF infix wildcard includes empty middle",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF literal numeric comparison in criteria",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF no match count and sum versus mean",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF trailing spaces remain significant",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF not equal wildcard negation",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS empty text matches blank and empty text",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS numeric relation skips text even numeric text",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS not equal includes unmatched text",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS case insensitive equality",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS question mark is exactly one character",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS escaped asterisk is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS escaped question mark is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS escaped tilde is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS prefix wildcard includes empty suffix",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS infix wildcard includes empty middle",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS literal numeric comparison in criteria",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS no match count and sum versus mean",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS trailing spaces remain significant",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS not equal wildcard negation",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS numeric zero excludes text except numeric spellings",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS empty text matches blank and empty text",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS numeric relation skips text even numeric text",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS not equal includes unmatched text",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS case insensitive equality",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS asterisk matches text but not numbers",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS question mark is exactly one character",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS escaped asterisk is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS escaped question mark is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS escaped tilde is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS prefix wildcard includes empty suffix",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS infix wildcard includes empty middle",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS literal numeric comparison in criteria",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS boolean criterion differs from number",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS no match count and sum versus mean",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS trailing spaces remain significant",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MINIFS not equal wildcard negation",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS empty text matches blank and empty text",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS blank criterion reference means numeric zero",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS numeric relation skips text even numeric text",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS not equal includes unmatched text",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS case insensitive equality",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS asterisk matches text but not numbers",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 40.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS question mark is exactly one character",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS escaped asterisk is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS escaped question mark is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS escaped tilde is literal",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS prefix wildcard includes empty suffix",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS infix wildcard includes empty middle",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS literal numeric comparison in criteria",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS no match count and sum versus mean",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS trailing spaces remain significant",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-criteria-siblings.json",
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS not equal wildcard negation",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: embedded spaces ignored",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 123.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: repeated percent scales repeatedly",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0025
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: grouping before decimal ignored",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1234.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: grouping after decimal invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: repeated decimal invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: identical separators invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: percent after trailing spaces",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.25
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: percent between digits invalid",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: custom punctuation",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1234.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numbervalue-grammar.json",
+      "name": "ClosedXML exploration numbervalue-grammar: group separator repeated accepted",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: numeric text ignored",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 38.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: text ignored",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 38.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: same count different shape rejected",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: different width rejected",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: zero does not mask error",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: arithmetic forces numeric text",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 56.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: arithmetic forces booleans",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 44.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: arithmetic rejects ordinary text",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: two dimensional correspondence",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 70.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-sumproduct-policies.json",
+      "name": "ClosedXML exploration sumproduct-policies: subtraction before sum",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -16.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: LEFT missing length is one",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "e"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: LEFT explicit missing length is zero",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: LEFT fraction length truncated",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "ed"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: LEFT negative length rejected",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: LEFT numeric text length",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "ed"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: LEFT error length propagates",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: RIGHT missing length is one",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "e"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: RIGHT explicit missing length zero",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: RIGHT fraction length truncated",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "ge"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: RIGHT negative length rejected",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: RIGHT numeric text length",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "ge"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: RIGHT error length propagates",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: MID fraction start and length truncate",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "bc"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: MID start zero rejected even empty result",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: MID beyond end returns empty",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: MID overshoot clips",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "bc"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: MID negative length rejected",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: MID text start grammar",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "a"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: MID empty source still validates start",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: REPLACE zero count inserts",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "abXcd"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: REPLACE start beyond end appends",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "abcdX"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: REPLACE overshoot removes remainder",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "abX"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: REPLACE fraction positions truncate",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "aXcd"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: REPLACE zero start rejected",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: REPLACE empty replacement deletes",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "ad"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: REPLACE negative count rejected",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: SUBSTITUTE nonoverlapping all occurrences",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "XXa"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: SUBSTITUTE nth occurrence scans source",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "aaXa"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: SUBSTITUTE case sensitive",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "xAx"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: SUBSTITUTE empty needle no insertions",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "abc"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: SUBSTITUTE absent occurrence unchanged",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "aba"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: SUBSTITUTE instance zero invalid",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: SUBSTITUTE fraction instance truncates",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "xba"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: SUBSTITUTE replacement not rescanned",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "aab"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: REPT fraction count truncates",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "abab"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: REPT zero count empty",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: REPT empty source large repetition stays empty",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: REPT output maximum exact",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 32767.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: REPT negative fractional count invalid",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: REPT numeric text repeat count",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "x"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: TRIM NBSP preserved",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "\u00a0a\u00a0"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: TRIM tab preserved",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "a\tb"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: TRIM only spaces removed",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: TRIM internal runs collapse",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "a b"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: TRIM zero string retained",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "0"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: CLEAN ASCII tab and LF removed",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "ab"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: CLEAN spaces retained",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": " a  b "
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: EXACT number requests text conversion",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: EXACT comparison remains case sensitive",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: EXACT blank reference differs from zero",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: EXACT blank reference equals empty text",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: FIND wildcard treated literally",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: FIND case sensitive",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: FIND start zero invalid",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: FIND search starts after earlier match",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: FIND numeric text fractional start",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: SEARCH escaped star literal",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: SEARCH escaped question literal",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: SEARCH case insensitive",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: SEARCH wildcard suffix can be empty",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-text-doc-boundaries.json",
+      "name": "ClosedXML exploration text-doc-boundaries: SEARCH unmatched pattern error",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 224,
+    "checks": 234,
+    "corroborated_scenarios": 224,
+    "corroborated_checks": 234
+  }
+}

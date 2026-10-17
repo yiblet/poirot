@@ -1,0 +1,963 @@
+{
+  "source_revision": "09f2f21a60e821ce7fb18ca3576b272e5dd6d921",
+  "screened_candidates": 718,
+  "selected_scenarios": 300,
+  "selection": "Prefer distinct semantic methods, include confirmed mismatches and tricky passing controls; combine scalar/array errors and add edit/restore checks where independently justified. No repeated unsupported-function samples added.",
+  "excluded_during_screening": [
+    {
+      "name": "ClosedXML extension nested-subtotals: skips nested subtotal cells but includes ordinary SUM \u2014 A14",
+      "reason": "action 1: UnsupportedCapability { capability: FunctionAdapter, source: Some(EvaluationTarget { sheet: 0, address: CellAddress { row: 13, col: 0 } }), detail: \"SUBTOTAL needs workbook visibility and nested subtotal metadata\" }"
+    },
+    {
+      "name": "ClosedXML extension nested-subtotals: skips subtotal even inside a larger arithmetic formula \u2014 A19",
+      "reason": "action 1: UnsupportedCapability { capability: FunctionAdapter, source: Some(EvaluationTarget { sheet: 0, address: CellAddress { row: 18, col: 0 } }), detail: \"SUBTOTAL needs workbook visibility and nested subtotal metadata\" }"
+    },
+    {
+      "name": "ClosedXML extension nested-subtotals: does not mistake a quoted SUBTOTAL string for a function call \u2014 A23",
+      "reason": "action 1: UnsupportedCapability { capability: FunctionAdapter, source: Some(EvaluationTarget { sheet: 0, address: CellAddress { row: 22, col: 0 } }), detail: \"SUBTOTAL needs workbook visibility and nested subtotal metadata\" }"
+    },
+    {
+      "name": "ClosedXML extension nested-subtotals: includes a cell referencing a subtotal as an ordinary value \u2014 A26",
+      "reason": "action 1: UnsupportedCapability { capability: FunctionAdapter, source: Some(EvaluationTarget { sheet: 0, address: CellAddress { row: 25, col: 0 } }), detail: \"SUBTOTAL needs workbook visibility and nested subtotal metadata\" }"
+    },
+    {
+      "name": "ClosedXML extension nested-subtotals: ignores literal text mentioning SUBTOTAL \u2014 A29",
+      "reason": "action 1: UnsupportedCapability { capability: FunctionAdapter, source: Some(EvaluationTarget { sheet: 0, address: CellAddress { row: 28, col: 0 } }), detail: \"SUBTOTAL needs workbook visibility and nested subtotal metadata\" }"
+    },
+    {
+      "name": "ClosedXML extension nested-subtotals: handles forward references and several subtotal forms \u2014 A33",
+      "reason": "action 1: UnsupportedCapability { capability: FunctionAdapter, source: Some(EvaluationTarget { sheet: 0, address: CellAddress { row: 32, col: 0 } }), detail: \"SUBTOTAL needs workbook visibility and nested subtotal metadata\" }"
+    },
+    {
+      "name": "ClosedXML extension nested-subtotals: expression function code and multiple input areas \u2014 A34",
+      "reason": "action 1: UnsupportedCapability { capability: FunctionAdapter, source: Some(EvaluationTarget { sheet: 0, address: CellAddress { row: 33, col: 0 } }), detail: \"SUBTOTAL needs workbook visibility and nested subtotal metadata\" }"
+    },
+    {
+      "name": "ClosedXML extension nested-subtotals: multiple ranges preserve source weights \u2014 A36",
+      "reason": "action 1: UnsupportedCapability { capability: FunctionAdapter, source: Some(EvaluationTarget { sheet: 0, address: CellAddress { row: 35, col: 0 } }), detail: \"SUBTOTAL needs workbook visibility and nested subtotal metadata\" }"
+    },
+    {
+      "name": "ClosedXML extension nested-subtotals: subtotal nested as a function argument \u2014 A41",
+      "reason": "action 1: UnsupportedCapability { capability: FunctionAdapter, source: Some(EvaluationTarget { sheet: 0, address: CellAddress { row: 40, col: 0 } }), detail: \"SUBTOTAL needs workbook visibility and nested subtotal metadata\" }"
+    },
+    {
+      "name": "ClosedXML extension nested-subtotals: two subtotal calls in one expression \u2014 A42",
+      "reason": "action 1: UnsupportedCapability { capability: FunctionAdapter, source: Some(EvaluationTarget { sheet: 0, address: CellAddress { row: 41, col: 0 } }), detail: \"SUBTOTAL needs workbook visibility and nested subtotal metadata\" }"
+    },
+    {
+      "name": "ClosedXML extension implicit-intersection: ImplicitIntersection CanWorkOnlyWithOneArea \u2014 ABS((B1:B2,B3:B5))",
+      "reason": "action 2: UnsupportedCapability { capability: FunctionAdapter, source: Some(EvaluationTarget { sheet: 0, address: CellAddress { row: 2, col: 3 } }), detail: \"pinned OperandResolver cannot coerce RefListEval to a scalar\" }"
+    },
+    {
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM(S!A1:S!B2)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM(A1:S!B2)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension reference-ranges: Range OnlyReferencesCanBeRange \u2014 SUM(A1:IF(TRUE,1,))",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension reference-ranges: Range UnificationAcrossSheetsResultsInValueError \u2014 SUM(S!A1:Other!B2)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension reference-ranges: Range UnificationAcrossSheetsResultsInValueError \u2014 SUM(A1:Other!B2)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension reference-ranges: Range UnificationAcrossSheetsResultsInValueError \u2014 SUM(A1:(Other!B2,C3))",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension reference-ranges: Range UnificationAcrossSheetsResultsInValueError \u2014 SUM(Other!A1:(Other!B2,C3))",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension reference-ranges: Range UnificationAcrossSheetsResultsInValueError \u2014 SUM((Other!A1,A5):Other!B2)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension reference-ranges: Range UnificationAcrossSheetsResultsInValueError \u2014 SUM((S!A1):Other!B2)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension reference-ranges: Range UnificationAcrossSheetsResultsInValueError \u2014 SUM(Other!A5:(B5))",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension matrix-inputs: MDETERM rejects or propagates boolean matrix member \u2014 MDETERM(A1:B2)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension matrix-inputs: MINVERSE rejects or propagates boolean matrix member \u2014 MINVERSE(A1:B2)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension join-text: TEXTJOIN traversal delimiter coercion and empty inputs \u2014 TEXTJOIN(\",\", TRUE, D1:E2)",
+      "reason": "Normal and overlay modes disagree; this cannot be accepted as a scalar known gap."
+    },
+    {
+      "name": "ClosedXML extension join-text: TEXTJOIN traversal delimiter coercion and empty inputs \u2014 TEXTJOIN(\",\", FALSE, D1:E2)",
+      "reason": "Normal and overlay modes disagree; this cannot be accepted as a scalar known gap."
+    },
+    {
+      "name": "ClosedXML extension join-text: TEXTJOIN traversal delimiter coercion and empty inputs \u2014 TEXTJOIN(false, FALSE, A1:B2)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: AVERAGE preserves array error \u2014 AVERAGE({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: AVERAGEA preserves array error \u2014 AVERAGEA({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: GEOMEAN preserves scalar error \u2014 GEOMEAN(1,#NULL!)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: GEOMEAN preserves array error \u2014 GEOMEAN({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: DEVSQ preserves array error \u2014 DEVSQ({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: MAX preserves array error \u2014 MAX({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: MAXA preserves array error \u2014 MAXA({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: MEDIAN preserves array error \u2014 MEDIAN({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: MIN preserves array error \u2014 MIN({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: MINA preserves array error \u2014 MINA({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: STDEV preserves array error \u2014 STDEV({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: STDEVA preserves array error \u2014 STDEVA({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: STDEVP preserves array error \u2014 STDEVP({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: STDEVPA preserves array error \u2014 STDEVPA({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: VAR preserves array error \u2014 VAR({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: VARA preserves array error \u2014 VARA({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: VARP preserves array error \u2014 VARP({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-errors: VARPA preserves array error \u2014 VARPA({1,#NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: AVERAGE numeric text \u2014 AVERAGE(\"0\",\"1\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: AVERAGE fraction text \u2014 AVERAGE(\"1\",\"0 0/2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: AVERAGEA numeric text \u2014 AVERAGEA(\"0\",\"1\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: AVERAGEA fraction text \u2014 AVERAGEA(\"1\",\"0 0/2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: AVERAGEA unconvertible text \u2014 AVERAGEA(5,\"Hello\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: DEVSQ numeric text \u2014 DEVSQ(\"0\",\"1\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: DEVSQ fraction text \u2014 DEVSQ(\"1\",\"0 0/2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: MAX numeric text \u2014 MAX(\"0\",\"1\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: MAX fraction text \u2014 MAX(\"1\",\"0 0/2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: MAXA numeric text \u2014 MAXA(\"0\",\"1\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: MAXA fraction text \u2014 MAXA(\"1\",\"0 0/2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: MAXA unconvertible text \u2014 MAXA(5,\"Hello\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: MEDIAN numeric text \u2014 MEDIAN(\"0\",\"1\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: MEDIAN fraction text \u2014 MEDIAN(\"1\",\"0 0/2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: MIN numeric text \u2014 MIN(\"0\",\"1\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: MIN fraction text \u2014 MIN(\"1\",\"0 0/2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: MINA unconvertible text \u2014 MINA(5,\"Hello\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: STDEV inline blank \u2014 STDEV(IF(TRUE,),1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: STDEV logical scalars \u2014 STDEV(FALSE,TRUE)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: STDEV numeric text \u2014 STDEV(\"0\",\"1\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: STDEV fraction text \u2014 STDEV(\"1\",\"0 0/2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: STDEVA inline blank \u2014 STDEVA(IF(TRUE,),1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: STDEVA logical scalars \u2014 STDEVA(FALSE,TRUE)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: STDEVA numeric text \u2014 STDEVA(\"0\",\"1\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: STDEVA fraction text \u2014 STDEVA(\"1\",\"0 0/2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: STDEVA unconvertible text \u2014 STDEVA(5,\"Hello\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: STDEVP numeric text \u2014 STDEVP(\"0\",\"1\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: STDEVP fraction text \u2014 STDEVP(\"1\",\"0 0/2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: STDEVPA numeric text \u2014 STDEVPA(\"0\",\"1\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: STDEVPA fraction text \u2014 STDEVPA(\"1\",\"0 0/2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: STDEVPA unconvertible text \u2014 STDEVPA(5,\"Hello\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: VAR numeric text \u2014 VAR(\"0\",\"1\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: VAR fraction text \u2014 VAR(\"1\",\"0 0/2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: VARA numeric text \u2014 VARA(\"0\",\"1\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: VARA fraction text \u2014 VARA(\"1\",\"0 0/2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: VARA unconvertible text \u2014 VARA(5,\"Hello\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: VARP numeric text \u2014 VARP(\"0\",\"1\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: VARP fraction text \u2014 VARP(\"1\",\"0 0/2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: VARPA numeric text \u2014 VARPA(\"0\",\"1\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: VARPA fraction text \u2014 VARPA(\"1\",\"0 0/2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-origins: VARPA unconvertible text \u2014 VARPA(5,\"Hello\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension distributions: Binomial zero trials endpoint probabilities and fractional trial counts: 0 out of 5 successes \u2014 BINOMDIST(0,5,0.2,FALSE)",
+      "reason": "Unsupported-function or nominal example does not add useful semantic coverage in this selection."
+    },
+    {
+      "name": "ClosedXML extension distributions: Binomial zero trials endpoint probabilities and fractional trial counts: 0 out of 0 successes \u2014 BINOMDIST(0,0,0.2,FALSE)",
+      "reason": "Unsupported-function or nominal example does not add useful semantic coverage in this selection."
+    },
+    {
+      "name": "ClosedXML extension distributions: Binomial zero trials endpoint probabilities and fractional trial counts \u2014 BINOMDIST(1,1,0,FALSE)",
+      "reason": "Unsupported-function or nominal example does not add useful semantic coverage in this selection."
+    },
+    {
+      "name": "ClosedXML extension distributions: Binomial zero trials endpoint probabilities and fractional trial counts \u2014 BINOMDIST(1,1,1,FALSE)",
+      "reason": "Unsupported-function or nominal example does not add useful semantic coverage in this selection."
+    },
+    {
+      "name": "ClosedXML extension distributions: Binomial zero trials endpoint probabilities and fractional trial counts: Attempts are floored \u2014 BINOMDIST(2.9,4.9,0.5,FALSE)",
+      "reason": "Unsupported-function or nominal example does not add useful semantic coverage in this selection."
+    },
+    {
+      "name": "ClosedXML extension distributions: Binomial zero trials endpoint probabilities and fractional trial counts \u2014 BINOMDIST(0,7,0.3,TRUE)",
+      "reason": "Unsupported-function or nominal example does not add useful semantic coverage in this selection."
+    },
+    {
+      "name": "ClosedXML extension distributions: Binomial zero trials endpoint probabilities and fractional trial counts \u2014 BINOMDIST(0,0,0.3,TRUE)",
+      "reason": "Unsupported-function or nominal example does not add useful semantic coverage in this selection."
+    },
+    {
+      "name": "ClosedXML extension distributions: Binomial zero trials endpoint probabilities and fractional trial counts \u2014 BINOMDIST(0,0,1,TRUE)",
+      "reason": "Unsupported-function or nominal example does not add useful semantic coverage in this selection."
+    },
+    {
+      "name": "ClosedXML extension distributions: Binomial zero trials endpoint probabilities and fractional trial counts: Values are floored \u2014 BINOMDIST(2.9,4.9,0.5,TRUE)",
+      "reason": "Unsupported-function or nominal example does not add useful semantic coverage in this selection."
+    },
+    {
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(1900,1,10),DATE(2024,2,29),1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1986,12,31),1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1988,12,31),2)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1990,12,31),11)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1992,12,31),12)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1994,12,31),13)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1999,12,31),14)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(2004,12,31),15)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(2008,12,31),16)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1929,12,31),17)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: ArrayOperation DifferentSizedArraysAreUpscaledToContainingSize \u2014 SUM({1,2;3,4;5,6}+{1,2,3;4,5,6})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: ArrayOperation DifferentSizedArraysAreUpscaledToContainingSize \u2014 ROWS({1,2;3,4;5,6}+{1,2,3;4,5,6})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: ArrayOperation DifferentSizedArraysAreUpscaledToContainingSize \u2014 COLUMNS({1,2;3,4;5,6}+{1,2,3;4,5,6})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 TRUE>1",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 TRUE>100",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 FALSE>1",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 FALSE>100",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 TRUE>\"100\"",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 FALSE>\"100\"",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 FALSE>\"\"",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 \"\">FALSE",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 10>FALSE",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 10>TRUE",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 1<TRUE",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 100<TRUE",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 1<FALSE",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 100<FALSE",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 \"100\"<TRUE",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 \"100\"<FALSE",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 \"\"<FALSE",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 FALSE<\"\"",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 FALSE<10",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 TRUE<10",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension operators: UnaryMinus ConvertsArgumentBeforeNegating \u2014 -FALSE",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: DateDif end date cant be after start date \u2014 DATEDIF(40524,38718,\"D\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: Day only accepts serial date from 0 to upper limit of calendar system \u2014 DAY(-0.1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: Day only accepts serial date from 0 to upper limit of calendar system \u2014 DAY(DATE(9999,12,31)+1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: EDate returns number error for non date values \u2014 EDATE(-0.1,0)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: EDate returns number error for non date values \u2014 EDATE(2958466,0)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: Hour accepts only serial time between zero and upper limit of date system \u2014 HOUR(-0.1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: Hour accepts only serial time between zero and upper limit of date system \u2014 HOUR(DATE(9999,12,31)+1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: Minute accepts only serial time between zero and upper limit of date system \u2014 MINUTE(-0.1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: Minute accepts only serial time between zero and upper limit of date system \u2014 MINUTE(DATE(9999,12,31)+1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: Month serial date must be between zero and upper limit of date system \u2014 MONTH(-0.1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: Month serial date must be between zero and upper limit of date system \u2014 MONTH(DATE(9999,12,31) + 1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(\"1\", \"10\", \"2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(1, 10, \"0 4/2\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(1, 10, \"1900-01-02\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(1, 10, {TRUE})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: Second accepts only serial time between zero and upper limit of date system \u2014 SECOND(-0.1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: Second accepts only serial time between zero and upper limit of date system \u2014 SECOND(DATE(9999,12,31)+1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: Weeknum match excel behavior and returns zero for serial date zero when week starts on sunday \u2014 WEEKNUM(0,1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: Weeknum match excel behavior and returns zero for serial date zero when week starts on sunday \u2014 WEEKNUM(0,17)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: Weeknum returns number invalid error on non serial dates \u2014 WEEKNUM(-0.1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension date-domains: Weeknum returns number invalid error on non serial dates \u2014 WEEKNUM(DATE(9999,12,31)+1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension precedence: Asc \u2014 Asc(\"Text\")",
+      "reason": "Unsupported-function or nominal example does not add useful semantic coverage in this selection."
+    },
+    {
+      "name": "ClosedXML extension precedence: Exact converts values to text \u2014 EXACT(TRUE, \"TRUE\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension logical: And ScalarArgumentsCoercedFromBlankOrTextOrNumber \u2014 AND(\"FALSE\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension logical: And ScalarArgumentsCoercedFromBlankOrTextOrNumber \u2014 AND(\"TRUE\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension logical: And UnconvertableScalarArgumentsSkipped \u2014 AND(TRUE,\"z\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension logical: Or ScalarArgumentsCoercedFromBlankOrTextOrNumber \u2014 OR(\"FALSE\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension logical: Or ScalarArgumentsCoercedFromBlankOrTextOrNumber \u2014 OR(\"TRUE\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension logical: Or UnconvertableScalarArgumentsSkipped \u2014 OR(TRUE,\"z\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension selection: Hlookup UnexpectedArguments \u2014 HLOOKUP(#DIV/0!,{1,2},1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension selection: Hlookup UnexpectedArguments \u2014 HLOOKUP(\"value\",1,1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension selection: Hlookup UnexpectedArguments \u2014 HLOOKUP(\"value\",TRUE,1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension selection: Index scalar \u2014 INDEX(\"Text\", 1, 1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension selection: Index scalar \u2014 INDEX(\"Text\", 0, 0)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension selection: Index scalar \u2014 TYPE(INDEX(\"Text\", 1, 1))",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Arabic solitary minus is not valid roman number \u2014 ARABIC(\"-\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Combin returns num error when k is larger than n \u2014 COMBIN(5, 6)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Combin returns num error when value is too large \u2014 COMBIN(2147483647, 2147483647)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Combin returns num error when value is too large \u2014 COMBIN(6, 5E+301)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Cot returns division by zero error on angle zero \u2014 COT(0)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Coth returns division by zero error on angle zero \u2014 COTH(0)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Csc returns division by zero on angle zero \u2014 CSC(0)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Csch returns division error on angle zero \u2014 CSCH(0)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Gcd numbers must be zero or positive \u2014 GCD(-1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Lcm numbers must be zero or positive \u2014 LCM(-1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Log error conditions \u2014 LOG(0)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Log error conditions \u2014 LOG(1,0)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Log error conditions \u2014 LOG(0,0)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Log error conditions \u2014 LOG(10,1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Multinomial doesnt accept negative values \u2014 MULTINOMIAL(5, -1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Multinomial coercion \u2014 MULTINOMIAL(5, #DIV/0!)",
+      "reason": "Unsupported-function or nominal example does not add useful semantic coverage in this selection."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Power errors \u2014 POWER(0, 0)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Power errors \u2014 POWER(0, -5)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Product \u2014 PRODUCT({2,3},4,\"5\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Product \u2014 PRODUCT(\"5\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Product \u2014 PRODUCT({5, \"Hello\", FALSE, TRUE})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Product \u2014 PRODUCT({1, #NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Quotient errors \u2014 QUOTIENT(1, 0)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: SumProduct \u2014 SUMPRODUCT({1,2,3,4}, {TRUE,FALSE,\"1\",\"\"})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: SumSq \u2014 SUMSQ(\"4\", \"3\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: SumSq \u2014 SUMSQ({2,TRUE,TRUE,FALSE,FALSE})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: SumSq \u2014 SUMSQ({1, #NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: Average \u2014 AVERAGE({FALSE, TRUE, \"1\", \"0 0/2\", -1})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: AverageA \u2014 AVERAGEA({2,TRUE,TRUE,FALSE,FALSE})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: Count \u2014 COUNT({TRUE,FALSE,\"1\"})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: Count \u2014 COUNT({1, #NULL!})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: CountBlank \u2014 COUNTBLANK(IF(TRUE,#DIV/0!))",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: CountBlank \u2014 COUNTBLANK(IF(TRUE,{1}))",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: Geomean \u2014 GEOMEAN(10.5,{5.3,2.9},\"12\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: Geomean \u2014 GEOMEAN(TRUE, \"5\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: Geomean \u2014 GEOMEAN({TRUE, FALSE, \"1\", 7}, 5)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: Devsq is calculated from numbers \u2014 DEVSQ({2,TRUE,TRUE,FALSE,FALSE})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: MaxA \u2014 MAXA({\"ABC\",TRUE})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: MaxA \u2014 MAXA({-2, TRUE, TRUE, FALSE, FALSE})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: MaxA \u2014 MAXA({-4, -2, \"hello\", \"10\" })",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: Median uses only numbers \u2014 MEDIAN({7, TRUE,FALSE,\"1\"})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: Min \u2014 MIN({5, TRUE, FALSE, \"1\", \"hello\"})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: MinA \u2014 MINA({2, TRUE, TRUE, FALSE, FALSE})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: MinA \u2014 MINA({4, 2, \"hello\", \"1\"})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: StDev \u2014 STDEV({0, 1, \"Hello\", FALSE, TRUE})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: StDevA \u2014 STDEVA({0, 1, \"9\", \"Hello\", FALSE, TRUE})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: StDevP \u2014 STDEVP({TRUE})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: StDevPA \u2014 STDEVPA({0, 1, \"9\", \"Hello\", FALSE, TRUE})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: StDevPA \u2014 STDEVPA({\"hello\"})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: Var \u2014 VAR({0, 1, \"Hello\", FALSE, TRUE})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: VarA \u2014 VARA({5, 7, \"9\", \"Hello\", FALSE, TRUE})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: VarPA \u2014 VARPA({5, 7, \"9\", \"Hello\", FALSE, TRUE})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension aggregate-policies: VarPA \u2014 VARPA({\"hello\"})",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Code returns error on empty string \u2014 CODE(\"\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Concat has limit of 32767 characters \u2014 CONCAT(REPT(\"A\",32768))",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Concat propagates error values \u2014 CONCAT(\"ABC\",{\"D\",#DIV/0!,7},5)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Concatenate has limit of 32767 characters \u2014 CONCATENATE(REPT(\"A\",32768))",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Find Empty Pattern And Empty Text \u2014 FIND(\"\", \"\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Find Empty Pattern And Empty Text \u2014 FIND(\"\", \"a\", 2)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Find Empty Search Pattern Returns Start Of Text \u2014 FIND(\"\", \"asdf\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Find Arguments Are Converted To Expected Types \u2014 FIND(TRUE, \"ATRUE\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Fixed coercion \u2014 FIXED(1234,1,\"0\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Mid uses code units \u2014 MID(\"\ud83d\ude0a\ud83d\ude0a\ud83d\ude0a\",1,4)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Replace start position must be from 1 to 32767 \u2014 REPLACE(\"ABC\",1,32768,\"D\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Rept limits output text length to 32767 \u2014 REPT(\"A\",32768)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Search Empty Search Pattern Returns Start Of Text \u2014 SEARCH(\"\", \"asdf\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Search Tilde Escapes Next Char \u2014 SEARCH(\"~a~b~\", \"ab\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Search Arguments Are Converted To Expected Types \u2014 SEARCH(TRUE, \"ATRUE\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Substitute searches for every occurence \u2014 SUBSTITUTE(\"AAAAAAAA\",\"AA\",\"ZZ\",3)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Substitute occurence must be between one and max int \u2014 SUBSTITUTE(\"ABC\",\"B\",\"ZZ\", 2147483647)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: T propagates error \u2014 T(#DIV/0!)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: T returns array of results when argument is array \u2014 INDEX(T({\"A\",#REF!}),1,1)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: T returns array of results when argument is array \u2014 INDEX(T({\"A\",#REF!}),1,2)",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Text propagates errors \u2014 TEXT(#REF!,\"#00\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    },
+    {
+      "name": "ClosedXML extension text-policies: Value Value \u2014 VALUE(\"16:48:00\")-VALUE(\"12:17:12\")",
+      "reason": "The independent Calc run does not corroborate every expected value."
+    }
+  ],
+  "remaining_unselected": "Other corroborated candidates were omitted as less distinct or redundant with the selected semantic boundary families.",
+  "research_correction": "One proposed VLOOKUP result-edit control targeted a cell outside its one-column table. Calc rejected the authored expectation, and both the control and its unsupported claim were removed before inclusion.",
+  "operational_gaps": "Nested SUBTOTAL requires metadata unsupported by the current runner. These operational failures and normal/overlay change-list disagreements were excluded, never annotated as scalar known gaps."
+}

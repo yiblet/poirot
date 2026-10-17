@@ -1,0 +1,1631 @@
+{
+  "screened": 1011,
+  "eligible": 600,
+  "excluded": [
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 0 Y",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 1 M",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 2 D",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 5 YD",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 10 Pathological case. Start is shifted to 2024-02-31, thus 2024-03-02 is one day before the end",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 11 YM across many years",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 14 YM counts only full months - the last month is not full",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 15 YM counts only full months - the last month is full",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 16 YM counts only full months - the last month exactly full",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 17 YD has plus +1 error with start dates in jan/feb 1900 and end in march of subsequent years",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 18 YD ignores year, baseline",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 20 YD uses start year, not end year. Start has feb29, baseline",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 21 YD uses start year, not end year. Start doesn't have feb29 => it's one less than the baseline",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 22 YD",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 23 Y",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 24 Y",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 25 M",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration calendar-units: DATEDIF 26 D",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF numeric zero excludes text except numeric spellings",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF blank criterion reference means numeric zero",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF asterisk matches text but not numbers",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: COUNTIF boolean criterion differs from number",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS numeric zero excludes text except numeric spellings",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS blank criterion reference means numeric zero",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS asterisk matches text but not numbers",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: COUNTIFS boolean criterion differs from number",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: SUMIF numeric zero excludes text except numeric spellings",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: SUMIF blank criterion reference means numeric zero",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: SUMIF asterisk matches text but not numbers",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: SUMIF boolean criterion differs from number",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS numeric zero excludes text except numeric spellings",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS blank criterion reference means numeric zero",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS asterisk matches text but not numbers",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: SUMIFS boolean criterion differs from number",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF numeric zero excludes text except numeric spellings",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF blank criterion reference means numeric zero",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF asterisk matches text but not numbers",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIF boolean criterion differs from number",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS numeric zero excludes text except numeric spellings",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS blank criterion reference means numeric zero",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS asterisk matches text but not numbers",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: AVERAGEIFS boolean criterion differs from number",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: MINIFS blank criterion reference means numeric zero",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS numeric zero excludes text except numeric spellings",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration criteria-siblings: MAXIFS boolean criterion differs from number",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DCOUNTA duplicate OR rows do not double count",
+      "reason": "The all-numeric selected field makes this indistinguishable from the corresponding DCOUNT criteria case."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DCOUNTA columns combine with AND",
+      "reason": "The all-numeric selected field makes this indistinguishable from the corresponding DCOUNT criteria case."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DCOUNTA different rows combine with OR",
+      "reason": "The all-numeric selected field makes this indistinguishable from the corresponding DCOUNT criteria case."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DCOUNTA repeated field names express numeric interval",
+      "reason": "The all-numeric selected field makes this indistinguishable from the corresponding DCOUNT criteria case."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DCOUNTA blank criteria row admits entire database",
+      "reason": "The all-numeric selected field makes this indistinguishable from the corresponding DCOUNT criteria case."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DCOUNTA no records match differs from zero result",
+      "reason": "The all-numeric selected field makes this indistinguishable from the corresponding DCOUNT criteria case."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DCOUNTA wildcard field criteria",
+      "reason": "The all-numeric selected field makes this indistinguishable from the corresponding DCOUNT criteria case."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DCOUNTA numeric field index instead of label",
+      "reason": "The all-numeric selected field makes this indistinguishable from the corresponding DCOUNT criteria case."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DGET duplicate OR rows do not double count",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DGET different rows combine with OR",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DGET repeated field names express numeric interval",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DGET blank criteria row admits entire database",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DGET wildcard field criteria",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DGET numeric field index instead of label",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DSTDEV columns combine with AND",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DSTDEV no records match differs from zero result",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DSTDEVP no records match differs from zero result",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DVAR columns combine with AND",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DVAR no records match differs from zero result",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration database-criteria: DVARP no records match differs from zero result",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration database-field-types: DSTDEV only one numeric value is insufficient",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration database-field-types: DGET blank unique result is numeric zero",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-complex: IMREAL uppercase suffix invalid",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-complex: IMREAL invalid text",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-complex: IMAGINARY uppercase suffix invalid",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-complex: IMAGINARY invalid text",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: BIN2DEC invalid digit rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: BIN2DEC eleven characters rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: BIN2DEC negative spelling is not radix sign",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: BIN2DEC fractional spelling invalid",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: HEX2DEC invalid digit rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: HEX2DEC eleven characters rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: HEX2DEC negative spelling is not radix sign",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: HEX2DEC fractional spelling invalid",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: OCT2DEC invalid digit rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: OCT2DEC eleven characters rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: OCT2DEC negative spelling is not radix sign",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: OCT2DEC fractional spelling invalid",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN below negative domain",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN above positive domain",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN positive insufficient padding",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN zero places insufficient",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN negative places invalid",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX negative fraction truncates toward zero",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX below negative domain",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX above positive domain",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX zero places insufficient",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX negative places invalid",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration financial-fractions: DOLLARDE negative denominator",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration financial-fractions: DOLLARDE zero denominator",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration financial-fractions: DOLLARDE fraction below one",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration financial-fractions: DOLLARFR negative denominator",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration financial-fractions: DOLLARFR zero denominator",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration financial-fractions: DOLLARFR fraction below one",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration financial-periods: NPV logical ignored",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration frequency-buckets: empty numeric population all zero",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration numbervalue-grammar: first separator characters only",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration numbervalue-grammar: empty input zero",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: CEILING.MATH CeilingMath fraction positions (0,)",
+      "reason": "Operational/harness failure: action 1: UnsupportedCapability { capability: FunctionAdapter, source: Some(EvaluationTarget { sheet: 0, address: CellAddress { row: 99, col: 25 } }), detail: \"math CeilingMath requires MissingNumericArgument\" }"
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: CEILING.MATH CeilingMath negative positions (0,)",
+      "reason": "Operational/harness failure: action 1: UnsupportedCapability { capability: FunctionAdapter, source: Some(EvaluationTarget { sheet: 0, address: CellAddress { row: 99, col: 25 } }), detail: \"math CeilingMath requires MissingNumericArgument\" }"
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: CEILING.MATH CeilingMath zero positions (0, 1)",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: FLOOR Floor zero positions (0,)",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: FLOOR.MATH FloorMath fraction positions (0,)",
+      "reason": "Operational/harness failure: action 1: UnsupportedCapability { capability: FunctionAdapter, source: Some(EvaluationTarget { sheet: 0, address: CellAddress { row: 99, col: 25 } }), detail: \"math FloorMath requires MissingNumericArgument\" }"
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: FLOOR.MATH FloorMath negative positions (0,)",
+      "reason": "Operational/harness failure: action 1: UnsupportedCapability { capability: FunctionAdapter, source: Some(EvaluationTarget { sheet: 0, address: CellAddress { row: 99, col: 25 } }), detail: \"math FloorMath requires MissingNumericArgument\" }"
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: FLOOR.MATH FloorMath zero positions (0, 1)",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: MROUND MRound zero positions (0,)",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: MROUND MRoundExceptions negative positions (0, 1)",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: MROUND MRoundExceptions negative positions (0,)",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: ROUND Round large positions ()",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: ROUND Round zero positions (0, 1)",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: ROUNDDOWN RoundDown zero positions (0, 1)",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: ROUNDDOWN RoundDown zero positions (0,)",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: ROUNDUP RoundUp zero positions (0, 1)",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: ROUNDUP RoundUp zero positions (0,)",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: TRUNC Trunc zero positions (0,)",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: TRUNC Trunc zero positions (0, 1)",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: TRUNC Trunc_Specify_Digits zero positions (0, 1)",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: EVEN Even zero positions (0,)",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: EVEN Even large positions ()",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: ODD Odd large positions ()",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: GCD Gcd text positions ()",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: LCM Lcm text positions ()",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: FACT Fact_calculates_factorial zero positions (0,)",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: FACT Fact_calculates_factorial fraction positions (0,)",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: FACT Fact_returns_error_for_negative_input negative positions (0,)",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: FACT Fact_returns_error_for_too_large_result large positions ()",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: FACTDOUBLE FactDouble_ReturnsCorrectResult zero positions (0,)",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: COMBIN Combin_calculates_combinations zero positions (0, 1)",
+      "reason": "Ordinary magnitude/zero example adds too little beyond existing domain coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: COMBIN Combin_returns_num_error_for_any_argument_smaller_than_0 negative positions (0,)",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: COMBINA Combina_calculates_correct_values zero positions (0, 1)",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: COMBINA Combina_calculates_correct_values zero positions (1,)",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: COMBINA Combina_truncates_numbers_to_zero fraction positions (0, 1)",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: COMBINA Combina_truncates_numbers_to_zero zero positions (0, 1)",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: BASE Base_returns_number_in_specified_base zero positions (0,)",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: BASE Base_returns_number_in_specified_base large positions ()",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: BASE Base_returns_text_of_at_least_minimal_length zero positions (0, 2)",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: DECIMAL Decimal text positions ()",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: DECIMAL Decimal text positions (1,)",
+      "reason": "Entirely unsupported function or spelling adds no useful repeated #NAME coverage."
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: LARGE empty numeric sample",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: LARGE rank exceeds filtered population",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: LARGE fraction above last rank",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: LARGE numeric text scalar sample",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: SMALL array logical excluded",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: SMALL empty numeric sample",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: SMALL rank exceeds filtered population",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: SMALL fraction above last rank",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: SMALL positive rank below one",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: SMALL numeric text scalar sample",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: PERCENTILE negative probability invalid",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: PERCENTILE above unit probability invalid",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: PERCENTILE boolean values filtered",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: PERCENTILE empty population",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: CORREL logical pair rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: CORREL different physical sizes",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: CORREL all pairs rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: PEARSON logical pair rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: PEARSON different physical sizes",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: PEARSON all pairs rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVAR logical pair rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVAR different physical sizes",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVAR all pairs rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.P logical pair rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.P different physical sizes",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.P all pairs rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S logical pair rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S different physical sizes",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S single pair",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S all pairs rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: SLOPE logical pair rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: SLOPE different physical sizes",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: SLOPE all pairs rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT logical pair rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT different physical sizes",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT all pairs rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: FORECAST logical pair rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: FORECAST different physical sizes",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: FORECAST all pairs rejected",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: OFFSET above sheet",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: OFFSET before first column",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration selected-aggregate-types: AVERAGE INDEX-selected logical",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration selected-aggregate-types: DEVSQ INDEX-selected logical",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration selected-aggregate-types: MEDIAN INDEX-selected logical",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration selected-aggregate-types: MIN INDEX-selected logical",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration selected-aggregate-types: STDEV INDEX-selected logical",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration selected-aggregate-types: STDEVP INDEX-selected logical",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration selected-aggregate-types: VAR INDEX-selected logical",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration selected-aggregate-types: VARP INDEX-selected logical",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration selected-information: ISNUMBER selected logical",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration selected-information: TYPE selected empty text",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration selected-information: TYPE selected logical",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration source-financial: Ipmt_EdgeCases case 3 Non-integer period",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration source-text: Text_formats_number case 0",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration source-text: TextJoin_joins_arguments_with_specified_delimiter case 4",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration source-text: TextJoin_joins_arguments_with_specified_delimiter case 5",
+      "reason": "Normal/overlay observations or ordered changes disagree; not a scalar known gap."
+    },
+    {
+      "name": "ClosedXML exploration source-text: TextJoin_joins_arguments_with_specified_delimiter case 6",
+      "reason": "Normal/overlay observations or ordered changes disagree; not a scalar known gap."
+    },
+    {
+      "name": "ClosedXML exploration source-text: TextJoin_joins_arguments_with_specified_delimiter case 7",
+      "reason": "Operational/harness failure: action 1: Budget(BudgetFailure { kind: CellWork, limit: 1000000, consumed: 999508, requested: 1343, target: Some(EvaluationTarget { sheet: 0, address: CellAddress { row: 99, col: 25 } }) })"
+    },
+    {
+      "name": "ClosedXML exploration source-text: TextJoin_joins_arguments_with_specified_delimiter case 9",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration sumproduct-policies: logical ignored",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration sumproduct-policies: single array sums numeric only",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: LEFT boolean text conversion",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: RIGHT boolean conversion",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: REPT output maximum overflow",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: CLEAN DEL retained",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: CLEAN NBSP retained",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: EXACT logical requests text conversion",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: FIND empty needle uses start",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: SEARCH empty needle uses start",
+      "reason": "Not independently corroborated by Calc; authored expectation is not changed to match it."
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: And ScalarArgumentsCoercedFromBlankOrTextOrNumber \u2014 AND(0)",
+      "reason": "Nominal truth-table/example; covered by stronger typed controls."
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: And ScalarArgumentsCoercedFromBlankOrTextOrNumber \u2014 AND(0.1)",
+      "reason": "Nominal truth-table/example; covered by stronger typed controls."
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: If ConditionError ReturnError \u2014 IF(1/0, \"T\", \"F\")",
+      "reason": "Nominal truth-table/example; covered by stronger typed controls."
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: If ConditionCoercedToLogical \u2014 IF(1, \"T\", \"F\")",
+      "reason": "Nominal truth-table/example; covered by stronger typed controls."
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: If ConditionCoercedToLogical \u2014 IF(0, \"T\", \"F\")",
+      "reason": "Nominal truth-table/example; covered by stronger typed controls."
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: IfError FirstArgumentNonError ReturnFirstArgument \u2014 IFERROR(TRUE, 5)",
+      "reason": "Nominal truth-table/example; covered by stronger typed controls."
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: IfError FirstArgumentNonError ReturnFirstArgument \u2014 IFERROR(0, 5)",
+      "reason": "Nominal truth-table/example; covered by stronger typed controls."
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: IfError FirstArgumentNonError ReturnFirstArgument \u2014 IFERROR(-2, 5)",
+      "reason": "Nominal truth-table/example; covered by stronger typed controls."
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: IfError FirstArgumentNonError ReturnFirstArgument \u2014 IFERROR(\"text\", 5)",
+      "reason": "Nominal truth-table/example; covered by stronger typed controls."
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: IfError FirstArgumentError ReturnSecondArgument \u2014 IFERROR(1/0, \"text\")",
+      "reason": "Nominal truth-table/example; covered by stronger typed controls."
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: Or ScalarArgumentsCoercedFromBlankOrTextOrNumber \u2014 OR(0)",
+      "reason": "Nominal truth-table/example; covered by stronger typed controls."
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: Or ScalarArgumentsCoercedFromBlankOrTextOrNumber \u2014 OR(0.1)",
+      "reason": "Nominal truth-table/example; covered by stronger typed controls."
+    },
+    {
+      "name": "ClosedXML exploration upstream numeric-domains: MDeterm examples \u2014 MDETERM({3,6;1,1})",
+      "reason": "Nominal matrix arithmetic already covered by matrix input boundaries."
+    },
+    {
+      "name": "ClosedXML exploration upstream selection: Match examples \u2014 MATCH(39,{25,38,40,41},1)",
+      "reason": "Nominal lookup example."
+    },
+    {
+      "name": "ClosedXML exploration upstream selection: Match examples \u2014 MATCH(41,{25,38,40,41},0)",
+      "reason": "Nominal lookup example."
+    },
+    {
+      "name": "ClosedXML exploration upstream selection: Vlookup CanSearchArrays \u2014 VLOOKUP(4, {1,2; 3,2; 5,3; 7,4}, 2)",
+      "reason": "Nominal lookup example."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Clean removes control characters \u2014 CLEAN(\"   \")",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Exact Value \u2014 Exact(\"asdf\", \"asdf\")",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Exact Value \u2014 Exact(\"asdf\", \"ASDF\")",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Find Value \u2014 FIND(\"Tuesday\", \"Today is Tuesday\")",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Search Value \u2014 SEARCH(\"Tuesday\", \"Today is Tuesday\")",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Search Value \u2014 SEARCH(\"Excel 20??\", \"Microsoft Excel 2010\")",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Search Value \u2014 SEARCH(\"text\", \"This is some text\", 14)",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Substitute replaces n th occurence \u2014 SUBSTITUTE(\"This is a Tuesday.\", \"Tuesday\", \"Monday\")",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Substitute replaces n th occurence \u2014 SUBSTITUTE(\"This is a Tuesday. Next week also has a Tuesday.\", \"Tuesday\", \"Monday\", 1)",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Substitute replaces n th occurence \u2014 SUBSTITUTE(\"This is a Tuesday. Next week also has a Tuesday.\", \"Tuesday\", \"Monday\", 2)",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Substitute replaces n th occurence \u2014 SUBSTITUTE(\"This is a Tuesday. Next week also has a Tuesday.\", \"\", \"Monday\")",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Substitute replaces n th occurence \u2014 SUBSTITUTE(\"This is a Tuesday. Next week also has a Tuesday.\", \"Tuesday\", \"\")",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: T returns text when value is text \u2014 T(\"asdf\")",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: T returns text when value is text \u2014 T(\"\")",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Upper converts text to upper case \u2014 UPPER(\"AbCdEfG\")",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Value Input String Is Not A Number \u2014 VALUE(\"asdf\")",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Value PassingUnexpectedTypes \u2014 VALUE(#DIV/0!)",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Value Value \u2014 VALUE(\"123.456\")",
+      "reason": "Nominal example or redundant with a more discriminating documentation boundary."
+    }
+  ],
+  "consolidations": [
+    {
+      "family": "selected-information",
+      "result": "ClosedXML exploration selected-information: ISBLANK contrasts",
+      "members": [
+        "ClosedXML exploration selected-information: ISBLANK selected numeric text",
+        "ClosedXML exploration selected-information: ISBLANK selected empty text",
+        "ClosedXML exploration selected-information: ISBLANK selected logical",
+        "ClosedXML exploration selected-information: ISBLANK selected number",
+        "ClosedXML exploration selected-information: ISBLANK selected NA error",
+        "ClosedXML exploration selected-information: ISBLANK selected DIV error",
+        "ClosedXML exploration selected-information: ISBLANK selected blank"
+      ]
+    },
+    {
+      "family": "selected-information",
+      "result": "ClosedXML exploration selected-information: ISTEXT contrasts",
+      "members": [
+        "ClosedXML exploration selected-information: ISTEXT selected numeric text",
+        "ClosedXML exploration selected-information: ISTEXT selected empty text",
+        "ClosedXML exploration selected-information: ISTEXT selected logical",
+        "ClosedXML exploration selected-information: ISTEXT selected number",
+        "ClosedXML exploration selected-information: ISTEXT selected NA error",
+        "ClosedXML exploration selected-information: ISTEXT selected DIV error",
+        "ClosedXML exploration selected-information: ISTEXT selected blank"
+      ]
+    },
+    {
+      "family": "selected-information",
+      "result": "ClosedXML exploration selected-information: ISNONTEXT contrasts",
+      "members": [
+        "ClosedXML exploration selected-information: ISNONTEXT selected numeric text",
+        "ClosedXML exploration selected-information: ISNONTEXT selected empty text",
+        "ClosedXML exploration selected-information: ISNONTEXT selected logical",
+        "ClosedXML exploration selected-information: ISNONTEXT selected number",
+        "ClosedXML exploration selected-information: ISNONTEXT selected NA error",
+        "ClosedXML exploration selected-information: ISNONTEXT selected DIV error",
+        "ClosedXML exploration selected-information: ISNONTEXT selected blank"
+      ]
+    },
+    {
+      "family": "selected-information",
+      "result": "ClosedXML exploration selected-information: ISNUMBER contrasts",
+      "members": [
+        "ClosedXML exploration selected-information: ISNUMBER selected numeric text",
+        "ClosedXML exploration selected-information: ISNUMBER selected empty text",
+        "ClosedXML exploration selected-information: ISNUMBER selected number",
+        "ClosedXML exploration selected-information: ISNUMBER selected NA error",
+        "ClosedXML exploration selected-information: ISNUMBER selected DIV error",
+        "ClosedXML exploration selected-information: ISNUMBER selected blank"
+      ]
+    },
+    {
+      "family": "selected-information",
+      "result": "ClosedXML exploration selected-information: ISLOGICAL contrasts",
+      "members": [
+        "ClosedXML exploration selected-information: ISLOGICAL selected numeric text",
+        "ClosedXML exploration selected-information: ISLOGICAL selected empty text",
+        "ClosedXML exploration selected-information: ISLOGICAL selected logical",
+        "ClosedXML exploration selected-information: ISLOGICAL selected number",
+        "ClosedXML exploration selected-information: ISLOGICAL selected NA error",
+        "ClosedXML exploration selected-information: ISLOGICAL selected DIV error",
+        "ClosedXML exploration selected-information: ISLOGICAL selected blank"
+      ]
+    },
+    {
+      "family": "selected-information",
+      "result": "ClosedXML exploration selected-information: ISERROR contrasts",
+      "members": [
+        "ClosedXML exploration selected-information: ISERROR selected numeric text",
+        "ClosedXML exploration selected-information: ISERROR selected empty text",
+        "ClosedXML exploration selected-information: ISERROR selected logical",
+        "ClosedXML exploration selected-information: ISERROR selected number",
+        "ClosedXML exploration selected-information: ISERROR selected NA error",
+        "ClosedXML exploration selected-information: ISERROR selected DIV error",
+        "ClosedXML exploration selected-information: ISERROR selected blank"
+      ]
+    },
+    {
+      "family": "selected-information",
+      "result": "ClosedXML exploration selected-information: ISERR contrasts",
+      "members": [
+        "ClosedXML exploration selected-information: ISERR selected numeric text",
+        "ClosedXML exploration selected-information: ISERR selected empty text",
+        "ClosedXML exploration selected-information: ISERR selected logical",
+        "ClosedXML exploration selected-information: ISERR selected number",
+        "ClosedXML exploration selected-information: ISERR selected NA error",
+        "ClosedXML exploration selected-information: ISERR selected DIV error",
+        "ClosedXML exploration selected-information: ISERR selected blank"
+      ]
+    },
+    {
+      "family": "selected-information",
+      "result": "ClosedXML exploration selected-information: ISNA contrasts",
+      "members": [
+        "ClosedXML exploration selected-information: ISNA selected numeric text",
+        "ClosedXML exploration selected-information: ISNA selected empty text",
+        "ClosedXML exploration selected-information: ISNA selected logical",
+        "ClosedXML exploration selected-information: ISNA selected number",
+        "ClosedXML exploration selected-information: ISNA selected NA error",
+        "ClosedXML exploration selected-information: ISNA selected DIV error",
+        "ClosedXML exploration selected-information: ISNA selected blank"
+      ]
+    },
+    {
+      "family": "selected-information",
+      "result": "ClosedXML exploration selected-information: TYPE contrasts",
+      "members": [
+        "ClosedXML exploration selected-information: TYPE selected numeric text",
+        "ClosedXML exploration selected-information: TYPE selected number",
+        "ClosedXML exploration selected-information: TYPE selected NA error",
+        "ClosedXML exploration selected-information: TYPE selected DIV error",
+        "ClosedXML exploration selected-information: TYPE selected blank"
+      ]
+    },
+    {
+      "family": "selected-information",
+      "result": "ClosedXML exploration selected-information: N contrasts",
+      "members": [
+        "ClosedXML exploration selected-information: N selected numeric text",
+        "ClosedXML exploration selected-information: N selected empty text",
+        "ClosedXML exploration selected-information: N selected logical",
+        "ClosedXML exploration selected-information: N selected number",
+        "ClosedXML exploration selected-information: N selected NA error",
+        "ClosedXML exploration selected-information: N selected DIV error",
+        "ClosedXML exploration selected-information: N selected blank"
+      ]
+    },
+    {
+      "family": "selected-information",
+      "result": "ClosedXML exploration selected-information: T contrasts",
+      "members": [
+        "ClosedXML exploration selected-information: T selected numeric text",
+        "ClosedXML exploration selected-information: T selected empty text",
+        "ClosedXML exploration selected-information: T selected logical",
+        "ClosedXML exploration selected-information: T selected number",
+        "ClosedXML exploration selected-information: T selected NA error",
+        "ClosedXML exploration selected-information: T selected DIV error",
+        "ClosedXML exploration selected-information: T selected blank"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: ABS contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: ABS selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: ABS selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: ABS selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: ABS selected error"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: SIGN contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: SIGN selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: SIGN selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: SIGN selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: SIGN selected error"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: INT contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: INT selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: INT selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: INT selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: INT selected error"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: TRUNC contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: TRUNC selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: TRUNC selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: TRUNC selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: TRUNC selected error"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: SQRT contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: SQRT selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: SQRT selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: SQRT selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: SQRT selected error"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: EXP contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: EXP selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: EXP selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: EXP selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: EXP selected error"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: LN contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: LN selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: LN selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: LN selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: LN selected error"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: LOG10 contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: LOG10 selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: LOG10 selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: LOG10 selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: LOG10 selected error"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: SIN contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: SIN selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: SIN selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: SIN selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: SIN selected error"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: COS contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: COS selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: COS selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: COS selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: COS selected error"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: TAN contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: TAN selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: TAN selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: TAN selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: TAN selected error"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: ATAN contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: ATAN selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: ATAN selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: ATAN selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: ATAN selected error"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: SINH contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: SINH selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: SINH selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: SINH selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: SINH selected error"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: COSH contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: COSH selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: COSH selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: COSH selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: COSH selected error"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: TANH contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: TANH selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: TANH selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: TANH selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: TANH selected error"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: DEGREES contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: DEGREES selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: DEGREES selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: DEGREES selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: DEGREES selected error"
+      ]
+    },
+    {
+      "family": "scalar-consumer-transfer",
+      "result": "ClosedXML exploration scalar-consumer-transfer: RADIANS contrasts",
+      "members": [
+        "ClosedXML exploration scalar-consumer-transfer: RADIANS selected fraction grammar",
+        "ClosedXML exploration scalar-consumer-transfer: RADIANS selected logical",
+        "ClosedXML exploration scalar-consumer-transfer: RADIANS selected empty string",
+        "ClosedXML exploration scalar-consumer-transfer: RADIANS selected error"
+      ]
+    },
+    {
+      "family": "selected-aggregate-types",
+      "result": "ClosedXML exploration selected-aggregate-types: AVERAGE selected text contrasts",
+      "members": [
+        "ClosedXML exploration selected-aggregate-types: AVERAGE INDEX-selected numeric text",
+        "ClosedXML exploration selected-aggregate-types: AVERAGE INDEX-selected empty text"
+      ]
+    },
+    {
+      "family": "selected-aggregate-types",
+      "result": "ClosedXML exploration selected-aggregate-types: AVERAGEA selected text contrasts",
+      "members": [
+        "ClosedXML exploration selected-aggregate-types: AVERAGEA INDEX-selected numeric text",
+        "ClosedXML exploration selected-aggregate-types: AVERAGEA INDEX-selected empty text"
+      ]
+    },
+    {
+      "family": "selected-aggregate-types",
+      "result": "ClosedXML exploration selected-aggregate-types: DEVSQ selected text contrasts",
+      "members": [
+        "ClosedXML exploration selected-aggregate-types: DEVSQ INDEX-selected numeric text",
+        "ClosedXML exploration selected-aggregate-types: DEVSQ INDEX-selected empty text"
+      ]
+    },
+    {
+      "family": "selected-aggregate-types",
+      "result": "ClosedXML exploration selected-aggregate-types: MAX selected text contrasts",
+      "members": [
+        "ClosedXML exploration selected-aggregate-types: MAX INDEX-selected numeric text",
+        "ClosedXML exploration selected-aggregate-types: MAX INDEX-selected empty text"
+      ]
+    },
+    {
+      "family": "selected-aggregate-types",
+      "result": "ClosedXML exploration selected-aggregate-types: MAXA selected text contrasts",
+      "members": [
+        "ClosedXML exploration selected-aggregate-types: MAXA INDEX-selected numeric text",
+        "ClosedXML exploration selected-aggregate-types: MAXA INDEX-selected empty text"
+      ]
+    },
+    {
+      "family": "selected-aggregate-types",
+      "result": "ClosedXML exploration selected-aggregate-types: MEDIAN selected text contrasts",
+      "members": [
+        "ClosedXML exploration selected-aggregate-types: MEDIAN INDEX-selected numeric text",
+        "ClosedXML exploration selected-aggregate-types: MEDIAN INDEX-selected empty text"
+      ]
+    },
+    {
+      "family": "selected-aggregate-types",
+      "result": "ClosedXML exploration selected-aggregate-types: MIN selected text contrasts",
+      "members": [
+        "ClosedXML exploration selected-aggregate-types: MIN INDEX-selected numeric text",
+        "ClosedXML exploration selected-aggregate-types: MIN INDEX-selected empty text"
+      ]
+    },
+    {
+      "family": "selected-aggregate-types",
+      "result": "ClosedXML exploration selected-aggregate-types: MINA selected text contrasts",
+      "members": [
+        "ClosedXML exploration selected-aggregate-types: MINA INDEX-selected numeric text",
+        "ClosedXML exploration selected-aggregate-types: MINA INDEX-selected empty text"
+      ]
+    },
+    {
+      "family": "selected-aggregate-types",
+      "result": "ClosedXML exploration selected-aggregate-types: STDEV selected text contrasts",
+      "members": [
+        "ClosedXML exploration selected-aggregate-types: STDEV INDEX-selected numeric text",
+        "ClosedXML exploration selected-aggregate-types: STDEV INDEX-selected empty text"
+      ]
+    },
+    {
+      "family": "selected-aggregate-types",
+      "result": "ClosedXML exploration selected-aggregate-types: STDEVA selected text contrasts",
+      "members": [
+        "ClosedXML exploration selected-aggregate-types: STDEVA INDEX-selected numeric text",
+        "ClosedXML exploration selected-aggregate-types: STDEVA INDEX-selected empty text"
+      ]
+    },
+    {
+      "family": "selected-aggregate-types",
+      "result": "ClosedXML exploration selected-aggregate-types: STDEVP selected text contrasts",
+      "members": [
+        "ClosedXML exploration selected-aggregate-types: STDEVP INDEX-selected numeric text",
+        "ClosedXML exploration selected-aggregate-types: STDEVP INDEX-selected empty text"
+      ]
+    },
+    {
+      "family": "selected-aggregate-types",
+      "result": "ClosedXML exploration selected-aggregate-types: STDEVPA selected text contrasts",
+      "members": [
+        "ClosedXML exploration selected-aggregate-types: STDEVPA INDEX-selected numeric text",
+        "ClosedXML exploration selected-aggregate-types: STDEVPA INDEX-selected empty text"
+      ]
+    },
+    {
+      "family": "selected-aggregate-types",
+      "result": "ClosedXML exploration selected-aggregate-types: VAR selected text contrasts",
+      "members": [
+        "ClosedXML exploration selected-aggregate-types: VAR INDEX-selected numeric text",
+        "ClosedXML exploration selected-aggregate-types: VAR INDEX-selected empty text"
+      ]
+    },
+    {
+      "family": "selected-aggregate-types",
+      "result": "ClosedXML exploration selected-aggregate-types: VARA selected text contrasts",
+      "members": [
+        "ClosedXML exploration selected-aggregate-types: VARA INDEX-selected numeric text",
+        "ClosedXML exploration selected-aggregate-types: VARA INDEX-selected empty text"
+      ]
+    },
+    {
+      "family": "selected-aggregate-types",
+      "result": "ClosedXML exploration selected-aggregate-types: VARP selected text contrasts",
+      "members": [
+        "ClosedXML exploration selected-aggregate-types: VARP INDEX-selected numeric text",
+        "ClosedXML exploration selected-aggregate-types: VARP INDEX-selected empty text"
+      ]
+    },
+    {
+      "family": "selected-aggregate-types",
+      "result": "ClosedXML exploration selected-aggregate-types: VARPA selected text contrasts",
+      "members": [
+        "ClosedXML exploration selected-aggregate-types: VARPA INDEX-selected numeric text",
+        "ClosedXML exploration selected-aggregate-types: VARPA INDEX-selected empty text"
+      ]
+    },
+    {
+      "family": "engineering-complex",
+      "result": "ClosedXML exploration engineering-complex: IMREAL contrasts",
+      "members": [
+        "ClosedXML exploration engineering-complex: IMREAL unit suffix",
+        "ClosedXML exploration engineering-complex: IMREAL negative unit suffix",
+        "ClosedXML exploration engineering-complex: IMREAL real number input",
+        "ClosedXML exploration engineering-complex: IMREAL negative coefficient",
+        "ClosedXML exploration engineering-complex: IMREAL imaginary only",
+        "ClosedXML exploration engineering-complex: IMREAL explicit plus unit"
+      ]
+    },
+    {
+      "family": "engineering-complex",
+      "result": "ClosedXML exploration engineering-complex: IMAGINARY contrasts",
+      "members": [
+        "ClosedXML exploration engineering-complex: IMAGINARY unit suffix",
+        "ClosedXML exploration engineering-complex: IMAGINARY negative unit suffix",
+        "ClosedXML exploration engineering-complex: IMAGINARY real number input",
+        "ClosedXML exploration engineering-complex: IMAGINARY negative coefficient",
+        "ClosedXML exploration engineering-complex: IMAGINARY imaginary only",
+        "ClosedXML exploration engineering-complex: IMAGINARY explicit plus unit"
+      ]
+    },
+    {
+      "family": "paired-statistics",
+      "result": "ClosedXML exploration paired-statistics: zero is included contrasts",
+      "members": [
+        "ClosedXML exploration paired-statistics: COVAR zero is included",
+        "ClosedXML exploration paired-statistics: COVARIANCE.P zero is included"
+      ]
+    },
+    {
+      "family": "paired-statistics",
+      "result": "ClosedXML exploration paired-statistics: text rejects the whole pair contrasts",
+      "members": [
+        "ClosedXML exploration paired-statistics: COVAR text rejects the whole pair",
+        "ClosedXML exploration paired-statistics: COVARIANCE.P text rejects the whole pair"
+      ]
+    },
+    {
+      "family": "paired-statistics",
+      "result": "ClosedXML exploration paired-statistics: numeric text is still excluded contrasts",
+      "members": [
+        "ClosedXML exploration paired-statistics: COVAR numeric text is still excluded",
+        "ClosedXML exploration paired-statistics: COVARIANCE.P numeric text is still excluded"
+      ]
+    },
+    {
+      "family": "paired-statistics",
+      "result": "ClosedXML exploration paired-statistics: blank pair rejected contrasts",
+      "members": [
+        "ClosedXML exploration paired-statistics: COVAR blank pair rejected",
+        "ClosedXML exploration paired-statistics: COVARIANCE.P blank pair rejected"
+      ]
+    },
+    {
+      "family": "paired-statistics",
+      "result": "ClosedXML exploration paired-statistics: nonnumeric opposite coordinate contrasts",
+      "members": [
+        "ClosedXML exploration paired-statistics: COVAR nonnumeric opposite coordinate",
+        "ClosedXML exploration paired-statistics: COVARIANCE.P nonnumeric opposite coordinate"
+      ]
+    },
+    {
+      "family": "paired-statistics",
+      "result": "ClosedXML exploration paired-statistics: constant x contrasts",
+      "members": [
+        "ClosedXML exploration paired-statistics: COVAR constant x",
+        "ClosedXML exploration paired-statistics: COVARIANCE.P constant x"
+      ]
+    },
+    {
+      "family": "paired-statistics",
+      "result": "ClosedXML exploration paired-statistics: constant y contrasts",
+      "members": [
+        "ClosedXML exploration paired-statistics: COVAR constant y",
+        "ClosedXML exploration paired-statistics: COVARIANCE.P constant y"
+      ]
+    },
+    {
+      "family": "paired-statistics",
+      "result": "ClosedXML exploration paired-statistics: single pair contrasts",
+      "members": [
+        "ClosedXML exploration paired-statistics: COVAR single pair",
+        "ClosedXML exploration paired-statistics: COVARIANCE.P single pair"
+      ]
+    },
+    {
+      "family": "paired-statistics",
+      "result": "ClosedXML exploration paired-statistics: error is not missing contrasts",
+      "members": [
+        "ClosedXML exploration paired-statistics: COVAR error is not missing",
+        "ClosedXML exploration paired-statistics: COVARIANCE.P error is not missing"
+      ]
+    },
+    {
+      "family": "upstream-date-domains",
+      "result": "ClosedXML exploration upstream-date-domains: NETWORKDAYS argument and holiday error positions contrasts",
+      "members": [
+        "ClosedXML exploration upstream date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(\"Text\", 10)",
+        "ClosedXML exploration upstream date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(1, \"Text\")",
+        "ClosedXML exploration upstream date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(1, 10, \"Text\")",
+        "ClosedXML exploration upstream date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(1, 10, {\"Text\"})",
+        "ClosedXML exploration upstream date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(#N/A, 10)",
+        "ClosedXML exploration upstream date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(1, #N/A)",
+        "ClosedXML exploration upstream date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(1, 10, {#N/A})"
+      ]
+    },
+    {
+      "family": "upstream-text-policies",
+      "result": "ClosedXML exploration upstream-text-policies: FIND error argument positions contrasts",
+      "members": [
+        "ClosedXML exploration upstream text-policies: Find Error Arguments Return The Error \u2014 FIND(\"\", #N/A)",
+        "ClosedXML exploration upstream text-policies: Find Error Arguments Return The Error \u2014 FIND(\"a\", \"a\", #N/A)"
+      ]
+    },
+    {
+      "family": "upstream-text-policies",
+      "result": "ClosedXML exploration upstream-text-policies: SEARCH error argument positions contrasts",
+      "members": [
+        "ClosedXML exploration upstream text-policies: Search Error Arguments Return The Error \u2014 SEARCH(\"\", #N/A)",
+        "ClosedXML exploration upstream text-policies: Search Error Arguments Return The Error \u2014 SEARCH(\"a\", \"a\", #N/A)"
+      ]
+    },
+    {
+      "family": "upstream-operators",
+      "result": "ClosedXML exploration upstream-operators: percent logical operands contrasts",
+      "members": [
+        "ClosedXML exploration upstream operators: UnaryPercent ConvertsArgumentBeforePercentOperator \u2014 TRUE%",
+        "ClosedXML exploration upstream operators: UnaryPercent ConvertsArgumentBeforePercentOperator \u2014 FALSE%"
+      ]
+    },
+    {
+      "family": "numeric-source",
+      "result": "ClosedXML exploration numeric-source: MOD rounding controls contrasts",
+      "members": [
+        "ClosedXML exploration numeric-source: MOD Mod fraction positions (0,)",
+        "ClosedXML exploration numeric-source: MOD Mod fraction positions (0, 1)"
+      ]
+    },
+    {
+      "family": "numeric-source",
+      "result": "ClosedXML exploration numeric-source: TRUNC rounding controls contrasts",
+      "members": [
+        "ClosedXML exploration numeric-source: TRUNC Trunc fraction positions (0,)",
+        "ClosedXML exploration numeric-source: TRUNC Trunc negative positions (0, 1)",
+        "ClosedXML exploration numeric-source: TRUNC Trunc negative positions (0,)",
+        "ClosedXML exploration numeric-source: TRUNC Trunc_Specify_Digits negative positions (0, 1)",
+        "ClosedXML exploration numeric-source: TRUNC Trunc_Specify_Digits fraction positions (0,)"
+      ]
+    },
+    {
+      "family": "numeric-source",
+      "result": "ClosedXML exploration numeric-source: INT rounding controls contrasts",
+      "members": [
+        "ClosedXML exploration numeric-source: INT Int fraction positions (0,)",
+        "ClosedXML exploration numeric-source: INT Int negative positions (0,)"
+      ]
+    },
+    {
+      "family": "database-field-types",
+      "result": "ClosedXML exploration database-field-types: DCOUNT record count versus numeric field count contrasts",
+      "members": [
+        "ClosedXML exploration database-field-types: DCOUNT omitted field counts matching records",
+        "ClosedXML exploration database-field-types: DCOUNT text field counts no numeric records"
+      ]
+    }
+  ],
+  "target": "1,200 total; 600 new scenarios",
+  "source_revision": "09f2f21a60e821ce7fb18ca3576b272e5dd6d921",
+  "strategy": [
+    "Transfer known grammar, origin, reference-identity and filtering issues to sibling consumers.",
+    "Review official Microsoft function documentation for implicit filtering, dimensions, defaults, signed widths, bucket endpoints and record-selection rules.",
+    "Author every expected independently before evaluating Poirot. Require Calc corroboration of every retained check.",
+    "Consolidate repeated type observations, aliases and argument-position errors into multi-check scenarios. Exclude nominal cases, unsupported-function repetitions and operational failures."
+  ],
+  "batches": {
+    "criteria-text": {
+      "scenarios": 224,
+      "checks": 234,
+      "known_gap_checks": 9,
+      "known_gap_scenarios": 9,
+      "multi_check_scenarios": 5
+    },
+    "statistics": {
+      "scenarios": 208,
+      "checks": 247,
+      "known_gap_checks": 32,
+      "known_gap_scenarios": 20,
+      "multi_check_scenarios": 20
+    },
+    "origins": {
+      "scenarios": 168,
+      "checks": 425,
+      "known_gap_checks": 23,
+      "known_gap_scenarios": 19,
+      "multi_check_scenarios": 75
+    }
+  },
+  "uniqueness": "Scenario names identify a consumer and rule. Input-type variants or aliases with the same outcome policy are combined where appropriate. Numeric flags/magnitudes are not swept. Identical formulas with distinct selected input types are deliberate policy contrasts. Existing 600 suites are unchanged.",
+  "oracle_corrections": "New MINIFS/MAXIFS and COVARIANCE.P/S names require OOXML _xlfn prefixes; added to the verifier before final screening. No rejection was repaired by copying Calc/Poirot values into expected."
+}

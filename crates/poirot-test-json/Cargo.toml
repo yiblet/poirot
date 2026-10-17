@@ -1,0 +1,15 @@
+[package]
+name = "poirot-test-json"
+version.workspace = true
+edition.workspace = true
+publish = false
+description = "JSON workbook scenarios checked across evaluation modes"
+
+[dependencies]
+poirot = { path = "../.." }
+serde.workspace = true
+serde_json.workspace = true
+clap.workspace = true
+
+[lints]
+workspace = true

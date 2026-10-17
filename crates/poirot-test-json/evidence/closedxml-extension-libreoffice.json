@@ -1,0 +1,5141 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T16:26:12.734668+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-extension-aggregate-errors.json": "7d2f2ca208a4b47f0748ac7ef6ad80fd2e7dcf5a23f4077df8192e3851e61e64",
+    "closedxml-extension-aggregate-origins.json": "36c3358a7527e117a389c6f574ddfa58d418f1e386bd51765ea039820da4c487",
+    "closedxml-extension-aggregate-policies.json": "bd8471cba83905fd39cb930d8946ab434baccf35f3f938cc6224787970f2345c",
+    "closedxml-extension-aggregate-references.json": "c1a8ce789fa96b7b368b448b782f46cbb9debd3acd019acbc29969c36d2c2a38",
+    "closedxml-extension-criteria-edits.json": "e583681283d8b4a0f7c9d69b149ce8dee2d4f099473a707464f8f9634ae75d80",
+    "closedxml-extension-date-domains.json": "9c253e9c91fde225b327b23890c4fcda8269b974c15ffc7a2ce1c98e18a17e30",
+    "closedxml-extension-day-count.json": "f1aaa937a83e3a9c5c4368dfa5fb066119ef26eea4acf11825fb84f4ada54f32",
+    "closedxml-extension-financial-defaults.json": "33683462bf6dc2e39bb00e86bfd4cefb73c15471ba494dde6bdeceecf1446754",
+    "closedxml-extension-implicit-intersection.json": "94ad4bbc1ab535af2a5c0b2c46ceaf74581b9c38778857781b8a0a26bb174d85",
+    "closedxml-extension-information.json": "589277999a7376934273fe7b4fe7a649888c65cb495f2d16b65907f4f712b85d",
+    "closedxml-extension-join-text.json": "b106702d415dfe3fe4f4c5214d64ccaf9cbabdd75a81f3d70a5db1e76a0d5d8b",
+    "closedxml-extension-logical.json": "b76eaaef98e4531412a336b1254a7fe4c28697a4f4287c8b79edc371b7ee25a4",
+    "closedxml-extension-lookup-types.json": "81fac00630038eee76cccc9c4cf48a6a6696dad236146b2e6c3b4c500ffb3809",
+    "closedxml-extension-matrix-consumers.json": "0cba8223ff4d1483dabf94bac00df9c15f91a891d6e6c01be952c5ea1904337d",
+    "closedxml-extension-matrix-inputs.json": "9126681a04eb15b7ff0ceb289b7e31ab20b1d2673c920a9f400bae8ac2af9933",
+    "closedxml-extension-numeric-domains.json": "8eaa971e85783340871345bd2dd1e4ad576306dd9309a1418a651c4f6cc07505",
+    "closedxml-extension-operators.json": "7af526ba232e02a62fe8b74a1579d7ea80873e6e1af0f98331be098463d06494",
+    "closedxml-extension-precedence.json": "423b87d59e5a43d19a946a2d2a06d0e6befe33a247cbdc8b72173530e6c1a73f",
+    "closedxml-extension-reference-ranges.json": "d282d4d48d7fb167678783d71b9e8cb206aa524e689b20d834c3f7f70e3a2886",
+    "closedxml-extension-reference-unions.json": "d7e8ebd5a1e729d84cc620c138bb57934aa682c5f017ecea35ca63397262f245",
+    "closedxml-extension-roman-formats.json": "4413797661ad8e811d5f1d847185d9bac741ec8d7050cdbbad0e4dfe42a216dd",
+    "closedxml-extension-selection.json": "d6b0b183960de66f1210dd019921701d43e87f1bfaf297197d1ab40c228f9465",
+    "closedxml-extension-text-policies.json": "2f3d7ad99228e508b90529323ac23ba06496c798efeb57d61e192c02cb2b8ebf",
+    "closedxml-extension-week-boundaries.json": "8107593468d81d3e8dc5820219c9709e6a29687b54e046983fd5b6af840a586a",
+    "closedxml-extension-workdays.json": "ae8765bc870ae827a138b62d450afa55f47e8f138758ff8790277bf76cbc0eae"
+  },
+  "results": [
+    {
+      "suite": "closedxml-extension-aggregate-errors.json",
+      "name": "ClosedXML extension aggregate-errors: AVERAGE propagates scalar and array errors",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NULL!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-errors.json",
+      "name": "ClosedXML extension aggregate-errors: AVERAGEA propagates scalar and array errors",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NULL!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-errors.json",
+      "name": "ClosedXML extension aggregate-errors: DEVSQ propagates scalar and array errors",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NULL!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-errors.json",
+      "name": "ClosedXML extension aggregate-errors: MAX propagates scalar and array errors",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NULL!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-errors.json",
+      "name": "ClosedXML extension aggregate-errors: MAXA propagates scalar and array errors",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NULL!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-errors.json",
+      "name": "ClosedXML extension aggregate-errors: MEDIAN propagates scalar and array errors",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NULL!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-errors.json",
+      "name": "ClosedXML extension aggregate-errors: MIN propagates scalar and array errors",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NULL!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-errors.json",
+      "name": "ClosedXML extension aggregate-errors: MINA propagates scalar and array errors",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NULL!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: MINA fraction text \u2014 MINA(\"1\",\"0 0/2\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: AVERAGE inline blank \u2014 AVERAGE(IF(TRUE,),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: AVERAGEA inline blank \u2014 AVERAGEA(IF(TRUE,),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: DEVSQ inline blank \u2014 DEVSQ(IF(TRUE,),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: MAX inline blank \u2014 MAX(IF(TRUE,),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: MAXA inline blank \u2014 MAXA(IF(TRUE,),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: MEDIAN inline blank \u2014 MEDIAN(IF(TRUE,),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: MIN inline blank \u2014 MIN(IF(TRUE,),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: MINA inline blank \u2014 MINA(IF(TRUE,),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: STDEV unconvertible text \u2014 STDEV(5,\"Hello\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: STDEVP inline blank \u2014 STDEVP(IF(TRUE,),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: STDEVPA inline blank \u2014 STDEVPA(IF(TRUE,),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: VAR inline blank \u2014 VAR(IF(TRUE,),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: VARA inline blank \u2014 VARA(IF(TRUE,),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: VARP inline blank \u2014 VARP(IF(TRUE,),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.25
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: VARPA inline blank \u2014 VARPA(IF(TRUE,),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.25
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: AVERAGE logical scalars \u2014 AVERAGE(FALSE,TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: AVERAGEA logical scalars \u2014 AVERAGEA(FALSE,TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: DEVSQ logical scalars \u2014 DEVSQ(FALSE,TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: MAX logical scalars \u2014 MAX(FALSE,TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: MAXA logical scalars \u2014 MAXA(FALSE,TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: MEDIAN logical scalars \u2014 MEDIAN(FALSE,TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: MIN logical scalars \u2014 MIN(FALSE,TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: MINA logical scalars \u2014 MINA(FALSE,TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: STDEVP logical scalars \u2014 STDEVP(FALSE,TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: STDEVPA logical scalars \u2014 STDEVPA(FALSE,TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: VAR logical scalars \u2014 VAR(FALSE,TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-origins.json",
+      "name": "ClosedXML extension aggregate-origins: VARA logical scalars \u2014 VARA(FALSE,TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: MinA \u2014 MINA({\"ABC\", TRUE})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: StDevA \u2014 STDEVA({\"hello\"})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: VarA \u2014 VARA({\"hello\"})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: AverageA \u2014 AVERAGEA({4, 2, \"hello\", \"10\" })",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: Count \u2014 COUNT(1, #NULL!)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: CountA on examples from spec \u2014 COUNTA({1,2,3,4,5},6,\"7\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: Geomean \u2014 GEOMEAN(\"Hello\", 5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: Devsq is calculated from numbers \u2014 DEVSQ({ 5.6, 8.2, 9.2})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.90666666666666
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: MaxA \u2014 MAXA(10.4,{-3.5,12.6})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.6
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: Median uses only numbers \u2014 MEDIAN({ -3.5,1.4,6.9},-4.5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.05
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: Min \u2014 MIN({\"hello\"})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: MinA \u2014 MINA(10.4, {-3.5, 12.6})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -3.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: StDevP \u2014 STDEVP({0, 1, \"Hello\", FALSE, TRUE})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: Var \u2014 VAR({\"hello\"})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: VarP \u2014 VARP({\"hello\"})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-policies.json",
+      "name": "ClosedXML extension aggregate-policies: Devsq is calculated from numbers \u2014 DEVSQ({2, 1, 1, 0, 0})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.8
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: AVERAGE distinguishes numbers from referenced logicals text and blanks \u2014 AVERAGE(A1:A2)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: AVERAGEA distinguishes numbers from referenced logicals text and blanks \u2014 AVERAGEA(A1:A6)",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: PRODUCT distinguishes numbers from referenced logicals text and blanks \u2014 PRODUCT(A1:A6)",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: GEOMEAN propagates referenced error before aggregation \u2014 GEOMEAN(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: DEVSQ propagates referenced error before aggregation \u2014 DEVSQ(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: MAX propagates referenced error before aggregation \u2014 MAX(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: MAXA propagates referenced error before aggregation \u2014 MAXA(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: MEDIAN propagates referenced error before aggregation \u2014 MEDIAN(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: MIN propagates referenced error before aggregation \u2014 MIN(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: MINA propagates referenced error before aggregation \u2014 MINA(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: STDEV propagates referenced error before aggregation \u2014 STDEV(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: STDEVA propagates referenced error before aggregation \u2014 STDEVA(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: STDEVP propagates referenced error before aggregation \u2014 STDEVP(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: STDEVPA propagates referenced error before aggregation \u2014 STDEVPA(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: VAR propagates referenced error before aggregation \u2014 VAR(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: VARA propagates referenced error before aggregation \u2014 VARA(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: VARP propagates referenced error before aggregation \u2014 VARP(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: VARPA propagates referenced error before aggregation \u2014 VARPA(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: AVERAGE propagates referenced error before aggregation \u2014 AVERAGE(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-aggregate-references.json",
+      "name": "ClosedXML extension aggregate-references: AVERAGEA propagates referenced error before aggregation \u2014 AVERAGEA(B1)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-criteria-edits.json",
+      "name": "ClosedXML extension criteria-edits: Escaped wildcard criteria after input edits \u2014 COUNTIF(A1:A1, \"~~?\")",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 4,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-criteria-edits.json",
+      "name": "ClosedXML extension criteria-edits: Escaped wildcard criteria after input edits \u2014 COUNTIF(A1:A1, \"~*\")",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 4,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-criteria-edits.json",
+      "name": "ClosedXML extension criteria-edits: Escaped wildcard criteria after input edits \u2014 COUNTIF(A1:A1, \"~~*\")",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 4,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: NetWorkDays with end date earlier than start date \u2014 NETWORKDAYS(\"3/01/2009\", \"10/01/2008\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -108.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(1, 10, {\"2\", 3})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Weekday without flag \u2014 WEEKDAY(\"2/14/2008\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Weekday behavior \u2014 WEEKDAY(\"0 2/2\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: NetWorkDays with end date earlier than start date \u2014 NETWORKDAYS(\"2016-01-01\", \"2015-12-23\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Weekday behavior \u2014 WEEKDAY(1, \"1 0/2\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Weekday behavior \u2014 WEEKDAY(1, \"text\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Weekday behavior \u2014 WEEKDAY(5, #N/A)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: DateValue propagates error \u2014 DATEVALUE(#DIV/0!)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Days360 Europe1 \u2014 DAYS360(\"1/1/2008\", \"3/31/2008\",TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 89.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Days360 Europe2 \u2014 DAYS360(\"3/31/2008\", \"1/1/2008\",TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -89.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Hour accepts only serial time between zero and upper limit of date system \u2014 HOUR(0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Minute accepts only serial time between zero and upper limit of date system \u2014 MINUTE(0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Month serial date must be between zero and upper limit of date system \u2014 MONTH(DATE(9999,12,31) + 0.9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(DATE(2006, 1, 1), DATE(2006, 2, 1), { \"2006-01-02\", \"2006-01-16\" })",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 21.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Second accepts only serial time between zero and upper limit of date system \u2014 SECOND(0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-day-count.json",
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2008,3,31),0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.25
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-day-count.json",
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2013,3,31),0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.25
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-day-count.json",
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2008,3,31),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.245901639344262
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-day-count.json",
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2013,3,31),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.24452554744526
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-day-count.json",
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(1924,6,25),DATE(2025,2,28),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 100.67763581705
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-day-count.json",
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2008,3,31),2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.25
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-day-count.json",
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2013,3,31),2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.32222222222222
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-day-count.json",
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2008,3,31),3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.246575342465753
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-day-count.json",
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2013,3,31),3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.24931506849315
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-day-count.json",
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2008,3,31),4)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.247222222222222
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-day-count.json",
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2013,3,31),4)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.24722222222222
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-day-count.json",
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2006,1,1),DATE(2006,3,26),0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.236111111111111
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-financial-defaults.json",
+      "name": "ClosedXML extension financial-defaults: Ipmt DefaultFutureValueIsZero \u2014 IPMT(0.1,1,2,1000)=IPMT(0.1,1,2,1000,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-financial-defaults.json",
+      "name": "ClosedXML extension financial-defaults: Ipmt DefaultTypeIsZero \u2014 IPMT(0.1,1,5,1000)=IPMT(0.1,1,5,1000,0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-financial-defaults.json",
+      "name": "ClosedXML extension financial-defaults: Fv DefaultFutureValueIsZero \u2014 FV(0.1,2,1000)=FV(0.1,2,1000,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-financial-defaults.json",
+      "name": "ClosedXML extension financial-defaults: Fv DefaultTypeIsZero \u2014 FV(0.1,5,1000)=FV(0.1,5,1000,0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-financial-defaults.json",
+      "name": "ClosedXML extension financial-defaults: Pmt DefaultFutureValueIsZero \u2014 PMT(0.1,2,1000)=PMT(0.1,2,1000,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-financial-defaults.json",
+      "name": "ClosedXML extension financial-defaults: Pmt DefaultTypeIsZero \u2014 PMT(0.1,5,1000)=PMT(0.1,5,1000,0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-financial-defaults.json",
+      "name": "ClosedXML extension financial-defaults: Pmt TypeConvertsNumberToOneOrZero \u2014 PMT(0.1,2,1000,500,0.000001)=PMT(0.1,2,1000,500,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-implicit-intersection.json",
+      "name": "ClosedXML extension implicit-intersection: ImplicitIntersection DoesNotAffectSingleCellReference \u2014 ABS(B3:B3)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-implicit-intersection.json",
+      "name": "ClosedXML extension implicit-intersection: ImplicitIntersection TakesReferenceFromHorizontalLine \u2014 ABS(B1:B10)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-implicit-intersection.json",
+      "name": "ClosedXML extension implicit-intersection: ImplicitIntersection TakesReferenceFromVerticalLine \u2014 ABS(A3:Z3)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-implicit-intersection.json",
+      "name": "ClosedXML extension implicit-intersection: ImplicitIntersection WithoutIntersectionResultsInValueError \u2014 ABS(B1:B4)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-implicit-intersection.json",
+      "name": "ClosedXML extension implicit-intersection: ImplicitIntersection IntersectionMustHaveSpanOfOneCell \u2014 ABS(A1:B5)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-information.json",
+      "name": "ClosedXML extension information: ISERR excludes #N/A while ISNA recognizes it",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-join-text.json",
+      "name": "ClosedXML extension join-text: TEXTJOIN traversal delimiter coercion and empty inputs \u2014 TEXTJOIN(\",\",TRUE,A1:B2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "A,B,D"
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "text",
+            "value": "A,0,B,D"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "text",
+            "value": "A,B,D"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-join-text.json",
+      "name": "ClosedXML extension join-text: TEXTJOIN traversal delimiter coercion and empty inputs \u2014 TEXTJOIN(\",\",FALSE,A1:B2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "A,,B,D"
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "text",
+            "value": "A,0,B,D"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "text",
+            "value": "A,,B,D"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-join-text.json",
+      "name": "ClosedXML extension join-text: TEXTJOIN traversal delimiter coercion and empty inputs \u2014 TEXTJOIN(\",\",FALSE,A1,A2,B1,B2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "A,B,,D"
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "text",
+            "value": "A,B,0,D"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "text",
+            "value": "A,B,,D"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-join-text.json",
+      "name": "ClosedXML extension join-text: TEXTJOIN traversal delimiter coercion and empty inputs \u2014 TEXTJOIN(\",\",FALSE,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "1"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-join-text.json",
+      "name": "ClosedXML extension join-text: TEXTJOIN traversal delimiter coercion and empty inputs \u2014 TEXTJOIN(0, FALSE, A1:B2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "A00B0D"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-join-text.json",
+      "name": "ClosedXML extension join-text: TEXTJOIN traversal delimiter coercion and empty inputs \u2014 TEXTJOIN(\",\", 0, A1:B2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "A,,B,D"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-join-text.json",
+      "name": "ClosedXML extension join-text: TEXTJOIN traversal delimiter coercion and empty inputs \u2014 TEXTJOIN(\",\", 100, A1:B2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "A,B,D"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-join-text.json",
+      "name": "ClosedXML extension join-text: TEXTJOIN traversal delimiter coercion and empty inputs \u2014 TEXTJOIN(B2, FALSE, A1:B2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "ADDBDD"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-join-text.json",
+      "name": "ClosedXML extension join-text: TEXTJOIN traversal delimiter coercion and empty inputs \u2014 TEXTJOIN(\",\", FALSE, 12345.67, DATE(2018, 10, 30))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "12345.67,43403"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-join-text.json",
+      "name": "ClosedXML extension join-text: TEXTJOIN traversal delimiter coercion and empty inputs \u2014 TEXTJOIN(\",\", \"FALSE\", A1:B2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "A,,B,D"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-logical.json",
+      "name": "ClosedXML extension logical: explicit missing false result differs from omitted false result",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-lookup-types.json",
+      "name": "ClosedXML extension lookup-types: Approximate lookup ignores interspersed nonnumeric values \u2014 VLOOKUP(1.9,A1:B7,2,TRUE)",
+      "checks": [
+        {
+          "action": 15,
+          "actual": {
+            "type": "text",
+            "value": "Row 3"
+          },
+          "agrees": true
+        },
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 42.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "text",
+            "value": "Row 3"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-lookup-types.json",
+      "name": "ClosedXML extension lookup-types: Only numeric key surrounded by blanks \u2014 VLOOKUP(6,A1:A5,1,TRUE)",
+      "checks": [
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-lookup-types.json",
+      "name": "ClosedXML extension lookup-types: Trailing blank does not replace last matching numeric key \u2014 VLOOKUP(3,A1:A4,1,TRUE)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-lookup-types.json",
+      "name": "ClosedXML extension lookup-types: Inline blank lookup key selects numeric zero \u2014 VLOOKUP(IF(TRUE,,),A1:B10,2)",
+      "checks": [
+        {
+          "action": 21,
+          "actual": {
+            "type": "text",
+            "value": "Row with value 0"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-lookup-types.json",
+      "name": "ClosedXML extension lookup-types: Approximate lookup selects final duplicate including table endpoint \u2014 VLOOKUP(3,A1:B8,2,TRUE)",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "text",
+            "value": "selected"
+          },
+          "agrees": true
+        },
+        {
+          "action": 21,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-lookup-types.json",
+      "name": "ClosedXML extension lookup-types: Horizontal duplicates select highest matching column \u2014 HLOOKUP(3,A1:H2,2,TRUE)",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "text",
+            "value": "G"
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 21,
+          "actual": {
+            "type": "text",
+            "value": "G"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-lookup-types.json",
+      "name": "ClosedXML extension lookup-types: Approximate lookup selects final duplicate including table endpoint \u2014 VLOOKUP(3,A2:B7,2,TRUE)",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "text",
+            "value": "selected"
+          },
+          "agrees": true
+        },
+        {
+          "action": 21,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-lookup-types.json",
+      "name": "ClosedXML extension lookup-types: Horizontal duplicates select highest matching column \u2014 HLOOKUP(3,B1:G2,2,TRUE)",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "text",
+            "value": "G"
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 21,
+          "actual": {
+            "type": "text",
+            "value": "G"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-consumers.json",
+      "name": "ClosedXML extension matrix-consumers: MINVERSE full-array result reaches SUM \u2014 SUM(MINVERSE(A1:C3))",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-consumers.json",
+      "name": "ClosedXML extension matrix-consumers: MMULT full-array result reaches SUM \u2014 SUM(MMULT(A1:B2,A3:B4))",
+      "checks": [
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 102.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-consumers.json",
+      "name": "ClosedXML extension matrix-consumers: MMULT full-array result reaches SUM \u2014 SUM(MMULT(A1:C2,A3:D5))",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1334.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MDETERM rejects or propagates text matrix member \u2014 MDETERM(A1:B2)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": -2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MINVERSE rejects or propagates blank matrix member \u2014 MINVERSE(A1:B2)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": -0.333333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MINVERSE rejects or propagates text matrix member \u2014 MINVERSE(A1:B2)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": -0.333333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MDETERM rejects or propagates blank matrix member \u2014 MDETERM(A1:B2)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": -2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MINVERSE rejects or propagates error matrix member \u2014 MINVERSE(A1:B2)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": -0.333333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MMULT requires inner dimensions to agree: 1x3 and 1x3 \u2014 MMULT(A2:C2,A3:C3)",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MDETERM rejects or propagates error matrix member \u2014 MDETERM(A1:B2)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#NAME?"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": -2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MMULT requires inner dimensions to agree: 3x3 and 1x3 \u2014 MMULT(A2:C4,A5:C5)",
+      "checks": [
+        {
+          "action": 13,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-matrix-inputs.json",
+      "name": "ClosedXML extension matrix-inputs: MMULT requires inner dimensions to agree: 3x4 and 1x4 \u2014 MMULT(A2:C5,A6:D6)",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: Roman has optional second argument with default value 0 \u2014 ROMAN(999)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "CMXCIX"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: Combin returns num error when k is larger than n \u2014 COMBIN(5, 5.5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: Combin returns num error when value is too large \u2014 COMBIN(5E+301, 6)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NUM!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: Fact coercion fails for non numeric input \u2014 FACT(\"x\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: FactDouble ThrowsValueExceptionForNonNumericInput \u2014 FACTDOUBLE(\"x\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: Log default base is 10 \u2014 LOG(100)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: MDeterm examples \u2014 MDETERM({3,6,1;1,1,0;3,10,2})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: MDeterm requires equal number of rows and columns \u2014 MDETERM({1,2})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: MDeterm singular matrix returns zero \u2014 MDETERM({1,2;1,2})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: MInverse requires square matrix \u2014 MINVERSE({1,2,3;7,5,5})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: Mod divisor zero returns error \u2014 MOD(1, 0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: Power errors \u2014 POWER(-5, 0.5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NUM!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: Product \u2014 PRODUCT({1,2;3,4})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 24.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: SumSq \u2014 SUMSQ({ 2.5, -3.6}, 2.4)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 24.97
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: ArrayOperation SameSizeArrayPerformsOperationIndividually \u2014 SUM({1,2,3;4,5,6} + {6,5,4;3,2,1})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 42.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: ArrayOperation ArrayPlusScalarUpscalesScalarToSizeOfArray \u2014 SUM({1,1,1;1,1,1} * 3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 18.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: ArrayOperation 1x1ArrayIsScaledToOtherArray \u2014 SUM({1,2;3,4}*{2})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: ArrayOperation SameSizeArrayPerformsOperationIndividually \u2014 COLUMNS({1,2} + \"A\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: ArrayOperation ArrayPlusScalarUpscalesScalarToSizeOfArray \u2014 SUM(6 / {2,2,2;3,3,3})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 TRUE>-1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: Comparison TextIsAlwaysGreaterThanAnyNumber \u2014 \"\">10",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryPercent ConvertsArgumentBeforePercentOperator \u2014 1%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.01
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryMinus ConvertsArgumentBeforeNegating \u2014 -1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 FALSE>-1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: Comparison TextIsAlwaysGreaterThanAnyNumber \u2014 \"1\">10",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryPercent ConvertsArgumentBeforePercentOperator \u2014 100%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryMinus ConvertsArgumentBeforeNegating \u2014 -125.45",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -125.45
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 -1<TRUE",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: Comparison TextIsAlwaysGreaterThanAnyNumber \u2014 10<\"\"",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryPercent ConvertsArgumentBeforePercentOperator \u2014 25.7%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.257
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryMinus ConvertsArgumentBeforeNegating \u2014 -#DIV/0!",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: Comparison LogicalIsAlwaysGreaterThanAnyTextOrNumber \u2014 -1<FALSE",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: Comparison TextIsAlwaysGreaterThanAnyNumber \u2014 10<\"1\"",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryPercent ConvertsArgumentBeforePercentOperator \u2014 125.45%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.2545
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryMinus ConvertsArgumentBeforeNegating \u2014 -A1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-operators.json",
+      "name": "ClosedXML extension operators: UnaryPercent ConvertsArgumentBeforePercentOperator \u2014 \"1\"%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.01
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: Exact converts values to text \u2014 EXACT(IF(TRUE,), \"\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: Exact converts values to text \u2014 EXACT(TRUE, \"true\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: Exact propagates errors \u2014 EXACT(#DIV/0!, \"A\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: Trim \u2014 Trim(\"Test    \")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "Test"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: PercentOperator \u2014 1234%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.34
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: MultipleUnaryOperators \u2014 --1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: TestStringSubExpression \u2014 RIGHT(\"2020\", 2) + 1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 21.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: Exact converts values to text \u2014 EXACT(1, \"1\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: Exact propagates errors \u2014 EXACT(\"A\", #DIV/0!)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: Trim \u2014 Trim(\"Test\u00a0 \")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "Test\u00a0"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: PercentOperator \u2014 1234%%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.1234
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: MultipleUnaryOperators \u2014 ++1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: TestStringSubExpression \u2014 LEFT(\"20.2020\", 6) + 1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 21.202
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: PercentOperator \u2014 100+200%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 102.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: MultipleUnaryOperators \u2014 -+-+-1",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: TestStringSubExpression \u2014 2 + (\"3\" & \"4\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 36.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: PercentOperator \u2014 100%+200",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 201.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: MultipleUnaryOperators \u2014 2^---2",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.25
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: TestStringSubExpression \u2014 2 + \"3\" & \"4\"",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "54"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-precedence.json",
+      "name": "ClosedXML extension precedence: PercentOperator \u2014 (100+200)%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM(S!B2:C5:S!D3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM((S!A1,A5):B5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM(B5:(S!A1,A5))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM(A1:B2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range OnlyReferencesCanBeRange \u2014 SUM(IF(TRUE,1,):A1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM(A1:B5:C3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range OnlyReferencesCanBeRange \u2014 SUM(IF(TRUE,\"text\"):A1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM(A1:C3:B5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range OnlyReferencesCanBeRange \u2014 SUM(IF(TRUE,FALSE):A1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM(A1:C3:B2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM(S!A1:B2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-unions.json",
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity:  \u2014 SUM((A1,A2))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-unions.json",
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity:  \u2014 SUM((A1:A3,B1))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-unions.json",
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity:  \u2014 SUM((A1,B1:B3))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-unions.json",
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity:  \u2014 SUM((Other!A1,S!A1))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-unions.json",
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity:  \u2014 SUM((A1,Other!A1))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-unions.json",
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity: Full overlap \u2014 SUM((B2:D3,B2:D3))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 14.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-unions.json",
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity: Partial overlap \u2014 SUM((A1:B3,B1:C3))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 14.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-unions.json",
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity:  \u2014 SUM((S!A1:B3,Other!B1:C3))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 66.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-unions.json",
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity:  \u2014 SUM((A1,Other!A1,S!A1))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-unions.json",
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity:  \u2014 SUM((A1:B2,Other!A1:B2,B2:C3,Other!E5:Other!F6))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 88.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-roman-formats.json",
+      "name": "ClosedXML extension roman-formats: ROMAN form and fractional-argument truncation \u2014 ROMAN(3046,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "MMMVLI"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-roman-formats.json",
+      "name": "ClosedXML extension roman-formats: ROMAN form and fractional-argument truncation \u2014 ROMAN(3999,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "MMMLMVLIV"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-roman-formats.json",
+      "name": "ClosedXML extension roman-formats: ROMAN form and fractional-argument truncation \u2014 ROMAN(999.99,0.9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "CMXCIX"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-roman-formats.json",
+      "name": "ClosedXML extension roman-formats: ROMAN form and fractional-argument truncation \u2014 ROMAN(999,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "LMVLIV"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-roman-formats.json",
+      "name": "ClosedXML extension roman-formats: ROMAN form and fractional-argument truncation \u2014 ROMAN(999,2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "XMIX"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-roman-formats.json",
+      "name": "ClosedXML extension roman-formats: ROMAN form and fractional-argument truncation \u2014 ROMAN(999,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "VMIV"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-roman-formats.json",
+      "name": "ClosedXML extension roman-formats: ROMAN form and fractional-argument truncation \u2014 ROMAN(999,4)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "IM"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-selection.json",
+      "name": "ClosedXML extension selection: Index scalar \u2014 INDEX(\"Text\", -1, 1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-selection.json",
+      "name": "ClosedXML extension selection: Index scalar \u2014 INDEX(\"Text\", 1, -1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-selection.json",
+      "name": "ClosedXML extension selection: Index scalar \u2014 INDEX(\"Text\", 1, 1, 0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-selection.json",
+      "name": "ClosedXML extension selection: Index scalar \u2014 INDEX(\"Text\", 1, 1, 2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#REF!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Search Arguments Are Converted To Expected Types \u2014 SEARCH(\"a\", \"aaaaa\", \"2 1/2\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Value Value \u2014 VALUE(\"$1,000\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1000.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Char returns error on empty string \u2014 CHAR(\"\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Clean empty string is empty string \u2014 CLEAN(\"\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Clean removes control characters \u2014 CLEAN(CHAR(9)&\"Monthly report\"&CHAR(10))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "Monthly report"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Concat propagates error values \u2014 CONCAT(\"ABC\",#DIV/0!,5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Dollar coercion \u2014 DOLLAR(\"\", 3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Exact Empty Input String \u2014 Exact(\"\", \"\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Find Start Position Too Large \u2014 FIND(\"abc\", \"abcdef\", 10)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Find Empty Searched Text Returns Error \u2014 FIND(\"abc\", \"\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Find String Not Found \u2014 FIND(\"123\", \"asdf\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Find Arguments Are Converted To Expected Types \u2014 FIND(1.2, \"A1.2B\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Find Error Arguments Return The Error \u2014 FIND(#N/A, \"a\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Fixed coercion \u2014 FIXED(\"asdf\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Left returns whole text when requested length is greater than text length \u2014 LEFT(\"ABC\", 5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "ABC"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Left takes one character by default \u2014 LEFT(\"ABC\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Left returns error on negative number of chars \u2014 LEFT(\"ABC\", -1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Left returns empty string on empty input \u2014 LEFT(\"\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Mid returns rest of text when end is out of text bounds \u2014 MID(\"ABC\",1,5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "ABC"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Mid when start is after end of text return empty string \u2014 MID(\"ABC\",5,5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Mid uses code units \u2014 LEN(MID(\"\ud83d\ude0a\ud83d\ude0a\ud83d\ude0a\",1,3))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Replace start position must be from 1 to 32767 \u2014 REPLACE(\"ABC\",1,0,\"D\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "DABC"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Replace length must be from 0 to 32767 \u2014 REPLACE(\"ABC\",1,0,\"\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "ABC"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Rept returns empty string when text is empty string \u2014 REPT(\"\",3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Right takes one character by default \u2014 RIGHT(\"ABC\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "C"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Right returns error on negative number of chars \u2014 RIGHT(\"ABC\",-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Right returns empty string on empty input \u2014 RIGHT(\"\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Search Start Position Too Large \u2014 SEARCH(\"abc\", \"abcdef\", 10)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Search Start Position Too Small \u2014 SEARCH(\"text\", \"This is some text\", 0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Search Empty Searched Text Returns Error \u2014 SEARCH(\"abc\", \"\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Search Text Not Found \u2014 SEARCH(\"123\", \"asdf\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Search Wildcard String Not Found \u2014 SEARCH(\"soft?2010\", \"Microsoft Excel 2010\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Search Tilde Escapes Next Char \u2014 SEARCH(\"a~?\", \"a?\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Search Arguments Are Converted To Expected Types \u2014 SEARCH(1.2, \"A1.2B\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Search Error Arguments Return The Error \u2014 SEARCH(#N/A, \"a\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: Substitute on empty string returns empty string \u2014 SUBSTITUTE(\"\",\"\",\"Monday\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-text-policies.json",
+      "name": "ClosedXML extension text-policies: T returns empty string on non text \u2014 T(IF(TRUE,,))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1965,1,1),21)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 53.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1965,1,3),21)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 53.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1968,12,30),21)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1968,12,31),21)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",11)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",14)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",15)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",17)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1987,1,1),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1987,1,4),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1989,1,1),2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1991,1,1),11)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1993,1,1),12)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(0,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,1,{2})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(0,5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,5,{2,4})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(10,-2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,4,{2,4,6})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(9,-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,3,{2,3,4,6})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(8,-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,2,{2,3,4,5,6})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(7,-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,1,{2,3,5})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 300,
+    "checks": 375,
+    "corroborated_scenarios": 300,
+    "corroborated_checks": 375
+  }
+}

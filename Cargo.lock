@@ -752,6 +752,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "poirot-test-json"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "poirot",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "poirot-text"
 version = "0.1.0"
 dependencies = [

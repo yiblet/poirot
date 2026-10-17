@@ -1,0 +1,4605 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T16:54:32.092175+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-exploration-numeric-source.json": "64f20c0194dc302a4c80376f862db60da279771ce46b64fd79d358992e654f4f",
+    "closedxml-exploration-reference-composition.json": "b9a0d4d02ed240e402bf09ec51a9157da7ffd74b6ea354cc0d31d049531959af",
+    "closedxml-exploration-scalar-consumer-transfer.json": "bdb3e905697f97533695dc9ae1f8fef8fd4fa885b64307f18062622fc7f950b5",
+    "closedxml-exploration-selected-aggregate-types.json": "c6f924682a45a457a817daab98c60acab9b15ffcf795eb08d741c33afd454676",
+    "closedxml-exploration-selected-information.json": "922a206775147b959c8d339e3d60619cd76449e7fbe219b9cf894a0567c904e8",
+    "closedxml-exploration-source-financial.json": "f77d1c7d0321966d12ff58025648c01fe8bfd7cc8b60ed9e3c70614b10d050b8",
+    "closedxml-exploration-upstream-aggregate-origins.json": "58ef1913398415fb62dc6cf328717029aff30c70cdba59c480cdd558dbb391d6",
+    "closedxml-exploration-upstream-date-domains.json": "6b703a942fc25fa010df142a245cec0d3cda18ce2ff1709d7fb5e8849a8ebeab",
+    "closedxml-exploration-upstream-logical.json": "a1ace8047c06aad05741a7bbaddd96b624073f1fd8befc6df2f509c9b09b595a",
+    "closedxml-exploration-upstream-numeric-domains.json": "dab5414d5f380a291206c1cfbb25f82018322eaa0eb64056e9953d4a55e4fea7",
+    "closedxml-exploration-upstream-operators.json": "47fd7259cd07180a3931a62b19fef05d02683f47d8d2ac0bcaaa7a5c4237b3dc",
+    "closedxml-exploration-upstream-selection.json": "9d9b0f868de7e04d2c2aef696016af7d1abaa2fe29b4d11ca5d02acfe2a9548c",
+    "closedxml-exploration-upstream-text-policies.json": "23b6437586ee9d96da81a3f766fdf652b5f9d7c996a527598ed8920c6df8f215"
+  },
+  "results": [
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: CEILING Ceiling fraction positions (0,)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: CEILING.MATH CeilingMath negative positions (0, 1, 2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.3
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: CEILING.MATH CeilingMath fraction positions (0, 1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.3
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: CEILING.MATH CeilingMath negative positions (0, 1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.3
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: FLOOR Floor negative positions (0, 1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -6.3
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: FLOOR.MATH FloorMath fraction positions (0, 1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: FLOOR.MATH FloorMath negative positions (0, 1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: MROUND MRound zero positions (1,)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: ROUND Round negative positions (1,)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: ROUNDDOWN RoundDown negative positions (0, 1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 31400.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: ROUNDUP RoundUp negative positions (0, 1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 31500.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: ROUNDUP RoundUp zero positions (1,)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: EVEN Even fraction positions (0,)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: ODD Odd negative positions (0,)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: COMBIN Combin_calculates_combinations zero positions (1,)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: COMBIN Combin_returns_value_error_for_any_non_numeric_argument text positions ()",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: MOD rounding controls contrasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.1
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: TRUNC rounding controls contrasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 27.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": -4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": -8.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 27.6
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-numeric-source.json",
+      "name": "ClosedXML exploration numeric-source: INT rounding controls contrasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": -9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: OFFSET inherited dimensions",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 110.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: OFFSET explicit dimensions",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 110.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: OFFSET negative movement",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 66.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: OFFSET zero displacement retains shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: OFFSET width controls columns",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: OFFSET fractional displacement truncated",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 22.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: INDIRECT constructs reference not text",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 66.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: INDIRECT reference row count",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: INDIRECT reference column count",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: INDIRECT invalid address",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "error",
+            "value": "#REF!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: INDIRECT row above grid",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "error",
+            "value": "#REF!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: INDIRECT column above grid",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "error",
+            "value": "#REF!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: INDEX zero row returns entire column",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 66.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: INDEX zero column returns entire row",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 66.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: INDEX zeros return full array",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 198.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: INDEX selected row shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: INDEX selected column shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: CHOOSE selected range is not scalar",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 66.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: CHOOSE range preserves shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: CHOOSE invalid zero index",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: CHOOSE fractional index truncates",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: CHOOSE negative fraction invalid",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: CHOOSE unselected error ignored",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 22.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-reference-composition.json",
+      "name": "ClosedXML exploration reference-composition: CHOOSE selected error propagated",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: ABS contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.5
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: SIGN contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: INT contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: TRUNC contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: SQRT contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.22474487139159
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: EXP contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 4.48168907033806
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.71828182845905
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: LN contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.405465108108164
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: LOG10 contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.176091259055681
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: SIN contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.997494986604054
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.841470984807897
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: COS contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0707372016677029
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.54030230586814
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: TAN contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 14.1014199471717
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.5574077246549
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: ATAN contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.982793723247329
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.785398163397448
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: SINH contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.12927945509482
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.1752011936438
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: COSH contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.35240961524325
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.54308063481524
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: TANH contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.905148253644866
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.761594155955765
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: DEGREES contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 85.9436692696235
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 57.2957795130823
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-scalar-consumer-transfer.json",
+      "name": "ClosedXML exploration scalar-consumer-transfer: RADIANS contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0261799387799149
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0174532925199433
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: AVERAGE INDEX-selected blank",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 6.33333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: AVERAGEA INDEX-selected logical",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 6.33333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: AVERAGEA INDEX-selected blank",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 6.33333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: DEVSQ INDEX-selected blank",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 40.6666666666667
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: MAX INDEX-selected logical",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: MAX INDEX-selected blank",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: MAXA INDEX-selected logical",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: MAXA INDEX-selected blank",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: MEDIAN INDEX-selected blank",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: MIN INDEX-selected blank",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: MINA INDEX-selected logical",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: MINA INDEX-selected blank",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: STDEV INDEX-selected blank",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.82842712474619
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 4.50924975282289
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 2.82842712474619
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: STDEVA INDEX-selected logical",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.64575131106459
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 4.50924975282289
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 2.64575131106459
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: STDEVA INDEX-selected blank",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.82842712474619
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 4.50924975282289
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 2.82842712474619
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: STDEVP INDEX-selected blank",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 3.68178700572909
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: STDEVPA INDEX-selected logical",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.16024689946929
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 3.68178700572909
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 2.16024689946929
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: STDEVPA INDEX-selected blank",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 3.68178700572909
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: VAR INDEX-selected blank",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 20.3333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: VARA INDEX-selected logical",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 20.3333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: VARA INDEX-selected blank",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 20.3333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: VARP INDEX-selected blank",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 13.5555555555556
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: VARPA INDEX-selected logical",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 4.66666666666667
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 13.5555555555556
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 4.66666666666667
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: VARPA INDEX-selected blank",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 13.5555555555556
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: AVERAGE selected text contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 6.33333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 16,
+          "actual": {
+            "type": "number",
+            "value": 6.33333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: AVERAGEA selected text contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.66666666666667
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 6.33333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 2.66666666666667
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 2.66666666666667
+          },
+          "agrees": true
+        },
+        {
+          "action": 16,
+          "actual": {
+            "type": "number",
+            "value": 6.33333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.66666666666667
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: DEVSQ selected text contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 40.6666666666667
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 16,
+          "actual": {
+            "type": "number",
+            "value": 40.6666666666667
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: MAX selected text contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 16,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: MAXA selected text contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 16,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: MEDIAN selected text contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 16,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: MIN selected text contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 16,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: MINA selected text contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 16,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: STDEV selected text contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.82842712474619
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 4.50924975282289
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 2.82842712474619
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 2.82842712474619
+          },
+          "agrees": true
+        },
+        {
+          "action": 16,
+          "actual": {
+            "type": "number",
+            "value": 4.50924975282289
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.82842712474619
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: STDEVA selected text contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 3.05505046330389
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 4.50924975282289
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 3.05505046330389
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 3.05505046330389
+          },
+          "agrees": true
+        },
+        {
+          "action": 16,
+          "actual": {
+            "type": "number",
+            "value": 4.50924975282289
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 3.05505046330389
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: STDEVP selected text contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 3.68178700572909
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 16,
+          "actual": {
+            "type": "number",
+            "value": 3.68178700572909
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: STDEVPA selected text contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.49443825784929
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 3.68178700572909
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 2.49443825784929
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 2.49443825784929
+          },
+          "agrees": true
+        },
+        {
+          "action": 16,
+          "actual": {
+            "type": "number",
+            "value": 3.68178700572909
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.49443825784929
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: VAR selected text contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 20.3333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 16,
+          "actual": {
+            "type": "number",
+            "value": 20.3333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: VARA selected text contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 9.33333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 20.3333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 9.33333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 9.33333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 16,
+          "actual": {
+            "type": "number",
+            "value": 20.3333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 9.33333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: VARP selected text contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 13.5555555555556
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 16,
+          "actual": {
+            "type": "number",
+            "value": 13.5555555555556
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-aggregate-types.json",
+      "name": "ClosedXML exploration selected-aggregate-types: VARPA selected text contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 6.22222222222222
+          },
+          "agrees": true
+        },
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 13.5555555555556
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 6.22222222222222
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 6.22222222222222
+          },
+          "agrees": true
+        },
+        {
+          "action": 16,
+          "actual": {
+            "type": "number",
+            "value": 13.5555555555556
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 6.22222222222222
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-information.json",
+      "name": "ClosedXML exploration selected-information: ISBLANK contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 23,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 27,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-information.json",
+      "name": "ClosedXML exploration selected-information: ISTEXT contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 23,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 27,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-information.json",
+      "name": "ClosedXML exploration selected-information: ISNONTEXT contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        },
+        {
+          "action": 23,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        },
+        {
+          "action": 27,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-information.json",
+      "name": "ClosedXML exploration selected-information: ISNUMBER contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 23,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-information.json",
+      "name": "ClosedXML exploration selected-information: ISLOGICAL contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 23,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 27,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-information.json",
+      "name": "ClosedXML exploration selected-information: ISERROR contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        },
+        {
+          "action": 23,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        },
+        {
+          "action": 27,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-information.json",
+      "name": "ClosedXML exploration selected-information: ISERR contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 23,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        },
+        {
+          "action": 27,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-information.json",
+      "name": "ClosedXML exploration selected-information: ISNA contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        },
+        {
+          "action": 23,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        },
+        {
+          "action": 27,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-information.json",
+      "name": "ClosedXML exploration selected-information: TYPE contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "number",
+            "value": 16.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 16.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-information.json",
+      "name": "ClosedXML exploration selected-information: N contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 19.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 23,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 27,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-selected-information.json",
+      "name": "ClosedXML exploration selected-information: T contrasts",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "text",
+            "value": "19"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 23,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 27,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-source-financial.json",
+      "name": "ClosedXML exploration source-financial: Fv_EdgeCases case 5 No PMT, but present value",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -4.84
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-source-financial.json",
+      "name": "ClosedXML exploration source-financial: Fv_EdgeCases case 6 Negative PMT - money is paid to us",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2000.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-source-financial.json",
+      "name": "ClosedXML exploration source-financial: Fv_EdgeCases case 7 Small number and high number of periods, check for stability",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1000499.66612614
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-source-financial.json",
+      "name": "ClosedXML exploration source-financial: Pmt_EdgeCases case 5 No principal, but future value",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.9047619047619
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-source-financial.json",
+      "name": "ClosedXML exploration source-financial: Pmt_EdgeCases case 6 Negative principal - money is paid to us",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 500.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-source-financial.json",
+      "name": "ClosedXML exploration source-financial: Pmt_EdgeCases case 7 Small number and high number of periods, check for stability",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.00050058333321
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-aggregate-origins.json",
+      "name": "ClosedXML exploration upstream aggregate-origins: AVERAGE unconvertible text \u2014 AVERAGE(5,\"Hello\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-aggregate-origins.json",
+      "name": "ClosedXML exploration upstream aggregate-origins: DEVSQ unconvertible text \u2014 DEVSQ(5,\"Hello\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-aggregate-origins.json",
+      "name": "ClosedXML exploration upstream aggregate-origins: MAX unconvertible text \u2014 MAX(5,\"Hello\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-aggregate-origins.json",
+      "name": "ClosedXML exploration upstream aggregate-origins: MEDIAN unconvertible text \u2014 MEDIAN(5,\"Hello\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-aggregate-origins.json",
+      "name": "ClosedXML exploration upstream aggregate-origins: MIN unconvertible text \u2014 MIN(5,\"Hello\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-aggregate-origins.json",
+      "name": "ClosedXML exploration upstream aggregate-origins: MINA numeric text \u2014 MINA(\"0\",\"1\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-aggregate-origins.json",
+      "name": "ClosedXML exploration upstream aggregate-origins: STDEVP unconvertible text \u2014 STDEVP(5,\"Hello\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-aggregate-origins.json",
+      "name": "ClosedXML exploration upstream aggregate-origins: VAR unconvertible text \u2014 VAR(5,\"Hello\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-aggregate-origins.json",
+      "name": "ClosedXML exploration upstream aggregate-origins: VARP logical scalars \u2014 VARP(FALSE,TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.25
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-aggregate-origins.json",
+      "name": "ClosedXML exploration upstream aggregate-origins: VARP unconvertible text \u2014 VARP(5,\"Hello\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-aggregate-origins.json",
+      "name": "ClosedXML exploration upstream aggregate-origins: VARPA logical scalars \u2014 VARPA(FALSE,TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.25
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-date-domains.json",
+      "name": "ClosedXML exploration upstream date-domains: Hour accepts only serial time between zero and upper limit of date system \u2014 HOUR(DATE(9999,12,31)+0.9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 21.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-date-domains.json",
+      "name": "ClosedXML exploration upstream date-domains: Minute accepts only serial time between zero and upper limit of date system \u2014 MINUTE(DATE(9999,12,31)+0.9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 36.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-date-domains.json",
+      "name": "ClosedXML exploration upstream date-domains: Second accepts only serial time between zero and upper limit of date system \u2014 SECOND(DATE(9999,12,31)+0.9999)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 51.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-date-domains.json",
+      "name": "ClosedXML exploration upstream date-domains: TimeValue propagates error \u2014 TIMEVALUE(#DIV/0!)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-date-domains.json",
+      "name": "ClosedXML exploration upstream date-domains: Weekday behavior \u2014 WEEKDAY(\"text\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-date-domains.json",
+      "name": "ClosedXML exploration upstream date-domains: Weekday behavior \u2014 WEEKDAY(#N/A)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-date-domains.json",
+      "name": "ClosedXML exploration upstream-date-domains: NETWORKDAYS argument and holiday error positions contrasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-logical.json",
+      "name": "ClosedXML exploration upstream logical: And ScalarArgumentsCoercedFromBlankOrTextOrNumber \u2014 AND(IF(TRUE,,))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-logical.json",
+      "name": "ClosedXML exploration upstream logical: If ConditionCoercedToLogical \u2014 IF(\"TRUE\", \"T\", \"F\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "T"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-logical.json",
+      "name": "ClosedXML exploration upstream logical: If ConditionCoercedToLogical \u2014 IF(\"FALSE\", \"T\", \"F\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "F"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-logical.json",
+      "name": "ClosedXML exploration upstream logical: If ConditionCoercedToLogical \u2014 IF(\"text\", \"T\", \"F\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-logical.json",
+      "name": "ClosedXML exploration upstream logical: IfError FirstArgumentError ReturnSecondArgument \u2014 IFERROR(#NULL!, TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-logical.json",
+      "name": "ClosedXML exploration upstream logical: Or ScalarArgumentsCoercedFromBlankOrTextOrNumber \u2014 OR(IF(TRUE,,))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-numeric-domains.json",
+      "name": "ClosedXML exploration upstream numeric-domains: Power errors \u2014 POWER(1e+100, 1e+100)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NUM!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-numeric-domains.json",
+      "name": "ClosedXML exploration upstream numeric-domains: Product \u2014 PRODUCT({\"hello\"})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-numeric-domains.json",
+      "name": "ClosedXML exploration upstream numeric-domains: Product \u2014 PRODUCT(1, \"Hello\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-numeric-domains.json",
+      "name": "ClosedXML exploration upstream numeric-domains: Product \u2014 PRODUCT(1, #NULL!)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NULL!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-numeric-domains.json",
+      "name": "ClosedXML exploration upstream numeric-domains: SumSq \u2014 SUMSQ(1, \"Hello\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-numeric-domains.json",
+      "name": "ClosedXML exploration upstream numeric-domains: SumSq \u2014 SUMSQ({4, 2, \"hello\", \"10\" })",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-numeric-domains.json",
+      "name": "ClosedXML exploration upstream numeric-domains: SumSq \u2014 SUMSQ(1, #NULL!)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NULL!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-operators.json",
+      "name": "ClosedXML exploration upstream operators: UnaryPercent ConvertsArgumentBeforePercentOperator \u2014 (1/0)%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-operators.json",
+      "name": "ClosedXML exploration upstream operators: UnaryPercent ConvertsArgumentBeforePercentOperator \u2014 A1%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-operators.json",
+      "name": "ClosedXML exploration upstream-operators: percent logical operands contrasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.01
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-selection.json",
+      "name": "ClosedXML exploration upstream selection: Columns Blank ReturnsValueError \u2014 COLUMNS(IF(TRUE,,))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-selection.json",
+      "name": "ClosedXML exploration upstream selection: Columns Error ReturnsError \u2014 COLUMNS(#DIV/0!)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-selection.json",
+      "name": "ClosedXML exploration upstream selection: Hlookup UnexpectedArguments \u2014 HLOOKUP(1,{1,2},0,FALSE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-selection.json",
+      "name": "ClosedXML exploration upstream selection: Hlookup truncates row index number parameter \u2014 HLOOKUP(7,{5,7,9},1.9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-selection.json",
+      "name": "ClosedXML exploration upstream selection: Index array errors \u2014 INDEX({1}, 1, -1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-selection.json",
+      "name": "ClosedXML exploration upstream selection: Index array errors \u2014 INDEX({1,2;3,4;5,6}, 1, 3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#REF!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-selection.json",
+      "name": "ClosedXML exploration upstream selection: Index scalar \u2014 INDEX(\"Text\", 1, 2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#REF!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-selection.json",
+      "name": "ClosedXML exploration upstream selection: Rows Error ReturnsError \u2014 ROWS(#DIV/0!)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-text-policies.json",
+      "name": "ClosedXML exploration upstream text-policies: Replace start position must be from 1 to 32767 \u2014 REPLACE(\"ABC\",0.9,0,\"D\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-text-policies.json",
+      "name": "ClosedXML exploration upstream text-policies: Replace start position must be from 1 to 32767 \u2014 REPLACE(\"ABC\",-1,0,\"D\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-text-policies.json",
+      "name": "ClosedXML exploration upstream text-policies: Replace start position must be from 1 to 32767 \u2014 REPLACE(\"ABC\",1,32767.9,\"D\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "D"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-text-policies.json",
+      "name": "ClosedXML exploration upstream text-policies: Replace length must be from 0 to 32767 \u2014 REPLACE(\"ABC\",1,-0.1,\"D\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-text-policies.json",
+      "name": "ClosedXML exploration upstream text-policies: Search Tilde Escapes Next Char \u2014 SEARCH(\"a~?\", \"ab\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-text-policies.json",
+      "name": "ClosedXML exploration upstream text-policies: Text returns empty string on empty string \u2014 TEXT(1913415.93,\"\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-text-policies.json",
+      "name": "ClosedXML exploration upstream text-policies: Upper empty string returns empty string \u2014 UPPER(\"\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-text-policies.json",
+      "name": "ClosedXML exploration upstream-text-policies: FIND error argument positions contrasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-text-policies.json",
+      "name": "ClosedXML exploration upstream-text-policies: SEARCH error argument positions contrasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 168,
+    "checks": 425,
+    "corroborated_scenarios": 168,
+    "corroborated_checks": 425
+  }
+}
