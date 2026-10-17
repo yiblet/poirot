@@ -291,6 +291,10 @@ pub enum InformationFunction {
 /// Arithmetic, rounding, trigonometry, and random number handlers.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum MathFunction {
+    /// BASE positional text handler.
+    Base,
+    /// DECIMAL positional numeric handler.
+    Decimal,
     /// RAND handler.
     Rand,
     /// RANDBETWEEN handler.
@@ -309,6 +313,8 @@ pub enum MathFunction {
     CeilingPrecise,
     /// COMBIN handler.
     Combin,
+    /// Combinations with replacement under the documented domain.
+    Combina,
     /// COSH handler.
     Cosh,
     /// EVEN handler.
@@ -388,6 +394,8 @@ pub enum MathFunction {
     Degrees,
     /// RADIANS handler.
     Radians,
+    /// Direct power-series summation.
+    SeriesSum,
 }
 /// Text construction, parsing, formatting, and matching handlers.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
@@ -396,6 +404,8 @@ pub enum TextFunction {
     NumberValue,
     /// PROPER handler.
     Proper,
+    /// ARABIC handler.
+    Arabic,
     /// ROMAN handler.
     Roman,
     /// TEXTJOIN handler.

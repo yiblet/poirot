@@ -1,0 +1,527 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T22:14:56.653874+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "purpose": "Disambiguating research probes before implementation. Zero-valued placeholders only requested typed outputs; they were not expected results. Records below retain independent formulas and actual Calc observations, with no Poirot output.",
+  "observations": [
+    {
+      "formula": "BASE(255,2,3)",
+      "actual": {
+        "type": "text",
+        "value": "11111111"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"zap\",36)",
+      "actual": {
+        "type": "number",
+        "value": 45745.0
+      }
+    },
+    {
+      "formula": "BASE(-0.5,16)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DECIMAL(-0.5,16)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "BASE(-1,16)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DECIMAL(-1,16)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "BASE(0,16)",
+      "actual": {
+        "type": "text",
+        "value": "0"
+      }
+    },
+    {
+      "formula": "DECIMAL(0,16)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "BASE(1.9,16)",
+      "actual": {
+        "type": "text",
+        "value": "1"
+      }
+    },
+    {
+      "formula": "DECIMAL(1.9,16)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "BASE(9007199254740991,16)",
+      "actual": {
+        "type": "text",
+        "value": "1FFFFFFFFFFFFF"
+      }
+    },
+    {
+      "formula": "DECIMAL(9007199254740991,16)",
+      "actual": {
+        "type": "number",
+        "value": 1.03782919825714e+19
+      }
+    },
+    {
+      "formula": "BASE(9007199254740992,16)",
+      "actual": {
+        "type": "text",
+        "value": "20000000000000"
+      }
+    },
+    {
+      "formula": "DECIMAL(9007199254740992,16)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "BASE(\"15\",16)",
+      "actual": {
+        "type": "text",
+        "value": "F"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"15\",16)",
+      "actual": {
+        "type": "number",
+        "value": 21.0
+      }
+    },
+    {
+      "formula": "BASE(TRUE,16)",
+      "actual": {
+        "type": "text",
+        "value": "1"
+      }
+    },
+    {
+      "formula": "DECIMAL(TRUE,16)",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "BASE(FALSE,16)",
+      "actual": {
+        "type": "text",
+        "value": "0"
+      }
+    },
+    {
+      "formula": "DECIMAL(FALSE,16)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "BASE(A1,16)",
+      "actual": {
+        "type": "text",
+        "value": "0"
+      }
+    },
+    {
+      "formula": "DECIMAL(A1,16)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "BASE(,16)",
+      "actual": {
+        "type": "text",
+        "value": "0"
+      }
+    },
+    {
+      "formula": "DECIMAL(,16)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "BASE(\"\",16)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"\",16)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "BASE(15,1.9)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"F\",1.9)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "BASE(15,2.9)",
+      "actual": {
+        "type": "text",
+        "value": "1111"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"F\",2.9)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "BASE(15,36.9)",
+      "actual": {
+        "type": "text",
+        "value": "F"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"F\",36.9)",
+      "actual": {
+        "type": "number",
+        "value": 15.0
+      }
+    },
+    {
+      "formula": "BASE(15,37)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"F\",37)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "BASE(15,0)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"F\",0)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "BASE(15,\"16\")",
+      "actual": {
+        "type": "text",
+        "value": "F"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"F\",\"16\")",
+      "actual": {
+        "type": "number",
+        "value": 15.0
+      }
+    },
+    {
+      "formula": "BASE(15,TRUE)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"F\",TRUE)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "BASE(15,A1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"F\",A1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "BASE(15,)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"F\",)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "BASE(15,16,-0.5)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "BASE(15,16,-1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "BASE(15,16,255)",
+      "actual": {
+        "type": "text",
+        "value": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000F"
+      }
+    },
+    {
+      "formula": "BASE(15,16,255.9)",
+      "actual": {
+        "type": "text",
+        "value": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000F"
+      }
+    },
+    {
+      "formula": "BASE(15,16,256)",
+      "actual": {
+        "type": "text",
+        "value": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000F"
+      }
+    },
+    {
+      "formula": "BASE(15,16,1E99)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "BASE(15,16,\"3\")",
+      "actual": {
+        "type": "text",
+        "value": "00F"
+      }
+    },
+    {
+      "formula": "BASE(15,16,TRUE)",
+      "actual": {
+        "type": "text",
+        "value": "F"
+      }
+    },
+    {
+      "formula": "BASE(15,16,A1)",
+      "actual": {
+        "type": "text",
+        "value": "F"
+      }
+    },
+    {
+      "formula": "BASE(15,16,)",
+      "actual": {
+        "type": "text",
+        "value": "F"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"\",36)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DECIMAL(\" \",36)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DECIMAL(\" F\",36)",
+      "actual": {
+        "type": "number",
+        "value": 15.0
+      }
+    },
+    {
+      "formula": "DECIMAL(\"F \",36)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"+F\",36)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"-F\",36)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"0xF\",36)",
+      "actual": {
+        "type": "number",
+        "value": 1203.0
+      }
+    },
+    {
+      "formula": "DECIMAL(\"fF\",36)",
+      "actual": {
+        "type": "number",
+        "value": 555.0
+      }
+    },
+    {
+      "formula": "DECIMAL(\"1.0\",36)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"2\",36)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "DECIMAL(\"\uff10\",36)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",36)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DECIMAL(\"0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",36)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DECIMAL(\"ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\",36)",
+      "actual": {
+        "type": "error",
+        "value": "#NUM!"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\",36)",
+      "actual": {
+        "type": "error",
+        "value": "#NUM!"
+      }
+    },
+    {
+      "formula": "BASE(-1,1/0)",
+      "actual": {
+        "type": "error",
+        "value": "#DIV/0!"
+      }
+    },
+    {
+      "formula": "BASE(1,1,1/0)",
+      "actual": {
+        "type": "error",
+        "value": "#DIV/0!"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"?\",1/0)",
+      "actual": {
+        "type": "error",
+        "value": "#DIV/0!"
+      }
+    },
+    {
+      "formula": "DECIMAL(\"?\",1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DECIMAL(TRUE,1/0)",
+      "actual": {
+        "type": "error",
+        "value": "#DIV/0!"
+      }
+    }
+  ]
+}

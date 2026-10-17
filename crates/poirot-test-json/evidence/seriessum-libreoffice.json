@@ -1,0 +1,514 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T22:42:51.405786+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "seriessum.json": "e073488b68a856c82660bf3efc85c7ab655f13e6974da01528d81dce28d51750",
+    "closedxml-aggregates.json": "7dbba52105eb79d86ce2bb30dbb9aa63b9760576868eedb389d43b56eebde9a8"
+  },
+  "results": [
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: single term",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 40.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: row major",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 49.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: negative step",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: fractional exponents",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 34.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: negative exponents",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: blank coefficient positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 13.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 17.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 13.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: scalar numeric text",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: empty text",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: zero power zero",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: zero negative power",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: zero coefficient invalid power",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: zero fractional power",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: negative fractional power",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: logical scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: text collection",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 13.0
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: logical collection",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: overflow before cancellation",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: cancellation",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: ordered coefficient errors",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "seriessum.json",
+      "name": "SERIESSUM: term precedes later error",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "closedxml-aggregates.json",
+      "name": "ClosedXML aggregates: CountBlank \u2014 COUNTBLANK(IF(TRUE,))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-aggregates.json",
+      "name": "ClosedXML aggregates: SumProduct \u2014 SUMPRODUCT(IF(TRUE,,),5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-aggregates.json",
+      "name": "ClosedXML aggregates: SeriesSum coercion \u2014 SERIESSUM(\"\",1,1,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-aggregates.json",
+      "name": "ClosedXML aggregates: CountBlank \u2014 COUNTBLANK(IF(TRUE,FALSE))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-aggregates.json",
+      "name": "ClosedXML aggregates: CountBlank \u2014 COUNTBLANK(IF(TRUE,1))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-aggregates.json",
+      "name": "ClosedXML aggregates: CountBlank \u2014 COUNTBLANK(IF(TRUE,\"\"))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-aggregates.json",
+      "name": "ClosedXML aggregates: Count \u2014 COUNT(IF(TRUE,,),TRUE,FALSE,\"1\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-aggregates.json",
+      "name": "ClosedXML aggregates: CountA counts blank argument \u2014 COUNTA(IF(TRUE,,))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-aggregates.json",
+      "name": "ClosedXML aggregates: CountA counts error arguments \u2014 COUNTA(#NULL!,#DIV/0!,#VALUE!,#REF!,#NAME?,#NUM!,#N/A)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-aggregates.json",
+      "name": "ClosedXML aggregates: MAX scalar text and logical coercion \u2014 MAX(\"asdf\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-aggregates.json",
+      "name": "ClosedXML aggregates: SumProduct \u2014 SUMPRODUCT({1,2},{1,#N/A})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-aggregates.json",
+      "name": "ClosedXML aggregates: Count \u2014 COUNT(\"Hello\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 32,
+    "checks": 34,
+    "corroborated_scenarios": 23,
+    "corroborated_checks": 25
+  }
+}

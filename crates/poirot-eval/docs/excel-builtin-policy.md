@@ -55,7 +55,13 @@ Source: [NORM.S.DIST](https://support.microsoft.com/en-us/excel/functions/norm-s
 The Excel profile also selects bounded differences in existing family adapters:
 `ADDRESS` evaluates its fourth argument and formats absolute or relative R1C1
 axes when false, retaining the shared sheet-name escaping. `CEILING.MATH` rounds
-negative numbers away from zero for every nonzero mode. `COVARIANCE.S` filters
+negative numbers away from zero for every nonzero mode. `FLOOR.MATH` rounds
+negative numbers toward zero for every nonzero mode. This numeric direction
+selection follows scalar argument admission; the pinned profile retains its
+negative-only mode flags. Both profiles preserve omitted significance, explicit
+missing-argument refusal and the zero-significance return before reading mode.
+Basic `FLOOR(0,0)` returns zero in both profiles, as in its pinned POI source;
+nonzero numbers with zero significance still return #DIV/0. `COVARIANCE.S` filters
 nonnumeric positional pairs and returns #DIV/0 when fewer than two valid pairs
 remain; mismatched lengths and input errors retain their typed failures. `RANK`
 uses the shared `RANK.EQ` order, tie and absent-number behavior. Both accept
@@ -67,6 +73,7 @@ form 4. The pinned entry points retain their source contracts. All overrides use
 shared scalar/reference hosts, collection budgets and existing numeric kernels.
 Sources: [ADDRESS](https://support.microsoft.com/en-us/excel/functions/address-function),
 [CEILING.MATH](https://support.microsoft.com/en-us/excel/functions/ceiling-math-function),
+[FLOOR.MATH](https://support.microsoft.com/en-us/excel/functions/floor-math-function),
 [COVARIANCE.S](https://support.microsoft.com/en-us/excel/functions/covariance-s-function),
 [RANK.EQ](https://support.microsoft.com/en-us/excel/functions/rank-eq-function),
 and [ROMAN](https://support.microsoft.com/en-us/excel/functions/roman-function).

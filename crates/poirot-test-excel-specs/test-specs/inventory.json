@@ -4378,7 +4378,7 @@
         "policies": [
           "ExcelDocumentation"
         ],
-        "supported": "Boolean form TRUE selects classic style and FALSE selects simplified style.",
+        "supported": "Omitted or explicitly missing form defaults to classic zero; boolean TRUE selects classic and FALSE simplified style.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
         ]
@@ -14094,6 +14094,301 @@
           "applicability": "not_applicable"
         }
       ]
+    },
+    {
+      "id": "function.BASE",
+      "kind": "function",
+      "name": "BASE",
+      "family": "Math",
+      "scope_status": "in_scope",
+      "implementation_status": "registered",
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function"
+      ],
+      "obligations": [
+        {
+          "id": "function.BASE.valid",
+          "behavior": "Establish a valid BASE call and independently derive a baseline result from its individual Excel contract.",
+          "applicability": "requires_research",
+          "reason": "Registration and bounded contract are implemented; exhaustive native Excel compatibility remains unverified."
+        },
+        {
+          "id": "function.BASE.boundary",
+          "behavior": "Determine BASE behavior at sign/domain/rounding limits.",
+          "applicability": "requires_research",
+          "reason": "Registration and bounded contract are implemented; exhaustive native Excel compatibility remains unverified."
+        },
+        {
+          "id": "function.BASE.coercion",
+          "behavior": "Determine BASE number/numeric-text/text/logical/blank/empty-text coercion, distinguishing literals, references, and arrays.",
+          "applicability": "requires_research",
+          "reason": "Registration and bounded contract are implemented; exhaustive native Excel compatibility remains unverified."
+        },
+        {
+          "id": "function.BASE.errors",
+          "behavior": "Determine BASE applicable domain/missing/shape errors and propagation or suppression; do not infer error precedence from ROI.",
+          "applicability": "requires_research",
+          "reason": "Registration and bounded contract are implemented; exhaustive native Excel compatibility remains unverified."
+        },
+        {
+          "id": "function.BASE.reference",
+          "behavior": "Determine BASE single-cell/range/array inputs and reference-valued outputs, including scalarization if applicable.",
+          "applicability": "requires_research",
+          "reason": "Registration and bounded contract are implemented; exhaustive native Excel compatibility remains unverified."
+        },
+        {
+          "id": "function.BASE.version",
+          "behavior": "Determine BASE relevant compatibility versions, date systems, aliases, and legacy/new forms.",
+          "applicability": "requires_research",
+          "reason": "Registration and bounded contract are implemented; exhaustive native Excel compatibility remains unverified."
+        }
+      ],
+      "implementation_scope": {
+        "policies": [
+          "PinnedPoi",
+          "ExcelDocumentation"
+        ],
+        "supported": "Unsigned radix 2..36 conversion with documented BASE number/padding bounds and DECIMAL text length/finite-result limits; scalar origins retained until consumer admission.",
+        "limitations": [
+          "Newly supported functions use one documented contract under both policies. Additional blank, logical, omission and whitespace rules are independently observed in Calc; native Excel is unavailable. Calc differs from documented invalid-domain errors and some upper bounds."
+        ]
+      }
+    },
+    {
+      "id": "function.DECIMAL",
+      "kind": "function",
+      "name": "DECIMAL",
+      "family": "Math",
+      "scope_status": "in_scope",
+      "implementation_status": "registered",
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function"
+      ],
+      "obligations": [
+        {
+          "id": "function.DECIMAL.valid",
+          "behavior": "Establish a valid DECIMAL call and independently derive a baseline result from its individual Excel contract.",
+          "applicability": "requires_research",
+          "reason": "Registration and bounded contract are implemented; exhaustive native Excel compatibility remains unverified."
+        },
+        {
+          "id": "function.DECIMAL.boundary",
+          "behavior": "Determine DECIMAL behavior at sign/domain/rounding limits.",
+          "applicability": "requires_research",
+          "reason": "Registration and bounded contract are implemented; exhaustive native Excel compatibility remains unverified."
+        },
+        {
+          "id": "function.DECIMAL.coercion",
+          "behavior": "Determine DECIMAL number/numeric-text/text/logical/blank/empty-text coercion, distinguishing literals, references, and arrays.",
+          "applicability": "requires_research",
+          "reason": "Registration and bounded contract are implemented; exhaustive native Excel compatibility remains unverified."
+        },
+        {
+          "id": "function.DECIMAL.errors",
+          "behavior": "Determine DECIMAL applicable domain/missing/shape errors and propagation or suppression; do not infer error precedence from ROI.",
+          "applicability": "requires_research",
+          "reason": "Registration and bounded contract are implemented; exhaustive native Excel compatibility remains unverified."
+        },
+        {
+          "id": "function.DECIMAL.reference",
+          "behavior": "Determine DECIMAL single-cell/range/array inputs and reference-valued outputs, including scalarization if applicable.",
+          "applicability": "requires_research",
+          "reason": "Registration and bounded contract are implemented; exhaustive native Excel compatibility remains unverified."
+        },
+        {
+          "id": "function.DECIMAL.version",
+          "behavior": "Determine DECIMAL relevant compatibility versions, date systems, aliases, and legacy/new forms.",
+          "applicability": "requires_research",
+          "reason": "Registration and bounded contract are implemented; exhaustive native Excel compatibility remains unverified."
+        }
+      ],
+      "implementation_scope": {
+        "policies": [
+          "PinnedPoi",
+          "ExcelDocumentation"
+        ],
+        "supported": "Unsigned radix 2..36 conversion with documented BASE number/padding bounds and DECIMAL text length/finite-result limits; scalar origins retained until consumer admission.",
+        "limitations": [
+          "Newly supported functions use one documented contract under both policies. Additional blank, logical, omission and whitespace rules are independently observed in Calc; native Excel is unavailable. Calc differs from documented invalid-domain errors and some upper bounds."
+        ]
+      }
+    },
+    {
+      "id": "function.ARABIC",
+      "kind": "function",
+      "name": "ARABIC",
+      "family": "Text",
+      "scope_status": "in_scope",
+      "implementation_status": "registered",
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function"
+      ],
+      "obligations": [
+        {
+          "id": "function.ARABIC.valid",
+          "behavior": "Establish a valid ARABIC call and independently derive a baseline result from its individual Excel contract.",
+          "applicability": "requires_research",
+          "reason": "Potential obligation only: individual contract and applicability not yet researched."
+        },
+        {
+          "id": "function.ARABIC.boundary",
+          "behavior": "Determine ARABIC behavior at empty strings, indices, lengths, Unicode units.",
+          "applicability": "requires_research",
+          "reason": "Potential obligation only: individual contract and applicability not yet researched."
+        },
+        {
+          "id": "function.ARABIC.coercion",
+          "behavior": "Determine ARABIC number/numeric-text/text/logical/blank/empty-text coercion, distinguishing literals, references, and arrays.",
+          "applicability": "requires_research",
+          "reason": "Potential obligation only: individual contract and applicability not yet researched."
+        },
+        {
+          "id": "function.ARABIC.errors",
+          "behavior": "Determine ARABIC applicable domain/missing/shape errors and propagation or suppression; do not infer error precedence from ROI.",
+          "applicability": "requires_research",
+          "reason": "Potential obligation only: individual contract and applicability not yet researched."
+        },
+        {
+          "id": "function.ARABIC.reference",
+          "behavior": "Determine ARABIC single-cell/range/array inputs and reference-valued outputs, including scalarization if applicable.",
+          "applicability": "requires_research",
+          "reason": "Potential obligation only: individual contract and applicability not yet researched."
+        },
+        {
+          "id": "function.ARABIC.version",
+          "behavior": "Determine ARABIC relevant compatibility versions, date systems, aliases, and legacy/new forms.",
+          "applicability": "requires_research",
+          "reason": "Potential obligation only: individual contract and applicability not yet researched."
+        }
+      ],
+      "implementation_scope": {
+        "policies": [
+          "PinnedPoi",
+          "ExcelDocumentation"
+        ],
+        "supported": "Bounded case-insensitive Roman text decoding, empty text, ASCII outer spaces and leading minus.",
+        "limitations": [
+          "Undocumented noncanonical spellings use adjacent-pair arithmetic; native Excel parity is unverified. Calc rejects documented signs, spaces and values above 3999."
+        ]
+      }
+    },
+    {
+      "id": "function.COMBINA",
+      "kind": "function",
+      "name": "COMBINA",
+      "family": "Math",
+      "scope_status": "in_scope",
+      "implementation_status": "registered",
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/combina-function"
+      ],
+      "obligations": [
+        {
+          "id": "function.COMBINA.valid",
+          "behavior": "Establish a valid COMBINA call and independently derive a baseline result from its individual Excel contract.",
+          "applicability": "applicable",
+          "reason": "Individual Microsoft COMBINA documentation establishes examples, truncation and invalid-domain NUM behavior."
+        },
+        {
+          "id": "function.COMBINA.boundary",
+          "behavior": "Determine COMBINA behavior at sign/domain/rounding limits.",
+          "applicability": "applicable",
+          "reason": "Individual Microsoft COMBINA documentation establishes examples, truncation and invalid-domain NUM behavior."
+        },
+        {
+          "id": "function.COMBINA.coercion",
+          "behavior": "Determine COMBINA number/numeric-text/text/logical/blank/empty-text coercion, distinguishing literals, references, and arrays.",
+          "applicability": "requires_research",
+          "reason": "Potential obligation only: individual contract and applicability not yet researched."
+        },
+        {
+          "id": "function.COMBINA.errors",
+          "behavior": "Determine COMBINA applicable domain/missing/shape errors and propagation or suppression; do not infer error precedence from ROI.",
+          "applicability": "applicable",
+          "reason": "Individual Microsoft COMBINA documentation establishes examples, truncation and invalid-domain NUM behavior."
+        },
+        {
+          "id": "function.COMBINA.reference",
+          "behavior": "Determine COMBINA single-cell/range/array inputs and reference-valued outputs, including scalarization if applicable.",
+          "applicability": "requires_research",
+          "reason": "Potential obligation only: individual contract and applicability not yet researched."
+        },
+        {
+          "id": "function.COMBINA.version",
+          "behavior": "Determine COMBINA relevant compatibility versions, date systems, aliases, and legacy/new forms.",
+          "applicability": "requires_research",
+          "reason": "Potential obligation only: individual contract and applicability not yet researched."
+        }
+      ],
+      "implementation_scope": {
+        "policies": [
+          "PinnedPoi",
+          "ExcelDocumentation"
+        ],
+        "supported": "Nonnegative operands truncated to n>=k; combinations with replacement use bounded exact integer binomial arithmetic before binary64 rounding.",
+        "limitations": [
+          "One documented contract under both policies. Zero-zero, blank, omission and scalar coercion are independently observed in Calc; native Excel unavailable. Calc uses VALUE for domain errors where Microsoft documents NUM."
+        ]
+      }
+    },
+    {
+      "id": "function.SERIESSUM",
+      "kind": "function",
+      "name": "SERIESSUM",
+      "family": "Math",
+      "scope_status": "in_scope",
+      "implementation_status": "registered",
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function"
+      ],
+      "obligations": [
+        {
+          "id": "function.SERIESSUM.valid",
+          "behavior": "Establish SERIESSUM valid under its individual Excel contract.",
+          "applicability": "requires_research",
+          "reason": "Implementation follows documented sum definition and pinned ClosedXML source. Native Excel boundary and coercion parity remains unverified."
+        },
+        {
+          "id": "function.SERIESSUM.boundary",
+          "behavior": "Establish SERIESSUM boundary under its individual Excel contract.",
+          "applicability": "requires_research",
+          "reason": "Implementation follows documented sum definition and pinned ClosedXML source. Native Excel boundary and coercion parity remains unverified."
+        },
+        {
+          "id": "function.SERIESSUM.coercion",
+          "behavior": "Establish SERIESSUM coercion under its individual Excel contract.",
+          "applicability": "requires_research",
+          "reason": "Implementation follows documented sum definition and pinned ClosedXML source. Native Excel boundary and coercion parity remains unverified."
+        },
+        {
+          "id": "function.SERIESSUM.errors",
+          "behavior": "Establish SERIESSUM errors under its individual Excel contract.",
+          "applicability": "requires_research",
+          "reason": "Implementation follows documented sum definition and pinned ClosedXML source. Native Excel boundary and coercion parity remains unverified."
+        },
+        {
+          "id": "function.SERIESSUM.reference",
+          "behavior": "Establish SERIESSUM reference under its individual Excel contract.",
+          "applicability": "requires_research",
+          "reason": "Implementation follows documented sum definition and pinned ClosedXML source. Native Excel boundary and coercion parity remains unverified."
+        },
+        {
+          "id": "function.SERIESSUM.version",
+          "behavior": "Establish SERIESSUM version under its individual Excel contract.",
+          "applicability": "requires_research",
+          "reason": "Implementation follows documented sum definition and pinned ClosedXML source. Native Excel boundary and coercion parity remains unverified."
+        }
+      ],
+      "implementation_scope": {
+        "policies": [
+          "PinnedPoi",
+          "ExcelDocumentation"
+        ],
+        "supported": "One explicit direct term-wise power-series contract; contextual scalar numeric text and exact numeric-or-blank collection coefficients, retaining row-major exponent positions.",
+        "limitations": [
+          "Native Excel boundary behavior is unverified. Calc differs for zero bases, logical and text coefficients, and error mapping. See docs/seriessum.md."
+        ]
+      }
     }
   ]
 }

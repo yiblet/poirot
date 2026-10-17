@@ -1054,11 +1054,11 @@ fn numeric_locale_identity_and_consumption_survive_retained_snapshot() {
 fn raw_snapshot_restore_rejects_previous_execution_semantics_versions() {
     let workbook = book();
     let overlay = Overlay::with_workbook(&workbook).build().unwrap();
-    for previous in [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] {
+    for previous in 8..28 {
         let mut bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
         // Payload's first field is its small postcard varint version.
         let version = bytes.first_mut().unwrap();
-        assert_eq!(*version, 22);
+        assert_eq!(*version, 28);
         *version = previous;
         let snapshot = postcard::from_bytes(&bytes).unwrap();
         assert!(
@@ -1163,4 +1163,94 @@ fn approximate_match_policy_switch_and_snapshot_restore_recompute_typed_candidat
     overlay.set_policy(policy).unwrap();
     assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(1.));
     assert_eq!(value(&mut overlay, "F1", &context), CellValue::Number(6.));
+}
+
+#[test]
+fn roman_policy_locale_and_arabic_reference_edits_invalidate_after_snapshot_restore() {
+    let mut workbook = Workbook::new();
+    let sheet = workbook.add_sheet("S").unwrap();
+    sheet.set_value(at("A1").address, "X").unwrap();
+    sheet
+        .set_formula(at("B1").address, "ARABIC(A1)", CellValue::Blank)
+        .unwrap();
+    sheet
+        .set_formula(at("C1").address, "ROMAN(999)", CellValue::Blank)
+        .unwrap();
+    sheet
+        .set_formula(at("D1").address, r#"ROMAN("1,234",0)"#, CellValue::Blank)
+        .unwrap();
+    let mut overlay = Overlay::with_workbook(&workbook).build().unwrap();
+    let mut context = EvaluationContext::default();
+    assert_eq!(value(&mut overlay, "B1", &context), CellValue::Number(10.));
+    assert_eq!(
+        value(&mut overlay, "C1", &context),
+        CellValue::Error(poirot_model::CellError::Value)
+    );
+    assert_eq!(
+        value(&mut overlay, "D1", &context),
+        CellValue::Text("MCCXXXIV".into())
+    );
+    let bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
+    let (workbook, state) = Overlay::from_snapshot(postcard::from_bytes(&bytes).unwrap()).unwrap();
+    let mut overlay = state.attach(&workbook).unwrap();
+    assert_eq!(value(&mut overlay, "B1", &context), CellValue::Number(10.));
+    overlay.set_value(at("A1"), "xiv").unwrap();
+    assert_eq!(value(&mut overlay, "B1", &context), CellValue::Number(14.));
+    let mut policy = overlay.policy().clone();
+    policy.builtin = crate::BuiltinSemanticsPolicy::ExcelDocumentation;
+    overlay.set_policy(policy).unwrap();
+    assert_eq!(
+        value(&mut overlay, "C1", &context),
+        CellValue::Text("CMXCIX".into())
+    );
+    context.number_locale = crate::NumberLocaleV2::new(",", Some("."), None, "%", ":").unwrap();
+    assert_eq!(
+        value(&mut overlay, "D1", &context),
+        CellValue::Text("I".into())
+    );
+    assert_eq!(value(&mut overlay, "B1", &context), CellValue::Number(14.));
+}
+
+#[test]
+fn search_start_policy_switch_invalidates_restored_values_for_both_text_routes() {
+    for source in [
+        crate::TextSourceVersion::PoirotF6c572d,
+        crate::TextSourceVersion::Poi7321209OpenJdk21Unicode15,
+    ] {
+        let mut workbook = book();
+        for (cell, formula) in [("E1", r#"SEARCH("","")"#), ("F1", r#"FIND("","abc",4)"#)] {
+            workbook
+                .sheet_mut(0)
+                .unwrap()
+                .set_formula(at(cell).address, formula, CellValue::Blank)
+                .unwrap();
+        }
+        let context = EvaluationContext::default();
+        let mut overlay = Overlay::with_workbook(&workbook)
+            .with_policy(OverlayPolicy {
+                text: crate::TextSemanticsPolicy { source },
+                ..Default::default()
+            })
+            .build()
+            .unwrap();
+        assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(1.));
+        assert_eq!(value(&mut overlay, "F1", &context), CellValue::Number(4.));
+        let bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
+        let (workbook, state) =
+            Overlay::from_snapshot(postcard::from_bytes(&bytes).unwrap()).unwrap();
+        let mut overlay = state.attach(&workbook).unwrap();
+        let mut policy = overlay.policy().clone();
+        policy.builtin = crate::BuiltinSemanticsPolicy::ExcelDocumentation;
+        overlay.set_policy(policy.clone()).unwrap();
+        for cell in ["E1", "F1"] {
+            assert_eq!(
+                value(&mut overlay, cell, &context),
+                CellValue::Error(poirot_model::CellError::Value)
+            );
+        }
+        policy.builtin = crate::BuiltinSemanticsPolicy::PinnedPoi;
+        overlay.set_policy(policy).unwrap();
+        assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(1.));
+        assert_eq!(value(&mut overlay, "F1", &context), CellValue::Number(4.));
+    }
 }

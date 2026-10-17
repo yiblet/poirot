@@ -338,3 +338,23 @@ fn kth_rank_admission_handles_fractional_boundaries() {
         }
     }
 }
+
+#[test]
+fn documented_search_start_truncates_before_checking_text_domain() {
+    for (number, length, expected) in [(1., 3, 0), (3.9, 3, 2), (2.9, 2, 1)] {
+        assert_eq!(coercev2_text_search_start(number, length), Ok(expected));
+    }
+    for (number, length) in [
+        (1., 0),
+        (0.9, 3),
+        (4., 3),
+        (f64::NAN, 3),
+        (f64::INFINITY, 3),
+        (2147483648., usize::MAX),
+    ] {
+        assert_eq!(
+            coercev2_text_search_start(number, length),
+            Err(CellError::Value)
+        );
+    }
+}

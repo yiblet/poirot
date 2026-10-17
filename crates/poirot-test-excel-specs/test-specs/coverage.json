@@ -1,32 +1,36 @@
 {
   "summary": {
-    "case_count": 2003,
-    "evaluation_steps": 2059,
-    "assertion_count": 2060,
-    "source_count": 261,
-    "feature_count": 291,
-    "potential_obligation_count": 1628,
+    "case_count": 2004,
+    "evaluation_steps": 2064,
+    "assertion_count": 2065,
+    "source_count": 262,
+    "feature_count": 296,
+    "potential_obligation_count": 1658,
     "obligation_status_counts": {
-      "specified_with_evidence": 563,
+      "specified_with_evidence": 566,
       "not_applicable": 8,
-      "missing": 1057
+      "missing": 1084
     },
     "evidence_counts": {
-      "documented_derivation": 2013,
-      "documented_example": 47
+      "documented_derivation": 2016,
+      "documented_example": 49
     },
-    "registered_function_count": 257,
-    "registered_functions_with_specifications": 256,
+    "registered_function_count": 262,
+    "registered_functions_with_specifications": 257,
     "registered_functions_without_specifications": [
-      "DATEDIF"
+      "ARABIC",
+      "BASE",
+      "DATEDIF",
+      "DECIMAL",
+      "SERIESSUM"
     ],
     "implementation_status_counts": {
-      "registered": 257,
+      "registered": 262,
       "unknown": 17,
       "partial": 8,
       "unsupported": 9
     },
-    "multi_step_cases": 45,
+    "multi_step_cases": 46,
     "named_cases": 17,
     "date1904_cases": 6,
     "array_assertions": 16,
@@ -27991,6 +27995,279 @@
       "applicability": "not_applicable",
       "specification_status": "not_applicable",
       "assertions": []
+    },
+    {
+      "id": "function.BASE.valid",
+      "feature": "function.BASE",
+      "behavior": "Establish a valid BASE call and independently derive a baseline result from its individual Excel contract.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.BASE.boundary",
+      "feature": "function.BASE",
+      "behavior": "Determine BASE behavior at sign/domain/rounding limits.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.BASE.coercion",
+      "feature": "function.BASE",
+      "behavior": "Determine BASE number/numeric-text/text/logical/blank/empty-text coercion, distinguishing literals, references, and arrays.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.BASE.errors",
+      "feature": "function.BASE",
+      "behavior": "Determine BASE applicable domain/missing/shape errors and propagation or suppression; do not infer error precedence from ROI.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.BASE.reference",
+      "feature": "function.BASE",
+      "behavior": "Determine BASE single-cell/range/array inputs and reference-valued outputs, including scalarization if applicable.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.BASE.version",
+      "feature": "function.BASE",
+      "behavior": "Determine BASE relevant compatibility versions, date systems, aliases, and legacy/new forms.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.DECIMAL.valid",
+      "feature": "function.DECIMAL",
+      "behavior": "Establish a valid DECIMAL call and independently derive a baseline result from its individual Excel contract.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.DECIMAL.boundary",
+      "feature": "function.DECIMAL",
+      "behavior": "Determine DECIMAL behavior at sign/domain/rounding limits.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.DECIMAL.coercion",
+      "feature": "function.DECIMAL",
+      "behavior": "Determine DECIMAL number/numeric-text/text/logical/blank/empty-text coercion, distinguishing literals, references, and arrays.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.DECIMAL.errors",
+      "feature": "function.DECIMAL",
+      "behavior": "Determine DECIMAL applicable domain/missing/shape errors and propagation or suppression; do not infer error precedence from ROI.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.DECIMAL.reference",
+      "feature": "function.DECIMAL",
+      "behavior": "Determine DECIMAL single-cell/range/array inputs and reference-valued outputs, including scalarization if applicable.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.DECIMAL.version",
+      "feature": "function.DECIMAL",
+      "behavior": "Determine DECIMAL relevant compatibility versions, date systems, aliases, and legacy/new forms.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.ARABIC.valid",
+      "feature": "function.ARABIC",
+      "behavior": "Establish a valid ARABIC call and independently derive a baseline result from its individual Excel contract.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.ARABIC.boundary",
+      "feature": "function.ARABIC",
+      "behavior": "Determine ARABIC behavior at empty strings, indices, lengths, Unicode units.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.ARABIC.coercion",
+      "feature": "function.ARABIC",
+      "behavior": "Determine ARABIC number/numeric-text/text/logical/blank/empty-text coercion, distinguishing literals, references, and arrays.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.ARABIC.errors",
+      "feature": "function.ARABIC",
+      "behavior": "Determine ARABIC applicable domain/missing/shape errors and propagation or suppression; do not infer error precedence from ROI.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.ARABIC.reference",
+      "feature": "function.ARABIC",
+      "behavior": "Determine ARABIC single-cell/range/array inputs and reference-valued outputs, including scalarization if applicable.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.ARABIC.version",
+      "feature": "function.ARABIC",
+      "behavior": "Determine ARABIC relevant compatibility versions, date systems, aliases, and legacy/new forms.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.COMBINA.valid",
+      "feature": "function.COMBINA",
+      "behavior": "Establish a valid COMBINA call and independently derive a baseline result from its individual Excel contract.",
+      "applicability": "applicable",
+      "specification_status": "specified_with_evidence",
+      "assertions": [
+        {
+          "case_id": 2003,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_example"
+        },
+        {
+          "case_id": 2003,
+          "step": 1,
+          "assertion": 0,
+          "evidence_kind": "documented_example"
+        }
+      ]
+    },
+    {
+      "id": "function.COMBINA.boundary",
+      "feature": "function.COMBINA",
+      "behavior": "Determine COMBINA behavior at sign/domain/rounding limits.",
+      "applicability": "applicable",
+      "specification_status": "specified_with_evidence",
+      "assertions": [
+        {
+          "case_id": 2003,
+          "step": 2,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        }
+      ]
+    },
+    {
+      "id": "function.COMBINA.coercion",
+      "feature": "function.COMBINA",
+      "behavior": "Determine COMBINA number/numeric-text/text/logical/blank/empty-text coercion, distinguishing literals, references, and arrays.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.COMBINA.errors",
+      "feature": "function.COMBINA",
+      "behavior": "Determine COMBINA applicable domain/missing/shape errors and propagation or suppression; do not infer error precedence from ROI.",
+      "applicability": "applicable",
+      "specification_status": "specified_with_evidence",
+      "assertions": [
+        {
+          "case_id": 2003,
+          "step": 3,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 2003,
+          "step": 4,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        }
+      ]
+    },
+    {
+      "id": "function.COMBINA.reference",
+      "feature": "function.COMBINA",
+      "behavior": "Determine COMBINA single-cell/range/array inputs and reference-valued outputs, including scalarization if applicable.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.COMBINA.version",
+      "feature": "function.COMBINA",
+      "behavior": "Determine COMBINA relevant compatibility versions, date systems, aliases, and legacy/new forms.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.SERIESSUM.valid",
+      "feature": "function.SERIESSUM",
+      "behavior": "Establish SERIESSUM valid under its individual Excel contract.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.SERIESSUM.boundary",
+      "feature": "function.SERIESSUM",
+      "behavior": "Establish SERIESSUM boundary under its individual Excel contract.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.SERIESSUM.coercion",
+      "feature": "function.SERIESSUM",
+      "behavior": "Establish SERIESSUM coercion under its individual Excel contract.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.SERIESSUM.errors",
+      "feature": "function.SERIESSUM",
+      "behavior": "Establish SERIESSUM errors under its individual Excel contract.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.SERIESSUM.reference",
+      "feature": "function.SERIESSUM",
+      "behavior": "Establish SERIESSUM reference under its individual Excel contract.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.SERIESSUM.version",
+      "feature": "function.SERIESSUM",
+      "behavior": "Establish SERIESSUM version under its individual Excel contract.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
     }
   ],
   "unresolved_expectations": [],
@@ -28100,7 +28377,7 @@
         "policies": [
           "ExcelDocumentation"
         ],
-        "supported": "Boolean form TRUE selects classic style and FALSE selects simplified style.",
+        "supported": "Omitted or explicitly missing form defaults to classic zero; boolean TRUE selects classic and FALSE simplified style.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
         ]
@@ -28523,6 +28800,96 @@
         "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
         "https://support.microsoft.com/en-us/excel/excel-functions-alphabetical",
         "https://support.microsoft.com/en-us/excel/functions/rank-eq-function"
+      ]
+    },
+    {
+      "id": "function.BASE",
+      "name": "BASE",
+      "implementation_status": "registered",
+      "implementation_scope": {
+        "policies": [
+          "PinnedPoi",
+          "ExcelDocumentation"
+        ],
+        "supported": "Unsigned radix 2..36 conversion with documented BASE number/padding bounds and DECIMAL text length/finite-result limits; scalar origins retained until consumer admission.",
+        "limitations": [
+          "Newly supported functions use one documented contract under both policies. Additional blank, logical, omission and whitespace rules are independently observed in Calc; native Excel is unavailable. Calc differs from documented invalid-domain errors and some upper bounds."
+        ]
+      },
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function"
+      ]
+    },
+    {
+      "id": "function.DECIMAL",
+      "name": "DECIMAL",
+      "implementation_status": "registered",
+      "implementation_scope": {
+        "policies": [
+          "PinnedPoi",
+          "ExcelDocumentation"
+        ],
+        "supported": "Unsigned radix 2..36 conversion with documented BASE number/padding bounds and DECIMAL text length/finite-result limits; scalar origins retained until consumer admission.",
+        "limitations": [
+          "Newly supported functions use one documented contract under both policies. Additional blank, logical, omission and whitespace rules are independently observed in Calc; native Excel is unavailable. Calc differs from documented invalid-domain errors and some upper bounds."
+        ]
+      },
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function"
+      ]
+    },
+    {
+      "id": "function.ARABIC",
+      "name": "ARABIC",
+      "implementation_status": "registered",
+      "implementation_scope": {
+        "policies": [
+          "PinnedPoi",
+          "ExcelDocumentation"
+        ],
+        "supported": "Bounded case-insensitive Roman text decoding, empty text, ASCII outer spaces and leading minus.",
+        "limitations": [
+          "Undocumented noncanonical spellings use adjacent-pair arithmetic; native Excel parity is unverified. Calc rejects documented signs, spaces and values above 3999."
+        ]
+      },
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function"
+      ]
+    },
+    {
+      "id": "function.COMBINA",
+      "name": "COMBINA",
+      "implementation_status": "registered",
+      "implementation_scope": {
+        "policies": [
+          "PinnedPoi",
+          "ExcelDocumentation"
+        ],
+        "supported": "Nonnegative operands truncated to n>=k; combinations with replacement use bounded exact integer binomial arithmetic before binary64 rounding.",
+        "limitations": [
+          "One documented contract under both policies. Zero-zero, blank, omission and scalar coercion are independently observed in Calc; native Excel unavailable. Calc uses VALUE for domain errors where Microsoft documents NUM."
+        ]
+      },
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/combina-function"
+      ]
+    },
+    {
+      "id": "function.SERIESSUM",
+      "name": "SERIESSUM",
+      "implementation_status": "registered",
+      "implementation_scope": {
+        "policies": [
+          "PinnedPoi",
+          "ExcelDocumentation"
+        ],
+        "supported": "One explicit direct term-wise power-series contract; contextual scalar numeric text and exact numeric-or-blank collection coefficients, retaining row-major exponent positions.",
+        "limitations": [
+          "Native Excel boundary behavior is unverified. Calc differs for zero bases, logical and text coefficients, and error mapping. See docs/seriessum.md."
+        ]
+      },
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function"
       ]
     }
   ],

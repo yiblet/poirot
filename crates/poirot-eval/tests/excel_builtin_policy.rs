@@ -53,7 +53,7 @@ fn documented_aliases_are_opt_in_and_do_not_change_default_registry() {
         default.fingerprint().computation(),
         excel.fingerprint().computation()
     );
-    assert_eq!(poirot_eval::registry::SUPPORTED_FUNCTIONS.len(), 257);
+    assert_eq!(poirot_eval::registry::SUPPORTED_FUNCTIONS.len(), 262);
     for (formula, expected) in [
         ("PERCENTILE.INC(A1:A4,0.5)", 4.),
         ("_xlfn.PERCENTILE.INC(A1:A4,0.25)", 3.25),
@@ -251,4 +251,116 @@ fn interest_payment_defaults_and_degenerate_cases_follow_one_contract() {
         value("IPMT(0,1,5,1000)", &RunConfiguration::default()),
         CellValue::Error(CellError::Num)
     );
+}
+
+#[test]
+fn rounding_modes_and_zero_domains_follow_function_policies() {
+    // Microsoft CEILING.MATH/FLOOR.MATH examples define opposite negative
+    // directions for nonzero mode; Calc independently confirms fractional flags.
+    let modern = excel();
+    let pinned = RunConfiguration::default();
+    for (function, default_negative, reversed_negative, positive) in
+        [("CEILING.MATH", -4., -6., 6.), ("FLOOR.MATH", -6., -4., 4.)]
+    {
+        for significance in [-2., 2.] {
+            for mode in [0., 0.1, -0.1, 1., -1., 10.] {
+                let formula = format!("{function}(-5.5,{significance},{mode})");
+                assert_eq!(
+                    value(&formula, &modern),
+                    CellValue::Number(if mode == 0. {
+                        default_negative
+                    } else {
+                        reversed_negative
+                    }),
+                    "{formula}"
+                );
+                assert_eq!(
+                    value(&formula, &pinned),
+                    CellValue::Number(if mode < 0. {
+                        reversed_negative
+                    } else {
+                        default_negative
+                    }),
+                    "pinned {formula}"
+                );
+                for (number, expected) in [(5.5, positive), (0., 0.), (-6., -6.)] {
+                    let formula = format!("{function}({number},{significance},{mode})");
+                    assert_eq!(
+                        value(&formula, &modern),
+                        CellValue::Number(expected),
+                        "{formula}"
+                    );
+                }
+            }
+        }
+    }
+    // Source policies admit omitted significance as one. A zero significance
+    // stops before mode, but never before number or significance coercion.
+    // Explicit missing remains an unsupported capability, distinct from blank;
+    // Calc's missing defaults and eager mode evaluation differ here.
+    for configuration in [&modern, &pinned] {
+        for (formula, expected) in [
+            ("FLOOR.MATH(-5.5,B1,1/0)", CellValue::Number(0.)),
+            ("FLOOR.MATH(-5.5,2,B1)", CellValue::Number(-6.)),
+            ("CEILING.MATH(-5.5,2,B1)", CellValue::Number(-4.)),
+            ("FLOOR(B1,B1)", CellValue::Number(0.)),
+            ("FLOOR(,)", CellValue::Number(0.)),
+            ("CEILING.MATH(-5.5)", CellValue::Number(-5.)),
+            ("FLOOR.MATH(-5.5)", CellValue::Number(-6.)),
+            ("CEILING.MATH(-5.5,0,1/0)", CellValue::Number(0.)),
+            ("FLOOR.MATH(-5.5,0,1/0)", CellValue::Number(0.)),
+            ("CEILING.MATH(1/0,0,1)", CellValue::Error(CellError::Div0)),
+            (
+                "FLOOR.MATH(0,\"bad\",1)",
+                CellValue::Error(CellError::Value),
+            ),
+            ("FLOOR.MATH(0,1/0,NA())", CellValue::Error(CellError::Div0)),
+            ("FLOOR.MATH(0,2,NA())", CellValue::Error(CellError::NA)),
+            ("FLOOR(0,0)", CellValue::Number(0.)),
+            ("FLOOR(0,-2)", CellValue::Number(0.)),
+            ("FLOOR(-5.5,0)", CellValue::Error(CellError::Div0)),
+            ("FLOOR(5.5,0)", CellValue::Error(CellError::Div0)),
+            ("FLOOR(0,NA())", CellValue::Error(CellError::NA)),
+            ("FLOOR(1/0,0)", CellValue::Error(CellError::Div0)),
+            ("FLOOR(0,\"bad\")", CellValue::Error(CellError::Value)),
+            ("FLOOR(5.5,-2)", CellValue::Error(CellError::Num)),
+            ("FLOOR(-5.5,-2)", CellValue::Number(-4.)),
+            ("FLOOR(-5.5,2)", CellValue::Number(-6.)),
+            ("CEILING(5.5,0)", CellValue::Number(0.)),
+            ("CEILING(-5.5,2)", CellValue::Number(-4.)),
+            ("CEILING(-5.5,-2)", CellValue::Number(-6.)),
+            ("CEILING(5.5,-2)", CellValue::Error(CellError::Num)),
+            ("CEILING.PRECISE(-5.5,-2)", CellValue::Number(-4.)),
+            ("FLOOR.PRECISE(-5.5,-2)", CellValue::Number(-6.)),
+            ("FLOOR.MATH(1E100,1)", CellValue::Number(1e100)),
+            ("FLOOR.MATH(1E-100,1E-100)", CellValue::Number(1e-100)),
+        ] {
+            assert_eq!(value(formula, configuration), expected, "{formula}");
+        }
+        for formula in [
+            "IFERROR(CEILING.MATH(-5.5,,1),0)",
+            "IFERROR(FLOOR.MATH(-5.5,,1),0)",
+            "IFERROR(CEILING.MATH(-5.5,2,),0)",
+            "IFERROR(FLOOR.MATH(-5.5,2,),0)",
+        ] {
+            assert!(
+                matches!(
+                    run(formula, configuration, EvaluationBudgets::default()),
+                    EvaluationOutcome::Aborted { .. }
+                ),
+                "{formula}"
+            );
+        }
+        assert!(matches!(
+            run(
+                "IFERROR(FLOOR.MATH(-5.5,2,1),0)",
+                configuration,
+                EvaluationBudgets {
+                    run_work: 100,
+                    ..EvaluationBudgets::default()
+                }
+            ),
+            EvaluationOutcome::Aborted { .. }
+        ));
+    }
 }

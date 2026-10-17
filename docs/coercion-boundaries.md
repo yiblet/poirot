@@ -171,6 +171,15 @@ for each function's sign checks. Pinned text policy retains its own floor rule
 and NUM error. This fixes common argument admission for MID and REPT without
 special-casing those function names or the failing formulas.
 
+Documented FIND/SEARCH starts additionally use `coercev2_text_search_start`:
+truncate first, then require a position from one through the text source's length.
+The consuming adapter supplies its existing scalar-character or UTF-16 length.
+Pinned builtin domains retain their end-position behavior, independently of the
+text source's wildcard/literal matching and Unicode case expansion. Calc confirms
+fractional last-position starts and the empty-haystack error; it disagrees with
+Microsoft's FIND empty-needle rule for nonempty text. Those disagreements remain
+recorded; no expectation is derived from Poirot. See `search-domains-libreoffice.json`.
+
 The authored expected values remain unchanged. Resolved gap metadata is removed
 only after normal and overlay results agree, and the affected suites have fresh
 Calc evidence in `coercionv2-paired-libreoffice.json` and
@@ -341,3 +350,25 @@ The independent evidence in
 `crates/poirot-test-json/evidence/classic-match-probes-libreoffice.json` records
 actual Calc disagreements on duplicates, type coercion, and error entries. The
 source-authored expectations remain unchanged; native Excel was unavailable.
+
+### General radix consumers
+
+BASE and DECIMAL request the central `poirot-coercionv2::radix` policies after
+lazy scalar selection. BASE's numeric arguments defer text to the existing
+context-aware numeric parser; DECIMAL's positional text grammar never uses that
+parser. Blank/missing/logical admission remains explicit and origin-independent
+at this consumer. BASE number/padding and DECIMAL radix/length/finite-overflow
+checks retain distinct domains. `poirot-numeric::radix::Radix` shares checked
+ASCII digit admission and uppercase spelling without importing engineering
+signed-width rules. BASE result rendering is an audited non-argument conversion.
+See the [independent contract and limitations](../crates/poirot-test-json/evidence/radix-domains-contract.md).
+
+### Roman numeral consumers
+
+`poirot-coercionv2::roman` owns ROMAN arity and optional/boolean form defaults,
+retaining the pinned two-argument policy. Numeric text uses existing contextual
+host conversion, including locale dependency reads. ARABIC accepts exact text
+or blank at scalar selection; numbers, booleans and missing syntax are not
+stringified. Host text/work admission precedes projection and bounded decoding.
+The 255-unit signed ASCII grammar is independent of the existing text-family
+formatter. See the [independent contract and limits](../crates/poirot-test-json/evidence/roman-numerals-contract.md).

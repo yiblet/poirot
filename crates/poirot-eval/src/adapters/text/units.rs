@@ -59,6 +59,9 @@ pub(crate) fn execute(
     arguments: ArgumentsRef<'_>,
     full_case: bool,
 ) -> EvalResult<Value> {
+    if matches!(name, TextFunction::Find | TextFunction::Search) {
+        session.read(DependencyRead::BuiltinPolicy);
+    }
     let excel = session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation;
     let paired = session.text_policy.source == TextSourceVersion::ExcelCompatibilityV2Documented;
     let mut h = TextHost {
@@ -304,7 +307,15 @@ pub(crate) fn execute(
                 } else {
                     1
                 };
-                let start = plan(&h, units::find_start(start))?;
+                let start = if excel {
+                    poirot_coercionv2::compatibility::coercev2_text_search_start(
+                        f64::from(start),
+                        hay.len(),
+                    )
+                    .map_err(Failure::Spreadsheet)?
+                } else {
+                    plan(&h, units::find_start(start))?
+                };
                 let position = if name == TextFunction::Search {
                     if !full_case && hay.iter().chain(&text).any(|u| *u > 127) {
                         return Err(h.source_fault(

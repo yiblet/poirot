@@ -138,7 +138,6 @@ pub const ATP_PLACEHOLDERS: &[&str] = &[
     "PRICEMAT",
     "RECEIVED",
     "RTD",
-    "SERIESSUM",
     "TBILLEQ",
     "TBILLPRICE",
     "TBILLYIELD",

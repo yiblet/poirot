@@ -119,3 +119,8 @@ pub mod policy;
 
 /// Evaluator-owned mathematical builtin dispatch.
 pub(crate) mod execution;
+
+/// General positional radix execution.
+pub mod radix;
+
+mod series;

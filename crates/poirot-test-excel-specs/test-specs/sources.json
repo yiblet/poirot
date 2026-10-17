@@ -878,6 +878,15 @@
     ]
   },
   {
+    "url": "https://support.microsoft.com/en-us/excel/functions/combina-function",
+    "publisher": "Microsoft",
+    "verified_on": "2026-10-13",
+    "applicability": "Primary documentation opened by the author/reviewer; assertion evidence identifies the specific rule and derivation.",
+    "spec_ids": [
+      2003
+    ]
+  },
+  {
     "url": "https://support.microsoft.com/en-us/excel/functions/complex-function",
     "publisher": "Microsoft",
     "verified_on": "2026-10-13",

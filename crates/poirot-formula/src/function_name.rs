@@ -293,6 +293,11 @@ common_functions! {
     RankEq = 257 => "RANK.EQ";
     PercentileInc = 258 => "PERCENTILE.INC";
     DateDif = 259 => "DATEDIF";
+    Base = 260 => "BASE";
+    Decimal = 261 => "DECIMAL";
+    Arabic = 262 => "ARABIC";
+    Combina = 263 => "COMBINA";
+    SeriesSum = 264 => "SERIESSUM";
 }
 
 /// Parsed function spelling, interned when it belongs to the common symbol table.

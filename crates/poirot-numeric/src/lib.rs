@@ -597,3 +597,6 @@ mod tests {
         assert_eq!(compare(1e300, 1e-300), Ok(Ordering::Greater));
     }
 }
+
+/// Checked positional digit alphabet for unsigned radix consumers.
+pub mod radix;

@@ -1,25 +1,25 @@
 # Excel E2E coverage inventory
 
-The single table contains 2,003 cases, 2,059 evaluation steps and 2,060 assertions citing 261 Microsoft sources. 256 of 257 registered function contracts have source-backed specifications. This is specification breadth, not verified passing coverage.
+The single table contains 2,004 cases, 2,064 evaluation steps and 2,065 assertions citing 262 Microsoft sources. 257 of 262 registered function contracts have source-backed specifications. This is specification breadth, not verified passing coverage.
 
-Of 1,628 potential obligations, 563 have documented assertion examples, 1057 have no case, 0 have unresolved expectations, and 8 are not applicable. Generic facets marked requires_research are not considered exhaustive merely because examples exist.
+Of 1,658 potential obligations, 566 have documented assertion examples, 1084 have no case, 0 have unresolved expectations, and 8 are not applicable. Generic facets marked requires_research are not considered exhaustive merely because examples exist.
 
-Workbook coverage includes 45 multistep cases, 17 named fixtures, 6 fixtures in the 1904 date system, and 16 complete worksheet-footprint assertions.
+Workbook coverage includes 46 multistep cases, 17 named fixtures, 6 fixtures in the 1904 date system, and 16 complete worksheet-footprint assertions.
 
-Evidence: 2,013 documented derivation, 47 documented example. No ROI evaluator tests or Excel observations were run during authoring.
+Evidence: 2,016 documented derivation, 49 documented example. No ROI evaluator tests or Excel observations were run during authoring.
 
 The complete machine-readable missing-obligation and capability lists are in [coverage.json](coverage.json), with scope and individual obligations in [inventory.json](inventory.json). Passing behavior remains unverified.
 
 ## Scoped execution capabilities
 
-Registered means membership in the default 256-entry registry. Entries below describe bounded policy-specific support; neither status establishes complete compatibility or live runtime verification.
+Registered means membership in the default 262-entry registry. Entries below describe bounded policy-specific support; neither status establishes complete compatibility or live runtime verification.
 
 - **function.ADDRESS** (registered; ExcelDocumentation): Fourth operand selects A1 or absolute/relative R1C1 axes. Limits: This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established.
 - **function.CEILING.MATH** (registered; ExcelDocumentation): Every nonzero mode rounds negative values away from zero. Limits: This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established.
 - **function.RANK** (registered; ExcelDocumentation): Shared documented RANK.EQ order, ties, absent-number and validated array/reference sample handling. Limits: This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established.
 - **function.COVARIANCE.S** (registered; ExcelDocumentation): Positional numeric-pair filtering and #DIV/0 for fewer than two valid pairs. Limits: This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established.
 - **function.NORM.S.DIST** (registered; ExcelDocumentation): Cumulative selector chooses the shared CDF or PDF kernel, including negative variates. Limits: This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established.
-- **function.ROMAN** (registered; ExcelDocumentation): Boolean form TRUE selects classic style and FALSE selects simplified style. Limits: This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established.
+- **function.ROMAN** (registered; ExcelDocumentation): Omitted or explicitly missing form defaults to classic zero; boolean TRUE selects classic and FALSE simplified style. Limits: This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established.
 - **function.IPMT** (registered; ExcelDocumentation): Four-to-six-argument signature with future value, timing and zero-rate interest handling. Limits: This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established.
 - **function.PPMT** (registered; ExcelDocumentation): Four-to-six-argument signature with future value, timing and zero-rate principal handling. Limits: This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established.
 - **function.BIN2DEC** (registered; ExcelDocumentation): Strict binary digit validation in the documented input domain. Limits: This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established.
@@ -41,6 +41,11 @@ Registered means membership in the default 256-entry registry. Entries below des
 - **function.PERCENTILE.INC** (partial; ExcelDocumentation): Inclusive percentile endpoints and interpolation through the existing budgeted typed percentile kernel. Limits: Profile-conditioned unresolved alias resolution retains the existing percentile kernel/coercion limits; no exhaustive Excel parity claim. Absent from the default 256-entry registry; registered extensions retain precedence.
 - **function.QUARTILE.INC** (partial; ExcelDocumentation): Typed quartile selector truncation into 0..4 and inclusive percentile calculation through the shared budgeted host. Limits: Only the documented inclusive form is added; general array broadcasting and exhaustive coercion parity are outside scope. Absent from the default 256-entry registry; registered extensions retain precedence.
 - **function.RANK.EQ** (partial; ExcelDocumentation): Typed reference or validated rectangular array sample ranking, shared tie ranks, any nonzero ascending order, and #N/A for absent numeric members. Limits: Scalar or missing list operands are invalid; no general function broadcasting or exhaustive coercion parity. Absent from the default 256-entry registry; registered extensions retain precedence.
+- **function.BASE** (registered; PinnedPoi, ExcelDocumentation): Unsigned radix 2..36 conversion with documented BASE number/padding bounds and DECIMAL text length/finite-result limits; scalar origins retained until consumer admission. Limits: Newly supported functions use one documented contract under both policies. Additional blank, logical, omission and whitespace rules are independently observed in Calc; native Excel is unavailable. Calc differs from documented invalid-domain errors and some upper bounds.
+- **function.DECIMAL** (registered; PinnedPoi, ExcelDocumentation): Unsigned radix 2..36 conversion with documented BASE number/padding bounds and DECIMAL text length/finite-result limits; scalar origins retained until consumer admission. Limits: Newly supported functions use one documented contract under both policies. Additional blank, logical, omission and whitespace rules are independently observed in Calc; native Excel is unavailable. Calc differs from documented invalid-domain errors and some upper bounds.
+- **function.ARABIC** (registered; PinnedPoi, ExcelDocumentation): Bounded case-insensitive Roman text decoding, empty text, ASCII outer spaces and leading minus. Limits: Undocumented noncanonical spellings use adjacent-pair arithmetic; native Excel parity is unverified. Calc rejects documented signs, spaces and values above 3999.
+- **function.COMBINA** (registered; PinnedPoi, ExcelDocumentation): Nonnegative operands truncated to n>=k; combinations with replacement use bounded exact integer binomial arithmetic before binary64 rounding. Limits: One documented contract under both policies. Zero-zero, blank, omission and scalar coercion are independently observed in Calc; native Excel unavailable. Calc uses VALUE for domain errors where Microsoft documents NUM.
+- **function.SERIESSUM** (registered; PinnedPoi, ExcelDocumentation): One explicit direct term-wise power-series contract; contextual scalar numeric text and exact numeric-or-blank collection coefficients, retaining row-major exponent positions. Limits: Native Excel boundary behavior is unverified. Calc differs for zero bases, logical and text coefficients, and error mapping. See docs/seriessum.md.
 
 ## Explicit capability gaps
 

@@ -334,6 +334,7 @@ impl Session<'_> {
         Ok(match name {
             TextFunction::NumberValue
             | TextFunction::Proper
+            | TextFunction::Arabic
             | TextFunction::Roman
             | TextFunction::TextJoin => return Err(VALUE_ERROR.into()),
             TextFunction::Len => Number(len as f64),
@@ -510,10 +511,15 @@ impl Session<'_> {
                 self.budget.text(hay.len())?;
                 self.budget.allocation(hay.chars().count())?;
                 let h: Vec<_> = hay.chars().collect();
-                if start < 1. || start > h.len() as f64 + 1. {
-                    return Err(VALUE_ERROR.into());
-                }
-                let offset = start as usize - 1;
+                self.read(DependencyRead::BuiltinPolicy);
+                let offset = if self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation {
+                    poirot_coercionv2::compatibility::coercev2_text_search_start(start, h.len())?
+                } else {
+                    if start < 1. || start > h.len() as f64 + 1. {
+                        return Err(VALUE_ERROR.into());
+                    }
+                    (start as usize).checked_sub(1).ok_or(VALUE_ERROR)?
+                };
                 let mut found = None;
                 for i in offset..=h.len() {
                     self.budget

@@ -91,13 +91,13 @@ helper_map! {
     partial MathFunction => crate::adapters::math::policy::MathFunction;
     helpers: [
         Rand, Randbetween, Acosh, Asinh, Atan2,
-        Atanh, CeilingMath, CeilingPrecise, Combin, Cosh,
+        Atanh, CeilingMath, CeilingPrecise, Combin, Combina, Cosh,
         Even, Fact, Factdouble, FloorMath, FloorPrecise,
         Gcd, Lcm, Mround, Odd, Quotient,
         Sinh, Sqrtpi, Tanh,
     ];
     local: [
-        Pi, Abs, Sign, Sqrt, Exp,
+        Base, Decimal, SeriesSum, Pi, Abs, Sign, Sqrt, Exp,
         Ln, Log10, Log, Power, Mod,
         Int, Trunc, Round, RoundUp, RoundDown,
         Ceiling, Floor, Sin, Cos, Tan,
@@ -129,7 +129,7 @@ helper_map! {
 helper_map! {
     partial TextFunction => crate::adapters::text::policy::Function;
     helpers: [
-        NumberValue, Proper, Roman, TextJoin,
+        NumberValue, Proper, Roman, Arabic, TextJoin,
     ];
     local: [
         Text, Len, Left, Right, Mid,

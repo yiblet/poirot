@@ -270,7 +270,7 @@ def main():
         md += 'Evidence: ' + ', '.join(f'{n:,} {kind.replace("_", " ")}' for kind, n in sorted(evidence_counts.items())) + '. No ROI evaluator tests or Excel observations were run during authoring.\n\n'
         md += 'The complete machine-readable missing-obligation and capability lists are in [coverage.json](coverage.json), with scope and individual obligations in [inventory.json](inventory.json). Passing behavior remains unverified.\n\n'
         md += '## Scoped execution capabilities\n\n'
-        md += 'Registered means membership in the default 256-entry registry. Entries below describe bounded policy-specific support; neither status establishes complete compatibility or live runtime verification.\n\n'
+        md += f'Registered means membership in the default {len(registered)}-entry registry. Entries below describe bounded policy-specific support; neither status establishes complete compatibility or live runtime verification.\n\n'
         for feature in report['scoped_capabilities']:
             scope = feature['implementation_scope']
             md += '- **' + feature['id'] + '** (' + feature['implementation_status'] + '; ' + ', '.join(scope['policies']) + '): ' + scope['supported'] + ' Limits: ' + ' '.join(scope['limitations']) + '\n'

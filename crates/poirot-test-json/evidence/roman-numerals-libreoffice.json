@@ -1,0 +1,1624 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T22:26:20.563433+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-extension-numeric-domains.json": "ec415c53fadfc8464670e3143962c47576a4deb3726a5599afb84a25297514ef",
+    "closedxml-math.json": "343b591cd568d7ae0b08da55e7e0cf7bb786aa9f90f5ae90ba0c31e68e70c4e0",
+    "roman-numeral-domains.json": "a91dde9a68c279a91c3efc0026fe8b2335e9ff8cca49478304cc88c7a4bd717c"
+  },
+  "results": [
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: Roman has optional second argument with default value 0 \u2014 ROMAN(999)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "CMXCIX"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: Combin returns num error when k is larger than n \u2014 COMBIN(5, 5.5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: Combin returns num error when value is too large \u2014 COMBIN(5E+301, 6)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NUM!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: Fact coercion fails for non numeric input \u2014 FACT(\"x\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: FactDouble ThrowsValueExceptionForNonNumericInput \u2014 FACTDOUBLE(\"x\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: Log default base is 10 \u2014 LOG(100)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: MDeterm examples \u2014 MDETERM({3,6,1;1,1,0;3,10,2})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: MDeterm requires equal number of rows and columns \u2014 MDETERM({1,2})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: MDeterm singular matrix returns zero \u2014 MDETERM({1,2;1,2})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: MInverse requires square matrix \u2014 MINVERSE({1,2,3;7,5,5})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: Mod divisor zero returns error \u2014 MOD(1, 0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: Power errors \u2014 POWER(-5, 0.5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NUM!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: Product \u2014 PRODUCT({1,2;3,4})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 24.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-numeric-domains.json",
+      "name": "ClosedXML extension numeric-domains: SumSq \u2014 SUMSQ({ 2.5, -3.6}, 2.4)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 24.97
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(-5.5,2.1,10)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -6.3
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR zero significance and negative numbers \u2014 FLOOR(0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(-5.5,2.1,10)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -4.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ARABIC representation and truncation boundaries \u2014 ARABIC(\"mcmxii\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1912.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: BASE representation and truncation boundaries \u2014 BASE(255,2,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "11111111"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: COMBINA representation and truncation boundaries \u2014 COMBINA(4.23,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: DECIMAL representation and truncation boundaries: Case insensitive \u2014 DECIMAL(\"zap\",36)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 45745.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(-5.5,-2.1,10)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -6.3
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(-5.5,-2.1,10)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -4.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING sign and zero significance \u2014 CEILING(-8.1,2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(-5.5,2,-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR zero significance and negative numbers \u2014 FLOOR(24.3,5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(5.5,2.1,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: MOD sign follows divisor and decimal remainder \u2014 MOD(-3,2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: MROUND ties zero and decimal multiples \u2014 MROUND(10.5,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ODD rounds away from zero \u2014 ODD(1.5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: EVEN rounds away from zero \u2014 EVEN(3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: QUOTIENT truncates toward zero \u2014 QUOTIENT(4.5,3.1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUND ties negative precision and large exponents \u2014 ROUND(2.15,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUNDDOWN truncates toward zero \u2014 ROUNDDOWN(76.9,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 76.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUNDUP rounds away from zero \u2014 ROUNDUP(76.9,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 77.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: Power errors \u2014 POWER(-1,0.5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NUM!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: Mod divisor zero returns error \u2014 MOD(0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING sign and zero significance \u2014 CEILING(5.5,2.1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.3
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(-5.5,2,-0.1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR zero significance and negative numbers \u2014 FLOOR(6.7,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(5.5,-2.1,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: MOD sign follows divisor and decimal remainder \u2014 MOD(-3,-2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: MROUND ties zero and decimal multiples \u2014 MROUND(10.4,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ODD rounds away from zero \u2014 ODD(2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: EVEN rounds away from zero \u2014 EVEN(2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: QUOTIENT truncates toward zero \u2014 QUOTIENT(-10,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUND ties negative precision and large exponents \u2014 ROUND(2.149,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.1
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUNDDOWN truncates toward zero \u2014 ROUNDDOWN(3.14159,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.141
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUNDUP rounds away from zero \u2014 ROUNDUP(3.14159,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.142
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING sign and zero significance \u2014 CEILING(5.5,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(5.5,2.1,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.3
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR zero significance and negative numbers \u2014 FLOOR(-8.1,2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(5.5,0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: MOD sign follows divisor and decimal remainder \u2014 MOD(-4.3,-0.5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -0.3
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: MROUND ties zero and decimal multiples \u2014 MROUND(-10,-3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ODD rounds away from zero \u2014 ODD(-2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: EVEN rounds away from zero \u2014 EVEN(-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: QUOTIENT truncates toward zero \u2014 QUOTIENT(-10,-4)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUND ties negative precision and large exponents \u2014 ROUND(-1.475,2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.48
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUNDDOWN truncates toward zero \u2014 ROUNDDOWN(-3.14159,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -3.1
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUNDUP rounds away from zero \u2014 ROUNDUP(-3.14159,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -3.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING sign and zero significance \u2014 CEILING(-5.5,2.1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -4.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(5.5,2.1,-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.3
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR zero significance and negative numbers \u2014 FLOOR(5.5,2.1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(5.5,0,-2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: MOD sign follows divisor and decimal remainder \u2014 MOD(6.9,-0.2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -0.0999999999999996
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: MROUND ties zero and decimal multiples \u2014 MROUND(1.3,0.2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.4
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ODD rounds away from zero \u2014 ODD(0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: EVEN rounds away from zero \u2014 EVEN(-2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: QUOTIENT truncates toward zero \u2014 QUOTIENT(1e+100,1e+40)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1e+60
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUND ties negative precision and large exponents \u2014 ROUND(21.5,-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(999)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "CMXCIX"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(999,)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "CMXCIX"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(3999.9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "MMMCMXCIX"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(-0.9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(4000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(499,-0.9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(499,4.9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "ID"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(499,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "CDXCIX"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(499,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "LDVLIV"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(499,2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "XDIX"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(499,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "VDIV"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(499,4)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "ID"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(499,TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "LDVLIV"
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(499,FALSE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "CDXCIX"
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(0,1/0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(1,1/0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ROMAN(1/0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(\"mcmxii\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1912.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(\"MXMVII\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1997.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(\"\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(\"LVII\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 57.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(\"IIII\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(\"IL\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 49.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(\"IC\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 99.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(\"IM\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 999.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(\"-MMXI\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(\" X \")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(\"MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(\"MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(\"+IV\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(\"N\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(\"I I\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(1/0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "roman-numeral-domains.json",
+      "name": "Roman numeral domains: ARABIC(A1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 107,
+    "checks": 107,
+    "corroborated_scenarios": 99,
+    "corroborated_checks": 99
+  }
+}

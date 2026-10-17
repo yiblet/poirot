@@ -200,6 +200,32 @@ impl Host<usize> for TextHost<'_, '_> {
             .map_err(Failure::Spreadsheet)
     }
 
+    fn coercev2_arabic_integer(&self, scalar: &ScalarOperand) -> Result<i32, TextFailure> {
+        use poirot_coercionv2::{
+            compatibility::ScalarRef,
+            roman::{coercev2_arabic_scalar, coercev2_arabic_text},
+        };
+        let input = if scalar.missing {
+            ScalarRef::Missing
+        } else {
+            (&scalar.value).into()
+        };
+        let text = coercev2_arabic_scalar(input).map_err(Failure::Spreadsheet)?;
+        match text {
+            poirot_model::TextRef::Utf8(text) => {
+                coercev2_arabic_text(text).map_err(Failure::Spreadsheet)
+            }
+            text => {
+                let text = self
+                    .host
+                    .try_borrow_mut()
+                    .map_err(|_| Failure::Operational(EvaluationFailure::StalePlan))?
+                    .project_text(text)
+                    .map_err(failure)?;
+                coercev2_arabic_text(&text).map_err(Failure::Spreadsheet)
+            }
+        }
+    }
     fn boolean_value(&self, scalar: &ScalarOperand) -> Option<bool> {
         match scalar.value {
             Boolean(value) if !scalar.missing => Some(value),
@@ -240,7 +266,15 @@ pub(crate) fn execute(
             return Ok(Number(0.).into());
         }
         Function::Proper if arguments.len() != 1 => return Ok(err(VALUE_ERROR)),
-        Function::Roman if arguments.len() != 2 => return Ok(err(VALUE_ERROR)),
+        Function::Arabic if arguments.len() != 1 => return Ok(err(VALUE_ERROR)),
+        Function::Roman
+            if !poirot_coercionv2::roman::coercev2_roman_arity(
+                arguments.len(),
+                session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation,
+            ) =>
+        {
+            return Ok(err(VALUE_ERROR));
+        }
         Function::TextJoin if !(3..=254).contains(&arguments.len()) => return Ok(err(VALUE_ERROR)),
         _ => {}
     }

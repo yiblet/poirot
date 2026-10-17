@@ -186,3 +186,28 @@ argument channel. Statistical `Origin::SelectedScalar` expresses that distinctio
 its blank is ignorable, while its logical/text values retain scalar admission.
 Actual reference and array operands retain their own collection filtering rules.
 `ExtremaA` ignores referenced blanks and counts referenced text as zero.
+
+## General positional radix arguments
+
+`radix` owns BASE numeric and padding domains, context-deferred numeric text,
+and DECIMAL scalar spelling and unsigned ASCII digit admission. All scalar
+origins share these explicit consumer policies; blank and omitted syntax are
+separately admitted as zero/empty. BASE number is below 2^53 and padding at most
+255. DECIMAL text is at most 255 UTF-16 units and finite binary64 accumulation
+permits precision loss above 2^53. Numeric spelling reserves the shared numeric
+formatter's `ALLOCATION_BOUND`; hosts admit that storage before conversion.
+The checked mathematical alphabet is in `poirot-numeric::radix`; BASE rendering
+is in `poirot-functions-math::radix`. Engineering signed-width grammars remain
+separate. Independent observations and documented Calc differences are in
+`poirot-test-json/evidence/radix-domains-contract.md`.
+
+## Roman numeral arguments
+
+`roman` owns ROMAN optional-form and boolean admission plus ARABIC scalar and
+text decoding. ROMAN numeric inputs keep the contextual host conversion. ARABIC
+preserves errors, treats blank as empty text, rejects numeric/logical/missing
+inputs, and counts at most 255 UTF-16 units before trimming ASCII outer spaces.
+Its bounded symbol scan admits case-insensitive symbols and one leading minus;
+it does not require formatter canonicality. Undocumented noncanonical spellings
+remain unverified against native Excel. See the independent contract in
+`poirot-test-json/evidence/roman-numerals-contract.md`.

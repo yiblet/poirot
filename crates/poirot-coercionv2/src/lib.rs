@@ -68,3 +68,15 @@ pub use formatted_number::{NumberLocaleV2, coercev2_formatted_number};
 
 /// Complex-number argument grammars and computed result spelling.
 pub mod complex;
+
+/// Explicit BASE numeric domains and DECIMAL unsigned positional text grammar.
+pub mod radix;
+
+/// Roman numeral option admission and bounded text decoding.
+pub mod roman;
+
+/// Combinations with replacement scalar and integer-domain admission.
+pub mod combinations;
+
+/// Power-series scalar and collection admission.
+pub mod series;

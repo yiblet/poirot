@@ -10,6 +10,33 @@ impl Session<'_> {
         name: MathFunction,
         args: ArgumentsRef<'_>,
     ) -> EvalResult<Value> {
+        if name == MathFunction::SeriesSum {
+            return super::series::execute(self, s, at, args);
+        }
+        if matches!(name, MathFunction::Base | MathFunction::Decimal) {
+            if !FunctionId::Math(name)
+                .descriptor()
+                .arity
+                .accepts(args.len())
+            {
+                return Ok(err(VALUE_ERROR));
+            }
+            let mut host = CallHost::new(self, s, at, args);
+            host.check_values(args.len())
+                .map_err(crate::adapters::failure::operational_only)?;
+            let indices: poirot_functions_core::ParamVec<_> = (0..args.len()).collect();
+            return match super::radix::evaluate(&mut host, name == MathFunction::Base, &indices) {
+                Ok(value) => Ok(value.into()),
+                Err(super::policy::Failure::Spreadsheet(error)) => Ok(err(error)),
+                Err(super::policy::Failure::Operational(failure)) => Err(failure),
+                Err(super::policy::Failure::UnsupportedCapability(capability)) => Err(
+                    crate::adapters::failure::operational_only(host.unsupported(
+                        CapabilityId::FunctionAdapter,
+                        format!("radix requires {capability:?}"),
+                    )),
+                ),
+            };
+        }
         if let Some(function) = name.helper() {
             return adapters::math::execute(self, s, at, function, args);
         }
@@ -77,6 +104,7 @@ impl Session<'_> {
             | MathFunction::Atanh
             | MathFunction::CeilingMath
             | MathFunction::CeilingPrecise
+            | MathFunction::Combina
             | MathFunction::Combin
             | MathFunction::Cosh
             | MathFunction::Even
@@ -140,7 +168,9 @@ impl Session<'_> {
             MathFunction::Ceiling | MathFunction::Floor => {
                 let y = num(1)?;
                 if y == 0. {
-                    return if name == MathFunction::Ceiling {
+                    // POI NumericFunction.FLOOR admits zero/zero before DIV0;
+                    // both operands have already been coerced in source order.
+                    return if name == MathFunction::Ceiling || x == 0. {
                         Ok(Number(0.))
                     } else {
                         Err(Div0)
@@ -156,7 +186,12 @@ impl Session<'_> {
                     q.floor() * y
                 }
             }
-            MathFunction::Pi => return Err(VALUE_ERROR),
+            MathFunction::Pi
+            | MathFunction::Base
+            | MathFunction::Decimal
+            | MathFunction::SeriesSum => {
+                return Err(VALUE_ERROR);
+            }
             MathFunction::Trunc
             | MathFunction::Round
             | MathFunction::RoundUp

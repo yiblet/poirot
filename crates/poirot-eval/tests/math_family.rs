@@ -252,3 +252,127 @@ fn mround_sign_validation_uses_source_floating_product() {
         );
     }
 }
+
+#[test]
+fn seriessum_preserves_term_domains_and_coefficient_order() {
+    let mut workbook = workbook();
+    let sheet = workbook.sheet_mut(0).unwrap();
+    sheet.set_value(CellAddress { row: 0, col: 0 }, 1.).unwrap();
+    sheet.set_value(CellAddress { row: 2, col: 0 }, 3.).unwrap();
+    sheet
+        .set_value(CellAddress { row: 0, col: 1 }, CellValue::Text("2".into()))
+        .unwrap();
+    for (formula, expected) in [
+        ("SERIESSUM(2,3,4,5)", CellValue::Number(40.)),
+        ("SERIESSUM(2,2,1,{1,2,3;4,5,6})", CellValue::Number(1284.)),
+        ("SERIESSUM(2,0,1,A1:A3)", CellValue::Number(13.)),
+        (
+            "SERIESSUM(2,0,1,{1,\"2\",3})",
+            CellValue::Error(CellError::Value),
+        ),
+        (
+            "SERIESSUM(2,0,1,{1,TRUE,3})",
+            CellValue::Error(CellError::Value),
+        ),
+        ("SERIESSUM(2,0,1,\"2\")", CellValue::Number(2.)),
+        ("SERIESSUM(2,0,1,B1)", CellValue::Number(2.)),
+        ("SERIESSUM(2,0,1,B1:B1)", CellValue::Number(2.)),
+        ("SERIESSUM(TRUE,0,1,1)", CellValue::Error(CellError::Value)),
+        ("SERIESSUM(2,0,1,TRUE)", CellValue::Error(CellError::Value)),
+        ("SERIESSUM(\"\",1,1,1)", CellValue::Error(CellError::Value)),
+        ("SERIESSUM(2,0,1,)", CellValue::Error(CellError::Value)),
+        ("SERIESSUM(0,0,1,1)", CellValue::Number(1.)),
+        ("SERIESSUM(0,0,1,0)", CellValue::Number(0.)),
+        ("SERIESSUM(0,-1,1,1)", CellValue::Error(CellError::Num)),
+        ("SERIESSUM(0,-1,1,0)", CellValue::Error(CellError::Num)),
+        ("SERIESSUM(0,0.5,1,1)", CellValue::Number(0.)),
+        ("SERIESSUM(-4,0.5,1,0)", CellValue::Error(CellError::Num)),
+        ("SERIESSUM(-4,2,-1,{1,2,3})", CellValue::Number(11.)),
+        ("SERIESSUM(4,0.5,0.5,{1,2,3})", CellValue::Number(34.)),
+        ("SERIESSUM(2,-1,-1,{2,4,8})", CellValue::Number(3.)),
+        (
+            "SERIESSUM(10,100,100,{1,2,3,4})",
+            CellValue::Error(CellError::Num),
+        ),
+        (
+            "SERIESSUM(1,0,0,{1E308,1E308,-1E308})",
+            CellValue::Error(CellError::Num),
+        ),
+        ("SERIESSUM(1,0,0,{3,-2,-1})", CellValue::Number(0.)),
+        ("SERIESSUM(1/0,NA(),0,1)", CellValue::Error(CellError::Div0)),
+        (
+            "SERIESSUM(0,-1,1,{1,#N/A})",
+            CellValue::Error(CellError::Num),
+        ),
+        (
+            "SERIESSUM(2,0,1,{#N/A,\"bad\"})",
+            CellValue::Error(CellError::NA),
+        ),
+        (
+            "SERIESSUM(UNKNOWN_FUNCTION())",
+            CellValue::Error(CellError::Value),
+        ),
+    ] {
+        assert_eq!(
+            match run_formula(
+                &workbook,
+                0,
+                AT,
+                formula,
+                Default::default(),
+                Default::default()
+            ) {
+                EvaluationOutcome::Complete { value, .. } => value,
+                outcome => panic!("evaluation aborted: {outcome:?}"),
+            },
+            expected,
+            "{formula}"
+        );
+    }
+}
+
+#[test]
+fn seriessum_reference_traversal_admission_aborts_outside_iferror() {
+    let workbook = workbook();
+    assert!(matches!(
+        run_formula(
+            &workbook,
+            0,
+            AT,
+            "IFERROR(SERIESSUM(2,0,1,A1:A10000),0)",
+            EvaluationInputs::default(),
+            EvaluationBudgets {
+                run_work: 100,
+                ..EvaluationBudgets::default()
+            }
+        ),
+        EvaluationOutcome::Aborted { .. }
+    ));
+}
+
+#[test]
+fn seriessum_scalar_text_uses_real_locale_parser() {
+    let workbook = workbook();
+    let configuration = poirot_eval::RunConfiguration::default().with_number_locale(
+        poirot_coercionv2::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap(),
+    );
+    for (formula, expected) in [
+        (r#"SERIESSUM("€2,5",1,1,"4,0")"#, CellValue::Number(10.)),
+        (
+            r#"SERIESSUM(2,0,1,{"4,0"})"#,
+            CellValue::Error(CellError::Value),
+        ),
+    ] {
+        match poirot_eval::run_formula_with_configuration(
+            &workbook,
+            0,
+            AT,
+            formula,
+            &configuration,
+            Default::default(),
+        ) {
+            EvaluationOutcome::Complete { value, .. } => assert_eq!(value, expected, "{formula}"),
+            outcome => panic!("{formula}: {outcome:?}"),
+        }
+    }
+}

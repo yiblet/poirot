@@ -1,0 +1,137 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T22:33:21.989116+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "combina-order-probes.json": "2be11453c9de738eea1723b1d8c26f32a34c30e2ba204e70812c18bcc2bd3c28"
+  },
+  "results": [
+    {
+      "suite": "combina-order-probes.json",
+      "name": "COMBINA(3.2,3.8)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "combina-order-probes.json",
+      "name": "COMBINA(0.2,0.8)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "combina-order-probes.json",
+      "name": "COMBINA(-0.2,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "combina-order-probes.json",
+      "name": "COMBINA(0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "combina-order-probes.json",
+      "name": "COMBINA(0.2,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "combina-order-probes.json",
+      "name": "COMBINA(FALSE,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "combina-order-probes.json",
+      "name": "COMBINA(TRUE,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "combina-order-probes.json",
+      "name": "COMBINA(A2,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    }
+  ],
+  "summary": {
+    "scenarios": 8,
+    "checks": 8,
+    "corroborated_scenarios": 4,
+    "corroborated_checks": 4
+  }
+}

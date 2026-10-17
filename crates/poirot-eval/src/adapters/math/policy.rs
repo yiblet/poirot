@@ -34,6 +34,8 @@ pub enum MathFunction {
     CeilingPrecise,
     /// Number of combinations.
     Combin,
+    /// Combinations with replacement under the documented domain.
+    Combina,
     /// Hyperbolic cosine.
     Cosh,
     /// Round away from zero to an even integer.
@@ -176,9 +178,12 @@ impl MathFunction {
                 count >= 1
             }
             Self::Gcd | Self::Lcm => count >= 1,
-            Self::Atan2 | Self::Combin | Self::Mround | Self::Quotient | Self::Randbetween => {
-                count == 2
-            }
+            Self::Atan2
+            | Self::Combina
+            | Self::Combin
+            | Self::Mround
+            | Self::Quotient
+            | Self::Randbetween => count == 2,
             _ => count == 1,
         }
     }
@@ -224,6 +229,29 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
             r
         }
     };
+    if function == Combina {
+        let mut number = |index: usize| {
+            work(p, 1)?;
+            let scalar = p.resolve_scalar(args.get(index).ok_or(CellError::Value)?)?;
+            poirot_coercionv2::combinations::coercev2_combina_number(
+                (&scalar.value).into(),
+                |text| match text {
+                    poirot_functions_core::TextRef::Utf8(text) => {
+                        p.check_text(text.len()).map_err(Failure::Operational)?;
+                        work(p, text.len() as u64)?;
+                        p.coercev2_text_number(text)
+                    }
+                    _ => Err(CellError::Value.into()),
+                },
+            )
+        };
+        let n = number(0)?;
+        let k = number(1)?;
+        // Kernel work and integers are bounded independently of operand size.
+        work(p, 1024)?;
+        p.check_collection(512).map_err(Failure::Operational)?;
+        return domain::combina(n, k).map_err(Failure::Spreadsheet);
+    }
     let x = read(p, 0)?;
     // Variadic families validate each operand in source order before moving on.
     // GCD checks raw value (before truncation) and LCM checks raw negativity.
@@ -269,6 +297,7 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
         }
         Atan2 => domain::atan2(x, read(p, 1)?),
         Quotient => domain::quotient(x, read(p, 1)?),
+        Combina => return Err(CellError::Value.into()),
         Combin => {
             let k = read(p, 1)?;
             work(p, 341)?;
@@ -291,18 +320,17 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
             } else {
                 0.0
             };
+            // Both MATH functions use any nonzero mode as a direction flag in
+            // Excel. Their pinned POI kernels reverse only for a negative mode.
+            let mode = if policy == SemanticsPolicy::ExcelDocumentation && mode != 0.0 {
+                -1.0
+            } else {
+                mode
+            };
             p.check_collection(2048).map_err(Failure::Operational)?;
             work(p, 2048)?;
             match function {
-                CeilingMath => domain::ceiling_math(
-                    x,
-                    s,
-                    if policy == SemanticsPolicy::ExcelDocumentation && mode != 0.0 {
-                        -1.0
-                    } else {
-                        mode
-                    },
-                ),
+                CeilingMath => domain::ceiling_math(x, s, mode),
                 FloorMath => domain::floor_math(x, s, mode),
                 CeilingPrecise => domain::ceiling_precise(x, s),
                 FloorPrecise => domain::floor_precise(x, s),

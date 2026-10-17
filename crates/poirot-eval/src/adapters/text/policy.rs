@@ -20,6 +20,8 @@ pub enum Function {
     Proper,
     /// Render Roman numeral text.
     Roman,
+    /// Decode Roman numeral text.
+    Arabic,
     /// Join selected text members with delimiters.
     TextJoin,
 }
@@ -151,6 +153,11 @@ pub trait Host<E> {
         &self,
         scalar: &Self::Scalar,
     ) -> TextResult<i32, Self::Error, Self::Operational>;
+    /// Decode a scalar through the central ARABIC argument policy.
+    fn coercev2_arabic_integer(
+        &self,
+        scalar: &Self::Scalar,
+    ) -> TextResult<i32, Self::Error, Self::Operational>;
     /// Inspect the source scalar without numeric or text coercion.
     fn boolean_value(&self, _scalar: &Self::Scalar) -> Option<bool> {
         None
@@ -203,13 +210,25 @@ pub fn evaluate_with_policy<E, H: Host<E>>(
             h.charge_work(text.len()).map_err(Failure::Operational)?;
             Ok(Value::Text(h.proper(&text)))
         }
+        Function::Arabic => {
+            if a.len() != 1 {
+                return Err(fail(h.error(Error::Value)));
+            }
+            let value = h.single(a.first().ok_or_else(|| fail(h.error(Error::Value)))?)?;
+            let bound = h
+                .string_bound(&value)
+                .ok_or(Failure::Unsupported(Unsupported::UnknownOutputGrowth))?;
+            h.check_text(bound).map_err(Failure::Operational)?;
+            h.charge_work(bound).map_err(Failure::Operational)?;
+            Ok(Value::Number(f64::from(h.coercev2_arabic_integer(&value)?)))
+        }
         Function::Roman => {
-            if a.len() != 2 {
+            let documented = semantics == SemanticsPolicy::ExcelDocumentation;
+            if !poirot_coercionv2::roman::coercev2_roman_arity(a.len(), documented) {
                 return Err(fail(h.error(Error::Value)));
             }
             let number = h
-                // SAFETY: Each argument branch checks its count locally; scalars is filled once per argument, separator checks index < scalars.len(), and delimiter indexing is guarded by nonempty and uses modulo its length.
-                .single(&a[0])
+                .single(a.first().ok_or_else(|| fail(h.error(Error::Value)))?)
                 .and_then(|v| h.coercev2_text_integer(&v))
                 .map_err(|e| match e {
                     Failure::Spreadsheet(_) => fail(h.error(Error::Value)),
@@ -221,17 +240,24 @@ pub fn evaluate_with_policy<E, H: Host<E>>(
             if number == 0 {
                 return Ok(Value::Text(String::new()));
             }
-            let form = h
-                // SAFETY: Each argument branch checks its count locally; scalars is filled once per argument, separator checks index < scalars.len(), and delimiter indexing is guarded by nonempty and uses modulo its length.
-                .single(&a[1])
-                .and_then(|v| {
-                    if semantics == SemanticsPolicy::ExcelDocumentation
-                        && let Some(boolean) = h.boolean_value(&v)
-                    {
-                        Ok(if boolean { 0 } else { 4 })
-                    } else {
-                        h.coercev2_text_integer(&v)
-                    }
+            let form = a
+                .get(1)
+                .map(|argument| {
+                    h.single(argument).and_then(|v| {
+                        if let Some(form) = poirot_coercionv2::roman::coercev2_roman_form_default(
+                            h.is_missing(&v),
+                            h.boolean_value(&v),
+                            documented,
+                        ) {
+                            Ok(form)
+                        } else {
+                            h.coercev2_text_integer(&v)
+                        }
+                    })
+                })
+                .unwrap_or_else(|| {
+                    poirot_coercionv2::roman::coercev2_roman_form_default(true, None, documented)
+                        .ok_or_else(|| fail(h.error(Error::Value)))
                 })
                 .map_err(|e| match e {
                     Failure::Spreadsheet(_) => fail(h.error(Error::Num)),
@@ -523,6 +549,14 @@ mod tests {
                 S::Int(n) => Ok(*n),
                 S::Bool(b) => Ok(i32::from(*b)),
                 _ => Err(Failure::Spreadsheet(Error::Value)),
+            }
+        }
+        fn coercev2_arabic_integer(&self, scalar: &S) -> Result<i32, Failure<Error>> {
+            if let S::Text(text) = scalar {
+                poirot_coercionv2::roman::coercev2_arabic_text(text)
+                    .map_err(|_| Failure::Spreadsheet(Error::Value))
+            } else {
+                Err(Failure::Spreadsheet(Error::Value))
             }
         }
         fn boolean_value(&self, scalar: &S) -> Option<bool> {

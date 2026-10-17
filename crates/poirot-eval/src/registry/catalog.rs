@@ -73,8 +73,12 @@ registry! {
     "ASINH" => Math(MathFunction::Asinh), 1, 1, FamilyControlled, REFERENCE_READS;
     "ATAN2" => Math(MathFunction::Atan2), 2, 2, FamilyControlled, REFERENCE_READS;
     "ATANH" => Math(MathFunction::Atanh), 1, 1, FamilyControlled, REFERENCE_READS;
+    "BASE" => Math(MathFunction::Base), 2, 3, FamilyControlled, REFERENCE_READS;
+    "DECIMAL" => Math(MathFunction::Decimal), 2, 2, FamilyControlled, REFERENCE_READS;
     "CEILING.MATH" => Math(MathFunction::CeilingMath), 1, usize::MAX, FamilyControlled, REFERENCE_READS;
     "CEILING.PRECISE" => Math(MathFunction::CeilingPrecise), 1, usize::MAX, FamilyControlled, REFERENCE_READS;
+    "SERIESSUM" => Math(MathFunction::SeriesSum), 4, 4, FamilyControlled, REFERENCE_READS;
+    "COMBINA" => Math(MathFunction::Combina), 2, 2, FamilyControlled, REFERENCE_READS;
     "COMBIN" => Math(MathFunction::Combin), 2, 2, FamilyControlled, REFERENCE_READS;
     "COSH" => Math(MathFunction::Cosh), 1, 1, FamilyControlled, REFERENCE_READS;
     "EVEN" => Math(MathFunction::Even), 1, 1, FamilyControlled, REFERENCE_READS;
@@ -137,7 +141,7 @@ registry! {
     "T.DIST.2T" => Statistics(StatisticsFunction::TDist2T), 2, 2, FamilyControlled, REFERENCE_READS;
     "NUMBERVALUE" => Text(TextFunction::NumberValue), 0, usize::MAX, FamilyControlled, REFERENCE_READS;
     "PROPER" => Text(TextFunction::Proper), 1, 1, FamilyControlled, REFERENCE_READS;
-    "ROMAN" => Text(TextFunction::Roman), 2, 2, FamilyControlled, REFERENCE_READS;
+    "ROMAN" => Text(TextFunction::Roman), 1, 2, FamilyControlled, REFERENCE_READS;
     "TEXTJOIN" => Text(TextFunction::TextJoin), 3, 254, FamilyControlled, REFERENCE_READS;
     "FV" => Financial(FinancialFunction::Fv), 3, 5, FamilyControlled, REFERENCE_READS;
     "PV" => Financial(FinancialFunction::Pv), 3, 5, FamilyControlled, REFERENCE_READS;
@@ -309,6 +313,7 @@ registry! {
     "CODE" => Text(TextFunction::Code), 1, 1, EagerErrorsBeforeArity, ARGUMENTS;
     "UNICHAR" => Text(TextFunction::UniChar), 1, 1, EagerErrorsBeforeArity, ARGUMENTS;
     "UNICODE" => Text(TextFunction::Unicode), 1, 1, EagerErrorsBeforeArity, ARGUMENTS;
+    "ARABIC" => Text(TextFunction::Arabic), 1, 1, FamilyControlled, REFERENCE_READS;
     }
     excel {
 

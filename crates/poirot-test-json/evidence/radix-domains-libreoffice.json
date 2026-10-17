@@ -1,0 +1,1353 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T22:18:29.843375+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-math.json": "72aa6c5cba447296fe63ee2e8eceae01aca1295f8d21f710fc1ed8593a0bb3a5",
+    "radix-domains.json": "05e0b100833b95a5ae81a554f7792c976ca96501ac328b829a5a66dceb193b76"
+  },
+  "results": [
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(-5.5,2.1,10)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -6.3
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR zero significance and negative numbers \u2014 FLOOR(0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(-5.5,2.1,10)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -4.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ARABIC representation and truncation boundaries \u2014 ARABIC(\"mcmxii\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1912.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: BASE representation and truncation boundaries \u2014 BASE(255,2,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "11111111"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: COMBINA representation and truncation boundaries \u2014 COMBINA(4.23,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: DECIMAL representation and truncation boundaries: Case insensitive \u2014 DECIMAL(\"zap\",36)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 45745.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(-5.5,-2.1,10)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -6.3
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(-5.5,-2.1,10)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -4.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING sign and zero significance \u2014 CEILING(-8.1,2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(-5.5,2,-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR zero significance and negative numbers \u2014 FLOOR(24.3,5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(5.5,2.1,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: MOD sign follows divisor and decimal remainder \u2014 MOD(-3,2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: MROUND ties zero and decimal multiples \u2014 MROUND(10.5,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ODD rounds away from zero \u2014 ODD(1.5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: EVEN rounds away from zero \u2014 EVEN(3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: QUOTIENT truncates toward zero \u2014 QUOTIENT(4.5,3.1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUND ties negative precision and large exponents \u2014 ROUND(2.15,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUNDDOWN truncates toward zero \u2014 ROUNDDOWN(76.9,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 76.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUNDUP rounds away from zero \u2014 ROUNDUP(76.9,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 77.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: Power errors \u2014 POWER(-1,0.5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#NUM!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: Mod divisor zero returns error \u2014 MOD(0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING sign and zero significance \u2014 CEILING(5.5,2.1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.3
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(-5.5,2,-0.1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR zero significance and negative numbers \u2014 FLOOR(6.7,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(5.5,-2.1,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: MOD sign follows divisor and decimal remainder \u2014 MOD(-3,-2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: MROUND ties zero and decimal multiples \u2014 MROUND(10.4,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ODD rounds away from zero \u2014 ODD(2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: EVEN rounds away from zero \u2014 EVEN(2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: QUOTIENT truncates toward zero \u2014 QUOTIENT(-10,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUND ties negative precision and large exponents \u2014 ROUND(2.149,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.1
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUNDDOWN truncates toward zero \u2014 ROUNDDOWN(3.14159,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.141
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUNDUP rounds away from zero \u2014 ROUNDUP(3.14159,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.142
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING sign and zero significance \u2014 CEILING(5.5,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(5.5,2.1,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.3
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR zero significance and negative numbers \u2014 FLOOR(-8.1,2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(5.5,0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: MOD sign follows divisor and decimal remainder \u2014 MOD(-4.3,-0.5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -0.3
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: MROUND ties zero and decimal multiples \u2014 MROUND(-10,-3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ODD rounds away from zero \u2014 ODD(-2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: EVEN rounds away from zero \u2014 EVEN(-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: QUOTIENT truncates toward zero \u2014 QUOTIENT(-10,-4)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUND ties negative precision and large exponents \u2014 ROUND(-1.475,2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.48
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUNDDOWN truncates toward zero \u2014 ROUNDDOWN(-3.14159,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -3.1
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUNDUP rounds away from zero \u2014 ROUNDUP(-3.14159,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -3.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING sign and zero significance \u2014 CEILING(-5.5,2.1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -4.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(5.5,2.1,-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.3
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR zero significance and negative numbers \u2014 FLOOR(5.5,2.1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(5.5,0,-2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: MOD sign follows divisor and decimal remainder \u2014 MOD(6.9,-0.2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -0.0999999999999996
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: MROUND ties zero and decimal multiples \u2014 MROUND(1.3,0.2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.4
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ODD rounds away from zero \u2014 ODD(0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: EVEN rounds away from zero \u2014 EVEN(-2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: QUOTIENT truncates toward zero \u2014 QUOTIENT(1e+100,1e+40)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1e+60
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-math.json",
+      "name": "ClosedXML math: ROUND ties negative precision and large exponents \u2014 ROUND(21.5,-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE(255,2,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "11111111"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE(100,16)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "64"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE(15,2,10)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "0000001111"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE(45745,36)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "ZAP"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE(15.9,16.9,3.9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "00F"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE(0,10)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "0"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE(9007199254740991,16)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "1FFFFFFFFFFFFF"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE(\"15\",16)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "F"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE(TRUE,16)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "1"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE(FALSE,16)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "0"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE(A1,16)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "0"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE(,16)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "0"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE(15,16,)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "F"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE(15,16,\"3\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "00F"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: LEN(BASE(15,16,255))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 255.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: DECIMAL(\"zap\",36)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 45745.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: DECIMAL(\"FF\",16)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 255.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: DECIMAL(111,2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: DECIMAL(\"123\",10)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 123.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: DECIMAL(\"\",36)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: DECIMAL(\" F\",36)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: DECIMAL(TRUE,16)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: DECIMAL(FALSE,16)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: DECIMAL(A1,16)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: DECIMAL(,16)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: DECIMAL({\"ff\"},16)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 255.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE({15},16)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "F"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: DECIMAL(\"9007199254740992\",10)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9007199254740990.0
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: DECIMAL(BASE(45745,36),36)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 45745.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE(-1,1/0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: BASE(1,1,1/0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "radix-domains.json",
+      "name": "General radix domains: DECIMAL(\"?\",1/0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 89,
+    "checks": 89,
+    "corroborated_scenarios": 88,
+    "corroborated_checks": 88
+  }
+}

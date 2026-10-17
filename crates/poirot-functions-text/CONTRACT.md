@@ -73,3 +73,13 @@ The immutable Unicode mapping assets live beside their loaders in `src/` with
 `UNICODE-LICENSE.txt`. Regeneration scripts are in `tools/`; supply the pinned
 OpenJDK 21.0.8 Unicode 15 source files explicitly. The simple-case generator
 checks the UnicodeData source hash before producing an asset.
+
+Under `ExcelDocumentation`, ROMAN admits one or two arguments and omitted or
+explicitly missing form means zero, while TRUE/FALSE retain documented classic /
+simplified meanings. Pinned POI retains exactly two arguments, numeric boolean
+styles and missing-argument source faults. Both preserve the existing zero-number
+lazy form skip and spreadsheet-error masking. Numeric text uses the host's
+contextual locale-aware conversion. The existing formatter remains unchanged.
+ARABIC is a new text adapter operation under both policies; central admission and
+decoding live in `poirot-coercionv2::roman`, not the formatting kernel. See
+`poirot-test-json/evidence/roman-numerals-contract.md` for oracle limits.

@@ -191,6 +191,62 @@ pub fn combin(n: f64, k: f64) -> MathResult {
     }
     finite(r / fact(small as f64)?)
 }
+/// Exact integer binomial coefficient from complementary selection counts.
+/// The recurrence divides at every step; intermediate numerator overflow cannot
+/// reject a finite result. At most 1023 iterations are needed: when both counts
+/// are at least 1024, C(a+b,a) >= 2^1024 exceeds finite binary64.
+fn binomial_from_counts(
+    left: bigdecimal::num_bigint::BigUint,
+    right: bigdecimal::num_bigint::BigUint,
+) -> MathResult {
+    use bigdecimal::num_bigint::BigUint;
+    // Bound input limbs here so the intermediate-size proof is local.
+    if left.bits() > 1024 || right.bits() > 1024 {
+        return Err(CellError::Num);
+    }
+    let (small, large) = if left <= right {
+        (left, right)
+    } else {
+        (right, left)
+    };
+    if small >= BigUint::from(1024u32) {
+        return Err(CellError::Num);
+    }
+    let small = small.to_u32().ok_or(CellError::Num)?;
+    let mut result = BigUint::from(1u32);
+    for i in 1..=small {
+        result *= &large + i;
+        // SAFETY: i comes from 1..=small, so the integer divisor is nonzero.
+        result /= i;
+        if result.bits() > 1024 {
+            return Err(CellError::Num);
+        }
+    }
+    finite(result.to_f64().ok_or(CellError::Num)?)
+}
+
+/// Documented COMBINA domain: raw nonnegative operands truncated to n >= k.
+/// Zero available kinds produce zero. Otherwise count selections with repetition
+/// using C(n+k-1,k), retaining exact integer counts before the transformation.
+/// Unlike the pinned POI COMBIN entry point, this uses bounded exact arithmetic.
+pub fn combina(n: f64, k: f64) -> MathResult {
+    use bigdecimal::{FromPrimitive, num_bigint::BigUint};
+    let (n, k) = poirot_coercionv2::combinations::coercev2_combina_counts(n, k)?;
+    if n == 0.0 {
+        return Ok(0.0);
+    }
+    // TODO(coercion-non-argument): [LOW] Exact binary64 integer counts are represented as arbitrary-precision integers for arithmetic; no scalar admission changes here.
+    let n = BigUint::from_f64(n).ok_or(CellError::Num)?;
+    // TODO(coercion-non-argument): [LOW] This representation change retains the admitted binary64 integer exactly.
+    let k = BigUint::from_f64(k).ok_or(CellError::Num)?;
+    let one = BigUint::from(1u32);
+    if n < one {
+        return Err(CellError::Num);
+    }
+    // SAFETY: the local comparison proves n >= one, so unsigned subtraction cannot underflow.
+    let left = n - one;
+    binomial_from_counts(left, k)
+}
 /// Return the integer portion of a division.
 pub fn quotient(n: f64, d: f64) -> MathResult {
     inputs(&[n, d])?;
@@ -480,3 +536,70 @@ mod tests {
         assert_eq!(mround(-1e-100, 1e-100), Err(CellError::Num));
     }
 }
+
+/// General unsigned positional result rendering.
+pub mod radix;
+
+#[cfg(test)]
+mod replacement_combination_tests {
+    use super::*;
+    #[test]
+    fn combina_uses_checked_replacement_combinations() {
+        for (n, k, want) in [
+            (4.23, 3., 20.),
+            (10., 3., 220.),
+            (3.2, 3.8, 10.),
+            (0., 0., 0.),
+            (1., 1., 1.),
+            (1000., 2., 500500.),
+        ] {
+            assert_eq!(combina(n, k), Ok(want));
+        }
+        // Independent Python math.comb(1199,200) converted once to binary64.
+        assert_eq!(combina(1000., 200.), Ok(1.667683306781366e233));
+        // The source-pinned COMBIN contract intentionally retains its old limit.
+        assert_eq!(combin(1199., 200.), Err(CellError::Num));
+        assert_eq!(combina(1e308, 1.), Ok(1e308));
+        assert_eq!(combina(1e308, 0.), Ok(1.));
+        for (n, k) in [
+            (1e308, 2.),
+            (1e308, 1e308),
+            (1000., 1000.),
+            (-0.2, 0.),
+            (2., -0.2),
+            (1., 2.),
+        ] {
+            assert_eq!(combina(n, k), Err(CellError::Num));
+        }
+    }
+    #[test]
+    fn exact_primitive_obeys_pascal_symmetry_and_small_enumeration() {
+        use bigdecimal::num_bigint::BigUint;
+        let coefficient =
+            |n: u32, k: u32| binomial_from_counts(BigUint::from(k), BigUint::from(n - k)).unwrap();
+        // Exhaustive subset enumeration supplies counts independently of the recurrence.
+        for n in 1..=12u32 {
+            for k in 0..=n {
+                let expected = (0..(1u32 << n))
+                    .filter(|bits| bits.count_ones() == k)
+                    .count() as f64;
+                assert_eq!(coefficient(n, k), expected);
+                assert_eq!(coefficient(n, k), coefficient(n, n - k));
+                if k > 0 && k < n {
+                    assert_eq!(
+                        coefficient(n, k),
+                        coefficient(n - 1, k - 1) + coefficient(n - 1, k)
+                    );
+                }
+            }
+        }
+        for n in 1..=10u32 {
+            for k in 0..=n {
+                assert_eq!(combina(n as f64, k as f64), Ok(coefficient(n + k - 1, k)));
+            }
+        }
+    }
+}
+
+/// Direct power-series kernels.
+pub mod series;

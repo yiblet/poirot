@@ -668,6 +668,17 @@ pub fn coercev2_text_integer_number(
     }
 }
 
+/// Admit a documented FIND/SEARCH start as a zero-based position in the text.
+/// Fractional starts truncate before the last-character bound. The text source
+/// supplies its own character/unit length; pinned source domains stay separate.
+pub fn coercev2_text_search_start(number: f64, length: usize) -> Result<usize, CellError> {
+    let number = coercev2_text_integer_number(number, TextIntegerPolicy::Checked)?.trunc();
+    if number < 1. || number > length as f64 {
+        return Err(CellError::Value);
+    }
+    (number as usize).checked_sub(1).ok_or(CellError::Value)
+}
+
 /// VALUE consumes numeric/blank inputs without rendering them first, rejects
 /// booleans and requests admitted Unicode projection for existing text.
 pub fn coercev2_value_number<'a, E: From<CellError>>(
