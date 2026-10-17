@@ -205,3 +205,92 @@ fn budgets_cannot_be_masked_by_iferror() {
         }
     ));
 }
+
+#[test]
+fn complex_components_preserve_sign_and_result_type() {
+    use CellValue::{Boolean, Error, Number, Text};
+    for (formula, expected) in [
+        (r#"COMPLEX(3,-1)"#, Text("3-i".into())),
+        (r#"COMPLEX(0,-1,"j")"#, Text("-j".into())),
+        ("COMPLEX(0,0)", Text("0".into())),
+        ("COMPLEX(-0,-0)", Text("0".into())),
+        (r#"COMPLEX(2,3,"")"#, Text("2+3i".into())),
+        (r#"COMPLEX(2,3,"I")"#, Error(CellError::Value)),
+        (r#"IMREAL("-2i")"#, Number(0.0)),
+        (r#"IMAGINARY("-2i")"#, Number(-2.0)),
+        (r#"IMAGINARY("-j")"#, Number(-1.0)),
+        (r#"IMREAL("1e-2-3e+2j")"#, Number(0.01)),
+        (r#"IMAGINARY("1e-2-3e+2j")"#, Number(-300.0)),
+        (r#"IMREAL(".5i")"#, Number(0.0)),
+        (r#"IMAGINARY(".5i")"#, Number(0.5)),
+        (r#"IMAGINARY(COMPLEX(3,-1))"#, Number(-1.0)),
+        (r#"ISNUMBER(IMREAL(COMPLEX(0,0)))"#, Boolean(true)),
+        (r#"IMREAL(INDEX({"-2i","3+j"},1,1))"#, Number(0.0)),
+        (r#"IMAGINARY(INDEX({"-2i","3+j"},1,2))"#, Number(1.0)),
+        (
+            r#"IMREAL(INDEX({TRUE,"3+j"},1,1))"#,
+            Error(CellError::Value),
+        ),
+        ("IMREAL(TRUE)", Error(CellError::Value)),
+        ("IMAGINARY(FALSE)", Error(CellError::Value)),
+        (r#"IMREAL("1,000")"#, Error(CellError::Num)),
+        (r#"IMREAL("$2")"#, Error(CellError::Num)),
+        (r#"IMREAL("1/2/2020")"#, Error(CellError::Num)),
+        (r#"IMREAL("2 +3i")"#, Error(CellError::Num)),
+        (r#"IMREAL("2+3I")"#, Error(CellError::Num)),
+        (r#"IMREAL("")"#, Error(CellError::Num)),
+        (r#"IMAGINARY("1e309i")"#, Error(CellError::Num)),
+        (r#"IMAGINARY("😀i")"#, Error(CellError::Num)),
+    ] {
+        assert_eq!(value(formula, &excel()), expected, "{formula}");
+    }
+}
+
+#[test]
+fn complex_reference_origins_and_utf16_failures_preserve_admission() {
+    let mut workbook = book();
+    for (address, input) in [
+        ("B1", CellValue::Text("-2i".into())),
+        ("B2", CellValue::Boolean(true)),
+        ("B3", CellValue::Blank),
+        ("B4", CellValue::Text("".into())),
+    ] {
+        workbook
+            .sheet_mut(0)
+            .unwrap()
+            .set_value(address.parse().unwrap(), input)
+            .unwrap();
+    }
+    for (formula, expected) in [
+        ("IMREAL(B1)", CellValue::Number(0.0)),
+        ("IMAGINARY(B1)", CellValue::Number(-2.0)),
+        ("IMREAL(B2)", CellValue::Error(CellError::Value)),
+        ("IMREAL(B3)", CellValue::Number(0.0)),
+        ("IMREAL(B4)", CellValue::Error(CellError::Num)),
+    ] {
+        match run_formula_with_configuration(
+            &workbook,
+            0,
+            CellAddress { row: 0, col: 25 },
+            formula,
+            &excel(),
+            EvaluationBudgets::default(),
+        ) {
+            EvaluationOutcome::Complete { value, .. } => assert_eq!(value, expected, "{formula}"),
+            other => panic!("{formula}: {other:?}"),
+        }
+    }
+    // A malformed UTF-16 scalar remains an operational host projection failure.
+    for formula in ["IFERROR(IMREAL(A1),7)", "IFERROR(IMAGINARY(A1),7)"] {
+        assert!(
+            matches!(
+                run(formula, &excel(), EvaluationBudgets::default()),
+                EvaluationOutcome::Aborted {
+                    failure: EvaluationFailure::UnsupportedCapability { .. },
+                    ..
+                }
+            ),
+            "{formula}"
+        );
+    }
+}

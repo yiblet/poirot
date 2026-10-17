@@ -1,0 +1,11 @@
+[package]
+name = "poirot-functions-dates"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+poirot-coercionv2 = { path = "../poirot-coercionv2" }
+poirot-functions-core = { path = "../poirot-functions-core" }
+
+[lints]
+workspace = true

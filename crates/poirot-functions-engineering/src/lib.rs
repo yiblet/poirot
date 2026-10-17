@@ -1,6 +1,6 @@
-//! Pure engineering algorithms. Coercion, references, budgets and spreadsheet errors belong
-//! to the evaluator adapter. Behavior follows the pinned POI engineering sources.
-use std::sync::OnceLock;
+//! Pure engineering algorithms and retained pinned POI helper APIs.
+//! Argument parsing and result spelling belong to poirot-coercionv2; references,
+//! resource admission and operational errors belong to the evaluator adapter.
 
 /// Spreadsheet value/domain failures from engineering conversions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -145,69 +145,39 @@ fn decimal_to_base(number: f64, places: Option<f64>, base: u32, half: i64) -> Re
     Ok(format!("{text:0>width$}"))
 }
 
-/// The formatter is supplied by the adapter to preserve the engine's Excel number spelling.
+/// Retained pinned POI complex text spelling.
 pub fn complex(
     real: f64,
     imaginary: f64,
     suffix: &str,
     format_number: impl Fn(f64) -> String,
 ) -> Result<String> {
-    let suffix = if suffix.is_empty() { "i" } else { suffix };
-    if suffix != "i" && suffix != "j" {
-        return Err(EngineeringError::Value);
-    }
-    let mut text = String::new();
-    if real != 0.0 {
-        text.push_str(&format_number(real));
-    }
-    if imaginary != 0.0 {
-        if !text.is_empty() && imaginary > 0.0 {
-            text.push('+');
-        }
-        if imaginary != 1.0 && imaginary != -1.0 {
-            text.push_str(&format_number(imaginary));
-        }
-        text.push_str(suffix);
-    }
-    Ok(text)
+    // TODO(coercion-non-argument): [LOW] Pinned result spelling intentionally retains historical sign and zero behavior.
+    poirot_coercionv2::complex::coerce_complex_pinned_result(real, imaginary, suffix, format_number)
+        .map_err(complex_error)
 }
-
-fn complex_parts(text: &str) -> Result<regex::Captures<'_>> {
-    static PATTERN: OnceLock<regex::Regex> = OnceLock::new();
-    PATTERN
-        .get_or_init(|| {
-            // SAFETY: The literal pattern below has balanced groups/classes and uses only supported regex syntax, independent of text.
-            regex::Regex::new(
-                r"\A([+-]?)([0-9]+\.[0-9]+|[0-9]*)([+-]?)([0-9]+\.[0-9]+|[0-9]*)([ij]?)\z",
-            )
-            .expect("constant regex")
-        })
-        .captures(text)
-        .ok_or(EngineeringError::Num)
-}
-/// Extract the imaginary component of a complex-number spelling.
+/// Retained pinned imaginary coefficient text.
 pub fn imaginary(text: &str) -> Result<String> {
-    let parts = complex_parts(text)?;
-    if parts[5].is_empty() {
-        return Ok("0".into());
-    }
-    let sign = if &parts[3] == "-" { "-" } else { "" };
-    Ok(format!(
-        "{sign}{}",
-        if parts[4].is_empty() { "1" } else { &parts[4] }
-    ))
+    poirot_coercionv2::complex::coercev2_complex_pinned_imaginary(text).map_err(complex_error)
 }
-/// Extract the real component of a complex-number spelling.
+/// Retained pinned real coefficient text.
 pub fn imreal(text: &str) -> Result<String> {
-    let parts = complex_parts(text)?;
-    if parts[2].is_empty() {
-        return Ok("0".into());
+    poirot_coercionv2::complex::coercev2_complex_pinned_real(text).map_err(complex_error)
+}
+fn complex_error(error: poirot_coercionv2::CellError) -> EngineeringError {
+    if error == poirot_coercionv2::CellError::Value {
+        EngineeringError::Value
+    } else {
+        EngineeringError::Num
     }
-    Ok(format!(
-        "{}{}",
-        if &parts[1] == "+" { "" } else { &parts[1] },
-        &parts[2]
-    ))
+}
+/// Extract the real component without text round trips.
+pub fn complex_real(value: poirot_coercionv2::complex::ComplexNumber) -> f64 {
+    value.real
+}
+/// Extract the imaginary component without text round trips.
+pub fn complex_imaginary(value: poirot_coercionv2::complex::ComplexNumber) -> f64 {
+    value.imaginary
 }
 /// Return one for equal numeric operands, otherwise zero.
 pub fn delta(a: f64, b: f64) -> f64 {

@@ -155,3 +155,83 @@ fn formatted_number_work_admission_is_operational_and_utf16_equivalent() {
         );
     }
 }
+
+#[test]
+fn modern_calendar_continuation_tracks_only_consumed_context() {
+    use crate::run::{ContextRead, DependencyRead, DependencyReadSink, ReadEvent};
+    #[derive(Default)]
+    struct Reads(Vec<ReadEvent>);
+    impl DependencyReadSink for Reads {
+        fn read(&mut self, event: ReadEvent) {
+            self.0.push(event);
+        }
+    }
+    let mut w = Workbook::new();
+    w.add_sheet("S").unwrap();
+    for (text, order, expected, year_read, order_read) in [
+        ("1/2/2020", DateOrder::MonthDayYear, 43832., false, true),
+        ("1/2/2020", DateOrder::DayMonthYear, 43862., false, true),
+        ("2020-01-02", DateOrder::DayMonthYear, 43832., false, false),
+        ("1/2", DateOrder::MonthDayYear, 44198., true, true),
+        ("12:00", DateOrder::DayMonthYear, 0.5, false, false),
+    ] {
+        let mut reads = Reads::default();
+        let context = EvaluationInputs {
+            as_of_time: UNIX_EPOCH + Duration::from_secs(1609502400),
+            localization: Localization {
+                utc_offset_seconds: 0,
+                date_order: order,
+            },
+            ..Default::default()
+        };
+        let mut session = Session::with_context(&w, context);
+        session.builtin_policy = BuiltinSemanticsPolicy::ExcelDocumentation;
+        session.dependency_sink = Some(&mut reads);
+        assert_eq!(session.coercev2_numeric_date_time(text).unwrap(), expected);
+        drop(session);
+        for (field, expected) in [
+            (ContextRead::AsOf, year_read),
+            (ContextRead::UtcOffset, year_read),
+            (ContextRead::DateOrder, order_read),
+        ] {
+            assert_eq!(
+                reads
+                    .0
+                    .iter()
+                    .any(|r| r.read == DependencyRead::ContextField(field)),
+                expected,
+                "{text}: {field:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn impossible_calendar_text_rejects_before_acquiring_default_year() {
+    let mut workbook = Workbook::new();
+    workbook.add_sheet("S").unwrap();
+    let mut session = Session::with_context(
+        &workbook,
+        EvaluationInputs {
+            as_of_time: UNIX_EPOCH + Duration::from_secs(400000000000),
+            ..Default::default()
+        },
+    );
+    session.builtin_policy = BuiltinSemanticsPolicy::ExcelDocumentation;
+    for input in ["hello-world", "2/30", "13/1"] {
+        assert!(
+            matches!(
+                session.coercev2_numeric_date_time(input),
+                Err(FunctionFailure::Spreadsheet(CellError::Value))
+            ),
+            "{input}"
+        );
+    }
+    // February 29 can be valid, so this request really needs the unavailable year.
+    assert!(matches!(
+        session.coercev2_numeric_date_time("2/29"),
+        Err(FunctionFailure::Operational(
+            EvaluationFailure::UnsupportedCapability { .. }
+        ))
+    ));
+}

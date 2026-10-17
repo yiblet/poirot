@@ -584,6 +584,28 @@ pub fn coercev2_optional_number<E>(
         convert(value)
     }
 }
+/// Documented payment operands default absent optional slots and explicit
+/// positional Missing to numeric zero.
+/// Arity admission separately rejects absent required positions. Blank and other
+/// scalar values continue through the consumer's numeric policy.
+pub fn coercev2_financial_payment_number<E>(
+    value: Option<Scalar>,
+    convert: impl FnOnce(Scalar) -> Result<f64, E>,
+) -> Result<f64, E> {
+    match value {
+        Some(value) => coercev2_optional_number(value, 0.0, convert),
+        None => Ok(0.0),
+    }
+}
+/// Documented IPMT/PPMT timing admits exactly end (zero) or beginning (one).
+/// Numeric parsing and omission defaults are selected before this policy.
+pub fn coercev2_financial_payment_timing(value: f64) -> Result<bool, CellError> {
+    match value {
+        0.0 => Ok(false),
+        1.0 => Ok(true),
+        _ => Err(CellError::Num),
+    }
+}
 /// Documented boolean options use false for omission and preserve their other restrictions.
 pub fn coercev2_boolean_default(
     value: ScalarRef<'_>,
@@ -660,4 +682,36 @@ pub fn coercev2_value_number<'a, E: From<CellError>>(
         ScalarRef::Error(e) => Err(e.into()),
         _ => Err(CellError::Value.into()),
     }
+}
+
+/// Date serial admission selected by the consuming date function.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DateSerialPolicy {
+    /// EDATE's pinned operand accepts only existing numbers and blank.
+    PinnedNumberOrBlank,
+    /// Modern arguments request finite scalar numbers and calendar text.
+    Calendar,
+}
+/// Request a date serial while leaving text, context and resource effects to
+/// the host continuation. Existing scalar errors are preserved by the modern policy.
+pub fn coercev2_date_serial<'a, E: From<CellError>>(
+    value: ScalarRef<'a>,
+    policy: DateSerialPolicy,
+    deferred: impl FnMut(DeferredNumber<'a>) -> Result<f64, E>,
+) -> Result<f64, E> {
+    if policy == DateSerialPolicy::PinnedNumberOrBlank
+        && !matches!(value, ScalarRef::Number(_) | ScalarRef::Blank)
+    {
+        return Err(CellError::Value.into());
+    }
+    coercev2_number(value, NumberPolicy::Finite, deferred)
+}
+/// WEEKDAY's modern option retains conversion errors; valid numeric options
+/// are truncated before the calendar algorithm checks the documented modes.
+pub fn coercev2_weekday_option<'a, E: From<CellError>>(
+    value: ScalarRef<'a>,
+    deferred: impl FnMut(DeferredNumber<'a>) -> Result<f64, E>,
+) -> Result<i64, E> {
+    coercev2_date_integer(coercev2_number(value, NumberPolicy::Finite, deferred)?)
+        .map_err(|_| CellError::Num.into())
 }

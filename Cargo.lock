@@ -571,6 +571,7 @@ dependencies = [
  "nom",
  "poirot-functions-core",
  "poirot-numeric",
+ "regex",
  "serde",
 ]
 
@@ -587,6 +588,7 @@ dependencies = [
  "poirot-functions-core",
  "poirot-functions-criteria",
  "poirot-functions-database",
+ "poirot-functions-dates",
  "poirot-functions-engineering",
  "poirot-functions-financial",
  "poirot-functions-logical",
@@ -649,11 +651,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "poirot-functions-dates"
+version = "0.1.0"
+dependencies = [
+ "poirot-coercionv2",
+ "poirot-functions-core",
+]
+
+[[package]]
 name = "poirot-functions-engineering"
 version = "0.1.0"
 dependencies = [
  "libm",
- "regex",
+ "poirot-coercionv2",
 ]
 
 [[package]]

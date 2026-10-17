@@ -370,6 +370,46 @@ impl Session<'_> {
         key: Option<(usize, CellAddress)>,
     ) -> FunctionResult<f64> {
         use poirot_coercionv2::date_time::{Context, LocalePolicy, Outcome, TimezonePolicy};
+        if self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation {
+            use poirot_coercionv2::date_time::{
+                CalendarTextPlan, Effects, coercev2_calendar_text_plan,
+            };
+            self.budget
+                .charge(WorkKind::HelperOperation, text.len() as u64)?;
+            if let CalendarTextPlan::Civil { date, fraction } = coercev2_calendar_text_plan(text)? {
+                self.read(DependencyRead::ContextField(
+                    crate::run::ContextRead::DateSystem,
+                ));
+                self.record_numeric_date_effects(
+                    Effects {
+                        locale: date.reads_date_order,
+                        ..Effects::default()
+                    },
+                    key,
+                )?;
+                let order = match self.context.localization.date_order {
+                    DateOrder::MonthDayYear => poirot_coercionv2::dates::DateOrder::MonthDayYear,
+                    DateOrder::DayMonthYear => poirot_coercionv2::dates::DateOrder::DayMonthYear,
+                };
+                let date = date.coercev2_resolve(order, || {
+                    self.record_numeric_date_effects(
+                        Effects {
+                            default_year: true,
+                            ..Effects::default()
+                        },
+                        key,
+                    )?;
+                    self.numeric_default_year().map(i64::from)
+                })?;
+                use poirot_coercionv2::date_time::{CalendarEpoch, coercev2_calendar_serial};
+                let epoch = match self.workbook.date_system {
+                    poirot_model::DateSystem::Excel1900 => CalendarEpoch::Excel1900,
+                    poirot_model::DateSystem::Excel1904 => CalendarEpoch::Excel1904,
+                };
+                return Ok(coercev2_calendar_serial(date, epoch)? + fraction);
+            }
+        }
+
         let mut context = Context {
             // Sentinel avoids even consulting the frozen clock for explicit-year
             // dates, standalone times, and ordinary rejected strings.

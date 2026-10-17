@@ -2,12 +2,12 @@
 use super::*;
 use serde::{Deserialize, Serialize, ser::Error as _};
 use std::borrow::Cow;
-const VERSION: u32 = 12;
+const VERSION: u32 = 17;
 /// Compatibility revision for persisted engine preparation and retained results.
 /// Bump when wire layout or execution semantics invalidate prepared snapshots,
 /// including changes that leave Serde field layouts intact. This is separate from
 /// durable workbook-source versioning owned by the public file envelope.
-pub const COMPATIBILITY_REVISION: u64 = 13;
+pub const COMPATIBILITY_REVISION: u64 = 18;
 
 /// Serde view of a baseline workbook and its sparse overlay state.
 pub struct Snapshot<'a> {

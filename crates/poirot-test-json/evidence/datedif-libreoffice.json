@@ -1,0 +1,873 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T21:12:44.459461+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-calendar.json": "8a6d8fae9f6527c868298192de46cd6b42d08fa07235b230e351083a1dc4615b",
+    "calendar-intervals.json": "2a10f27ddbe91a8620ae87c1f54566dbe128d21674a904dc28e3559ffde7c7f7"
+  },
+  "results": [
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATEDIF completed periods leap years and pathological month-day mode \u2014 DATEDIF(\"1/1/2006\",\"12/12/2010\",\"MD\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATEDIF completed periods leap years and pathological month-day mode \u2014 DATEDIF(\"1/1/2006\",\"12/12/2010\",\"YM\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE normalization and 1900 leap-year boundary \u2014 DATE(2008,15,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 39873.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE floors negative fractional components: Month -5.1 behaves as -6 \u2014 DATE(2000,-5,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 36342.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE extreme component handling: Month can be [-32767..32767) \u2014 DATE(10000,-32767,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1961112.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: EOMONTH date normalization and leap-day end \u2014 EOMONTH(DATE(1985,4,15),9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 31443.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(0,0,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.15740740740741e-05
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Tue \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-01\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE normalization and 1900 leap-year boundary \u2014 DATE(2008,-50,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 37895.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE floors negative fractional components: Day -10.1 behaves as -11 \u2014 DATE(2000,2,-10)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 36546.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE extreme component handling \u2014 DATE(2000,32766.9,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1033789.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: EOMONTH date normalization and leap-day end: Spec examples \u2014 EOMONTH(DATE(2006,1,31),5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 38898.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(0,0,2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.31481481481481e-05
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Thu \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-03\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE normalization and 1900 leap-year boundary \u2014 DATE(2008,5,63)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 39631.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE extreme component handling: Day is clamped to at most 32767 \u2014 DATE(2000,1,32767.9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 69292.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: EOMONTH date normalization and leap-day end \u2014 EOMONTH(DATE(2004,2,29),12)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 38411.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(0,0,20)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.000231481481481482
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Fri \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-04\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE normalization and 1900 leap-year boundary \u2014 DATE(2008,13,63)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 39876.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE extreme component handling: When day is < -32768, day uses 32767 value instead \u2014 DATE(2000,1,-32768)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3757.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: EOMONTH date normalization and leap-day end \u2014 EOMONTH(DATE(2004,2,28),12)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 38411.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(2,3,20)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0856481481481482
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Sat \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-05\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE normalization and 1900 leap-year boundary \u2014 DATE(2008,15,-120)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 39752.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE extreme component handling: Year is clamped to 10000 \u2014 DATE(10000,-32000,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1984455.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: EOMONTH date normalization and leap-day end \u2014 EOMONTH(DATE(2004,1,15),-23)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 37315.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(12,0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Sun \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-06\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(23,59,59)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.999988425925926
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Mon \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-07\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(26,120,240)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.169444444444444
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Sat \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-12\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(1,2,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0430902777777778
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Sun \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-13\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(24,0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Mon \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-14\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(120,240,347)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.17068287037037
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Tue \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-15\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Wed \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-16\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 13.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Thu \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-17\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 14.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Fri \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-18\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Sat \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-19\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "calendar-intervals.json",
+      "name": "Calendar intervals: DATEDIF(\"1/1/2006\",\"12/12/2010\",\"Y\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "calendar-intervals.json",
+      "name": "Calendar intervals: DATEDIF(\"1/1/2006\",\"12/12/2010\",\"M\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 59.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "calendar-intervals.json",
+      "name": "Calendar intervals: DATEDIF(\"1/1/2006\",\"12/12/2010\",\"D\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1806.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "calendar-intervals.json",
+      "name": "Calendar intervals: DATEDIF(\"1/1/2006\",\"12/12/2010\",\"YD\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 345.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "calendar-intervals.json",
+      "name": "Calendar intervals: DATEDIF(\"2020-01-31\",\"2024-03-01\",\"MD\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "calendar-intervals.json",
+      "name": "Calendar intervals: DATEDIF(\"1990-01-20\",\"2002-12-15\",\"YM\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "calendar-intervals.json",
+      "name": "Calendar intervals: DATEDIF(\"2001-12-31\",\"2002-4-15\",\"YM\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "calendar-intervals.json",
+      "name": "Calendar intervals: DATEDIF(\"2001-12-15\",\"2002-4-15\",\"YM\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "calendar-intervals.json",
+      "name": "Calendar intervals: DATEDIF(\"2000-02-20\",\"2100-02-10\",\"YD\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 355.0
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "calendar-intervals.json",
+      "name": "Calendar intervals: DATEDIF(\"2001-02-20\",\"2100-02-10\",\"YD\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 355.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "calendar-intervals.json",
+      "name": "Calendar intervals: DATEDIF(\"2020-11-22\",\"2020-11-23 9:00\",\"D\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "calendar-intervals.json",
+      "name": "Calendar intervals: DATEDIF(60,61,\"MD\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "calendar-intervals.json",
+      "name": "Calendar intervals: DATEDIF(0,61,\"M\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "calendar-intervals.json",
+      "name": "Calendar intervals: DATEDIF(1.9,1.1,\"D\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 57,
+    "checks": 57,
+    "corroborated_scenarios": 56,
+    "corroborated_checks": 56
+  }
+}

@@ -1,0 +1,950 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T20:50:36.818761+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-calendar.json": "369714fff1d7c9ea382fd500a5635de3ccee0dc6527045d6d4958685a3664486",
+    "closedxml-calendar-edate.json": "c91a1da8fc493c3d963e72d06ab76c523e749968bf2c2095e6ddd80427873efd",
+    "closedxml-extension-date-domains.json": "e919a01b21a766fe1a8e2fc5641b8e8dcdd8f270c9f43991f73928d336430416"
+  },
+  "results": [
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATEDIF completed periods leap years and pathological month-day mode \u2014 DATEDIF(\"1/1/2006\",\"12/12/2010\",\"MD\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATEDIF completed periods leap years and pathological month-day mode \u2014 DATEDIF(\"1/1/2006\",\"12/12/2010\",\"YM\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE normalization and 1900 leap-year boundary \u2014 DATE(2008,15,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 39873.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE floors negative fractional components: Month -5.1 behaves as -6 \u2014 DATE(2000,-5,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 36342.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE extreme component handling: Month can be [-32767..32767) \u2014 DATE(10000,-32767,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1961112.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: EOMONTH date normalization and leap-day end \u2014 EOMONTH(DATE(1985,4,15),9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 31443.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(0,0,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.15740740740741e-05
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Tue \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-01\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE normalization and 1900 leap-year boundary \u2014 DATE(2008,-50,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 37895.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE floors negative fractional components: Day -10.1 behaves as -11 \u2014 DATE(2000,2,-10)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 36546.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE extreme component handling \u2014 DATE(2000,32766.9,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1033789.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: EOMONTH date normalization and leap-day end: Spec examples \u2014 EOMONTH(DATE(2006,1,31),5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 38898.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(0,0,2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.31481481481481e-05
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Thu \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-03\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE normalization and 1900 leap-year boundary \u2014 DATE(2008,5,63)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 39631.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE extreme component handling: Day is clamped to at most 32767 \u2014 DATE(2000,1,32767.9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 69292.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: EOMONTH date normalization and leap-day end \u2014 EOMONTH(DATE(2004,2,29),12)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 38411.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(0,0,20)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.000231481481481482
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Fri \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-04\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE normalization and 1900 leap-year boundary \u2014 DATE(2008,13,63)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 39876.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE extreme component handling: When day is < -32768, day uses 32767 value instead \u2014 DATE(2000,1,-32768)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3757.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: EOMONTH date normalization and leap-day end \u2014 EOMONTH(DATE(2004,2,28),12)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 38411.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(2,3,20)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0856481481481482
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Sat \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-05\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE normalization and 1900 leap-year boundary \u2014 DATE(2008,15,-120)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 39752.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: DATE extreme component handling: Year is clamped to 10000 \u2014 DATE(10000,-32000,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1984455.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: EOMONTH date normalization and leap-day end \u2014 EOMONTH(DATE(2004,1,15),-23)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 37315.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(12,0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Sun \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-06\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(23,59,59)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.999988425925926
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Mon \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-07\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(26,120,240)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.169444444444444
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Sat \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-12\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(1,2,3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0430902777777778
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Sun \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-13\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(24,0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Mon \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-14\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(120,240,347)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.17068287037037
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Tue \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-15\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Wed \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-16\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 13.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Thu \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-17\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 14.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Fri \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-18\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar.json",
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Sat \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-19\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar-edate.json",
+      "name": "ClosedXML calendar: EDATE end-of-month clipping and fractional offsets \u2014 EDATE(\"2008-03-31\",-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 39507.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 39507.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-calendar-edate.json",
+      "name": "ClosedXML calendar: EDATE end-of-month clipping and fractional offsets \u2014 EDATE(\"1983-07-31\",-77)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 28184.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 28184.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: NetWorkDays with end date earlier than start date \u2014 NETWORKDAYS(\"3/01/2009\", \"10/01/2008\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -108.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(1, 10, {\"2\", 3})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Weekday without flag \u2014 WEEKDAY(\"2/14/2008\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Weekday behavior \u2014 WEEKDAY(\"0 2/2\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: NetWorkDays with end date earlier than start date \u2014 NETWORKDAYS(\"2016-01-01\", \"2015-12-23\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Weekday behavior \u2014 WEEKDAY(1, \"1 0/2\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Weekday behavior \u2014 WEEKDAY(1, \"text\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Weekday behavior \u2014 WEEKDAY(5, #N/A)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: DateValue propagates error \u2014 DATEVALUE(#DIV/0!)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Days360 Europe1 \u2014 DAYS360(\"1/1/2008\", \"3/31/2008\",TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 89.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Days360 Europe2 \u2014 DAYS360(\"3/31/2008\", \"1/1/2008\",TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -89.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Hour accepts only serial time between zero and upper limit of date system \u2014 HOUR(0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Minute accepts only serial time between zero and upper limit of date system \u2014 MINUTE(0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Month serial date must be between zero and upper limit of date system \u2014 MONTH(DATE(9999,12,31) + 0.9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(DATE(2006, 1, 1), DATE(2006, 2, 1), { \"2006-01-02\", \"2006-01-16\" })",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 21.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Second accepts only serial time between zero and upper limit of date system \u2014 SECOND(0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 61,
+    "checks": 63,
+    "corroborated_scenarios": 61,
+    "corroborated_checks": 63
+  }
+}

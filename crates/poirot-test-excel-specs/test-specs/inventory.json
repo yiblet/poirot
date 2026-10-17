@@ -7228,6 +7228,55 @@
       ]
     },
     {
+      "id": "function.DATEDIF",
+      "kind": "function",
+      "name": "DATEDIF",
+      "family": "Date",
+      "scope_status": "in_scope",
+      "implementation_status": "registered",
+      "source_urls": [
+        "https://support.microsoft.com/en-au/excel/functions/datedif-function"
+      ],
+      "obligations": [
+        {
+          "id": "function.DATEDIF.valid",
+          "behavior": "Establish a valid DATEDIF call and independently derive a baseline result from its individual Excel contract.",
+          "applicability": "requires_research",
+          "reason": "Potential obligation only: individual contract and applicability not yet researched."
+        },
+        {
+          "id": "function.DATEDIF.boundary",
+          "behavior": "Determine DATEDIF behavior at serial endpoints, leap years, truncation, weekend modes.",
+          "applicability": "requires_research",
+          "reason": "Potential obligation only: individual contract and applicability not yet researched."
+        },
+        {
+          "id": "function.DATEDIF.coercion",
+          "behavior": "Determine DATEDIF number/numeric-text/text/logical/blank/empty-text coercion, distinguishing literals, references, and arrays.",
+          "applicability": "requires_research",
+          "reason": "Potential obligation only: individual contract and applicability not yet researched."
+        },
+        {
+          "id": "function.DATEDIF.errors",
+          "behavior": "Determine DATEDIF applicable domain/missing/shape errors and propagation or suppression; do not infer error precedence from ROI.",
+          "applicability": "requires_research",
+          "reason": "Potential obligation only: individual contract and applicability not yet researched."
+        },
+        {
+          "id": "function.DATEDIF.reference",
+          "behavior": "Determine DATEDIF single-cell/range/array inputs and reference-valued outputs, including scalarization if applicable.",
+          "applicability": "requires_research",
+          "reason": "Potential obligation only: individual contract and applicability not yet researched."
+        },
+        {
+          "id": "function.DATEDIF.version",
+          "behavior": "Determine DATEDIF relevant compatibility versions, date systems, aliases, and legacy/new forms.",
+          "applicability": "requires_research",
+          "reason": "Potential obligation only: individual contract and applicability not yet researched."
+        }
+      ]
+    },
+    {
       "id": "function.DAY",
       "kind": "function",
       "name": "DAY",

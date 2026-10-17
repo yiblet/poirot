@@ -211,6 +211,27 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
     }
     work(p, 1)?;
     let out = match f {
+        Imaginary | Imreal if excel => {
+            let value = scalar(p, args.first().ok_or(CellError::Value)?)?;
+            if let Scalar::Text(ref text) = value {
+                p.check_text(text.len()).map_err(Failure::Operational)?;
+                work(p, text.len() as u64 + 1)?;
+            }
+            let value = match poirot_coercionv2::complex::coercev2_complex_scalar(value)? {
+                Some(value) => value,
+                None => {
+                    let text = p.coercev2_missing_text()?;
+                    p.check_text(text.len()).map_err(Failure::Operational)?;
+                    work(p, text.len() as u64 + 1)?;
+                    poirot_coercionv2::complex::coercev2_complex_text(&text)?
+                }
+            };
+            Output::Number(if f == Imaginary {
+                domain::complex_imaginary(value)
+            } else {
+                domain::complex_real(value)
+            })
+        }
         Bin2dec | Hex2dec | Oct2dec | Imaginary | Imreal => {
             let s = coercev2_engineering_argument_text(p, args.first().ok_or(CellError::Value)?)?;
             // Regex/output allocation bounded by the input plus a sign/digit.
@@ -233,15 +254,7 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
                         domain::imreal(&s)
                     }
                     .map_err(domain_error)?;
-                    if excel {
-                        // Only the shared complex parser's selected coefficient is numeric.
-                        Output::Number(
-                            p.coercev2_decimal_text(&coefficient)?
-                                .ok_or(Failure::Spreadsheet(CellError::Num))?,
-                        )
-                    } else {
-                        Output::Text(coefficient)
-                    }
+                    Output::Text(coefficient)
                 }
                 _ => return Err(CellError::Value.into()),
             }
@@ -309,9 +322,7 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
             } else {
                 "i".into()
             };
-            if !suffix.is_empty() && suffix != "i" && suffix != "j" {
-                return Err(Failure::Spreadsheet(CellError::Value));
-            }
+            let unit = poirot_coercionv2::complex::coercev2_complex_suffix(&suffix)?;
             p.check_text(132).map_err(Failure::Operational)?;
             work(p, 132)?;
             // Format only components actually emitted by the pinned source.
@@ -327,16 +338,26 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
             } else {
                 String::new()
             };
-            Output::Text(
-                domain::complex(r, i, &suffix, |n| {
-                    if n.to_bits() == r.to_bits() {
-                        rt.clone()
-                    } else {
-                        it.clone()
-                    }
-                })
-                .map_err(domain_error)?,
-            )
+            let format_number = |n: f64| {
+                if n.to_bits() == r.to_bits() {
+                    rt.clone()
+                } else {
+                    it.clone()
+                }
+            };
+            // TODO(coercion-non-argument): [LOW] Result spelling uses the selected spreadsheet precision and compatibility policy.
+            Output::Text(if excel {
+                poirot_coercionv2::complex::coerce_complex_result(
+                    poirot_coercionv2::complex::ComplexNumber {
+                        real: r,
+                        imaginary: i,
+                        suffix: unit,
+                    },
+                    format_number,
+                )?
+            } else {
+                domain::complex(r, i, &suffix, format_number).map_err(domain_error)?
+            })
         }
     };
     Ok(out)

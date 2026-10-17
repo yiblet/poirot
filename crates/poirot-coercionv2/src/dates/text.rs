@@ -55,6 +55,7 @@ fn date_parts(input: &str) -> Result<Vec<&str>, CellError> {
 }
 /// Inspection precedes the host's optional current-year/context reads.
 /// Resolution retains the same grammar pass and explicit localization input.
+#[derive(Clone, Copy)]
 pub struct DateTextPlan<'a> {
     input: &'a str,
     /// Whether execution must supply the current year from captured context.
@@ -66,12 +67,31 @@ impl<'a> DateTextPlan<'a> {
     /// Inspect date grammar before the host reads optional context inputs.
     pub fn inspect(input: &'a str) -> Result<Self, CellError> {
         let parts = date_parts(input)?;
+        if !matches!(parts.len(), 2 | 3) {
+            return Err(VALUE_ERROR);
+        }
         Ok(Self {
             input,
             needs_default_year: parts.len() == 2,
             reads_date_order: input.split(' ').next().unwrap_or("").contains('/')
                 && parts.first().ok_or(VALUE_ERROR)?.len() != 4,
         })
+    }
+    /// Resolve calendar arguments in dependency order. Impossible fields reject
+    /// under a leap-year probe before the host acquires a clock; explicit years
+    /// never request the continuation. February 29 remains year-dependent.
+    pub fn coercev2_resolve<E: From<CellError>>(
+        self,
+        order: DateOrder,
+        default_year: impl FnOnce() -> Result<i64, E>,
+    ) -> Result<Date, E> {
+        self.resolve(2000, order)?;
+        let year = if self.needs_default_year {
+            default_year()?
+        } else {
+            2000
+        };
+        self.resolve(year, order).map_err(Into::into)
     }
     /// Resolve inspected date text under explicit year and numeric component ordering.
     pub fn resolve(self, default_year: i64, order: DateOrder) -> Result<Date, CellError> {

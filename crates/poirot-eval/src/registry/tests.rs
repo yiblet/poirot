@@ -4,7 +4,7 @@ fn descriptor_contracts_and_family_owned_execution_are_not_stubs() {
     let mut workbook = poirot_model::Workbook::new();
     workbook.add_sheet("Sheet1").unwrap();
     let address = poirot_model::CellAddress { row: 0, col: 0 };
-    assert_eq!(SUPPORTED_FUNCTIONS.len(), 256);
+    assert_eq!(SUPPORTED_FUNCTIONS.len(), 257);
     let mut names = std::collections::HashSet::new();
     for descriptor in FUNCTION_DESCRIPTORS {
         assert!(names.insert(descriptor.name));

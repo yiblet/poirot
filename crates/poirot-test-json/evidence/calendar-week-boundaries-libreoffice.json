@@ -1,0 +1,721 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T20:43:28.013001+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-extension-week-boundaries.json": "db7c6a988f0fd46a624431ea742d535cab58e0f0a1872876d9579da12b07fca8",
+    "excel-serial-weekdays.json": "2b8594287fc491a5a28e7741c8e2220d4bdab689f73bc3c8926c2a421e110e01"
+  },
+  "results": [
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1965,1,1),21)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 53.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1965,1,3),21)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 53.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1968,12,30),21)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1968,12,31),21)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",11)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",14)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",15)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",17)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1987,1,1),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1987,1,4),1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1989,1,1),2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1991,1,1),11)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-week-boundaries.json",
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1993,1,1),12)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-serial-weekdays.json",
+      "name": "Excel serial weekday modes retain the phantom-day calendar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 11,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 21,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 23,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 25,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 27,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 29,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 31,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 33,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 35,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 37,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 39,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 41,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 43,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 45,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 47,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 49,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 51,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 53,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 55,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 57,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 59,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 61,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 63,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 65,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 67,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 69,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 71,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 73,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 75,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 77,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 79,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 81,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 83,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 85,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 87,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 89,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 91,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 93,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 95,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 97,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 99,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 17,
+    "checks": 73,
+    "corroborated_scenarios": 17,
+    "corroborated_checks": 73
+  }
+}

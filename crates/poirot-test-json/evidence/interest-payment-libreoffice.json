@@ -1,0 +1,378 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T21:17:24.571178+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-financial.json": "9f56391c0f58c60db5dd86f374d125949bba780028f5391ba7418d7ac113d02c",
+    "closedxml-extension-financial-defaults.json": "db2af472582c78184f52e3d512fee7cb1cd078ce66424c355b9049d751a791c9"
+  },
+  "results": [
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Ipmt EdgeCases: Zero interest rate \u2014 IPMT(0,1,1,1000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Ipmt EdgeCases: Zero interest rate with future value \u2014 IPMT(0,1,5,10000,5000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Ipmt EdgeCases: No principal, but future value \u2014 IPMT(0.1,1,2,0,4)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Fv EdgeCases: Zero interest rate \u2014 FV(0,1,1000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1000.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Ipmt EdgeCases: Negative interest rate \u2014 IPMT(-0.4,1,2,1000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 400.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Pmt EdgeCases: Zero interest rate \u2014 PMT(0,1,1000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1000.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Fv EdgeCases: Zero interest rate with present value \u2014 FV(0,5,10000,5000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -55000.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Ipmt EdgeCases: Different non-integer period \u2014 IPMT(0.01,1,1.4,1000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Pmt EdgeCases: Zero interest rate for 5 years, (10k principal, pay all and have 5k in bank at the end = payment is 3k/year) \u2014 PMT(0,5,10000,5000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -3000.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Fv EdgeCases: Negative interest rate \u2014 FV(-0.4,2,1000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -1600.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Ipmt EdgeCases: Negative principal - money is paid to us \u2014 IPMT(0.1,1,2,-1000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 100.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Pmt EdgeCases: Negative interest rate \u2014 PMT(-0.4,2,1000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -225.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Fv EdgeCases: Non-integer period \u2014 FV(0.01,0.5,1000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -498.756211208895
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Ipmt EdgeCases: Small number and high number of periods, check for stability \u2014 IPMT(0.000001,1,1000,1000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -0.001
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Pmt EdgeCases: Non-integer period \u2014 PMT(0.01,0.5,1000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -2014.98756211209
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Fv EdgeCases: Negative periods \u2014 FV(0.1,-2,1000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1735.53719008265
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-financial.json",
+      "name": "ClosedXML financial: Pmt EdgeCases: Negative periods \u2014 PMT(0.1,-2,1000)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 476.190476190476
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-financial-defaults.json",
+      "name": "ClosedXML extension financial-defaults: Ipmt DefaultFutureValueIsZero \u2014 IPMT(0.1,1,2,1000)=IPMT(0.1,1,2,1000,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-financial-defaults.json",
+      "name": "ClosedXML extension financial-defaults: Ipmt DefaultTypeIsZero \u2014 IPMT(0.1,1,5,1000)=IPMT(0.1,1,5,1000,0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-financial-defaults.json",
+      "name": "ClosedXML extension financial-defaults: Fv DefaultFutureValueIsZero \u2014 FV(0.1,2,1000)=FV(0.1,2,1000,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-financial-defaults.json",
+      "name": "ClosedXML extension financial-defaults: Fv DefaultTypeIsZero \u2014 FV(0.1,5,1000)=FV(0.1,5,1000,0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-financial-defaults.json",
+      "name": "ClosedXML extension financial-defaults: Pmt DefaultFutureValueIsZero \u2014 PMT(0.1,2,1000)=PMT(0.1,2,1000,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-financial-defaults.json",
+      "name": "ClosedXML extension financial-defaults: Pmt DefaultTypeIsZero \u2014 PMT(0.1,5,1000)=PMT(0.1,5,1000,0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-financial-defaults.json",
+      "name": "ClosedXML extension financial-defaults: Pmt TypeConvertsNumberToOneOrZero \u2014 PMT(0.1,2,1000,500,0.000001)=PMT(0.1,2,1000,500,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 24,
+    "checks": 24,
+    "corroborated_scenarios": 24,
+    "corroborated_checks": 24
+  }
+}

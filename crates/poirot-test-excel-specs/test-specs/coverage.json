@@ -4,22 +4,24 @@
     "evaluation_steps": 2059,
     "assertion_count": 2060,
     "source_count": 261,
-    "feature_count": 290,
-    "potential_obligation_count": 1622,
+    "feature_count": 291,
+    "potential_obligation_count": 1628,
     "obligation_status_counts": {
       "specified_with_evidence": 563,
       "not_applicable": 8,
-      "missing": 1051
+      "missing": 1057
     },
     "evidence_counts": {
       "documented_derivation": 2013,
       "documented_example": 47
     },
-    "registered_function_count": 256,
+    "registered_function_count": 257,
     "registered_functions_with_specifications": 256,
-    "registered_functions_without_specifications": [],
+    "registered_functions_without_specifications": [
+      "DATEDIF"
+    ],
     "implementation_status_counts": {
-      "registered": 256,
+      "registered": 257,
       "unknown": 17,
       "partial": 8,
       "unsupported": 9
@@ -11266,6 +11268,54 @@
           "evidence_kind": "documented_derivation"
         }
       ]
+    },
+    {
+      "id": "function.DATEDIF.valid",
+      "feature": "function.DATEDIF",
+      "behavior": "Establish a valid DATEDIF call and independently derive a baseline result from its individual Excel contract.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.DATEDIF.boundary",
+      "feature": "function.DATEDIF",
+      "behavior": "Determine DATEDIF behavior at serial endpoints, leap years, truncation, weekend modes.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.DATEDIF.coercion",
+      "feature": "function.DATEDIF",
+      "behavior": "Determine DATEDIF number/numeric-text/text/logical/blank/empty-text coercion, distinguishing literals, references, and arrays.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.DATEDIF.errors",
+      "feature": "function.DATEDIF",
+      "behavior": "Determine DATEDIF applicable domain/missing/shape errors and propagation or suppression; do not infer error precedence from ROI.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.DATEDIF.reference",
+      "feature": "function.DATEDIF",
+      "behavior": "Determine DATEDIF single-cell/range/array inputs and reference-valued outputs, including scalarization if applicable.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.DATEDIF.version",
+      "feature": "function.DATEDIF",
+      "behavior": "Determine DATEDIF relevant compatibility versions, date systems, aliases, and legacy/new forms.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
     },
     {
       "id": "function.DAY.valid",

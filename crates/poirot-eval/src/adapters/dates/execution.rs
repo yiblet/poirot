@@ -43,21 +43,16 @@ impl Session<'_> {
     }
     fn coercev2_date_text(&mut self, t: &str) -> Result<Date, CellError> {
         let plan = DateTextPlan::inspect(t)?;
-        let year = if plan.needs_default_year {
-            date(self.clock_serial()?, self.workbook.date_system)?.y
-        } else {
-            2000
-        };
         if plan.reads_date_order {
             self.read(DependencyRead::ContextField(run::ContextRead::DateOrder));
         }
-        plan.resolve(
-            year,
-            match self.context.localization.date_order {
-                DateOrder::MonthDayYear => poirot_coercionv2::dates::DateOrder::MonthDayYear,
-                DateOrder::DayMonthYear => poirot_coercionv2::dates::DateOrder::DayMonthYear,
-            },
-        )
+        let order = match self.context.localization.date_order {
+            DateOrder::MonthDayYear => poirot_coercionv2::dates::DateOrder::MonthDayYear,
+            DateOrder::DayMonthYear => poirot_coercionv2::dates::DateOrder::DayMonthYear,
+        };
+        plan.coercev2_resolve(order, || {
+            Ok(date(self.clock_serial()?, self.workbook.date_system)?.y)
+        })
     }
     fn time_default_year(&mut self) -> Result<i64, CellError> {
         self.read(DependencyRead::ContextField(run::ContextRead::AsOf));
@@ -147,6 +142,47 @@ impl Session<'_> {
         };
         Ok(valid(n, self.workbook.date_system)?)
     }
+    fn coercev2_requested_date_serial(
+        &mut self,
+        value: &CellValue,
+        policy: poirot_coercionv2::compatibility::DateSerialPolicy,
+    ) -> FunctionResult<f64> {
+        use poirot_coercionv2::compatibility::{
+            DeferredNumber, NumericTextDecision, coercev2_date_serial,
+        };
+        coercev2_date_serial(value.into(), policy, |request| match request {
+            DeferredNumber::Missing => Err(VALUE_ERROR.into()),
+            DeferredNumber::Text(text) => {
+                let text = checked_text_view(text, &mut self.budget)?;
+                match self.coercev2_formatted_text(&text)? {
+                    NumericTextDecision::Number(n) => n.map_err(Into::into),
+                    NumericTextDecision::DateTime => self.coercev2_numeric_date_time(&text),
+                }
+            }
+        })
+    }
+    fn coercev2_datedif_argument(&mut self, value: &CellValue) -> FunctionResult<f64> {
+        use poirot_coercionv2::compatibility::{
+            DateSerialPolicy, DeferredNumber, NumericTextDecision, coercev2_date_serial,
+        };
+        coercev2_date_serial(
+            value.into(),
+            DateSerialPolicy::Calendar,
+            |request| match request {
+                DeferredNumber::Missing => Err(VALUE_ERROR.into()),
+                DeferredNumber::Text(text) => {
+                    let text = checked_text_view(text, &mut self.budget)?;
+                    match poirot_coercionv2::compatibility::coercev2_date_numeric_text(&text) {
+                        NumericTextDecision::Number(n) => n.map_err(Into::into),
+                        NumericTextDecision::DateTime => Ok(serial(
+                            self.coercev2_date_text(&text)?,
+                            self.workbook.date_system,
+                        )?),
+                    }
+                }
+            },
+        )
+    }
     fn coercev2_yearfrac_date_argument(&mut self, v: &CellValue) -> FunctionResult<f64> {
         // Numeric text bypasses checkDate as in the pinned source.
         if let Some(text) = v.text_ref() {
@@ -212,6 +248,7 @@ impl Session<'_> {
     ) -> EvalResult<Value> {
         match name {
             DateFunction::Date
+            | DateFunction::DateDif
             | DateFunction::DateValue
             | DateFunction::Day
             | DateFunction::Days
@@ -276,6 +313,27 @@ impl Session<'_> {
             None
         };
         let a = self.argument(s, at, args, 0)?;
+        if name == DateFunction::DateDif {
+            let start = self.coercev2_datedif_argument(&a)?;
+            let b = self.argument(s, at, args, 1)?;
+            let end = self.coercev2_datedif_argument(&b)?;
+            let c = self.argument(s, at, args, 2)?;
+            let unit = coercev2_formula_text(&c, &mut self.budget)?;
+            use poirot_coercionv2::{
+                date_time::CalendarEpoch,
+                dates::interval::{coercev2_datedif_day, coercev2_datedif_unit},
+            };
+            let epoch = match system {
+                poirot_model::DateSystem::Excel1900 => CalendarEpoch::Excel1900,
+                poirot_model::DateSystem::Excel1904 => CalendarEpoch::Excel1904,
+            };
+            let start = coercev2_datedif_day(start, epoch)?;
+            let end = coercev2_datedif_day(end, epoch)?;
+            let unit = coercev2_datedif_unit(&unit)?;
+            return Ok(Number(poirot_functions_dates::datedif(
+                start, end, unit, epoch,
+            )?));
+        }
         if name == DateFunction::DateValue || name == DateFunction::TimeValue {
             let t = coercev2_formula_text(&a, &mut self.budget)?;
             if name == DateFunction::TimeValue && t.is_empty() {
@@ -314,15 +372,11 @@ impl Session<'_> {
                 coerce_numeric_outcome(name, x, y, z, system)?
             }));
         }
-        let edate_offset = if name == DateFunction::EDate {
-            if !matches!(a, Number(_) | Blank) {
-                return Err(VALUE_ERROR.into());
-            }
+        let edate_offset = if name == DateFunction::EDate && !excel {
+            use poirot_coercionv2::compatibility::DateSerialPolicy::PinnedNumberOrBlank;
+            self.coercev2_requested_date_serial(&a, PinnedNumberOrBlank)?;
             let b = self.argument(s, at, args, 1)?;
-            if !matches!(b, Number(_) | Blank) {
-                return Err(VALUE_ERROR.into());
-            }
-            Some(self.coercev2_scalar_number(&b)?)
+            Some(self.coercev2_requested_date_serial(&b, PinnedNumberOrBlank)?)
         } else {
             None
         };
@@ -335,7 +389,15 @@ impl Session<'_> {
                 | DateFunction::WorkDayIntl
                 | DateFunction::YearFrac
         );
-        let start = if name == DateFunction::YearFrac {
+        let start = if excel && matches!(name, DateFunction::EDate | DateFunction::WeekDay) {
+            valid(
+                self.coercev2_requested_date_serial(
+                    &a,
+                    poirot_coercionv2::compatibility::DateSerialPolicy::Calendar,
+                )?,
+                system,
+            )?
+        } else if name == DateFunction::YearFrac {
             self.coercev2_yearfrac_date_argument(&a)?
         } else if textual_date {
             self.coercev2_date_argument(&a)?
@@ -378,10 +440,21 @@ impl Session<'_> {
             Number(1.)
         };
         if name == DateFunction::WeekDay || name == DateFunction::WeekNum {
-            let mode = coercev2_date_integer(
-                self.coercev2_scalar_number(&b)
-                    .map_err(|e| remap_semantic(e, Num))?,
-            )?;
+            let mode = if excel && name == DateFunction::WeekDay {
+                use poirot_coercionv2::compatibility::{DeferredNumber, coercev2_weekday_option};
+                coercev2_weekday_option((&b).into(), |request| match request {
+                    DeferredNumber::Text(_) => self.coercev2_scalar_number(&b),
+                    DeferredNumber::Missing => Err(VALUE_ERROR.into()),
+                })?
+            } else {
+                coercev2_date_integer(
+                    self.coercev2_scalar_number(&b)
+                        .map_err(|e| remap_semantic(e, Num))?,
+                )?
+            };
+            if excel && name == DateFunction::WeekDay {
+                return Ok(Number(components::excel_weekday(start, mode, system)?));
+            }
             if excel && name == DateFunction::WeekNum && mode == 21 {
                 return Ok(Number(components::iso_week(d)));
             }
@@ -389,7 +462,7 @@ impl Session<'_> {
         }
         if name == DateFunction::EDate || name == DateFunction::EOMonth {
             // EDATE's POI operand contract accepts numbers/blank but not text/bools.
-            if name == DateFunction::EDate && !matches!(a, Number(_) | Blank) {
+            if name == DateFunction::EDate && !excel && !matches!(a, Number(_) | Blank) {
                 return Err(VALUE_ERROR.into());
             }
             let months = coercev2_date_integer(self.coercev2_scalar_number(&b)?)?;
@@ -427,10 +500,18 @@ impl Session<'_> {
             return Ok(Number(yearfrac(start, end, d, e, basis)?));
         }
         let intl = name == DateFunction::WorkDayIntl;
+        let mut modern_mask = None;
         let weekend_mode = if intl && n >= 3 {
             let c = self.argument(s, at, args, 2)?;
+            if excel && let Some(text) = c.text_ref() {
+                let text = checked_text_view(text, &mut self.budget)?;
+                modern_mask = Some(poirot_coercionv2::collections::coercev2_weekend_mask(
+                    &text,
+                    poirot_coercionv2::collections::WeekendConsumer::WorkDay,
+                )?);
+            }
             // Numeric text, including leading zeroes, is a POI weekend code.
-            if matches!(c, Blank) {
+            if modern_mask.is_some() || matches!(c, Blank) {
                 1
             } else {
                 coercev2_date_integer(self.coercev2_scalar_number(&c)?)?
@@ -438,19 +519,85 @@ impl Session<'_> {
         } else {
             1
         };
-        let weekends = weekend_policy(weekend_mode)?;
+        let weekends = modern_mask.unwrap_or(weekend_policy(weekend_mode)?);
         let hi = if intl { 3 } else { 2 };
         let mut holidays = Vec::new();
         if let Some(arg) = args.get(hi) {
             let v = self.expr(s, at, arg)?;
+            use poirot_coercionv2::{
+                Origin,
+                collections::{HolidayPolicy, coercev2_holiday_member},
+            };
+            let omitted = arg.is_missing() || matches!(v, Value::Missing);
+            let origin = match &v {
+                Value::Scalar(_) | Value::Missing => Origin::Direct,
+                Value::SelectedScalar(_, origin) => match origin {
+                    host::OperandOrigin::Direct => Origin::Direct,
+                    host::OperandOrigin::ReferencedCell => Origin::Reference,
+                    host::OperandOrigin::ArrayElement => Origin::Array,
+                },
+                Value::Array(_) => Origin::Array,
+                _ => Origin::Reference,
+            };
+            let policy = if !excel {
+                HolidayPolicy::PinnedPoi
+            } else if name == DateFunction::NetworkDays {
+                HolidayPolicy::NetworkDays
+            } else {
+                HolidayPolicy::WorkDay
+            };
             for v in self.holiday_values(v)? {
                 self.budget
                     .check_allocation(holidays.len().saturating_add(1))?;
                 self.budget.charge(WorkKind::Materialization, 1)?;
-                holidays.push(self.coercev2_date_argument(&v)?);
+                let member = if omitted {
+                    poirot_coercionv2::compatibility::ScalarRef::Missing
+                } else {
+                    (&v).into()
+                };
+                if let Some(holiday) = coercev2_holiday_member(member, origin, policy, || {
+                    self.coercev2_date_argument(&v)
+                })? {
+                    holidays.push(holiday);
+                }
             }
         }
         self.budget.allocation(holidays.len())?;
+        if excel {
+            self.budget.allocation(holidays.len())?;
+            let mut serial_holidays: Vec<_> = holidays.iter().map(|h| h.trunc() as i64).collect();
+            serial_holidays.sort_unstable();
+            serial_holidays.dedup();
+            if name == DateFunction::NetworkDays {
+                let end = self.coercev2_date_argument(&b)?;
+                return Ok(Number(business_days::network_serial(
+                    start.trunc() as i64,
+                    end.trunc() as i64,
+                    system,
+                    &weekends,
+                    &serial_holidays,
+                )?));
+            }
+            let mut count = coercev2_date_integer(self.coercev2_scalar_number(&b)?)?;
+            let direction = if count < 0 { -1 } else { 1 };
+            count = count.checked_abs().ok_or(Num)?;
+            if count > max_serial(system) {
+                return Err(Num.into());
+            }
+            let mut day = start.trunc() as i64;
+            while count > 0 {
+                self.budget.charge(WorkKind::CalendarStep, 1)?;
+                (day, count) = business_days::advance_serial(
+                    day,
+                    count,
+                    direction,
+                    system,
+                    &weekends,
+                    &serial_holidays,
+                )?;
+            }
+            return Ok(Number(day as f64));
+        }
         let holiday_set: HashSet<_> = holidays
             .iter()
             .map(|h| h.round() as i64 - start.fract().round() as i64)

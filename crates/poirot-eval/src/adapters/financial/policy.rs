@@ -269,23 +269,21 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
         Fixed | Dollar => return formatting::evaluate(p, f, args),
         Ipmt | Ppmt if policy == SemanticsPolicy::ExcelDocumentation => {
             // Preserve financial resolve-before-coerce ordering, including fv/type.
-            let values = resolve_operands(p, args)?;
+            let mut values = resolve_operands(p, args)?.into_iter();
             let mut numbers = [0.0; 6];
-            for (i, value) in values.into_iter().enumerate() {
-                *numbers.get_mut(i).ok_or(CellError::Value)? = if value == Scalar::Missing {
-                    0.0
-                } else {
-                    coercev2_financial_scalar_number(p, value)?
-                };
+            for number in &mut numbers {
+                *number = poirot_coercionv2::compatibility::coercev2_financial_payment_number(
+                    values.next(),
+                    |value| coercev2_financial_scalar_number(p, value),
+                )?;
             }
             let [rate, period, periods, present, future, timing] = numbers;
-            if timing != 0.0 && timing != 1.0 {
-                return Err(CellError::Num.into());
-            }
+            let beginning =
+                poirot_coercionv2::compatibility::coercev2_financial_payment_timing(timing)?;
             if f == Ipmt {
-                domain::ipmt_excel(rate, period, periods, present, future, timing == 1.0)
+                domain::ipmt_excel(rate, period, periods, present, future, beginning)
             } else {
-                domain::ppmt_excel(rate, period, periods, present, future, timing == 1.0)
+                domain::ppmt_excel(rate, period, periods, present, future, beginning)
             }
         }
         Ipmt | Ppmt => {

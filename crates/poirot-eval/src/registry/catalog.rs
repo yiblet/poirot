@@ -192,6 +192,7 @@ registry! {
     "DVAR" => Database(DatabaseFunction::Var), 3, 3, FamilyControlled, REFERENCE_READS;
     "DVARP" => Database(DatabaseFunction::VarP), 3, 3, FamilyControlled, REFERENCE_READS;
     "DATE" => Date(DateFunction::Date), 3, 3, FamilyControlled, DATE_FAMILY;
+    "DATEDIF" => Date(DateFunction::DateDif), 3, 3, FamilyControlled, DATE_FAMILY;
     "DATEVALUE" => Date(DateFunction::DateValue), 1, 1, FamilyControlled, DATE_FAMILY;
     "DAY" => Date(DateFunction::Day), 1, 1, FamilyControlled, DATE_FAMILY;
     "DAYS" => Date(DateFunction::Days), 2, 2, FamilyControlled, DATE_FAMILY;

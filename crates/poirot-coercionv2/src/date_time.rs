@@ -1,4 +1,4 @@
-//! Pure numeric-text datetime fallback from the pinned POI formatter builder.
+//! Numeric-text datetime continuations with explicit modern and pinned contracts.
 use nom::{IResult, Parser, bytes::complete::take_while_m_n};
 /// Locale capability available to the pinned numeric-text date fallback.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -232,10 +232,15 @@ pub fn coercev2_date_time(text: &str, context: Context) -> Outcome {
 /// This permits callers to trace failed context guards without inferring fields.
 pub fn coercev2_date_time_with_effects(text: &str, context: Context) -> (Outcome, Effects) {
     let mut effects = Effects::default();
-    let outcome = parse_inner(text, context, &mut effects);
+    let outcome = parse_inner(text, context, &mut effects, false);
     (outcome, effects)
 }
-fn parse_inner(text: &str, context: Context, effects: &mut Effects) -> Outcome {
+fn parse_inner(
+    text: &str,
+    context: Context,
+    effects: &mut Effects,
+    calendar_clock: bool,
+) -> Outcome {
     if context.locale != LocalePolicy::English {
         effects.locale = true;
         return Outcome::Unsupported("formatter locale");
@@ -257,7 +262,9 @@ fn parse_inner(text: &str, context: Context, effects: &mut Effects) -> Outcome {
             return Outcome::Rejected;
         }
     }
-    if !input.is_empty() {
+    if !input.is_empty()
+        || (calendar_clock && (f.year.is_some() || f.month.is_some() || f.day.is_some()))
+    {
         return Outcome::Rejected;
     }
     if f.year.is_some_and(|y| y < 1) || f.month.is_some_and(|m| !(1..=12).contains(&m)) {
@@ -345,7 +352,13 @@ fn parse_inner(text: &str, context: Context, effects: &mut Effects) -> Outcome {
         }
     }
     Outcome::Valid {
-        value: serial + f64::from(seconds) / 86400.0,
+        value: serial
+            + f64::from(seconds) / 86400.0
+            + if calendar_clock {
+                excess as f64 + f64::from(f.millis.unwrap_or(0)) / 86400000.
+            } else {
+                0.
+            },
         effects: *effects,
     }
 }
@@ -489,5 +502,203 @@ mod tests {
             coercev2_date_time("12:00", c),
             Outcome::Valid { .. }
         ));
+    }
+}
+
+/// Calendar continuation for modern numeric arguments. The calendar plan owns
+/// variable-width civil dates and date ordering; the pinned formatter remains
+/// available for its distinct named-date and standalone-clock grammar.
+pub enum CalendarTextPlan<'a> {
+    /// Civil date with an optional, fully validated clock fraction.
+    Civil {
+        /// Calendar fields awaiting explicit year and date-order context.
+        date: crate::dates::text::DateTextPlan<'a>,
+        /// Fraction of a day from an optional standalone clock.
+        fraction: f64,
+    },
+    /// Text outside the modern civil-date grammar retains the pinned formatter.
+    Formatter,
+}
+/// Inspect modern calendar text without reading workbook or clock context.
+pub fn coercev2_calendar_text_plan(input: &str) -> Result<CalendarTextPlan<'_>, crate::CellError> {
+    let input = input.trim();
+    let (date, clock) = input.split_once(char::is_whitespace).unwrap_or((input, ""));
+    let Ok(date) = crate::dates::text::DateTextPlan::inspect(date) else {
+        return Ok(CalendarTextPlan::Formatter);
+    };
+    let fraction = if clock.is_empty() {
+        0.
+    } else {
+        match parse_inner(
+            clock.trim(),
+            Context {
+                default_year: 0,
+                locale: LocalePolicy::English,
+                timezone: TimezonePolicy::FixedOffsetSeconds(0),
+            },
+            &mut Effects::default(),
+            true,
+        ) {
+            Outcome::Valid { value, .. } => value,
+            _ => return Err(crate::CellError::Value),
+        }
+    };
+    Ok(CalendarTextPlan::Civil { date, fraction })
+}
+
+/// Explicit workbook epoch for modern calendar-text argument admission.
+#[derive(Clone, Copy, Debug)]
+pub enum CalendarEpoch {
+    /// The 1900 serial calendar includes Excel's fictitious leap-day slot.
+    Excel1900,
+    /// The 1904 calendar begins on Gregorian January 1, 1904.
+    Excel1904,
+}
+/// Convert a validated civil argument to its workbook serial. Civil text does
+/// not invent February 29, 1900; serial values retain that separate Excel slot.
+pub fn coercev2_calendar_serial(
+    date: crate::dates::calendar::Date,
+    system: CalendarEpoch,
+) -> Result<f64, crate::CellError> {
+    use crate::dates::calendar::{Date, epoch, month_days};
+    if !(1..=9999).contains(&date.y)
+        || !(1..=12).contains(&date.m)
+        || !(1..=month_days(date.y, date.m)).contains(&date.d)
+    {
+        return Err(crate::CellError::Value);
+    }
+    let day = epoch(date);
+    let value = match system {
+        CalendarEpoch::Excel1900 => {
+            day - epoch(Date {
+                y: 1899,
+                m: 12,
+                d: 31,
+            }) + i64::from(
+                day >= epoch(Date {
+                    y: 1900,
+                    m: 3,
+                    d: 1,
+                }),
+            )
+        }
+        CalendarEpoch::Excel1904 => {
+            day - epoch(Date {
+                y: 1904,
+                m: 1,
+                d: 1,
+            })
+        }
+    };
+    Ok(value as f64)
+}
+
+#[cfg(test)]
+mod calendar_tests {
+    use super::*;
+    use crate::dates::calendar::Date;
+    #[test]
+    fn civil_argument_epochs_preserve_early_serial_boundaries() {
+        for (date, expected) in [
+            (
+                Date {
+                    y: 1899,
+                    m: 12,
+                    d: 31,
+                },
+                0.,
+            ),
+            (
+                Date {
+                    y: 1900,
+                    m: 1,
+                    d: 1,
+                },
+                1.,
+            ),
+            (
+                Date {
+                    y: 1900,
+                    m: 2,
+                    d: 28,
+                },
+                59.,
+            ),
+            (
+                Date {
+                    y: 1900,
+                    m: 3,
+                    d: 1,
+                },
+                61.,
+            ),
+            (
+                Date {
+                    y: 1904,
+                    m: 1,
+                    d: 1,
+                },
+                1462.,
+            ),
+            (
+                Date {
+                    y: 9999,
+                    m: 12,
+                    d: 31,
+                },
+                2958465.,
+            ),
+        ] {
+            assert_eq!(
+                coercev2_calendar_serial(date, CalendarEpoch::Excel1900),
+                Ok(expected)
+            );
+            // The phantom 1900 slot changes the difference before March 1900.
+            let offset = if expected < 60. { 1461. } else { 1462. };
+            assert_eq!(
+                coercev2_calendar_serial(date, CalendarEpoch::Excel1904),
+                Ok(expected - offset)
+            );
+        }
+        for date in [
+            Date {
+                y: 1900,
+                m: 2,
+                d: 29,
+            },
+            Date {
+                y: i64::MAX,
+                m: 1,
+                d: 1,
+            },
+            Date {
+                y: 2020,
+                m: 2,
+                d: 30,
+            },
+        ] {
+            assert_eq!(
+                coercev2_calendar_serial(date, CalendarEpoch::Excel1900),
+                Err(crate::CellError::Value)
+            );
+        }
+    }
+    #[test]
+    fn modern_clock_suffix_is_complete_and_rolls_midnight_forward() {
+        for (input, expected) in [
+            ("1/2/2020 12:00", 0.5),
+            ("1/2/2020 24:00", 1.),
+            ("1/2/2020 12:00:00.500", 0.5 + 0.5 / 86400.),
+        ] {
+            let CalendarTextPlan::Civil { fraction, .. } =
+                coercev2_calendar_text_plan(input).unwrap()
+            else {
+                panic!("calendar expected")
+            };
+            assert_eq!(fraction, expected);
+        }
+        for input in ["1/2/2020 garbage", "1/2/2020 32 12:00", "1/2/2020 24:01"] {
+            assert!(coercev2_calendar_text_plan(input).is_err(), "{input}");
+        }
     }
 }

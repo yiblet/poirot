@@ -1,4 +1,4 @@
-use super::calendar::{max_serial, weekday};
+use super::calendar::{max_serial, pinned_gregorian_weekday};
 use crate::{CellError, CellError::Num};
 use poirot_model::DateSystem;
 
@@ -22,13 +22,13 @@ pub(super) fn network(
     };
     let mut count = (lo..split)
         // SAFETY: rem_euclid(7) produces an index in 0..7; weekends has seven entries in its type.
-        .filter(|x| !weekends[weekday(*x, system).rem_euclid(7) as usize])
+        .filter(|x| !weekends[pinned_gregorian_weekday(*x, system).rem_euclid(7) as usize])
         .count() as i64;
     let length = hi - split + 1;
     count += length / 7 * 5;
     for x in 0..length % 7 {
         // SAFETY: rem_euclid(7) produces an index in 0..7; weekends has seven entries in its type.
-        if !weekends[weekday(split + x, system).rem_euclid(7) as usize] {
+        if !weekends[pinned_gregorian_weekday(split + x, system).rem_euclid(7) as usize] {
             count += 1;
         }
     }
@@ -37,7 +37,7 @@ pub(super) fn network(
         if h >= start
             && h <= raw_end
             // SAFETY: rem_euclid(7) produces an index in 0..7; weekends has seven entries in its type.
-            && !weekends[weekday(h.floor() as i64, system).rem_euclid(7) as usize]
+            && !weekends[pinned_gregorian_weekday(h.floor() as i64, system).rem_euclid(7) as usize]
         {
             count -= 1;
         }
@@ -161,4 +161,133 @@ pub(super) fn weekend_policy(mode: i64) -> Result<[bool; 7], CellError> {
         _ => return Err(Num),
     }
     Ok(weekends)
+}
+
+/// Count an inclusive signed interval in Excel's continuous serial calendar.
+/// Holidays are sorted, deduplicated, integer serials admitted by the caller.
+pub(super) fn network_serial(
+    start: i64,
+    end: i64,
+    system: DateSystem,
+    weekends: &[bool; 7],
+    holidays: &[i64],
+) -> Result<f64, CellError> {
+    let limit = max_serial(system);
+    if !(0..=i64::MAX / 16).contains(&limit)
+        || !(0..=limit).contains(&start)
+        || !(0..=limit).contains(&end)
+    {
+        return Err(Num);
+    }
+    // SAFETY: Both endpoints are checked in 0..=limit and limit <= i64::MAX/16,
+    // bounding all interval lengths and signed counts below i64 overflow.
+    let (lo, hi) = (start.min(end), start.max(end));
+    let length = hi - lo + 1;
+    let work_per_week = weekends.iter().filter(|day| !**day).count() as i64;
+    let mut count = length / 7 * work_per_week;
+    for offset in 0..length % 7 {
+        if is_serial_workday(lo + offset, system, weekends) {
+            count += 1;
+        }
+    }
+    for &holiday in holidays {
+        if (lo..=hi).contains(&holiday) && is_serial_workday(holiday, system, weekends) {
+            count = count.checked_sub(1).ok_or(Num)?;
+        }
+    }
+    let signed = if start > end {
+        count.checked_neg().ok_or(Num)?
+    } else {
+        count
+    };
+    Ok(signed as f64)
+}
+fn is_serial_workday(day: i64, system: DateSystem, weekends: &[bool; 7]) -> bool {
+    let weekday = super::calendar::excel_serial_weekday(day, system).rem_euclid(7) as usize;
+    // SAFETY: rem_euclid(7) bounds weekday to 0..7 and the array has seven entries.
+    !weekends[weekday]
+}
+/// Advance in one serial coordinate, jumping whole weeks before a holiday or
+/// calendar bound. Each call is charged as one CalendarStep by the host.
+pub(super) fn advance_serial(
+    day: i64,
+    count: i64,
+    direction: i64,
+    system: DateSystem,
+    weekends: &[bool; 7],
+    holidays: &[i64],
+) -> Result<(i64, i64), CellError> {
+    let limit = max_serial(system);
+    if !(0..=i64::MAX / 16).contains(&limit)
+        || !(0..=limit).contains(&day)
+        || !(1..=limit).contains(&count)
+        || ![-1, 1].contains(&direction)
+    {
+        return Err(Num);
+    }
+    let work_per_week = weekends.iter().filter(|day| !**day).count() as i64;
+    if work_per_week == 0 {
+        return Err(Num);
+    }
+    let next_holiday = if direction > 0 {
+        holidays
+            .get(holidays.partition_point(|h| *h <= day))
+            .copied()
+            .unwrap_or(limit + 1)
+    } else {
+        holidays
+            .partition_point(|h| *h < day)
+            .checked_sub(1)
+            .and_then(|i| holidays.get(i))
+            .copied()
+            .unwrap_or(-1)
+    };
+    if !(-1..=limit + 1).contains(&next_holiday) {
+        return Err(Num);
+    }
+    // SAFETY: The local checks bound day/count/next_holiday to calendar-sized
+    // integers and direction to +/-1. Each subsequent difference/product is
+    // at most a small multiple of limit, far below i64::MAX.
+    let room = if direction > 0 { limit - day } else { day };
+    let available = ((next_holiday - day).abs() - 1).min(room);
+    let weeks = ((count - 1) / work_per_week).min(available / 7);
+    let next = day + direction * (weeks * 7 + 1);
+    if !(0..=limit).contains(&next) {
+        return Err(Num);
+    }
+    let remaining = count
+        - weeks * work_per_week
+        - i64::from(
+            is_serial_workday(next, system, weekends) && holidays.binary_search(&next).is_err(),
+        );
+    Ok((next, remaining))
+}
+
+#[cfg(test)]
+mod modern_tests {
+    use super::*;
+    #[test]
+    fn serial_helpers_reject_unbounded_inputs_without_arithmetic_panics() {
+        let weekends = [true, false, false, false, false, false, true];
+        let system = DateSystem::Excel1900;
+        for (start, end) in [(i64::MIN, 1), (0, i64::MAX), (-1, 0)] {
+            assert_eq!(network_serial(start, end, system, &weekends, &[]), Err(Num));
+        }
+        for (day, count, direction, holidays) in [
+            (i64::MIN, 1, 1, vec![]),
+            (i64::MAX, 1, -1, vec![]),
+            (1, i64::MIN, 1, vec![]),
+            (1, i64::MAX, 1, vec![]),
+            (1, 1, i64::MAX, vec![]),
+            (1, 1, -1, vec![i64::MIN]),
+            (1, 1, 1, vec![i64::MAX]),
+        ] {
+            assert_eq!(
+                advance_serial(day, count, direction, system, &weekends, &holidays),
+                Err(Num)
+            );
+        }
+        assert_eq!(advance_serial(1, 1, 1, system, &[true; 7], &[]), Err(Num));
+        assert_eq!(network_serial(1, 100, system, &[true; 7], &[]), Ok(0.));
+    }
 }

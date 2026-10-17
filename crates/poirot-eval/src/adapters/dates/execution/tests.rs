@@ -528,3 +528,64 @@ fn shared_policy_formula_and_display_boundaries() {
         assert_eq!(evaluate(&w, "TEXT(1.5,\"[h]:mm\")"), Text("36:00".into()));
     }
 }
+
+#[test]
+fn datedif_uses_calendar_interval_modes() {
+    // Pinned ClosedXML DateAndTimeTests.DateDif and Microsoft DATEDIF contract.
+    for system in [DateSystem::Excel1900, DateSystem::Excel1904] {
+        let w = book(system);
+        for (unit, expected) in [
+            ("Y", 4.),
+            ("M", 59.),
+            ("D", 1806.),
+            ("MD", 11.),
+            ("YM", 11.),
+            ("YD", 345.),
+        ] {
+            num(
+                &w,
+                &format!("DATEDIF(\"1/1/2006\",\"12/12/2010\",\"{unit}\")"),
+                expected,
+            );
+            num(&w, &format!("DATEDIF(1,1,\"{unit}\")"), 0.);
+            assert_eq!(
+                evaluate(&w, &format!("DATEDIF(2,1,\"{unit}\")")),
+                Error(Num)
+            );
+        }
+        for (formula, expected) in [
+            ("DATEDIF(\"2020-01-31\",\"2024-03-01\",\"MD\")", -1.),
+            ("DATEDIF(\"2000-02-20\",\"2100-02-10\",\"YD\")", 356.),
+            ("DATEDIF(\"2001-02-20\",\"2100-02-10\",\"YD\")", 355.),
+            ("DATEDIF(\"2020-02-29\",\"2021-02-28\",\"M\")", 11.),
+            ("DATEDIF(\"2020-02-29\",\"2021-02-28\",\"Y\")", 0.),
+            ("DATEDIF(1.9,1.1,\"D\")", 0.),
+            ("DATEDIF(\"1\",2,\"d\")", 1.),
+            ("DATEDIF(TRUE,2,\"D\")", 1.),
+            ("DATEDIF(,2,\"D\")", 2.),
+        ] {
+            num(&w, formula, expected);
+        }
+        for formula in [
+            "DATEDIF(1,2,\" D\")",
+            "DATEDIF(1,2,1)",
+            "DATEDIF(1,2,)",
+            "DATEDIF(-0.1,2,\"D\")",
+        ] {
+            assert_eq!(evaluate(&w, formula), Error(Num), "{formula}");
+        }
+        assert_eq!(evaluate(&w, "DATEDIF(#REF!,#N/A,#DIV/0!)"), Error(Ref));
+        assert_eq!(evaluate(&w, "DATEDIF(1,2,#N/A)"), Error(NA));
+        assert_eq!(evaluate(&w, "DATEDIF(\"bad\",2,\"D\")"), Error(VALUE_ERROR));
+    }
+    let w = book(DateSystem::Excel1900);
+    for (formula, expected) in [
+        ("DATEDIF(0,61,\"M\")", 2.),
+        ("DATEDIF(0,61,\"MD\")", 1.),
+        ("DATEDIF(59,60,\"D\")", 1.),
+        ("DATEDIF(60,61,\"MD\")", 1.),
+        ("DATEDIF(\"1900-01-12\",\"1901-03-04\",\"YD\")", 52.),
+    ] {
+        num(&w, formula, expected);
+    }
+}

@@ -202,9 +202,27 @@ workbook source remains recoverable.
 Independent Calc observations establish suffix percent and full fractional-second
 precision. The inspected ClosedXML helper also admits prefix percent and rounds
 elapsed fractions to milliseconds; these uncorroborated extensions are not enabled
-by the default grammar. The retained pinned calendar fallback still requires two
-day digits in slash dates (`M/dd/yyyy`); broader calendar admission is tracked
-separately, rather than changing the numeric grammar to compensate.
+by the default grammar. The retained pinned calendar fallback requires two day
+digits in slash dates (`M/dd/yyyy`). Under `ExcelDocumentation`, the shared
+numeric calendar continuation instead requests `coercev2_calendar_text_plan`:
+variable-width civil dates use the explicit date order and workbook epoch, and
+omitted years use the captured clock only after the fields can form a valid date.
+`coercev2_calendar_serial` validates civil bounds and explicitly includes the
+1900 calendar's phantom slot after February 28. This does not change DATEVALUE,
+TIMEVALUE, or the explicitly pinned formatter grammar.
+
+Modern EDATE and WEEKDAY request central date serial admission; modern WEEKDAY
+options preserve conversion errors before numeric mode validation. Missing and
+blank options still convert to zero, which is an invalid WEEKDAY mode; an absent
+option defaults to one. The modern civil-date continuation validates an optional
+clock completely, retains admitted millisecond fractions, and advances 24:00 to
+the next day. Its clock suffix retains the source's three-digit fractional field;
+it does not claim all Calc time spellings. Named dates and standalone clocks
+outside the civil-date plan retain the pinned formatter continuation. Calendar
+reads include date order only for ambiguous slash dates, year/offset only for
+omitted years, and workbook date system for civil serial conversion. Raw snapshot
+version 14 and compatibility revision 15 invalidate retained results from earlier
+semantics; durable workbook source remains recoverable.
 
 
 NUMBERVALUE under `ExcelDocumentation` uses its central explicit-separator grammar
@@ -252,3 +270,55 @@ correction. Percentile interpolation, quartile truncation, scalar type/origin
 handling, omission failures and rank-first error/budget order remain unchanged.
 Raw snapshot version 12 and envelope compatibility revision 13 invalidate older
 computed state while preserving source recovery.
+
+Business-day holiday arguments retain container/selection origin through traversal.
+`coercev2_holiday_member` selects explicit `PinnedPoi`, `NetworkDays`, or `WorkDay`
+member admission before requesting date conversion. Modern NETWORKDAYS ignores
+referenced text and logical members; WORKDAY requests date conversion for text and
+logicals. Blank worksheet members and explicit omission remain distinct. The host
+owns bounded date admission, dependency reads, allocation and materialization
+charges; the calendar consumer truncates and deduplicates admitted serial days.
+
+
+Documented IPMT/PPMT admission uses `coercev2_financial_payment_number` to admit
+explicit positional Missing operands as zero, preserving the existing consumer
+contract. Arity admission separately rejects absent required positions. Omitted
+future-value and timing slots default to zero. Blank references remain distinct
+until numeric admission. `coercev2_financial_payment_timing` admits zero or one
+after numeric conversion. Resolution still precedes conversion for all used
+operands, including their errors and resource charges. The pinned entry point
+and global default remain unchanged.
+
+
+### Complex coefficients and result spelling
+
+`poirot-coercionv2::complex` owns complex argument conversion and computed
+result spelling. Its `ComplexNumber` retains real and imaginary coefficients and
+an explicit lowercase i/j suffix. Under `ExcelDocumentation`, component calls
+return numeric coefficients directly; numeric arguments keep their full f64
+value without a text round trip. Direct, reference and selected-array origins
+share this policy. Booleans are rejected, actual blanks retain the established
+zero component admission, and missing slots retain host capability failures.
+
+The documented text grammar uses nom's complete decimal/scientific parser with
+full consumption and finite results. It recognizes omitted unit coefficients
+and distinguishes pair separators from exponent signs. Whitespace, currency,
+locale separators, date syntax and nonfinite values are rejected. Existing
+`#NUM!` invalid-complex failures are retained. Computed results use the existing
+number formatter with explicit negative unit signs and canonical text zero.
+The established empty suffix default remains i.
+
+`PinnedPoi` preserves the source-pinned permissive regex, textual component
+results and historical renderer behavior; public defaults stay pinned. Those
+legacy helper APIs delegate to central conversion ownership. The engineering
+kernel's typed component accessors only consume the representation.
+
+Microsoft's [COMPLEX](https://support.microsoft.com/en-us/excel/functions/complex-function),
+[IMREAL](https://support.microsoft.com/en-us/excel/functions/imreal-function) and
+[IMAGINARY](https://support.microsoft.com/en-us/excel/functions/imaginary-function)
+contracts motivate the documented policy. The hash-bound
+`json-gaps-complex-libreoffice.json` corroborates all original authored checks.
+Exploratory Calc probes additionally corroborate exponent signs and fractional
+coefficients, but differ on invalid-spelling error codes, boolean admission,
+decimal commas and negative-zero result spelling. These disagreements do not
+justify inheriting locale grammar or changing established Poirot errors.

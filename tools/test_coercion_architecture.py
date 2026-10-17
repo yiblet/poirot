@@ -117,6 +117,22 @@ def violations(source):
     return result
 
 
+def searchable_v2_source(source):
+    """Permit only locally declared, adjacent-audited non-argument names."""
+    code = production_code(source)
+    declared_results = set()
+    for match in re.finditer(r'\bfn\s+(coerce_\w+)\b', code):
+        line_start = source.rfind('\n', 0, match.start())
+        prefix = source[:line_start].splitlines()
+        adjacent = prefix[-1] if prefix else ''
+        if re.search(r'// TODO\(coercion-non-argument\): \[(?:HIGH|MEDIUM|LOW)\] \S.+', adjacent):
+            declared_results.add(match[1])
+    source = re.sub(r'// TODO\(coercion-non-argument\):[^\n]*', '', source)
+    for name in declared_results:
+        source = re.sub(r'\b' + re.escape(name) + r'\b', '', source)
+    return source
+
+
 class CoercionArchitectureTests(unittest.TestCase):
     def test_type_changes_live_in_named_coercion_helpers(self):
         failures = []
@@ -189,10 +205,21 @@ class CoercionArchitectureTests(unittest.TestCase):
         # A production item after a test-only item is still checked.
         self.assertTrue(violations('#[cfg(test)] mod tests {} fn read() { match v { Blank => Number(0.) } }'))
 
+    def test_v2_naming_exempts_only_audited_central_result_helpers(self):
+        pattern = r'(?i)\b(?:coercion|coerce)(?!v2)'
+        audited = '// TODO(coercion-non-argument): [LOW] Result text may round digits.\nfn coerce_result() {}\nfn use_result() { coerce_result() }'
+        self.assertNotRegex(searchable_v2_source(audited), pattern)
+        self.assertRegex(searchable_v2_source('fn coerce_result() {}'), pattern)
+        self.assertRegex(searchable_v2_source('fn use_result() { coerce_result() }'), pattern)
+        self.assertRegex(searchable_v2_source(audited + '\nfn use_other() { coerce_argument() }'), pattern)
+
     def test_v2_crate_keeps_conversion_names_searchable(self):
         crate = ROOT / 'crates' / 'poirot-coercionv2'
         for path in [crate / 'Cargo.toml', crate / 'README.md', *crate.rglob('*.rs')]:
-            self.assertNotRegex(path.read_text(), r'(?i)\b(?:coercion|coerce)(?!v2)', str(path))
+            source = path.read_text()
+            if path.suffix == '.rs':
+                source = searchable_v2_source(source)
+            self.assertNotRegex(source, r'(?i)\b(?:coercion|coerce)(?!v2)', str(path))
 
 
 if __name__ == '__main__':

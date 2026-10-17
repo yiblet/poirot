@@ -148,3 +148,95 @@ pub fn coercev2_aggregate_argument(value: crate::CellValue, origin: Origin) -> c
         value
     }
 }
+
+/// Business-day consumer's explicit holiday member contract.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum HolidayPolicy {
+    /// Preserve the historical date-argument conversion for every member.
+    PinnedPoi,
+    /// NETWORKDAYS ignores text held in worksheet holiday ranges.
+    NetworkDays,
+    /// WORKDAY requests date conversion for text members from every origin.
+    WorkDay,
+}
+/// Admit a holiday member, retaining provenance until the consuming function
+/// requests date conversion. Bounds and date-text context belong to the host.
+pub fn coercev2_holiday_member<'a, E: From<CellError>>(
+    value: ScalarRef<'a>,
+    origin: Origin,
+    policy: HolidayPolicy,
+    date: impl FnOnce() -> Result<f64, E>,
+) -> Result<Option<f64>, E> {
+    if policy != HolidayPolicy::PinnedPoi {
+        match value {
+            ScalarRef::Blank => return Ok(None),
+            ScalarRef::Boolean(_) if policy == HolidayPolicy::NetworkDays => return Ok(None),
+            ScalarRef::Text(_)
+                if policy == HolidayPolicy::NetworkDays && origin == Origin::Reference =>
+            {
+                return Ok(None);
+            }
+            ScalarRef::Error(error) => return Err(error.into()),
+            _ => (),
+        }
+    }
+    date().map(Some)
+}
+
+/// Consumer-specific validity of seven-character weekend masks.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WeekendConsumer {
+    /// WORKDAY cannot advance when every weekday is excluded.
+    WorkDay,
+    /// NETWORKDAYS permits an empty working week and returns zero.
+    NetworkDays,
+}
+/// Modern seven-character weekend masks start with Monday; numeric weekend
+/// codes remain handled by weekend_policy. WORKDAY forbids an all-weekend mask.
+pub fn coercev2_weekend_mask(
+    text: &str,
+    consumer: WeekendConsumer,
+) -> Result<[bool; 7], CellError> {
+    if text.len() != 7 || !text.bytes().all(|byte| matches!(byte, b'0' | b'1')) {
+        return Err(CellError::Value);
+    }
+    let mut weekends = [false; 7];
+    for (index, byte) in text.bytes().enumerate() {
+        // SAFETY: modulo seven bounds the index in the seven-entry local array.
+        weekends[(index + 1) % 7] = byte == b'1';
+    }
+    if consumer == WeekendConsumer::WorkDay && weekends.iter().all(|day| *day) {
+        return Err(CellError::Value);
+    }
+    Ok(weekends)
+}
+
+#[cfg(test)]
+mod business_day_tests {
+    use super::*;
+    #[test]
+    fn weekend_masks_keep_consumer_specific_empty_week_rules() {
+        assert_eq!(
+            coercev2_weekend_mask("1111111", WeekendConsumer::NetworkDays),
+            Ok([true; 7])
+        );
+        assert_eq!(
+            coercev2_weekend_mask("1111111", WeekendConsumer::WorkDay),
+            Err(CellError::Value)
+        );
+        assert_eq!(
+            coercev2_weekend_mask("0000000", WeekendConsumer::WorkDay),
+            Ok([false; 7])
+        );
+        assert_eq!(
+            coercev2_weekend_mask("0000011", WeekendConsumer::WorkDay),
+            Ok([true, false, false, false, false, false, true])
+        );
+        for text in ["", "1", "00000000", "000000x", "000000é"] {
+            assert_eq!(
+                coercev2_weekend_mask(text, WeekendConsumer::WorkDay),
+                Err(CellError::Value)
+            );
+        }
+    }
+}

@@ -1051,14 +1051,14 @@ fn numeric_locale_identity_and_consumption_survive_retained_snapshot() {
 }
 
 #[test]
-fn raw_snapshot_restore_rejects_previous_kth_rank_semantics_versions() {
+fn raw_snapshot_restore_rejects_previous_execution_semantics_versions() {
     let workbook = book();
     let overlay = Overlay::with_workbook(&workbook).build().unwrap();
-    for previous in [8, 9, 10, 11] {
+    for previous in [8, 9, 10, 11, 12, 13, 14, 15, 16] {
         let mut bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
         // Payload's first field is its small postcard varint version.
         let version = bytes.first_mut().unwrap();
-        assert_eq!(*version, 12);
+        assert_eq!(*version, 17);
         *version = previous;
         let snapshot = postcard::from_bytes(&bytes).unwrap();
         assert!(

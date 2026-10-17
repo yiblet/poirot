@@ -625,6 +625,55 @@ mod tests {
         assert_eq!(ipmt(0.1, i32::MIN, 10, 100.0), Err(FinancialError::Num));
     }
     #[test]
+    fn documented_payment_parts_follow_cash_balance_recurrence() {
+        // Independent amortization recurrence: interest is minus the balance
+        // times rate; end payments then reduce the balance. Beginning payments
+        // precede accrual, so their first interest component is zero.
+        for rate in [0.0, 0.000001, -0.01, 0.1] {
+            for present in [0.0, 1000.0] {
+                for future in [0.0, 200.0] {
+                    for beginning in [false, true] {
+                        let payment = pmt(rate, 5.0, present, future, beginning).unwrap();
+                        let mut balance = present;
+                        for period in 1..=5 {
+                            let interest = if beginning && period == 1 {
+                                0.0
+                            } else {
+                                -balance * rate
+                            };
+                            near(
+                                ipmt_excel(rate, period as f64, 5.0, present, future, beginning),
+                                interest,
+                            );
+                            near(
+                                ppmt_excel(rate, period as f64, 5.0, present, future, beginning),
+                                payment - interest,
+                            );
+                            balance += payment - interest;
+                        }
+                        // Beginning annuities have one final interest accrual.
+                        if beginning {
+                            balance *= 1.0 + rate;
+                        }
+                        assert!((balance + future).abs() < 1e-6);
+                    }
+                }
+            }
+        }
+        for period in [0.0, -1.0, 6.0] {
+            assert_eq!(
+                ipmt_excel(0.0, period, 5.0, 0.0, 0.0, true),
+                Err(FinancialError::Num)
+            );
+            assert_eq!(
+                ppmt_excel(0.1, period, 5.0, 1000.0, 0.0, false),
+                Err(FinancialError::Num)
+            );
+        }
+        near(ipmt_excel(0.1, 1.0, 2.0, 0.0, 4.0, false), 0.0);
+        near(ipmt_excel(0.01, 1.0, 1.4, 1000.0, 0.0, false), -10.0);
+    }
+    #[test]
     fn discounted_flows_and_fraction_conversion() {
         near(npv(0.1, &[100.0, 100.0]), 173.55371900826447);
         near(dollar_de(1.02, 16.9), 1.125);

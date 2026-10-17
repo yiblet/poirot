@@ -292,6 +292,7 @@ common_functions! {
     QuartileInc = 256 => "QUARTILE.INC";
     RankEq = 257 => "RANK.EQ";
     PercentileInc = 258 => "PERCENTILE.INC";
+    DateDif = 259 => "DATEDIF";
 }
 
 /// Parsed function spelling, interned when it belongs to the common symbol table.

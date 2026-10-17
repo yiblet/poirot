@@ -1,8 +1,8 @@
 # Excel E2E coverage inventory
 
-The single table contains 2,003 cases, 2,059 evaluation steps and 2,060 assertions citing 261 Microsoft sources. 256 of 256 registered function contracts have source-backed specifications. This is specification breadth, not verified passing coverage.
+The single table contains 2,003 cases, 2,059 evaluation steps and 2,060 assertions citing 261 Microsoft sources. 256 of 257 registered function contracts have source-backed specifications. This is specification breadth, not verified passing coverage.
 
-Of 1,622 potential obligations, 563 have documented assertion examples, 1051 have no case, 0 have unresolved expectations, and 8 are not applicable. Generic facets marked requires_research are not considered exhaustive merely because examples exist.
+Of 1,628 potential obligations, 563 have documented assertion examples, 1057 have no case, 0 have unresolved expectations, and 8 are not applicable. Generic facets marked requires_research are not considered exhaustive merely because examples exist.
 
 Workbook coverage includes 45 multistep cases, 17 named fixtures, 6 fixtures in the 1904 date system, and 16 complete worksheet-footprint assertions.
 

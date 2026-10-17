@@ -1,0 +1,560 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T21:07:51.902909+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Discriminating raw Calc observations, not authored expected values or native Excel claims.",
+  "results": [
+    {
+      "formula": "DATEDIF(\"1/1/2006\",\"12/12/2010\",\"Y\")",
+      "actual": {
+        "type": "number",
+        "value": 4.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/1/2006\",\"12/12/2010\",\"M\")",
+      "actual": {
+        "type": "number",
+        "value": 59.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/1/2006\",\"12/12/2010\",\"D\")",
+      "actual": {
+        "type": "number",
+        "value": 1806.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/1/2006\",\"12/12/2010\",\"MD\")",
+      "actual": {
+        "type": "number",
+        "value": 11.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/1/2006\",\"12/12/2010\",\"YM\")",
+      "actual": {
+        "type": "number",
+        "value": 11.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/1/2006\",\"12/12/2010\",\"YD\")",
+      "actual": {
+        "type": "number",
+        "value": 345.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/31/2020\",\"3/1/2020\",\"Y\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/31/2020\",\"3/1/2020\",\"M\")",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/31/2020\",\"3/1/2020\",\"D\")",
+      "actual": {
+        "type": "number",
+        "value": 30.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/31/2020\",\"3/1/2020\",\"MD\")",
+      "actual": {
+        "type": "number",
+        "value": -1.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/31/2020\",\"3/1/2020\",\"YM\")",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/31/2020\",\"3/1/2020\",\"YD\")",
+      "actual": {
+        "type": "number",
+        "value": 30.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/31/2021\",\"3/1/2021\",\"Y\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/31/2021\",\"3/1/2021\",\"M\")",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/31/2021\",\"3/1/2021\",\"D\")",
+      "actual": {
+        "type": "number",
+        "value": 29.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/31/2021\",\"3/1/2021\",\"MD\")",
+      "actual": {
+        "type": "number",
+        "value": -2.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/31/2021\",\"3/1/2021\",\"YM\")",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1/31/2021\",\"3/1/2021\",\"YD\")",
+      "actual": {
+        "type": "number",
+        "value": 29.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"2/29/2020\",\"2/28/2021\",\"Y\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"2/29/2020\",\"2/28/2021\",\"M\")",
+      "actual": {
+        "type": "number",
+        "value": 11.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"2/29/2020\",\"2/28/2021\",\"D\")",
+      "actual": {
+        "type": "number",
+        "value": 365.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"2/29/2020\",\"2/28/2021\",\"MD\")",
+      "actual": {
+        "type": "number",
+        "value": 30.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"2/29/2020\",\"2/28/2021\",\"YM\")",
+      "actual": {
+        "type": "number",
+        "value": 11.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"2/29/2020\",\"2/28/2021\",\"YD\")",
+      "actual": {
+        "type": "number",
+        "value": 365.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"3/1/2019\",\"2/29/2020\",\"Y\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"3/1/2019\",\"2/29/2020\",\"M\")",
+      "actual": {
+        "type": "number",
+        "value": 11.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"3/1/2019\",\"2/29/2020\",\"D\")",
+      "actual": {
+        "type": "number",
+        "value": 365.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"3/1/2019\",\"2/29/2020\",\"MD\")",
+      "actual": {
+        "type": "number",
+        "value": 28.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"3/1/2019\",\"2/29/2020\",\"YM\")",
+      "actual": {
+        "type": "number",
+        "value": 11.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"3/1/2019\",\"2/29/2020\",\"YD\")",
+      "actual": {
+        "type": "number",
+        "value": 365.0
+      }
+    },
+    {
+      "formula": "DATEDIF(0,61,\"Y\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(0,61,\"M\")",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "DATEDIF(0,61,\"D\")",
+      "actual": {
+        "type": "number",
+        "value": 61.0
+      }
+    },
+    {
+      "formula": "DATEDIF(0,61,\"MD\")",
+      "actual": {
+        "type": "number",
+        "value": -1.0
+      }
+    },
+    {
+      "formula": "DATEDIF(0,61,\"YM\")",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "DATEDIF(0,61,\"YD\")",
+      "actual": {
+        "type": "number",
+        "value": 61.0
+      }
+    },
+    {
+      "formula": "DATEDIF(59,60,\"Y\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(59,60,\"M\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(59,60,\"D\")",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "DATEDIF(59,60,\"MD\")",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "DATEDIF(59,60,\"YM\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(59,60,\"YD\")",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "DATEDIF(60,61,\"Y\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(60,61,\"M\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(60,61,\"D\")",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "DATEDIF(60,61,\"MD\")",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "DATEDIF(60,61,\"YM\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(60,61,\"YD\")",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "DATEDIF(1,1,\"Y\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(1,1,\"M\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(1,1,\"D\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(1,1,\"MD\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(1,1,\"YM\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(1,1,\"YD\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(2,1,\"Y\")",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DATEDIF(2,1,\"M\")",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DATEDIF(2,1,\"D\")",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DATEDIF(2,1,\"MD\")",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DATEDIF(2,1,\"YM\")",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DATEDIF(2,1,\"YD\")",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DATEDIF(1.9,1.1,\"Y\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(1.9,1.1,\"M\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(1.9,1.1,\"D\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(1.9,1.1,\"MD\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(1.9,1.1,\"YM\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(1.9,1.1,\"YD\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "DATEDIF(1,2,\"d\")",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "DATEDIF(1,2,\" D\")",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DATEDIF(1,2,\"bad\")",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DATEDIF(#REF!,#N/A,#DIV/0!)",
+      "actual": {
+        "type": "error",
+        "value": "#NAME?"
+      }
+    },
+    {
+      "formula": "DATEDIF(-1,#N/A,\"D\")",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "DATEDIF(2,1,#N/A)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "DATEDIF(\"bad\",#N/A,\"D\")",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "DATEDIF(TRUE,2,\"D\")",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "DATEDIF(\"1\",2,\"D\")",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "DATEDIF(,2,\"D\")",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "DATEDIF(1,2,1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "DATEDIF(1,2,)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    }
+  ],
+  "summary": {
+    "scenarios": 78,
+    "checks": 78,
+    "corroborated_scenarios": 23,
+    "corroborated_checks": 23
+  }
+}

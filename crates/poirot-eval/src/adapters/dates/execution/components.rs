@@ -1,4 +1,7 @@
-use super::calendar::{Date, civil, date, epoch, month_days, serial, valid, weekday};
+use super::calendar::{
+    Date, civil, date, epoch, excel_serial_weekday, month_days, pinned_gregorian_weekday, serial,
+    valid,
+};
 use crate::{CellError, CellError::Num, DateFunction, VALUE_ERROR};
 use poirot_model::DateSystem;
 
@@ -143,16 +146,10 @@ pub(super) fn week(
     mode: i64,
     system: DateSystem,
 ) -> Result<f64, CellError> {
-    let w = weekday(start.floor() as i64, system);
-    let result = if name == DateFunction::WeekDay {
-        match mode {
-            1 => w + 1,
-            2 => (w + 6) % 7 + 1,
-            3 => (w + 6) % 7,
-            11..=17 => (w - (mode - 10) % 7).rem_euclid(7) + 1,
-            _ => return Err(Num),
-        }
-    } else {
+    if name == DateFunction::WeekDay {
+        return weekday_mode(pinned_gregorian_weekday(start.floor() as i64, system), mode);
+    }
+    let result = {
         let first = match mode {
             1 | 17 => 0,
             2 | 11 => 1,
@@ -171,6 +168,22 @@ pub(super) fn week(
         (day - begin).div_euclid(7) + 1
     };
     Ok(result as f64)
+}
+
+/// Compute documented WEEKDAY without losing the Excel serial-calendar identity.
+pub(super) fn excel_weekday(start: f64, mode: i64, system: DateSystem) -> Result<f64, CellError> {
+    weekday_mode(excel_serial_weekday(start.floor() as i64, system), mode)
+}
+
+fn weekday_mode(w: i64, mode: i64) -> Result<f64, CellError> {
+    let w = w.rem_euclid(7);
+    Ok(match mode {
+        1 => w + 1,
+        2 => (w + 6) % 7 + 1,
+        3 => (w + 6) % 7,
+        11..=17 => (w - (mode - 10) % 7).rem_euclid(7) + 1,
+        _ => return Err(Num),
+    } as f64)
 }
 
 /// Shift a date for EDATE or EOMONTH, applying month-end bounds.

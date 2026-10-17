@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+poirot-functions-dates = { path = "../poirot-functions-dates" }
 poirot-coercionv2 = { path = "../poirot-coercionv2" }
 poirot-model = { path = "../poirot-model" }
 poirot-formula = { path = "../poirot-formula" }

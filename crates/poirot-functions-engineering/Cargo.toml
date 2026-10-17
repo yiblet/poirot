@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 libm.workspace = true
-regex.workspace = true
+poirot-coercionv2 = { path = "../poirot-coercionv2" }
 
 [lints]
 workspace = true

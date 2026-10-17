@@ -7,6 +7,8 @@ pub use crate::atp::ATP_SUPPORTED as PINNED_ATP_FUNCTIONS;
 pub enum DateFunction {
     /// DATE handler.
     Date,
+    /// DATEDIF handler.
+    DateDif,
     /// DATEVALUE handler.
     DateValue,
     /// DAY handler.

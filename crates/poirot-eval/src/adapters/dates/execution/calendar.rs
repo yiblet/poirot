@@ -78,7 +78,7 @@ pub(super) fn calendar_date(n: f64, system: DateSystem) -> Result<Date, CellErro
 }
 
 /// Return the Gregorian weekday with Sunday as zero, preserving serial-60 behavior.
-pub(super) fn weekday(n: i64, system: DateSystem) -> i64 {
+pub(super) fn pinned_gregorian_weekday(n: i64, system: DateSystem) -> i64 {
     // Sunday=0. The serial-60 discontinuity follows Gregorian conversion in POI.
     let e = if system == DateSystem::Excel1904 {
         n - 24107
@@ -86,6 +86,19 @@ pub(super) fn weekday(n: i64, system: DateSystem) -> i64 {
         n - 25568 - i64::from(n > 60)
     };
     (e + 4).rem_euclid(7)
+}
+
+/// Return Excel's serial-calendar weekday with Sunday as zero.
+pub(super) fn excel_serial_weekday(n: i64, system: DateSystem) -> i64 {
+    // Excel keeps a continuous seven-day cycle across its fictitious 1900-02-29.
+    // Thus serial 1 is Sunday rather than Gregorian 1900-01-01's Monday.
+    // The 1904 system starts on Friday and has no fictitious leap day.
+    let origin = if system == DateSystem::Excel1904 {
+        5
+    } else {
+        6
+    };
+    (n.rem_euclid(7) + origin) % 7
 }
 /// Truncate a finite value within the source's signed 32-bit argument range.
 pub(super) fn coercev2_date_integer(n: f64) -> Result<i64, CellError> {

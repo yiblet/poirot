@@ -363,6 +363,56 @@ mod adapter_tests {
         );
     }
     #[test]
+    fn documented_interest_defaults_preserve_missing_errors_and_limits() {
+        let mut args = vec![n(0.1), n(1.0), n(5.0), n(1000.0), n(0.0), n(0.0)];
+        args[4].values[0] = Scalar::Missing;
+        args[5].values[0] = Scalar::Missing;
+        let policy = SemanticsPolicy::ExcelDocumentation;
+        assert_eq!(
+            evaluate_with_policy(&mut Port::default(), FinancialFunction::Ipmt, &args, policy),
+            Ok(Output::Number(-100.0))
+        );
+        args[0].values[0] = Scalar::Missing;
+        assert_eq!(
+            evaluate_with_policy(&mut Port::default(), FinancialFunction::Ipmt, &args, policy),
+            Ok(Output::Number(0.0))
+        );
+        args[5] = e(CellError::Ref);
+        assert_eq!(
+            evaluate_with_policy(&mut Port::default(), FinancialFunction::Ipmt, &args, policy),
+            Err(Failure::Spreadsheet(CellError::Ref))
+        );
+        let mut port = Port {
+            collection_limit: Some(5),
+            ..Port::default()
+        };
+        assert_eq!(
+            evaluate_with_policy(&mut port, FinancialFunction::Ipmt, &args, policy),
+            Err(Failure::Operational("collection"))
+        );
+        assert_eq!(port.reads, 0);
+        let mut port = Port {
+            work_limit: Some(3),
+            ..Port::default()
+        };
+        assert_eq!(
+            evaluate_with_policy(&mut port, FinancialFunction::Ppmt, &args, policy),
+            Err(Failure::Operational("work"))
+        );
+        assert_eq!(port.reads, 2);
+        args[0].values[0] = Scalar::Text("1000".into());
+        args[5] = n(0.0);
+        let mut port = Port {
+            text_limit: Some(3),
+            ..Port::default()
+        };
+        assert_eq!(
+            evaluate_with_policy(&mut port, FinancialFunction::Ppmt, &args, policy),
+            Err(Failure::Operational("text"))
+        );
+        assert_eq!(port.reads, 6);
+    }
+    #[test]
     fn excel_arity_rejects_before_any_port_work_or_resolution() {
         for function in [FinancialFunction::Ipmt, FinancialFunction::Ppmt] {
             for count in [0, 3, 7] {

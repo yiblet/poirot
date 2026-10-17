@@ -1,0 +1,438 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T21:00:53.366800+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-extension-workdays.json": "2dd668c26bda106d6109e272787507fd20dbaa19220f9ec4394c72704128c567",
+    "closedxml-extension-date-domains.json": "308f2a4ae4d51955313c7f027080979ef7d4410c1642af393115ef543b20c17a"
+  },
+  "results": [
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(0,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,1,{2})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(0,5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,5,{2,4})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(10,-2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,4,{2,4,6})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(9,-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,3,{2,3,4,6})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(8,-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,2,{2,3,4,5,6})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(7,-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-workdays.json",
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,1,{2,3,5})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: NetWorkDays with end date earlier than start date \u2014 NETWORKDAYS(\"3/01/2009\", \"10/01/2008\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -108.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(1, 10, {\"2\", 3})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Weekday without flag \u2014 WEEKDAY(\"2/14/2008\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Weekday behavior \u2014 WEEKDAY(\"0 2/2\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: NetWorkDays with end date earlier than start date \u2014 NETWORKDAYS(\"2016-01-01\", \"2015-12-23\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Weekday behavior \u2014 WEEKDAY(1, \"1 0/2\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Weekday behavior \u2014 WEEKDAY(1, \"text\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Weekday behavior \u2014 WEEKDAY(5, #N/A)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: DateValue propagates error \u2014 DATEVALUE(#DIV/0!)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Days360 Europe1 \u2014 DAYS360(\"1/1/2008\", \"3/31/2008\",TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 89.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Days360 Europe2 \u2014 DAYS360(\"3/31/2008\", \"1/1/2008\",TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -89.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Hour accepts only serial time between zero and upper limit of date system \u2014 HOUR(0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Minute accepts only serial time between zero and upper limit of date system \u2014 MINUTE(0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Month serial date must be between zero and upper limit of date system \u2014 MONTH(DATE(9999,12,31) + 0.9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(DATE(2006, 1, 1), DATE(2006, 2, 1), { \"2006-01-02\", \"2006-01-16\" })",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 21.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-date-domains.json",
+      "name": "ClosedXML extension date-domains: Second accepts only serial time between zero and upper limit of date system \u2014 SECOND(0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 28,
+    "checks": 28,
+    "corroborated_scenarios": 28,
+    "corroborated_checks": 28
+  }
+}

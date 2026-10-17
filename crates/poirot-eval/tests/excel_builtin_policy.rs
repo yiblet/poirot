@@ -53,7 +53,7 @@ fn documented_aliases_are_opt_in_and_do_not_change_default_registry() {
         default.fingerprint().computation(),
         excel.fingerprint().computation()
     );
-    assert_eq!(poirot_eval::registry::SUPPORTED_FUNCTIONS.len(), 256);
+    assert_eq!(poirot_eval::registry::SUPPORTED_FUNCTIONS.len(), 257);
     for (formula, expected) in [
         ("PERCENTILE.INC(A1:A4,0.5)", 4.),
         ("_xlfn.PERCENTILE.INC(A1:A4,0.25)", 3.25),
@@ -185,4 +185,70 @@ fn bound_extensions_keep_precedence_over_profile_aliases() {
     )
     .unwrap();
     assert_eq!(run.evaluate_cell(target).unwrap(), CellValue::Number(99.));
+}
+
+#[test]
+fn interest_payment_defaults_and_degenerate_cases_follow_one_contract() {
+    let configuration = excel();
+    for (formula, expected) in [
+        ("IPMT(0,1,1,1000)", 0.0),
+        ("IPMT(,1,2,1000)", 0.0),
+        ("PPMT(,1,2,1000)", -500.0),
+        ("IPMT(0.1,1,2,)", 0.0),
+        ("PPMT(0.1,1,2,)", 0.0),
+        ("IPMT(0,1,5,10000,5000)", 0.0),
+        ("PPMT(0,3,5,10000,5000)", -3000.0),
+        ("IPMT(0.1,1,2,0,4)", 0.0),
+        ("IPMT(0.1,1,5,1000,,)", -100.0),
+        ("IPMT(0.1,1,5,1000,B1,B2)", -100.0),
+        ("IPMT(0.1,1,5,1000,0,1)", 0.0),
+        ("IPMT(0.01,1,1.4,1000)", -10.0),
+        ("IPMT(0.1,1,5,1000,\"0\",FALSE)", -100.0),
+        ("IPMT(0.1,1,5,1000,{0},{0})", -100.0),
+    ] {
+        assert_eq!(
+            value(formula, &configuration),
+            CellValue::Number(expected),
+            "{formula}"
+        );
+    }
+    for formula in [
+        "IPMT(0.1,1,5,1000)=IPMT(0.1,1,5,1000,0,0)",
+        "PPMT(0.1,1,5,1000)=PPMT(0.1,1,5,1000,,)",
+    ] {
+        assert_eq!(value(formula, &configuration), CellValue::Boolean(true));
+    }
+    for rate in [0.0, 0.000001, -0.01, 0.1] {
+        for period in [1, 3, 5] {
+            for timing in [0, 1] {
+                let formula = format!(
+                    "IPMT({rate},{period},5,1000,200,{timing})+PPMT({rate},{period},5,1000,200,{timing})-PMT({rate},5,1000,200,{timing})"
+                );
+                let CellValue::Number(actual) = value(&formula, &configuration) else {
+                    panic!("{formula}")
+                };
+                assert!(actual.abs() < 1e-10);
+            }
+        }
+    }
+    for (formula, error) in [
+        ("IPMT(0,0,5,0)", CellError::Num),
+        ("PPMT(0,6,5,0)", CellError::Num),
+        ("IPMT(0.1,1,5,1000,0,2)", CellError::Num),
+        ("IPMT(0.1,1,5,1000,0,0.5)", CellError::Num),
+        ("IPMT(\"bad\",1,5,1000,1/0)", CellError::Div0),
+        ("PPMT(\"bad\",1,5,1000,0,#REF!)", CellError::Ref),
+        ("IPMT(0.1,1,5,1000,\"bad\",0)", CellError::Value),
+    ] {
+        assert_eq!(
+            value(formula, &configuration),
+            CellValue::Error(error),
+            "{formula}"
+        );
+    }
+    // The global default continues to select the pinned four-argument algorithm.
+    assert_eq!(
+        value("IPMT(0,1,5,1000)", &RunConfiguration::default()),
+        CellValue::Error(CellError::Num)
+    );
 }
