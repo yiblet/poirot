@@ -1,0 +1,271 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "results": [
+    {
+      "formula": "MATCH(5,{TRUE},-1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "MATCH(5,{\"5\"},-1)",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "MATCH(5,{10,4,5},-1)",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "MATCH(5,{10,\"x\",4,5},-1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "MATCH(12,{10,\"x\",4,5},1)",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "MATCH(5,{5,5,5},-1)",
+      "actual": {
+        "type": "number",
+        "value": 3.0
+      }
+    },
+    {
+      "formula": "MATCH(5,{1,5,5,10},1)",
+      "actual": {
+        "type": "number",
+        "value": 3.0
+      }
+    },
+    {
+      "formula": "MATCH(5,{1,5,5,10},-1)",
+      "actual": {
+        "type": "number",
+        "value": 3.0
+      }
+    },
+    {
+      "formula": "MATCH(5,{1,5,5,10},0)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "MATCH(TRUE,{1,5,5,10},0)",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "MATCH(5,{10,5,5,1},-1)",
+      "actual": {
+        "type": "number",
+        "value": 3.0
+      }
+    },
+    {
+      "formula": "MATCH(12,{5,15,18,18,11,1,15,17},1)",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "MATCH(12,{5;15;18;18;11;1;15;17},1)",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "MATCH(5,{14,5,3,5,11,12,11,13,13,4},1)",
+      "actual": {
+        "type": "number",
+        "value": 4.0
+      }
+    },
+    {
+      "formula": "MATCH(12,{14,5,3,5,11,12,11,13,13,4},1)",
+      "actual": {
+        "type": "number",
+        "value": 7.0
+      }
+    },
+    {
+      "formula": "MATCH(5,{1,#REF!,3,5},1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "MATCH(5,{1,#REF!,3,5},-1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "MATCH(5,{1,#REF!,3,5},0)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "MATCH(12,{1,2},1)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "MATCH(5,{3,1,2},1)",
+      "actual": {
+        "type": "number",
+        "value": 3.0
+      }
+    },
+    {
+      "formula": "MATCH(5,{1,3,2},1)",
+      "actual": {
+        "type": "number",
+        "value": 3.0
+      }
+    },
+    {
+      "formula": "MATCH(5,A1:A6,1)",
+      "actual": {
+        "type": "number",
+        "value": 3.0
+      }
+    },
+    {
+      "formula": "MATCH(5,A1:A6,-1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "MATCH(5,A1:A6,0)",
+      "actual": {
+        "type": "number",
+        "value": 3.0
+      }
+    },
+    {
+      "formula": "MATCH(0,A1:A6,1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "MATCH(0,A1:A6,-1)",
+      "actual": {
+        "type": "number",
+        "value": 3.0
+      }
+    },
+    {
+      "formula": "MATCH(0,A1:A6,0)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "MATCH(5,{10,#DIV/0!,4,5},-1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "MATCH(5,{#REF!,10,4,5},-1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "MATCH(5,{1,#REF!,5,10},1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "MATCH(5,{1,5,#REF!,10},1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "MATCH(5,{1,5,5,#REF!},1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "VLOOKUP(12,{5,1;15,2;18,3;18,4;11,5;1,6;15,7;17,8},2,TRUE)",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "HLOOKUP(12,{5,15,18,18,11,1,15,17;1,2,3,4,5,6,7,8},2,TRUE)",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    }
+  ],
+  "verified_at": "2026-10-17T21:53:52.298710+00:00",
+  "method": "Isolated LibreOffice profile; fresh OOXML workbook with 613 formulas, calculateAll, export, typed cached results. This file retains disambiguating observations; raw full output is /tmp/approximate-probes.json. No Poirot result determines an expectation.",
+  "suite_sha256": {
+    "closedxml-lookup.json": "ec211045bb356e7f89ab7bb87f7cac290528927ad4a5a747e4e4b732106b14f8"
+  },
+  "probe_script_sha256": "61a3485d2d88383186b4c414b55fe34abb2796520337a8c4d90645939ed9db70",
+  "source_contract": "Pinned ClosedXML 09f2f21a60e821ce7fb18ca3576b272e5dd6d921 LookupTests.cs, Match_from_descending / Match_from_ascending / Match_from_ascending_matches_excel. Sorted bounds also follow Microsoft MATCH documentation.",
+  "sources": [
+    "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LookupTests.cs",
+    "https://support.microsoft.com/en-us/excel/functions/match-function"
+  ],
+  "reference_cells": {
+    "S!A1": 1,
+    "S!A2": "blank",
+    "S!A3": 5,
+    "S!A4": "#REF!",
+    "S!A5": true,
+    "S!A6": 10
+  },
+  "limitations": [
+    "Native Excel was unavailable. These are actual Calc observations, not Excel parity claims.",
+    "Calc returns last descending duplicate (3 for MATCH(5,{5,5,5},-1)); source typed contract returns first exact (1).",
+    "Calc coerces boolean TRUE to numeric 1 for exact lookup; source contract requires identical scalar types.",
+    "Calc mixed/error candidate behavior differs from the source typed skip rule.",
+    "Unsorted results depend on search trajectory; primary source and Calc also disagree on other numeric unsorted vectors. No nearest-value or permutation rule is inferred."
+  ],
+  "total_probes": 613,
+  "retained_probes": 34
+}

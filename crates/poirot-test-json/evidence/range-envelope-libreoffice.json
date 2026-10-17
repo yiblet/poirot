@@ -1,0 +1,182 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T21:44:32.235945+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-extension-reference-ranges.json": "1e86e3db39514519721bcb2d8b3db78d180027f93f20ca59afe5da1c4f524f5c"
+  },
+  "results": [
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM(S!B2:C5:S!D3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM((S!A1,A5):B5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM(B5:(S!A1,A5))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM(A1:B2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range OnlyReferencesCanBeRange \u2014 SUM(IF(TRUE,1,):A1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM(A1:B5:C3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range OnlyReferencesCanBeRange \u2014 SUM(IF(TRUE,\"text\"):A1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM(A1:C3:B5)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range OnlyReferencesCanBeRange \u2014 SUM(IF(TRUE,FALSE):A1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM(A1:C3:B2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-reference-ranges.json",
+      "name": "ClosedXML extension reference-ranges: Range UnifiesReferencesIntoSingleAreas \u2014 SUM(S!A1:B2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 11,
+    "checks": 11,
+    "corroborated_scenarios": 11,
+    "corroborated_checks": 11
+  }
+}

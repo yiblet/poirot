@@ -604,3 +604,78 @@ fn scalar_argument_roles_do_not_inherit_an_outer_array_request() {
         ));
     }
 }
+
+#[test]
+fn index_memo_preserves_kind_shape_and_origin_in_both_projection_orders() {
+    for formula in [
+        "INDEX({1,2;3,4},0,1)",
+        "INDEX(TRANSPOSE({1,2;3,4}),0,1)",
+        "INDEX(A1:A2,0,1)",
+    ] {
+        for scalar_first in [false, true] {
+            let mut workbook = workbook();
+            workbook.sheet_mut(0).unwrap().set_value(AT, 1.).unwrap();
+            let arguments = [expression(formula)];
+            let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+            session.builtin_policy = BuiltinSemanticsPolicy::ExcelDocumentation;
+            let mut host = CallHost::new(&mut session, 0, AT, &arguments);
+            if scalar_first {
+                assert_eq!(
+                    host.scalar_data(0, MissingPolicy::Blank).unwrap().value,
+                    Number(1.)
+                );
+            }
+            let expected_kind = if formula.contains("A1:A2") {
+                OperandKind::Reference
+            } else {
+                OperandKind::Array
+            };
+            assert_eq!(host.kind(0).unwrap(), expected_kind);
+            let expressions = host.session.budget.usage.expressions;
+            assert_eq!(host.shape(0).unwrap(), (2, 1));
+            let scalar = host.scalar_data(0, MissingPolicy::Blank).unwrap();
+            assert_eq!(scalar.value, Number(1.));
+            assert_eq!(
+                scalar.origin,
+                if expected_kind == OperandKind::Reference {
+                    OperandOrigin::ReferencedCell
+                } else {
+                    OperandOrigin::ArrayElement
+                }
+            );
+            assert_eq!(host.kind(0).unwrap(), expected_kind);
+            assert_eq!(host.session.budget.usage.expressions, expressions);
+        }
+    }
+}
+
+#[test]
+fn index_scalar_selection_retains_origin_and_array_slice_anchor() {
+    let workbook = workbook();
+    let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+    session.builtin_policy = BuiltinSemanticsPolicy::ExcelDocumentation;
+    for (formula, origin) in [
+        ("INDEX(1,1,1)", OperandOrigin::Direct),
+        ("INDEX({1,2},1,1)", OperandOrigin::ArrayElement),
+        ("INDEX(INDEX({1,2},1,1),1,1)", OperandOrigin::ArrayElement),
+    ] {
+        let arguments = [expression(formula)];
+        let mut host = CallHost::new(&mut session, 0, AT, &arguments);
+        assert_eq!(host.kind(0).unwrap(), OperandKind::Scalar);
+        assert_eq!(
+            host.scalar_data(0, MissingPolicy::Blank).unwrap().origin,
+            origin
+        );
+    }
+    let at = CellAddress { row: 4, col: 5 };
+    let plan = expression("INDEX({1,2;3,4},2,0)");
+    match session.expr(0, at, &plan).unwrap() {
+        Value::Array(view) => {
+            // Literal arrays have established A1 coordinates, independent of the caller.
+            // Selecting their second row preserves that origin plus the row offset.
+            assert_eq!(view.anchor, Some(CellAddress { row: 1, col: 0 }));
+            assert_eq!(view.values, vec![vec![Number(3.), Number(4.)]]);
+        }
+        _ => panic!("whole row selection must retain its array channel"),
+    }
+}

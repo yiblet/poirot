@@ -1,10 +1,15 @@
 //! Streaming aggregation with repeated lazy matching for two-pass statistics.
 use super::criteria::CriteriaPlan;
 use super::selection::{coercev2_database_number, selected};
-use super::{CellError, CellValue, DatabaseError, DatabaseFunction, DatabasePlan};
+use super::{
+    CellError, CellValue, DatabaseError, DatabaseFunction, DatabasePlan, FinalizationPolicy,
+};
 
 /// Aggregate the records selected by a validated database plan.
-pub(super) fn execute(plan: &DatabasePlan<'_>) -> Result<CellValue, DatabaseError> {
+pub(super) fn execute(
+    plan: &DatabasePlan<'_>,
+    policy: FinalizationPolicy,
+) -> Result<CellValue, DatabaseError> {
     let criteria = CriteriaPlan::new(plan.database, plan.criteria);
     let mut count = 0usize;
     let mut sum = 0.;
@@ -65,6 +70,9 @@ pub(super) fn execute(plan: &DatabasePlan<'_>) -> Result<CellValue, DatabaseErro
         Count | CountA => count as f64,
         Average => {
             if count == 0 {
+                if policy == FinalizationPolicy::ExcelDocumentation {
+                    return Ok(CellValue::Error(CellError::Div0));
+                }
                 0.
             } else {
                 sum / count as f64

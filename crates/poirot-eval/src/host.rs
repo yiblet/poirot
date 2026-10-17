@@ -144,6 +144,10 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         };
         host
     }
+    /// Return the run's builtin compatibility contract.
+    pub(crate) fn builtin_semantics_policy(&self) -> BuiltinSemanticsPolicy {
+        self.session.builtin_policy
+    }
     /// Return the run's numeric result construction policy.
     pub(crate) fn numeric_outcome_policy(&self) -> NumericOutcomePolicy {
         self.session.numeric_policy

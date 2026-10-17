@@ -141,3 +141,45 @@ fn dynamic_reference_invocations_retain_original_source_spans_and_admission() {
         .is_err()
     );
 }
+
+#[test]
+fn colon_rhs_disambiguates_cells_without_rewriting_sheet_span_atoms() {
+    for source in ["S!B2:C5:S!D3", "S!B2:C5:S!D3:A1", "S!B2:(C5:D3)"] {
+        let expression = parse_formula(source).unwrap();
+        let printed = FormulaPrinter::print(&expression).unwrap();
+        assert_eq!(
+            parse_formula(&printed).unwrap(),
+            expression,
+            "{source} -> {printed}"
+        );
+    }
+    let Expr::Binary { left, right, .. } = parse_formula("S!B2:C5:S!D3").unwrap() else {
+        panic!()
+    };
+    assert!(matches!(
+        *left,
+        Expr::Binary {
+            op: BinaryOp::Range,
+            ..
+        }
+    ));
+    assert!(matches!(*right, Expr::Cell(_)));
+    for source in ["C5:S!D3", "'C5:S'!D3"] {
+        let expression = parse_formula(source).unwrap();
+        assert!(matches!(&expression, Expr::SheetSpan(_)), "{source}");
+        let printed = FormulaPrinter::print(&expression).unwrap();
+        assert_eq!(parse_formula(&printed).unwrap(), expression, "{source}");
+    }
+    for source in ["S!B2:(C5:S!D3)", "S!B2:'C5:S'!D3"] {
+        let expression = parse_formula(source).unwrap();
+        assert!(
+            matches!(&expression,Expr::Binary {right,..} if matches!(&**right,Expr::SheetSpan(_)))
+        );
+        let printed = FormulaPrinter::print(&expression).unwrap();
+        assert_eq!(
+            parse_formula(&printed).unwrap(),
+            expression,
+            "{source} -> {printed}"
+        );
+    }
+}

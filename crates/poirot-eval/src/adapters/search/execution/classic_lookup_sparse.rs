@@ -188,3 +188,16 @@ impl CandidateReader for LookupReader<'_, '_> {
         )
     }
 }
+
+impl poirot_functions_lookup::MatchCandidateReader for LookupReader<'_, '_> {
+    type Error = FunctionFailure;
+    fn next(&mut self, first: usize, end: usize) -> FunctionResult<Option<usize>> {
+        CandidateReader::next(self, first, end)
+    }
+    fn previous(&mut self, end: usize) -> FunctionResult<Option<usize>> {
+        CandidateReader::previous(self, end)
+    }
+    fn compare(&mut self, index: usize) -> FunctionResult<Option<Ordering>> {
+        CandidateReader::compare(self, index)
+    }
+}

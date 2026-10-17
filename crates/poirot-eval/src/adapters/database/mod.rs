@@ -2,9 +2,9 @@
 use crate::host::{CallHost, MissingPolicy};
 use crate::*;
 use poirot_functions_database::{
-    DatabaseError, DatabaseFunction, DatabasePlan, Grid, coercev2_database_criteria_header_index,
-    coercev2_database_field_index, coercev2_database_number, coercev2_database_text,
-    condition_matches, equal_ignore_case,
+    DatabaseError, DatabaseFunction, DatabasePlan, FinalizationPolicy, Grid,
+    coercev2_database_criteria_header_index, coercev2_database_field_index,
+    coercev2_database_number, coercev2_database_text, condition_matches, equal_ignore_case,
 };
 
 /// Execute database aggregation through bounded criteria-table and record reads.
@@ -15,6 +15,9 @@ pub(crate) fn execute(
     function: DatabaseFunction,
     arguments: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
+    if function == DatabaseFunction::Average {
+        session.read(DependencyRead::BuiltinPolicy);
+    }
     let mut host = CallHost::new(session, sheet, address, arguments);
     function_value(evaluate(&mut host, function))
 }
@@ -194,6 +197,10 @@ fn evaluate(host: &mut CallHost<'_, '_>, function: DatabaseFunction) -> Function
     let estimate = plan.work_estimate();
     host.check_values(usize::try_from(estimate.scratch_bytes).map_err(|_| Num)?)?;
     host.charge_work(estimate.cell_visits.saturating_add(estimate.work_units))?;
-    plan.execute()
+    let policy = match host.builtin_semantics_policy() {
+        BuiltinSemanticsPolicy::PinnedPoi => FinalizationPolicy::PinnedPoi,
+        BuiltinSemanticsPolicy::ExcelDocumentation => FinalizationPolicy::ExcelDocumentation,
+    };
+    plan.execute_with_policy(policy)
         .map_err(|error| database_failure(host, error))
 }

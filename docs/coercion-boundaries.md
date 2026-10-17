@@ -94,7 +94,7 @@ new general Excel specification.
 | Engineering | **Retained:** radix/complex text conversion differs from numeric scalar conversion; parse-only numeric grammar differs from date-aware scalar coercion. Numeric/text outputs follow the selected function. | [engineering policy](../crates/poirot-eval/src/adapters/engineering/policy.rs), [engineering kernel](../crates/poirot-functions-engineering/src/lib.rs) |
 | Dates / times | **Retained:** date serials are numbers, with separate display formatting. DATEVALUE/TIMEVALUE explicitly parse text. Calendar integer truncation, serial construction, date-system adjustments and clock-context reads are algorithm/consumer operations. | [dates](../crates/poirot-eval/src/adapters/dates/execution.rs), [date text](../crates/poirot-coercionv2/src/dates/text.rs) |
 | Text / VALUE / TEXT | **Retained:** text functions own their string/numeric parameter rules. VALUE intentionally parses; TEXT intentionally produces text. UTF-16 unit operations preserve exact text; checked scalar projection fails explicitly when unsupported. | [text policy](../crates/poirot-eval/src/adapters/text/policy.rs), [unit consumers](../crates/poirot-eval/src/adapters/text/units.rs), [text kernel](../crates/poirot-functions-text/src/lib.rs) |
-| Criteria / SUMIF(S) / COUNTIF(S) | **Retained:** criterion parsing and matching are consumers with their own blank/error/text rules; sum members are selected separately. Known COUNTIF compatibility gaps are not repaired by changing raw storage types. | [criteria adapter](../crates/poirot-eval/src/adapters/criteria/mod.rs), [criteria projection](../crates/poirot-eval/src/criteria_adapter.rs), [criteria kernel](../crates/poirot-functions-criteria/src/lib.rs) |
+| Criteria / SUMIF(S) / COUNTIF(S) / MINIFS / MAXIFS | **Explicit admission:** after scalar selection and omission handling, ExcelDocumentation requests `coercev2_criteria_excel_operand`: a supplied blank criterion becomes numeric zero, including blanks forwarded through IF/INDEX/arrays. Empty text stays text. PinnedPoi retains BlankEval's nonmatching predicate. Candidate range members are preserved and matching rules remain separate; missing criteria retain their operational unsupported result. | [criteria admission](../crates/poirot-coercionv2/src/criteria.rs), [criteria adapter](../crates/poirot-eval/src/adapters/criteria/mod.rs), [criteria kernel](../crates/poirot-functions-criteria/src/lib.rs) |
 | SUBTOTAL | **Retained:** metadata exclusion precedes reading/aggregation. Filtered cells and nested subtotal exclusion are selection rules, not value coercion. Included members use the chosen aggregate's contract. | [subtotal host](../crates/poirot-eval/src/host/subtotal.rs), [subtotal kernel](../crates/poirot-functions-criteria/src/subtotal.rs) |
 | Database functions | **Retained explicit pinned policy:** criteria/header conversion and selected numeric collection belong to database operations. DGET skips blanks and requires one nonblank selected value; empty-text handling is explicit. DMIN/DMAX's empty-result zero is intrinsic aggregate output. The bridge forwards selected record types before the kernel's operation-specific handling. | [database adapter](../crates/poirot-eval/src/adapters/database/mod.rs), [selection](../crates/poirot-functions-database/src/selection.rs), [aggregation](../crates/poirot-functions-database/src/aggregation.rs) |
 | Matrix functions / TRANSPOSE | **Retained explicit profile differences:** documented-profile TRANSPOSE preserves text/booleans/errors/blanks. Documented MDETERM/MINVERSE require square geometry and numeric members at every coordinate; `MatrixAdmission` in coercionv2 scans row-major, rejects invalid geometry or any nonnumber before embedded errors, then propagates the first embedded error. No rejected matrix reaches a kernel, and singleton numeric matrices are valid. Boolean members are rejected by the numeric-only contract even though Calc admits them. Pinned matrix collection compacts selected numeric members and pads zeros, including pinned TRANSPOSE; it is not a general selector rule. Determinant/inverse/multiply/trend/sumproduct each own collection rules. | [matrix adapter](../crates/poirot-eval/src/adapters/matrix/mod.rs), [matrix policy](../crates/poirot-eval/src/adapters/matrix/policy.rs), [matrix collection](../crates/poirot-functions-matrix/src/collection.rs) |
@@ -322,3 +322,22 @@ Exploratory Calc probes additionally corroborate exponent signs and fractional
 coefficients, but differ on invalid-spelling error codes, boolean admission,
 decimal commas and negative-zero result spelling. These disagreements do not
 justify inheriting locale grammar or changing established Poirot errors.
+
+
+Approximate classic MATCH under `ExcelDocumentation` preserves candidate scalar
+types and original positions. The lookup family owns an inclusive-bound ascending
+bisection and a descending scan that remembers the last comparable candidate,
+stops at the first lower value, and returns the first exact match. Ascending exact
+duplicate runs return their last contiguous position. Blank and spreadsheet-error
+candidates are noncomparable; operational read failures remain fatal. This follows
+the typed ClosedXML lookup test contract, including its explicitly authored
+unordered trajectories. It does not promise a nearest-value result on unordered
+vectors. `PinnedPoi` retains its existing traversal, and HLOOKUP, VLOOKUP, LOOKUP,
+XMATCH and exact MATCH retain their existing contracts. No new argument conversion
+policy is introduced. The host records builtin-policy dependencies in both
+approximate MATCH profiles, so retained results cannot cross profiles.
+
+The independent evidence in
+`crates/poirot-test-json/evidence/classic-match-probes-libreoffice.json` records
+actual Calc disagreements on duplicates, type coercion, and error entries. The
+source-authored expectations remain unchanged; native Excel was unavailable.

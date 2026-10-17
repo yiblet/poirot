@@ -33,8 +33,9 @@ impl EvaluationPort for CallHost<'_, '_> {
         CallHost::argument(self, index).map_err(port_failure)
     }
     fn is_reference(&mut self, index: usize) -> Result<bool, Failure<EvaluationFailure>> {
+        let pinned = self.builtin_semantics_policy() == BuiltinSemanticsPolicy::PinnedPoi;
         self.kind(index)
-            .map(|kind| matches!(kind, OperandKind::Reference | OperandKind::Array))
+            .map(|kind| kind == OperandKind::Reference || (pinned && kind == OperandKind::Array))
             .map_err(port_failure)
     }
     fn coercev2_truncated_number(

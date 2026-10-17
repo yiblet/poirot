@@ -290,16 +290,34 @@ impl Session<'_> {
                 Ok(Value::SignedRefs(left.into_iter().chain(right).collect()))
             }
             BinaryOp::Range => {
-                // SAFETY: The range branch returns unless both vectors have exactly one element before comparing or copying their first areas.
-                if left.len() != 1 || right.len() != 1 || left[0].sheet != right[0].sheet {
+                let (Some(mut envelope), Some(right_first)) =
+                    (left.first().copied(), right.first().copied())
+                else {
+                    return Ok(err(Ref));
+                };
+                if right_first.sheet != envelope.sheet {
                     return Ok(err(Ref));
                 }
-                // SAFETY: The range branch returns unless both vectors have exactly one element before comparing or copying their first areas.
-                let (a, b) = (left[0], right[0]);
+                for area in left.iter().skip(1).chain(right.iter().skip(1)) {
+                    self.budget.charge(WorkKind::ReferencePair, 1)?;
+                    if area.sheet != envelope.sheet {
+                        return Ok(err(Ref));
+                    }
+                    envelope.r0 = envelope.r0.min(area.r0);
+                    envelope.r1 = envelope.r1.max(area.r1);
+                    envelope.c0 = envelope.c0.min(area.c0);
+                    envelope.c1 = envelope.c1.max(area.c1);
+                }
                 self.budget.allocation(1)?;
-                Ok(Value::SignedRefs(vec![a.source_bounds(
-                    (a.r0.min(b.r0), a.r1.max(b.r1)),
-                    (a.c0.min(b.c0), a.c1.max(b.c1)),
+                Ok(Value::SignedRefs(vec![envelope.source_bounds(
+                    (
+                        envelope.r0.min(right_first.r0),
+                        envelope.r1.max(right_first.r1),
+                    ),
+                    (
+                        envelope.c0.min(right_first.c0),
+                        envelope.c1.max(right_first.c1),
+                    ),
                 )]))
             }
             BinaryOp::Intersection => {

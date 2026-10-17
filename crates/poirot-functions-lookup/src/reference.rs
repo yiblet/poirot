@@ -327,3 +327,41 @@ pub(super) fn indirect(
         w.dynamic_reference(&query, c).map_err(indirect_failure)
     }
 }
+
+/// Select admitted INDEX coordinates without changing the source representation.
+/// Zero retains a complete dimension; vector form requires one singleton axis.
+pub fn index_selection(
+    vector: bool,
+    height: usize,
+    width: usize,
+    row: usize,
+    column: usize,
+) -> Option<(usize, usize)> {
+    let (row, column) = if vector {
+        if width == 1 {
+            (row, 0)
+        } else if height == 1 {
+            (0, row)
+        } else {
+            return None;
+        }
+    } else {
+        (row, column)
+    };
+    (height > 0 && width > 0 && row <= height && column <= width).then_some((row, column))
+}
+
+#[cfg(test)]
+mod index_tests {
+    use super::index_selection;
+    #[test]
+    fn index_selection_retains_dimensions_and_rejects_empty_or_exhausted_sources() {
+        assert_eq!(index_selection(false, 2, 3, 0, 0), Some((0, 0)));
+        assert_eq!(index_selection(false, 2, 3, 2, 0), Some((2, 0)));
+        assert_eq!(index_selection(false, 2, 3, 0, 4), None);
+        assert_eq!(index_selection(false, 0, 3, 0, 1), None);
+        assert_eq!(index_selection(true, 2, 3, 1, 1), None);
+        assert_eq!(index_selection(true, 1, 3, 2, 1), Some((0, 2)));
+        assert_eq!(index_selection(true, 3, 1, 2, 1), Some((2, 0)));
+    }
+}

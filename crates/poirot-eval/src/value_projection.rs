@@ -126,20 +126,34 @@ impl<'a> Session<'a> {
                 Ok(Value::Refs(left.into_iter().chain(right).collect()))
             }
             BinaryOp::Range => {
-                // SAFETY: The range branch returns unless both vectors have exactly one element before comparing or copying their first areas.
-                if left.len() != 1 || right.len() != 1 || left[0].sheet != right[0].sheet {
+                let (Some(mut envelope), Some(right_first)) =
+                    (left.first().copied(), right.first().copied())
+                else {
+                    return Ok(err(Ref));
+                };
+                if right_first.sheet != envelope.sheet {
                     return Ok(err(Ref));
                 }
+                // Each operand contributes its full bounds, including every union
+                // member. No cell values are needed to construct this reference.
+                for area in left.iter().skip(1).chain(right.iter().skip(1)) {
+                    self.budget.charge(WorkKind::ReferencePair, 1)?;
+                    if area.sheet != envelope.sheet {
+                        return Ok(err(Ref));
+                    }
+                    envelope.r0 = envelope.r0.min(area.r0);
+                    envelope.r1 = envelope.r1.max(area.r1);
+                    envelope.c0 = envelope.c0.min(area.c0);
+                    envelope.c1 = envelope.c1.max(area.c1);
+                }
                 self.budget.allocation(1)?;
-                // SAFETY: The range branch returns unless both vectors have exactly one element before comparing or copying their first areas.
-                let (left, right) = (left[0], right[0]);
                 Ok(Value::Refs(vec![Area {
                     kind: AreaKind::Area,
-                    sheet: left.sheet,
-                    r0: left.r0.min(right.r0),
-                    r1: left.r1.max(right.r1),
-                    c0: left.c0.min(right.c0),
-                    c1: left.c1.max(right.c1),
+                    sheet: envelope.sheet,
+                    r0: envelope.r0.min(right_first.r0),
+                    r1: envelope.r1.max(right_first.r1),
+                    c0: envelope.c0.min(right_first.c0),
+                    c1: envelope.c1.max(right_first.c1),
                 }]))
             }
             BinaryOp::Intersection => {

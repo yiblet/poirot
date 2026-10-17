@@ -1,0 +1,862 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T21:32:51.333836+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-index.json": "d0779882e9dd881caf63732ed068f4c0063f0415aa7b212ea0d3efe3f9ac1abd",
+    "closedxml-lookup.json": "7e17ee647417ef2938984ae13c0ee41ae9250dd726aac5558b8f333064e4416d",
+    "closedxml-extension-selection.json": "b13d1524bdec74416ec37d7dafebc07237bf8b924071d5517ec1c6c2d38a849a",
+    "closedxml-exploration-upstream-selection.json": "3ed2d4fcafac43df1320fd4dab4d03a792c46e912dfa4e2539dbaf8f965798fb"
+  },
+  "results": [
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: INDEX selected array shape differs from reference identity \u2014 ROWS(INDEX({1,2,3;4,5,6},0,3))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: Index reference errors \u2014 INDEX((A1,B1,C1),1,1,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: Index array errors \u2014 INDEX({1},1,1,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: INDEX selected array shape differs from reference identity \u2014 ROWS(INDEX({1,2,3;4,5,6},,3))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: Index array errors \u2014 INDEX({1},1,1,2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#REF!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: INDEX selected array shape differs from reference identity \u2014 ROWS(INDEX({1,2,3;4,5,6},2,0))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: INDEX selected array shape differs from reference identity \u2014 ROWS(INDEX({1,2,3;4,5,6},2,))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: INDEX selected array shape differs from reference identity \u2014 ROWS(INDEX({1,2,3;4,5,6},0,0))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: INDEX selected reference shape and identity \u2014 INDEX(INDEX(B2:J12,3,4),1,1)",
+      "checks": [
+        {
+          "action": 6,
+          "actual": {
+            "type": "text",
+            "value": "E4"
+          },
+          "agrees": true
+        },
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 12,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: Index reference errors \u2014 INDEX(A1,-1,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: Index array errors \u2014 INDEX({1},-1,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: Index scalar \u2014 INDEX(\"Text\",2,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#REF!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: INDEX selected reference shape and identity \u2014 INDEX(INDEX(B2:J12,0,4),1,1)",
+      "checks": [
+        {
+          "action": 6,
+          "actual": {
+            "type": "text",
+            "value": "E2"
+          },
+          "agrees": true
+        },
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 12,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: Index reference errors \u2014 INDEX(B3:C5,4,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#REF!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: Index array errors \u2014 INDEX({1,2;3,4;5,6},4,1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#REF!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: INDEX selected reference shape and identity \u2014 INDEX(INDEX(B2:J12,,4),1,1)",
+      "checks": [
+        {
+          "action": 6,
+          "actual": {
+            "type": "text",
+            "value": "E2"
+          },
+          "agrees": true
+        },
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 12,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML lookup: Index reference errors \u2014 INDEX(A1,1,-1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML exploration upstream selection: Index array errors \u2014 INDEX({1}, 1, -1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML exploration upstream selection: Index array errors \u2014 INDEX({1,2;3,4;5,6}, 1, 3)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#REF!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-index.json",
+      "name": "ClosedXML exploration upstream selection: Index scalar \u2014 INDEX(\"Text\", 1, 2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#REF!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Match from descending \u2014 MATCH(5, {TRUE}, -1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Match from ascending matches excel \u2014 MATCH(12, {5;15;18;18;11;1;15;17})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Match from descending: Because 4 is less than the target, search stops. Values should be descending. \u2014 MATCH(5, {10,4,5}, -1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Match from unsorted: Finds value even in unsorted \u2014 MATCH(35,{25,38,24,35,70},0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Match from ascending: Nothing found, even smallest value is greater than target \u2014 MATCH(20,{25,38,40},1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Match from ascending matches excel \u2014 MATCH(17, {14;5;3;5;11;12;11;13;13;4})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Match edge conditions: Return not found for blank value \u2014 MATCH(IF(TRUE,),{1,2,3},1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Array shape includes one-element arrays \u2014 COLUMNS({1})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Array shape includes one-element arrays \u2014 ROWS({1})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Match from descending \u2014 MATCH(5, {4}, -1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Match from unsorted: Nothing found \u2014 MATCH(1,{5},0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Match from ascending: If target value is greater than the last element of same type, return the position of the last element \u2014 MATCH(5, {1,2,3}, 1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Match edge conditions: Default match type is 1 (ascending bisection) \u2014 MATCH(3,{1,2,3,4,5})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Array shape includes one-element arrays \u2014 COLUMNS({1,2,3,4;5,6,7,8})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Array shape includes one-element arrays \u2014 ROWS({1,2,3,4;5,6,7,8;9,10,11,12})",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Match from descending \u2014 MATCH(5, {10}, -1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-lookup.json",
+      "name": "ClosedXML lookup: Match from unsorted: Consider string targets wildcards \u2014 MATCH(\"c*\",{\"a\",\"cd\"},0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-selection.json",
+      "name": "ClosedXML extension selection: Index scalar \u2014 INDEX(\"Text\", -1, 1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-selection.json",
+      "name": "ClosedXML extension selection: Index scalar \u2014 INDEX(\"Text\", 1, -1)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-selection.json",
+      "name": "ClosedXML extension selection: Index scalar \u2014 INDEX(\"Text\", 1, 1, 0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-extension-selection.json",
+      "name": "ClosedXML extension selection: Index scalar \u2014 INDEX(\"Text\", 1, 1, 2)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#REF!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-selection.json",
+      "name": "ClosedXML exploration upstream selection: Columns Blank ReturnsValueError \u2014 COLUMNS(IF(TRUE,,))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-selection.json",
+      "name": "ClosedXML exploration upstream selection: Columns Error ReturnsError \u2014 COLUMNS(#DIV/0!)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-selection.json",
+      "name": "ClosedXML exploration upstream selection: Hlookup UnexpectedArguments \u2014 HLOOKUP(1,{1,2},0,FALSE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-selection.json",
+      "name": "ClosedXML exploration upstream selection: Hlookup truncates row index number parameter \u2014 HLOOKUP(7,{5,7,9},1.9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-upstream-selection.json",
+      "name": "ClosedXML exploration upstream selection: Rows Error ReturnsError \u2014 ROWS(#DIV/0!)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 46,
+    "checks": 65,
+    "corroborated_scenarios": 46,
+    "corroborated_checks": 65
+  }
+}

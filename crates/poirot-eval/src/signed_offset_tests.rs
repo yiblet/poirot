@@ -524,3 +524,163 @@ fn signed_sum_union_throw_precedes_physical_area_reads() {
         DependencyRead::Cell(_) | DependencyRead::SparseMembership { .. }
     )));
 }
+
+#[test]
+fn range_envelope_reads_only_consumed_rectangle_in_row_major_order() {
+    let w = fixture();
+    for source in [
+        "SUM((A1,C3):B2)",
+        "SUM(B2:(A1,C3))",
+        "SUM((OFFSET(B3,0,0,-2,-2),A1):C3)",
+    ] {
+        let (value, reads) = traced_formula(&w, source, None, EvaluationBudgets::default());
+        assert_eq!(value, Number(369.), "{source}");
+        let ranges: Vec<_> = reads
+            .iter()
+            .filter_map(|read| match read {
+                DependencyRead::SparseMembership { sheet, first, last } => {
+                    Some((*sheet, *first, *last))
+                }
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            ranges,
+            [(0, "A1".parse().unwrap(), "C3".parse().unwrap())],
+            "{source}"
+        );
+        let cells: Vec<_> = reads
+            .iter()
+            .filter_map(|read| match read {
+                DependencyRead::Cell(target) => Some(target.address),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            cells,
+            ["A1", "B1", "C1", "A2", "B2", "C2", "A3", "B3"].map(|a| a.parse().unwrap()),
+            "{source}"
+        );
+    }
+    for source in [
+        "ROWS((A1,C3):B2)",
+        "ROWS((OFFSET(B3,0,0,-2,-2),A1):C3)",
+        "ROWS((IF(TRUE,1/0,A1),C3):B2)",
+    ] {
+        let (_, reads) = traced_formula(&w, source, None, EvaluationBudgets::default());
+        assert!(
+            !reads.iter().any(|read| matches!(
+                read,
+                DependencyRead::Cell(_) | DependencyRead::SparseMembership { .. }
+            )),
+            "{source}: {reads:?}"
+        );
+    }
+}
+
+#[test]
+fn range_envelopes_reject_empty_and_mixed_sheet_operands_in_both_channels() {
+    let w = fixture();
+    let a = Area {
+        kind: AreaKind::Cell,
+        sheet: 0,
+        r0: 0,
+        r1: 0,
+        c0: 0,
+        c1: 0,
+    };
+    let b = Area {
+        kind: AreaKind::Area,
+        sheet: 0,
+        r0: 2,
+        r1: 4,
+        c0: 1,
+        c1: 3,
+    };
+    for signed in [false, true] {
+        let wrap = |areas: Vec<Area>| {
+            if signed {
+                Value::SignedRefs(
+                    areas
+                        .into_iter()
+                        .map(signed_reference::SignedArea::from_unsigned)
+                        .collect(),
+                )
+            } else {
+                Value::Refs(areas)
+            }
+        };
+        let mut session = Session::with_context(&w, EvaluationInputs::default());
+        for (left, right) in [
+            (vec![], vec![a]),
+            (vec![a], vec![]),
+            (vec![a, Area { sheet: 1, ..b }], vec![b]),
+            (vec![a], vec![b, Area { sheet: 1, ..a }]),
+        ] {
+            assert!(matches!(
+                session
+                    .references(BinaryOp::Range, wrap(left), wrap(right))
+                    .unwrap(),
+                Value::Scalar(Error(Ref))
+            ));
+        }
+        let result = session
+            .references(BinaryOp::Range, wrap(vec![a, b]), wrap(vec![a]))
+            .unwrap();
+        if signed {
+            assert!(
+                matches!(result,Value::SignedRefs(v) if v.len()==1 && (v[0].r0,v[0].r1,v[0].c0,v[0].c1)==(0,4,0,3))
+            );
+        } else {
+            assert!(
+                matches!(result,Value::Refs(v) if v.len()==1 && (v[0].r0,v[0].r1,v[0].c0,v[0].c1)==(0,4,0,3))
+            );
+        }
+    }
+}
+
+#[test]
+fn additional_envelope_members_consume_work_without_reading_cells() {
+    let w = fixture();
+    let a = Area {
+        kind: AreaKind::Cell,
+        sheet: 0,
+        r0: 0,
+        r1: 0,
+        c0: 0,
+        c1: 0,
+    };
+    for signed in [false, true] {
+        let wrap = |areas: Vec<Area>| {
+            if signed {
+                Value::SignedRefs(
+                    areas
+                        .into_iter()
+                        .map(signed_reference::SignedArea::from_unsigned)
+                        .collect(),
+                )
+            } else {
+                Value::Refs(areas)
+            }
+        };
+        for extra in [false, true] {
+            let mut session = Session::new(
+                &w,
+                EvaluationInputs::default(),
+                BudgetMeter::new(EvaluationBudgets {
+                    run_work: 1,
+                    cell_work: 1,
+                    ..Default::default()
+                })
+                .unwrap(),
+            );
+            let left = if extra { vec![a, a] } else { vec![a] };
+            let result = session.references(BinaryOp::Range, wrap(left), wrap(vec![a]));
+            if extra {
+                assert!(matches!(result, Err(EvaluationFailure::Budget(_))));
+            } else {
+                assert!(result.is_ok());
+            }
+        }
+    }
+}

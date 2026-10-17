@@ -1,0 +1,1157 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-17T22:06:28.772939+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "closedxml-exploration-database-criteria.json": "b13e745f7d0a35b44fad9dca35f909900167b4f2fd7ea5d83229bbb9c16fc79c"
+  },
+  "results": [
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSUM duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSUM columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSUM different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSUM repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSUM blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSUM no records match differs from zero result",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSUM wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 16.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSUM numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DCOUNT duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DCOUNT columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DCOUNT different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DCOUNT repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DCOUNT blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DCOUNT no records match differs from zero result",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DCOUNT wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DCOUNT numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DGET columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DGET no records match differs from zero result",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DAVERAGE duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DAVERAGE columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DAVERAGE different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DAVERAGE repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DAVERAGE blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DAVERAGE no records match differs from zero result",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DAVERAGE wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 5.33333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DAVERAGE numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMIN duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMIN columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMIN different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMIN repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMIN blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMIN no records match differs from zero result",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMIN wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMIN numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMAX duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMAX columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMAX different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMAX repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMAX blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMAX no records match differs from zero result",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMAX wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DMAX numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DPRODUCT duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DPRODUCT columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DPRODUCT different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 32.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DPRODUCT repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 24.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DPRODUCT blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 384.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DPRODUCT no records match differs from zero result",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DPRODUCT wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 96.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DPRODUCT numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEV duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.82842712474619
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEV different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.82842712474619
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEV repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 1.4142135623731
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEV blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.58198889747161
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEV wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 3.05505046330389
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEV numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.82842712474619
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEVP duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEVP columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEVP different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEVP repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEVP blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.23606797749979
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEVP wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.49443825784929
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DSTDEVP numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVAR duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVAR different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVAR repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVAR blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 6.66666666666667
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVAR wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 9.33333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVAR numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVARP duplicate OR rows do not double count",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVARP columns combine with AND",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVARP different rows combine with OR",
+      "checks": [
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVARP repeated field names express numeric interval",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVARP blank criteria row admits entire database",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVARP wildcard field criteria",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 6.22222222222222
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "closedxml-exploration-database-criteria.json",
+      "name": "ClosedXML exploration database-criteria: DVARP numeric field index instead of label",
+      "checks": [
+        {
+          "action": 18,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 76,
+    "checks": 76,
+    "corroborated_scenarios": 76,
+    "corroborated_checks": 76
+  }
+}

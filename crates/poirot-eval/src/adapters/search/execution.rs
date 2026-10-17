@@ -160,24 +160,58 @@ impl Session<'_> {
                 }
             })?;
         }
-        let found = prefix::select(self, &table, vector, &key, mode, is_match, source)
-            .unwrap_or_else(|| {
-                select_with_reader(
-                    vector.len,
+        let excel_match = is_match
+            && mode != SearchMode::Exact
+            && self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation;
+        if is_match && mode != SearchMode::Exact {
+            self.read(DependencyRead::BuiltinPolicy);
+        }
+        let found = if excel_match {
+            poirot_functions_lookup::classic_match_index(
+                vector.len,
+                if mode == SearchMode::Ascending {
+                    poirot_functions_lookup::ClassicMatchMode::Ascending
+                } else {
+                    poirot_functions_lookup::ClassicMatchMode::Descending
+                },
+                &mut sparse::LookupReader {
+                    session: self,
+                    table: &table,
+                    vector,
+                    key: &key,
                     mode,
-                    !is_match,
-                    &mut sparse::LookupReader {
-                        session: self,
-                        table: &table,
-                        vector,
-                        key: &key,
+                    is_match,
+                    source,
+                    forward: None,
+                },
+            )
+            .map_err(|failure| match failure {
+                poirot_functions_lookup::MatchSelectionFailure::Reader(failure) => failure,
+                poirot_functions_lookup::MatchSelectionFailure::InvalidPosition => {
+                    EvaluationFailure::StalePlan.into()
+                }
+            })
+        } else {
+            prefix::select(self, &table, vector, &key, mode, is_match, source).unwrap_or_else(
+                || {
+                    select_with_reader(
+                        vector.len,
                         mode,
-                        is_match,
-                        source,
-                        forward: None,
-                    },
-                )
-            });
+                        !is_match,
+                        &mut sparse::LookupReader {
+                            session: self,
+                            table: &table,
+                            vector,
+                            key: &key,
+                            mode,
+                            is_match,
+                            source,
+                            forward: None,
+                        },
+                    )
+                },
+            )
+        };
         let index = match found {
             Ok(Some(i)) => i,
             Ok(None) => return Ok(err(NA)),
@@ -244,6 +278,9 @@ pub enum SearchAxis {
     Horizontal,
 }
 
+#[cfg(test)]
+#[path = "execution/classic_match_tests.rs"]
+mod classic_match_tests;
 #[cfg(test)]
 #[path = "execution/classic_lookup_historical_select.rs"]
 mod historical_selection;

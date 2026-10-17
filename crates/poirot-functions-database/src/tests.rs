@@ -257,3 +257,66 @@ fn shapes_headers_and_rounding() {
         Err(DatabaseError::Cell(CellError::Value))
     );
 }
+
+// Empty means no admitted numeric observations, rather than a zero-valued sum.
+#[test]
+fn database_average_distinguishes_empty_samples_from_zero_values() {
+    for (values, condition, empty) in [
+        (vec![], CellValue::Blank, true),
+        (vec![2.0.into()], ">5".into(), true),
+        (
+            vec!["text".into(), CellValue::Blank, "0".into()],
+            CellValue::Blank,
+            true,
+        ),
+        (vec![0.0.into()], CellValue::Blank, false),
+        (vec![2.0.into(), (-2.0).into()], CellValue::Blank, false),
+        // Pinned numeric admission still ignores selected cell errors; Calc differs.
+        (
+            vec![CellValue::Error(CellError::NA)],
+            CellValue::Blank,
+            true,
+        ),
+    ] {
+        let mut data = vec!["N".into()];
+        data.extend(values);
+        let criteria = ["N".into(), condition];
+        for function in [
+            DatabaseFunction::Average,
+            DatabaseFunction::Count,
+            DatabaseFunction::Sum,
+            DatabaseFunction::Min,
+            DatabaseFunction::Max,
+        ] {
+            let plan = DatabasePlan::new(
+                function,
+                Grid::new(data.len(), 1, &data).unwrap(),
+                &1.0.into(),
+                Grid::new(2, 1, &criteria).unwrap(),
+            )
+            .unwrap();
+            let pinned = plan.execute().unwrap();
+            assert_eq!(
+                plan.execute_with_policy(FinalizationPolicy::PinnedPoi)
+                    .unwrap(),
+                pinned
+            );
+            let modern = plan
+                .execute_with_policy(FinalizationPolicy::ExcelDocumentation)
+                .unwrap();
+            if function == DatabaseFunction::Average {
+                assert_eq!(pinned, 0.0.into());
+                assert_eq!(
+                    modern,
+                    if empty {
+                        CellValue::Error(CellError::Div0)
+                    } else {
+                        0.0.into()
+                    }
+                );
+            } else {
+                assert_eq!(modern, pinned);
+            }
+        }
+    }
+}

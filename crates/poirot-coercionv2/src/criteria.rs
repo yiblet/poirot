@@ -32,6 +32,16 @@ pub enum Cell {
     Error(Error),
 }
 
+/// Admit a supplied Excel criterion after scalar selection and omission handling.
+/// An empty reference (including one forwarded by selection) requests numeric
+/// zero. Empty text remains text; candidate range members are not converted.
+pub fn coercev2_criteria_excel_operand(value: Cell) -> Cell {
+    match value {
+        Cell::Blank => Cell::Number(0.0),
+        value => value,
+    }
+}
+
 /// Origin-sensitive admission of an eligible subtotal member.
 pub fn coercev2_subtotal_member(
     value: &Cell,

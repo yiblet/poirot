@@ -1054,11 +1054,11 @@ fn numeric_locale_identity_and_consumption_survive_retained_snapshot() {
 fn raw_snapshot_restore_rejects_previous_execution_semantics_versions() {
     let workbook = book();
     let overlay = Overlay::with_workbook(&workbook).build().unwrap();
-    for previous in [8, 9, 10, 11, 12, 13, 14, 15, 16] {
+    for previous in [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] {
         let mut bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
         // Payload's first field is its small postcard varint version.
         let version = bytes.first_mut().unwrap();
-        assert_eq!(*version, 17);
+        assert_eq!(*version, 22);
         *version = previous;
         let snapshot = postcard::from_bytes(&bytes).unwrap();
         assert!(
@@ -1129,4 +1129,38 @@ fn numbervalue_locale_defaults_invalidate_only_consumers_after_snapshot_restore(
         ]
     );
     assert_eq!(evaluation.usage().formula_executions, 2);
+}
+
+#[test]
+fn approximate_match_policy_switch_and_snapshot_restore_recompute_typed_candidates() {
+    let mut workbook = book();
+    for (cell, formula) in [
+        ("E1", "MATCH(5,{TRUE},-1)"),
+        ("F1", "MATCH(12,{5;15;18;18;11;1;15;17})"),
+    ] {
+        workbook
+            .sheet_mut(0)
+            .unwrap()
+            .set_formula(at(cell).address, formula, CellValue::Blank)
+            .unwrap();
+    }
+    let context = EvaluationContext::default();
+    let mut overlay = Overlay::with_workbook(&workbook).build().unwrap();
+    assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(1.));
+    assert_eq!(value(&mut overlay, "F1", &context), CellValue::Number(6.));
+    let bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
+    let (workbook, state) = Overlay::from_snapshot(postcard::from_bytes(&bytes).unwrap()).unwrap();
+    let mut overlay = state.attach(&workbook).unwrap();
+    let mut policy = overlay.policy().clone();
+    policy.builtin = crate::BuiltinSemanticsPolicy::ExcelDocumentation;
+    overlay.set_policy(policy.clone()).unwrap();
+    assert_eq!(
+        value(&mut overlay, "E1", &context),
+        CellValue::Error(poirot_model::CellError::NA)
+    );
+    assert_eq!(value(&mut overlay, "F1", &context), CellValue::Number(1.));
+    policy.builtin = crate::BuiltinSemanticsPolicy::PinnedPoi;
+    overlay.set_policy(policy).unwrap();
+    assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(1.));
+    assert_eq!(value(&mut overlay, "F1", &context), CellValue::Number(6.));
 }

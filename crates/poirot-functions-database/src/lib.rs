@@ -56,6 +56,16 @@ impl DatabaseFunction {
     }
 }
 
+/// Finalization contract, independent of record selection and numeric admission.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum FinalizationPolicy {
+    /// Preserve POI's zero-valued empty DAVERAGE result.
+    #[default]
+    PinnedPoi,
+    /// Return division by zero when DAVERAGE has no admitted numeric values.
+    ExcelDocumentation,
+}
+
 /// A rectangular, row-major area, including its header row. The adapter must
 /// reject scalar arguments before constructing this value.
 #[derive(Debug, Clone, Copy)]
@@ -145,7 +155,14 @@ impl<'a> DatabasePlan<'a> {
     }
     /// Apply the prepared criteria and aggregate selected records.
     pub fn execute(&self) -> Result<CellValue, DatabaseError> {
-        aggregation::execute(self)
+        self.execute_with_policy(FinalizationPolicy::PinnedPoi)
+    }
+    /// Aggregate with an explicit finalization contract; selection and admission stay unchanged.
+    pub fn execute_with_policy(
+        &self,
+        policy: FinalizationPolicy,
+    ) -> Result<CellValue, DatabaseError> {
+        aggregation::execute(self, policy)
     }
 }
 

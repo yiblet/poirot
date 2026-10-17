@@ -166,6 +166,14 @@ impl Parser<'_> {
         Ok(())
     }
     fn expression(&mut self, min: u8, union: bool) -> Result<Expr, ParseError> {
+        self.expression_context(min, union, false)
+    }
+    fn expression_context(
+        &mut self,
+        min: u8,
+        union: bool,
+        range_rhs: bool,
+    ) -> Result<Expr, ParseError> {
         self.admit_expression()?;
         if self.depth >= self.policy.max_depth {
             return self.fail("expression nesting limit exceeded");
@@ -173,7 +181,7 @@ impl Parser<'_> {
         let start = self.pos + self.tail()?.len() - self.tail()?.trim_start().len();
         self.depth += 1;
         let invocation_checkpoint = self.function_invocations.len();
-        let result = self.expression_inner(min, union);
+        let result = self.expression_inner(min, union, range_rhs);
         self.depth -= 1;
         if result.is_ok() {
             self.spans.push(FormulaSpan {
@@ -185,7 +193,12 @@ impl Parser<'_> {
         }
         result
     }
-    fn expression_inner(&mut self, min: u8, union: bool) -> Result<Expr, ParseError> {
+    fn expression_inner(
+        &mut self,
+        min: u8,
+        union: bool,
+        range_rhs: bool,
+    ) -> Result<Expr, ParseError> {
         self.space();
         let mut left = if self.take('+') {
             Expr::Unary {
@@ -204,7 +217,7 @@ impl Parser<'_> {
                 operand: Box::new(self.expression(8, union)?),
             }
         } else {
-            self.atom()?
+            self.atom(range_rhs)?
         };
         loop {
             let operator_start = self.pos;
@@ -261,7 +274,8 @@ impl Parser<'_> {
                 break;
             }
             self.pos += length;
-            let mut right = self.expression(precedence + 1, union)?;
+            let mut right =
+                self.expression_context(precedence + 1, union, op == BinaryOp::Range)?;
             if op == BinaryOp::Range {
                 (left, right) = range_pair(left, right).map_err(|message| ParseError {
                     position: self.pos,
@@ -289,9 +303,16 @@ impl Parser<'_> {
             }
         }
     }
-    fn atom(&mut self) -> Result<Expr, ParseError> {
+    fn atom(&mut self, range_rhs: bool) -> Result<Expr, ParseError> {
         self.space();
-        if let Ok((rest, (first_sheet, last_sheet))) = sheet_span_prefix(self.tail()?) {
+        // A direct colon RHS starts with a cell in A1:B2:Sheet!C3.
+        // Bare B2:Sheet!C3 remains a 3D atom; quoting or parentheses also
+        // retain that interpretation. Decide before consuming any prefix.
+        if let Ok((rest, (first_sheet, last_sheet))) = sheet_span_prefix(self.tail()?)
+            && (!range_rhs
+                || self.peek() == Some('\'')
+                || !matches!(cell_reference(&first_sheet, None), Ok(Some(_))))
+        {
             self.pos = self.input.len() - rest.len();
             if [&first_sheet, &last_sheet]
                 .iter()

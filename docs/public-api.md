@@ -22,6 +22,15 @@ artifacts. A materialization-only change preserves raw computation. Text policy
 changes invalidate actual text-policy consumers. Parser/computation changes
 invalidate the appropriate compilation/results.
 
+Under `BuiltinSemanticsPolicy::ExcelDocumentation`, DAVERAGE returns `#DIV/0!`
+when no numeric observations are admitted, including no matching records or
+matched text/blank fields. Numeric zeros and cancelling observations still average
+to zero. `PinnedPoi` remains the default and returns zero for empty averages.
+The database kernel exposes the same choice through `DatabasePlan::execute_with_policy`
+and `FinalizationPolicy`; `execute` retains the pinned default. This finalization
+choice preserves existing database selection and candidate admission: selected
+cell errors are still ignored, unlike Calc, so this is not full DAVERAGE parity.
+
 `EvaluationContext` contains per-run clock, seed, localization, formatting inputs,
 budgets and retention bounds. It owns no edits or cache. Create a fresh instance
 with `overlay.evaluation(&context)`, returning `OverlayEvaluation`:

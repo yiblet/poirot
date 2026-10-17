@@ -87,3 +87,72 @@ pub fn coercev2_lookup_text<E: From<Error>>(
         Scalar::Error(e) => Err((*e).into()),
     }
 }
+
+/// Omission rule for INDEX's optional area ordinal.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum IndexAreaDefault {
+    /// The legacy union extension requires an explicit area when there are several.
+    SingleArea,
+    /// The documented reference form selects its first area when omitted.
+    FirstArea,
+}
+
+/// Admit a zero-based area selection before selecting any source representation.
+/// Explicit area ordinals truncate toward zero; zero/negative values are VALUE,
+/// positive out-of-range values are REF. Legacy unions require an explicit area.
+pub fn coercev2_index_area(
+    number: Option<f64>,
+    count: usize,
+    default_area: IndexAreaDefault,
+) -> Result<usize, crate::CellError> {
+    let number = match number {
+        Some(number) => number.trunc(),
+        None if count == 1 || default_area == IndexAreaDefault::FirstArea => 1.,
+        None => return Err(crate::CellError::Value),
+    };
+    if number < 1. {
+        Err(crate::CellError::Value)
+    } else if !number.is_finite() || number > count as f64 {
+        Err(crate::CellError::Ref)
+    } else {
+        // SAFETY: The number is finite and at least one in this branch; its saturating usize cast is therefore at least one.
+        Ok(number as usize - 1)
+    }
+}
+
+#[cfg(test)]
+mod index_tests {
+    use super::*;
+    use crate::CellError;
+    #[test]
+    fn area_admission_distinguishes_default_zero_fraction_and_exhausted_areas() {
+        assert_eq!(
+            coercev2_index_area(None, 2, IndexAreaDefault::FirstArea),
+            Ok(0)
+        );
+        assert_eq!(
+            coercev2_index_area(None, 2, IndexAreaDefault::SingleArea),
+            Err(CellError::Value)
+        );
+        for number in [-1., 0., 0.9] {
+            assert_eq!(
+                coercev2_index_area(Some(number), 2, IndexAreaDefault::FirstArea),
+                Err(CellError::Value)
+            );
+        }
+        assert_eq!(
+            coercev2_index_area(Some(1.9), 2, IndexAreaDefault::FirstArea),
+            Ok(0)
+        );
+        assert_eq!(
+            coercev2_index_area(Some(2.), 2, IndexAreaDefault::FirstArea),
+            Ok(1)
+        );
+        for number in [3., f64::INFINITY, f64::NAN] {
+            assert_eq!(
+                coercev2_index_area(Some(number), 2, IndexAreaDefault::FirstArea),
+                Err(CellError::Ref)
+            );
+        }
+    }
+}

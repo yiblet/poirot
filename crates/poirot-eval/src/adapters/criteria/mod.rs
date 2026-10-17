@@ -12,6 +12,9 @@ pub(crate) fn execute(
     function: Function,
     arguments: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
+    if function != Function::Subtotal {
+        session.read(DependencyRead::BuiltinPolicy);
+    }
     let mut host = CallHost::new(session, sheet, address, arguments);
     match evaluate(&mut host, function) {
         Ok(value) => Ok(value),
@@ -131,7 +134,13 @@ fn evaluate(host: &mut CallHost<'_, '_>, function: Function) -> FunctionResult<V
             }
             let v = scalar.value;
             preflight(host, &[&v])?;
-            let predicate = Criterion::parse(&cell(host, &v)?);
+            let projected = cell(host, &v)?;
+            let admitted = if host.excel_builtins() {
+                poirot_coercionv2::criteria::coercev2_criteria_excel_operand(projected)
+            } else {
+                projected
+            };
+            let predicate = Criterion::parse(&admitted);
             if (!single || function == AverageIf)
                 && let Cell::Error(e) = predicate.value
                 && criterion_error.is_none()

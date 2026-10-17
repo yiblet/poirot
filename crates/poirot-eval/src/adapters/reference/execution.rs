@@ -92,6 +92,15 @@ impl Session<'_> {
                         .into()
                     }
                     Value::Scalar(Error(e)) | Value::SelectedScalar(Error(e), _) => err(e),
+                    Value::Scalar(_) | Value::SelectedScalar(_, _)
+                        if self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
+                            && matches!(
+                                name,
+                                ReferenceFunction::Rows | ReferenceFunction::Columns
+                            ) =>
+                    {
+                        Number(1.).into()
+                    }
                     _ => err(VALUE_ERROR),
                 }
             }
@@ -163,28 +172,39 @@ impl Session<'_> {
             Ok(index) => index,
             Err(error) => return Ok(err(error)),
         };
-        if let Value::SignedRefs(areas) = &v {
-            let area = if args.len() == 4 {
-                match semantic({
-                    let value = self.scalar(at, area_value.ok_or(EvaluationFailure::StalePlan)?)?;
-                    self.coercev2_scalar_number(&value)
-                })? {
-                    Ok(n) if n >= 1. && n.trunc() <= areas.len() as f64 => *areas
-                        .get(
-                            (n as usize)
-                                .checked_sub(1)
-                                .ok_or(EvaluationFailure::StalePlan)?,
-                        )
-                        .ok_or(EvaluationFailure::StalePlan)?,
-                    Ok(_) => return Ok(err(Ref)),
-                    Err(e) => return Ok(err(e)),
+        // Admit area bounds once before selecting from the original representation.
+        let area_count = match &v {
+            Value::Refs(areas) => areas.len(),
+            Value::SignedRefs(areas) => areas.len(),
+            _ => 1,
+        };
+        let area_number = match area_value {
+            Some(value)
+                if !args.get(3).is_some_and(|argument| argument.is_missing())
+                    && !matches!(value, Value::Missing) =>
+            {
+                let value = self.scalar(at, value)?;
+                match semantic(self.coercev2_scalar_number(&value))? {
+                    Ok(number) => Some(number),
+                    Err(error) => return Ok(err(error)),
                 }
-            } else if areas.len() == 1 {
-                // SAFETY: This branch checks areas.len() == 1 before selecting its first area.
-                areas[0]
+            }
+            _ => None,
+        };
+        let area_index = match poirot_coercionv2::lookup::coercev2_index_area(
+            area_number,
+            area_count,
+            if self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation {
+                poirot_coercionv2::lookup::IndexAreaDefault::FirstArea
             } else {
-                return Ok(err(VALUE_ERROR));
-            };
+                poirot_coercionv2::lookup::IndexAreaDefault::SingleArea
+            },
+        ) {
+            Ok(index) => index,
+            Err(error) => return Ok(err(error)),
+        };
+        if let Value::SignedRefs(areas) = &v {
+            let area = *areas.get(area_index).ok_or(EvaluationFailure::StalePlan)?;
             let (row, col) = match index_selection(
                 IndexForm::from_arity(args.len()),
                 area.height() as usize,
@@ -199,27 +219,7 @@ impl Session<'_> {
             return Ok(Value::SignedRefs(vec![area.select(row, col)]));
         }
         if let Value::Refs(areas) = v {
-            let area = if args.len() == 4 {
-                match semantic({
-                    let value = self.scalar(at, area_value.ok_or(EvaluationFailure::StalePlan)?)?;
-                    self.coercev2_scalar_number(&value)
-                })? {
-                    Ok(n) if n >= 1. && n.trunc() <= areas.len() as f64 => *areas
-                        .get(
-                            (n as usize)
-                                .checked_sub(1)
-                                .ok_or(EvaluationFailure::StalePlan)?,
-                        )
-                        .ok_or(EvaluationFailure::StalePlan)?,
-                    Ok(_) => return Ok(err(Ref)),
-                    Err(e) => return Ok(err(e)),
-                }
-            } else if areas.len() == 1 {
-                // SAFETY: This branch checks areas.len() == 1 before selecting its first area.
-                areas[0]
-            } else {
-                return Ok(err(VALUE_ERROR));
-            };
+            let area = *areas.get(area_index).ok_or(EvaluationFailure::StalePlan)?;
             let h = (area.r1 - area.r0 + 1) as usize;
             let w = (area.c1 - area.c0 + 1) as usize;
             let (row, col) =
@@ -252,6 +252,16 @@ impl Session<'_> {
                     area.c0 + col as u32 - 1
                 },
             }]));
+        }
+        if self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
+            && matches!(v, Value::Scalar(_) | Value::SelectedScalar(_, _))
+        {
+            return Ok(
+                match index_selection(IndexForm::from_arity(args.len()), 1, 1, row, col) {
+                    Ok(_) => v,
+                    Err(error) => err(error),
+                },
+            );
         }
         let anchor = match &v {
             Value::Array(view) => view.anchor,
@@ -294,12 +304,18 @@ impl Session<'_> {
                 .collect();
             Ok(Value::Array(ArrayView::anchored(selected, anchor)))
         } else {
-            if let Text(text) = a
+            let selected = a
                 .get(row.checked_sub(1).ok_or(EvaluationFailure::StalePlan)?)
                 .and_then(|values| col.checked_sub(1).and_then(|index| values.get(index)))
-                .ok_or(EvaluationFailure::StalePlan)?
-            {
-                self.budget.text(text.len())?;
+                .ok_or(EvaluationFailure::StalePlan)?;
+            if let Some(text) = selected.text_ref() {
+                self.budget.text(text.storage_bytes())?;
+            }
+            if self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation {
+                return Ok(Value::SelectedScalar(
+                    selected.clone(),
+                    host::OperandOrigin::ArrayElement,
+                ));
             }
             // Pinned Index.java returns a TwoDEval row/column view even for
             // a 1x1 selection. Scalar consumers still select its sole value.
@@ -346,22 +362,14 @@ fn index_selection(
     row: usize,
     column: usize,
 ) -> Result<(usize, usize), CellError> {
-    let (row, column) = if matches!(form, IndexForm::Vector) {
-        if width == 1 {
-            (row, 0)
-        } else if height == 1 {
-            (0, row)
-        } else {
-            return Err(Ref);
-        }
-    } else {
-        (row, column)
-    };
-    if row > height || column > width {
-        Err(Ref)
-    } else {
-        Ok((row, column))
-    }
+    poirot_functions_lookup::index_selection(
+        matches!(form, IndexForm::Vector),
+        height,
+        width,
+        row,
+        column,
+    )
+    .ok_or(Ref)
 }
 
 #[cfg(test)]

@@ -1,4 +1,5 @@
 //! Reference-preserving lookup kernels. Workbook services are explicit query ports.
+mod classic_match;
 mod comparison;
 mod domain;
 mod geometry;
@@ -11,6 +12,10 @@ mod search;
 mod syntax;
 mod table;
 mod wildcard;
+/// Typed classic MATCH selection with fallible, lazy candidate access.
+pub use classic_match::{
+    classic_match_index, ClassicMatchMode, MatchCandidateReader, MatchSelectionFailure,
+};
 /// Workbook-independent values, reference geometry, failures, and work requests.
 pub use domain::{
     Array, BudgetRequest, Error, Failure, OperationalFailure, Reference, ReferenceKind, Scalar,
@@ -26,6 +31,8 @@ pub use policy::{
 };
 /// Host ports for consumed cell reads, workbook metadata, and computed references.
 pub use ports::{Context, DynamicReference, Workbook};
+/// Pure INDEX coordinate selection over admitted dimensions and ordinals.
+pub use reference::index_selection;
 /// Parsing of dynamic A1/R1C1 reference spellings before host resolution.
 pub use syntax::parse_dynamic_reference;
 /// Pinned POI source revision defining compatibility behavior.
