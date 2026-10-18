@@ -434,7 +434,7 @@ mod membership_tests {
     }
 
     fn lookup(run: &mut Session<'_>, formula: &str) -> EvalResult<CellValue> {
-        let parsed = poirot_formula::parse_formula(formula).unwrap();
+        let parsed = poirot_parsing::formula::parse_formula(formula).unwrap();
         let bound = bound::FormulaPlan::bind(&parsed).unwrap();
         let at = "Z20".parse().unwrap();
         let value = run.expr(0, at, &bound.expression())?;

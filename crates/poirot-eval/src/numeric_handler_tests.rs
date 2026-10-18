@@ -27,7 +27,7 @@ fn bits(v: CellValue) -> u64 {
 }
 #[test]
 fn actual_bound_nonfinite_number_ptg_is_catchable_num_and_not_a_number() {
-    use poirot_formula::Expr as Syntax;
+    use poirot_parsing::formula::Expr as Syntax;
     let w = book();
     let c = pinned();
     for raw in [

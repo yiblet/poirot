@@ -1,13 +1,5 @@
 use super::DateOrder;
 use super::calendar::{Date, month_days};
-use nom::{
-    IResult, Parser,
-    bytes::complete::take_while1,
-    character::complete::char,
-    combinator::{all_consuming, opt, rest},
-    multi::separated_list1,
-    sequence::{preceded, terminated},
-};
 use poirot_functions_core::{CellError, CellError::Value as VALUE_ERROR};
 
 fn parse_month(s: &str) -> Option<i64> {
@@ -35,23 +27,7 @@ fn parse_month(s: &str) -> Option<i64> {
         .map(|i| i as i64 + 1)
 }
 fn date_parts(input: &str) -> Result<Vec<&str>, CellError> {
-    fn word(s: &str) -> IResult<&str, &str> {
-        take_while1(|c: char| c.is_ascii_alphanumeric())(s)
-    }
-    all_consuming(terminated(
-        separated_list1(
-            char(if input.split(' ').next().unwrap_or("").contains('/') {
-                '/'
-            } else {
-                '-'
-            }),
-            word,
-        ),
-        opt(preceded(char(' '), rest)),
-    ))
-    .parse(input)
-    .map(|(_, parts)| parts)
-    .map_err(|_| VALUE_ERROR)
+    poirot_parsing::date::date_parts(input).map_err(|_| VALUE_ERROR)
 }
 /// Inspection precedes the host's optional current-year/context reads.
 /// Resolution retains the same grammar pass and explicit localization input.

@@ -316,9 +316,9 @@ pub(crate) enum ReferenceRef<'a> {
         /// Last sheet spelling.
         last_sheet: &'a str,
         /// First cell endpoint.
-        start: &'a poirot_formula::CellReference,
+        start: &'a poirot_parsing::formula::CellReference,
         /// Optional second cell endpoint.
-        end: Option<&'a poirot_formula::CellReference>,
+        end: Option<&'a poirot_parsing::formula::CellReference>,
     },
 }
 

@@ -22,7 +22,8 @@ fn fixture() -> Workbook {
 }
 fn formula(w: &Workbook, expression: &str) -> CellValue {
     let plan =
-        bound::FormulaPlan::bind(&poirot_formula::parse_formula(expression).unwrap()).unwrap();
+        bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(expression).unwrap())
+            .unwrap();
     match crate::run_plan(
         w,
         0,
@@ -99,16 +100,17 @@ fn ordinary_reference_representation_stays_unsigned_and_signed_reads_are_lazy() 
     let mut session = Session::with_context(&w, EvaluationInputs::default());
     let at = "P1".parse().unwrap();
     let plan = bound::FormulaPlan::bind(
-        &poirot_formula::parse_formula("OFFSET(G5:H6,1,-1,-2,3)").unwrap(),
+        &poirot_parsing::formula::parse_formula("OFFSET(G5:H6,1,-1,-2,3)").unwrap(),
     )
     .unwrap();
     assert!(
         matches!(session.expr(0, at, &plan.expression()).unwrap(), Value::Refs(areas)
         if areas.len() == 1 && (areas[0].r0, areas[0].r1, areas[0].c0, areas[0].c1) == (2,5,5,7))
     );
-    let plan =
-        bound::FormulaPlan::bind(&poirot_formula::parse_formula("OFFSET(B3,0,0,-2,-2)").unwrap())
-            .unwrap();
+    let plan = bound::FormulaPlan::bind(
+        &poirot_parsing::formula::parse_formula("OFFSET(B3,0,0,-2,-2)").unwrap(),
+    )
+    .unwrap();
     assert!(
         matches!(session.expr(0, at, &plan.expression()).unwrap(), Value::SignedRefs(areas)
         if areas.len() == 1 && (areas[0].r0, areas[0].r1, areas[0].c0, areas[0].c1) == (-1,2,-2,1))
@@ -117,7 +119,8 @@ fn ordinary_reference_representation_stays_unsigned_and_signed_reads_are_lazy() 
 
 fn formula_at(w: &Workbook, expression: &str, address: &str, sheet: usize) -> CellValue {
     let plan =
-        bound::FormulaPlan::bind(&poirot_formula::parse_formula(expression).unwrap()).unwrap();
+        bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(expression).unwrap())
+            .unwrap();
     match crate::run_plan(
         w,
         sheet,
@@ -232,7 +235,8 @@ fn traced_formula(
     session.inputs = inputs;
     session.dependency_sink = Some(&mut reads);
     let plan =
-        bound::FormulaPlan::bind(&poirot_formula::parse_formula(expression).unwrap()).unwrap();
+        bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(expression).unwrap())
+            .unwrap();
     let at = "P1".parse().unwrap();
     let value = session.expr(0, at, &plan.expression()).unwrap();
     let value = session.scalar(at, value).unwrap();
@@ -395,7 +399,7 @@ fn signed_host_padding_origin_shape_and_relative_resize_are_preserved() {
     use crate::host::{CallHost, OperandKind, OperandOrigin};
     let w = fixture();
     let arguments = [bound::bind(
-        &poirot_formula::parse_formula("OFFSET(B3,0,0,-2,-2)").unwrap(),
+        &poirot_parsing::formula::parse_formula("OFFSET(B3,0,0,-2,-2)").unwrap(),
     )];
     let mut session = Session::with_context(&w, EvaluationInputs::default());
     let mut host = CallHost::new(&mut session, 0, "P1".parse().unwrap(), &arguments);
@@ -444,7 +448,7 @@ fn signed_logical_algebra_retains_padding_union_and_range_geometry() {
     let at = "P1".parse().unwrap();
     let mut session = Session::with_context(&w, EvaluationInputs::default());
     let read = |session: &mut Session<'_>, expression: &str| {
-        let expression = bound::bind(&poirot_formula::parse_formula(expression).unwrap());
+        let expression = bound::bind(&poirot_parsing::formula::parse_formula(expression).unwrap());
         session.expr(0, at, &expression).unwrap()
     };
     let signed = read(&mut session, "OFFSET(B3,0,0,-2,-2)");
@@ -474,7 +478,8 @@ fn signed_sum_union_source_throw_is_operational_and_bypasses_masks() {
         "IF(TRUE,SUM((OFFSET(B3,0,0,-2,-2),A1:B2)),42)",
     ] {
         let plan =
-            bound::FormulaPlan::bind(&poirot_formula::parse_formula(expression).unwrap()).unwrap();
+            bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(expression).unwrap())
+                .unwrap();
         assert!(
             matches!(run_plan(&w, 0, at, &plan, EvaluationInputs::default(), EvaluationBudgets::default()),
             EvaluationOutcome::Aborted { failure: EvaluationFailure::KnownSourceException {
@@ -509,8 +514,9 @@ fn signed_sum_union_throw_precedes_physical_area_reads() {
     let mut reads = SignedReads::default();
     let mut session = Session::with_context(&w, EvaluationInputs::default());
     session.dependency_sink = Some(&mut reads);
-    let expression =
-        bound::bind(&poirot_formula::parse_formula("SUM((OFFSET(B3,0,0,-2,-2),A1:B2))").unwrap());
+    let expression = bound::bind(
+        &poirot_parsing::formula::parse_formula("SUM((OFFSET(B3,0,0,-2,-2),A1:B2))").unwrap(),
+    );
     assert!(matches!(
         session.expr(0, "P1".parse().unwrap(), &expression),
         Err(EvaluationFailure::KnownSourceException {

@@ -126,7 +126,8 @@ fn resource_and_capability_faults_survive_iferror() {
             },
         ),
     ] {
-        let plan = FormulaPlan::bind(&poirot_formula::parse_formula(formula).unwrap()).unwrap();
+        let plan =
+            FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap()).unwrap();
         assert!(
             matches!(
                 run_plan(
@@ -259,7 +260,8 @@ fn irr_bound_admits_long_flow_and_preserves_fallback_and_no_root() {
             )
             .unwrap();
     }
-    let plan = FormulaPlan::bind(&poirot_formula::parse_formula("IRR(A1:A100)").unwrap()).unwrap();
+    let plan = FormulaPlan::bind(&poirot_parsing::formula::parse_formula("IRR(A1:A100)").unwrap())
+        .unwrap();
     let outcome = run_plan(
         &workbook,
         0,

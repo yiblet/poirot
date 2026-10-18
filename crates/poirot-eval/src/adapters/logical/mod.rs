@@ -237,7 +237,7 @@ mod tests {
             Number(3.)
         );
         let plan = bound::FormulaPlan::bind(
-            &poirot_formula::parse_formula("ISREF(A1,UNKNOWN_FUNCTION())").unwrap(),
+            &poirot_parsing::formula::parse_formula("ISREF(A1,UNKNOWN_FUNCTION())").unwrap(),
         )
         .unwrap();
         assert!(matches!(
@@ -258,7 +258,7 @@ mod tests {
             }
         ));
         let plan = bound::FormulaPlan::bind(
-            &poirot_formula::parse_formula("IFERROR(ISREF({1,2,3}),TRUE)").unwrap(),
+            &poirot_parsing::formula::parse_formula("IFERROR(ISREF({1,2,3}),TRUE)").unwrap(),
         )
         .unwrap();
         assert!(matches!(

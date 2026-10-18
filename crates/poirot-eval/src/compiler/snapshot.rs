@@ -213,7 +213,7 @@ impl<'a> Plan<'a> {
                             target: match c.builtin {
                                 Some(name) => CallTarget::Builtin(
                                     registry::resolve_function(
-                                        &poirot_formula::FunctionName::from(&*name),
+                                        &poirot_parsing::formula::FunctionName::from(&*name),
                                     )
                                     .ok_or("snapshot builtin unavailable")?
                                     .handler,

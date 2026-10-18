@@ -102,7 +102,7 @@ fn first_match_does_not_reserve_or_read_populated_unused_suffix() {
         .unwrap(),
     );
     session.dependency_sink = Some(&mut reads);
-    let syntax = poirot_formula::parse_formula("VLOOKUP(7,A:B,2,FALSE)").unwrap();
+    let syntax = poirot_parsing::formula::parse_formula("VLOOKUP(7,A:B,2,FALSE)").unwrap();
     let plan = bound::FormulaPlan::bind(&syntax).unwrap();
     let at = "Z20".parse().unwrap();
     let value = session.expr(0, at, &plan.expression()).unwrap();
@@ -140,7 +140,7 @@ fn absent_gap_has_membership_guard_and_stored_blank_formula_is_evaluated() {
     let mut reads = Reads::default();
     let mut session = Session::with_context(&w, EvaluationInputs::default());
     session.dependency_sink = Some(&mut reads);
-    let syntax = poirot_formula::parse_formula("MATCH(7,A:A,0)").unwrap();
+    let syntax = poirot_parsing::formula::parse_formula("MATCH(7,A:A,0)").unwrap();
     let plan = bound::FormulaPlan::bind(&syntax).unwrap();
     let at = "Z20".parse().unwrap();
     let result = session.expr(0, at, &plan.expression()).unwrap();
@@ -235,7 +235,7 @@ fn stored_formula_scalar_projection_remains_operational_and_lazy_branch_has_no_q
     let mut reads = Reads::default();
     let mut session = Session::with_context(&w, EvaluationInputs::default());
     session.dependency_sink = Some(&mut reads);
-    let syntax = poirot_formula::parse_formula("IF(FALSE,MATCH(7,A:A,0),42)").unwrap();
+    let syntax = poirot_parsing::formula::parse_formula("IF(FALSE,MATCH(7,A:A,0),42)").unwrap();
     let plan = bound::FormulaPlan::bind(&syntax).unwrap();
     let at = "Z20".parse().unwrap();
     let result = session.expr(0, at, &plan.expression()).unwrap();
@@ -329,7 +329,7 @@ fn stored_random_and_error_formulas_keep_actual_effects_despite_stale_caches() {
     let mut reads = Reads::default();
     let mut session = Session::with_context(&w, EvaluationInputs::default());
     session.dependency_sink = Some(&mut reads);
-    let syntax = poirot_formula::parse_formula("MATCH(9,A:A,0)").unwrap();
+    let syntax = poirot_parsing::formula::parse_formula("MATCH(9,A:A,0)").unwrap();
     let plan = bound::FormulaPlan::bind(&syntax).unwrap();
     let at = "Z20".parse().unwrap();
     let result = session.expr(0, at, &plan.expression()).unwrap();

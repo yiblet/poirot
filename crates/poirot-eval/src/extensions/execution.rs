@@ -62,7 +62,7 @@ pub(crate) fn run<T>(
         }
     };
     let policy = crate::EvaluationPolicy::with_extensions(
-        poirot_formula::FormulaParsePolicy::default(),
+        poirot_parsing::formula::FormulaParsePolicy::default(),
         execution.registry,
     );
     let plan = crate::FormulaCompiler::new().compile_workbook_with_extensions(
@@ -102,7 +102,7 @@ pub fn run_formula_with_extensions(
 ) -> ExtensionEvaluation<CellValue> {
     run(workbook, execution, |session| {
         let policy = crate::EvaluationPolicy::with_extensions(
-            poirot_formula::FormulaParsePolicy::default(),
+            poirot_parsing::formula::FormulaParsePolicy::default(),
             session.extensions.ok_or(EvaluationFailure::StalePlan)?,
         );
         let prepared = crate::FormulaCompiler::new().compile_formula_with_extensions(

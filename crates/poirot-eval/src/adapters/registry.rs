@@ -5,7 +5,7 @@ use crate::{
     EvaluationFailure,
     registry::{FunctionDescriptor, FunctionId},
 };
-use poirot_formula::{CommonFunction, FunctionName};
+use poirot_parsing::formula::{CommonFunction, FunctionName};
 use std::{collections::HashMap, sync::Arc};
 
 /// Flattened adapter callback stored by the parent builtin registry.

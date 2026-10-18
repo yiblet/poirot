@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+poirot-parsing = { path = "../poirot-parsing" }
 poirot-coercionv2 = { path = "../poirot-coercionv2" }
 poirot-functions-core = { path = "../poirot-functions-core" }
 poirot-functions-criteria = { path = "../poirot-functions-criteria" }

@@ -72,7 +72,7 @@ pub enum ArrayResultPolicy {
 pub struct RunConfiguration {
     context: EvaluationInputs,
     formatting: FormattingConfiguration,
-    number_locale: poirot_coercionv2::NumberLocaleV2,
+    number_locale: poirot_parsing::number::NumberLocaleV2,
     text_policy: TextSemanticsPolicy,
     numeric_policy: crate::NumericOutcomePolicy,
     builtin_policy: BuiltinSemanticsPolicy,
@@ -112,12 +112,12 @@ impl RunConfiguration {
     /// let configuration = RunConfiguration::default().with_number_locale(comma);
     /// # Ok::<(), &str>(())
     /// ```
-    pub fn with_number_locale(mut self, locale: poirot_coercionv2::NumberLocaleV2) -> Self {
+    pub fn with_number_locale(mut self, locale: poirot_parsing::number::NumberLocaleV2) -> Self {
         self.number_locale = locale;
         self
     }
     /// Numeric text input profile. No ambient locale is consulted.
-    pub fn number_locale(&self) -> &poirot_coercionv2::NumberLocaleV2 {
+    pub fn number_locale(&self) -> &poirot_parsing::number::NumberLocaleV2 {
         &self.number_locale
     }
     /// Select a source-version policy explicitly. Existing constructors preserve legacy ROI units.
@@ -206,7 +206,7 @@ pub struct ConfigurationFingerprint {
     /// Exact formatting settings.
     pub formatting: FormattingConfiguration,
     /// Exact numeric input token profile.
-    pub number_locale: poirot_coercionv2::NumberLocaleV2,
+    pub number_locale: poirot_parsing::number::NumberLocaleV2,
     /// Selected text source semantics.
     pub text_policy: TextSemanticsPolicy,
     /// Selected numeric result semantics.

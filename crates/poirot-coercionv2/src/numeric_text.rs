@@ -88,7 +88,7 @@ pub fn coercev2_number_value(text: &str, decimal: u16, grouping: u16) -> Result<
         percent += 1;
     }
     let text = String::from_utf16(&units).map_err(|_| value_error())?;
-    let number = poirot_numeric::parse_java_number(&text).ok_or_else(value_error)?
+    let number = poirot_parsing::java_number::parse_java_number(&text).ok_or_else(value_error)?
         / i32::try_from(percent).map_or(f64::INFINITY, |count| 100_f64.powi(count));
     if number.is_finite() {
         Ok(number)
@@ -104,11 +104,11 @@ pub fn coercev2_number_value(text: &str, decimal: u16, grouping: u16) -> Result<
 /// before calling this kernel. Normalization never grows beyond the input bytes.
 pub fn coercev2_number_value_excel(
     text: &str,
-    locale: &crate::NumberLocaleV2,
+    locale: &poirot_parsing::number::NumberLocaleV2,
     decimal_argument: Option<&str>,
     grouping_argument: Option<&str>,
 ) -> Result<f64, ParseFailure> {
-    use nom::{Parser, combinator::all_consuming, number::complete::recognize_float};
+    use nom::{Parser, combinator::all_consuming};
     let value_error = || ParseFailure::Spreadsheet(Error::Value);
     if decimal_argument
         .into_iter()
@@ -177,10 +177,11 @@ pub fn coercev2_number_value_excel(
         // by the initial String length, which is representable as usize.
         percent_count += 1;
     }
-    all_consuming(recognize_float::<_, nom::error::Error<_>>)
+    all_consuming(poirot_parsing::number::source_float)
         .parse(normalized.as_str())
         .map_err(|_| value_error())?;
-    let mut number = normalized.parse::<f64>().map_err(|_| value_error())?;
+    let mut number =
+        poirot_parsing::number::parse_rust_float(&normalized).ok_or_else(value_error)?;
     if !number.is_finite() {
         return Err(value_error());
     }
@@ -206,7 +207,7 @@ mod tests {
     use super::*;
     #[test]
     fn documented_numbervalue_preserves_tiny_percent_results_and_locale_tokens() {
-        let locale = crate::NumberLocaleV2::EN_US;
+        let locale = poirot_parsing::number::NumberLocaleV2::EN_US;
         let parse = |s| coercev2_number_value_excel(s, &locale, None, None);
         assert_eq!(parse("1.23456789e308"), Ok(1.23456789e308));
         assert_eq!(parse("1.23456789e-310"), Ok(1.23456789e-310));
@@ -220,10 +221,12 @@ mod tests {
         assert_eq!(parse("1e309"), Err(ParseFailure::Spreadsheet(Error::Value)));
         assert_eq!(parse("1,,2.5"), Ok(12.5));
         assert_eq!(parse("1.2,3"), Err(ParseFailure::Spreadsheet(Error::Value)));
-        let synthetic = crate::NumberLocaleV2::new("::", Some("__"), None, "%", ":");
+        let synthetic =
+            poirot_parsing::number::NumberLocaleV2::new("::", Some("__"), None, "%", ":");
         // Locale validation deliberately forbids overlapping decimal/time tokens.
         assert!(synthetic.is_none());
-        let synthetic = crate::NumberLocaleV2::new("::", Some("__"), None, "%", "|").unwrap();
+        let synthetic =
+            poirot_parsing::number::NumberLocaleV2::new("::", Some("__"), None, "%", "|").unwrap();
         assert_eq!(
             coercev2_number_value_excel("1__234::5", &synthetic, None, None),
             Ok(1234.5)

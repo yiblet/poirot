@@ -49,4 +49,4 @@ codecs, storage and input limits remain separate. Use trusted same-engine data.
 `workbook()`/`workbook_mut()`. Saving is explicit through `SavePlan`; imports and
 exports do not calculate. Formula-aware structural edits remain in `edit` and
 `translation_edit`. The [root guide](../../README.md) and
-[API reference](../../docs/public-api.md) describe the full workflow.
+[evaluation guide](../../docs/evaluation.md) describe the full workflow.

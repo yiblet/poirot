@@ -9,10 +9,10 @@ use poirot_model::{CellError, CellValue};
 #[test]
 fn source_specific_aliases_preserve_typed_handlers_and_prefix_case() {
     assert_eq!(
-        resolve_function(&poirot_formula::FunctionName::from("_xlfn.ifna"))
+        resolve_function(&poirot_parsing::formula::FunctionName::from("_xlfn.ifna"))
             .unwrap()
             .handler,
-        resolve_function(&poirot_formula::FunctionName::from("IFNA"))
+        resolve_function(&poirot_parsing::formula::FunctionName::from("IFNA"))
             .unwrap()
             .handler
     );
@@ -24,11 +24,11 @@ fn source_specific_aliases_preserve_typed_handlers_and_prefix_case() {
         "PERCENTILE.INC",
     ] {
         assert!(
-            resolve_function(&poirot_formula::FunctionName::from(name)).is_none(),
+            resolve_function(&poirot_parsing::formula::FunctionName::from(name)).is_none(),
             "{name}"
         );
     }
-    let syntax = poirot_formula::parse_formula("_xlfn.IFNA(1,2)").unwrap();
+    let syntax = poirot_parsing::formula::parse_formula("_xlfn.IFNA(1,2)").unwrap();
     assert!(matches!(
         FormulaPlan::bind(&syntax).unwrap().expression(),
         Expression::Logical(_)
@@ -161,7 +161,7 @@ fn explicit_external_namespace_is_bounded_and_preserves_raw_plan_syntax() {
     );
     let mut registry = ExtensionRegistry::new();
     registry.set_external_namespace(Some(namespace)).unwrap();
-    let syntax = poirot_formula::parse_formula("_Xlfn.IfNa(#N/A,2)").unwrap();
+    let syntax = poirot_parsing::formula::parse_formula("_Xlfn.IfNa(#N/A,2)").unwrap();
     let plan = FormulaPlan::bind_with_extensions(&syntax, &registry).unwrap();
     assert_eq!(plan.syntax(), &syntax);
     assert!(matches!(plan.expression(), Expression::Logical(_)));

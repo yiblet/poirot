@@ -87,7 +87,7 @@ pub(crate) struct ContextKey {
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct OverlayPolicy {
     /// Formula grammar and preparation limits.
-    pub parse: poirot_formula::FormulaParsePolicy,
+    pub parse: poirot_parsing::formula::FormulaParsePolicy,
     /// Numeric result and error handling rules.
     pub numeric: crate::NumericOutcomePolicy,
     /// Selected builtin compatibility behavior.

@@ -106,7 +106,8 @@ fn prediction_requires_a_fit_without_residual_degrees_of_freedom() {
     ] {
         let prepared = compiler.compile_formula(formula, &policy);
         let bound =
-            bound::FormulaPlan::bind(&poirot_formula::parse_formula(formula).unwrap()).unwrap();
+            bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap())
+                .unwrap();
         let mut run = EvaluationRun::new_with_configuration(
             WorkbookView::new(&book, &plan, &policy).unwrap(),
             &config,

@@ -156,7 +156,7 @@ fn check(
         let expected = if gaps::expected_is_error_flag(case) {
             None
         } else if let Some(formula) = &case.expected.formula {
-            poirot_formula::parse_formula(formula)
+            poirot_parsing::formula::parse_formula(formula)
                 .ok()
                 .filter(|expr| gaps::missing_functions(expr).is_empty())
                 .and_then(|_| {

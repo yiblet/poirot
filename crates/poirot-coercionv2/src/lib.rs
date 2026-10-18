@@ -64,7 +64,7 @@ pub mod collections;
 pub mod numeric_text;
 
 mod formatted_number;
-pub use formatted_number::{NumberLocaleV2, coercev2_formatted_number};
+pub use formatted_number::coercev2_formatted_number;
 
 /// Complex-number argument grammars and computed result spelling.
 pub mod complex;

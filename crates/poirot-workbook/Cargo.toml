@@ -6,7 +6,7 @@ description = "Workbook editing, evaluation contexts and explicit save planning 
 
 [dependencies]
 poirot-model = { path = "../poirot-model" }
-poirot-formula = { path = "../poirot-formula" }
+poirot-parsing = { path = "../poirot-parsing" }
 poirot-eval = { path = "../poirot-eval" }
 poirot-io = { path = "../poirot-io" }
 poirot-xls = { path = "../poirot-xls" }

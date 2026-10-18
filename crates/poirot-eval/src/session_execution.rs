@@ -8,7 +8,7 @@ impl<'a> Session<'a> {
             .extensions
             .map_or_else(EvaluationPolicy::default, |registry| {
                 EvaluationPolicy::with_extensions(
-                    poirot_formula::FormulaParsePolicy::default(),
+                    poirot_parsing::formula::FormulaParsePolicy::default(),
                     registry,
                 )
             });
@@ -46,7 +46,7 @@ impl<'a> Session<'a> {
             inputs: None,
             context,
             currency: None,
-            number_locale: &poirot_coercionv2::NumberLocaleV2::EN_US,
+            number_locale: &poirot_parsing::number::NumberLocaleV2::EN_US,
             numeric_policy: NumericOutcomePolicy::LegacyFinite,
             builtin_policy: BuiltinSemanticsPolicy::default(),
             array_result_policy: ArrayResultPolicy::default(),

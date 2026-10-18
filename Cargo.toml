@@ -43,7 +43,7 @@ serde.workspace = true
 postcard.workspace = true
 poirot-workbook = { path = "crates/poirot-workbook" }
 poirot-model = { path = "crates/poirot-model" }
-poirot-formula = { path = "crates/poirot-formula" }
+poirot-parsing = { path = "crates/poirot-parsing" }
 poirot-eval = { path = "crates/poirot-eval" }
 poirot-io = { path = "crates/poirot-io" }
 poirot-format = { path = "crates/poirot-format" }

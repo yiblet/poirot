@@ -1,8 +1,8 @@
 #![doc = include_str!("../README.md")]
 use CellError::*;
 use CellValue::{Blank, Boolean, Error, Number, Text};
-use poirot_formula::{BinaryOp, UnaryOp};
 use poirot_model::{CellAddress, CellError, CellValue, MAX_COLUMNS, MAX_ROWS, Workbook};
+use poirot_parsing::formula::{BinaryOp, UnaryOp};
 use std::collections::{HashMap, HashSet};
 use std::time::SystemTime;
 #[cfg(test)]
@@ -37,7 +37,7 @@ pub use configuration::{
     CurrencyContext, FormattingConfiguration, RunConfiguration,
 };
 /// Explicit numeric input tokens for locale-parametric argument parsing.
-pub use poirot_coercionv2::NumberLocaleV2;
+pub use poirot_parsing::number::NumberLocaleV2;
 /// Formula compilation and immutable execution preparation.
 pub mod compiler;
 mod consumed_calls;
@@ -490,7 +490,7 @@ struct Session<'a> {
     inputs: Option<&'a run_overlay::RunInputs>,
     context: EvaluationInputs,
     currency: Option<&'a CurrencyContext>,
-    number_locale: &'a poirot_coercionv2::NumberLocaleV2,
+    number_locale: &'a poirot_parsing::number::NumberLocaleV2,
     text_policy: poirot_text::TextSemanticsPolicy,
     numeric_policy: NumericOutcomePolicy,
     builtin_policy: BuiltinSemanticsPolicy,

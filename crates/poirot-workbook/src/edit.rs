@@ -1,8 +1,8 @@
 //! Pure formula-aware planning; model owns atomic application.
-use poirot_formula::{
+use poirot_model::{FormulaReplacement, FormulaSource, ModelError, RenameSheetPlan, Workbook};
+use poirot_parsing::formula::{
     Expr, FormulaParsePolicy, FormulaPrinter, ParseError, parse_formula_with_policy,
 };
-use poirot_model::{FormulaReplacement, FormulaSource, ModelError, RenameSheetPlan, Workbook};
 use std::fmt;
 
 /// Untouched imported source stays byte-for-byte intact. Changed syntax is printed
@@ -343,7 +343,7 @@ mod tests {
     #[test]
     fn rewriting_visits_every_argument_and_array_element() {
         let mut expression =
-            poirot_formula::parse_formula("SUM(Data!A1,1,Data!B1,Data!C1)").unwrap();
+            poirot_parsing::formula::parse_formula("SUM(Data!A1,1,Data!B1,Data!C1)").unwrap();
         assert!(rewrite(&mut expression, "Data", "Input").unwrap());
         assert_eq!(
             FormulaPrinter::print(&expression).unwrap(),
@@ -351,13 +351,13 @@ mod tests {
         );
         // The parser currently restricts array literals to constants. Exercise
         // traversal directly so future array expression support cannot skip cells.
-        let reference = poirot_formula::parse_formula("Data!A1").unwrap();
+        let reference = poirot_parsing::formula::parse_formula("Data!A1").unwrap();
         let mut array = Expr::Array(vec![
             vec![reference.clone(), Expr::Number(1.0)],
             vec![reference.clone(), reference],
         ]);
         assert!(rewrite(&mut array, "Data", "Input").unwrap());
-        let expected = poirot_formula::parse_formula("Input!A1").unwrap();
+        let expected = poirot_parsing::formula::parse_formula("Input!A1").unwrap();
         assert_eq!(
             array,
             Expr::Array(vec![
@@ -458,8 +458,8 @@ mod identifier_edit_tests {
         // The printer canonically quotes every sheet qualifier, even ASCII names.
         assert_eq!(plan.replacements()[0].replacement, "'Input'!B1");
         assert_eq!(
-            poirot_formula::parse_formula(&plan.replacements()[0].replacement).unwrap(),
-            poirot_formula::parse_formula("Input!B1").unwrap()
+            poirot_parsing::formula::parse_formula(&plan.replacements()[0].replacement).unwrap(),
+            poirot_parsing::formula::parse_formula("Input!B1").unwrap()
         );
         let mut unresolved = Workbook::new();
         unresolved

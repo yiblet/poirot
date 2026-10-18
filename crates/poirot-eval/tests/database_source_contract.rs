@@ -5,7 +5,7 @@ use poirot_model::{CellAddress, CellError as E, CellValue as V, Workbook};
 fn check(formula: &str, expected: V) {
     let mut w = Workbook::new();
     w.add_sheet("Sheet1").unwrap();
-    let p = FormulaPlan::bind(&poirot_formula::parse_formula(formula).unwrap()).unwrap();
+    let p = FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap()).unwrap();
     assert_eq!(
         match poirot_eval::run_plan(
             &w,
@@ -109,7 +109,8 @@ fn blank_conditions_and_get_termination_preserve_laziness() {
         ("DGET(A1:A4,1,C1:D3)", V::Error(E::Num)),
         ("DSUM(A1:A4,1,F1:F2)", 11.0.into()),
     ] {
-        let p = FormulaPlan::bind(&poirot_formula::parse_formula(formula).unwrap()).unwrap();
+        let p =
+            FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap()).unwrap();
         assert_eq!(
             match poirot_eval::run_plan(
                 &w,

@@ -178,7 +178,7 @@ fn contextual_text_admission_tracks_locale_calendar_profiles_edits_and_snapshots
         );
     }
     context.number_locale =
-        poirot_coercionv2::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap();
+        poirot_parsing::number::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap();
     assert_eq!(
         overlay
             .evaluation(&context)
@@ -255,7 +255,8 @@ fn text_calendar_admission_uses_workbook_epoch_and_does_not_swallow_operational_
         "0".into()
     );
     let syntax =
-        poirot_formula::parse_formula(r#"IFERROR(TEXT("15:43:09","h:mm:ss AM/PM"),99)"#).unwrap();
+        poirot_parsing::formula::parse_formula(r#"IFERROR(TEXT("15:43:09","h:mm:ss AM/PM"),99)"#)
+            .unwrap();
     let plan = poirot_eval::bound::FormulaPlan::bind(&syntax).unwrap();
     for budget in [
         EvaluationBudgets {

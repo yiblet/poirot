@@ -116,7 +116,7 @@ mod tests {
     #[test]
     fn refusing_profile_observer_preserves_tree_vm_and_direct_policy_reads() {
         let workbook = workbook();
-        let syntax = poirot_formula::parse_formula("RANK.EQ(4,{1,4,4},0)").unwrap();
+        let syntax = poirot_parsing::formula::parse_formula("RANK.EQ(4,{1,4,4},0)").unwrap();
         let bound = bound::FormulaPlan::bind(&syntax).unwrap();
         let compiled = bytecode::compile(&syntax).unwrap();
         for vm in [false, true] {
@@ -161,11 +161,11 @@ mod tests {
         let result = run.call_with_adapter(
             &builtins(),
             target(),
-            &poirot_formula::FunctionName::from("RANK.EQ"),
+            &poirot_parsing::formula::FunctionName::from("RANK.EQ"),
             [
-                bytecode::compile(&poirot_formula::Expr::Number(4.)).unwrap(),
-                bytecode::compile(&poirot_formula::Expr::Number(1.)).unwrap(),
-                bytecode::compile(&poirot_formula::Expr::Number(0.)).unwrap(),
+                bytecode::compile(&poirot_parsing::formula::Expr::Number(4.)).unwrap(),
+                bytecode::compile(&poirot_parsing::formula::Expr::Number(1.)).unwrap(),
+                bytecode::compile(&poirot_parsing::formula::Expr::Number(0.)).unwrap(),
             ]
             .into_iter()
             .collect(),
@@ -198,7 +198,7 @@ mod tests {
             builtins()
                 .call(
                     &mut context,
-                    &poirot_formula::FunctionName::from("UNKNOWN"),
+                    &poirot_parsing::formula::FunctionName::from("UNKNOWN"),
                     std::iter::empty().collect(),
                 )
                 .unwrap()

@@ -1,6 +1,6 @@
 //! Pure structural admission of caller-provided syntax.
 //! This checks resource budgets, array shape and grid bounds, never function eligibility.
-use poirot_formula::Expr as Syntax;
+use poirot_parsing::formula::Expr as Syntax;
 
 /// Structural failure while admitting caller-provided expression syntax.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

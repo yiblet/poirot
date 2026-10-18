@@ -1,7 +1,7 @@
 //! Pure ingress parsing; workbook-dependent identifier lookup stays in the shell.
-use poirot_formula as formula;
 use poirot_model as model;
 use poirot_model::ModelError as Error;
+use poirot_parsing::formula;
 use std::borrow::Cow;
 
 /// Parsed local sheet name and address, before workbook lookup.

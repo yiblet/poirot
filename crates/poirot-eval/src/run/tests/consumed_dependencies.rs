@@ -321,7 +321,7 @@ fn indirect_parses_current_operands_at_runtime_and_honors_parse_policy() {
         );
     }
     let restricted = EvaluationPolicy {
-        parse: poirot_formula::FormulaParsePolicy {
+        parse: poirot_parsing::formula::FormulaParsePolicy {
             max_rows: 1,
             ..policy.parse
         },

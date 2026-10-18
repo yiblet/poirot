@@ -2,8 +2,10 @@
 #[cfg(test)]
 use crate::bound;
 use crate::{EvaluationTarget, registry};
-use poirot_formula::{FormulaParsePolicy, ParseError, ParsedFormula, parse_formula_with_policy};
 use poirot_model::{CellAddress, Workbook};
+use poirot_parsing::formula::{
+    FormulaParsePolicy, ParseError, ParsedFormula, parse_formula_with_policy,
+};
 use std::{
     collections::HashMap,
     hash::{Hash, Hasher},
@@ -73,9 +75,9 @@ pub struct CompilerUsage {
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum PotentialReference {
     /// Syntactically present cell reference, possibly in an unselected branch.
-    Cell(poirot_formula::CellReference),
+    Cell(poirot_parsing::formula::CellReference),
     /// Ordered sheet endpoints and cell anchors retained until workbook resolution.
-    SheetSpan(poirot_formula::SheetSpanReference),
+    SheetSpan(poirot_parsing::formula::SheetSpanReference),
     /// Syntactically present whole-column reference.
     Column {
         /// Zero-based column index.
@@ -350,8 +352,8 @@ fn executable_hash(program: &crate::bytecode::Executable) -> u64 {
 }
 fn classified_cell_count(source: &str, policy: &EvaluationPolicy) -> Option<usize> {
     let mut count = 0;
-    for token in poirot_formula::classified::Tokens::new(source) {
-        if let poirot_formula::classified::TokenKind::Cell(cell) = token.ok()?.kind {
+    for token in poirot_parsing::formula::classified::Tokens::new(source) {
+        if let poirot_parsing::formula::classified::TokenKind::Cell(cell) = token.ok()?.kind {
             if cell.row >= policy.parse.max_rows || cell.column >= policy.parse.max_columns {
                 return None;
             }
@@ -371,7 +373,7 @@ fn rebound(exemplar: &CompiledFormula, source: &str, cell_count: usize) -> Optio
     // Rebinding point cells preserves shape. Range endpoints can change a
     // producer's dimensions, so those bounds must be compiled again.
     if exemplar.spill.shape.is_some()
-        && poirot_formula::classified::Tokens::new(source)
+        && poirot_parsing::formula::classified::Tokens::new(source)
             .any(|token| token.is_ok_and(|token| token.raw == ":"))
     {
         return None;
@@ -397,8 +399,8 @@ fn rebound(exemplar: &CompiledFormula, source: &str, cell_count: usize) -> Optio
     let mut references = program.references.clone();
     let mut potential = exemplar.potential.clone();
     let mut index = 0;
-    for token in poirot_formula::classified::Tokens::new(source) {
-        let poirot_formula::classified::TokenKind::Cell(cell) = token.ok()?.kind else {
+    for token in poirot_parsing::formula::classified::Tokens::new(source) {
+        let poirot_parsing::formula::classified::TokenKind::Cell(cell) = token.ok()?.kind else {
             continue;
         };
         let slot = references.slots.get(index)?;
@@ -511,13 +513,13 @@ impl FormulaCompiler {
             self.templates.push(TemplatePool::default());
             self.pool.len() - 1
         });
-        let normalized = poirot_formula::classified::normalized_hash(source).ok();
+        let normalized = poirot_parsing::formula::classified::normalized_hash(source).ok();
         if let Some(bucket) =
             // SAFETY: The entry check requires templates.len() == pool.len(); position returns a valid pool index, or this function pushes one element into both vectors before indexing.
             normalized.and_then(|hash| self.templates[pool_index].classified.get(&hash))
         {
             for exemplar in bucket {
-                if poirot_formula::classified::normalized_equal(source, &exemplar.source)
+                if poirot_parsing::formula::classified::normalized_equal(source, &exemplar.source)
                     == Ok(true)
                     && let Some(cell_count) = classified_cell_count(source, policy)
                     && let Some(formula) = rebound(exemplar, source, cell_count)
@@ -660,10 +662,10 @@ impl FormulaCompiler {
     }
 }
 fn potential(
-    expression: &poirot_formula::Expr,
+    expression: &poirot_parsing::formula::Expr,
     executable: &crate::bytecode::Compiled,
 ) -> Option<PotentialDependencies> {
-    use poirot_formula::Expr;
+    use poirot_parsing::formula::Expr;
     let mut result = PotentialDependencies::default();
     let mut pending = vec![expression];
     while let Some(expression) = pending.pop() {
@@ -952,7 +954,7 @@ mod template_tests {
         let mut compiler = FormulaCompiler::new();
         let policy = EvaluationPolicy::default();
         let first = compiler.compile_formula("SUM(A1,1)", &policy);
-        let hash = poirot_formula::classified::normalized_hash("SUM(B2,2)").unwrap();
+        let hash = poirot_parsing::formula::classified::normalized_hash("SUM(B2,2)").unwrap();
         let PreparedFormula::Ready(first) = first.as_ref() else {
             panic!()
         };
@@ -1021,7 +1023,8 @@ mod template_tests {
         let policy = EvaluationPolicy::default();
         let first = compiler.compile_formula("1+2", &policy);
         let other =
-            crate::bytecode::compile(&poirot_formula::parse_formula("1+3").unwrap()).unwrap();
+            crate::bytecode::compile(&poirot_parsing::formula::parse_formula("1+3").unwrap())
+                .unwrap();
         let hash = executable_hash(&other.executable);
         compiler.templates[0]
             .structural

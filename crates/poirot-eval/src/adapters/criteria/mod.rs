@@ -2,7 +2,8 @@
 use crate::criteria_adapter::{Function, cell, error};
 use crate::host::{CallHost, MissingPolicy, NumericPolicy, OperandKind};
 use crate::*;
-use poirot_functions_criteria::{Cell, Comparison, Criterion};
+use poirot_functions_criteria::{Cell, Criterion};
+use poirot_parsing::criteria::Comparison;
 
 /// Dispatch criteria aggregation with lazy, metered workbook reads.
 pub(crate) fn execute(

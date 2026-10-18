@@ -5,6 +5,7 @@ edition.workspace = true
 description = "Typed, consumer-requested spreadsheet value conversions"
 
 [dependencies]
+poirot-parsing = { path = "../poirot-parsing" }
 nom.workspace = true
 regex.workspace = true
 serde = { workspace = true, features = ["derive"] }

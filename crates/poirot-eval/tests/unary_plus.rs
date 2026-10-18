@@ -92,7 +92,8 @@ fn unary_plus_preserves_selected_value_types() {
         ] {
             let prepared = compiler.compile_formula(formula, &policy);
             let bound =
-                bound::FormulaPlan::bind(&poirot_formula::parse_formula(formula).unwrap()).unwrap();
+                bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap())
+                    .unwrap();
             assert_eq!(
                 run.evaluate_formula(target("F2"), &prepared).unwrap(),
                 expected,

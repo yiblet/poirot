@@ -153,7 +153,7 @@ fn radix_operational_budgets_escape_iferror() {
 fn radix_numeric_arguments_use_calculation_locale_and_currency() {
     let book = book();
     let configuration = poirot_eval::RunConfiguration::default().with_number_locale(
-        poirot_coercionv2::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap(),
+        poirot_parsing::number::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap(),
     );
     for (formula, expected) in [
         (r#"BASE("€15,9",16,"3,9")"#, CellValue::Text("00F".into())),

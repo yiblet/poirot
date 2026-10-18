@@ -9,7 +9,9 @@ fn descriptor_contracts_and_family_owned_execution_are_not_stubs() {
     for descriptor in FUNCTION_DESCRIPTORS {
         assert!(names.insert(descriptor.name));
         assert_eq!(
-            resolve_function(&poirot_formula::FunctionName::from(descriptor.name)),
+            resolve_function(&poirot_parsing::formula::FunctionName::from(
+                descriptor.name
+            )),
             Some(descriptor)
         );
         let strategy = match descriptor.handler {
@@ -78,7 +80,7 @@ fn descriptor_contracts_and_family_owned_execution_are_not_stubs() {
         ("CONCAT", 1, 255),
     ] {
         assert_eq!(
-            resolve_function(&poirot_formula::FunctionName::from(name))
+            resolve_function(&poirot_parsing::formula::FunctionName::from(name))
                 .unwrap()
                 .arity,
             Arity { minimum, maximum },
@@ -86,7 +88,8 @@ fn descriptor_contracts_and_family_owned_execution_are_not_stubs() {
         );
     }
     for name in ["ABS", "POWER", "LOG", "TRUNC"] {
-        let descriptor = resolve_function(&poirot_formula::FunctionName::from(name)).unwrap();
+        let descriptor =
+            resolve_function(&poirot_parsing::formula::FunctionName::from(name)).unwrap();
         assert_eq!(descriptor.strategy, EvaluationStrategy::FamilyControlled);
         assert!(descriptor.dependencies.contains(DependencyPolicy::TIME));
         assert!(
@@ -105,24 +108,27 @@ fn descriptor_contracts_and_family_owned_execution_are_not_stubs() {
                 .contains(DependencyPolicy::DATE_SYSTEM)
         );
     }
-    let text = resolve_function(&poirot_formula::FunctionName::from("TEXT")).unwrap();
+    let text = resolve_function(&poirot_parsing::formula::FunctionName::from("TEXT")).unwrap();
     assert!(text.dependencies.contains(DependencyPolicy::DATE_SYSTEM));
     assert!(
-        resolve_function(&poirot_formula::FunctionName::from("NOW"))
+        resolve_function(&poirot_parsing::formula::FunctionName::from("NOW"))
             .unwrap()
             .dependencies
             .contains(DependencyPolicy::TIME)
     );
     assert!(
-        resolve_function(&poirot_formula::FunctionName::from("YEARFRAC"))
+        resolve_function(&poirot_parsing::formula::FunctionName::from("YEARFRAC"))
             .unwrap()
             .dependencies
             .contains(DependencyPolicy::LOCALIZATION)
     );
-    assert!(resolve_function(&poirot_formula::FunctionName::from("_xlfn.IFNA")).is_some());
-    assert!(resolve_function(&poirot_formula::FunctionName::from("_XLFN.IFNA")).is_none());
+    assert!(resolve_function(&poirot_parsing::formula::FunctionName::from("_xlfn.IFNA")).is_some());
+    assert!(resolve_function(&poirot_parsing::formula::FunctionName::from("_XLFN.IFNA")).is_none());
     assert!(
-        resolve_function(&poirot_formula::FunctionName::from("_xlfn.PERCENTILE.INC")).is_none()
+        resolve_function(&poirot_parsing::formula::FunctionName::from(
+            "_xlfn.PERCENTILE.INC"
+        ))
+        .is_none()
     );
     assert_ne!(
         UdfIdentity {

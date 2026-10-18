@@ -1,6 +1,5 @@
 //! Conditional aggregation domain, based on pinned POI Countif, Sumif and Baseifs.
 //! Adapters resolve references, implicit intersection and array criteria before planning.
-use nom::{Parser, branch::alt, bytes::complete::tag};
 use std::cmp::Ordering;
 /// Subtotal aggregation with hidden-row and nested-subtotal provenance.
 pub mod subtotal;
@@ -8,79 +7,22 @@ pub mod subtotal;
 mod tests;
 
 pub use poirot_coercionv2::criteria::{Cell, Error};
-/// Comparison prefix parsed from a criteria operand.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Comparison {
-    /// No explicit comparison prefix.
-    None,
-    /// Equality comparison.
-    Eq,
-    /// Inequality comparison.
-    Ne,
-    /// Strict less-than comparison.
-    Lt,
-    /// Less-than-or-equal comparison.
-    Le,
-    /// Strict greater-than comparison.
-    Gt,
-    /// Greater-than-or-equal comparison.
-    Ge,
-}
-impl Comparison {
-    fn test(self, c: Ordering) -> bool {
-        match self {
-            Self::None | Self::Eq => c == Ordering::Equal,
-            Self::Ne => c != Ordering::Equal,
-            Self::Lt => c == Ordering::Less,
-            Self::Le => c != Ordering::Greater,
-            Self::Gt => c == Ordering::Greater,
-            Self::Ge => c != Ordering::Less,
-        }
+use poirot_parsing::criteria::Comparison;
+fn test_comparison(op: Comparison, c: Ordering) -> bool {
+    match op {
+        Comparison::None | Comparison::Eq => c == Ordering::Equal,
+        Comparison::Ne => c != Ordering::Equal,
+        Comparison::Lt => c == Ordering::Less,
+        Comparison::Le => c != Ordering::Greater,
+        Comparison::Gt => c == Ordering::Greater,
+        Comparison::Ge => c != Ordering::Less,
     }
 }
-/// Split a criteria comparison prefix from its operand text.
-pub fn parse_comparison(s: &str) -> (Comparison, &str) {
-    let result: nom::IResult<&str, &str> = alt((
-        tag("<>"),
-        tag("<="),
-        tag(">="),
-        tag("="),
-        tag("<"),
-        tag(">"),
-    ))
-    .parse(s);
-    match result {
-        Ok((rest, op)) => (
-            match op {
-                "<>" => Comparison::Ne,
-                "<=" => Comparison::Le,
-                ">=" => Comparison::Ge,
-                "=" => Comparison::Eq,
-                "<" => Comparison::Lt,
-                _ => Comparison::Gt,
-            },
-            rest,
-        ),
-        Err(_) => (Comparison::None, s),
-    }
-}
+
 /// Parse numeric criterion text using the family's supported grammar.
 pub fn coercev2_criteria_number_text(s: &str) -> Option<f64> {
     poirot_coercionv2::compatibility::coercev2_criteria_number_text(s)
 }
-fn parse_error(s: &str) -> Option<Error> {
-    Some(match s {
-        "#NULL!" => Error::Null,
-        "#DIV/0!" => Error::DivZero,
-        "#VALUE!" => Error::Value,
-        "#REF!" => Error::Ref,
-        "#NAME?" => Error::Name,
-        "#NUM!" => Error::Num,
-        "#N/A" => Error::Na,
-        _ => return None,
-    })
-}
-
 /// Parsed conditional-aggregation comparison and operand, such as `>=5` or a text pattern.
 #[derive(Clone, Debug)]
 pub struct Criterion {
@@ -93,17 +35,22 @@ impl Criterion {
     /// Compile a cell criterion into comparison and wildcard state.
     pub fn parse(value: &Cell) -> Self {
         if let Cell::Text(text) = value {
-            let (comparison, s) = parse_comparison(text);
-            let value = if s.eq_ignore_ascii_case("true") {
-                Cell::Bool(true)
-            } else if s.eq_ignore_ascii_case("false") {
-                Cell::Bool(false)
-            } else if let Some(n) = coercev2_criteria_number_text(s) {
-                Cell::Number(n)
-            } else if let Some(e) = parse_error(s) {
-                Cell::Error(e)
-            } else {
-                Cell::Text(s.into())
+            let syntax = poirot_parsing::criteria::parse_criterion(text);
+            let comparison = syntax.comparison;
+            use poirot_parsing::criteria::{ErrorLiteral, Operand};
+            let value = match syntax.classic_operand() {
+                Operand::Boolean(b) => Cell::Bool(b),
+                Operand::Number(n) => Cell::Number(n),
+                Operand::Text(s) => Cell::Text(s.into()),
+                Operand::Error(e) => Cell::Error(match e {
+                    ErrorLiteral::Null => Error::Null,
+                    ErrorLiteral::DivZero => Error::DivZero,
+                    ErrorLiteral::Value => Error::Value,
+                    ErrorLiteral::Ref => Error::Ref,
+                    ErrorLiteral::Name => Error::Name,
+                    ErrorLiteral::Num => Error::Num,
+                    ErrorLiteral::Na => Error::Na,
+                }),
             };
             Self { comparison, value }
         } else {
@@ -118,14 +65,16 @@ impl Criterion {
         let op = self.comparison;
         match (&self.value, cell) {
             (Cell::Blank, _) => false,
-            (Cell::Number(a), Cell::Number(b)) => op.test(b.total_cmp(a)),
+            (Cell::Number(a), Cell::Number(b)) => test_comparison(op, b.total_cmp(a)),
             (Cell::Number(a), Cell::Text(b)) => match op {
                 Comparison::None | Comparison::Eq => coercev2_criteria_number_text(b) == Some(*a),
                 Comparison::Ne => true,
                 _ => false,
             },
-            (Cell::Bool(a), Cell::Bool(b)) => op.test(b.cmp(a)),
-            (Cell::Error(a), Cell::Error(b)) => op.test(error_code(*b).cmp(&error_code(*a))),
+            (Cell::Bool(a), Cell::Bool(b)) => test_comparison(op, b.cmp(a)),
+            (Cell::Error(a), Cell::Error(b)) => {
+                test_comparison(op, error_code(*b).cmp(&error_code(*a)))
+            }
             (Cell::Text(a), Cell::Blank) => match op {
                 Comparison::None | Comparison::Eq => a.is_empty(),
                 Comparison::Ne => !a.is_empty(),
@@ -138,13 +87,16 @@ impl Criterion {
                 if matches!(op, Comparison::None | Comparison::Eq | Comparison::Ne)
                     && has_wildcards(a)
                 {
-                    return op.test(if wildcard_match(a, b) {
-                        Ordering::Equal
-                    } else {
-                        Ordering::Less
-                    });
+                    return test_comparison(
+                        op,
+                        if wildcard_match(a, b) {
+                            Ordering::Equal
+                        } else {
+                            Ordering::Less
+                        },
+                    );
                 }
-                op.test(b.to_lowercase().cmp(&a.to_lowercase()))
+                test_comparison(op, b.to_lowercase().cmp(&a.to_lowercase()))
             }
             _ => op == Comparison::Ne,
         }

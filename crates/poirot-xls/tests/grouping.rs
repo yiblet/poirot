@@ -1,8 +1,8 @@
 //! Raw token structure and checked poirot readback; stale caches cannot prove grouping.
 //! Standalone calamine currently cannot decode the source-required MemArea token.
 use calamine::{Reader, Xls};
-use poirot_formula::{Expr, parse_formula};
 use poirot_model::{CellValue, Workbook};
+use poirot_parsing::formula::{Expr, parse_formula};
 use std::io::{Cursor, Read};
 
 fn exported(formula: &str) -> (Vec<u8>, String) {

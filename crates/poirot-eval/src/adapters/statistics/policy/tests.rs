@@ -141,7 +141,7 @@ impl EvaluationPort for Port {
         }
     }
     fn coercev2_text_number(&mut self, t: &str) -> Result<f64, Failure<Self::Operational>> {
-        poirot_numeric::parse_java_number(t).ok_or(CellError::Value.into())
+        poirot_parsing::java_number::parse_java_number(t).ok_or(CellError::Value.into())
     }
     fn is_reference(&mut self, a: &Arg) -> Result<bool, Failure<Self::Operational>> {
         Ok(a.origin == Origin::Reference)

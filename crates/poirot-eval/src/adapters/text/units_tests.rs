@@ -1,5 +1,5 @@
 use super::*;
-use poirot_formula::parse_formula;
+use poirot_parsing::formula::parse_formula;
 fn evaluate(formula: &str, budgets: EvaluationBudgets) -> EvalResult<CellValue> {
     let mut workbook = Workbook::new();
     workbook.add_sheet("Sheet1").unwrap();

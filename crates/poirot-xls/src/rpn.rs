@@ -1,5 +1,5 @@
 use super::*;
-use poirot_formula::{BinaryOp, Expr, GroupingContext, UnaryOp, needs_parentheses};
+use poirot_parsing::formula::{BinaryOp, Expr, GroupingContext, UnaryOp, needs_parentheses};
 /// Lower supported formula syntax into BIFF RPN with the supplied source context.
 #[cfg(test)]
 pub(super) fn compile(
@@ -286,7 +286,7 @@ mod identifier_tests {
         compile(
             w,
             sheet,
-            &poirot_formula::parse_formula(formula).unwrap(),
+            &poirot_parsing::formula::parse_formula(formula).unwrap(),
             0x20,
             1024,
         )

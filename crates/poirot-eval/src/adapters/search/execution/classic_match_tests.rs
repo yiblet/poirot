@@ -107,7 +107,7 @@ fn approximate_match_preserves_blank_positions_lazy_failures_and_policy_dependen
         let mut session = Session::with_context(&w, EvaluationInputs::default());
         session.builtin_policy = policy;
         session.dependency_sink = Some(&mut reads);
-        let syntax = poirot_formula::parse_formula("MATCH(B1,A1:A6,C1)").unwrap();
+        let syntax = poirot_parsing::formula::parse_formula("MATCH(B1,A1:A6,C1)").unwrap();
         let plan = bound::FormulaPlan::bind(&syntax).unwrap();
         let at = "Z20".parse().unwrap();
         let result = session.expr(0, at, &plan.expression()).unwrap();
@@ -210,7 +210,7 @@ fn ascending_match_bisection_reads_only_consumed_candidates_in_original_order() 
     let mut session = Session::with_context(&w, EvaluationInputs::default());
     session.builtin_policy = BuiltinSemanticsPolicy::ExcelDocumentation;
     session.dependency_sink = Some(&mut reads);
-    let syntax = poirot_formula::parse_formula("MATCH(12,A1:A8)").unwrap();
+    let syntax = poirot_parsing::formula::parse_formula("MATCH(12,A1:A8)").unwrap();
     let plan = bound::FormulaPlan::bind(&syntax).unwrap();
     let at = "Z20".parse().unwrap();
     let result = session.expr(0, at, &plan.expression()).unwrap();

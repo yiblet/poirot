@@ -6,7 +6,7 @@ fn book() -> Workbook {
     workbook
 }
 fn evaluate(session: &mut Session<'_>, formula: &str) -> CellValue {
-    let parsed = poirot_formula::parse_formula(formula).unwrap();
+    let parsed = poirot_parsing::formula::parse_formula(formula).unwrap();
     let bound = bound::FormulaPlan::bind(&parsed).unwrap();
     let at = "Z20".parse().unwrap();
     let value = session.expr(0, at, &bound.expression()).unwrap();

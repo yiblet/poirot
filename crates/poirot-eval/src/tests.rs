@@ -368,8 +368,10 @@ fn lookup_blanks_reach_consumers_before_formula_cell_publication() {
             ),
         ] {
             assert_eq!(eval(&w, &formula), expected, "prepared: {formula}");
-            let plan = bound::FormulaPlan::bind(&poirot_formula::parse_formula(&formula).unwrap())
-                .unwrap();
+            let plan = bound::FormulaPlan::bind(
+                &poirot_parsing::formula::parse_formula(&formula).unwrap(),
+            )
+            .unwrap();
             let tree =
                 execute_configuration(&w, &Default::default(), Default::default(), |session| {
                     let at = "Z20".parse().unwrap();

@@ -7,7 +7,7 @@ edition.workspace = true
 poirot-functions-dates = { path = "../poirot-functions-dates" }
 poirot-coercionv2 = { path = "../poirot-coercionv2" }
 poirot-model = { path = "../poirot-model" }
-poirot-formula = { path = "../poirot-formula" }
+poirot-parsing = { path = "../poirot-parsing" }
 foldhash = "0.1.5"
 poirot-format = { path = "../poirot-format" }
 nom.workspace = true

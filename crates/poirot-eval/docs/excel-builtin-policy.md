@@ -93,7 +93,7 @@ errors propagate in the Excel profile; PinnedPoi keeps numeric-only target
 admission. TEXT numeric-text admission uses the contextual parser in the Excel
 profile, retaining literal fallback on spreadsheet parse rejection and preserving
 operational failures. SUMPRODUCT uses uniform conformable argument admission in
-the Excel profile; PinnedPoi retains its source-specific admission and schedule. The [integrated compatibility review](../../poirot-test-json/evidence/master-compat-reconciliation.md)
+the Excel profile; PinnedPoi retains its source-specific admission and schedule. The [integrated compatibility review](../../poirot-test-runner/evidence/master-compat-reconciliation.md)
 records independent evidence and retained compatibility gaps.
 
 Array result publication is selected independently with `ArrayResultPolicy`.

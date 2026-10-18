@@ -140,7 +140,8 @@ impl ExtensionRegistry {
         if signature.is_empty() {
             return Err(MissingSignature);
         }
-        if crate::registry::resolve_function(&poirot_formula::FunctionName::from(name)).is_some()
+        if crate::registry::resolve_function(&poirot_parsing::formula::FunctionName::from(name))
+            .is_some()
             || crate::atp::ATP_SUPPORTED
                 .iter()
                 .any(|entry| entry.eq_ignore_ascii_case(name))

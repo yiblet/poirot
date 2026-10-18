@@ -7,7 +7,7 @@ fn workbook() -> Workbook {
     workbook
 }
 fn plan(formula: &str) -> bound::FormulaPlan {
-    bound::FormulaPlan::bind(&poirot_formula::parse_formula(formula).unwrap()).unwrap()
+    bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap()).unwrap()
 }
 fn value(outcome: EvaluationOutcome<CellValue>) -> CellValue {
     match outcome {
@@ -505,7 +505,7 @@ fn intersection_checks_actual_output_cardinality_before_each_push() {
         c1: 0,
     };
     let result = session.references(
-        poirot_formula::BinaryOp::Intersection,
+        poirot_parsing::formula::BinaryOp::Intersection,
         Value::Refs(vec![area; 3]),
         Value::Refs(vec![area; 3]),
     );
@@ -543,7 +543,7 @@ fn intersection_checks_actual_output_cardinality_before_each_push() {
     assert!(matches!(
         session
             .references(
-                poirot_formula::BinaryOp::Intersection,
+                poirot_parsing::formula::BinaryOp::Intersection,
                 Value::Refs(vec![left; 3]),
                 Value::Refs(vec![right; 3])
             )

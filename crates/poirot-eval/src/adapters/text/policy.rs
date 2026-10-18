@@ -81,7 +81,7 @@ pub enum AreaSelection {
 /// Documented semantics use the locale; pinned defaults remain `.` and `,`.
 pub struct Policy<'a> {
     /// Numeric locale for documented argument parsing.
-    pub number_locale: &'a poirot_coercionv2::NumberLocaleV2,
+    pub number_locale: &'a poirot_parsing::number::NumberLocaleV2,
     /// Default decimal separator as one UTF-16 unit.
     pub decimal_separator: u16,
     /// Default grouping separator as one UTF-16 unit.
@@ -90,7 +90,7 @@ pub struct Policy<'a> {
 impl Default for Policy<'_> {
     fn default() -> Self {
         Self {
-            number_locale: &poirot_coercionv2::NumberLocaleV2::EN_US,
+            number_locale: &poirot_parsing::number::NumberLocaleV2::EN_US,
             decimal_separator: b'.' as u16,
             grouping_separator: b',' as u16,
         }

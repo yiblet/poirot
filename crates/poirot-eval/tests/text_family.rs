@@ -341,7 +341,7 @@ fn numbervalue_validates_explicit_separator_and_result_domains() {
         EvaluationOutcome::Aborted { .. }
     ));
     let comma = excel.with_number_locale(
-        poirot_coercionv2::NumberLocaleV2::new(",", Some("."), None, "%", ":").unwrap(),
+        poirot_parsing::number::NumberLocaleV2::new(",", Some("."), None, "%", ":").unwrap(),
     );
     assert_eq!(
         value(r#"NUMBERVALUE("1.234,5")"#, &comma),

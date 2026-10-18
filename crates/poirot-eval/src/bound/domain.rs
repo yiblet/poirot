@@ -1,6 +1,6 @@
 //! Immutable executable domain records and their read-only accessors.
 use crate::registry::*;
-use poirot_formula::{BinaryOp, CellReference, Expr as Syntax, UnaryOp};
+use poirot_parsing::formula::{BinaryOp, CellReference, Expr as Syntax, UnaryOp};
 /// Deferred operands of a bound function call with source and lookup spellings.
 /// Binding selects a handler but does not evaluate these expressions.
 #[derive(Clone, Debug, PartialEq)]
@@ -154,7 +154,7 @@ pub enum Expression {
     /// Deferred single-cell reference.
     Cell(CellReference),
     /// Deferred reference spanning multiple sheets.
-    SheetSpan(poirot_formula::SheetSpanReference),
+    SheetSpan(poirot_parsing::formula::SheetSpanReference),
     /// Whole-column reference.
     Column {
         /// Zero-based column index.

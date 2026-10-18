@@ -9,12 +9,12 @@ pub use poirot_eval as eval;
 pub use poirot_eval::NumberLocaleV2;
 /// Pure compilation and rendering of Excel number/date formats.
 pub use poirot_format as format;
-/// Workbook-independent formula parsing, syntax, and reference translation.
-pub use poirot_formula as formula;
 /// Checked XLS/XLSX import and XLSX export with fidelity diagnostics.
 pub use poirot_io as io;
 /// Canonical sparse workbook source, typed values, and owned changes.
 pub use poirot_model as model;
+/// Formula scanning/full parsing and shared number, criteria, and date/time grammars.
+pub use poirot_parsing as parsing;
 /// File-backed spreadsheet facade and formula-aware source editing.
 pub use poirot_workbook as workbook;
 /// Checked BIFF/XLS formula planning and workbook serialization.

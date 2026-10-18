@@ -297,9 +297,9 @@ impl<'a> XlsExportPlan<'a> {
         }
         let mut addins = addins::AddInPlan::default();
         for named in &workbook.named_ranges {
-            let expr = poirot_formula::parse_formula_with_policy(
+            let expr = poirot_parsing::formula::parse_formula_with_policy(
                 &named.formula,
-                poirot_formula::FormulaParsePolicy::default(),
+                poirot_parsing::formula::FormulaParsePolicy::default(),
             )
             .map_err(|e| context(format!("defined name {}", named.name), fail(&e.to_string())))?;
             addins
@@ -309,9 +309,9 @@ impl<'a> XlsExportPlan<'a> {
         for sheet in workbook.sheets() {
             for (address, cell) in sheet.cells() {
                 if let Some(source) = &cell.formula {
-                    let expr = poirot_formula::parse_formula_with_policy(
+                    let expr = poirot_parsing::formula::parse_formula_with_policy(
                         source,
-                        poirot_formula::FormulaParsePolicy::default(),
+                        poirot_parsing::formula::FormulaParsePolicy::default(),
                     )
                     .map_err(|e| {
                         context(

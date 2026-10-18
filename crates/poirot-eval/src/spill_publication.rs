@@ -501,8 +501,8 @@ impl Session<'_> {
 }
 // Only statically bounded producers are discoverable before their anchor.
 /// Infer fixed spill dimensions from temporary syntax when supported.
-pub(crate) fn spill_shape(expr: &poirot_formula::Expr) -> Option<(u64, u64)> {
-    use poirot_formula::Expr as E;
+pub(crate) fn spill_shape(expr: &poirot_parsing::formula::Expr) -> Option<(u64, u64)> {
+    use poirot_parsing::formula::Expr as E;
     match expr {
         E::Array(rows) => Some((rows.len() as u64, rows.first()?.len() as u64)),
         E::Unary { op, operand } if *op != UnaryOp::ImplicitIntersection => operand_shape(operand),
@@ -544,8 +544,8 @@ pub(crate) fn spill_shape(expr: &poirot_formula::Expr) -> Option<(u64, u64)> {
         _ => None,
     }
 }
-fn operand_shape(expr: &poirot_formula::Expr) -> Option<(u64, u64)> {
-    use poirot_formula::Expr as E;
+fn operand_shape(expr: &poirot_parsing::formula::Expr) -> Option<(u64, u64)> {
+    use poirot_parsing::formula::Expr as E;
     match expr {
         E::Cell(_) => Some((1, 1)),
         E::Binary {
@@ -560,7 +560,7 @@ fn operand_shape(expr: &poirot_formula::Expr) -> Option<(u64, u64)> {
             _ => None,
         },
         E::Unary {
-            op: poirot_formula::UnaryOp::ImplicitIntersection,
+            op: poirot_parsing::formula::UnaryOp::ImplicitIntersection,
             ..
         } => Some((1, 1)),
         E::Function { name, .. }
@@ -606,8 +606,8 @@ fn operand_shape(expr: &poirot_formula::Expr) -> Option<(u64, u64)> {
 }
 
 /// Whether syntax may produce an array without statically bounded dimensions.
-pub(crate) fn unbounded_producer(expr: &poirot_formula::Expr) -> bool {
-    use poirot_formula::Expr as E;
+pub(crate) fn unbounded_producer(expr: &poirot_parsing::formula::Expr) -> bool {
+    use poirot_parsing::formula::Expr as E;
     match expr {
         E::Name(_) | E::QualifiedName { .. } => true,
         E::Unary {

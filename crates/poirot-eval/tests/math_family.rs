@@ -354,7 +354,7 @@ fn seriessum_reference_traversal_admission_aborts_outside_iferror() {
 fn seriessum_scalar_text_uses_real_locale_parser() {
     let workbook = workbook();
     let configuration = poirot_eval::RunConfiguration::default().with_number_locale(
-        poirot_coercionv2::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap(),
+        poirot_parsing::number::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap(),
     );
     for (formula, expected) in [
         (r#"SERIESSUM("€2,5",1,1,"4,0")"#, CellValue::Number(10.)),

@@ -6,7 +6,7 @@ fn workbook() -> Workbook {
     workbook
 }
 fn expression(formula: &str) -> Expr {
-    bound::bind(&poirot_formula::parse_formula(formula).unwrap())
+    bound::bind(&poirot_parsing::formula::parse_formula(formula).unwrap())
 }
 #[test]
 fn demand_memoization_preserves_references_without_reading_cells() {

@@ -91,8 +91,8 @@ Pass an `Arc<Workbook>` to share a baseline across independently owned workspace
 
 `EvaluationContext` controls time, random seed, localization, and execution
 budgets. Reuse the same context inputs for reproducible time and random values.
-See the [API guide](docs/public-api.md) for run lifetimes and configuration,
-and [dependency tracking](docs/incremental-cache.md) for how overlays reuse results.
+See the [API guide](docs/evaluation.md) for run lifetimes and configuration,
+and [dependency tracking](docs/recalculation.md) for how overlays reuse results.
 
 ## Compatibility and limitations
 
@@ -110,14 +110,17 @@ See the [I/O guide](crates/poirot-io/README.md),
 
 ## More examples and documentation
 
+The [documentation guide](docs/README.md) provides a reading path from your first
+calculation through file handling, repeated scenarios and persistence.
+
 | Task | Start here |
 | --- | --- |
 | Create, edit, calculate and round-trip a workbook | [Public workflow](examples/public_workbook.rs) |
 | Evaluate over a shared workbook | [Direct evaluation example](examples/direct_evaluation.rs) |
-| Configure evaluation and apply changes | [API guide](docs/public-api.md) |
-| Understand incremental recalculation | [Dependency tracking](docs/incremental-cache.md) |
+| Configure evaluation and apply changes | [API guide](docs/evaluation.md) |
+| Understand incremental recalculation | [Dependency tracking](docs/recalculation.md) |
 | Work with dynamic array results | [Dynamic arrays](crates/poirot-eval/docs/dynamic-array-results.md) |
-| Save and restore Poirot state | [Snapshot files](docs/snapshot-files.md) and [runnable example](examples/snapshot_file.rs) |
+| Save and restore Poirot state | [Snapshot files](docs/snapshots.md) and [runnable example](examples/snapshot_file.rs) |
 
 Snapshots persist workbook data and optional prepared evaluation state separately
 from Excel files. Use `poirot::artifact` for versioned snapshot files; see the guide
@@ -140,7 +143,7 @@ Generate the Rust API documentation with
 `cargo doc -p poirot --no-deps --open`.
 
 The component crates cover [workbook data](crates/poirot-model/README.md),
-[formula syntax](crates/poirot-formula/README.md),
+[formula and value parsing](crates/poirot-parsing/README.md),
 [evaluation](crates/poirot-eval/README.md),
 [formatting](crates/poirot-format/README.md), file I/O, and
 [workbook integration](crates/poirot-workbook/README.md).

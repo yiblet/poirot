@@ -56,7 +56,8 @@ fn reference_identity_and_deferred_operands_follow_pinned_source() {
             CellValue::Error(CellError::Ref),
         ),
     ] {
-        let plan = FormulaPlan::bind(&poirot_formula::parse_formula(formula).unwrap()).unwrap();
+        let plan =
+            FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap()).unwrap();
         assert_eq!(
             match poirot_eval::run_plan(
                 &workbook,
@@ -79,7 +80,7 @@ fn unsupported_and_budget_failures_survive_iferror() {
     let workbook = workbook();
     let at = CellAddress { row: 0, col: 3 };
     let supported_short = FormulaPlan::bind(
-        &poirot_formula::parse_formula("SUM(IFERROR(OFFSET(A1,40000,0),99))").unwrap(),
+        &poirot_parsing::formula::parse_formula("SUM(IFERROR(OFFSET(A1,40000,0),99))").unwrap(),
     )
     .unwrap();
     assert_eq!(
@@ -101,7 +102,8 @@ fn unsupported_and_budget_failures_survive_iferror() {
         r#"IFERROR(XMATCH("é",{"é"}),99)"#,
         "IFERROR(LOOKUP(1,{1,2;3,4},{1,2}),99)",
     ] {
-        let plan = FormulaPlan::bind(&poirot_formula::parse_formula(formula).unwrap()).unwrap();
+        let plan =
+            FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap()).unwrap();
         assert!(
             matches!(
                 run_plan(
@@ -118,7 +120,8 @@ fn unsupported_and_budget_failures_survive_iferror() {
         );
     }
     let plan = FormulaPlan::bind(
-        &poirot_formula::parse_formula(r#"IFERROR(XMATCH("a*",{"abc","def"},2),99)"#).unwrap(),
+        &poirot_parsing::formula::parse_formula(r#"IFERROR(XMATCH("a*",{"abc","def"},2),99)"#)
+            .unwrap(),
     )
     .unwrap();
     assert!(matches!(

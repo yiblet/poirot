@@ -325,7 +325,7 @@ registry! {
 /// POI ATP strips exactly lowercase `_xlfn.` before case-insensitive lookup.
 /// Only pinned implemented ATP registrations have builtin prefix aliases.
 pub fn resolve_function(
-    name: &poirot_formula::FunctionName,
+    name: &poirot_parsing::formula::FunctionName,
 ) -> Option<&'static FunctionDescriptor> {
     use crate::adapters::FunctionAdapter;
     crate::adapters::builtins().resolve(name)
@@ -336,7 +336,9 @@ pub fn resolve_function(
 
 /// Runtime resolution for otherwise unresolved documented Excel spellings.
 /// Arbitrary extensions have already been bound and never pass through here.
-pub(crate) fn resolve_excel_function(name: &poirot_formula::FunctionName) -> Option<FunctionId> {
+pub(crate) fn resolve_excel_function(
+    name: &poirot_parsing::formula::FunctionName,
+) -> Option<FunctionId> {
     crate::adapters::profile_function(name)
 }
 
@@ -366,19 +368,24 @@ mod tests {
                 "{}",
                 declared.name
             );
-            let resolved = resolve_function(&poirot_formula::FunctionName::from(declared.name))
-                .map(|descriptor| descriptor.handler)
-                .or_else(|| {
-                    resolve_excel_function(&poirot_formula::FunctionName::from(declared.name))
-                });
+            let resolved =
+                resolve_function(&poirot_parsing::formula::FunctionName::from(declared.name))
+                    .map(|descriptor| descriptor.handler)
+                    .or_else(|| {
+                        resolve_excel_function(&poirot_parsing::formula::FunctionName::from(
+                            declared.name,
+                        ))
+                    });
             assert_eq!(resolved, Some(declared.handler), "{}", declared.name);
         }
         // This documented Excel alias reuses an advertised handler without a row.
-        let percentile =
-            resolve_excel_function(&poirot_formula::FunctionName::from("PERCENTILE.INC")).unwrap();
+        let percentile = resolve_excel_function(&poirot_parsing::formula::FunctionName::from(
+            "PERCENTILE.INC",
+        ))
+        .unwrap();
         assert_eq!(
             percentile.descriptor(),
-            resolve_function(&poirot_formula::FunctionName::from("PERCENTILE")).unwrap()
+            resolve_function(&poirot_parsing::formula::FunctionName::from("PERCENTILE")).unwrap()
         );
         assert_eq!(percentile.canonical_name(), "PERCENTILE");
     }

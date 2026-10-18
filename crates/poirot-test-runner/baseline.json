@@ -6038,7 +6038,7 @@
     "json:excel-serial-weekdays.json:Excel serial weekday modes retain the phantom-day calendar",
     "json:lookup-blanks.json:blank lookup reaches consumer before numeric coercion",
     "json:lookup-blanks.json:inline missing IF result remains blank",
-    "json:lookup-blanks.json:missing IF result remains blank through a cell reference",
+    "json:lookup-blanks.json:missing IF result publishes zero through a cell reference",
     "json:matrix-numeric-admission.json:MDETERM accepts singleton array",
     "json:matrix-numeric-admission.json:MDETERM keeps numeric zero coordinates",
     "json:matrix-numeric-admission.json:MDETERM reference precedence #DIV/0! then #N/A",

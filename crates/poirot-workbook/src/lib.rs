@@ -2,12 +2,12 @@
 
 /// Formula compilation and bounded overlay execution APIs.
 pub use poirot_eval as eval;
-/// Workbook-independent formula syntax, parsing, and translation.
-pub use poirot_formula as formula;
 /// Checked file import and XLSX export adapters.
 pub use poirot_io as io;
 /// Canonical sparse workbook source and typed values.
 pub use poirot_model as model;
+/// Formula scanning/full parsing and shared spreadsheet text grammars.
+pub use poirot_parsing as parsing;
 /// Checked BIFF/XLS export planning and serialization.
 pub use poirot_xls as xls;
 

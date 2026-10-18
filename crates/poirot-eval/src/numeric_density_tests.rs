@@ -31,7 +31,8 @@ fn tiny_string_density_is_raw_number_through_actual_aliases_and_consumers() {
     for name in ["NORMDIST", "NORM.DIST"] {
         let f = format!("{name}(0,0,\"5e-324\",FALSE)");
         assert_eq!(bits(value(run(&w, &f))), f64::INFINITY.to_bits());
-        let plan = bound::FormulaPlan::bind(&poirot_formula::parse_formula(&f).unwrap()).unwrap();
+        let plan =
+            bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(&f).unwrap()).unwrap();
         assert_eq!(
             bits(value(run_plan_with_configuration(
                 &w,

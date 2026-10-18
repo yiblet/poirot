@@ -27,7 +27,7 @@ fn xlsx_retains_qualified_formula_and_scoped_name_identity() {
         Some("'O''Brien'!Rate")
     );
     assert_eq!(
-        poirot_formula::parse_formula(
+        poirot_parsing::formula::parse_formula(
             imported
                 .sheet(0)
                 .unwrap()
@@ -38,7 +38,7 @@ fn xlsx_retains_qualified_formula_and_scoped_name_identity() {
                 .unwrap()
         )
         .unwrap(),
-        poirot_formula::Expr::QualifiedName {
+        poirot_parsing::formula::Expr::QualifiedName {
             sheet: "O'Brien".into(),
             name: "Rate".into()
         }

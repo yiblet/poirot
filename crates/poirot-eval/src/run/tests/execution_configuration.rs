@@ -140,8 +140,10 @@ fn provider_identity_rebinds_unknown_names_and_only_selected_calls_are_consumed(
             },
         )
         .unwrap();
-    let policy =
-        EvaluationPolicy::with_extensions(poirot_formula::FormulaParsePolicy::default(), &registry);
+    let policy = EvaluationPolicy::with_extensions(
+        poirot_parsing::formula::FormulaParsePolicy::default(),
+        &registry,
+    );
     assert!(!plain.matches(&workbook, &policy));
     let plan = compiler.compile_workbook_with_extensions(&workbook, &policy, &registry);
     let mut reads = Reads::default();
@@ -280,10 +282,10 @@ fn random_consumption_tracks_actual_draws_and_session_memo() {
 #[test]
 fn dollar_and_rand_have_independent_dependency_categories_and_consumption() {
     use crate::registry::{DependencyPolicy, resolve_function};
-    let dollar = resolve_function(&poirot_formula::FunctionName::from("DOLLAR"))
+    let dollar = resolve_function(&poirot_parsing::formula::FunctionName::from("DOLLAR"))
         .unwrap()
         .dependencies;
-    let rand = resolve_function(&poirot_formula::FunctionName::from("RAND"))
+    let rand = resolve_function(&poirot_parsing::formula::FunctionName::from("RAND"))
         .unwrap()
         .dependencies;
     assert!(dollar.contains(DependencyPolicy::CURRENCY));

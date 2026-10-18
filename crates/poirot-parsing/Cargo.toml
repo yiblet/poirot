@@ -1,0 +1,16 @@
+[package]
+name = "poirot-parsing"
+version.workspace = true
+edition.workspace = true
+description = "Workbook-independent formula scanning and spreadsheet text grammars"
+
+[dependencies]
+num-bigint.workspace = true
+nom.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+allocation-counter.workspace = true
+
+[lints]
+workspace = true

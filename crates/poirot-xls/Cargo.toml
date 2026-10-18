@@ -6,7 +6,7 @@ edition.workspace = true
 [dependencies]
 cfb.workspace = true
 poirot-model = { path = "../poirot-model" }
-poirot-formula = { path = "../poirot-formula" }
+poirot-parsing = { path = "../poirot-parsing" }
 
 [dev-dependencies]
 calamine.workspace = true

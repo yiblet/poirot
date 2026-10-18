@@ -4,7 +4,7 @@
 //! ```
 //! use poirot_eval::{bound::{FormulaPlan, Expression}, registry::SearchFunction};
 //! use poirot_model::{Workbook, CellAddress, CellValue};
-//! let syntax = poirot_formula::parse_formula("VLOOKUP(2,{1,10;2,20},2,FALSE)")?;
+//! let syntax = poirot_parsing::formula::parse_formula("VLOOKUP(2,{1,10;2,20},2,FALSE)")?;
 //! let plan = FormulaPlan::bind(&syntax)?;
 //! if let Expression::Search(search) = plan.expression() {
 //!     assert_eq!(search.function, SearchFunction::VLookup);
@@ -23,7 +23,7 @@ mod domain;
 pub use admission::BindingError;
 /// Bound inspection expressions, family metadata, and bytecode-backed formula plans.
 pub use domain::*;
-use poirot_formula::Expr as Syntax;
+use poirot_parsing::formula::Expr as Syntax;
 
 /// Internal parser adapter bounds individual subtrees, keeping errors deferred in lazy branches.
 #[cfg(test)]

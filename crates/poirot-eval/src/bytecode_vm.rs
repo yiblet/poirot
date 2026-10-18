@@ -252,7 +252,7 @@ impl Session<'_> {
             CallTarget::Unresolved
                 if self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation =>
             {
-                registry::resolve_excel_function(&poirot_formula::FunctionName::from(
+                registry::resolve_excel_function(&poirot_parsing::formula::FunctionName::from(
                     program.resolved_spelling(index).ok()?,
                 ))
             }
@@ -443,7 +443,7 @@ impl<'a> Reader<'a> {
             Ok(None)
         }
     }
-    fn cell(&mut self) -> EvalResult<poirot_formula::CellReference> {
+    fn cell(&mut self) -> EvalResult<poirot_parsing::formula::CellReference> {
         let row = self.word()?;
         let column = self.word()?;
         let row_absolute = self.word()? != 0;
@@ -451,7 +451,7 @@ impl<'a> Reader<'a> {
         if self.optional()?.is_some() {
             return Err(EvaluationFailure::StalePlan);
         }
-        Ok(poirot_formula::CellReference {
+        Ok(poirot_parsing::formula::CellReference {
             row,
             column,
             row_absolute,
@@ -593,7 +593,7 @@ mod tests {
         }
     }
     fn compare(
-        syntax: &poirot_formula::Expr,
+        syntax: &poirot_parsing::formula::Expr,
         budgets: EvaluationBudgets,
         registry: Option<&extensions::ExtensionRegistry>,
     ) {
@@ -617,7 +617,7 @@ mod tests {
         }
     }
     fn compare_configured(
-        syntax: &poirot_formula::Expr,
+        syntax: &poirot_parsing::formula::Expr,
         budgets: EvaluationBudgets,
         registry: Option<&extensions::ExtensionRegistry>,
         numeric: NumericOutcomePolicy,
@@ -733,7 +733,7 @@ mod tests {
             "ISLOGICAL({TRUE})",
             "ISBLANK(IFS(TRUE,))",
         ] {
-            let syntax = poirot_formula::parse_formula(source).unwrap();
+            let syntax = poirot_parsing::formula::parse_formula(source).unwrap();
             for numeric in [
                 NumericOutcomePolicy::LegacyFinite,
                 NumericOutcomePolicy::PinnedPoi7321209,
@@ -767,15 +767,18 @@ mod tests {
 
     fn source(source: &str, budgets: EvaluationBudgets) {
         compare(
-            &poirot_formula::parse_formula(source)
+            &poirot_parsing::formula::parse_formula(source)
                 .unwrap_or_else(|error| panic!("{source}: {error}")),
             budgets,
             None,
         );
     }
     fn compile(source: &str) -> Compiled {
-        bytecode::compile_with_registry(&poirot_formula::parse_formula(source).unwrap(), None)
-            .unwrap()
+        bytecode::compile_with_registry(
+            &poirot_parsing::formula::parse_formula(source).unwrap(),
+            None,
+        )
+        .unwrap()
     }
 
     #[test]
@@ -895,7 +898,8 @@ mod tests {
                 Blank,
             )
             .unwrap();
-        let syntax = poirot_formula::parse_formula("100+IF(TRUE,A2+SUM({5,6}),UNKNOWN())").unwrap();
+        let syntax =
+            poirot_parsing::formula::parse_formula("100+IF(TRUE,A2+SUM({5,6}),UNKNOWN())").unwrap();
         let tree = bound::bind_with_registry(&syntax, None);
         let program = bytecode::compile_with_registry(&syntax, None).unwrap();
         let probe = compile("17");
@@ -1040,23 +1044,23 @@ mod tests {
     #[test]
     fn bytecode_vm_preserves_missing_array_provenance_and_depth_truncation() {
         compare(
-            &poirot_formula::Expr::Function {
+            &poirot_parsing::formula::Expr::Function {
                 name: "INDEX".into(),
                 args: vec![
-                    poirot_formula::Expr::Array(vec![vec![
-                        poirot_formula::Expr::Number(1.),
-                        poirot_formula::Expr::Missing,
+                    poirot_parsing::formula::Expr::Array(vec![vec![
+                        poirot_parsing::formula::Expr::Number(1.),
+                        poirot_parsing::formula::Expr::Missing,
                     ]]),
-                    poirot_formula::Expr::Number(1.),
-                    poirot_formula::Expr::Number(2.),
+                    poirot_parsing::formula::Expr::Number(1.),
+                    poirot_parsing::formula::Expr::Number(2.),
                 ],
             },
             EvaluationBudgets::default(),
             None,
         );
-        let array_syntax = poirot_formula::Expr::Array(vec![vec![
-            poirot_formula::parse_formula("A1").unwrap(),
-            poirot_formula::parse_formula("IFERROR(1/0,2)").unwrap(),
+        let array_syntax = poirot_parsing::formula::Expr::Array(vec![vec![
+            poirot_parsing::formula::parse_formula("A1").unwrap(),
+            poirot_parsing::formula::parse_formula("IFERROR(1/0,2)").unwrap(),
         ]]);
         for work in 1..32 {
             compare(
@@ -1068,9 +1072,9 @@ mod tests {
                 None,
             );
         }
-        let mut syntax = poirot_formula::Expr::Number(1.);
+        let mut syntax = poirot_parsing::formula::Expr::Number(1.);
         for _ in 0..132 {
-            syntax = poirot_formula::Expr::Unary {
+            syntax = poirot_parsing::formula::Expr::Unary {
                 op: UnaryOp::Plus,
                 operand: Box::new(syntax),
             };
@@ -1124,14 +1128,14 @@ mod tests {
                 "SUM(A1:B1)",
             ] {
                 compare(
-                    &poirot_formula::parse_formula(source).unwrap(),
+                    &poirot_parsing::formula::parse_formula(source).unwrap(),
                     EvaluationBudgets::default(),
                     Some(&registry),
                 );
             }
-            let syntax = poirot_formula::Expr::Function {
+            let syntax = poirot_parsing::formula::Expr::Function {
                 name: "unsupported_Ω".into(),
-                args: vec![poirot_formula::Expr::Number(1.)],
+                args: vec![poirot_parsing::formula::Expr::Number(1.)],
             };
             compare(&syntax, EvaluationBudgets::default(), Some(&registry));
         }
@@ -1159,7 +1163,7 @@ mod tests {
             }
         }
         let workbook = workbook();
-        let syntax = poirot_formula::parse_formula("IFERROR(1/0,2)+3").unwrap();
+        let syntax = poirot_parsing::formula::parse_formula("IFERROR(1/0,2)+3").unwrap();
         let tree = bound::bind(&syntax);
         let program = bytecode::compile(&syntax).unwrap();
         for limit in 0..30 {
@@ -1198,7 +1202,7 @@ mod tests {
             "IF(FALSE,UNKNOWN(),IF(TRUE,7,1/0))",
             "{1,2;3,4}",
         ] {
-            let syntax = poirot_formula::parse_formula(source).unwrap();
+            let syntax = poirot_parsing::formula::parse_formula(source).unwrap();
             let tree = bound::bind(&syntax);
             let program = bytecode::compile(&syntax).unwrap();
             let budgets = std::iter::once(EvaluationBudgets::default())

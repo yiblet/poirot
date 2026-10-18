@@ -136,7 +136,7 @@ fn roman_all_forms_keep_formatter_decoder_inverse() {
 fn roman_contextual_numeric_text_and_arabic_operational_failures() {
     let book = book();
     let locale = config().with_number_locale(
-        poirot_coercionv2::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap(),
+        poirot_parsing::number::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap(),
     );
     assert_eq!(
         value(&book, r#"ROMAN("€499,9","4,9")"#, &locale),

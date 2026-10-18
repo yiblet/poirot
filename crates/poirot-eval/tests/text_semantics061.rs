@@ -159,7 +159,7 @@ fn poi_code_decimal_output_is_admitted_before_allocation_and_iferror_cannot_catc
     workbook.add_sheet("Sheet1").unwrap();
     // Preparation has its own spelling budget. Bind normally so these limits
     // exercise actual execution, including the one-byte argument admissions.
-    let syntax = poirot_formula::parse_formula(r#"IFERROR(CODE("A"),7)"#).unwrap();
+    let syntax = poirot_parsing::formula::parse_formula(r#"IFERROR(CODE("A"),7)"#).unwrap();
     let plan = poirot_eval::bound::FormulaPlan::bind(&syntax).unwrap();
     let target = poirot_eval::EvaluationTarget {
         sheet: 0,

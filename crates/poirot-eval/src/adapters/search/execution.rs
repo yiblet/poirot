@@ -325,7 +325,8 @@ mod tests {
             for (cell, value) in [("B1", 1.), ("B2", 2.), ("B3", 2.), ("B4", 3.)] {
                 sheet.set_value(cell.parse().unwrap(), value).unwrap();
             }
-            let syntax = poirot_formula::parse_formula("IFERROR(MATCH(A1,B1:B4,C1),99)").unwrap();
+            let syntax =
+                poirot_parsing::formula::parse_formula("IFERROR(MATCH(A1,B1:B4,C1),99)").unwrap();
             let selected = bound::FormulaPlan::bind(&syntax).unwrap();
             let mut reads = Reads::default();
             let mut session = Session::with_context(&w, EvaluationInputs::default());
@@ -479,7 +480,7 @@ mod tests {
         let mut reads = Reads::default();
         let mut session = Session::with_context(&w, EvaluationInputs::default());
         session.dependency_sink = Some(&mut reads);
-        let syntax = poirot_formula::parse_formula("VLOOKUP(7,A:B,2,FALSE)").unwrap();
+        let syntax = poirot_parsing::formula::parse_formula("VLOOKUP(7,A:B,2,FALSE)").unwrap();
         let plan = bound::FormulaPlan::bind(&syntax).unwrap();
         let at = "Z20".parse().unwrap();
         let value = session.expr(0, at, &plan.expression()).unwrap();
@@ -653,7 +654,7 @@ mod tests {
             ("VLOOKUP(1,#N/A,#DIV/0!)", Error(VALUE_ERROR)),
             ("VLOOKUP(#REF!,#N/A)", Error(VALUE_ERROR)),
         ] {
-            let syntax = poirot_formula::parse_formula(formula).unwrap();
+            let syntax = poirot_parsing::formula::parse_formula(formula).unwrap();
             let plan = bound::FormulaPlan::bind(&syntax).unwrap();
             assert_eq!(
                 match crate::run_plan(

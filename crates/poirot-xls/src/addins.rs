@@ -2,7 +2,7 @@
 //! POI LinkTable.addNameXPtg uses an add-in SUPBOOK, workbook-scope EXTERNSHEET
 //! (-2, -2), and an EXTERNNAME whose formula is the single #REF! error token.
 use super::*;
-use poirot_formula::Expr;
+use poirot_parsing::formula::Expr;
 
 /// Deduplicated external-name and sheet records required for BIFF add-in formula tokens.
 #[derive(Debug, Default)]
@@ -60,7 +60,7 @@ impl AddInPlan {
     /// Use parser-attached node metadata; AST name normalization stays unchanged.
     pub(super) fn visit_parsed(
         &mut self,
-        parsed: &poirot_formula::ParsedFormula,
+        parsed: &poirot_parsing::formula::ParsedFormula,
     ) -> Result<(), XlsError> {
         for call in parsed.function_invocations() {
             let name = parsed
@@ -172,9 +172,9 @@ mod tests {
     use super::*;
     #[test]
     fn parser_attached_calls_exclude_escaped_literals_and_quoted_sheets() {
-        let parsed = poirot_formula::parse_formula_with_policy(
+        let parsed = poirot_parsing::formula::parse_formula_with_policy(
             r#"IFERROR("edate(""1"",2)",'YEARFRAC(2,3)'!A1)+edate(1,2)"#,
-            poirot_formula::FormulaParsePolicy::default(),
+            poirot_parsing::formula::FormulaParsePolicy::default(),
         )
         .unwrap();
         let mut plan = AddInPlan::default();
@@ -207,9 +207,9 @@ mod tests {
     fn identities_reuse_first_spelling_and_biff_name_slot() {
         let mut plan = AddInPlan::default();
         plan.visit_parsed(
-            &poirot_formula::parse_formula_with_policy(
+            &poirot_parsing::formula::parse_formula_with_policy(
                 "edate(1,2)+EDATE(3,4)+YEARFRAC(1,2)",
-                poirot_formula::FormulaParsePolicy::default(),
+                poirot_parsing::formula::FormulaParsePolicy::default(),
             )
             .unwrap(),
         )

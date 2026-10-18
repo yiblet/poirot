@@ -401,13 +401,11 @@ impl helper::Workbook for Port<'_, '_> {
             ))?;
         let result = self.session.budget.text(bytes);
         self.operational(result)?;
-        let parse_policy = self
-            .session
-            .plan
-            .map_or_else(poirot_formula::FormulaParsePolicy::default, |plan| {
-                plan.policy().parse
-            });
-        let mut endpoint = |text: &str| -> Result<poirot_formula::Expr, helper::Failure> {
+        let parse_policy = self.session.plan.map_or_else(
+            poirot_parsing::formula::FormulaParsePolicy::default,
+            |plan| plan.policy().parse,
+        );
+        let mut endpoint = |text: &str| -> Result<poirot_parsing::formula::Expr, helper::Failure> {
             let text = if query.a1 {
                 text.to_owned()
             } else {
@@ -415,11 +413,11 @@ impl helper::Workbook for Port<'_, '_> {
             };
             self.session.run_usage.dynamic_parse_attempts += 1;
             let syntax = if text.contains(':') {
-                match poirot_formula::parse_formula_with_policy(&text, parse_policy)
-                    .map(poirot_formula::ParsedFormula::into_expression)
+                match poirot_parsing::formula::parse_formula_with_policy(&text, parse_policy)
+                    .map(poirot_parsing::formula::ParsedFormula::into_expression)
                     .map_err(|_| helper::Failure::Spreadsheet(helper::Error::Ref))?
                 {
-                    poirot_formula::Expr::Binary {
+                    poirot_parsing::formula::Expr::Binary {
                         op: BinaryOp::Range,
                         left,
                         ..
@@ -427,14 +425,14 @@ impl helper::Workbook for Port<'_, '_> {
                     _ => return Err(helper::Failure::Spreadsheet(helper::Error::Ref)),
                 }
             } else if query.a1 && query.last.is_some() {
-                match poirot_formula::parse_formula_with_policy(
+                match poirot_parsing::formula::parse_formula_with_policy(
                     &format!("{text}:{text}"),
                     parse_policy,
                 )
-                .map(poirot_formula::ParsedFormula::into_expression)
+                .map(poirot_parsing::formula::ParsedFormula::into_expression)
                 .map_err(|_| helper::Failure::Spreadsheet(helper::Error::Ref))?
                 {
-                    poirot_formula::Expr::Binary {
+                    poirot_parsing::formula::Expr::Binary {
                         op: BinaryOp::Range,
                         left,
                         ..
@@ -442,17 +440,17 @@ impl helper::Workbook for Port<'_, '_> {
                     _ => return Err(helper::Failure::Spreadsheet(helper::Error::Ref)),
                 }
             } else {
-                poirot_formula::parse_formula_with_policy(&text, parse_policy)
-                    .map(poirot_formula::ParsedFormula::into_expression)
+                poirot_parsing::formula::parse_formula_with_policy(&text, parse_policy)
+                    .map(poirot_parsing::formula::ParsedFormula::into_expression)
                     .map_err(|_| helper::Failure::Spreadsheet(helper::Error::Ref))?
             };
             if !matches!(
                 syntax,
-                poirot_formula::Expr::Cell(_)
-                    | poirot_formula::Expr::Column { .. }
-                    | poirot_formula::Expr::Row { .. }
-                    | poirot_formula::Expr::Name(_)
-                    | poirot_formula::Expr::QualifiedName { .. }
+                poirot_parsing::formula::Expr::Cell(_)
+                    | poirot_parsing::formula::Expr::Column { .. }
+                    | poirot_parsing::formula::Expr::Row { .. }
+                    | poirot_parsing::formula::Expr::Name(_)
+                    | poirot_parsing::formula::Expr::QualifiedName { .. }
             ) {
                 return Err(helper::Failure::Spreadsheet(helper::Error::Ref));
             }
@@ -460,7 +458,7 @@ impl helper::Workbook for Port<'_, '_> {
         };
         let first = endpoint(&query.first)?;
         let syntax = if let Some(last) = &query.last {
-            poirot_formula::Expr::Binary {
+            poirot_parsing::formula::Expr::Binary {
                 op: BinaryOp::Range,
                 left: Box::new(first),
                 right: Box::new(endpoint(last)?),

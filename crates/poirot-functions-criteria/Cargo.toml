@@ -4,8 +4,8 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+poirot-parsing = { path = "../poirot-parsing" }
 poirot-coercionv2 = { path = "../poirot-coercionv2" }
-nom.workspace = true
 
 [lints]
 workspace = true

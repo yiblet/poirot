@@ -12,7 +12,7 @@
 //! `Invoke` must never eagerly execute the blocks following it. References stay values
 //! on the stack until an operator or family adapter requests dereferencing/coercion.
 
-use poirot_formula::{BinaryOp, Expr, UnaryOp};
+use poirot_parsing::formula::{BinaryOp, Expr, UnaryOp};
 use std::sync::Arc;
 
 const LIMIT: usize = 100_000;
@@ -285,7 +285,7 @@ fn validate(e: &Expr, depth: usize, nodes: &mut usize, strict: bool) -> Result<(
     if *nodes > LIMIT || depth >= DEPTH {
         return Err(CompileError::ResourceLimit);
     }
-    let invalid_cell = |c: &poirot_formula::CellReference| {
+    let invalid_cell = |c: &poirot_parsing::formula::CellReference| {
         c.row >= poirot_model::MAX_ROWS || c.column >= poirot_model::MAX_COLUMNS
     };
     match e {
@@ -415,7 +415,7 @@ trait Bytes {
             self.string(s);
         }
     }
-    fn cell(&mut self, c: &poirot_formula::CellReference) {
+    fn cell(&mut self, c: &poirot_parsing::formula::CellReference) {
         self.word(c.row);
         self.word(c.column);
         self.word(c.row_absolute.into());
@@ -626,7 +626,7 @@ impl Sink for Writer<'_> {
                 };
                 let call_target = match lookup {
                     Some(lookup) => match crate::registry::resolve_function(
-                        &poirot_formula::FunctionName::from(lookup),
+                        &poirot_parsing::formula::FunctionName::from(lookup),
                     ) {
                         Some(d) => CallTarget::Builtin(d.handler),
                         None => self
@@ -696,7 +696,9 @@ fn binary(op: BinaryOp) -> u32 {
 }
 
 /// Convenience entry point retaining neither the parsed source nor its AST.
-pub fn lower_parsed(parsed: &poirot_formula::ParsedFormula) -> Result<Compiled, CompileError> {
+pub fn lower_parsed(
+    parsed: &poirot_parsing::formula::ParsedFormula,
+) -> Result<Compiled, CompileError> {
     compile(parsed.expression())
 }
 
@@ -704,7 +706,7 @@ pub fn lower_parsed(parsed: &poirot_formula::ParsedFormula) -> Result<Compiled, 
 mod tests {
     use super::*;
     fn compiled(source: &str) -> Compiled {
-        let syntax = poirot_formula::parse_formula(source).unwrap();
+        let syntax = poirot_parsing::formula::parse_formula(source).unwrap();
         compile(&syntax).unwrap()
     }
     #[test]
@@ -785,7 +787,7 @@ mod tests {
     }
     #[test]
     fn bytecode_all_syntax_atoms_and_operators() {
-        let cell = poirot_formula::CellReference {
+        let cell = poirot_parsing::formula::CellReference {
             row: 1,
             column: 2,
             row_absolute: true,
@@ -814,10 +816,10 @@ mod tests {
                 absolute: false,
                 sheet: Some("sheet".into()),
             },
-            Expr::SheetSpan(poirot_formula::SheetSpanReference {
+            Expr::SheetSpan(poirot_parsing::formula::SheetSpanReference {
                 first_sheet: "one".into(),
                 last_sheet: "three".into(),
-                start: poirot_formula::CellReference {
+                start: poirot_parsing::formula::CellReference {
                     sheet: None,
                     ..cell
                 },

@@ -7,7 +7,7 @@ use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 const AT: CellAddress = CellAddress { row: 0, col: 0 };
 
 fn run(book: &Workbook, formula: &str, work: u64) -> EvaluationOutcome<CellValue> {
-    let expression = poirot::formula::parse_formula(formula).unwrap();
+    let expression = poirot::parsing::formula::parse_formula(formula).unwrap();
     let plan = eval::bound::FormulaPlan::bind(&expression).unwrap();
     eval::run_plan(
         book,

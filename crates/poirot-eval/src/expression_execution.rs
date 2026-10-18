@@ -64,7 +64,7 @@ impl<'a> Session<'a> {
             if self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
                 && let Expr::UnresolvedFunction(arguments) = expression
             {
-                registry::resolve_excel_function(&poirot_formula::FunctionName::from(
+                registry::resolve_excel_function(&poirot_parsing::formula::FunctionName::from(
                     arguments.resolved_spelling(),
                 ))
                 .map(|handler| (handler, arguments))

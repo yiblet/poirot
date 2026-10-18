@@ -111,7 +111,7 @@ fn search_validates_empty_pattern_and_text_domains() {
             EvaluationOutcome::Aborted { .. }
         ));
         let comma = config.clone().with_number_locale(
-            poirot_coercionv2::NumberLocaleV2::new(",", Some("."), None, "%", ":").unwrap(),
+            poirot_parsing::number::NumberLocaleV2::new(",", Some("."), None, "%", ":").unwrap(),
         );
         assert_eq!(
             value(r#"FIND("c","abc","3,9")"#, &comma),

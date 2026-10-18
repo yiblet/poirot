@@ -76,7 +76,7 @@ fn combina_uses_one_documented_contract_and_preserves_scalar_admission() {
 #[test]
 fn combina_contextual_text_and_resource_failures_remain_distinct() {
     let c = RunConfiguration::default().with_number_locale(
-        poirot_coercionv2::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap(),
+        poirot_parsing::number::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap(),
     );
     assert_eq!(
         value("COMBINA(\"€4,23\",\"3,8\")", &c),

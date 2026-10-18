@@ -1,7 +1,7 @@
 use super::*;
 use crate::registry::*;
 use crate::{CellAddress, CellError, CellValue, Workbook};
-use poirot_formula::{CellReference, Expr as Syntax, UnaryOp};
+use poirot_parsing::formula::{CellReference, Expr as Syntax, UnaryOp};
 const AT: CellAddress = CellAddress { row: 0, col: 0 };
 fn workbook() -> Workbook {
     let mut workbook = Workbook::new();
@@ -9,7 +9,7 @@ fn workbook() -> Workbook {
     workbook
 }
 fn plan(formula: &str) -> FormulaPlan {
-    FormulaPlan::bind(&poirot_formula::parse_formula(formula).unwrap()).unwrap()
+    FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap()).unwrap()
 }
 #[test]
 fn aliases_bind_to_one_typed_identity_and_keep_syntax() {
@@ -20,25 +20,25 @@ fn aliases_bind_to_one_typed_identity_and_keep_syntax() {
         ("VARP", "VAR.P"),
     ] {
         assert_eq!(
-            resolve_function(&poirot_formula::FunctionName::from(alias))
+            resolve_function(&poirot_parsing::formula::FunctionName::from(alias))
                 .unwrap()
                 .handler,
-            resolve_function(&poirot_formula::FunctionName::from(canonical))
+            resolve_function(&poirot_parsing::formula::FunctionName::from(canonical))
                 .unwrap()
                 .handler
         );
         assert_eq!(
-            resolve_function(&poirot_formula::FunctionName::from(alias))
+            resolve_function(&poirot_parsing::formula::FunctionName::from(alias))
                 .unwrap()
                 .arity,
-            resolve_function(&poirot_formula::FunctionName::from(canonical))
+            resolve_function(&poirot_parsing::formula::FunctionName::from(canonical))
                 .unwrap()
                 .arity
         );
     }
     let syntax = Syntax::Function {
         // Explicit raw syntax retains caller spelling; normal parsed builtins use a slot.
-        name: poirot_formula::FunctionName::Unknown("vlookup".into()),
+        name: poirot_parsing::formula::FunctionName::Unknown("vlookup".into()),
         args: vec![
             Syntax::Number(1.),
             Syntax::Array(vec![vec![Syntax::Number(1.), Syntax::Number(7.)]]),
@@ -323,7 +323,7 @@ fn admission_keeps_lifo_diagnostic_precedence_and_exact_node_budget() {
         ),
     ] {
         let syntax = Syntax::Binary {
-            op: poirot_formula::BinaryOp::Add,
+            op: poirot_parsing::formula::BinaryOp::Add,
             left: Box::new(left),
             right: Box::new(right),
         };
@@ -342,7 +342,7 @@ fn admission_keeps_lifo_diagnostic_precedence_and_exact_node_budget() {
 
 #[test]
 fn hierarchical_sheet_spans_and_qualified_names_keep_exact_records() {
-    let span = poirot_formula::SheetSpanReference {
+    let span = poirot_parsing::formula::SheetSpanReference {
         first_sheet: "First sheet".into(),
         last_sheet: "Last'Sheet".into(),
         start: CellReference {

@@ -2,60 +2,14 @@
 use poirot_functions_core::{CellError, CellValue, Scalar, TextRef};
 use poirot_numeric::number_text::{SourceVersion, render};
 pub fn coercev2_criteria_number_text(s: &str) -> Option<f64> {
-    let s = s.trim_matches(|c: char| c <= '\u{20}');
-    let parsed: nom::IResult<&str, f64> = nom::number::complete::double(s);
-    match parsed {
-        Ok(("", n)) if n.is_finite() => Some(n),
-        _ => None,
-    }
+    poirot_parsing::number::parse_criteria_number(s)
 }
+
 pub fn coercev2_financial_decimal_text(text: &str) -> Option<f64> {
-    let text = text.trim_matches(|c: char| c <= '\u{20}');
-    let bytes = text.as_bytes();
-    let mut at = usize::from(matches!(bytes.first(), Some(b'+' | b'-')));
-    let start = at;
-    while bytes.get(at).is_some_and(u8::is_ascii_digit) {
-        at += 1;
-    }
-    let mut digits = at - start;
-    if bytes.get(at) == Some(&b'.') {
-        at += 1;
-        let start = at;
-        while bytes.get(at).is_some_and(u8::is_ascii_digit) {
-            at += 1;
-        }
-        digits += at - start;
-    }
-    if digits == 0 {
-        return None;
-    }
-    if matches!(bytes.get(at), Some(b'e' | b'E')) {
-        at += 1;
-        if matches!(bytes.get(at), Some(b'+' | b'-')) {
-            at += 1;
-        }
-        let start = at;
-        while bytes.get(at).is_some_and(u8::is_ascii_digit) {
-            at += 1;
-        }
-        if at == start {
-            return None;
-        }
-    }
-    if at != bytes.len() {
-        return None;
-    }
-    poirot_numeric::parse_java_number(text).filter(|number| number.is_finite())
+    poirot_parsing::number::parse_financial_decimal(text)
 }
 pub fn coercev2_statistics_decimal_text(text: &str) -> Option<f64> {
-    let text = text.trim_matches(|c: char| c <= '\u{20}');
-    if text
-        .bytes()
-        .any(|c| !matches!(c, b'0'..=b'9' | b'.' | b'+' | b'-' | b'e' | b'E'))
-    {
-        return None;
-    }
-    text.parse::<f64>().ok().filter(|n| n.is_finite())
+    poirot_parsing::number::parse_statistics_decimal(text)
 }
 
 /// Borrowed scalar view; omission remains distinct from a blank cell.
@@ -137,9 +91,7 @@ pub fn coercev2_number<'a, E: From<CellError>>(
 }
 /// Legacy Unicode-trimmed, finite Rust numeric grammar.
 pub fn coercev2_arithmetic_text(text: &str) -> Result<f64, CellError> {
-    text.trim()
-        .parse::<f64>()
-        .ok()
+    poirot_parsing::number::parse_rust_float(text.trim())
         .filter(|n| n.is_finite())
         .ok_or(CellError::Value)
 }
@@ -395,14 +347,12 @@ pub enum NumericTextDecision {
 pub fn coercev2_numeric_text(text: &str) -> NumericTextDecision {
     use nom::Parser;
     let trimmed = text.trim_matches(|c: char| (c as u32) <= 32);
-    if nom::combinator::all_consuming(
-        nom::number::complete::recognize_float::<_, nom::error::Error<_>>,
-    )
-    .parse(trimmed)
-    .is_ok()
+    if nom::combinator::all_consuming(poirot_parsing::number::source_float)
+        .parse(trimmed)
+        .is_ok()
     {
         NumericTextDecision::Number(
-            poirot_numeric::parse_java_number(trimmed)
+            poirot_parsing::java_number::parse_java_number(trimmed)
                 .filter(|n| n.is_finite())
                 .ok_or(CellError::Value),
         )
@@ -521,20 +471,20 @@ pub fn coercev2_arithmetic_operand<'a, E: From<CellError>>(
 
 /// Date numeric text rejects nonfinite parses before considering date fallback.
 pub fn coercev2_date_numeric_text(text: &str) -> NumericTextDecision {
-    match text.trim().parse::<f64>() {
-        Ok(n) => NumericTextDecision::Number(if n.is_finite() {
+    match poirot_parsing::number::parse_rust_float(text.trim()) {
+        Some(n) => NumericTextDecision::Number(if n.is_finite() {
             Ok(n)
         } else {
             Err(CellError::Value)
         }),
-        Err(_) => NumericTextDecision::DateTime,
+        None => NumericTextDecision::DateTime,
     }
 }
 /// Source-visible decimal text converted back to a truncated logical-function index.
 pub fn coercev2_truncated_text(text: &str) -> Result<f64, CellError> {
-    text.parse::<f64>()
+    poirot_parsing::number::parse_rust_float(text)
         .map(f64::trunc)
-        .map_err(|_| CellError::Num)
+        .ok_or(CellError::Num)
 }
 /// Number rendering with an explicit source profile, following host admission.
 pub fn coercev2_render_number(value: f64, source: SourceVersion) -> String {
@@ -588,7 +538,7 @@ pub fn coercev2_database_criteria_header_index(
 
 /// Java numeric syntax, including hex and suffixes, selected explicitly by its consumers.
 pub fn coercev2_java_number_text(text: &str) -> Option<f64> {
-    poirot_numeric::parse_java_number(text)
+    poirot_parsing::java_number::parse_java_number(text)
 }
 /// Optional numeric argument defaults only omitted slots, never blank cells.
 pub fn coercev2_optional_number<E>(

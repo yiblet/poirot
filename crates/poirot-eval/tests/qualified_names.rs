@@ -51,7 +51,7 @@ fn explicit_scope_selects_name_but_body_retains_caller_context() {
             "{formula}"
         );
     }
-    let syntax = poirot_formula::parse_formula("'O''Brien'!Rate").unwrap();
+    let syntax = poirot_parsing::formula::parse_formula("'O''Brien'!Rate").unwrap();
     assert!(
         matches!(FormulaPlan::bind(&syntax).unwrap().expression(), Expression::QualifiedName {sheet, name} if sheet == "O'Brien" && name == "Rate")
     );

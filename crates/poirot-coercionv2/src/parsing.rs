@@ -26,42 +26,5 @@ pub(crate) fn coercev2_text_view<'a>(
 /// Deliberately narrow, locale-independent finite decimal grammar.
 /// No date, percent, fraction, grouping, NaN, or infinity spellings are admitted.
 pub(crate) fn coercev2_decimal_text(text: &str) -> Option<f64> {
-    let text = text.trim_matches(|c: char| c.is_ascii_whitespace());
-    let mut bytes = text.bytes().peekable();
-    if bytes.peek().is_some_and(|byte| matches!(byte, b'+' | b'-')) {
-        bytes.next();
-    }
-    let mut has_digits = false;
-    while bytes.peek().is_some_and(u8::is_ascii_digit) {
-        bytes.next();
-        has_digits = true;
-    }
-    if bytes.peek() == Some(&b'.') {
-        bytes.next();
-        while bytes.peek().is_some_and(u8::is_ascii_digit) {
-            bytes.next();
-            has_digits = true;
-        }
-    }
-    if !has_digits {
-        return None;
-    }
-    if bytes.peek().is_some_and(|byte| matches!(byte, b'e' | b'E')) {
-        bytes.next();
-        if bytes.peek().is_some_and(|byte| matches!(byte, b'+' | b'-')) {
-            bytes.next();
-        }
-        let mut has_exponent_digits = false;
-        while bytes.peek().is_some_and(u8::is_ascii_digit) {
-            bytes.next();
-            has_exponent_digits = true;
-        }
-        if !has_exponent_digits {
-            return None;
-        }
-    }
-    if bytes.next().is_some() {
-        return None;
-    }
-    text.parse::<f64>().ok().filter(|number| number.is_finite())
+    poirot_parsing::number::parse_finite_decimal(text)
 }

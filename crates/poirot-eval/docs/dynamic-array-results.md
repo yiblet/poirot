@@ -85,7 +85,7 @@ This is bounded support, not complete Calc shape parity. Calc can inspect unused
 argument shapes, pad short operands, or admit booleans differently. Materialized
 selector members retain the rectangular reader's missing-to-blank limitation;
 no new omission state is introduced. The individual
-[selector contracts](../../poirot-test-json/evidence/master-compat-reconciliation.md)
+[selector contracts](../../poirot-test-runner/evidence/master-compat-reconciliation.md)
 record the retained differences and independent falsifying probes.
 
 Explicit `@` selects a scalar. CSE arrays and dynamic `#` reference syntax are

@@ -54,7 +54,8 @@ fn text_numeric_affixes_match_in_default_and_pinned_poi_configuration() {
 fn text_format_budget_and_lossless_failures_are_not_caught_by_iferror() {
     let mut workbook = workbook();
     let configuration = RunConfiguration::default();
-    let syntax = poirot_formula::parse_formula(r#"IFERROR(TEXT(-6653,"$###,###"),7)"#).unwrap();
+    let syntax =
+        poirot_parsing::formula::parse_formula(r#"IFERROR(TEXT(-6653,"$###,###"),7)"#).unwrap();
     let plan = poirot_eval::bound::FormulaPlan::bind(&syntax).unwrap();
     let address = CellAddress { row: 0, col: 1 };
     let outcome = poirot_eval::run_plan_with_configuration(

@@ -30,7 +30,7 @@
 //! let view = WorkbookView::new(&workbook, &plan, &policy)?;
 //! let mut run = EvaluationRun::new(view, EvaluationInputs::default(), EvaluationBudgets::default())?;
 //! let adapter = MathAdapter.chain(FinancialAdapter);
-//! let argument = bytecode::compile(&poirot_formula::Expr::Number(5.))?;
+//! let argument = bytecode::compile(&poirot_parsing::formula::Expr::Number(5.))?;
 //! let arguments: ParamVec<_> = [argument].into_iter().collect();
 //! let target = EvaluationTarget { sheet: 0, address: CellAddress::new(0, 0)? };
 //! let name = FunctionName::Known(CommonFunction::Fact);
@@ -80,10 +80,10 @@ mod registry;
 pub use registry::AdapterRegistry;
 /// Compatibility name for the indexed parent produced by chaining adapters.
 pub type AdapterChain = AdapterRegistry;
-/// Parsed builtin names and fallback spellings.
-pub use poirot_formula::{CommonFunction, FunctionName};
 /// Deferred input protocol and small argument vector.
 pub use poirot_functions_core::{Input, ParamVec};
+/// Parsed builtin names and fallback spellings.
+pub use poirot_parsing::formula::{CommonFunction, FunctionName};
 
 use crate::registry::{FUNCTION_DESCRIPTORS, FunctionDescriptor, FunctionId};
 

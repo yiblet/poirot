@@ -12,7 +12,7 @@ quick-xml.workspace = true
 zip.workspace = true
 
 [dev-dependencies]
-poirot-formula = { path = "../poirot-formula" }
+poirot-parsing = { path = "../poirot-parsing" }
 
 [lints]
 workspace = true

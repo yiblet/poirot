@@ -313,7 +313,7 @@ pub(crate) fn execute(
 #[cfg(test)]
 mod semantics_port_tests {
     use super::*;
-    use poirot_formula::parse_formula;
+    use poirot_parsing::formula::parse_formula;
     fn eval(workbook: &Workbook, at: &str, formula: &str) -> EvalResult<CellValue> {
         let mut session = Session::with_context(workbook, EvaluationInputs::default());
         session.text_policy = TextSemanticsPolicy {
@@ -444,7 +444,7 @@ pub(crate) mod execution;
 #[cfg(test)]
 mod concat_member_tests {
     use super::*;
-    use poirot_formula::parse_formula;
+    use poirot_parsing::formula::parse_formula;
 
     fn expression(formula: &str) -> Expr {
         bound::bind(&parse_formula(formula).unwrap())

@@ -10,7 +10,7 @@ fn eval(formula: &str, literal: CellValue, budgets: EvaluationBudgets) -> EvalRe
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
     session.budget = BudgetMeter::new(budgets).unwrap();
     let at = "B1".parse().unwrap();
-    let expression = crate::bound::bind(&poirot_formula::parse_formula(formula).unwrap());
+    let expression = crate::bound::bind(&poirot_parsing::formula::parse_formula(formula).unwrap());
     let value = session.expr(0, at, &expression)?;
     session.scalar(at, value)
 }

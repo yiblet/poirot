@@ -22,7 +22,8 @@ fn fixture() -> Workbook {
 }
 fn formula(w: &Workbook, expression: &str) -> CellValue {
     let plan =
-        bound::FormulaPlan::bind(&poirot_formula::parse_formula(expression).unwrap()).unwrap();
+        bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(expression).unwrap())
+            .unwrap();
     match crate::run_plan(
         w,
         0,
@@ -79,7 +80,7 @@ fn upper_grid_padding_and_nested_return_keep_reference_shape() {
         assert_eq!(formula(&w, expression), Number(expected), "{expression}");
     }
     let args = [bound::bind(
-        &poirot_formula::parse_formula("OFFSET(A1048576,1,0,1,1)").unwrap(),
+        &poirot_parsing::formula::parse_formula("OFFSET(A1048576,1,0,1,1)").unwrap(),
     )];
     let mut session = Session::with_context(&w, EvaluationInputs::default());
     let mut host = host::CallHost::new(&mut session, 0, "P1".parse().unwrap(), &args);
@@ -185,7 +186,7 @@ fn zero_negative_source_dimensions_keep_metadata_and_empty_sparse_loop_policy() 
 fn short_widened_sparse_area_stays_sparse_under_small_materialization_budget() {
     let w = fixture();
     let plan = bound::FormulaPlan::bind(
-        &poirot_formula::parse_formula("SUM(OFFSET(A1,32767,0,2,1))").unwrap(),
+        &poirot_parsing::formula::parse_formula("SUM(OFFSET(A1,32767,0,2,1))").unwrap(),
     )
     .unwrap();
     assert!(matches!(
@@ -221,7 +222,8 @@ fn countblank_positive_int_overflow_remains_sparse() {
         ),
     ] {
         let plan = bound::FormulaPlan::bind(
-            &poirot_formula::parse_formula("COUNTBLANK(OFFSET(A1,32767,32767,2,2))").unwrap(),
+            &poirot_parsing::formula::parse_formula("COUNTBLANK(OFFSET(A1,32767,32767,2,2))")
+                .unwrap(),
         )
         .unwrap();
         assert!(matches!(run_plan(&w, 0, "P1".parse().unwrap(), &plan,

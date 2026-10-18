@@ -1,7 +1,7 @@
 //! Atomic application of bounded syntax translations to existing formula sources.
 use crate::edit::EditError;
-use poirot_formula::{FormulaLocation, TranslationPlan, TranslationPolicy};
 use poirot_model::{CellValue, FormulaSource, ModelError, Workbook};
+use poirot_parsing::formula::{FormulaLocation, TranslationPlan, TranslationPolicy};
 
 /// Treatment of saved formula results after an in-place reference translation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

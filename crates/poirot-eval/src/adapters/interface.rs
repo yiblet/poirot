@@ -5,8 +5,8 @@ use crate::{
     call_admission::{AdmissionOrder, ResolvedCall},
     registry::{FunctionDescriptor, FunctionId},
 };
-use poirot_formula::FunctionName;
 use poirot_functions_core::{Input, ParamVec};
+use poirot_parsing::formula::FunctionName;
 
 /// Borrowed lazy argument blocks from compiled bytecode.
 /// This view never materializes a bytecode tree just to call a function family.
@@ -274,7 +274,7 @@ pub trait FunctionAdapter: Send + Sync {
 
 impl crate::EvaluationRun<'_> {
     /// Call a builtin by name with a small, deferred argument vector.
-    /// Parse individual expressions with poirot_formula and compile them with bytecode::compile. Unknown names return the spreadsheet #NAME? error.
+    /// Parse individual expressions with poirot_parsing::formula and compile them with bytecode::compile. Unknown names return the spreadsheet #NAME? error.
     pub fn call(
         &mut self,
         target: EvaluationTarget,

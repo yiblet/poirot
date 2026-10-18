@@ -36,7 +36,7 @@ fn workbook() -> Workbook {
     w
 }
 fn plan(formula: &str) -> FormulaPlan {
-    FormulaPlan::bind(&poirot_formula::parse_formula(formula).unwrap()).unwrap()
+    FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap()).unwrap()
 }
 fn check(w: &Workbook, formula: &str, expected: CellValue) {
     assert_eq!(

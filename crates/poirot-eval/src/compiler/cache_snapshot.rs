@@ -197,7 +197,7 @@ impl<'a> Cache<'a> {
             let prepared = Arc::new(prepared);
             if let PreparedFormula::Ready(formula) = prepared.as_ref()
                 && reusable_template(formula)
-                && let Ok(hash) = poirot_formula::classified::normalized_hash(&source)
+                && let Ok(hash) = poirot_parsing::formula::classified::normalized_hash(&source)
             {
                 templates
                     .classified

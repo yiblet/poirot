@@ -384,7 +384,8 @@ mod tests {
             r#"INDEX(1/0,1,INDIRECT("[missing.xlsx]Sheet1!A1"))"#,
         ] {
             let plan =
-                bound::FormulaPlan::bind(&poirot_formula::parse_formula(formula).unwrap()).unwrap();
+                bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap())
+                    .unwrap();
             let mut session = Session::with_context(&workbook, EvaluationInputs::default());
             assert!(
                 matches!(
@@ -461,8 +462,10 @@ mod tests {
                     &workbook,
                     0,
                     at,
-                    &bound::FormulaPlan::bind(&poirot_formula::parse_formula(formula).unwrap())
-                        .unwrap(),
+                    &bound::FormulaPlan::bind(
+                        &poirot_parsing::formula::parse_formula(formula).unwrap()
+                    )
+                    .unwrap(),
                     Default::default(),
                     Default::default()
                 ) {
@@ -473,9 +476,10 @@ mod tests {
                 "{formula}"
             );
         }
-        let plan =
-            bound::FormulaPlan::bind(&poirot_formula::parse_formula("INDEX(A1:B3,2,2)").unwrap())
-                .unwrap();
+        let plan = bound::FormulaPlan::bind(
+            &poirot_parsing::formula::parse_formula("INDEX(A1:B3,2,2)").unwrap(),
+        )
+        .unwrap();
         let mut session = Session::with_context(&workbook, EvaluationInputs::default());
         assert!(
             matches!(session.expr(0,at,&plan.expression()).unwrap(),Value::Refs(areas) if areas.len()==1 && areas[0].r0==1 && areas[0].c0==1)

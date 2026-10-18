@@ -13,7 +13,7 @@ fn target() -> EvaluationTarget {
     }
 }
 fn expression(source: &str) -> bytecode::Compiled {
-    bytecode::compile(&poirot_formula::parse_formula(source).unwrap()).unwrap()
+    bytecode::compile(&poirot_parsing::formula::parse_formula(source).unwrap()).unwrap()
 }
 fn call(
     adapter: &impl FunctionAdapter,
@@ -228,14 +228,14 @@ fn deferred_input_keeps_missing_distinct_from_a_blank_value() {
         session: &mut session,
         target: target(),
     };
-    let expression = bytecode::compile(&poirot_formula::Expr::Missing).unwrap();
+    let expression = bytecode::compile(&poirot_parsing::formula::Expr::Missing).unwrap();
     assert!(context.input(&expression).force().unwrap().is_missing());
 }
 
 #[test]
 fn borrowed_bytecode_arguments_force_once_and_skip_other_blocks() {
     let workbook = workbook();
-    let syntax = poirot_formula::parse_formula("IF(TRUE,RAND(),1/0)").unwrap();
+    let syntax = poirot_parsing::formula::parse_formula("IF(TRUE,RAND(),1/0)").unwrap();
     let program = crate::bytecode::compile(&syntax).unwrap();
     let (ip, invoke) = program
         .template

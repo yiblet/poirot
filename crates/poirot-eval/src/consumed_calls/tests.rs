@@ -1,7 +1,7 @@
 use super::*;
 use crate::{BudgetFailure, BudgetKind, EvaluationInputs, Session};
-use poirot_formula::Expr as Syntax;
 use poirot_model::{CellAddress, CellValue, Workbook};
+use poirot_parsing::formula::Expr as Syntax;
 
 /// Owned builtin entry evidence used to compare observed call identities.
 #[derive(Debug, PartialEq, Eq)]
@@ -78,7 +78,8 @@ fn workbook() -> Workbook {
     workbook
 }
 fn plan(source: &str) -> crate::bound::FormulaPlan {
-    crate::bound::FormulaPlan::bind(&poirot_formula::parse_formula(source).unwrap()).unwrap()
+    crate::bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(source).unwrap())
+        .unwrap()
 }
 fn names(observer: &Bounded) -> Vec<&str> {
     observer
@@ -187,7 +188,7 @@ fn every_builtin_family_enters_the_same_typed_port() {
             builtin_call(&plan.expression()).expect("fixture must be typed builtin");
         assert_eq!(
             expected,
-            crate::registry::resolve_function(&poirot_formula::FunctionName::from(name))
+            crate::registry::resolve_function(&poirot_parsing::formula::FunctionName::from(name))
                 .unwrap()
                 .handler
         );
@@ -230,7 +231,7 @@ fn every_builtin_family_enters_the_same_typed_port() {
     for (entry, name) in observer.entries.iter().zip(names) {
         assert_eq!(
             entry.handler,
-            crate::registry::resolve_function(&poirot_formula::FunctionName::from(name))
+            crate::registry::resolve_function(&poirot_parsing::formula::FunctionName::from(name))
                 .unwrap()
                 .handler
         );

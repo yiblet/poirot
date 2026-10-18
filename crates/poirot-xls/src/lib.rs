@@ -1,6 +1,6 @@
 #![doc = include_str!("../README.md")]
-use poirot_formula::parse_formula;
 use poirot_model::{CellValue, Workbook};
+use poirot_parsing::formula::parse_formula;
 use std::{
     collections::BTreeMap,
     fmt,

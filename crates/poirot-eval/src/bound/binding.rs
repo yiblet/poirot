@@ -2,7 +2,7 @@
 use super::admission::{BindingError, validate_size};
 use super::domain::*;
 use crate::registry::*;
-use poirot_formula::Expr as Syntax;
+use poirot_parsing::formula::Expr as Syntax;
 
 impl FormulaPlan {
     /// Validate and compile caller-owned syntax without extensions.
@@ -101,7 +101,7 @@ pub(super) fn bind_at(
             let resolved = if lookup_name == name.as_str() {
                 resolve_function(name)
             } else {
-                resolve_function(&poirot_formula::FunctionName::from(lookup_name))
+                resolve_function(&poirot_parsing::formula::FunctionName::from(lookup_name))
             };
             match resolved.map(|d| d.handler) {
                 Some(FunctionId::Date(function)) => Expression::Date(DateExpr {

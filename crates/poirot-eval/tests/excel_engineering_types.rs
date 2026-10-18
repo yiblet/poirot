@@ -155,10 +155,12 @@ fn pinned_defaults_keep_text_results_arity_and_permissive_digits() {
     });
     assert_eq!(value(r#"CODE("A")"#, &poi_text), Text("65".into()));
     assert_eq!(
-        poirot_eval::registry::resolve_function(&poirot_formula::FunctionName::from("DELTA"))
-            .unwrap()
-            .arity
-            .minimum,
+        poirot_eval::registry::resolve_function(&poirot_parsing::formula::FunctionName::from(
+            "DELTA"
+        ))
+        .unwrap()
+        .arity
+        .minimum,
         2
     );
 }

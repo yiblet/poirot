@@ -182,7 +182,8 @@ fn each_allocating_host_stage_is_admitted_before_semantic_fallback() {
     let mut session = Session::with_context(&book, context());
     assert_eq!(session.coercev2_time_text(input), Ok(0.));
     let formula = "IFERROR(TIMEVALUE(\"1/01/2000 bad\"),0)";
-    let plan = bound::FormulaPlan::bind(&poirot_formula::parse_formula(formula).unwrap()).unwrap();
+    let plan = bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap())
+        .unwrap();
     assert!(matches!(
         run_plan(
             &book,

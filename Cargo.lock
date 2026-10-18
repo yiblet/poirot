@@ -547,9 +547,9 @@ version = "0.1.0"
 dependencies = [
  "poirot-eval",
  "poirot-format",
- "poirot-formula",
  "poirot-io",
  "poirot-model",
+ "poirot-parsing",
  "poirot-workbook",
  "poirot-xls",
  "postcard",
@@ -571,6 +571,7 @@ dependencies = [
  "nom",
  "poirot-functions-core",
  "poirot-numeric",
+ "poirot-parsing",
  "regex",
  "serde",
 ]
@@ -584,7 +585,6 @@ dependencies = [
  "nom",
  "poirot-coercionv2",
  "poirot-format",
- "poirot-formula",
  "poirot-functions-core",
  "poirot-functions-criteria",
  "poirot-functions-database",
@@ -599,6 +599,7 @@ dependencies = [
  "poirot-functions-text",
  "poirot-model",
  "poirot-numeric",
+ "poirot-parsing",
  "poirot-text",
  "postcard",
  "rand_chacha",
@@ -616,15 +617,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "poirot-formula"
-version = "0.1.0"
-dependencies = [
- "allocation-counter",
- "nom",
- "serde",
-]
-
-[[package]]
 name = "poirot-functions-core"
 version = "0.1.0"
 dependencies = [
@@ -636,8 +628,8 @@ dependencies = [
 name = "poirot-functions-criteria"
 version = "0.1.0"
 dependencies = [
- "nom",
  "poirot-coercionv2",
+ "poirot-parsing",
 ]
 
 [[package]]
@@ -648,6 +640,7 @@ dependencies = [
  "poirot-functions-core",
  "poirot-functions-criteria",
  "poirot-numeric",
+ "poirot-parsing",
 ]
 
 [[package]]
@@ -733,8 +726,8 @@ version = "0.1.0"
 dependencies = [
  "calamine",
  "cfb",
- "poirot-formula",
  "poirot-model",
+ "poirot-parsing",
  "quick-xml",
  "rust_xlsxwriter",
  "zip",
@@ -759,6 +752,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "poirot-parsing"
+version = "0.1.0"
+dependencies = [
+ "allocation-counter",
+ "nom",
+ "num-bigint",
+ "serde",
+]
+
+[[package]]
 name = "poirot-test-excel-specs"
 version = "0.1.0"
 dependencies = [
@@ -772,8 +775,8 @@ dependencies = [
  "clap",
  "poirot",
  "poirot-eval",
- "poirot-formula",
  "poirot-model",
+ "poirot-parsing",
  "rayon",
  "regex",
  "roxmltree",
@@ -794,9 +797,9 @@ name = "poirot-workbook"
 version = "0.1.0"
 dependencies = [
  "poirot-eval",
- "poirot-formula",
  "poirot-io",
  "poirot-model",
+ "poirot-parsing",
  "poirot-xls",
 ]
 
@@ -807,9 +810,9 @@ dependencies = [
  "calamine",
  "cfb",
  "poirot-eval",
- "poirot-formula",
  "poirot-io",
  "poirot-model",
+ "poirot-parsing",
 ]
 
 [[package]]

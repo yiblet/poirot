@@ -82,7 +82,7 @@ mod adapter_tests {
             }
         }
         fn coercev2_text_number(&mut self, t: &str) -> Result<f64, Failure<Self::Operational>> {
-            poirot_numeric::parse_java_number(t).ok_or(CellError::Value.into())
+            poirot_parsing::java_number::parse_java_number(t).ok_or(CellError::Value.into())
         }
         fn currency_format(&mut self) -> Result<CurrencyContext, Failure<Self::Operational>> {
             if self.locale {

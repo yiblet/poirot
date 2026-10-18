@@ -14386,7 +14386,7 @@
         ],
         "supported": "One explicit direct term-wise power-series contract; contextual scalar numeric text and exact numeric-or-blank collection coefficients, retaining row-major exponent positions.",
         "limitations": [
-          "Native Excel boundary behavior is unverified. Calc differs for zero bases, logical and text coefficients, and error mapping. See docs/seriessum.md."
+          "Native Excel boundary behavior is unverified. Calc differs for zero bases, logical and text coefficients, and error mapping. See [the SERIESSUM contract](../../poirot-functions-math/docs/seriessum.md)."
         ]
       }
     }

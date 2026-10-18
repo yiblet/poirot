@@ -1,6 +1,7 @@
+use poirot_coercionv2::coercev2_formatted_number;
 use poirot_coercionv2::compatibility::NumericTextDecision;
-use poirot_coercionv2::{NumberLocaleV2, coercev2_formatted_number};
 use poirot_functions_core::CellError;
+use poirot_parsing::number::NumberLocaleV2;
 fn parse(text: &str, locale: &NumberLocaleV2) -> Option<Result<f64, CellError>> {
     match coercev2_formatted_number(text, locale, |_, _| Ok::<_, ()>(())).unwrap() {
         NumericTextDecision::Number(value) => Some(value),

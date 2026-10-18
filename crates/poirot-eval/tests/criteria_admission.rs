@@ -269,7 +269,7 @@ fn contextual_thresholds_keep_literal_wildcard_boolean_and_error_criteria_typed(
         0.0.into()
     );
     let localized = excel().with_number_locale(
-        poirot_coercionv2::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap(),
+        poirot_parsing::number::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap(),
     );
     assert_eq!(value(&w, r#"COUNTIF(A1,">€0,03")"#, &localized), 1.0.into());
     for budgets in [
@@ -341,7 +341,7 @@ fn contextual_criteria_invalidate_retained_locale_and_date_order_reads() {
         1.0.into()
     );
     context.number_locale =
-        poirot_coercionv2::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap();
+        poirot_parsing::number::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap();
     assert_eq!(
         overlay
             .evaluation(&context)

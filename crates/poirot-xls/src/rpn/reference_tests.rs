@@ -3,7 +3,7 @@ fn tokens(w: &Workbook, formula: &str, budget: usize) -> Result<Vec<u8>, XlsErro
     compile(
         w,
         0,
-        &poirot_formula::parse_formula(formula).unwrap(),
+        &poirot_parsing::formula::parse_formula(formula).unwrap(),
         0x20,
         budget,
     )

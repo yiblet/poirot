@@ -16,7 +16,7 @@ fn bytecode_only_final_buffers_and_shared_owner_allocate() {
             .is_some()
     );
     for (source, expected) in [("1+2", 2), ("SUM(A1,IFERROR(B2,\"fallback\"))", 6)] {
-        let syntax = poirot_formula::parse_formula(source).unwrap();
+        let syntax = poirot_parsing::formula::parse_formula(source).unwrap();
         let (result, allocations) = measure_allocations(|| poirot_eval::bytecode::compile(&syntax));
         assert!(result.is_ok());
         assert_eq!(allocations, expected, "{source}");
@@ -24,7 +24,7 @@ fn bytecode_only_final_buffers_and_shared_owner_allocate() {
         drop(syntax);
         assert!(!result.template.code.is_empty());
     }
-    let bad = poirot_formula::Expr::Array(vec![]);
+    let bad = poirot_parsing::formula::Expr::Array(vec![]);
     let (result, allocations) = measure_allocations(|| poirot_eval::bytecode::compile(&bad));
     assert!(result.is_err());
     assert_eq!(allocations, 0);

@@ -72,8 +72,8 @@ fn names_remain_lazy_scoped_operands_instead_of_speculative_columns() {
 #[test]
 fn binding_keeps_name_and_typed_function_identity_for_reference_consumers() {
     use poirot_eval::bound::{Expression, FormulaPlan};
-    use poirot_formula::BinaryOp;
-    let syntax = poirot_formula::parse_formula("A1:Z").unwrap();
+    use poirot_parsing::formula::BinaryOp;
+    let syntax = poirot_parsing::formula::parse_formula("A1:Z").unwrap();
     let plan = FormulaPlan::bind(&syntax).unwrap();
     let Expression::Binary {
         op: BinaryOp::Range,
@@ -84,7 +84,7 @@ fn binding_keeps_name_and_typed_function_identity_for_reference_consumers() {
         panic!()
     };
     assert_eq!(right.as_ref(), &Expression::Name("Z".into()));
-    let syntax = poirot_formula::parse_formula("OFFSET(B3,0,0,-2,-2):C4").unwrap();
+    let syntax = poirot_parsing::formula::parse_formula("OFFSET(B3,0,0,-2,-2):C4").unwrap();
     let plan = FormulaPlan::bind(&syntax).unwrap();
     let Expression::Binary {
         op: BinaryOp::Range,

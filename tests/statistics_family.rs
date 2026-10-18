@@ -140,9 +140,10 @@ fn operational_limits_cannot_be_caught_by_iferror() {
             },
         ),
     ] {
-        let plan =
-            eval::bound::FormulaPlan::bind(&poirot::formula::parse_formula(formula).unwrap())
-                .unwrap();
+        let plan = eval::bound::FormulaPlan::bind(
+            &poirot::parsing::formula::parse_formula(formula).unwrap(),
+        )
+        .unwrap();
         assert!(
             matches!(
                 eval::run_plan(&book, 0, AT, &plan, EvaluationInputs::default(), budgets),
@@ -175,9 +176,10 @@ fn indexed_reference_traversal_stops_before_later_operational_failure() {
             CellValue::Number(99.),
         )
         .unwrap();
-    let plan =
-        eval::bound::FormulaPlan::bind(&poirot::formula::parse_formula("AVERAGEA(A1:A2)").unwrap())
-            .unwrap();
+    let plan = eval::bound::FormulaPlan::bind(
+        &poirot::parsing::formula::parse_formula("AVERAGEA(A1:A2)").unwrap(),
+    )
+    .unwrap();
     let outcome = eval::run_plan(
         &book,
         0,
@@ -206,9 +208,10 @@ fn unsupported_adapter_topology_stays_operational_through_iferror() {
         "IFERROR(LARGE({1,2},),42)",
         "IFERROR(NORMDIST(0,0,1,A1),42)",
     ] {
-        let plan =
-            eval::bound::FormulaPlan::bind(&poirot::formula::parse_formula(formula).unwrap())
-                .unwrap();
+        let plan = eval::bound::FormulaPlan::bind(
+            &poirot::parsing::formula::parse_formula(formula).unwrap(),
+        )
+        .unwrap();
         assert!(
             matches!(
                 eval::run_plan(

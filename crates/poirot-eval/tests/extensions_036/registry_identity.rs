@@ -24,7 +24,7 @@ fn trace_contract_and_epoch_make_provider_changes_visible() {
             identity,
         )
         .unwrap();
-    let syntax = poirot_formula::parse_formula("CUSTOM(5)").unwrap();
+    let syntax = poirot_parsing::formula::parse_formula("CUSTOM(5)").unwrap();
     let plan = FormulaPlan::bind_with_extensions(&syntax, &registry).unwrap();
     assert!(matches!(plan.expression(), Expression::Extension { .. }));
     let workbook = workbook();
@@ -100,7 +100,7 @@ fn structural_identity_includes_bound_ids_for_independently_constructed_registri
     );
     assert_ne!(first.identity(), reversed.identity());
     assert_eq!(first.identity(), equivalent.identity());
-    let syntax = poirot_formula::parse_formula("poirot_TEST_FIRST(7)").unwrap();
+    let syntax = poirot_parsing::formula::parse_formula("poirot_TEST_FIRST(7)").unwrap();
     let plan = FormulaPlan::bind_with_extensions(&syntax, &first).unwrap();
     let workbook = workbook();
     let run_plan = |registry| {

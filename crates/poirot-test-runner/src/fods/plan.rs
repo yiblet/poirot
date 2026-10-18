@@ -178,7 +178,7 @@ pub(crate) fn prepare_fixture(
                 source.id
             )));
         }
-        let parsed = poirot_formula::parse_formula(&source.formula);
+        let parsed = poirot_parsing::formula::parse_formula(&source.formula);
         let missing_functions = parsed
             .as_ref()
             .map(crate::fods::gaps::missing_root_function)

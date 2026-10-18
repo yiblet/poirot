@@ -77,8 +77,8 @@ pub fn condition_matches(value: &CellValue, condition: &CellValue) -> Result<boo
     }
 }
 fn string_condition(value: &CellValue, condition: &str) -> Result<bool, DatabaseError> {
-    use poirot_functions_criteria::Comparison::*;
-    let (operator, operand) = poirot_functions_criteria::parse_comparison(condition);
+    use poirot_parsing::criteria::Comparison::*;
+    let (operator, operand) = poirot_parsing::criteria::parse_comparison(condition);
     if operator == None {
         if operand.is_empty() {
             return Ok(value.text_ref().is_some());

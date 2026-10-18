@@ -1,7 +1,7 @@
 //! Evidence-based categories for failed checks; these never change the oracle.
 use crate::fods::xml::model::{FormulaCase, InputValue};
-use poirot_formula::Expr;
 use poirot_model::CellValue;
+use poirot_parsing::formula::Expr;
 use serde::{Deserialize, Serialize};
 
 /// Stable failure taxonomy separating evaluator gaps from source/harness limitations.
