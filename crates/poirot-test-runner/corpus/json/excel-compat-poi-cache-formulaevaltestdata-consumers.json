@@ -130,14 +130,7 @@
             "type": "number",
             "value": 0.5005
           },
-          "tolerance": 5.004999999999999e-12,
-          "known_gap": {
-            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 1.001
-            }
-          }
+          "tolerance": 5.004999999999999e-12
         }
       ]
     },
@@ -535,13 +528,6 @@
           "expected": {
             "type": "number",
             "value": 2.0
-          },
-          "known_gap": {
-            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 1.0
-            }
           }
         }
       ]
@@ -659,13 +645,6 @@
           "expected": {
             "type": "number",
             "value": 8.0
-          },
-          "known_gap": {
-            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 7.0
-            }
           }
         }
       ]
@@ -1340,13 +1319,6 @@
           "expected": {
             "type": "number",
             "value": 0.0
-          },
-          "known_gap": {
-            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": -1.0
-            }
           }
         }
       ]
@@ -2442,13 +2414,6 @@
           "expected": {
             "type": "number",
             "value": 0.0
-          },
-          "known_gap": {
-            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 1e-05
-            }
           }
         }
       ]
@@ -3002,13 +2967,6 @@
           "expected": {
             "type": "number",
             "value": 0.0
-          },
-          "known_gap": {
-            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 1e-05
-            }
           }
         }
       ]
@@ -3279,13 +3237,6 @@
           "expected": {
             "type": "number",
             "value": 0.0
-          },
-          "known_gap": {
-            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#VALUE!"
-            }
           }
         }
       ]

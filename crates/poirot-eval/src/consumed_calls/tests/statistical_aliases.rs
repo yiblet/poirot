@@ -182,7 +182,8 @@ fn documented_alias_execution_observation_and_dependency_reads_match_handler() {
         (
             "IF(FALSE,QUARTILE.INC({1,3},2),7)",
             vec![FunctionId::Logical(crate::registry::LogicalFunction::If)],
-            false,
+            // The alias stays skipped, but IF itself selects profile-dependent array semantics.
+            true,
         ),
     ] {
         let mut events = Events::default();

@@ -1,0 +1,3414 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "unsorted *Ian* mode 0",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"*Ian*\",A1:A6,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "unsorted *Ian* mode 1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"*Ian*\",A1:A6,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "unsorted *Ian* mode -1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"*Ian*\",A1:A6,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "unsorted G*?eg mode 0",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G*?eg\",A1:A6,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "unsorted G*?eg mode 1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G*?eg\",A1:A6,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "unsorted G*?eg mode -1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G*?eg\",A1:A6,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "unsorted G?eg mode 0",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G?eg\",A1:A6,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "unsorted G?eg mode 1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G?eg\",A1:A6,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "unsorted G?eg mode -1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G?eg\",A1:A6,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "unsorted ??eg mode 0",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"??eg\",A1:A6,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "unsorted ??eg mode 1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"??eg\",A1:A6,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "unsorted ??eg mode -1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"??eg\",A1:A6,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "ascending *Ian* mode 0",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"*Ian*\",A1:A6,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "ascending *Ian* mode 1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"*Ian*\",A1:A6,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "ascending *Ian* mode -1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"*Ian*\",A1:A6,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "ascending G*?eg mode 0",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G*?eg\",A1:A6,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "ascending G*?eg mode 1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G*?eg\",A1:A6,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "ascending G*?eg mode -1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G*?eg\",A1:A6,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "ascending G?eg mode 0",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G?eg\",A1:A6,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "ascending G?eg mode 1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G?eg\",A1:A6,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "ascending G?eg mode -1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G?eg\",A1:A6,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "ascending ??eg mode 0",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"??eg\",A1:A6,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "ascending ??eg mode 1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"??eg\",A1:A6,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "ascending ??eg mode -1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"??eg\",A1:A6,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "descending *Ian* mode 0",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"*Ian*\",A1:A6,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "descending *Ian* mode 1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"*Ian*\",A1:A6,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "descending *Ian* mode -1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"*Ian*\",A1:A6,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "descending G*?eg mode 0",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G*?eg\",A1:A6,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "descending G*?eg mode 1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G*?eg\",A1:A6,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "descending G*?eg mode -1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G*?eg\",A1:A6,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "descending G?eg mode 0",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G?eg\",A1:A6,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "descending G?eg mode 1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G?eg\",A1:A6,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "descending G?eg mode -1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G?eg\",A1:A6,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "descending ??eg mode 0",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"??eg\",A1:A6,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "descending ??eg mode 1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"??eg\",A1:A6,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "descending ??eg mode -1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"??eg\",A1:A6,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "exact escape duplicate case a~*",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "a*"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "abc"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"a~*\",A1:A2,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "exact escape duplicate case a~?",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "a?"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "ab"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"a~?\",A1:A2,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "exact escape duplicate case a~~*",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "a~x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "abc"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"a~~*\",A1:A2,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "exact escape duplicate case G*",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G*\",A1:A3,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "exact escape duplicate case Greg",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"Greg\",A1:A3,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "exact escape duplicate case gReG",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"gReG\",A1:A3,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "numeric duplicate mode 0",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(5,A1:A4,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "numeric duplicate mode 1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(5,A1:A4,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "numeric duplicate mode -1",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(5,A1:A4,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "mixed type",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G*\",A1:A3,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "error candidate",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "error",
+            "value": "#REF!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G*\",A1:A2,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "unmatched",
+      "evidence": [
+        "Diagnostic hypothesis authored before running either engine. For approximate wildcards the hypothesis is positional first (exact/descending) or last (ascending) wildcard match; disagreements are observations, not normative Excel results. Microsoft documents wildcard matching for exact mode only."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G*\",A1:A2,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ascending literal",
+      "evidence": [
+        "Independent diagnostic hypothesis: literal ordered position or first/last wildcard match; approximate wildcard results are not claimed as normative Excel behavior."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"Greg\",A1:A3,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "descending literal",
+      "evidence": [
+        "Independent diagnostic hypothesis: literal ordered position or first/last wildcard match; approximate wildcard results are not claimed as normative Excel behavior."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"Greg\",A1:A3,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ascending escape",
+      "evidence": [
+        "Independent diagnostic hypothesis: literal ordered position or first/last wildcard match; approximate wildcard results are not claimed as normative Excel behavior."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "a*"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "abc"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "zzz"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"a~*\",A1:A3,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "descending escape",
+      "evidence": [
+        "Independent diagnostic hypothesis: literal ordered position or first/last wildcard match; approximate wildcard results are not claimed as normative Excel behavior."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "zzz"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "abc"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "a*"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"a~*\",A1:A3,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ascending wildcard duplicates",
+      "evidence": [
+        "Independent diagnostic hypothesis: literal ordered position or first/last wildcard match; approximate wildcard results are not claimed as normative Excel behavior."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G*\",A1:A4,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "descending wildcard duplicates",
+      "evidence": [
+        "Independent diagnostic hypothesis: literal ordered position or first/last wildcard match; approximate wildcard results are not claimed as normative Excel behavior."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z1",
+          "content": {
+            "formula": "MATCH(\"G*\",A1:A4,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 use crate::criteria_adapter::{Function, cell, error};
 use crate::host::{CallHost, MissingPolicy, NumericPolicy, OperandKind};
 use crate::*;
-use poirot_functions_criteria::{Cell, Criterion};
+use poirot_functions_criteria::{Cell, Comparison, Criterion};
 
 /// Dispatch criteria aggregation with lazy, metered workbook reads.
 pub(crate) fn execute(
@@ -140,7 +140,24 @@ fn evaluate(host: &mut CallHost<'_, '_>, function: Function) -> FunctionResult<V
             } else {
                 projected
             };
-            let predicate = Criterion::parse(&admitted);
+            let mut predicate = Criterion::parse(&admitted);
+            // Equality and inequality retain literal text matching. Contextual
+            // interpretation here is limited to ordered numeric thresholds.
+            if host.excel_builtins()
+                && matches!(
+                    predicate.comparison,
+                    Comparison::Lt | Comparison::Le | Comparison::Gt | Comparison::Ge
+                )
+            {
+                predicate.value = poirot_coercionv2::criteria::coercev2_criteria_ordered_threshold(
+                    predicate.value,
+                    |text| match host.coercev2_number_text(text, NumericPolicy::PinnedPoi) {
+                        Ok(number) => Ok(Some(number)),
+                        Err(FunctionFailure::Spreadsheet(_)) => Ok(None),
+                        Err(failure) => Err(failure),
+                    },
+                )?;
+            }
             if (!single || function == AverageIf)
                 && let Cell::Error(e) = predicate.value
                 && criterion_error.is_none()
@@ -221,8 +238,9 @@ fn aggregate(
                         .value
                 }
             };
+            // Pinned POI AverageIf admits only numeric targets; Excel forwards selected errors.
             if let Error(e) = v
-                && function != AverageIf
+                && (function != AverageIf || host.excel_builtins())
             {
                 return Ok(Error(e));
             }

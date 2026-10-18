@@ -1,0 +1,4651 @@
+{
+  "scope": "Assessment only. Four production gaps retained unchanged; diagnostic hypotheses are not normative Excel expected values. No native Excel execution.",
+  "sources": [
+    {
+      "url": "https://support.microsoft.com/en-gb/excel/functions/match-function",
+      "accessed": "2026-10-18",
+      "finding": "Ascending/descending approximate modes require corresponding order; wildcards documented for exact mode."
+    }
+  ],
+  "calc": {
+    "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+    "verified_at": "2026-10-18T02:36:13.699457+00:00",
+    "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+    "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+    "suite_sha256": {
+      "match-wildcard-controls.json": "f7a2d767b2f4fdf7634d0f5d252e8ed761569ac20389f3e5b374e10dc8c8d483",
+      "excel-compat-poi-cache-matchfunctiontestcasedata.json": "6da23363694a10efb9b97d603fe6b443f888b4d9cfc53066dc7e7b5c66b7c37b"
+    },
+    "results": [
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "unsorted *Ian* mode 0",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 5.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "unsorted *Ian* mode 1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 5.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "unsorted *Ian* mode -1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 5.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "unsorted G*?eg mode 0",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 4.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "unsorted G*?eg mode 1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 4.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "unsorted G*?eg mode -1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 4.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "unsorted G?eg mode 0",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 4.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "unsorted G?eg mode 1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 4.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "unsorted G?eg mode -1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 4.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "unsorted ??eg mode 0",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 4.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "unsorted ??eg mode 1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 4.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "unsorted ??eg mode -1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 4.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "ascending *Ian* mode 0",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 6.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "ascending *Ian* mode 1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 6.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "ascending *Ian* mode -1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 6.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "ascending G*?eg mode 0",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 5.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "ascending G*?eg mode 1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 5.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "ascending G*?eg mode -1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 5.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "ascending G?eg mode 0",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 5.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "ascending G?eg mode 1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 5.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "ascending G?eg mode -1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 5.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "ascending ??eg mode 0",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 5.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "ascending ??eg mode 1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 5.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "ascending ??eg mode -1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 5.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "descending *Ian* mode 0",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 1.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "descending *Ian* mode 1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 1.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "descending *Ian* mode -1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 1.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "descending G*?eg mode 0",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "descending G*?eg mode 1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "descending G*?eg mode -1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "descending G?eg mode 0",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "descending G?eg mode 1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "descending G?eg mode -1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "descending ??eg mode 0",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "descending ??eg mode 1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "descending ??eg mode -1",
+        "checks": [
+          {
+            "action": 7,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "exact escape duplicate case a~*",
+        "checks": [
+          {
+            "action": 3,
+            "actual": {
+              "type": "number",
+              "value": 1.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "exact escape duplicate case a~?",
+        "checks": [
+          {
+            "action": 3,
+            "actual": {
+              "type": "number",
+              "value": 1.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "exact escape duplicate case a~~*",
+        "checks": [
+          {
+            "action": 3,
+            "actual": {
+              "type": "number",
+              "value": 1.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "exact escape duplicate case G*",
+        "checks": [
+          {
+            "action": 4,
+            "actual": {
+              "type": "number",
+              "value": 1.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "exact escape duplicate case Greg",
+        "checks": [
+          {
+            "action": 4,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "exact escape duplicate case gReG",
+        "checks": [
+          {
+            "action": 4,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "numeric duplicate mode 0",
+        "checks": [
+          {
+            "action": 5,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "numeric duplicate mode 1",
+        "checks": [
+          {
+            "action": 5,
+            "actual": {
+              "type": "number",
+              "value": 3.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "numeric duplicate mode -1",
+        "checks": [
+          {
+            "action": 5,
+            "actual": {
+              "type": "number",
+              "value": 3.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "mixed type",
+        "checks": [
+          {
+            "action": 4,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "error candidate",
+        "checks": [
+          {
+            "action": 3,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "unmatched",
+        "checks": [
+          {
+            "action": 3,
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "ascending literal",
+        "checks": [
+          {
+            "action": 4,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "descending literal",
+        "checks": [
+          {
+            "action": 4,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "ascending escape",
+        "checks": [
+          {
+            "action": 4,
+            "actual": {
+              "type": "number",
+              "value": 1.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "descending escape",
+        "checks": [
+          {
+            "action": 4,
+            "actual": {
+              "type": "number",
+              "value": 3.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "ascending wildcard duplicates",
+        "checks": [
+          {
+            "action": 5,
+            "actual": {
+              "type": "number",
+              "value": 3.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "match-wildcard-controls.json",
+        "name": "descending wildcard duplicates",
+        "checks": [
+          {
+            "action": 5,
+            "actual": {
+              "type": "number",
+              "value": 3.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "excel-compat-poi-cache-matchfunctiontestcasedata.json",
+        "name": "Excel compatibility poi-cache-matchfunctiontestcasedata: Match B51 MATCH(\"*\"&E51&\"*\",H3:H8,F51)",
+        "checks": [
+          {
+            "action": 9,
+            "actual": {
+              "type": "number",
+              "value": 5.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "excel-compat-poi-cache-matchfunctiontestcasedata.json",
+        "name": "Excel compatibility poi-cache-matchfunctiontestcasedata: Match B50 MATCH(\"G\"&\"*?\"&E50,H3:H8,F50)",
+        "checks": [
+          {
+            "action": 9,
+            "actual": {
+              "type": "number",
+              "value": 4.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "excel-compat-poi-cache-matchfunctiontestcasedata.json",
+        "name": "Excel compatibility poi-cache-matchfunctiontestcasedata: Match B49 MATCH(\"G\"&\"?\"&E49,H3:H8,F49)",
+        "checks": [
+          {
+            "action": 9,
+            "actual": {
+              "type": "number",
+              "value": 4.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      },
+      {
+        "suite": "excel-compat-poi-cache-matchfunctiontestcasedata.json",
+        "name": "Excel compatibility poi-cache-matchfunctiontestcasedata: Match B48 MATCH(\"??\"&E48,H3:H8,F48)",
+        "checks": [
+          {
+            "action": 9,
+            "actual": {
+              "type": "number",
+              "value": 4.0
+            },
+            "agrees": true
+          }
+        ],
+        "agrees": true
+      }
+    ],
+    "summary": {
+      "scenarios": 58,
+      "checks": 58,
+      "corroborated_scenarios": 57,
+      "corroborated_checks": 57
+    }
+  },
+  "poirot_controls": [
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "unsorted *Ian* mode 0",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 5.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 5.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "unsorted *Ian* mode 1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "failed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "unsorted *Ian* mode -1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 5.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 5.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "unsorted G*?eg mode 0",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 4.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 4.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "unsorted G*?eg mode 1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "failed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "unsorted G*?eg mode -1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 4.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 4.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "unsorted G?eg mode 0",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 4.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 4.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "unsorted G?eg mode 1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "failed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "unsorted G?eg mode -1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 4.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 4.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "unsorted ??eg mode 0",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 4.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 4.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "unsorted ??eg mode 1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "failed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "unsorted ??eg mode -1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 4.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 4.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "ascending *Ian* mode 0",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 6.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 6.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 6.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 6.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "ascending *Ian* mode 1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 6.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 6.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "failed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "ascending *Ian* mode -1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 6.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 6.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 6.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 6.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "ascending G*?eg mode 0",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 5.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 5.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "ascending G*?eg mode 1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "failed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "ascending G*?eg mode -1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 5.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 5.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "ascending G?eg mode 0",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 5.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 5.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "ascending G?eg mode 1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "failed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "ascending G?eg mode -1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 5.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 5.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "ascending ??eg mode 0",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 5.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 5.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "ascending ??eg mode 1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "failed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "ascending ??eg mode -1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 5.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 5.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "descending *Ian* mode 0",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 1.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 1.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 1.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 1.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "descending *Ian* mode 1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 1.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 1.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 1.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 1.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "descending *Ian* mode -1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 1.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 1.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 1.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 1.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "descending G*?eg mode 0",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "descending G*?eg mode 1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "failed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "descending G*?eg mode -1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "descending G?eg mode 0",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "descending G?eg mode 1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "failed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "descending G?eg mode -1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "descending ??eg mode 0",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "descending ??eg mode 1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "failed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "descending ??eg mode -1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 7,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "exact escape duplicate case a~*",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 3,
+              "actual": {
+                "type": "number",
+                "value": 1.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 1.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 3,
+              "actual": {
+                "type": "number",
+                "value": 1.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 1.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "exact escape duplicate case a~?",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 3,
+              "actual": {
+                "type": "number",
+                "value": 1.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 1.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 3,
+              "actual": {
+                "type": "number",
+                "value": 1.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 1.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "exact escape duplicate case a~~*",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 3,
+              "actual": {
+                "type": "number",
+                "value": 1.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 1.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 3,
+              "actual": {
+                "type": "number",
+                "value": 1.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 1.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "exact escape duplicate case G*",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 4,
+              "actual": {
+                "type": "number",
+                "value": 1.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 1.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 4,
+              "actual": {
+                "type": "number",
+                "value": 1.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 1.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "exact escape duplicate case Greg",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 4,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 4,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "exact escape duplicate case gReG",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 4,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 4,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "numeric duplicate mode 0",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 5,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 5,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "numeric duplicate mode 1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 5,
+              "actual": {
+                "type": "number",
+                "value": 3.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 3.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 5,
+              "actual": {
+                "type": "number",
+                "value": 3.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 3.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "numeric duplicate mode -1",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 5,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 3.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 5,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 3.0
+              },
+              "status": "failed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "failed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "mixed type",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 4,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 4,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "error candidate",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 3,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 3,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "unmatched",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 3,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 3,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "ascending literal",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 4,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 4,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "descending literal",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 4,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 4,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "ascending escape",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 4,
+              "actual": {
+                "type": "number",
+                "value": 1.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 1.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 4,
+              "actual": {
+                "type": "number",
+                "value": 1.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 1.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "descending escape",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 4,
+              "actual": {
+                "type": "number",
+                "value": 3.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 3.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 4,
+              "actual": {
+                "type": "number",
+                "value": 3.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 3.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "ascending wildcard duplicates",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 5,
+              "actual": {
+                "type": "number",
+                "value": 3.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 3.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 5,
+              "actual": {
+                "type": "number",
+                "value": 3.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 3.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "descending wildcard duplicates",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 5,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 5,
+              "actual": {
+                "type": "number",
+                "value": 2.0
+              },
+              "cell": "S!Z1",
+              "detail": "format=None, display=None",
+              "expected": {
+                "type": "number",
+                "value": 2.0
+              },
+              "status": "passed"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "passed"
+      },
+      "type": "scenario"
+    },
+    {
+      "success": false,
+      "summary": {
+        "failed": 12,
+        "harness_errors": 0,
+        "known_gaps": 0,
+        "passed": 42,
+        "scenarios": 54,
+        "unexpected_passes": 0
+      },
+      "type": "summary"
+    }
+  ],
+  "poirot_production": [
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "Excel compatibility poi-cache-matchfunctiontestcasedata: Match B51 MATCH(\"*\"&E51&\"*\",H3:H8,F51)",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 9,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "'Match'!B51",
+              "detail": "format=None, display=None, known gap: The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "known_gap"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 9,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "'Match'!B51",
+              "detail": "format=None, display=None, known gap: The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+              "expected": {
+                "type": "number",
+                "value": 5.0
+              },
+              "status": "known_gap"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "known_gap"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "Excel compatibility poi-cache-matchfunctiontestcasedata: Match B50 MATCH(\"G\"&\"*?\"&E50,H3:H8,F50)",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 9,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "'Match'!B50",
+              "detail": "format=None, display=None, known gap: The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "known_gap"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 9,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "'Match'!B50",
+              "detail": "format=None, display=None, known gap: The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "known_gap"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "known_gap"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "Excel compatibility poi-cache-matchfunctiontestcasedata: Match B49 MATCH(\"G\"&\"?\"&E49,H3:H8,F49)",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 9,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "'Match'!B49",
+              "detail": "format=None, display=None, known gap: The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "known_gap"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 9,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "'Match'!B49",
+              "detail": "format=None, display=None, known gap: The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "known_gap"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "known_gap"
+      },
+      "type": "scenario"
+    },
+    {
+      "result": {
+        "changes_equal": true,
+        "name": "Excel compatibility poi-cache-matchfunctiontestcasedata: Match B48 MATCH(\"??\"&E48,H3:H8,F48)",
+        "normal": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 9,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "'Match'!B48",
+              "detail": "format=None, display=None, known gap: The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "known_gap"
+            }
+          ],
+          "error": null,
+          "mode": "normal"
+        },
+        "outputs_equal": true,
+        "overlay": {
+          "builtin_policy": "ExcelDocumentation",
+          "checks": [
+            {
+              "action": 9,
+              "actual": {
+                "type": "error",
+                "value": "#N/A"
+              },
+              "cell": "'Match'!B48",
+              "detail": "format=None, display=None, known gap: The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+              "expected": {
+                "type": "number",
+                "value": 4.0
+              },
+              "status": "known_gap"
+            }
+          ],
+          "error": null,
+          "mode": "overlay"
+        },
+        "status": "known_gap"
+      },
+      "type": "scenario"
+    },
+    {
+      "success": true,
+      "summary": {
+        "failed": 0,
+        "harness_errors": 0,
+        "known_gaps": 4,
+        "passed": 0,
+        "scenarios": 4,
+        "unexpected_passes": 0
+      },
+      "type": "summary"
+    }
+  ],
+  "comparison": [
+    {
+      "name": "unsorted *Ian* mode 0",
+      "poirot": {
+        "type": "number",
+        "value": 5.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 5.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "unsorted *Ian* mode 1",
+      "poirot": {
+        "type": "error",
+        "value": "#N/A"
+      },
+      "calc": {
+        "type": "number",
+        "value": 5.0
+      },
+      "engines_agree": false,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "unsorted *Ian* mode -1",
+      "poirot": {
+        "type": "number",
+        "value": 5.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 5.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "unsorted G*?eg mode 0",
+      "poirot": {
+        "type": "number",
+        "value": 4.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 4.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "unsorted G*?eg mode 1",
+      "poirot": {
+        "type": "error",
+        "value": "#N/A"
+      },
+      "calc": {
+        "type": "number",
+        "value": 4.0
+      },
+      "engines_agree": false,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "unsorted G*?eg mode -1",
+      "poirot": {
+        "type": "number",
+        "value": 4.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 4.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "unsorted G?eg mode 0",
+      "poirot": {
+        "type": "number",
+        "value": 4.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 4.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "unsorted G?eg mode 1",
+      "poirot": {
+        "type": "error",
+        "value": "#N/A"
+      },
+      "calc": {
+        "type": "number",
+        "value": 4.0
+      },
+      "engines_agree": false,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "unsorted G?eg mode -1",
+      "poirot": {
+        "type": "number",
+        "value": 4.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 4.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "unsorted ??eg mode 0",
+      "poirot": {
+        "type": "number",
+        "value": 4.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 4.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "unsorted ??eg mode 1",
+      "poirot": {
+        "type": "error",
+        "value": "#N/A"
+      },
+      "calc": {
+        "type": "number",
+        "value": 4.0
+      },
+      "engines_agree": false,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "unsorted ??eg mode -1",
+      "poirot": {
+        "type": "number",
+        "value": 4.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 4.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "ascending *Ian* mode 0",
+      "poirot": {
+        "type": "number",
+        "value": 6.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 6.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "ascending *Ian* mode 1",
+      "poirot": {
+        "type": "error",
+        "value": "#N/A"
+      },
+      "calc": {
+        "type": "number",
+        "value": 6.0
+      },
+      "engines_agree": false,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "ascending *Ian* mode -1",
+      "poirot": {
+        "type": "number",
+        "value": 6.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 6.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "ascending G*?eg mode 0",
+      "poirot": {
+        "type": "number",
+        "value": 5.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 5.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "ascending G*?eg mode 1",
+      "poirot": {
+        "type": "error",
+        "value": "#N/A"
+      },
+      "calc": {
+        "type": "number",
+        "value": 5.0
+      },
+      "engines_agree": false,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "ascending G*?eg mode -1",
+      "poirot": {
+        "type": "number",
+        "value": 5.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 5.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "ascending G?eg mode 0",
+      "poirot": {
+        "type": "number",
+        "value": 5.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 5.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "ascending G?eg mode 1",
+      "poirot": {
+        "type": "error",
+        "value": "#N/A"
+      },
+      "calc": {
+        "type": "number",
+        "value": 5.0
+      },
+      "engines_agree": false,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "ascending G?eg mode -1",
+      "poirot": {
+        "type": "number",
+        "value": 5.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 5.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "ascending ??eg mode 0",
+      "poirot": {
+        "type": "number",
+        "value": 5.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 5.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "ascending ??eg mode 1",
+      "poirot": {
+        "type": "error",
+        "value": "#N/A"
+      },
+      "calc": {
+        "type": "number",
+        "value": 5.0
+      },
+      "engines_agree": false,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "ascending ??eg mode -1",
+      "poirot": {
+        "type": "number",
+        "value": 5.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 5.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "descending *Ian* mode 0",
+      "poirot": {
+        "type": "number",
+        "value": 1.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 1.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "descending *Ian* mode 1",
+      "poirot": {
+        "type": "number",
+        "value": 1.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 1.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "descending *Ian* mode -1",
+      "poirot": {
+        "type": "number",
+        "value": 1.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 1.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "descending G*?eg mode 0",
+      "poirot": {
+        "type": "number",
+        "value": 2.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 2.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "descending G*?eg mode 1",
+      "poirot": {
+        "type": "error",
+        "value": "#N/A"
+      },
+      "calc": {
+        "type": "number",
+        "value": 2.0
+      },
+      "engines_agree": false,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "descending G*?eg mode -1",
+      "poirot": {
+        "type": "number",
+        "value": 2.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 2.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "descending G?eg mode 0",
+      "poirot": {
+        "type": "number",
+        "value": 2.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 2.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "descending G?eg mode 1",
+      "poirot": {
+        "type": "error",
+        "value": "#N/A"
+      },
+      "calc": {
+        "type": "number",
+        "value": 2.0
+      },
+      "engines_agree": false,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "descending G?eg mode -1",
+      "poirot": {
+        "type": "number",
+        "value": 2.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 2.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "descending ??eg mode 0",
+      "poirot": {
+        "type": "number",
+        "value": 2.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 2.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "descending ??eg mode 1",
+      "poirot": {
+        "type": "error",
+        "value": "#N/A"
+      },
+      "calc": {
+        "type": "number",
+        "value": 2.0
+      },
+      "engines_agree": false,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "descending ??eg mode -1",
+      "poirot": {
+        "type": "number",
+        "value": 2.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 2.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "exact escape duplicate case a~*",
+      "poirot": {
+        "type": "number",
+        "value": 1.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 1.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "exact escape duplicate case a~?",
+      "poirot": {
+        "type": "number",
+        "value": 1.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 1.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "exact escape duplicate case a~~*",
+      "poirot": {
+        "type": "number",
+        "value": 1.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 1.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "exact escape duplicate case G*",
+      "poirot": {
+        "type": "number",
+        "value": 1.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 1.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "exact escape duplicate case Greg",
+      "poirot": {
+        "type": "number",
+        "value": 2.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 2.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "exact escape duplicate case gReG",
+      "poirot": {
+        "type": "number",
+        "value": 2.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 2.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "numeric duplicate mode 0",
+      "poirot": {
+        "type": "number",
+        "value": 2.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 2.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "numeric duplicate mode 1",
+      "poirot": {
+        "type": "number",
+        "value": 3.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 3.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "numeric duplicate mode -1",
+      "poirot": {
+        "type": "number",
+        "value": 2.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 3.0
+      },
+      "engines_agree": false,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "mixed type",
+      "poirot": {
+        "type": "number",
+        "value": 2.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 2.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "error candidate",
+      "poirot": {
+        "type": "number",
+        "value": 2.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 2.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "unmatched",
+      "poirot": {
+        "type": "error",
+        "value": "#N/A"
+      },
+      "calc": {
+        "type": "error",
+        "value": "#N/A"
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "ascending literal",
+      "poirot": {
+        "type": "number",
+        "value": 2.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 2.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "descending literal",
+      "poirot": {
+        "type": "number",
+        "value": 2.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 2.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "ascending escape",
+      "poirot": {
+        "type": "number",
+        "value": 1.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 1.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "descending escape",
+      "poirot": {
+        "type": "number",
+        "value": 3.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 3.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "ascending wildcard duplicates",
+      "poirot": {
+        "type": "number",
+        "value": 3.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 3.0
+      },
+      "engines_agree": true,
+      "outputs_equal": true,
+      "changes_equal": true
+    },
+    {
+      "name": "descending wildcard duplicates",
+      "poirot": {
+        "type": "number",
+        "value": 2.0
+      },
+      "calc": {
+        "type": "number",
+        "value": 3.0
+      },
+      "engines_agree": false,
+      "outputs_equal": true,
+      "changes_equal": true
+    }
+  ],
+  "summary": {
+    "diagnostic_cases": 54,
+    "production_cases": 4,
+    "engine_agreements": 41,
+    "calc_diagnostic_hypothesis_agreements": 53,
+    "calc_production_agreements": 4,
+    "normal_overlay_parity": true
+  },
+  "poirot_recording": "Typed checks, errors and normal/overlay parity are retained. Repetitive serialized change lists are omitted; their equality is recorded for every scenario."
+}

@@ -42,6 +42,23 @@ pub fn coercev2_criteria_excel_operand(value: Cell) -> Cell {
     }
 }
 
+/// Resolve an ordered criterion's remaining text threshold with the consumer's contextual
+/// number parser. Non-numeric text stays literal; operational failures escape.
+/// The consumer must select an ordered comparison (<, <=, >, >=); equality and
+/// inequality retain literal matching. Already typed operands keep their precedence.
+pub fn coercev2_criteria_ordered_threshold<E>(
+    value: Cell,
+    parse: impl FnOnce(&str) -> Result<Option<f64>, E>,
+) -> Result<Cell, E> {
+    match value {
+        Cell::Text(text) => Ok(match parse(&text)? {
+            Some(number) => Cell::Number(number),
+            None => Cell::Text(text),
+        }),
+        value => Ok(value),
+    }
+}
+
 /// Origin-sensitive admission of an eligible subtotal member.
 pub fn coercev2_subtotal_member(
     value: &Cell,

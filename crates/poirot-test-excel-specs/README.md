@@ -19,8 +19,19 @@ python3 tools/maintain.py --check
 
 To grow coverage, inventory the behavior first, research its rule, author a small case with explained evidence, then add variations for distinct semantic paths. Append authored cases directly to the shared `../poirot-test-runner/corpus/json/cases.json`; update `generate.py`/`extend.py` only for reviewed matrix-generation rules. Never use poirot output as the expected-result authority.
 
-The runner checks the default 261-entry registry through poirot's public API; `registered` is reserved for that projection. `partial` features have explicitly scoped policy support in the inventory and generated coverage reports. The runner selects `ExcelDocumentation` builtin contracts, the Version 1 POI UTF-16 proxy or `ExcelCompatibilityV2Documented`, and `DynamicSpill` only for fixtures that request it. It reads every footprint cell from the public runtime and preserves exact UTF-16 units.
+The runner checks the default 262-entry registry through poirot's public API; `registered` is reserved for that projection. `partial` features have explicitly scoped policy support in the inventory and generated coverage reports. The runner selects `ExcelDocumentation` builtin contracts, the Version 1 POI UTF-16 proxy or `ExcelCompatibilityV2Documented`, and `DynamicSpill` only for fixtures that request it. It reads every footprint cell from the public runtime and preserves exact UTF-16 units.
 
-Supported scope includes documented modern statistical aliases and bounded family overrides, V2 LEN/MID/LEFT/RIGHT/REPLACE counting, typed static spills and SUBTOTAL with explicitly declared visibility. FIND/SEARCH remain pinned unit adapters; casing remains source specific. General broadcasting/CSE, unbounded dynamic-reference producers, incremental spill execution, mutable cache materialization and imported row-visibility fidelity remain outside scope. See [builtin contracts](../poirot-eval/docs/excel-builtin-policy.md), [dynamic array limits](../poirot-eval/docs/dynamic-array-results.md) and [text policy scope](../poirot-text/CONTRACT.md).
+Supported scope includes documented modern statistical aliases and bounded family
+overrides, V2 LEN/MID/LEFT/RIGHT/REPLACE counting, typed static spills, bounded
+selector and exact-predicate arrays with singleton broadcasting, and SUBTOTAL
+with explicitly declared visibility. FIND/SEARCH remain pinned unit adapters;
+casing remains source specific. General function vectorization/CSE, unbounded
+named or dynamic-reference producers, and imported row-visibility fidelity remain
+outside this supported scope. Runtime spill reuse and materialization follow the
+linked evaluator contract; fixture coverage does not claim exhaustive support.
+Selector shape, omission and Calc admission differences remain documented
+limitations. See [builtin contracts](../poirot-eval/docs/excel-builtin-policy.md),
+[dynamic array limits](../poirot-eval/docs/dynamic-array-results.md) and
+[text policy scope](../poirot-text/CONTRACT.md).
 
 Runtime failures remain visible. Specification generation and validation check authoring evidence and coverage links without executing evaluator tests; generated `runtime_tests: not_run` and `passing_behavior: unverified` describe that authoring step. Report actual `cargo test` outcomes separately. Neither metadata nor documented derivations claim native Excel observations or complete compatibility.

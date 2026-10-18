@@ -295,7 +295,8 @@ fn execute_configuration<T>(
     let result = operation(&mut run.session);
     run.finish(result).outcome
 }
-/// Run one cell. Semantic spreadsheet errors are successful `Complete` values.
+/// Run one cell. Completed formula blanks publish as numeric zero; empty cells stay blank.
+/// Semantic spreadsheet errors are successful `Complete` values.
 pub fn run_cell(
     workbook: &Workbook,
     sheet: usize,
@@ -317,7 +318,9 @@ pub fn run_cell_with_configuration(
         session.cell(sheet, address)
     })
 }
-/// Parsing/binding retain their own preparation limits. Runtime work is metered separately.
+/// Evaluate supplied expression text without publishing a worksheet formula result.
+/// Blank expression results remain blank. Parsing/binding retain their own
+/// preparation limits. Runtime work is metered separately.
 pub fn run_formula(
     workbook: &Workbook,
     sheet: usize,

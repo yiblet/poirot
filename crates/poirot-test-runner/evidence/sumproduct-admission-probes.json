@@ -1,0 +1,2114 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "manifest_sha256": "fe4b7da5308a9ea3c44d5b99d1c5824139de9d0518364f3272e4af017e0fb915",
+  "results": [
+    {
+      "formula": "SUMPRODUCT(\"4\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(\"4\",2)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,\"4\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(\"4\",Data!C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,\"4\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(\"4\",Data!C1:C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,\"4\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(\"4\",Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,\"4\")",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(\"x\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(\"x\",2)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,\"x\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(\"x\",Data!C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,\"x\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(\"x\",Data!C1:C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,\"x\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(\"x\",Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,\"x\")",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(\"\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(\"\",2)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,\"\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(\"\",Data!C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,\"\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(\"\",Data!C1:C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,\"\")",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(\"\",Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,\"\")",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(TRUE)",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(TRUE,2)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,TRUE)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(TRUE,Data!C1)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,TRUE)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(TRUE,Data!C1:C1)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,TRUE)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(TRUE,Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,TRUE)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(FALSE)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(FALSE,2)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,FALSE)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(FALSE,Data!C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,FALSE)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(FALSE,Data!C1:C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,FALSE)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(FALSE,Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,FALSE)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(4)",
+      "actual": {
+        "type": "number",
+        "value": 4.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(4,2)",
+      "actual": {
+        "type": "number",
+        "value": 8.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,4)",
+      "actual": {
+        "type": "number",
+        "value": 8.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(4,Data!C1)",
+      "actual": {
+        "type": "number",
+        "value": 8.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,4)",
+      "actual": {
+        "type": "number",
+        "value": 8.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(4,Data!C1:C1)",
+      "actual": {
+        "type": "number",
+        "value": 8.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,4)",
+      "actual": {
+        "type": "number",
+        "value": 8.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(4,Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,4)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!A1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!A1,2)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,Data!A1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!A1,Data!C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,Data!A1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!A1,Data!C1:C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,Data!A1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!A1,Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,Data!A1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!A1:A1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!A1:A1,2)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,Data!A1:A1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!A1:A1,Data!C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,Data!A1:A1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!A1:A1,Data!C1:C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,Data!A1:A1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!A1:A1,Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,Data!A1:A1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT({\"4\"})",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT({\"4\"},2)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,{\"4\"})",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT({\"4\"},Data!C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,{\"4\"})",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT({\"4\"},Data!C1:C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,{\"4\"})",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT({\"4\"},Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,{\"4\"})",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT({TRUE})",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT({TRUE},2)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,{TRUE})",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT({TRUE},Data!C1)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,{TRUE})",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT({TRUE},Data!C1:C1)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,{TRUE})",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT({TRUE},Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,{TRUE})",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!B1)",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!B1,2)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,Data!B1)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!B1,Data!C1)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,Data!B1)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!B1,Data!C1:C1)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,Data!B1)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!B1,Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,Data!B1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!B1:B1)",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!B1:B1,2)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,Data!B1:B1)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!B1:B1,Data!C1)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,Data!B1:B1)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!B1:B1,Data!C1:C1)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,Data!B1:B1)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!B1:B1,Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,Data!B1:B1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!D1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!D1,2)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,Data!D1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!D1,Data!C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,Data!D1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!D1,Data!C1:C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,Data!D1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!D1,Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,Data!D1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!D1:D1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!D1:D1,2)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,Data!D1:D1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!D1:D1,Data!C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,Data!D1:D1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!D1:D1,Data!C1:C1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,Data!D1:D1)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!D1:D1,Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,Data!D1:D1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!E1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!E1,2)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,Data!E1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!E1,Data!C1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,Data!E1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!E1,Data!C1:C1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,Data!E1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!E1,Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,Data!E1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!E1:E1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!E1:E1,2)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,Data!E1:E1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!E1:E1,Data!C1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,Data!E1:E1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!E1:E1,Data!C1:C1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,Data!E1:E1)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!E1:E1,Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,Data!E1:E1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!A1:A2)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!A1:A2,2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,Data!A1:A2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!A1:A2,Data!C1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,Data!A1:A2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!A1:A2,Data!C1:C1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,Data!A1:A2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!A1:A2,Data!C1:C2)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,Data!A1:A2)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!B1:B2)",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!B1:B2,2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,Data!B1:B2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!B1:B2,Data!C1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,Data!B1:B2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!B1:B2,Data!C1:C1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,Data!B1:B2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!B1:B2,Data!C1:C2)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,Data!B1:B2)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(--Data!B1:B2)",
+      "actual": {
+        "type": "number",
+        "value": 1.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(--Data!B1:B2,2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,--Data!B1:B2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(--Data!B1:B2,Data!C1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,--Data!B1:B2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(--Data!B1:B2,Data!C1:C1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,--Data!B1:B2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(--Data!B1:B2,Data!C1:C2)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,--Data!B1:B2)",
+      "actual": {
+        "type": "number",
+        "value": 2.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(--Data!A1:A1)",
+      "actual": {
+        "type": "number",
+        "value": 4.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(--Data!A1:A1,2)",
+      "actual": {
+        "type": "number",
+        "value": 8.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,--Data!A1:A1)",
+      "actual": {
+        "type": "number",
+        "value": 8.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(--Data!A1:A1,Data!C1)",
+      "actual": {
+        "type": "number",
+        "value": 8.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1,--Data!A1:A1)",
+      "actual": {
+        "type": "number",
+        "value": 8.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(--Data!A1:A1,Data!C1:C1)",
+      "actual": {
+        "type": "number",
+        "value": 8.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,--Data!A1:A1)",
+      "actual": {
+        "type": "number",
+        "value": 8.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(--Data!A1:A1,Data!C1:C2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C2,--Data!A1:A1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!A1:A2,Data!E1:E1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!E1:E1,Data!A1:A2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!E1:E2,Data!C1:C1)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(Data!C1:C1,Data!E1:E2)",
+      "actual": {
+        "type": "error",
+        "value": "#VALUE!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(,2)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(2,)",
+      "actual": {
+        "type": "number",
+        "value": 0.0
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(1/0,NA())",
+      "actual": {
+        "type": "error",
+        "value": "#DIV/0!"
+      }
+    },
+    {
+      "formula": "SUMPRODUCT(NA(),1/0)",
+      "actual": {
+        "type": "error",
+        "value": "#N/A"
+      }
+    }
+  ],
+  "method": "Fresh OOXML batch; calculateAll and typed exported caches. No Poirot values establish expectations. Full input manifest is embedded; probes deliberately include unresolved boolean and omission policy disagreements.",
+  "manifest": {
+    "cells": {
+      "Data!A1": {
+        "type": "text",
+        "value": "4"
+      },
+      "Data!A2": {
+        "type": "text",
+        "value": "x"
+      },
+      "Data!B1": {
+        "type": "boolean",
+        "value": true
+      },
+      "Data!B2": {
+        "type": "boolean",
+        "value": false
+      },
+      "Data!C1": {
+        "type": "number",
+        "value": 2
+      },
+      "Data!C2": {
+        "type": "number",
+        "value": 3
+      },
+      "Data!E1": {
+        "type": "error",
+        "value": "#N/A"
+      },
+      "Data!E2": {
+        "type": "error",
+        "value": "#DIV/0!"
+      },
+      "Probe!A1": {
+        "formula": "SUMPRODUCT(\"4\")"
+      },
+      "Probe!A2": {
+        "formula": "SUMPRODUCT(\"4\",2)"
+      },
+      "Probe!A3": {
+        "formula": "SUMPRODUCT(2,\"4\")"
+      },
+      "Probe!A4": {
+        "formula": "SUMPRODUCT(\"4\",Data!C1)"
+      },
+      "Probe!A5": {
+        "formula": "SUMPRODUCT(Data!C1,\"4\")"
+      },
+      "Probe!A6": {
+        "formula": "SUMPRODUCT(\"4\",Data!C1:C1)"
+      },
+      "Probe!A7": {
+        "formula": "SUMPRODUCT(Data!C1:C1,\"4\")"
+      },
+      "Probe!A8": {
+        "formula": "SUMPRODUCT(\"4\",Data!C1:C2)"
+      },
+      "Probe!A9": {
+        "formula": "SUMPRODUCT(Data!C1:C2,\"4\")"
+      },
+      "Probe!A10": {
+        "formula": "SUMPRODUCT(\"x\")"
+      },
+      "Probe!A11": {
+        "formula": "SUMPRODUCT(\"x\",2)"
+      },
+      "Probe!A12": {
+        "formula": "SUMPRODUCT(2,\"x\")"
+      },
+      "Probe!A13": {
+        "formula": "SUMPRODUCT(\"x\",Data!C1)"
+      },
+      "Probe!A14": {
+        "formula": "SUMPRODUCT(Data!C1,\"x\")"
+      },
+      "Probe!A15": {
+        "formula": "SUMPRODUCT(\"x\",Data!C1:C1)"
+      },
+      "Probe!A16": {
+        "formula": "SUMPRODUCT(Data!C1:C1,\"x\")"
+      },
+      "Probe!A17": {
+        "formula": "SUMPRODUCT(\"x\",Data!C1:C2)"
+      },
+      "Probe!A18": {
+        "formula": "SUMPRODUCT(Data!C1:C2,\"x\")"
+      },
+      "Probe!A19": {
+        "formula": "SUMPRODUCT(\"\")"
+      },
+      "Probe!A20": {
+        "formula": "SUMPRODUCT(\"\",2)"
+      },
+      "Probe!A21": {
+        "formula": "SUMPRODUCT(2,\"\")"
+      },
+      "Probe!A22": {
+        "formula": "SUMPRODUCT(\"\",Data!C1)"
+      },
+      "Probe!A23": {
+        "formula": "SUMPRODUCT(Data!C1,\"\")"
+      },
+      "Probe!A24": {
+        "formula": "SUMPRODUCT(\"\",Data!C1:C1)"
+      },
+      "Probe!A25": {
+        "formula": "SUMPRODUCT(Data!C1:C1,\"\")"
+      },
+      "Probe!A26": {
+        "formula": "SUMPRODUCT(\"\",Data!C1:C2)"
+      },
+      "Probe!A27": {
+        "formula": "SUMPRODUCT(Data!C1:C2,\"\")"
+      },
+      "Probe!A28": {
+        "formula": "SUMPRODUCT(TRUE)"
+      },
+      "Probe!A29": {
+        "formula": "SUMPRODUCT(TRUE,2)"
+      },
+      "Probe!A30": {
+        "formula": "SUMPRODUCT(2,TRUE)"
+      },
+      "Probe!A31": {
+        "formula": "SUMPRODUCT(TRUE,Data!C1)"
+      },
+      "Probe!A32": {
+        "formula": "SUMPRODUCT(Data!C1,TRUE)"
+      },
+      "Probe!A33": {
+        "formula": "SUMPRODUCT(TRUE,Data!C1:C1)"
+      },
+      "Probe!A34": {
+        "formula": "SUMPRODUCT(Data!C1:C1,TRUE)"
+      },
+      "Probe!A35": {
+        "formula": "SUMPRODUCT(TRUE,Data!C1:C2)"
+      },
+      "Probe!A36": {
+        "formula": "SUMPRODUCT(Data!C1:C2,TRUE)"
+      },
+      "Probe!A37": {
+        "formula": "SUMPRODUCT(FALSE)"
+      },
+      "Probe!A38": {
+        "formula": "SUMPRODUCT(FALSE,2)"
+      },
+      "Probe!A39": {
+        "formula": "SUMPRODUCT(2,FALSE)"
+      },
+      "Probe!A40": {
+        "formula": "SUMPRODUCT(FALSE,Data!C1)"
+      },
+      "Probe!A41": {
+        "formula": "SUMPRODUCT(Data!C1,FALSE)"
+      },
+      "Probe!A42": {
+        "formula": "SUMPRODUCT(FALSE,Data!C1:C1)"
+      },
+      "Probe!A43": {
+        "formula": "SUMPRODUCT(Data!C1:C1,FALSE)"
+      },
+      "Probe!A44": {
+        "formula": "SUMPRODUCT(FALSE,Data!C1:C2)"
+      },
+      "Probe!A45": {
+        "formula": "SUMPRODUCT(Data!C1:C2,FALSE)"
+      },
+      "Probe!A46": {
+        "formula": "SUMPRODUCT(4)"
+      },
+      "Probe!A47": {
+        "formula": "SUMPRODUCT(4,2)"
+      },
+      "Probe!A48": {
+        "formula": "SUMPRODUCT(2,4)"
+      },
+      "Probe!A49": {
+        "formula": "SUMPRODUCT(4,Data!C1)"
+      },
+      "Probe!A50": {
+        "formula": "SUMPRODUCT(Data!C1,4)"
+      },
+      "Probe!A51": {
+        "formula": "SUMPRODUCT(4,Data!C1:C1)"
+      },
+      "Probe!A52": {
+        "formula": "SUMPRODUCT(Data!C1:C1,4)"
+      },
+      "Probe!A53": {
+        "formula": "SUMPRODUCT(4,Data!C1:C2)"
+      },
+      "Probe!A54": {
+        "formula": "SUMPRODUCT(Data!C1:C2,4)"
+      },
+      "Probe!A55": {
+        "formula": "SUMPRODUCT(Data!A1)"
+      },
+      "Probe!A56": {
+        "formula": "SUMPRODUCT(Data!A1,2)"
+      },
+      "Probe!A57": {
+        "formula": "SUMPRODUCT(2,Data!A1)"
+      },
+      "Probe!A58": {
+        "formula": "SUMPRODUCT(Data!A1,Data!C1)"
+      },
+      "Probe!A59": {
+        "formula": "SUMPRODUCT(Data!C1,Data!A1)"
+      },
+      "Probe!A60": {
+        "formula": "SUMPRODUCT(Data!A1,Data!C1:C1)"
+      },
+      "Probe!A61": {
+        "formula": "SUMPRODUCT(Data!C1:C1,Data!A1)"
+      },
+      "Probe!A62": {
+        "formula": "SUMPRODUCT(Data!A1,Data!C1:C2)"
+      },
+      "Probe!A63": {
+        "formula": "SUMPRODUCT(Data!C1:C2,Data!A1)"
+      },
+      "Probe!A64": {
+        "formula": "SUMPRODUCT(Data!A1:A1)"
+      },
+      "Probe!A65": {
+        "formula": "SUMPRODUCT(Data!A1:A1,2)"
+      },
+      "Probe!A66": {
+        "formula": "SUMPRODUCT(2,Data!A1:A1)"
+      },
+      "Probe!A67": {
+        "formula": "SUMPRODUCT(Data!A1:A1,Data!C1)"
+      },
+      "Probe!A68": {
+        "formula": "SUMPRODUCT(Data!C1,Data!A1:A1)"
+      },
+      "Probe!A69": {
+        "formula": "SUMPRODUCT(Data!A1:A1,Data!C1:C1)"
+      },
+      "Probe!A70": {
+        "formula": "SUMPRODUCT(Data!C1:C1,Data!A1:A1)"
+      },
+      "Probe!A71": {
+        "formula": "SUMPRODUCT(Data!A1:A1,Data!C1:C2)"
+      },
+      "Probe!A72": {
+        "formula": "SUMPRODUCT(Data!C1:C2,Data!A1:A1)"
+      },
+      "Probe!A73": {
+        "formula": "SUMPRODUCT({\"4\"})"
+      },
+      "Probe!A74": {
+        "formula": "SUMPRODUCT({\"4\"},2)"
+      },
+      "Probe!A75": {
+        "formula": "SUMPRODUCT(2,{\"4\"})"
+      },
+      "Probe!A76": {
+        "formula": "SUMPRODUCT({\"4\"},Data!C1)"
+      },
+      "Probe!A77": {
+        "formula": "SUMPRODUCT(Data!C1,{\"4\"})"
+      },
+      "Probe!A78": {
+        "formula": "SUMPRODUCT({\"4\"},Data!C1:C1)"
+      },
+      "Probe!A79": {
+        "formula": "SUMPRODUCT(Data!C1:C1,{\"4\"})"
+      },
+      "Probe!A80": {
+        "formula": "SUMPRODUCT({\"4\"},Data!C1:C2)"
+      },
+      "Probe!A81": {
+        "formula": "SUMPRODUCT(Data!C1:C2,{\"4\"})"
+      },
+      "Probe!A82": {
+        "formula": "SUMPRODUCT({TRUE})"
+      },
+      "Probe!A83": {
+        "formula": "SUMPRODUCT({TRUE},2)"
+      },
+      "Probe!A84": {
+        "formula": "SUMPRODUCT(2,{TRUE})"
+      },
+      "Probe!A85": {
+        "formula": "SUMPRODUCT({TRUE},Data!C1)"
+      },
+      "Probe!A86": {
+        "formula": "SUMPRODUCT(Data!C1,{TRUE})"
+      },
+      "Probe!A87": {
+        "formula": "SUMPRODUCT({TRUE},Data!C1:C1)"
+      },
+      "Probe!A88": {
+        "formula": "SUMPRODUCT(Data!C1:C1,{TRUE})"
+      },
+      "Probe!A89": {
+        "formula": "SUMPRODUCT({TRUE},Data!C1:C2)"
+      },
+      "Probe!A90": {
+        "formula": "SUMPRODUCT(Data!C1:C2,{TRUE})"
+      },
+      "Probe!A91": {
+        "formula": "SUMPRODUCT(Data!B1)"
+      },
+      "Probe!A92": {
+        "formula": "SUMPRODUCT(Data!B1,2)"
+      },
+      "Probe!A93": {
+        "formula": "SUMPRODUCT(2,Data!B1)"
+      },
+      "Probe!A94": {
+        "formula": "SUMPRODUCT(Data!B1,Data!C1)"
+      },
+      "Probe!A95": {
+        "formula": "SUMPRODUCT(Data!C1,Data!B1)"
+      },
+      "Probe!A96": {
+        "formula": "SUMPRODUCT(Data!B1,Data!C1:C1)"
+      },
+      "Probe!A97": {
+        "formula": "SUMPRODUCT(Data!C1:C1,Data!B1)"
+      },
+      "Probe!A98": {
+        "formula": "SUMPRODUCT(Data!B1,Data!C1:C2)"
+      },
+      "Probe!A99": {
+        "formula": "SUMPRODUCT(Data!C1:C2,Data!B1)"
+      },
+      "Probe!A100": {
+        "formula": "SUMPRODUCT(Data!B1:B1)"
+      },
+      "Probe!A101": {
+        "formula": "SUMPRODUCT(Data!B1:B1,2)"
+      },
+      "Probe!A102": {
+        "formula": "SUMPRODUCT(2,Data!B1:B1)"
+      },
+      "Probe!A103": {
+        "formula": "SUMPRODUCT(Data!B1:B1,Data!C1)"
+      },
+      "Probe!A104": {
+        "formula": "SUMPRODUCT(Data!C1,Data!B1:B1)"
+      },
+      "Probe!A105": {
+        "formula": "SUMPRODUCT(Data!B1:B1,Data!C1:C1)"
+      },
+      "Probe!A106": {
+        "formula": "SUMPRODUCT(Data!C1:C1,Data!B1:B1)"
+      },
+      "Probe!A107": {
+        "formula": "SUMPRODUCT(Data!B1:B1,Data!C1:C2)"
+      },
+      "Probe!A108": {
+        "formula": "SUMPRODUCT(Data!C1:C2,Data!B1:B1)"
+      },
+      "Probe!A109": {
+        "formula": "SUMPRODUCT(Data!D1)"
+      },
+      "Probe!A110": {
+        "formula": "SUMPRODUCT(Data!D1,2)"
+      },
+      "Probe!A111": {
+        "formula": "SUMPRODUCT(2,Data!D1)"
+      },
+      "Probe!A112": {
+        "formula": "SUMPRODUCT(Data!D1,Data!C1)"
+      },
+      "Probe!A113": {
+        "formula": "SUMPRODUCT(Data!C1,Data!D1)"
+      },
+      "Probe!A114": {
+        "formula": "SUMPRODUCT(Data!D1,Data!C1:C1)"
+      },
+      "Probe!A115": {
+        "formula": "SUMPRODUCT(Data!C1:C1,Data!D1)"
+      },
+      "Probe!A116": {
+        "formula": "SUMPRODUCT(Data!D1,Data!C1:C2)"
+      },
+      "Probe!A117": {
+        "formula": "SUMPRODUCT(Data!C1:C2,Data!D1)"
+      },
+      "Probe!A118": {
+        "formula": "SUMPRODUCT(Data!D1:D1)"
+      },
+      "Probe!A119": {
+        "formula": "SUMPRODUCT(Data!D1:D1,2)"
+      },
+      "Probe!A120": {
+        "formula": "SUMPRODUCT(2,Data!D1:D1)"
+      },
+      "Probe!A121": {
+        "formula": "SUMPRODUCT(Data!D1:D1,Data!C1)"
+      },
+      "Probe!A122": {
+        "formula": "SUMPRODUCT(Data!C1,Data!D1:D1)"
+      },
+      "Probe!A123": {
+        "formula": "SUMPRODUCT(Data!D1:D1,Data!C1:C1)"
+      },
+      "Probe!A124": {
+        "formula": "SUMPRODUCT(Data!C1:C1,Data!D1:D1)"
+      },
+      "Probe!A125": {
+        "formula": "SUMPRODUCT(Data!D1:D1,Data!C1:C2)"
+      },
+      "Probe!A126": {
+        "formula": "SUMPRODUCT(Data!C1:C2,Data!D1:D1)"
+      },
+      "Probe!A127": {
+        "formula": "SUMPRODUCT(Data!E1)"
+      },
+      "Probe!A128": {
+        "formula": "SUMPRODUCT(Data!E1,2)"
+      },
+      "Probe!A129": {
+        "formula": "SUMPRODUCT(2,Data!E1)"
+      },
+      "Probe!A130": {
+        "formula": "SUMPRODUCT(Data!E1,Data!C1)"
+      },
+      "Probe!A131": {
+        "formula": "SUMPRODUCT(Data!C1,Data!E1)"
+      },
+      "Probe!A132": {
+        "formula": "SUMPRODUCT(Data!E1,Data!C1:C1)"
+      },
+      "Probe!A133": {
+        "formula": "SUMPRODUCT(Data!C1:C1,Data!E1)"
+      },
+      "Probe!A134": {
+        "formula": "SUMPRODUCT(Data!E1,Data!C1:C2)"
+      },
+      "Probe!A135": {
+        "formula": "SUMPRODUCT(Data!C1:C2,Data!E1)"
+      },
+      "Probe!A136": {
+        "formula": "SUMPRODUCT(Data!E1:E1)"
+      },
+      "Probe!A137": {
+        "formula": "SUMPRODUCT(Data!E1:E1,2)"
+      },
+      "Probe!A138": {
+        "formula": "SUMPRODUCT(2,Data!E1:E1)"
+      },
+      "Probe!A139": {
+        "formula": "SUMPRODUCT(Data!E1:E1,Data!C1)"
+      },
+      "Probe!A140": {
+        "formula": "SUMPRODUCT(Data!C1,Data!E1:E1)"
+      },
+      "Probe!A141": {
+        "formula": "SUMPRODUCT(Data!E1:E1,Data!C1:C1)"
+      },
+      "Probe!A142": {
+        "formula": "SUMPRODUCT(Data!C1:C1,Data!E1:E1)"
+      },
+      "Probe!A143": {
+        "formula": "SUMPRODUCT(Data!E1:E1,Data!C1:C2)"
+      },
+      "Probe!A144": {
+        "formula": "SUMPRODUCT(Data!C1:C2,Data!E1:E1)"
+      },
+      "Probe!A145": {
+        "formula": "SUMPRODUCT(Data!A1:A2)"
+      },
+      "Probe!A146": {
+        "formula": "SUMPRODUCT(Data!A1:A2,2)"
+      },
+      "Probe!A147": {
+        "formula": "SUMPRODUCT(2,Data!A1:A2)"
+      },
+      "Probe!A148": {
+        "formula": "SUMPRODUCT(Data!A1:A2,Data!C1)"
+      },
+      "Probe!A149": {
+        "formula": "SUMPRODUCT(Data!C1,Data!A1:A2)"
+      },
+      "Probe!A150": {
+        "formula": "SUMPRODUCT(Data!A1:A2,Data!C1:C1)"
+      },
+      "Probe!A151": {
+        "formula": "SUMPRODUCT(Data!C1:C1,Data!A1:A2)"
+      },
+      "Probe!A152": {
+        "formula": "SUMPRODUCT(Data!A1:A2,Data!C1:C2)"
+      },
+      "Probe!A153": {
+        "formula": "SUMPRODUCT(Data!C1:C2,Data!A1:A2)"
+      },
+      "Probe!A154": {
+        "formula": "SUMPRODUCT(Data!B1:B2)"
+      },
+      "Probe!A155": {
+        "formula": "SUMPRODUCT(Data!B1:B2,2)"
+      },
+      "Probe!A156": {
+        "formula": "SUMPRODUCT(2,Data!B1:B2)"
+      },
+      "Probe!A157": {
+        "formula": "SUMPRODUCT(Data!B1:B2,Data!C1)"
+      },
+      "Probe!A158": {
+        "formula": "SUMPRODUCT(Data!C1,Data!B1:B2)"
+      },
+      "Probe!A159": {
+        "formula": "SUMPRODUCT(Data!B1:B2,Data!C1:C1)"
+      },
+      "Probe!A160": {
+        "formula": "SUMPRODUCT(Data!C1:C1,Data!B1:B2)"
+      },
+      "Probe!A161": {
+        "formula": "SUMPRODUCT(Data!B1:B2,Data!C1:C2)"
+      },
+      "Probe!A162": {
+        "formula": "SUMPRODUCT(Data!C1:C2,Data!B1:B2)"
+      },
+      "Probe!A163": {
+        "formula": "SUMPRODUCT(--Data!B1:B2)"
+      },
+      "Probe!A164": {
+        "formula": "SUMPRODUCT(--Data!B1:B2,2)"
+      },
+      "Probe!A165": {
+        "formula": "SUMPRODUCT(2,--Data!B1:B2)"
+      },
+      "Probe!A166": {
+        "formula": "SUMPRODUCT(--Data!B1:B2,Data!C1)"
+      },
+      "Probe!A167": {
+        "formula": "SUMPRODUCT(Data!C1,--Data!B1:B2)"
+      },
+      "Probe!A168": {
+        "formula": "SUMPRODUCT(--Data!B1:B2,Data!C1:C1)"
+      },
+      "Probe!A169": {
+        "formula": "SUMPRODUCT(Data!C1:C1,--Data!B1:B2)"
+      },
+      "Probe!A170": {
+        "formula": "SUMPRODUCT(--Data!B1:B2,Data!C1:C2)"
+      },
+      "Probe!A171": {
+        "formula": "SUMPRODUCT(Data!C1:C2,--Data!B1:B2)"
+      },
+      "Probe!A172": {
+        "formula": "SUMPRODUCT(--Data!A1:A1)"
+      },
+      "Probe!A173": {
+        "formula": "SUMPRODUCT(--Data!A1:A1,2)"
+      },
+      "Probe!A174": {
+        "formula": "SUMPRODUCT(2,--Data!A1:A1)"
+      },
+      "Probe!A175": {
+        "formula": "SUMPRODUCT(--Data!A1:A1,Data!C1)"
+      },
+      "Probe!A176": {
+        "formula": "SUMPRODUCT(Data!C1,--Data!A1:A1)"
+      },
+      "Probe!A177": {
+        "formula": "SUMPRODUCT(--Data!A1:A1,Data!C1:C1)"
+      },
+      "Probe!A178": {
+        "formula": "SUMPRODUCT(Data!C1:C1,--Data!A1:A1)"
+      },
+      "Probe!A179": {
+        "formula": "SUMPRODUCT(--Data!A1:A1,Data!C1:C2)"
+      },
+      "Probe!A180": {
+        "formula": "SUMPRODUCT(Data!C1:C2,--Data!A1:A1)"
+      },
+      "Probe!A181": {
+        "formula": "SUMPRODUCT(Data!A1:A2,Data!E1:E1)"
+      },
+      "Probe!A182": {
+        "formula": "SUMPRODUCT(Data!E1:E1,Data!A1:A2)"
+      },
+      "Probe!A183": {
+        "formula": "SUMPRODUCT(Data!E1:E2,Data!C1:C1)"
+      },
+      "Probe!A184": {
+        "formula": "SUMPRODUCT(Data!C1:C1,Data!E1:E2)"
+      },
+      "Probe!A185": {
+        "formula": "SUMPRODUCT(,2)"
+      },
+      "Probe!A186": {
+        "formula": "SUMPRODUCT(2,)"
+      },
+      "Probe!A187": {
+        "formula": "SUMPRODUCT(1/0,NA())"
+      },
+      "Probe!A188": {
+        "formula": "SUMPRODUCT(NA(),1/0)"
+      }
+    },
+    "formulas": [
+      "SUMPRODUCT(\"4\")",
+      "SUMPRODUCT(\"4\",2)",
+      "SUMPRODUCT(2,\"4\")",
+      "SUMPRODUCT(\"4\",Data!C1)",
+      "SUMPRODUCT(Data!C1,\"4\")",
+      "SUMPRODUCT(\"4\",Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,\"4\")",
+      "SUMPRODUCT(\"4\",Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,\"4\")",
+      "SUMPRODUCT(\"x\")",
+      "SUMPRODUCT(\"x\",2)",
+      "SUMPRODUCT(2,\"x\")",
+      "SUMPRODUCT(\"x\",Data!C1)",
+      "SUMPRODUCT(Data!C1,\"x\")",
+      "SUMPRODUCT(\"x\",Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,\"x\")",
+      "SUMPRODUCT(\"x\",Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,\"x\")",
+      "SUMPRODUCT(\"\")",
+      "SUMPRODUCT(\"\",2)",
+      "SUMPRODUCT(2,\"\")",
+      "SUMPRODUCT(\"\",Data!C1)",
+      "SUMPRODUCT(Data!C1,\"\")",
+      "SUMPRODUCT(\"\",Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,\"\")",
+      "SUMPRODUCT(\"\",Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,\"\")",
+      "SUMPRODUCT(TRUE)",
+      "SUMPRODUCT(TRUE,2)",
+      "SUMPRODUCT(2,TRUE)",
+      "SUMPRODUCT(TRUE,Data!C1)",
+      "SUMPRODUCT(Data!C1,TRUE)",
+      "SUMPRODUCT(TRUE,Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,TRUE)",
+      "SUMPRODUCT(TRUE,Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,TRUE)",
+      "SUMPRODUCT(FALSE)",
+      "SUMPRODUCT(FALSE,2)",
+      "SUMPRODUCT(2,FALSE)",
+      "SUMPRODUCT(FALSE,Data!C1)",
+      "SUMPRODUCT(Data!C1,FALSE)",
+      "SUMPRODUCT(FALSE,Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,FALSE)",
+      "SUMPRODUCT(FALSE,Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,FALSE)",
+      "SUMPRODUCT(4)",
+      "SUMPRODUCT(4,2)",
+      "SUMPRODUCT(2,4)",
+      "SUMPRODUCT(4,Data!C1)",
+      "SUMPRODUCT(Data!C1,4)",
+      "SUMPRODUCT(4,Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,4)",
+      "SUMPRODUCT(4,Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,4)",
+      "SUMPRODUCT(Data!A1)",
+      "SUMPRODUCT(Data!A1,2)",
+      "SUMPRODUCT(2,Data!A1)",
+      "SUMPRODUCT(Data!A1,Data!C1)",
+      "SUMPRODUCT(Data!C1,Data!A1)",
+      "SUMPRODUCT(Data!A1,Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,Data!A1)",
+      "SUMPRODUCT(Data!A1,Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,Data!A1)",
+      "SUMPRODUCT(Data!A1:A1)",
+      "SUMPRODUCT(Data!A1:A1,2)",
+      "SUMPRODUCT(2,Data!A1:A1)",
+      "SUMPRODUCT(Data!A1:A1,Data!C1)",
+      "SUMPRODUCT(Data!C1,Data!A1:A1)",
+      "SUMPRODUCT(Data!A1:A1,Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,Data!A1:A1)",
+      "SUMPRODUCT(Data!A1:A1,Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,Data!A1:A1)",
+      "SUMPRODUCT({\"4\"})",
+      "SUMPRODUCT({\"4\"},2)",
+      "SUMPRODUCT(2,{\"4\"})",
+      "SUMPRODUCT({\"4\"},Data!C1)",
+      "SUMPRODUCT(Data!C1,{\"4\"})",
+      "SUMPRODUCT({\"4\"},Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,{\"4\"})",
+      "SUMPRODUCT({\"4\"},Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,{\"4\"})",
+      "SUMPRODUCT({TRUE})",
+      "SUMPRODUCT({TRUE},2)",
+      "SUMPRODUCT(2,{TRUE})",
+      "SUMPRODUCT({TRUE},Data!C1)",
+      "SUMPRODUCT(Data!C1,{TRUE})",
+      "SUMPRODUCT({TRUE},Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,{TRUE})",
+      "SUMPRODUCT({TRUE},Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,{TRUE})",
+      "SUMPRODUCT(Data!B1)",
+      "SUMPRODUCT(Data!B1,2)",
+      "SUMPRODUCT(2,Data!B1)",
+      "SUMPRODUCT(Data!B1,Data!C1)",
+      "SUMPRODUCT(Data!C1,Data!B1)",
+      "SUMPRODUCT(Data!B1,Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,Data!B1)",
+      "SUMPRODUCT(Data!B1,Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,Data!B1)",
+      "SUMPRODUCT(Data!B1:B1)",
+      "SUMPRODUCT(Data!B1:B1,2)",
+      "SUMPRODUCT(2,Data!B1:B1)",
+      "SUMPRODUCT(Data!B1:B1,Data!C1)",
+      "SUMPRODUCT(Data!C1,Data!B1:B1)",
+      "SUMPRODUCT(Data!B1:B1,Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,Data!B1:B1)",
+      "SUMPRODUCT(Data!B1:B1,Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,Data!B1:B1)",
+      "SUMPRODUCT(Data!D1)",
+      "SUMPRODUCT(Data!D1,2)",
+      "SUMPRODUCT(2,Data!D1)",
+      "SUMPRODUCT(Data!D1,Data!C1)",
+      "SUMPRODUCT(Data!C1,Data!D1)",
+      "SUMPRODUCT(Data!D1,Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,Data!D1)",
+      "SUMPRODUCT(Data!D1,Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,Data!D1)",
+      "SUMPRODUCT(Data!D1:D1)",
+      "SUMPRODUCT(Data!D1:D1,2)",
+      "SUMPRODUCT(2,Data!D1:D1)",
+      "SUMPRODUCT(Data!D1:D1,Data!C1)",
+      "SUMPRODUCT(Data!C1,Data!D1:D1)",
+      "SUMPRODUCT(Data!D1:D1,Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,Data!D1:D1)",
+      "SUMPRODUCT(Data!D1:D1,Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,Data!D1:D1)",
+      "SUMPRODUCT(Data!E1)",
+      "SUMPRODUCT(Data!E1,2)",
+      "SUMPRODUCT(2,Data!E1)",
+      "SUMPRODUCT(Data!E1,Data!C1)",
+      "SUMPRODUCT(Data!C1,Data!E1)",
+      "SUMPRODUCT(Data!E1,Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,Data!E1)",
+      "SUMPRODUCT(Data!E1,Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,Data!E1)",
+      "SUMPRODUCT(Data!E1:E1)",
+      "SUMPRODUCT(Data!E1:E1,2)",
+      "SUMPRODUCT(2,Data!E1:E1)",
+      "SUMPRODUCT(Data!E1:E1,Data!C1)",
+      "SUMPRODUCT(Data!C1,Data!E1:E1)",
+      "SUMPRODUCT(Data!E1:E1,Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,Data!E1:E1)",
+      "SUMPRODUCT(Data!E1:E1,Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,Data!E1:E1)",
+      "SUMPRODUCT(Data!A1:A2)",
+      "SUMPRODUCT(Data!A1:A2,2)",
+      "SUMPRODUCT(2,Data!A1:A2)",
+      "SUMPRODUCT(Data!A1:A2,Data!C1)",
+      "SUMPRODUCT(Data!C1,Data!A1:A2)",
+      "SUMPRODUCT(Data!A1:A2,Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,Data!A1:A2)",
+      "SUMPRODUCT(Data!A1:A2,Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,Data!A1:A2)",
+      "SUMPRODUCT(Data!B1:B2)",
+      "SUMPRODUCT(Data!B1:B2,2)",
+      "SUMPRODUCT(2,Data!B1:B2)",
+      "SUMPRODUCT(Data!B1:B2,Data!C1)",
+      "SUMPRODUCT(Data!C1,Data!B1:B2)",
+      "SUMPRODUCT(Data!B1:B2,Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,Data!B1:B2)",
+      "SUMPRODUCT(Data!B1:B2,Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,Data!B1:B2)",
+      "SUMPRODUCT(--Data!B1:B2)",
+      "SUMPRODUCT(--Data!B1:B2,2)",
+      "SUMPRODUCT(2,--Data!B1:B2)",
+      "SUMPRODUCT(--Data!B1:B2,Data!C1)",
+      "SUMPRODUCT(Data!C1,--Data!B1:B2)",
+      "SUMPRODUCT(--Data!B1:B2,Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,--Data!B1:B2)",
+      "SUMPRODUCT(--Data!B1:B2,Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,--Data!B1:B2)",
+      "SUMPRODUCT(--Data!A1:A1)",
+      "SUMPRODUCT(--Data!A1:A1,2)",
+      "SUMPRODUCT(2,--Data!A1:A1)",
+      "SUMPRODUCT(--Data!A1:A1,Data!C1)",
+      "SUMPRODUCT(Data!C1,--Data!A1:A1)",
+      "SUMPRODUCT(--Data!A1:A1,Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,--Data!A1:A1)",
+      "SUMPRODUCT(--Data!A1:A1,Data!C1:C2)",
+      "SUMPRODUCT(Data!C1:C2,--Data!A1:A1)",
+      "SUMPRODUCT(Data!A1:A2,Data!E1:E1)",
+      "SUMPRODUCT(Data!E1:E1,Data!A1:A2)",
+      "SUMPRODUCT(Data!E1:E2,Data!C1:C1)",
+      "SUMPRODUCT(Data!C1:C1,Data!E1:E2)",
+      "SUMPRODUCT(,2)",
+      "SUMPRODUCT(2,)",
+      "SUMPRODUCT(1/0,NA())",
+      "SUMPRODUCT(NA(),1/0)"
+    ]
+  },
+  "scope": "Text/blank admission and conformable geometry corroborated. Calc admits logical members and omitted arguments; this change retains Poirot Boolean-to-number and omitted-argument policies without claiming native Excel parity. Scalar errors can precede shape rejection in Calc while area member errors do not; no additional exception is introduced."
+}

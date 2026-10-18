@@ -211,7 +211,7 @@ impl<'a> Session<'a> {
         }
     }
     /// Explicit arrays retain shape; references expand only for an array consumer or dynamic execution.
-    fn operator_retains_array(&self, value: &Value) -> bool {
+    pub(super) fn retains_array(&self, value: &Value) -> bool {
         matches!(value, Value::Array(_))
             || (self.expands_operator_references() && array_operator::is_array_operand(value))
     }
@@ -230,7 +230,7 @@ impl<'a> Session<'a> {
         value: Value,
     ) -> EvalResult<Value> {
         let op = &operation;
-        if *op != UnaryOp::ImplicitIntersection && self.operator_retains_array(&value) {
+        if *op != UnaryOp::ImplicitIntersection && self.retains_array(&value) {
             return self.array_unary(s, at, operation, value);
         }
         let value = self.scalar(at, value)?;
@@ -300,7 +300,7 @@ impl<'a> Session<'a> {
         ) {
             return self.references(*op, left, right);
         }
-        if self.operator_retains_array(&left) || self.operator_retains_array(&right) {
+        if self.retains_array(&left) || self.retains_array(&right) {
             // Literal arrays retain shape in legacy formulas, but do not turn an
             // ordinary reference operand into an array-formula request.
             let left = self.operator_reference_operand(at, left)?;

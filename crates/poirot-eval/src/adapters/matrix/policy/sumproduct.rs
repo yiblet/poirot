@@ -11,7 +11,11 @@ pub(super) fn evaluate<P: EvaluationPort>(
     args: &[P::Argument],
 ) -> Result<f64, Failure<P::Operational>> {
     let first = describe(p, args.first().ok_or(CellError::Value)?)?;
-    let scalar = first.origin != Origin::Array || (first.rows == 1 && first.cols == 1);
+    // Documented text/blank admission applies to each conformable argument,
+    // irrespective of direct, reference, or array origin and singleton size.
+    let uniform = p.uniform_sumproduct_arrays();
+    let scalar =
+        !uniform && (first.origin != Origin::Array || (first.rows == 1 && first.cols == 1));
     if scalar {
         let mut result = 1.0;
         for (i, a) in args.iter().enumerate() {
@@ -39,13 +43,18 @@ pub(super) fn evaluate<P: EvaluationPort>(
     for a in args.get(1..).ok_or(CellError::Value)? {
         shapes.push(describe(p, a)?);
     }
-    if shapes.iter().any(|s| s.origin != Origin::Array) {
+    if (uniform && shapes.iter().any(|s| s.sheets != 1))
+        || (!uniform && shapes.iter().any(|s| s.origin != Origin::Array))
+    {
         return value();
     }
     if shapes
         .iter()
         .any(|s| s.rows != first.rows || s.cols != first.cols)
     {
+        if uniform {
+            return value();
+        }
         for (a, s) in args.iter().zip(&shapes).skip(1) {
             for r in 0..s.rows {
                 for c in 0..s.cols {

@@ -1,0 +1,1866 @@
+{
+  "purpose": "Discriminating IFS shape, origin, error and laziness probes. Diagnostic expected zeros are placeholders and all disagreements are retained; no Poirot output supplied expectations. The RAND observation is nondeterministic and is not asserted as a numeric expectation.",
+  "primary_contract": "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+  "runs": [
+    {
+      "source": {
+        "schema_version": 1,
+        "builtin_policy": "ExcelDocumentation",
+        "workbook": {
+          "sheets": [
+            "S"
+          ],
+          "cells": [
+            {
+              "cell": "S!A1",
+              "content": {
+                "type": "number",
+                "value": 1
+              }
+            },
+            {
+              "cell": "S!A2",
+              "content": {
+                "type": "number",
+                "value": 100
+              }
+            },
+            {
+              "cell": "S!A3",
+              "content": {
+                "type": "number",
+                "value": 3
+              }
+            },
+            {
+              "cell": "S!B1",
+              "content": {
+                "type": "number",
+                "value": 200
+              }
+            },
+            {
+              "cell": "S!B2",
+              "content": {
+                "type": "number",
+                "value": 2
+              }
+            },
+            {
+              "cell": "S!B3",
+              "content": {
+                "type": "number",
+                "value": 300
+              }
+            },
+            {
+              "cell": "S!C1",
+              "content": {
+                "type": "boolean",
+                "value": true
+              }
+            },
+            {
+              "cell": "S!C2",
+              "content": {
+                "type": "boolean",
+                "value": false
+              }
+            },
+            {
+              "cell": "S!C3",
+              "content": {
+                "type": "boolean",
+                "value": true
+              }
+            }
+          ]
+        },
+        "scenarios": [
+          {
+            "name": "SUM(IFS({TRUE,FALSE,TRUE},{3,100,7},TRUE,5))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE,TRUE},{3,100,7},TRUE,5))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE,TRUE},{3,100,7},{FALSE,TRUE,FALSE},{20,5,30},TRUE,99))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE,TRUE},{3,100,7},{FALSE,TRUE,FALSE},{20,5,30},TRUE,99))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},2,TRUE,{10,20,30}))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},2,TRUE,{10,20,30}))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE;FALSE},{1,2,3},TRUE,{10,20,30}))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE;FALSE},{1,2,3},TRUE,{10,20,30}))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS(TRUE,{1,2,3},TRUE,{10,20,30,40}))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS(TRUE,{1,2,3},TRUE,{10,20,30,40}))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,TRUE},2,TRUE,{10,20,30}))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,TRUE},2,TRUE,{10,20,30}))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE,TRUE},{1,2},TRUE,9))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE,TRUE},{1,2},TRUE,9))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},2,{FALSE,TRUE,TRUE},{10,20,30}))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},2,{FALSE,TRUE,TRUE},{10,20,30}))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},2,{FALSE;TRUE},9))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},2,{FALSE;TRUE},9))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({FALSE,FALSE},2,{TRUE,TRUE,TRUE},{10,20,30}))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({FALSE,FALSE},2,{TRUE,TRUE,TRUE},{10,20,30}))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS(FALSE,1,{TRUE,FALSE},2,TRUE,3))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS(FALSE,1,{TRUE,FALSE},2,TRUE,3))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,TRUE},2,1/0,3))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,TRUE},2,1/0,3))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},2,TRUE,1/0))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},2,TRUE,1/0))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},2,{TRUE,TRUE},3))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},2,{TRUE,TRUE},3))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},2))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},2))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({\"TRUE\",\"FALSE\"},2,TRUE,3))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({\"TRUE\",\"FALSE\"},2,TRUE,3))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({1,0},2,TRUE,3))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({1,0},2,TRUE,3))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},,TRUE,3))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},,TRUE,3))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "COUNT(IFS({TRUE,FALSE},,TRUE,3))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "COUNT(IFS({TRUE,FALSE},,TRUE,3))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISREF(IFS(TRUE,A1:A3,TRUE,0))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "ISREF(IFS(TRUE,A1:A3,TRUE,0))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISREF(IFS({TRUE},A1:A3,TRUE,0))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "ISREF(IFS({TRUE},A1:A3,TRUE,0))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE;FALSE;TRUE},A1:A3,TRUE,B1:B3))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE;FALSE;TRUE},A1:A3,TRUE,B1:B3))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS(C1:C3,A1:A3,TRUE,B1:B3))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS(C1:C3,A1:A3,TRUE,B1:B3))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},2,{TRUE,FALSE},3))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},2,{TRUE,FALSE},3))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},2,TRUE,{10,20}))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},2,TRUE,{10,20}))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},{1;2;3},TRUE,9))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},{1;2;3},TRUE,9))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,TRUE},2,FALSE,UNKNOWN_FUNCTION()))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,TRUE},2,FALSE,UNKNOWN_FUNCTION()))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS(TRUE,2,TRUE,UNKNOWN_FUNCTION()))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS(TRUE,2,TRUE,UNKNOWN_FUNCTION()))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "observation": {
+        "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+        "verified_at": "2026-10-18T02:15:25.092156+00:00",
+        "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+        "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+        "suite_sha256": {
+          "ifs-array-probes.json": "b614292d6dd5aa974e8c33fac11f6d54e843fbef50c8f7879cd5e4ca0aa35028"
+        },
+        "results": [
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE,FALSE,TRUE},{3,100,7},TRUE,5))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 15.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE,FALSE,TRUE},{3,100,7},{FALSE,TRUE,FALSE},{20,5,30},TRUE,99))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 15.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE,FALSE},2,TRUE,{10,20,30}))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#VALUE!"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE;FALSE},{1,2,3},TRUE,{10,20,30}))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 66.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS(TRUE,{1,2,3},TRUE,{10,20,30,40}))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#N/A"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE,TRUE},2,TRUE,{10,20,30}))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#VALUE!"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE,FALSE,TRUE},{1,2},TRUE,9))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#N/A"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE,FALSE},2,{FALSE,TRUE,TRUE},{10,20,30}))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#VALUE!"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE,FALSE},2,{FALSE;TRUE},9))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#N/A"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({FALSE,FALSE},2,{TRUE,TRUE,TRUE},{10,20,30}))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#VALUE!"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS(FALSE,1,{TRUE,FALSE},2,TRUE,3))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 5.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE,TRUE},2,1/0,3))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 4.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE,FALSE},2,TRUE,1/0))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE,FALSE},2,{TRUE,TRUE},3))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 5.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE,FALSE},2))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#N/A"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({\"TRUE\",\"FALSE\"},2,TRUE,3))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 5.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({1,0},2,TRUE,3))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 5.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE,FALSE},,TRUE,3))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 3.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "COUNT(IFS({TRUE,FALSE},,TRUE,3))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 2.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "ISREF(IFS(TRUE,A1:A3,TRUE,0))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "boolean",
+                  "value": true
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "ISREF(IFS({TRUE},A1:A3,TRUE,0))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "boolean",
+                  "value": false
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE;FALSE;TRUE},A1:A3,TRUE,B1:B3))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 6.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS(C1:C3,A1:A3,TRUE,B1:B3))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#VALUE!"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE,FALSE},2,{TRUE,FALSE},3))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#N/A"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE,FALSE},2,TRUE,{10,20}))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 22.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE,FALSE},{1;2;3},TRUE,9))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 33.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS({TRUE,TRUE},2,FALSE,UNKNOWN_FUNCTION()))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 4.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-probes.json",
+            "name": "SUM(IFS(TRUE,2,TRUE,UNKNOWN_FUNCTION()))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 2.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          }
+        ],
+        "summary": {
+          "scenarios": 28,
+          "checks": 28,
+          "corroborated_scenarios": 0,
+          "corroborated_checks": 0
+        }
+      }
+    },
+    {
+      "source": {
+        "schema_version": 1,
+        "builtin_policy": "ExcelDocumentation",
+        "workbook": {
+          "sheets": [
+            "S"
+          ],
+          "cells": [
+            {
+              "cell": "S!A1",
+              "content": {
+                "type": "number",
+                "value": 1
+              }
+            },
+            {
+              "cell": "S!A2",
+              "content": {
+                "type": "number",
+                "value": 100
+              }
+            },
+            {
+              "cell": "S!A3",
+              "content": {
+                "type": "number",
+                "value": 3
+              }
+            },
+            {
+              "cell": "S!B1",
+              "content": {
+                "type": "number",
+                "value": 200
+              }
+            },
+            {
+              "cell": "S!B2",
+              "content": {
+                "type": "number",
+                "value": 2
+              }
+            },
+            {
+              "cell": "S!B3",
+              "content": {
+                "type": "number",
+                "value": 300
+              }
+            },
+            {
+              "cell": "S!C1",
+              "content": {
+                "type": "boolean",
+                "value": true
+              }
+            },
+            {
+              "cell": "S!C2",
+              "content": {
+                "type": "boolean",
+                "value": false
+              }
+            },
+            {
+              "cell": "S!C3",
+              "content": {
+                "type": "boolean",
+                "value": true
+              }
+            },
+            {
+              "cell": "S!D1",
+              "content": {
+                "formula": "1/0"
+              }
+            },
+            {
+              "cell": "S!E1",
+              "content": {
+                "formula": "NA()"
+              }
+            },
+            {
+              "cell": "S!F1",
+              "content": {
+                "formula": "1"
+              }
+            },
+            {
+              "cell": "S!G1",
+              "content": {
+                "formula": "1/0"
+              }
+            },
+            {
+              "cell": "S!H1",
+              "content": {
+                "formula": "1/0"
+              }
+            },
+            {
+              "cell": "S!I1",
+              "content": {
+                "formula": "2"
+              }
+            }
+          ]
+        },
+        "scenarios": [
+          {
+            "name": "SUMPRODUCT(IFS(C1:C3,A1:A3,TRUE,B1:B3))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(IFS(C1:C3,A1:A3,TRUE,B1:B3))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS(FALSE,1,{TRUE,FALSE},2,TRUE,3))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS(FALSE,1,{TRUE,FALSE},2,TRUE,3))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE;FALSE,TRUE},{1,2;3,4},TRUE,{10,20;30,40}))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE;FALSE,TRUE},{1,2;3,4},TRUE,{10,20;30,40}))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE;FALSE},{1,2,3},TRUE,9))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE;FALSE},{1,2,3},TRUE,9))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},2,{FALSE;TRUE},9,TRUE,7))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},2,{FALSE;TRUE},9,TRUE,7))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},2,TRUE,RAND()))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},2,TRUE,RAND()))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},2,D1:E1,3,TRUE,4))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},2,D1:E1,3,TRUE,4))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},F1:G1,TRUE,H1:I1))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},F1:G1,TRUE,H1:I1))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "COUNT(IFS({TRUE,FALSE},J1,TRUE,3))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "COUNT(IFS({TRUE,FALSE},J1,TRUE,3))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "AND(ISBLANK(IFS({TRUE,FALSE},J1,TRUE,J1)))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "AND(ISBLANK(IFS({TRUE,FALSE},J1,TRUE,J1)))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,TRUE},2,TRUE,UNKNOWN_FUNCTION()))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,TRUE},2,TRUE,UNKNOWN_FUNCTION()))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({FALSE,FALSE},UNKNOWN_FUNCTION(),TRUE,3))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({FALSE,FALSE},UNKNOWN_FUNCTION(),TRUE,3))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},2,TRUE,3,TRUE,UNKNOWN_FUNCTION()))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},2,TRUE,3,TRUE,UNKNOWN_FUNCTION()))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},2,TRUE,3,{TRUE,FALSE,TRUE},9))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},2,TRUE,3,{TRUE,FALSE,TRUE},9))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IFS({TRUE,FALSE},2,TRUE,3,TRUE,{1,2,3}))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actual observations and mismatches."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IFS({TRUE,FALSE},2,TRUE,3,TRUE,{1,2,3}))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "observation": {
+        "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+        "verified_at": "2026-10-18T02:18:19.231424+00:00",
+        "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+        "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+        "suite_sha256": {
+          "ifs-array-controls.json": "defaac9e16190da6e24bd79815639e4b702108f213006aeb5c0b1845b1fd3675"
+        },
+        "results": [
+          {
+            "suite": "ifs-array-controls.json",
+            "name": "SUMPRODUCT(IFS(C1:C3,A1:A3,TRUE,B1:B3))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 6.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-controls.json",
+            "name": "SUM(IFS(FALSE,1,{TRUE,FALSE},2,TRUE,3))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 5.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-controls.json",
+            "name": "SUM(IFS({TRUE,FALSE;FALSE,TRUE},{1,2;3,4},TRUE,{10,20;30,40}))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 55.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-controls.json",
+            "name": "SUM(IFS({TRUE;FALSE},{1,2,3},TRUE,9))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 33.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-controls.json",
+            "name": "SUM(IFS({TRUE,FALSE},2,{FALSE;TRUE},9,TRUE,7))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 20.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-controls.json",
+            "name": "SUM(IFS({TRUE,FALSE},2,TRUE,RAND()))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 2.4698483084812
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-controls.json",
+            "name": "SUM(IFS({TRUE,FALSE},2,D1:E1,3,TRUE,4))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#N/A"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-controls.json",
+            "name": "SUM(IFS({TRUE,FALSE},F1:G1,TRUE,H1:I1))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 3.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-controls.json",
+            "name": "COUNT(IFS({TRUE,FALSE},J1,TRUE,3))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 1.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-controls.json",
+            "name": "AND(ISBLANK(IFS({TRUE,FALSE},J1,TRUE,J1)))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "boolean",
+                  "value": true
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-controls.json",
+            "name": "SUM(IFS({TRUE,TRUE},2,TRUE,UNKNOWN_FUNCTION()))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 4.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-controls.json",
+            "name": "SUM(IFS({FALSE,FALSE},UNKNOWN_FUNCTION(),TRUE,3))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 6.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-controls.json",
+            "name": "SUM(IFS({TRUE,FALSE},2,TRUE,3,TRUE,UNKNOWN_FUNCTION()))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 5.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-controls.json",
+            "name": "SUM(IFS({TRUE,FALSE},2,TRUE,3,{TRUE,FALSE,TRUE},9))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#VALUE!"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "ifs-array-controls.json",
+            "name": "SUM(IFS({TRUE,FALSE},2,TRUE,3,TRUE,{1,2,3}))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#VALUE!"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          }
+        ],
+        "summary": {
+          "scenarios": 15,
+          "checks": 15,
+          "corroborated_scenarios": 0,
+          "corroborated_checks": 0
+        }
+      }
+    }
+  ]
+}

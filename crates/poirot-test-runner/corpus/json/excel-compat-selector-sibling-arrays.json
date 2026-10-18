@@ -32,14 +32,7 @@
             "type": "number",
             "value": 15
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#VALUE!"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -67,14 +60,7 @@
             "type": "number",
             "value": 3
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -102,14 +88,7 @@
             "type": "number",
             "value": 105
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#VALUE!"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -137,14 +116,7 @@
             "type": "number",
             "value": 3
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#VALUE!"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -172,14 +144,7 @@
             "type": "number",
             "value": 7
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#VALUE!"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -207,14 +172,7 @@
             "type": "number",
             "value": 5.0
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#VALUE!"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -242,14 +200,7 @@
             "type": "number",
             "value": 5
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#VALUE!"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -277,14 +228,7 @@
             "type": "number",
             "value": 83
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#VALUE!"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -312,14 +256,7 @@
             "type": "number",
             "value": 13
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#VALUE!"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -347,14 +284,7 @@
             "type": "number",
             "value": 3
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -382,14 +312,7 @@
             "type": "number",
             "value": 63
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#VALUE!"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -417,14 +340,7 @@
             "type": "number",
             "value": 3
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#VALUE!"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -452,14 +368,7 @@
             "type": "number",
             "value": 7
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#VALUE!"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -487,14 +396,7 @@
             "type": "number",
             "value": 4.333333333333333
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#VALUE!"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -522,14 +424,7 @@
             "type": "number",
             "value": 3
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#VALUE!"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -557,14 +452,7 @@
             "type": "number",
             "value": 67
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#VALUE!"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -592,14 +480,7 @@
             "type": "number",
             "value": 15
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -627,14 +508,7 @@
             "type": "number",
             "value": 3
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -662,14 +536,7 @@
             "type": "number",
             "value": 105
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -697,14 +564,7 @@
             "type": "number",
             "value": 3
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -732,14 +592,7 @@
             "type": "number",
             "value": 7
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -767,14 +620,7 @@
             "type": "number",
             "value": 5.0
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -802,14 +648,7 @@
             "type": "number",
             "value": 5
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -837,14 +676,7 @@
             "type": "number",
             "value": 83
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -872,14 +704,7 @@
             "type": "number",
             "value": 15
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -907,14 +732,7 @@
             "type": "number",
             "value": 3
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -942,14 +760,7 @@
             "type": "number",
             "value": 105
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -977,14 +788,7 @@
             "type": "number",
             "value": 3
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1012,14 +816,7 @@
             "type": "number",
             "value": 7
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1047,14 +844,7 @@
             "type": "number",
             "value": 5.0
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1082,14 +872,7 @@
             "type": "number",
             "value": 5
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1117,14 +900,7 @@
             "type": "number",
             "value": 83
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1152,14 +928,7 @@
             "type": "number",
             "value": 15
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 110.0
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1215,14 +984,7 @@
             "type": "number",
             "value": 105
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 2100.0
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1278,14 +1040,7 @@
             "type": "number",
             "value": 7
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 100.0
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1313,14 +1068,7 @@
             "type": "number",
             "value": 5.0
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 36.666666666666664
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1348,14 +1096,7 @@
             "type": "number",
             "value": 5
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 7.0
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1383,14 +1124,7 @@
             "type": "number",
             "value": 83
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 10058.0
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1418,14 +1152,7 @@
             "type": "number",
             "value": 31
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 7.0
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1453,14 +1180,7 @@
             "type": "number",
             "value": 3
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 1.0
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1488,14 +1208,7 @@
             "type": "number",
             "value": 1001
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 7.0
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1551,14 +1264,7 @@
             "type": "number",
             "value": 13
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 7.0
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1586,14 +1292,7 @@
             "type": "number",
             "value": 10.333333333333334
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 7.0
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1621,14 +1320,7 @@
             "type": "number",
             "value": 11
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 7.0
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     },
@@ -1656,14 +1348,7 @@
             "type": "number",
             "value": 339
           },
-          "tolerance": 1e-11,
-          "known_gap": {
-            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 49.0
-            }
-          }
+          "tolerance": 1e-11
         }
       ]
     }

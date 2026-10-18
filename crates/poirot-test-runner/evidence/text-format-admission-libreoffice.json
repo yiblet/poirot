@@ -1,0 +1,62 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-18T02:47:37.700399+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "excel-compat-poi-cache-datetimetonumbertestcases.json": "4987332d5e30e57ac936b2f7ea59f51a476b90850ef95e8999742fed46aec411"
+  },
+  "results": [
+    {
+      "suite": "excel-compat-poi-cache-datetimetonumbertestcases.json",
+      "name": "Excel compatibility poi-cache-datetimetonumbertestcases: DateTime F12 TEXT(F5,\"H:MM:ss AM/PM\")",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "text",
+            "value": "3:43:09 PM"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-datetimetonumbertestcases.json",
+      "name": "Excel compatibility poi-cache-datetimetonumbertestcases: DateTime B5 F5+0.0",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.654965277777778
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-datetimetonumbertestcases.json",
+      "name": "Excel compatibility poi-cache-datetimetonumbertestcases: DateTime B9 F9+0.0",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 3,
+    "checks": 3,
+    "corroborated_scenarios": 3,
+    "corroborated_checks": 3
+  }
+}

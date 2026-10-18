@@ -237,7 +237,7 @@ fn resource_and_function_contracts() {
             ..
         }
     ));
-    assert_eq!(eval(&w, "INDEX(A:A,0)"), Blank);
+    assert_eq!(eval(&w, "INDEX(A:A,0)"), Number(0.));
     assert!(matches!(
         crate::run_formula(
             &w,
@@ -320,7 +320,7 @@ fn arrays_statistics_text_and_lookup() {
 }
 
 #[test]
-fn lookup_blanks_preserve_identity_through_consumers_and_formula_cells() {
+fn lookup_blanks_reach_consumers_before_formula_cell_publication() {
     let mut w = book();
     let sheet = w.sheet_mut(0).unwrap();
     for (address, value) in [
@@ -417,9 +417,10 @@ fn lookup_blanks_preserve_identity_through_consumers_and_formula_cells() {
     ] {
         assert_eq!(eval(&w, lookup), Error(NA));
     }
-    // Formula publication and subsequent references retain the selected blank.
-    assert_eq!(eval(&w, "ISBLANK(H1)"), Boolean(true));
-    assert_eq!(eval(&w, "MIN(H1,0.03)"), Number(0.03));
+    // A completed worksheet formula publishes zero; inline selections above retain blank.
+    assert_eq!(eval(&w, "ISBLANK(H1)"), Boolean(false));
+    assert_eq!(eval(&w, "ISNUMBER(H1)"), Boolean(true));
+    assert_eq!(eval(&w, "MIN(H1,0.03)"), Number(0.));
 }
 
 #[test]

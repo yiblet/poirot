@@ -16,7 +16,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: percent threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -80,13 +81,6 @@
           "expected": {
             "type": "number",
             "value": 2
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted percent threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -99,7 +93,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: scientific threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -175,7 +170,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: currency threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -239,13 +235,6 @@
           "expected": {
             "type": "number",
             "value": 2
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted currency threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -258,7 +247,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: mixed fraction threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -322,13 +312,6 @@
           "expected": {
             "type": "number",
             "value": 1
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted mixed fraction threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -341,7 +324,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: calendar text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -405,13 +389,6 @@
           "expected": {
             "type": "number",
             "value": 1
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted calendar text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -424,7 +401,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: time text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -488,13 +466,6 @@
           "expected": {
             "type": "number",
             "value": 1
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted time text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -507,7 +478,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: space after operator. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -583,7 +555,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: parenthesized negative criterion. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -666,7 +639,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: percent threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -730,13 +704,6 @@
           "expected": {
             "type": "number",
             "value": 2
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted percent threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -749,7 +716,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: scientific threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -825,7 +793,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: currency threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -889,13 +858,6 @@
           "expected": {
             "type": "number",
             "value": 2
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted currency threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -908,7 +870,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: mixed fraction threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -972,13 +935,6 @@
           "expected": {
             "type": "number",
             "value": 1
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted mixed fraction threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -991,7 +947,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: calendar text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -1055,13 +1012,6 @@
           "expected": {
             "type": "number",
             "value": 1
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted calendar text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -1074,7 +1024,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: time text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -1138,13 +1089,6 @@
           "expected": {
             "type": "number",
             "value": 1
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted time text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -1157,7 +1101,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: space after operator. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -1233,7 +1178,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: parenthesized negative criterion. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -1316,7 +1262,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: percent threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -1380,13 +1327,6 @@
           "expected": {
             "type": "number",
             "value": 50
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted percent threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -1399,7 +1339,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: scientific threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -1475,7 +1416,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: currency threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -1539,13 +1481,6 @@
           "expected": {
             "type": "number",
             "value": 50
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted currency threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -1558,7 +1493,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: mixed fraction threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -1622,13 +1558,6 @@
           "expected": {
             "type": "number",
             "value": 30
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted mixed fraction threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -1641,7 +1570,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: calendar text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -1705,13 +1635,6 @@
           "expected": {
             "type": "number",
             "value": 30
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted calendar text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -1724,7 +1647,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: time text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -1788,13 +1712,6 @@
           "expected": {
             "type": "number",
             "value": 30
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted time text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -1807,7 +1724,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: space after operator. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -1883,7 +1801,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: parenthesized negative criterion. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -1966,7 +1885,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: percent threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -2030,13 +1950,6 @@
           "expected": {
             "type": "number",
             "value": 50
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted percent threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -2049,7 +1962,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: scientific threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -2125,7 +2039,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: currency threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -2189,13 +2104,6 @@
           "expected": {
             "type": "number",
             "value": 50
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted currency threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -2208,7 +2116,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: mixed fraction threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -2272,13 +2181,6 @@
           "expected": {
             "type": "number",
             "value": 30
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted mixed fraction threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -2291,7 +2193,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: calendar text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -2355,13 +2258,6 @@
           "expected": {
             "type": "number",
             "value": 30
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted calendar text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -2374,7 +2270,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: time text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -2438,13 +2335,6 @@
           "expected": {
             "type": "number",
             "value": 30
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted time text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -2457,7 +2347,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: space after operator. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -2533,7 +2424,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: parenthesized negative criterion. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -2616,7 +2508,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: percent threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -2680,13 +2573,6 @@
           "expected": {
             "type": "number",
             "value": 25.0
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted percent threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#DIV/0!"
-            }
           }
         }
       ]
@@ -2699,7 +2585,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: scientific threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -2775,7 +2662,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: currency threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -2839,13 +2727,6 @@
           "expected": {
             "type": "number",
             "value": 25.0
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted currency threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#DIV/0!"
-            }
           }
         }
       ]
@@ -2858,7 +2739,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: mixed fraction threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -2922,13 +2804,6 @@
           "expected": {
             "type": "number",
             "value": 30.0
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted mixed fraction threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#DIV/0!"
-            }
           }
         }
       ]
@@ -2941,7 +2816,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: calendar text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -3005,13 +2881,6 @@
           "expected": {
             "type": "number",
             "value": 30.0
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted calendar text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#DIV/0!"
-            }
           }
         }
       ]
@@ -3024,7 +2893,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: time text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -3088,13 +2958,6 @@
           "expected": {
             "type": "number",
             "value": 30.0
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted time text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#DIV/0!"
-            }
           }
         }
       ]
@@ -3107,7 +2970,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: space after operator. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -3183,7 +3047,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: parenthesized negative criterion. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -3266,7 +3131,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: percent threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -3330,13 +3196,6 @@
           "expected": {
             "type": "number",
             "value": 25.0
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted percent threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#DIV/0!"
-            }
           }
         }
       ]
@@ -3349,7 +3208,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: scientific threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -3425,7 +3285,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: currency threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -3489,13 +3350,6 @@
           "expected": {
             "type": "number",
             "value": 25.0
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted currency threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#DIV/0!"
-            }
           }
         }
       ]
@@ -3508,7 +3362,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: mixed fraction threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -3572,13 +3427,6 @@
           "expected": {
             "type": "number",
             "value": 30.0
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted mixed fraction threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#DIV/0!"
-            }
           }
         }
       ]
@@ -3591,7 +3439,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: calendar text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -3655,13 +3504,6 @@
           "expected": {
             "type": "number",
             "value": 30.0
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted calendar text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#DIV/0!"
-            }
           }
         }
       ]
@@ -3674,7 +3516,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: time text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -3738,13 +3581,6 @@
           "expected": {
             "type": "number",
             "value": 30.0
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted time text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#DIV/0!"
-            }
           }
         }
       ]
@@ -3757,7 +3593,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: space after operator. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -3833,7 +3670,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: parenthesized negative criterion. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -3916,7 +3754,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: percent threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -3980,13 +3819,6 @@
           "expected": {
             "type": "number",
             "value": 20
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted percent threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -3999,7 +3831,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: scientific threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -4075,7 +3908,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: currency threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -4139,13 +3973,6 @@
           "expected": {
             "type": "number",
             "value": 20
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted currency threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -4158,7 +3985,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: mixed fraction threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -4222,13 +4050,6 @@
           "expected": {
             "type": "number",
             "value": 30
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted mixed fraction threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -4241,7 +4062,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: calendar text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -4305,13 +4127,6 @@
           "expected": {
             "type": "number",
             "value": 30
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted calendar text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -4324,7 +4139,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: time text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -4388,13 +4204,6 @@
           "expected": {
             "type": "number",
             "value": 30
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted time text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -4407,7 +4216,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: space after operator. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -4483,7 +4293,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: parenthesized negative criterion. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -4566,7 +4377,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: percent threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -4630,13 +4442,6 @@
           "expected": {
             "type": "number",
             "value": 30
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted percent threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -4649,7 +4454,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: scientific threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -4725,7 +4531,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: currency threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -4789,13 +4596,6 @@
           "expected": {
             "type": "number",
             "value": 30
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted currency threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -4808,7 +4608,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: mixed fraction threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -4872,13 +4673,6 @@
           "expected": {
             "type": "number",
             "value": 30
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted mixed fraction threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -4891,7 +4685,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: calendar text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -4955,13 +4750,6 @@
           "expected": {
             "type": "number",
             "value": 30
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted calendar text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -4974,7 +4762,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: time text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -5038,13 +4827,6 @@
           "expected": {
             "type": "number",
             "value": 30
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted time text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -5057,7 +4839,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: space after operator. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -5133,7 +4916,8 @@
         "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: parenthesized negative criterion. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {

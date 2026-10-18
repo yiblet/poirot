@@ -140,7 +140,9 @@ impl SelectionPlan {
     }
 }
 
-fn switch_scalar<E>(value: Result<CellValue, Failure<E>>) -> Result<CellValue, Failure<E>> {
+pub(super) fn switch_scalar<E>(
+    value: Result<CellValue, Failure<E>>,
+) -> Result<CellValue, Failure<E>> {
     match value {
         Err(Failure::Cell(_)) | Ok(CellValue::Error(_)) => Err(Failure::Cell(CellError::NA)),
         other => other,

@@ -22,7 +22,7 @@ Compilation remains policy independent: otherwise unresolved calls are resolved
 when executed, without cloning syntax or evaluating unselected lazy branches.
 Already bound extensions retain their implementation and precedence. Profile-only
 handlers have typed descriptors for invocation observations but are absent from
-the default public catalog, which remains at 256 entries. Parsed and resolved
+the default public catalog, which currently contains 262 entries. Parsed and resolved
 spellings are retained separately from the handler identity. An observation is
 handler entry evidence, not a source-parity claim.
 
@@ -77,6 +77,24 @@ Sources: [ADDRESS](https://support.microsoft.com/en-us/excel/functions/address-f
 [COVARIANCE.S](https://support.microsoft.com/en-us/excel/functions/covariance-s-function),
 [RANK.EQ](https://support.microsoft.com/en-us/excel/functions/rank-eq-function),
 and [ROMAN](https://support.microsoft.com/en-us/excel/functions/roman-function).
+
+The Excel profile retains explicit/bounded arrays through IF, IFS, SWITCH and
+CHOOSE selection and exact ISERROR/ISERR/ISNA/ISNUMBER/ISTEXT/ISBLANK/ISLOGICAL/
+ISNONTEXT inspection. References retain shape when their caller requests array
+evaluation; singleton axes broadcast. Scalar selection and PinnedPoi keep their
+existing reference, omission and admission contracts. This does not vectorize all
+functions or change ISREF, TYPE, N or T. Needed non-singleton extent mismatches,
+named-producer bounds, materialized omission and Calc admission/unused-shape
+limitations remain explicit in the linked array and investigation contracts.
+
+Relational criteria thresholds reuse contextual numeric/calendar parsing while
+literal equality and inequality matching remain intact. Selected AVERAGEIF target
+errors propagate in the Excel profile; PinnedPoi keeps numeric-only target
+admission. TEXT numeric-text admission uses the contextual parser in the Excel
+profile, retaining literal fallback on spreadsheet parse rejection and preserving
+operational failures. SUMPRODUCT uses uniform conformable argument admission in
+the Excel profile; PinnedPoi retains its source-specific admission and schedule. The [integrated compatibility review](../../poirot-test-json/evidence/master-compat-reconciliation.md)
+records independent evidence and retained compatibility gaps.
 
 Array result publication is selected independently with `ArrayResultPolicy`.
 See [dynamic array results](dynamic-array-results.md) for footprint ownership,

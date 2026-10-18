@@ -20,7 +20,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -215,7 +216,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -327,13 +329,6 @@
           "expected": {
             "type": "number",
             "value": 8711.0
-          },
-          "known_gap": {
-            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -346,7 +341,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -374,7 +370,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -486,13 +483,6 @@
           "expected": {
             "type": "number",
             "value": 500.0
-          },
-          "known_gap": {
-            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 0.0
-            }
           }
         }
       ]
@@ -505,7 +495,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {
@@ -707,7 +698,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Post-fix source-bound independent Calc observations: ../evidence/criteria-relational-thresholds-libreoffice.json. Ordered thresholds reuse contextual parsing; equality and inequality literal matching remain unchanged, with parenthesized-negative <> cases explicitly retained as gaps."
       ],
       "actions": [
         {

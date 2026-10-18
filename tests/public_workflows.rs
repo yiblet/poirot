@@ -178,11 +178,11 @@ fn lookup_blank_consumers_survive_overlay_reset_materialization_and_xlsx() {
             );
             assert_eq!(
                 evaluation.cell(at("B1")).unwrap(),
-                input.map_or(CellValue::Blank, CellValue::Number)
+                CellValue::Number(input.unwrap_or(0.))
             );
             assert_eq!(
                 evaluation.cell(at("B3")).unwrap(),
-                CellValue::Number(expected)
+                CellValue::Number(input.unwrap_or(0.).min(0.03))
             );
         }
         overlay.changes()
@@ -195,9 +195,9 @@ fn lookup_blank_consumers_survive_overlay_reset_materialization_and_xlsx() {
         .unwrap();
     let reopened = Spreadsheet::from_bytes(&bytes).unwrap();
     for (cell, expected) in [
-        ("B1", CellValue::Blank),
+        ("B1", CellValue::Number(0.)),
         ("B2", CellValue::Number(0.03)),
-        ("B3", CellValue::Number(0.03)),
+        ("B3", CellValue::Number(0.)),
         ("B4", CellValue::Boolean(true)),
     ] {
         assert_eq!(

@@ -95,7 +95,9 @@ pub fn coercev2_trend_member(value: ScalarRef<'_>) -> Result<f64, CellError> {
         _ => Err(CellError::Value),
     }
 }
-/// SUMPRODUCT retains source scalar-versus-area blank/text handling.
+/// SUMPRODUCT requests either strict scalar or zero-admitting text/blank handling.
+/// The caller selects admission; singleton geometry does not determine it.
+/// Boolean-to-number admission is retained in both modes.
 pub fn coercev2_sumproduct_member(value: ScalarRef<'_>, scalar: bool) -> Result<f64, CellError> {
     match value {
         ScalarRef::Number(n) => Ok(n),

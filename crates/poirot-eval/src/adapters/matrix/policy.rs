@@ -116,6 +116,10 @@ pub trait EvaluationPort {
     fn determined_trend_fit(&self) -> bool {
         false
     }
+    /// Treat every SUMPRODUCT argument as a conformable array, including singletons.
+    fn uniform_sumproduct_arrays(&self) -> bool {
+        false
+    }
     /// Resolve operand shape without reading its member cells.
     fn describe(&mut self, arg: &Self::Argument) -> Result<Shape, Failure<Self::Operational>>;
     /// Read one member at zero-based offsets, retaining typed failures.
@@ -254,6 +258,9 @@ mod tests {
         fn strict_numeric_matrices(&self) -> bool {
             self.strict
         }
+        fn uniform_sumproduct_arrays(&self) -> bool {
+            self.strict
+        }
         fn describe(&mut self, a: &Arg) -> Result<Shape, Failure<Self::Operational>> {
             Ok(a.shape)
         }
@@ -362,6 +369,36 @@ mod tests {
             Err(Failure::Spreadsheet(CellError::Div0))
         );
         assert_eq!(p.reads, vec![(0, 0), (0, 1), (0, 2)]);
+    }
+    #[test]
+    fn uniform_sumproduct_checks_shapes_then_reads_even_after_zero_terms() {
+        let mut text = area(1, 1, &[0.]);
+        text.cells[0] = Cell::Text("4".into());
+        let mut p = port();
+        p.strict = true;
+        assert_eq!(
+            evaluate(
+                &mut p,
+                MatrixFunction::Sumproduct,
+                &[text, area(1, 2, &[1., 2.])]
+            ),
+            Err(Failure::Spreadsheet(CellError::Value))
+        );
+        assert!(p.reads.is_empty());
+        let mut text = area(1, 1, &[0.]);
+        text.cells[0] = Cell::Text("4".into());
+        let mut p = port();
+        p.strict = true;
+        p.remaining = 8;
+        assert_eq!(
+            evaluate(
+                &mut p,
+                MatrixFunction::Sumproduct,
+                &[text, area(1, 1, &[2.])]
+            ),
+            Err(Failure::Operational("budget"))
+        );
+        assert_eq!(p.reads, vec![(0, 0)]);
     }
     #[test]
     fn operational_budget_aborts_before_cell_traversal() {

@@ -1,14 +1,14 @@
-//! Row-major array operators; scalar kernels retain their selected computation policies.
+//! Shared rectangular traversal and row-major operators; scalar kernels retain their policies.
 use crate::*;
 
 /// Logical operand dimensions, inspected without reading referenced cells.
 #[derive(Clone, Copy)]
-struct Shape {
-    rows: usize,
-    columns: usize,
+pub(super) struct Shape {
+    pub(super) rows: usize,
+    pub(super) columns: usize,
 }
 impl Shape {
-    fn inspect(value: &Value) -> Option<Self> {
+    pub(super) fn inspect(value: &Value) -> Option<Self> {
         let (rows, columns) = match value {
             Value::Scalar(_) | Value::SelectedScalar(_, _) | Value::Missing => (1, 1),
             Value::Array(array) => {
@@ -61,8 +61,8 @@ impl Session<'_> {
                 "array operator requires one bounded rectangular operand",
             )
         })?;
-        self.operator_values(at, shape, |session, row, column| {
-            let value = session.operator_element(&value, shape, row, column)?;
+        self.rectangular_values(at, shape, |session, row, column| {
+            let value = session.rectangular_element(&value, shape, row, column)?;
             let result = session.unary_value(sheet, at, operation, Value::Scalar(value))?;
             session.scalar(at, result)
         })
@@ -90,9 +90,9 @@ impl Session<'_> {
             rows: left_shape.rows.max(right_shape.rows),
             columns: left_shape.columns.max(right_shape.columns),
         };
-        self.operator_values(at, output, |session, row, column| {
-            let left = session.operator_element(&left, left_shape, row, column)?;
-            let right = session.operator_element(&right, right_shape, row, column)?;
+        self.rectangular_values(at, output, |session, row, column| {
+            let left = session.rectangular_element(&left, left_shape, row, column)?;
+            let right = session.rectangular_element(&right, right_shape, row, column)?;
             let result = session.binary_values(
                 sheet,
                 at,
@@ -104,35 +104,61 @@ impl Session<'_> {
         })
     }
 
-    fn operator_values(
+    pub(super) fn rectangular_values(
         &mut self,
         at: CellAddress,
         shape: Shape,
-        mut element: impl FnMut(&mut Self, usize, usize) -> EvalResult<CellValue>,
+        element: impl FnMut(&mut Self, usize, usize) -> EvalResult<CellValue>,
     ) -> EvalResult<Value> {
-        let count = (shape.rows as u64).saturating_mul(shape.columns as u64);
-        // Admit the complete output before any coordinate reads or buffer allocation.
-        self.budget.allocation_u64(count)?;
-        let mut rows = Vec::with_capacity(shape.rows);
-        for row in 0..shape.rows {
-            let mut values = Vec::with_capacity(shape.columns);
-            for column in 0..shape.columns {
-                values.push(element(self, row, column)?);
-            }
-            rows.push(values);
-        }
-        if count == 1 {
+        let mut rows = self.rectangular_array(at, shape, element)?;
+        if shape.rows == 1 && shape.columns == 1 {
             Ok(Value::Scalar(
-                rows.pop()
+                rows.values
+                    .pop()
                     .and_then(|mut row| row.pop())
                     .ok_or(EvaluationFailure::StalePlan)?,
             ))
         } else {
-            Ok(Value::Array(ArrayView::anchored(rows, Some(at))))
+            Ok(Value::Array(rows))
         }
     }
 
-    fn operator_element(
+    /// Build an array without collapsing its singleton shape or reading unselected members.
+    pub(super) fn rectangular_array(
+        &mut self,
+        at: CellAddress,
+        shape: Shape,
+        mut element: impl FnMut(&mut Self, usize, usize) -> EvalResult<CellValue>,
+    ) -> EvalResult<ArrayView> {
+        let count = (shape.rows as u64).saturating_mul(shape.columns as u64);
+        self.budget.allocation_u64(count)?;
+        let mut rows = Vec::new();
+        rows.try_reserve_exact(shape.rows)
+            .map_err(|_| EvaluationFailure::ResourceLimit {
+                capability: CapabilityId::FunctionAdapter,
+                source: self.consumer,
+                detail: "rectangular row allocation failed".into(),
+            })?;
+        for row in 0..shape.rows {
+            let mut values = Vec::new();
+            values.try_reserve_exact(shape.columns).map_err(|_| {
+                EvaluationFailure::ResourceLimit {
+                    capability: CapabilityId::FunctionAdapter,
+                    source: self.consumer,
+                    detail: "rectangular member allocation failed".into(),
+                }
+            })?;
+            for column in 0..shape.columns {
+                // SAFETY: Reservation admitted shape.columns slots and this loop pushes exactly that many.
+                values.push(element(self, row, column)?);
+            }
+            // SAFETY: Reservation admitted shape.rows slots and this loop pushes exactly that many.
+            rows.push(values);
+        }
+        Ok(ArrayView::anchored(rows, Some(at)))
+    }
+
+    pub(super) fn rectangular_element(
         &mut self,
         value: &Value,
         shape: Shape,
@@ -175,5 +201,55 @@ impl Session<'_> {
         };
         self.budget.text(value.text_storage_bytes())?;
         Ok(value.clone())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rectangular_capacity_overflow_is_an_attributed_resource_failure() {
+        let workbook = Workbook::new();
+        let target = EvaluationTarget {
+            sheet: 0,
+            address: "B2".parse().unwrap(),
+        };
+        // Each capacity exceeds Vec's byte limit, without requesting real heap storage.
+        let shapes = [
+            Shape {
+                rows: usize::MAX / std::mem::size_of::<Vec<CellValue>>(),
+                columns: 1,
+            },
+            Shape {
+                rows: 1,
+                columns: usize::MAX / std::mem::size_of::<CellValue>(),
+            },
+        ];
+        for shape in shapes {
+            let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+            session.consumer = Some(target);
+            session.budget = BudgetMeter::new(EvaluationBudgets {
+                run_work: u64::MAX,
+                cell_work: u64::MAX,
+                materialized_values: usize::MAX,
+                ..Default::default()
+            })
+            .unwrap();
+            let failure = session
+                .rectangular_array(target.address, shape, |_, _, _| {
+                    panic!("reservation must reject before evaluating any member")
+                })
+                .err()
+                .unwrap();
+            assert!(matches!(failure, EvaluationFailure::ResourceLimit {
+                capability: CapabilityId::FunctionAdapter,
+                source: Some(source), ..
+            } if source == target));
+            assert_eq!(
+                session.budget.usage.materialized_values,
+                (shape.rows * shape.columns) as u64
+            );
+        }
     }
 }

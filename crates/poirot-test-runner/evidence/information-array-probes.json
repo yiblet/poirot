@@ -1,0 +1,2153 @@
+{
+  "contract": "Microsoft IS functions inspect exact types without conversion. Array mapping follows that same existing scalar predicate. Raw Calc logical-array and invalid omitted-literal disagreements are retained, not translated into extra runtime states. No native Excel run is claimed.",
+  "source": "https://support.microsoft.com/en-us/excel/functions/is-functions",
+  "runs": [
+    {
+      "suite": {
+        "schema_version": 1,
+        "builtin_policy": "ExcelDocumentation",
+        "workbook": {
+          "sheets": [
+            "S"
+          ],
+          "cells": []
+        },
+        "scenarios": [
+          {
+            "name": "ISERROR mixed 2x4",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!A1",
+                "content": {
+                  "type": "number",
+                  "value": 1
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B1",
+                "content": {
+                  "type": "text",
+                  "value": "2"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C1",
+                "content": {
+                  "type": "text",
+                  "value": ""
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D1",
+                "content": {
+                  "type": "blank"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!A2",
+                "content": {
+                  "type": "boolean",
+                  "value": true
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B2",
+                "content": {
+                  "type": "error",
+                  "value": "#N/A"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C2",
+                "content": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D2",
+                "content": {
+                  "type": "number",
+                  "value": 0
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISERROR(A1:D2),{1,2,4,8;16,32,64,128})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 96
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISERR mixed 2x4",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!A1",
+                "content": {
+                  "type": "number",
+                  "value": 1
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B1",
+                "content": {
+                  "type": "text",
+                  "value": "2"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C1",
+                "content": {
+                  "type": "text",
+                  "value": ""
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D1",
+                "content": {
+                  "type": "blank"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!A2",
+                "content": {
+                  "type": "boolean",
+                  "value": true
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B2",
+                "content": {
+                  "type": "error",
+                  "value": "#N/A"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C2",
+                "content": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D2",
+                "content": {
+                  "type": "number",
+                  "value": 0
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISERR(A1:D2),{1,2,4,8;16,32,64,128})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 64
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISNA mixed 2x4",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!A1",
+                "content": {
+                  "type": "number",
+                  "value": 1
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B1",
+                "content": {
+                  "type": "text",
+                  "value": "2"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C1",
+                "content": {
+                  "type": "text",
+                  "value": ""
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D1",
+                "content": {
+                  "type": "blank"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!A2",
+                "content": {
+                  "type": "boolean",
+                  "value": true
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B2",
+                "content": {
+                  "type": "error",
+                  "value": "#N/A"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C2",
+                "content": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D2",
+                "content": {
+                  "type": "number",
+                  "value": 0
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISNA(A1:D2),{1,2,4,8;16,32,64,128})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 32
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISNUMBER mixed 2x4",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!A1",
+                "content": {
+                  "type": "number",
+                  "value": 1
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B1",
+                "content": {
+                  "type": "text",
+                  "value": "2"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C1",
+                "content": {
+                  "type": "text",
+                  "value": ""
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D1",
+                "content": {
+                  "type": "blank"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!A2",
+                "content": {
+                  "type": "boolean",
+                  "value": true
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B2",
+                "content": {
+                  "type": "error",
+                  "value": "#N/A"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C2",
+                "content": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D2",
+                "content": {
+                  "type": "number",
+                  "value": 0
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISNUMBER(A1:D2),{1,2,4,8;16,32,64,128})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 129
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISTEXT mixed 2x4",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!A1",
+                "content": {
+                  "type": "number",
+                  "value": 1
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B1",
+                "content": {
+                  "type": "text",
+                  "value": "2"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C1",
+                "content": {
+                  "type": "text",
+                  "value": ""
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D1",
+                "content": {
+                  "type": "blank"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!A2",
+                "content": {
+                  "type": "boolean",
+                  "value": true
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B2",
+                "content": {
+                  "type": "error",
+                  "value": "#N/A"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C2",
+                "content": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D2",
+                "content": {
+                  "type": "number",
+                  "value": 0
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISTEXT(A1:D2),{1,2,4,8;16,32,64,128})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 6
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISBLANK mixed 2x4",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!A1",
+                "content": {
+                  "type": "number",
+                  "value": 1
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B1",
+                "content": {
+                  "type": "text",
+                  "value": "2"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C1",
+                "content": {
+                  "type": "text",
+                  "value": ""
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D1",
+                "content": {
+                  "type": "blank"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!A2",
+                "content": {
+                  "type": "boolean",
+                  "value": true
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B2",
+                "content": {
+                  "type": "error",
+                  "value": "#N/A"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C2",
+                "content": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D2",
+                "content": {
+                  "type": "number",
+                  "value": 0
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISBLANK(A1:D2),{1,2,4,8;16,32,64,128})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 8
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISLOGICAL mixed 2x4",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!A1",
+                "content": {
+                  "type": "number",
+                  "value": 1
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B1",
+                "content": {
+                  "type": "text",
+                  "value": "2"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C1",
+                "content": {
+                  "type": "text",
+                  "value": ""
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D1",
+                "content": {
+                  "type": "blank"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!A2",
+                "content": {
+                  "type": "boolean",
+                  "value": true
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B2",
+                "content": {
+                  "type": "error",
+                  "value": "#N/A"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C2",
+                "content": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D2",
+                "content": {
+                  "type": "number",
+                  "value": 0
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISLOGICAL(A1:D2),{1,2,4,8;16,32,64,128})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 16
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISNONTEXT mixed 2x4",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!A1",
+                "content": {
+                  "type": "number",
+                  "value": 1
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B1",
+                "content": {
+                  "type": "text",
+                  "value": "2"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C1",
+                "content": {
+                  "type": "text",
+                  "value": ""
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D1",
+                "content": {
+                  "type": "blank"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!A2",
+                "content": {
+                  "type": "boolean",
+                  "value": true
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B2",
+                "content": {
+                  "type": "error",
+                  "value": "#N/A"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C2",
+                "content": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D2",
+                "content": {
+                  "type": "number",
+                  "value": 0
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISNONTEXT(A1:D2),{1,2,4,8;16,32,64,128})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 249
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUMPRODUCT(--ISNUMBER({1,\"2\",FALSE;3,\"\",TRUE}),{1,2,4;8,16,32})",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISNUMBER({1,\"2\",FALSE;3,\"\",TRUE}),{1,2,4;8,16,32})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 9
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUMPRODUCT(--ISLOGICAL({TRUE,FALSE,1,\"TRUE\"}),{1,2,4,8})",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISLOGICAL({TRUE,FALSE,1,\"TRUE\"}),{1,2,4,8})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 3
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISNUMBER(\"1\")",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "ISNUMBER(\"1\")"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "boolean",
+                  "value": false
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISBLANK(IFS(TRUE,))",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "ISBLANK(IFS(TRUE,))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "boolean",
+                  "value": false
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISNONTEXT(IFS(TRUE,))",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "ISNONTEXT(IFS(TRUE,))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "boolean",
+                  "value": true
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISBLANK(IF(TRUE,A20,0))",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "ISBLANK(IF(TRUE,A20,0))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "boolean",
+                  "value": true
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUMPRODUCT(--ISBLANK({,1}),{1,2})",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISBLANK({,1}),{1,2})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUMPRODUCT(--ISNONTEXT({,\"\"}),{1,2})",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISNONTEXT({,\"\"}),{1,2})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 1
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUMPRODUCT(--ISERROR({1,2}),{1,2})",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISERROR({1,2}),{1,2})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISNUMBER({1})",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "ISNUMBER({1})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "boolean",
+                  "value": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "report": {
+        "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+        "verified_at": "2026-10-18T02:08:21.695253+00:00",
+        "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+        "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+        "suite_sha256": {
+          "information-array-probes.json": "6f2fb0856cd3d98eafdf92be4882feff17ecb6c03963b5b94f9cc7c93616a641"
+        },
+        "results": [
+          {
+            "suite": "information-array-probes.json",
+            "name": "ISERROR mixed 2x4",
+            "checks": [
+              {
+                "action": 9,
+                "actual": {
+                  "type": "number",
+                  "value": 96.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "ISERR mixed 2x4",
+            "checks": [
+              {
+                "action": 9,
+                "actual": {
+                  "type": "number",
+                  "value": 64.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "ISNA mixed 2x4",
+            "checks": [
+              {
+                "action": 9,
+                "actual": {
+                  "type": "number",
+                  "value": 32.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "ISNUMBER mixed 2x4",
+            "checks": [
+              {
+                "action": 9,
+                "actual": {
+                  "type": "number",
+                  "value": 145.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "ISTEXT mixed 2x4",
+            "checks": [
+              {
+                "action": 9,
+                "actual": {
+                  "type": "number",
+                  "value": 6.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "ISBLANK mixed 2x4",
+            "checks": [
+              {
+                "action": 9,
+                "actual": {
+                  "type": "number",
+                  "value": 8.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "ISLOGICAL mixed 2x4",
+            "checks": [
+              {
+                "action": 9,
+                "actual": {
+                  "type": "number",
+                  "value": 0.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "ISNONTEXT mixed 2x4",
+            "checks": [
+              {
+                "action": 9,
+                "actual": {
+                  "type": "number",
+                  "value": 249.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "SUMPRODUCT(--ISNUMBER({1,\"2\",FALSE;3,\"\",TRUE}),{1,2,4;8,16,32})",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 45.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "SUMPRODUCT(--ISLOGICAL({TRUE,FALSE,1,\"TRUE\"}),{1,2,4,8})",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 3.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "ISNUMBER(\"1\")",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "boolean",
+                  "value": false
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "ISBLANK(IFS(TRUE,))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "boolean",
+                  "value": false
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "ISNONTEXT(IFS(TRUE,))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "boolean",
+                  "value": true
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "ISBLANK(IF(TRUE,A20,0))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "boolean",
+                  "value": true
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "SUMPRODUCT(--ISBLANK({,1}),{1,2})",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 1.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "SUMPRODUCT(--ISNONTEXT({,\"\"}),{1,2})",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 1.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "SUMPRODUCT(--ISERROR({1,2}),{1,2})",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 0.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-probes.json",
+            "name": "ISNUMBER({1})",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "boolean",
+                  "value": true
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          }
+        ],
+        "summary": {
+          "scenarios": 18,
+          "checks": 18,
+          "corroborated_scenarios": 14,
+          "corroborated_checks": 14
+        }
+      }
+    },
+    {
+      "suite": {
+        "schema_version": 1,
+        "builtin_policy": "ExcelDocumentation",
+        "workbook": {
+          "sheets": [
+            "S"
+          ],
+          "cells": []
+        },
+        "scenarios": [
+          {
+            "name": "ISERROR mixed 2x4",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!A1",
+                "content": {
+                  "type": "number",
+                  "value": 1
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B1",
+                "content": {
+                  "type": "text",
+                  "value": "2"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C1",
+                "content": {
+                  "type": "text",
+                  "value": ""
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D1",
+                "content": {
+                  "type": "blank"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!A2",
+                "content": {
+                  "formula": "TRUE()"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B2",
+                "content": {
+                  "type": "error",
+                  "value": "#N/A"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C2",
+                "content": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D2",
+                "content": {
+                  "type": "number",
+                  "value": 0
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISERROR(A1:D2),{1,2,4,8;16,32,64,128})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 96
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISERR mixed 2x4",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!A1",
+                "content": {
+                  "type": "number",
+                  "value": 1
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B1",
+                "content": {
+                  "type": "text",
+                  "value": "2"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C1",
+                "content": {
+                  "type": "text",
+                  "value": ""
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D1",
+                "content": {
+                  "type": "blank"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!A2",
+                "content": {
+                  "formula": "TRUE()"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B2",
+                "content": {
+                  "type": "error",
+                  "value": "#N/A"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C2",
+                "content": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D2",
+                "content": {
+                  "type": "number",
+                  "value": 0
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISERR(A1:D2),{1,2,4,8;16,32,64,128})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 64
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISNA mixed 2x4",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!A1",
+                "content": {
+                  "type": "number",
+                  "value": 1
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B1",
+                "content": {
+                  "type": "text",
+                  "value": "2"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C1",
+                "content": {
+                  "type": "text",
+                  "value": ""
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D1",
+                "content": {
+                  "type": "blank"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!A2",
+                "content": {
+                  "formula": "TRUE()"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B2",
+                "content": {
+                  "type": "error",
+                  "value": "#N/A"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C2",
+                "content": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D2",
+                "content": {
+                  "type": "number",
+                  "value": 0
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISNA(A1:D2),{1,2,4,8;16,32,64,128})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 32
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISNUMBER mixed 2x4",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!A1",
+                "content": {
+                  "type": "number",
+                  "value": 1
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B1",
+                "content": {
+                  "type": "text",
+                  "value": "2"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C1",
+                "content": {
+                  "type": "text",
+                  "value": ""
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D1",
+                "content": {
+                  "type": "blank"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!A2",
+                "content": {
+                  "formula": "TRUE()"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B2",
+                "content": {
+                  "type": "error",
+                  "value": "#N/A"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C2",
+                "content": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D2",
+                "content": {
+                  "type": "number",
+                  "value": 0
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISNUMBER(A1:D2),{1,2,4,8;16,32,64,128})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 129
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISTEXT mixed 2x4",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!A1",
+                "content": {
+                  "type": "number",
+                  "value": 1
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B1",
+                "content": {
+                  "type": "text",
+                  "value": "2"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C1",
+                "content": {
+                  "type": "text",
+                  "value": ""
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D1",
+                "content": {
+                  "type": "blank"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!A2",
+                "content": {
+                  "formula": "TRUE()"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B2",
+                "content": {
+                  "type": "error",
+                  "value": "#N/A"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C2",
+                "content": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D2",
+                "content": {
+                  "type": "number",
+                  "value": 0
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISTEXT(A1:D2),{1,2,4,8;16,32,64,128})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 6
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISBLANK mixed 2x4",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!A1",
+                "content": {
+                  "type": "number",
+                  "value": 1
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B1",
+                "content": {
+                  "type": "text",
+                  "value": "2"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C1",
+                "content": {
+                  "type": "text",
+                  "value": ""
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D1",
+                "content": {
+                  "type": "blank"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!A2",
+                "content": {
+                  "formula": "TRUE()"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B2",
+                "content": {
+                  "type": "error",
+                  "value": "#N/A"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C2",
+                "content": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D2",
+                "content": {
+                  "type": "number",
+                  "value": 0
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISBLANK(A1:D2),{1,2,4,8;16,32,64,128})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 8
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISLOGICAL mixed 2x4",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!A1",
+                "content": {
+                  "type": "number",
+                  "value": 1
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B1",
+                "content": {
+                  "type": "text",
+                  "value": "2"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C1",
+                "content": {
+                  "type": "text",
+                  "value": ""
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D1",
+                "content": {
+                  "type": "blank"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!A2",
+                "content": {
+                  "formula": "TRUE()"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B2",
+                "content": {
+                  "type": "error",
+                  "value": "#N/A"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C2",
+                "content": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D2",
+                "content": {
+                  "type": "number",
+                  "value": 0
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISLOGICAL(A1:D2),{1,2,4,8;16,32,64,128})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 16
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISNONTEXT mixed 2x4",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!A1",
+                "content": {
+                  "type": "number",
+                  "value": 1
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B1",
+                "content": {
+                  "type": "text",
+                  "value": "2"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C1",
+                "content": {
+                  "type": "text",
+                  "value": ""
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D1",
+                "content": {
+                  "type": "blank"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!A2",
+                "content": {
+                  "formula": "TRUE()"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!B2",
+                "content": {
+                  "type": "error",
+                  "value": "#N/A"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!C2",
+                "content": {
+                  "type": "error",
+                  "value": "#DIV/0!"
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!D2",
+                "content": {
+                  "type": "number",
+                  "value": 0
+                }
+              },
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISNONTEXT(A1:D2),{1,2,4,8;16,32,64,128})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 249
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUMPRODUCT(--ISLOGICAL(IF({1,0},TRUE(),FALSE())),{1,2})",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISLOGICAL(IF({1,0},TRUE(),FALSE())),{1,2})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 3
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUMPRODUCT(--ISNUMBER(IF({1,0},TRUE(),FALSE())),{1,2})",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISNUMBER(IF({1,0},TRUE(),FALSE())),{1,2})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISLOGICAL(TRUE())",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "ISLOGICAL(TRUE())"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "boolean",
+                  "value": true
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUMPRODUCT(--ISBLANK({,1}),{1,2})",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUMPRODUCT(--ISBLANK({,1}),{1,2})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 1
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISBLANK({})",
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "ISBLANK({})"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "boolean",
+                  "value": false
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "report": {
+        "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+        "verified_at": "2026-10-18T02:09:35.596542+00:00",
+        "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+        "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+        "suite_sha256": {
+          "information-array-boolean-controls.json": "c417663cf1b95a079fe96912496d2560ef850c755c92e113bdc4ae186ceb07c3"
+        },
+        "results": [
+          {
+            "suite": "information-array-boolean-controls.json",
+            "name": "ISERROR mixed 2x4",
+            "checks": [
+              {
+                "action": 9,
+                "actual": {
+                  "type": "number",
+                  "value": 96.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-boolean-controls.json",
+            "name": "ISERR mixed 2x4",
+            "checks": [
+              {
+                "action": 9,
+                "actual": {
+                  "type": "number",
+                  "value": 64.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-boolean-controls.json",
+            "name": "ISNA mixed 2x4",
+            "checks": [
+              {
+                "action": 9,
+                "actual": {
+                  "type": "number",
+                  "value": 32.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-boolean-controls.json",
+            "name": "ISNUMBER mixed 2x4",
+            "checks": [
+              {
+                "action": 9,
+                "actual": {
+                  "type": "number",
+                  "value": 145.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "information-array-boolean-controls.json",
+            "name": "ISTEXT mixed 2x4",
+            "checks": [
+              {
+                "action": 9,
+                "actual": {
+                  "type": "number",
+                  "value": 6.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-boolean-controls.json",
+            "name": "ISBLANK mixed 2x4",
+            "checks": [
+              {
+                "action": 9,
+                "actual": {
+                  "type": "number",
+                  "value": 8.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-boolean-controls.json",
+            "name": "ISLOGICAL mixed 2x4",
+            "checks": [
+              {
+                "action": 9,
+                "actual": {
+                  "type": "number",
+                  "value": 0.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "information-array-boolean-controls.json",
+            "name": "ISNONTEXT mixed 2x4",
+            "checks": [
+              {
+                "action": 9,
+                "actual": {
+                  "type": "number",
+                  "value": 249.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-boolean-controls.json",
+            "name": "SUMPRODUCT(--ISLOGICAL(IF({1,0},TRUE(),FALSE())),{1,2})",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 0.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "information-array-boolean-controls.json",
+            "name": "SUMPRODUCT(--ISNUMBER(IF({1,0},TRUE(),FALSE())),{1,2})",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 3.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "information-array-boolean-controls.json",
+            "name": "ISLOGICAL(TRUE())",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "boolean",
+                  "value": true
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-boolean-controls.json",
+            "name": "SUMPRODUCT(--ISBLANK({,1}),{1,2})",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 1.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "information-array-boolean-controls.json",
+            "name": "ISBLANK({})",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "boolean",
+                  "value": true
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          }
+        ],
+        "summary": {
+          "scenarios": 13,
+          "checks": 13,
+          "corroborated_scenarios": 8,
+          "corroborated_checks": 8
+        }
+      }
+    }
+  ]
+}

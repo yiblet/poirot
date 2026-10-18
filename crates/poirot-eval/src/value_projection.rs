@@ -2,6 +2,27 @@
 use super::*;
 
 impl<'a> Session<'a> {
+    /// Publish worksheet results before memoization; ad hoc expressions use result_scalar.
+    pub(super) fn worksheet_result(
+        &mut self,
+        sheet: usize,
+        address: CellAddress,
+        mut value: Value,
+    ) -> EvalResult<CellValue> {
+        if self.array_result_policy == ArrayResultPolicy::DynamicSpill
+            && let Value::Array(rows) = &mut value
+        {
+            for member in rows.values.iter_mut().flatten() {
+                // TODO(coercion-non-argument): [LOW] Each published spill member becomes a worksheet value; inline array members retain blanks.
+                poirot_coercionv2::coerce_worksheet_formula_result(member);
+            }
+        }
+        let mut result = self.result_scalar(sheet, address, value)?;
+        // TODO(coercion-non-argument): [LOW] Completed worksheet formulas expose numeric zero for a remaining blank; reads and intermediate selections preserve identity.
+        poirot_coercionv2::coerce_worksheet_formula_result(&mut result);
+        Ok(result)
+    }
+
     /// Publish a final dynamic array or project a supported final result to a scalar.
     pub(super) fn result_scalar(
         &mut self,

@@ -25,14 +25,18 @@ footprints remain unevaluated, and lazy branches retain ordinary selection. Admi
 retention for the entire anchor/child batch before changing the memo.
 
 Supported static geometry includes rectangular array constants, unary and binary
-operators, TRANSPOSE, MMULT, MINVERSE, FREQUENCY, and bounded
-IF/IFERROR/IFNA/CHOOSE branches. Operands can
+operators, TRANSPOSE, MMULT, MINVERSE, FREQUENCY, bounded
+IF/IFERROR/IFNA/IFS/SWITCH/CHOOSE expressions, and the exact information
+predicates listed below. Operands can
 be literal arrays, bounded cell ranges, scalar literals/expressions, or nested
 bounded producers. Geometry discovery uses bounds captured during compilation, not expected values, and
 does not evaluate unrelated producers with a known disjoint footprint. Lazy
 branch selection remains in the evaluator. Under `ExcelDocumentation`, TRANSPOSE
 preserves numbers, exact text/UTF-16 units, booleans, individual errors and
-reference blanks. Spill publication and cached children preserve blanks too.
+reference blanks inside expressions. Completed worksheet formula publication
+converts remaining blanks to numeric zero, including spill members, before
+memoization and downstream reads. Physical empty cells remain blank; empty text
+remains text. Ad hoc expression evaluation does not publish worksheet results.
 Numeric matrix functions retain their existing separate kernels and
 admission/coercion contracts.
 
@@ -60,6 +64,29 @@ non-singleton axis produces `#VALUE!` for those elements; for example,
 POI rather than claiming Excel parity. References must resolve to one rectangular
 sheet area with supported static geometry. Whole-row/column, computed-reference,
 and reference-combination geometry is not inferred for operator publication.
+
+Under `ExcelDocumentation`, IF, IFS, SWITCH and CHOOSE select results per array
+position. Explicit arrays retain their rectangular identity, including 1x1
+arrays; references participate when the caller requests array evaluation.
+Singleton axes broadcast. Scalar selectors retain their existing lazy reference
+and omission channels, and `PinnedPoi` retains scalar selection. IF uses
+non-singleton condition axes as its extent and returns `#N/A` for exhausted
+selected branch axes. IFS/SWITCH/CHOOSE reject incompatible needed non-singleton
+extents with `#VALUE!`. Only needed branches are evaluated, once each; reference
+members remain deferred. Compound branches execute as a whole when needed.
+
+The exact predicates ISERROR, ISERR, ISNA, ISNUMBER, ISTEXT, ISBLANK, ISLOGICAL
+and ISNONTEXT inspect retained members without converting their types under
+`ExcelDocumentation`. They preserve array shape; scalar projection, ISREF, TYPE,
+N and T retain their own existing contracts. Bounded selector and predicate
+footprints include their controlling inputs for child-before-anchor discovery.
+
+This is bounded support, not complete Calc shape parity. Calc can inspect unused
+argument shapes, pad short operands, or admit booleans differently. Materialized
+selector members retain the rectangular reader's missing-to-blank limitation;
+no new omission state is introduced. The individual
+[selector contracts](../../poirot-test-json/evidence/master-compat-reconciliation.md)
+record the retained differences and independent falsifying probes.
 
 Explicit `@` selects a scalar. CSE arrays and dynamic `#` reference syntax are
 not implemented by this policy. Ordinary family scalar consumers retain their

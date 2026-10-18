@@ -301,7 +301,8 @@ impl<'a> EvaluationRun<'a> {
     ) -> Result<CellValue, EvaluationFailure> {
         self.session.cell(target.sheet, target.address)
     }
-    /// Evaluate a supplied prepared formula at the given coordinates.
+    /// Evaluate a supplied prepared expression at the given coordinates.
+    /// This does not publish a worksheet cell; blank expression results remain blank.
     pub fn evaluate_formula(
         &mut self,
         target: EvaluationTarget,
@@ -309,7 +310,7 @@ impl<'a> EvaluationRun<'a> {
     ) -> Result<CellValue, EvaluationFailure> {
         self.session.prepared_at(target, formula)
     }
-    /// Evaluate supplied bound syntax at the given coordinates.
+    /// Evaluate supplied bound syntax at the given coordinates without worksheet publication.
     pub fn evaluate_bound(
         &mut self,
         target: EvaluationTarget,

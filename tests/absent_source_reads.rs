@@ -80,13 +80,13 @@ macro_rules! source_read_test {
             let mut applied = source.clone();
             applied.apply(changes).unwrap();
             assert!(applied.sheet(0).unwrap().get(at("A1").address).is_none());
-            // A formula's actual blank result replaces a stale cache and retains the formula.
+            // Worksheet publication replaces a stale cache with zero and retains the formula.
             runtime.set_formula(at("Z100"), "IF(TRUE,,)").unwrap();
             runtime.set_cached_value(at("Z100"), 99.).unwrap();
-            assert_eq!(read(&mut runtime, at("Z100")), CellValue::Blank);
+            assert_eq!(read(&mut runtime, at("Z100")), CellValue::Number(0.));
             let changes = runtime.changes();
             assert!(changes.iter().any(|change| matches!(change,
-                WorkbookChange::SetCachedValue { address, value: CellValue::Blank, .. }
+                WorkbookChange::SetCachedValue { address, value: CellValue::Number(0.), .. }
                 if *address == at("Z100").address
             )));
             let mut applied = source.clone();
@@ -97,7 +97,7 @@ macro_rules! source_read_test {
             assert!(reopened.workbook().sheet(0).unwrap().get(at("A2").address).is_none());
             let cell = reopened.workbook().sheet(0).unwrap().get(at("Z100").address).unwrap();
             assert_eq!(cell.formula.as_deref(), Some("IF(TRUE,,)"));
-            assert_eq!(cell.value, CellValue::Blank);
+            assert_eq!(cell.value, CellValue::Number(0.));
         }
     };
 }
@@ -178,7 +178,7 @@ fn absent_reads_and_retained_results_survive_snapshot_without_authoring_cells() 
 }
 
 #[test]
-fn blank_spill_children_still_publish_without_authoring_the_blank_input() {
+fn blank_spill_children_publish_zero_without_authoring_the_blank_input() {
     let source = book();
     let context = EvaluationContext::default();
     let policy = poirot::OverlayPolicy {
@@ -208,19 +208,19 @@ fn blank_spill_children_still_publish_without_authoring_the_blank_input() {
             .unwrap(),
         CellValue::Text("a".into())
     );
-    assert_eq!(direct.cell(at("AA100")).unwrap(), CellValue::Blank);
+    assert_eq!(direct.cell(at("AA100")).unwrap(), CellValue::Number(0.));
     assert_eq!(
         overlay
             .evaluation(&context)
             .unwrap()
             .cell(at("AA100"))
             .unwrap(),
-        CellValue::Blank
+        CellValue::Number(0.)
     );
     let changes = direct.changes();
     assert_eq!(changes, overlay.changes());
     assert!(changes.iter().any(|change| matches!(change,
-        WorkbookChange::SetSpillCachedValue { address, value: CellValue::Blank, .. }
+        WorkbookChange::SetSpillCachedValue { address, value: CellValue::Number(0.), .. }
         if *address == at("AA100").address
     )));
     let mut applied = source.clone();

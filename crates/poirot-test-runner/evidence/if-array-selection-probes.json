@@ -1,0 +1,1165 @@
+{
+  "purpose": "Discriminating IF shape and origin probes run before implementation choices. Diagnostic expected zeros were placeholders, not claimed oracle expectations. All disagreements and the rejected invalid array-expression probe are retained. No Poirot results supply expectations.",
+  "runs": [
+    {
+      "source": {
+        "schema_version": 1,
+        "builtin_policy": "ExcelDocumentation",
+        "workbook": {
+          "sheets": [
+            "S"
+          ],
+          "cells": [
+            {
+              "cell": "S!A1",
+              "content": {
+                "type": "blank"
+              }
+            },
+            {
+              "cell": "S!B1",
+              "content": {
+                "formula": "A1"
+              }
+            },
+            {
+              "cell": "S!B2",
+              "content": {
+                "formula": "IF(TRUE,A1,42)"
+              }
+            },
+            {
+              "cell": "S!B3",
+              "content": {
+                "formula": "IFNA(A1,42)"
+              }
+            },
+            {
+              "cell": "S!J1",
+              "content": {
+                "type": "number",
+                "value": 1
+              }
+            },
+            {
+              "cell": "S!K1",
+              "content": {
+                "type": "blank"
+              }
+            },
+            {
+              "cell": "S!B4",
+              "content": {
+                "formula": "VLOOKUP(1,J1:K1,2,FALSE)"
+              }
+            }
+          ]
+        },
+        "scenarios": [
+          {
+            "name": "SUM(IF({TRUE,FALSE,TRUE},2,{30,5,70}))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actuals."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF({TRUE,FALSE,TRUE},2,{30,5,70}))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IF({TRUE;FALSE},{1,2,3},{10,20,30}))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actuals."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF({TRUE;FALSE},{1,2,3},{10,20,30}))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IF({TRUE,FALSE,TRUE},{1,2},9))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actuals."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF({TRUE,FALSE,TRUE},{1,2},9))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IF({TRUE,FALSE},{1,2,3},9))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actuals."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF({TRUE,FALSE},{1,2,3},9))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IF({TRUE,TRUE},2,{10,20,30}))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actuals."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF({TRUE,TRUE},2,{10,20,30}))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IF({TRUE,FALSE},2,{10,20,30}))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actuals."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF({TRUE,FALSE},2,{10,20,30}))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IF(TRUE,{1,2,3},{10,20,30,40}))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actuals."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF(TRUE,{1,2,3},{10,20,30,40}))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IF({TRUE,TRUE},2,1/0))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actuals."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF({TRUE,TRUE},2,1/0))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IF({TRUE,FALSE},{1,1/0},{1/0,2}))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actuals."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF({TRUE,FALSE},{1,1/0},{1/0,2}))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IF({TRUE,FALSE},{1;2;3},9))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actuals."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF({TRUE,FALSE},{1;2;3},9))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IF({TRUE,FALSE},A1,9))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actuals."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF({TRUE,FALSE},A1,9))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "COUNT(IF({TRUE,FALSE},A1,9))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actuals."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "COUNT(IF({TRUE,FALSE},A1,9))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IF({TRUE,FALSE},{1,2},))",
+            "evidence": [
+              "Independent diagnostic; expected zero is a placeholder, retain actuals."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF({TRUE,FALSE},{1,2},))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "calc": {
+        "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+        "verified_at": "2026-10-18T01:54:24.302593+00:00",
+        "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+        "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+        "suite_sha256": {
+          "if-array-probes.json": "0e7a54405c5cc9094922790eb9af1e0367118859e0c30ccf2bef238609663568"
+        },
+        "results": [
+          {
+            "suite": "if-array-probes.json",
+            "name": "SUM(IF({TRUE,FALSE,TRUE},2,{30,5,70}))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 9.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-probes.json",
+            "name": "SUM(IF({TRUE;FALSE},{1,2,3},{10,20,30}))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 66.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-probes.json",
+            "name": "SUM(IF({TRUE,FALSE,TRUE},{1,2},9))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#N/A"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-probes.json",
+            "name": "SUM(IF({TRUE,FALSE},{1,2,3},9))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 10.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-probes.json",
+            "name": "SUM(IF({TRUE,TRUE},2,{10,20,30}))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 4.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-probes.json",
+            "name": "SUM(IF({TRUE,FALSE},2,{10,20,30}))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 22.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-probes.json",
+            "name": "SUM(IF(TRUE,{1,2,3},{10,20,30,40}))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 6.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-probes.json",
+            "name": "SUM(IF({TRUE,TRUE},2,1/0))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 4.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-probes.json",
+            "name": "SUM(IF({TRUE,FALSE},{1,1/0},{1/0,2}))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#N/A"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-probes.json",
+            "name": "SUM(IF({TRUE,FALSE},{1;2;3},9))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 33.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-probes.json",
+            "name": "SUM(IF({TRUE,FALSE},A1,9))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 9.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-probes.json",
+            "name": "COUNT(IF({TRUE,FALSE},A1,9))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 1.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-probes.json",
+            "name": "SUM(IF({TRUE,FALSE},{1,2},))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 1.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          }
+        ],
+        "summary": {
+          "scenarios": 13,
+          "checks": 13,
+          "corroborated_scenarios": 0,
+          "corroborated_checks": 0
+        }
+      }
+    },
+    {
+      "source": {
+        "schema_version": 1,
+        "builtin_policy": "ExcelDocumentation",
+        "workbook": {
+          "sheets": [
+            "S"
+          ],
+          "cells": [
+            {
+              "cell": "S!A1",
+              "content": {
+                "type": "blank"
+              }
+            },
+            {
+              "cell": "S!B1",
+              "content": {
+                "formula": "A1"
+              }
+            },
+            {
+              "cell": "S!B2",
+              "content": {
+                "formula": "IF(TRUE,A1,42)"
+              }
+            },
+            {
+              "cell": "S!B3",
+              "content": {
+                "formula": "IFNA(A1,42)"
+              }
+            },
+            {
+              "cell": "S!J1",
+              "content": {
+                "type": "number",
+                "value": 1
+              }
+            },
+            {
+              "cell": "S!K1",
+              "content": {
+                "type": "blank"
+              }
+            },
+            {
+              "cell": "S!B4",
+              "content": {
+                "formula": "VLOOKUP(1,J1:K1,2,FALSE)"
+              }
+            }
+          ]
+        },
+        "scenarios": [
+          {
+            "name": "ISREF(IF(TRUE,A1:A3,0))",
+            "evidence": [
+              "Diagnostic; placeholder expected zero."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "ISREF(IF(TRUE,A1:A3,0))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "ISREF(IF({TRUE},A1:A3,0))",
+            "evidence": [
+              "Diagnostic; placeholder expected zero."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "ISREF(IF({TRUE},A1:A3,0))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "COUNT(IF(TRUE,IFS(TRUE,),0))",
+            "evidence": [
+              "Diagnostic; placeholder expected zero."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "COUNT(IF(TRUE,IFS(TRUE,),0))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "COUNT(IF({TRUE},IFS(TRUE,),0))",
+            "evidence": [
+              "Diagnostic; placeholder expected zero."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "COUNT(IF({TRUE},IFS(TRUE,),0))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "COUNT(IF({TRUE,FALSE},IFS(TRUE,),9))",
+            "evidence": [
+              "Diagnostic; placeholder expected zero."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "COUNT(IF({TRUE,FALSE},IFS(TRUE,),9))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "COUNT(IF({TRUE,FALSE},,9))",
+            "evidence": [
+              "Diagnostic; placeholder expected zero."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "COUNT(IF({TRUE,FALSE},,9))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "COUNT(IF({TRUE,FALSE},IF(TRUE,),9))",
+            "evidence": [
+              "Diagnostic; placeholder expected zero."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "COUNT(IF({TRUE,FALSE},IF(TRUE,),9))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IF({TRUE,FALSE},A1:A2,B1:B2))",
+            "evidence": [
+              "Diagnostic; placeholder expected zero."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF({TRUE,FALSE},A1:A2,B1:B2))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IF({TRUE,FALSE},{1,#DIV/0!},{#DIV/0!,2}))",
+            "evidence": [
+              "Diagnostic; placeholder expected zero."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF({TRUE,FALSE},{1,#DIV/0!},{#DIV/0!,2}))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 0
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "calc": {
+        "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+        "verified_at": "2026-10-18T01:58:35.638864+00:00",
+        "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+        "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+        "suite_sha256": {
+          "if-array-origin-probes.json": "56e366b9fc6925c663be7e3b5cbd1eb1c142c1ab718c29f0d17056ccd04d7548"
+        },
+        "results": [
+          {
+            "suite": "if-array-origin-probes.json",
+            "name": "ISREF(IF(TRUE,A1:A3,0))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "boolean",
+                  "value": true
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-origin-probes.json",
+            "name": "ISREF(IF({TRUE},A1:A3,0))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "boolean",
+                  "value": false
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-origin-probes.json",
+            "name": "COUNT(IF(TRUE,IFS(TRUE,),0))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 1.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-origin-probes.json",
+            "name": "COUNT(IF({TRUE},IFS(TRUE,),0))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 1.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-origin-probes.json",
+            "name": "COUNT(IF({TRUE,FALSE},IFS(TRUE,),9))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 2.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-origin-probes.json",
+            "name": "COUNT(IF({TRUE,FALSE},,9))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 2.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-origin-probes.json",
+            "name": "COUNT(IF({TRUE,FALSE},IF(TRUE,),9))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 1.0
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          },
+          {
+            "suite": "if-array-origin-probes.json",
+            "name": "SUM(IF({TRUE,FALSE},A1:A2,B1:B2))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 0.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "if-array-origin-probes.json",
+            "name": "SUM(IF({TRUE,FALSE},{1,#DIV/0!},{#DIV/0!,2}))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#N/A"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          }
+        ],
+        "summary": {
+          "scenarios": 9,
+          "checks": 9,
+          "corroborated_scenarios": 1,
+          "corroborated_checks": 1
+        }
+      }
+    },
+    {
+      "source": {
+        "schema_version": 1,
+        "builtin_policy": "ExcelDocumentation",
+        "workbook": {
+          "sheets": [
+            "S"
+          ],
+          "cells": [
+            {
+              "cell": "S!P1",
+              "content": {
+                "type": "number",
+                "value": 1
+              }
+            },
+            {
+              "cell": "S!P2",
+              "content": {
+                "type": "error",
+                "value": "#DIV/0!"
+              }
+            },
+            {
+              "cell": "S!Q1",
+              "content": {
+                "type": "error",
+                "value": "#DIV/0!"
+              }
+            },
+            {
+              "cell": "S!Q2",
+              "content": {
+                "type": "number",
+                "value": 2
+              }
+            }
+          ]
+        },
+        "scenarios": [
+          {
+            "name": "SUM(IF({TRUE;FALSE},P1:P2,Q1:Q2))",
+            "evidence": [
+              "Expected sums authored from selected1and2, or selected1and9; error-valued unselected positions must not escape."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF({TRUE;FALSE},P1:P2,Q1:Q2))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 3
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IF({TRUE;FALSE},P1:P2,9))",
+            "evidence": [
+              "Expected sums authored from selected1and2, or selected1and9; error-valued unselected positions must not escape."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF({TRUE;FALSE},P1:P2,9))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 10
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUM(IF({TRUE;FALSE},P1:P2,Q1:Q2+0))",
+            "evidence": [
+              "Expected sums authored from selected1and2, or selected1and9; error-valued unselected positions must not escape."
+            ],
+            "actions": [
+              {
+                "action": "set",
+                "cell": "S!Z100",
+                "content": {
+                  "formula": "SUM(IF({TRUE;FALSE},P1:P2,Q1:Q2+0))"
+                }
+              },
+              {
+                "action": "check",
+                "cell": "S!Z100",
+                "expected": {
+                  "type": "number",
+                  "value": 3
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "calc": {
+        "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+        "verified_at": "2026-10-18T02:01:25.263211+00:00",
+        "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+        "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+        "suite_sha256": {
+          "if-array-errors-probes.json": "f3c20df60e17d526a81a100d032f7ef922c8a34d4fa59332c560ab6804897eac"
+        },
+        "results": [
+          {
+            "suite": "if-array-errors-probes.json",
+            "name": "SUM(IF({TRUE;FALSE},P1:P2,Q1:Q2))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 3.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "if-array-errors-probes.json",
+            "name": "SUM(IF({TRUE;FALSE},P1:P2,9))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "number",
+                  "value": 10.0
+                },
+                "agrees": true
+              }
+            ],
+            "agrees": true
+          },
+          {
+            "suite": "if-array-errors-probes.json",
+            "name": "SUM(IF({TRUE;FALSE},P1:P2,Q1:Q2+0))",
+            "checks": [
+              {
+                "action": 1,
+                "actual": {
+                  "type": "error",
+                  "value": "#VALUE!"
+                },
+                "agrees": false
+              }
+            ],
+            "agrees": false
+          }
+        ],
+        "summary": {
+          "scenarios": 3,
+          "checks": 3,
+          "corroborated_scenarios": 2,
+          "corroborated_checks": 2
+        }
+      }
+    }
+  ]
+}

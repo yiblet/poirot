@@ -309,7 +309,8 @@ fn prepared_qualified_names_retain_typed_potential_and_consumed_scope_queries() 
         (
             "IF(FALSE,MissingSheet!Rate,7)",
             CellValue::Number(7.),
-            vec![],
+            // The skipped name has no reads; IF still selects profile-dependent semantics.
+            vec![DependencyRead::BuiltinPolicy],
         ),
     ] {
         let prepared = compiler.compile_formula(formula, &policy);

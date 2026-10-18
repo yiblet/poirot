@@ -1,4 +1,5 @@
 //! Information family handles error values rather than propagating them uniformly.
+use crate::array_operator::Shape;
 use crate::host::{CallHost, MissingPolicy};
 use crate::*;
 impl Session<'_> {
@@ -25,29 +26,53 @@ impl Session<'_> {
             function,
             IsError | IsErr | IsNa | IsNumber | IsText | IsBlank | IsLogical | IsNonText
         ) {
-            // LogicalFunction classifies the resolved ValueEval without coercion.
-            // MissingArgEval is not BlankEval, including when selected by IFS.
-            // OperandResolver selection errors are classified as ErrorEval;
-            // operational failures still abort the evaluation.
-            let (value, missing) =
-                match CallHost::new(self, s, at, args).scalar_data(0, MissingPolicy::Blank) {
-                    Ok(operand) => (operand.value, operand.missing),
-                    Err(FunctionFailure::Spreadsheet(error)) => (Error(error), false),
-                    Err(FunctionFailure::Operational(failure)) => return Err(failure),
-                };
-            let result = match function {
-                IsError => !missing && matches!(value, Error(_)),
-                IsErr => !missing && matches!(value, Error(error) if error != NA),
-                IsNa => !missing && value == Error(NA),
-                IsNumber => !missing && matches!(value, Number(_)),
-                IsText => !missing && value.text_ref().is_some(),
-                IsBlank => !missing && value == Blank,
-                IsLogical => !missing && matches!(value, Boolean(_)),
-                IsNonText => missing || value.text_ref().is_none(),
-                // SAFETY: The classifier-only match is guarded by those exact variants, and that branch returns before the later non-classifier match.
-                _ => unreachable!("classifier dispatch"),
+            self.read(DependencyRead::BuiltinPolicy);
+            let modern = self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation;
+            let mut host = if modern {
+                CallHost::new_inheriting(self, s, at, args)
+            } else {
+                CallHost::new(self, s, at, args)
             };
-            return Ok(Boolean(result).into());
+            if modern {
+                let retains_array = match semantic(host.retains_array(0))? {
+                    Ok(retains_array) => retains_array,
+                    Err(error) => {
+                        return information_predicate(function, &Error(error), false)
+                            .map(Value::from);
+                    }
+                };
+                if retains_array {
+                    let operand = match semantic(host.argument(0))? {
+                        Ok(operand) => operand,
+                        Err(error) => {
+                            return information_predicate(function, &Error(error), false)
+                                .map(Value::from);
+                        }
+                    };
+                    drop(host);
+                    let shape = Shape::inspect(operand.value()).ok_or_else(|| {
+                        self.spill_unsupported(
+                            s,
+                            at,
+                            "information predicate requires one bounded rectangular operand",
+                        )
+                    })?;
+                    let rows = self.rectangular_array(at, shape, |session, row, column| {
+                        let value =
+                            session.rectangular_element(operand.value(), shape, row, column)?;
+                        information_predicate(function, &value, operand.missing_at(row, column))
+                    })?;
+                    return Ok(Value::Array(rows));
+                }
+            }
+            // MissingArgEval is not BlankEval, including when selected by IFS.
+            // Spreadsheet errors remain inspectable data; operational failures escape.
+            let (value, missing) = match host.scalar_data(0, MissingPolicy::Blank) {
+                Ok(operand) => (operand.value, operand.missing),
+                Err(FunctionFailure::Spreadsheet(error)) => (Error(error), false),
+                Err(FunctionFailure::Operational(failure)) => return Err(failure),
+            };
+            return information_predicate(function, &value, missing).map(Value::from);
         }
         let value = self.argument(s, at, args, 0)?;
         Ok(match function {
@@ -67,6 +92,27 @@ impl Session<'_> {
             }
         })
     }
+}
+
+/// Exact type inspection neither parses text nor converts blank, omission, or errors.
+fn information_predicate(
+    function: InformationFunction,
+    value: &CellValue,
+    missing: bool,
+) -> EvalResult<CellValue> {
+    use InformationFunction::*;
+    let result = match function {
+        IsError => !missing && matches!(value, Error(_)),
+        IsErr => !missing && matches!(value, Error(error) if *error != NA),
+        IsNa => !missing && *value == Error(NA),
+        IsNumber => !missing && matches!(value, Number(_)),
+        IsText => !missing && value.text_ref().is_some(),
+        IsBlank => !missing && *value == Blank,
+        IsLogical => !missing && matches!(value, Boolean(_)),
+        IsNonText => missing || value.text_ref().is_none(),
+        _ => return Err(EvaluationFailure::StalePlan),
+    };
+    Ok(Boolean(result))
 }
 
 /// N converts booleans to numbers and other nonnumeric, nonerror values to zero.

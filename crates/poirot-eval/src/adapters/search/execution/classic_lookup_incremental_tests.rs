@@ -35,7 +35,7 @@ fn matching_insertions_removals_and_unrelated_edits_validate_consumed_guards() {
     overlay.set_value(later, 7.).unwrap();
     run(&mut overlay, Number(42.), 0);
     overlay.remove_cell(a).unwrap();
-    run(&mut overlay, Blank, 1);
+    run(&mut overlay, Number(0.), 1);
     overlay.remove_cell(later).unwrap();
     run(&mut overlay, Number(99.), 1);
 }

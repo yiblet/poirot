@@ -1,0 +1,737 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-18T02:27:11.141985+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "excel-compat-selector-sibling-arrays.json": "099a2a7f9c60a1948ff3ae88a1991bf7e8ef81a6a20122b11c4a25f6d7187348"
+  },
+  "results": [
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under SUM array conditions with scalar default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under COUNT array conditions with scalar default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under PRODUCT array conditions with scalar default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 105.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MIN array conditions with scalar default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MAX array conditions with scalar default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under AVERAGE array conditions with scalar default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MEDIAN array conditions with scalar default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under SUMSQ array conditions with scalar default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 83.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under SUM first true condition at each position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 13.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under COUNT first true condition at each position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under PRODUCT first true condition at each position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 63.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MIN first true condition at each position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MAX first true condition at each position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under AVERAGE first true condition at each position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.33333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MEDIAN first true condition at each position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under SUMSQ first true condition at each position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 67.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under SUM array expression with typed branch values",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under COUNT array expression with typed branch values",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under PRODUCT array expression with typed branch values",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 105.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MIN array expression with typed branch values",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MAX array expression with typed branch values",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under AVERAGE array expression with typed branch values",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MEDIAN array expression with typed branch values",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under SUMSQ array expression with typed branch values",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 83.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under SUM duplicate case uses first match and default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under COUNT duplicate case uses first match and default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under PRODUCT duplicate case uses first match and default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 105.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MIN duplicate case uses first match and default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MAX duplicate case uses first match and default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under AVERAGE duplicate case uses first match and default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MEDIAN duplicate case uses first match and default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under SUMSQ duplicate case uses first match and default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 83.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under SUM array indices select corresponding branch positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under COUNT array indices select corresponding branch positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under PRODUCT array indices select corresponding branch positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 105.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MIN array indices select corresponding branch positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MAX array indices select corresponding branch positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under AVERAGE array indices select corresponding branch positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MEDIAN array indices select corresponding branch positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under SUMSQ array indices select corresponding branch positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 83.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under SUM array indices retain every selected scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 31.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under COUNT array indices retain every selected scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under PRODUCT array indices retain every selected scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1001.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MIN array indices retain every selected scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MAX array indices retain every selected scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 13.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under AVERAGE array indices retain every selected scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.3333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MEDIAN array indices retain every selected scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under SUMSQ array indices retain every selected scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 339.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 48,
+    "checks": 48,
+    "corroborated_scenarios": 48,
+    "corroborated_checks": 48
+  }
+}

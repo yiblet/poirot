@@ -521,7 +521,8 @@ pub(crate) fn spill_shape(expr: &poirot_formula::Expr) -> Option<(u64, u64)> {
                 let (r, c) = operand_shape(args.first()?)?;
                 Some((c, r))
             }
-            "MINVERSE" => operand_shape(args.first()?),
+            "MINVERSE" | "ISERROR" | "ISERR" | "ISNA" | "ISNUMBER" | "ISTEXT" | "ISBLANK"
+            | "ISLOGICAL" | "ISNONTEXT" => operand_shape(args.first()?),
             "MMULT" => Some((
                 operand_shape(args.first()?)?.0,
                 operand_shape(args.get(1)?)?.1,
@@ -530,9 +531,8 @@ pub(crate) fn spill_shape(expr: &poirot_formula::Expr) -> Option<(u64, u64)> {
                 let (r, c) = operand_shape(args.get(1)?)?;
                 Some((r.checked_mul(c)?.checked_add(1)?, 1))
             }
-            "IF" | "CHOOSE" => args
+            "IF" | "IFS" | "SWITCH" | "CHOOSE" => args
                 .iter()
-                .skip(1)
                 .filter_map(operand_shape)
                 .reduce(|a, b| (a.0.max(b.0), a.1.max(b.1))),
             "IFERROR" | "IFNA" => args
@@ -580,6 +580,15 @@ fn operand_shape(expr: &poirot_formula::Expr) -> Option<(u64, u64)> {
                             | registry::LogicalFunction::Choose
                             | registry::LogicalFunction::Ifs
                             | registry::LogicalFunction::Switch
+                    ) | FunctionId::Information(
+                        registry::InformationFunction::IsError
+                            | registry::InformationFunction::IsErr
+                            | registry::InformationFunction::IsNa
+                            | registry::InformationFunction::IsNumber
+                            | registry::InformationFunction::IsText
+                            | registry::InformationFunction::IsBlank
+                            | registry::InformationFunction::IsLogical
+                            | registry::InformationFunction::IsNonText
                     ) | FunctionId::Reference(
                         registry::ReferenceFunction::Indirect
                             | registry::ReferenceFunction::Offset
@@ -616,8 +625,10 @@ pub(crate) fn unbounded_producer(expr: &poirot_formula::Expr) -> bool {
         }
         E::Function { name, args } => match name.to_ascii_uppercase().as_str() {
             "TRANSPOSE" | "MMULT" | "MINVERSE" | "FREQUENCY" => spill_shape(expr).is_none(),
+            "ISERROR" | "ISERR" | "ISNA" | "ISNUMBER" | "ISTEXT" | "ISBLANK" | "ISLOGICAL"
+            | "ISNONTEXT" => args.iter().any(unbounded_producer),
             "TREND" => true,
-            "IF" | "CHOOSE" => args.iter().skip(1).any(unbounded_producer),
+            "IF" | "IFS" | "SWITCH" | "CHOOSE" => args.iter().any(unbounded_producer),
             "IFERROR" | "IFNA" => args.iter().any(unbounded_producer),
             _ => false,
         },

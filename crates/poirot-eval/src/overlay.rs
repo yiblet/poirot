@@ -273,7 +273,7 @@ fn result_change(
     // An implicit blank is an evaluation value, not authored source. Reads may
     // memoize it, but only source edits or spill publication can create a cell.
     // Authored blank edits are emitted separately by source_changes; formula
-    // cells remain present here and can still publish a genuinely blank cache.
+    // cells remain present here and publish their completed worksheet result.
     if source.is_none() && matches!(value, CellValue::Blank) {
         return None;
     }

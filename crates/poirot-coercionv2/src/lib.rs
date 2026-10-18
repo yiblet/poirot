@@ -80,3 +80,12 @@ pub mod combinations;
 
 /// Power-series scalar and collection admission.
 pub mod series;
+
+/// Publish a completed worksheet formula member without changing empty text.
+/// Intermediate expressions and physical empty cells must not request this policy.
+// TODO(coercion-non-argument): [LOW] Worksheet publication intentionally loses blank identity; invoking it during expression evaluation would change predicates and selection.
+pub fn coerce_worksheet_formula_result(value: &mut CellValue) {
+    if matches!(value, CellValue::Blank) {
+        *value = CellValue::Number(0.0);
+    }
+}

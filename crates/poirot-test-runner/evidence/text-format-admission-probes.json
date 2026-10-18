@@ -1,0 +1,907 @@
+{
+  "scope": "TEXT value admission diagnostics. Hypotheses were recorded before observation; disagreements are retained and do not amend target contracts. No native Excel execution is available.",
+  "source": "https://support.microsoft.com/en-au/excel/functions/text-function",
+  "en_us": {
+    "input": {
+      "schema_version": 1,
+      "builtin_policy": "ExcelDocumentation",
+      "workbook": {
+        "sheets": [
+          "Sheet1"
+        ],
+        "cells": []
+      },
+      "scenarios": [
+        {
+          "name": "time",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"15:43:09\",\"H:MM:ss AM/PM\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "3:43:09 PM"
+              }
+            }
+          ]
+        },
+        {
+          "name": "midnight",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"00:00:00\",\"h:mm AM/PM\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "12:00 AM"
+              }
+            }
+          ]
+        },
+        {
+          "name": "noon",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"12:00:00\",\"h:mm AM/PM\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "12:00 PM"
+              }
+            }
+          ]
+        },
+        {
+          "name": "24hour",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"15:43:09\",\"hh:mm:ss\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "15:43:09"
+              }
+            }
+          ]
+        },
+        {
+          "name": "numeric",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"1.25\",\"0.00\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "1.25"
+              }
+            }
+          ]
+        },
+        {
+          "name": "currency",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"$1,234.50\",\"0.00\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "1234.50"
+              }
+            }
+          ]
+        },
+        {
+          "name": "percent",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"12.5%\",\"0.000\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "0.125"
+              }
+            }
+          ]
+        },
+        {
+          "name": "date",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"1/2/2024\",\"yyyy-mm-dd\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "2024-01-02"
+              }
+            }
+          ]
+        },
+        {
+          "name": "datetime",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"1/2/2024 15:43:09\",\"yyyy-mm-dd h:mm:ss AM/PM\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "2024-01-02 3:43:09 PM"
+              }
+            }
+          ]
+        },
+        {
+          "name": "literal",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"word\",\"0.00\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "word"
+              }
+            }
+          ]
+        },
+        {
+          "name": "malformednumber",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"1..25\",\"0.00\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "1..25"
+              }
+            }
+          ]
+        },
+        {
+          "name": "boolean",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(TRUE,\"0.00\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "TRUE"
+              }
+            }
+          ]
+        },
+        {
+          "name": "empty",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"\",\"0.00\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": ""
+              }
+            }
+          ]
+        },
+        {
+          "name": "blank",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(A2,\"0.00\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "0.00"
+              }
+            }
+          ]
+        },
+        {
+          "name": "whitespace",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"  \",\"0.00\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "  "
+              }
+            }
+          ]
+        },
+        {
+          "name": "badtime",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"25:61:00\",\"h:mm\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "25:61:00"
+              }
+            }
+          ]
+        },
+        {
+          "name": "negative",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"(123.4)\",\"0.00\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "-123.40"
+              }
+            }
+          ]
+        },
+        {
+          "name": "error",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(1/0,\"0.00\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "error",
+                "value": "#DIV/0!"
+              }
+            }
+          ]
+        },
+        {
+          "name": "scientific",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"1.25E2\",\"0.00\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "125.00"
+              }
+            }
+          ]
+        },
+        {
+          "name": "booltext",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"TRUE\",\"0.00\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "TRUE"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "observations": {
+      "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+      "verified_at": "2026-10-18T02:44:43.817436+00:00",
+      "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+      "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+      "suite_sha256": {
+        "text-admission-probes.json": "35b3a6e1e9ca212fd5d3c3a6008201c6bf6c8582d5c0a2c6f29f5b0a99146adc"
+      },
+      "results": [
+        {
+          "suite": "text-admission-probes.json",
+          "name": "time",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "3:43:09 PM"
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "midnight",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "12:00 AM"
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "noon",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "12:00 PM"
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "24hour",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "15:43:09"
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "numeric",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "1.25"
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "currency",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "1234.50"
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "percent",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "0.125"
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "date",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "2024-01-02"
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "datetime",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "2024-01-02 3:43:09 PM"
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "literal",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "word"
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "malformednumber",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "1..25"
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "boolean",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "1.00"
+              },
+              "agrees": false
+            }
+          ],
+          "agrees": false
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "empty",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": ""
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "blank",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "0.00"
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "whitespace",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "  "
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "badtime",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "25:61:00"
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "negative",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "-123.40"
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "error",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "error",
+                "value": "#DIV/0!"
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "scientific",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "125.00"
+              },
+              "agrees": true
+            }
+          ],
+          "agrees": true
+        },
+        {
+          "suite": "text-admission-probes.json",
+          "name": "booltext",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "1.00"
+              },
+              "agrees": false
+            }
+          ],
+          "agrees": false
+        }
+      ],
+      "summary": {
+        "scenarios": 20,
+        "checks": 20,
+        "corroborated_scenarios": 18,
+        "corroborated_checks": 18
+      }
+    }
+  },
+  "locale_attempt": {
+    "input": {
+      "schema_version": 1,
+      "builtin_policy": "ExcelDocumentation",
+      "workbook": {
+        "sheets": [
+          "Sheet1"
+        ],
+        "cells": []
+      },
+      "scenarios": [
+        {
+          "name": "comma_decimal",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"1,234\",\"0.000\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "1.234"
+              }
+            }
+          ]
+        },
+        {
+          "name": "euro_currency",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"\u20ac1.234,50\",\"0.00\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "1234.50"
+              }
+            }
+          ]
+        },
+        {
+          "name": "comma_percent",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"12,5%\",\"0.000\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "0.125"
+              }
+            }
+          ]
+        },
+        {
+          "name": "day_first",
+          "actions": [
+            {
+              "action": "set",
+              "cell": "Sheet1!A1",
+              "content": {
+                "formula": "TEXT(\"1/2/2024\",\"yyyy-mm-dd\")"
+              }
+            },
+            {
+              "action": "check",
+              "cell": "Sheet1!A1",
+              "expected": {
+                "type": "text",
+                "value": "2024-02-01"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "observations": {
+      "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+      "verified_at": "2026-10-18T02:47:07.370075+00:00",
+      "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+      "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+      "suite_sha256": {
+        "text-admission-localized-probes.json": "fe2f34af28aa854abe540295f45895750ab12bf3904d0eb5b76b0646705e9ffc"
+      },
+      "results": [
+        {
+          "suite": "text-admission-localized-probes.json",
+          "name": "comma_decimal",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "1234.000"
+              },
+              "agrees": false
+            }
+          ],
+          "agrees": false
+        },
+        {
+          "suite": "text-admission-localized-probes.json",
+          "name": "euro_currency",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "\u20ac1.234,50"
+              },
+              "agrees": false
+            }
+          ],
+          "agrees": false
+        },
+        {
+          "suite": "text-admission-localized-probes.json",
+          "name": "comma_percent",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "12,5%"
+              },
+              "agrees": false
+            }
+          ],
+          "agrees": false
+        },
+        {
+          "suite": "text-admission-localized-probes.json",
+          "name": "day_first",
+          "checks": [
+            {
+              "action": 1,
+              "actual": {
+                "type": "text",
+                "value": "2024-01-02"
+              },
+              "agrees": false
+            }
+          ],
+          "agrees": false
+        }
+      ],
+      "summary": {
+        "scenarios": 4,
+        "checks": 4,
+        "corroborated_scenarios": 0,
+        "corroborated_checks": 0
+      }
+    },
+    "limitation": "Changing the LibreOffice application locale alone did not change the imported OOXML numeric/date interpretation; all four localized hypotheses disagree. This attempt cannot corroborate locale-parametric expectations. Rust tests assert consistency with the already-established parser locale/calendar contract."
+  }
+}

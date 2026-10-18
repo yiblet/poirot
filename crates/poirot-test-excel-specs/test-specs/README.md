@@ -44,8 +44,13 @@ The fixture runner selects `ExcelDocumentation` independently of text and array
 publication policies. Version 1 uses the explicit POI UTF-16 proxy; Version 2 uses
 `ExcelCompatibilityV2Documented` for lossless LEN/MID/LEFT/RIGHT/REPLACE counting.
 FIND/SEARCH and casing retain source-specific limits. DynamicSpill covers bounded
-static producers in read-only source-cell execution, with no general broadcasting,
-CSE, # reference syntax, incremental spill reuse or mutable spill materialization.
+static producers, including explicit/bounded IF/IFS/SWITCH/CHOOSE selection and
+exact information predicates under ExcelDocumentation. Singleton axes broadcast;
+ordinary scalar consumers retain their own contracts. This does not provide
+general function vectorization, CSE, # reference syntax or unbounded named/computed
+producer inference. See the evaluator's dynamic-array contract for supported
+incremental spill reuse and materialization; specification coverage remains
+bounded to the authored cases.
 SUBTOTAL visibility must be declared explicitly; file import does not currently
 retain filtered/manually hidden metadata. These scopes describe implementation
 capabilities, not native Excel observations. Authoring reports remain independent

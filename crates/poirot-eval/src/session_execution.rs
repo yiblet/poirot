@@ -413,7 +413,7 @@ impl<'a> Session<'a> {
                             }
                         };
                         let value = self.prepared_expression(sheet, address, prepared)?;
-                        self.result_scalar(sheet, address, value)
+                        self.worksheet_result(sheet, address, value)
                     }
                 },
             }?;

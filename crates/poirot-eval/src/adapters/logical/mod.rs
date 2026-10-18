@@ -5,6 +5,7 @@ use crate::adapters::logical::policy::{
 };
 use crate::host::{CallHost, HostOperand, MissingPolicy, NumericPolicy, OperandKind};
 use crate::*;
+use array_switch::execute_switch;
 
 fn port_failure(failure: FunctionFailure) -> Failure<EvaluationFailure> {
     project_host(failure, Failure::Cell, Failure::Operational)
@@ -79,6 +80,58 @@ pub(crate) fn execute(
     function: HelperFunction,
     arguments: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
+    if matches!(function, HelperFunction::Ifs | HelperFunction::Switch) {
+        session.read(DependencyRead::BuiltinPolicy);
+    }
+    if function == HelperFunction::Switch
+        && session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
+    {
+        return execute_switch(session, sheet, address, arguments);
+    }
+    if function == HelperFunction::Ifs
+        && session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
+    {
+        if !arguments.len().is_multiple_of(2) {
+            return Ok(err(VALUE_ERROR));
+        }
+        let mut host = CallHost::new_inheriting(session, sheet, address, arguments);
+        // SAFETY: The literal step 2 is nonzero.
+        for ordinal in (0..arguments.len()).step_by(2) {
+            match semantic(host.retains_array(ordinal))? {
+                Err(error) => return Ok(err(error)),
+                Ok(true) => {
+                    let condition = match semantic(host.argument(ordinal))? {
+                        Ok(operand) => operand.into_value(),
+                        Err(error) => return Ok(err(error)),
+                    };
+                    drop(host);
+                    return session.array_ifs(sheet, address, arguments, ordinal, condition);
+                }
+                Ok(false) => {}
+            }
+            let condition = match EvaluationPort::scalar(&mut host, ordinal) {
+                Ok(value) => value,
+                Err(Failure::Cell(error)) => return Ok(err(error)),
+                Err(Failure::Operational(failure)) => return Err(failure),
+                Err(Failure::UnsupportedPoiError(_)) => {
+                    return Err(EvaluationFailure::StalePlan);
+                }
+            };
+            match policy::coercev2_logical_test(&condition) {
+                Ok(true) => {
+                    return match semantic(
+                        host.argument(ordinal.checked_add(1).ok_or(EvaluationFailure::StalePlan)?),
+                    )? {
+                        Ok(operand) => Ok(operand.into_value()),
+                        Err(error) => Ok(err(error)),
+                    };
+                }
+                Ok(false) => {}
+                Err(error) => return Ok(err(error)),
+            }
+        }
+        return Ok(err(NA));
+    }
     let mut host = match function {
         HelperFunction::Ifs => CallHost::new_selecting(session, sheet, address, arguments, 1, None),
         HelperFunction::Switch => {
@@ -230,3 +283,8 @@ pub mod policy;
 
 /// Evaluator-owned logical builtin dispatch.
 pub(crate) mod execution;
+
+mod array_choose;
+mod array_ifs;
+mod array_selection;
+mod array_switch;

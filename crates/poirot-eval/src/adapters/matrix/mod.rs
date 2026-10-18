@@ -25,6 +25,9 @@ impl EvaluationPort for MatrixPort<'_, '_> {
     fn determined_trend_fit(&self) -> bool {
         self.strict_numeric_matrices
     }
+    fn uniform_sumproduct_arrays(&self) -> bool {
+        self.strict_numeric_matrices
+    }
     fn describe(&mut self, index: &usize) -> Result<Shape, Failure<EvaluationFailure>> {
         let description = self.host.describe(*index).map_err(port_failure)?;
         Ok(Shape {
@@ -136,6 +139,9 @@ pub(crate) fn execute(
     } else {
         args.len()
     };
+    if function == helper::MatrixFunction::Sumproduct {
+        session.read(DependencyRead::BuiltinPolicy);
+    }
     let strict_numeric_matrices =
         session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation;
     let mut port = MatrixPort {

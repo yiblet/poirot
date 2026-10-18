@@ -16,9 +16,9 @@
   },
   "scenarios": [
     {
-      "name": "missing IF result remains blank through a cell reference",
+      "name": "missing IF result publishes zero through a cell reference",
       "evidence": [
-        "Explicit project contract requested by the user: A1=IF(TRUE,,) should evaluate to blank, and ISBLANK(A1) should return TRUE. ISBLANK uses the Excel function spelling of the requested IS_BLANK predicate. This is not a native Excel observation."
+        "Excel worksheet publication contract confirmed by the user's native Excel observation: an empty reference stored as a formula becomes numeric zero. The user explicitly authorized applying the same publication rule to IF's empty result, while preserving blank inside expressions. This supersedes the earlier project-only blank publication contract; no new native Excel execution is claimed."
       ],
       "actions": [
         {
@@ -39,7 +39,8 @@
           "action": "check",
           "cell": "S!A1",
           "expected": {
-            "type": "blank"
+            "type": "number",
+            "value": 0.0
           }
         },
         {
@@ -47,7 +48,7 @@
           "cell": "S!B1",
           "expected": {
             "type": "boolean",
-            "value": true
+            "value": false
           }
         },
         {

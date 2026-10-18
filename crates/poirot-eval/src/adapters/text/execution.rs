@@ -660,21 +660,42 @@ impl Session<'_> {
 }
 
 impl Session<'_> {
-    /// TEXT's pinned numeric policy preserves nonnumeric text, renders booleans
-    /// directly, and admits numeric text and blanks to the formatting consumer.
+    /// TEXT requests its own text admission policy; contextual parsing reuses the
+    /// same metered locale/calendar grammar as other numeric argument consumers.
     fn coercev2_text_format_value(&mut self, value: CellValue) -> EvalResult<(CellValue, bool)> {
-        poirot_coercionv2::compatibility::coercev2_text_format_value(value, |view| {
+        use poirot_coercionv2::compatibility::{NumericTextDecision, TextFormatPolicy};
+        self.read(DependencyRead::BuiltinPolicy);
+        let policy = if self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation {
+            TextFormatPolicy::Contextual
+        } else {
+            TextFormatPolicy::PinnedPoi
+        };
+        poirot_coercionv2::compatibility::coercev2_text_format_value(value, policy, |view| {
             self.budget
                 .charge(WorkKind::TextByte, view.len_units() as u64)?;
             if view.utf8_len().is_err() {
                 return Ok(None);
             }
-            let projected =
-                checked_text_view(view, &mut self.budget).map_err(|error| match error {
-                    FunctionFailure::Operational(error) => error,
-                    FunctionFailure::Spreadsheet(_) => EvaluationFailure::StalePlan,
-                })?;
-            Ok(poirot_coercionv2::compatibility::coercev2_arithmetic_text(&projected).ok())
+            let projected = match checked_text_view(view, &mut self.budget) {
+                Ok(text) => text,
+                Err(FunctionFailure::Operational(error)) => return Err(error),
+                Err(FunctionFailure::Spreadsheet(_)) => return Ok(None),
+            };
+            if policy == TextFormatPolicy::PinnedPoi {
+                return Ok(
+                    poirot_coercionv2::compatibility::coercev2_arithmetic_text(&projected).ok(),
+                );
+            }
+            let number = match self.coercev2_formatted_text(&projected) {
+                Ok(NumericTextDecision::Number(result)) => result.map_err(FunctionFailure::from),
+                Ok(NumericTextDecision::DateTime) => self.coercev2_numeric_date_time(&projected),
+                Err(error) => Err(error),
+            };
+            match number {
+                Ok(number) => Ok(Some(number)),
+                Err(FunctionFailure::Spreadsheet(_)) => Ok(None),
+                Err(FunctionFailure::Operational(error)) => Err(error),
+            }
         })
     }
 }

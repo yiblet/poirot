@@ -1,0 +1,287 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-18T01:50:27.650380+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "excel-compat-criteria-error-masking.json": "b767891f02a60c32e4e1d0cc35e61af61d5fab9e271ecf275c4f28c07493f6f2"
+  },
+  "results": [
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: SUMIF unmatched result error ignored",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: SUMIF matched result error propagated",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: SUMIF zero match does not mask matched error",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: SUMIFS unmatched result error ignored",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: SUMIFS matched result error propagated",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: SUMIFS zero match does not mask matched error",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIF unmatched result error ignored",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIF matched result error propagated",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIF zero match does not mask matched error",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIFS unmatched result error ignored",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIFS matched result error propagated",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIFS zero match does not mask matched error",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: MINIFS unmatched result error ignored",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: MINIFS matched result error propagated",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: MINIFS zero match does not mask matched error",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: MAXIFS unmatched result error ignored",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: MAXIFS matched result error propagated",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: MAXIFS zero match does not mask matched error",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 18,
+    "checks": 18,
+    "corroborated_scenarios": 18,
+    "corroborated_checks": 18
+  }
+}

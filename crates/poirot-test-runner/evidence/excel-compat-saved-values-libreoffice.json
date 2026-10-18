@@ -4,7 +4,7 @@
   "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
   "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
   "suite_sha256": {
-    "excel-compat-poi-cache-formulaevaltestdata-values.json": "a82241106730237e1b4ab8e175f9a0a1992fa41406695db26f2940e1bd4ea9d7"
+    "excel-compat-poi-cache-formulaevaltestdata-values.json": "462c508f6d54474fbbd3e312149a9ba33f099429ae847a1efdab6b40e96a7030"
   },
   "results": [
     {
@@ -5863,5 +5863,18 @@
     "checks": 390,
     "corroborated_scenarios": 390,
     "corroborated_checks": 390
-  }
+  },
+  "source_reverification": [
+    {
+      "evidence": "worksheet-publication-libreoffice.json",
+      "verified_at": "2026-10-18T01:38:39.579478+00:00",
+      "reason": "Removed only resolved known-gap annotations; formulas and independently authored expected values are unchanged. Fresh isolated Calc snapshots corroborate all 555 checks in the four changed suites. Saved cache corroboration does not imply Calc live type introspection matches Excel.",
+      "previous_suite_sha256": {
+        "excel-compat-poi-cache-formulaevaltestdata-values.json": "a82241106730237e1b4ab8e175f9a0a1992fa41406695db26f2940e1bd4ea9d7"
+      },
+      "suite_sha256": {
+        "excel-compat-poi-cache-formulaevaltestdata-values.json": "462c508f6d54474fbbd3e312149a9ba33f099429ae847a1efdab6b40e96a7030"
+      }
+    }
+  ]
 }

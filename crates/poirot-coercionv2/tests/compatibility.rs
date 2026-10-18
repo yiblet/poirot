@@ -222,14 +222,26 @@ fn matrix_member_rules_keep_error_remapping_and_area_defaults_separate() {
 
 #[test]
 fn text_formatting_preserves_nonnumeric_types_until_requested() {
-    let result = coercev2_text_format_value::<CellError>(CellValue::Blank, |_| panic!()).unwrap();
+    let result = coercev2_text_format_value::<CellError>(
+        CellValue::Blank,
+        TextFormatPolicy::PinnedPoi,
+        |_| panic!(),
+    )
+    .unwrap();
     assert_eq!(result, (CellValue::Number(0.), true));
-    let result =
-        coercev2_text_format_value::<CellError>(CellValue::Text("NaN".into()), |_| panic!())
-            .unwrap();
+    let result = coercev2_text_format_value::<CellError>(
+        CellValue::Text("NaN".into()),
+        TextFormatPolicy::PinnedPoi,
+        |_| panic!(),
+    )
+    .unwrap();
     assert_eq!(result, (CellValue::Text("NaN".into()), false));
-    let result =
-        coercev2_text_format_value::<CellError>(CellValue::Boolean(true), |_| panic!()).unwrap();
+    let result = coercev2_text_format_value::<CellError>(
+        CellValue::Boolean(true),
+        TextFormatPolicy::PinnedPoi,
+        |_| panic!(),
+    )
+    .unwrap();
     assert_eq!(result, (CellValue::Text("TRUE".into()), false));
 }
 
@@ -355,6 +367,39 @@ fn documented_search_start_truncates_before_checking_text_domain() {
         assert_eq!(
             coercev2_text_search_start(number, length),
             Err(CellError::Value)
+        );
+    }
+}
+
+#[test]
+fn contextual_text_format_admission_delegates_both_encodings_and_preserves_failures() {
+    for value in [
+        CellValue::Text("15:43:09".into()),
+        CellValue::TextUtf16(poirot_functions_core::ExcelText::from_units(
+            "15:43:09".encode_utf16().collect::<Vec<_>>(),
+        )),
+    ] {
+        assert_eq!(
+            coercev2_text_format_value::<Failure>(
+                value.clone(),
+                TextFormatPolicy::Contextual,
+                |_| Ok(Some(0.5))
+            ),
+            Ok((CellValue::Number(0.5), true))
+        );
+        assert_eq!(
+            coercev2_text_format_value::<Failure>(
+                value.clone(),
+                TextFormatPolicy::Contextual,
+                |_| Ok(None)
+            ),
+            Ok((value.clone(), false))
+        );
+        assert_eq!(
+            coercev2_text_format_value::<Failure>(value, TextFormatPolicy::Contextual, |_| Err(
+                Failure::Operational
+            )),
+            Err(Failure::Operational)
         );
     }
 }

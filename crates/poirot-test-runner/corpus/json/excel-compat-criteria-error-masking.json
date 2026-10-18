@@ -16,7 +16,7 @@
         "Criterion matches only the second row: unmatched result error ignored. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -76,7 +76,7 @@
         "Criterion matches only the second row: matched result error propagated. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -136,7 +136,7 @@
         "Criterion matches only the second row: zero match does not mask matched error. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -196,7 +196,7 @@
         "Criterion matches only the second row: unmatched result error ignored. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -256,7 +256,7 @@
         "Criterion matches only the second row: matched result error propagated. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -316,7 +316,7 @@
         "Criterion matches only the second row: zero match does not mask matched error. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -376,7 +376,7 @@
         "Criterion matches only the second row: unmatched result error ignored. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -436,7 +436,7 @@
         "Criterion matches only the second row: matched result error propagated. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -484,13 +484,6 @@
           "expected": {
             "type": "error",
             "value": "#N/A"
-          },
-          "known_gap": {
-            "reason": "The selected result-field error is masked or forwarded before criterion row selection. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#DIV/0!"
-            }
           }
         }
       ]
@@ -503,7 +496,7 @@
         "Criterion matches only the second row: zero match does not mask matched error. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -563,7 +556,7 @@
         "Criterion matches only the second row: unmatched result error ignored. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -623,7 +616,7 @@
         "Criterion matches only the second row: matched result error propagated. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -683,7 +676,7 @@
         "Criterion matches only the second row: zero match does not mask matched error. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -743,7 +736,7 @@
         "Criterion matches only the second row: unmatched result error ignored. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -803,7 +796,7 @@
         "Criterion matches only the second row: matched result error propagated. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -863,7 +856,7 @@
         "Criterion matches only the second row: zero match does not mask matched error. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -923,7 +916,7 @@
         "Criterion matches only the second row: unmatched result error ignored. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -983,7 +976,7 @@
         "Criterion matches only the second row: matched result error propagated. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {
@@ -1043,7 +1036,7 @@
         "Criterion matches only the second row: zero match does not mask matched error. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-criteria-error-masking-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
       ],
       "actions": [
         {

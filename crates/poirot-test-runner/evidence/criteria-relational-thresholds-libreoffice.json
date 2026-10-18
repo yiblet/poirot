@@ -1,0 +1,1068 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-18T01:46:09.471091+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "excel-compat-criteria-number-grammars.json": "9404749f8a162646dfc533e5bc7fc99c23ff6c2ff94a40b8e12ed61ee801516c",
+    "excel-compat-poi-cache-sumifs.json": "087cd400ace139dea2b952e16888248ed6c103d23f130400daee5444855ce4cc"
+  },
+  "results": [
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF percent threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF scientific threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF currency threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF mixed fraction threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF calendar text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF time text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF space after operator",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF parenthesized negative criterion",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS percent threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS scientific threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS currency threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS mixed fraction threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS calendar text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS time text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS space after operator",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS parenthesized negative criterion",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIF percent threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIF scientific threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIF currency threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIF mixed fraction threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIF calendar text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIF time text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIF space after operator",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIF parenthesized negative criterion",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS percent threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS scientific threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS currency threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS mixed fraction threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS calendar text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS time text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS space after operator",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS parenthesized negative criterion",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF percent threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF scientific threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF currency threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF mixed fraction threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF calendar text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF time text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF space after operator",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF parenthesized negative criterion",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS percent threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS scientific threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS currency threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS mixed fraction threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS calendar text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS time text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS space after operator",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS parenthesized negative criterion",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MINIFS percent threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MINIFS scientific threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MINIFS currency threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MINIFS mixed fraction threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MINIFS calendar text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MINIFS time text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MINIFS space after operator",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MINIFS parenthesized negative criterion",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS percent threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS scientific threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS currency threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS mixed fraction threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS calendar text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS time text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS space after operator",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS parenthesized negative criterion",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-sumifs.json",
+      "name": "Excel compatibility poi-cache-sumifs: Example 5 C10 AVERAGEIFS(G2:G6,C2:C6,\">2\",E2:E6,C7,F2:F6,\">1999\",F2:F6,\"<2004\")",
+      "checks": [
+        {
+          "action": 22,
+          "actual": {
+            "type": "number",
+            "value": 312500.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-sumifs.json",
+      "name": "Excel compatibility poi-cache-sumifs: Example 2 C8 SUMIFS(B2:E2,B5:E5,\">=1%\",B5:E5,\"<=3%\",B4:E4,\">1%\")",
+      "checks": [
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 8711.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-sumifs.json",
+      "name": "Excel compatibility poi-cache-sumifs: Example 5 C7 \"y*\"",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "y*"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-sumifs.json",
+      "name": "Excel compatibility poi-cache-sumifs: Example 2 C7 SUMIFS(B2:E2,B3:E3,\">3%\",B4:E4,\">=2%\")",
+      "checks": [
+        {
+          "action": 13,
+          "actual": {
+            "type": "number",
+            "value": 500.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-sumifs.json",
+      "name": "Excel compatibility poi-cache-sumifs: Example 5 C9 SUMIFS(G2:G6,C2:C6,A7,E2:E6,B7,F2:F6,\">1999\",F2:F6,\"<2004\")",
+      "checks": [
+        {
+          "action": 23,
+          "actual": {
+            "type": "number",
+            "value": 625000.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-sumifs.json",
+      "name": "Excel compatibility poi-cache-sumifs: Example 1 C12 SUMIFS(A2:A9,B2:B9,\"<>Bananas\",C2:C9,1.0)",
+      "checks": [
+        {
+          "action": 25,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 70,
+    "checks": 70,
+    "corroborated_scenarios": 70,
+    "corroborated_checks": 70
+  }
+}

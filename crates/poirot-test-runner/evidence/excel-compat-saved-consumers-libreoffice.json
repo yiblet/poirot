@@ -8,18 +8,18 @@
     "excel-compat-poi-cache-booleanfunctionstestcasedata.json": "b09dfa17f10d7dfc703c28c050ee48fec190a71af3a2a38e377b6963b15d187b",
     "excel-compat-poi-cache-bug60848-sumproduct-unary-minus.json": "42fc07256a7ca26054ae6248f096103a287ecf6d009d401b4c9b345c1d6e55a7",
     "excel-compat-poi-cache-complexfunctiontestcasedata.json": "3f2468d1ce058b8df3e16ea52cbbda4abc6316fe2afbcb750d3165b8446ef8ec",
-    "excel-compat-poi-cache-datetimetonumbertestcases.json": "e7e5a50ce9957da77888ddb8a3e331e3dacccd4e2db5cd3c76388d98ee35a76d",
+    "excel-compat-poi-cache-datetimetonumbertestcases.json": "4987332d5e30e57ac936b2f7ea59f51a476b90850ef95e8999742fed46aec411",
     "excel-compat-poi-cache-deltafunctiontestcasedata.json": "f012c191a1fe9a30f336e5cd91fb63621694f2f698c6a6b988f6386449ffdd26",
     "excel-compat-poi-cache-factdoublefunctiontestcasedata.json": "8213ae184921d97dd69ffe0634556df29e81779d22256798de33bfcab3e1c727",
-    "excel-compat-poi-cache-formulaevaltestdata-consumers.json": "1c559c3b157d40d30182dc42201aa07a2c9edeb6e9917d74b7f5b4364906c054",
+    "excel-compat-poi-cache-formulaevaltestdata-consumers.json": "0ec0bc0ff658d289fb1e271b287b658fd9375b95cdccfa594248bb6ddffaf346",
     "excel-compat-poi-cache-iffunctiontestcasedata.json": "45f4886fc63a97b0eb0bd2367f4a9ac77cdf9362193717a0fb1368c21dcf1d00",
-    "excel-compat-poi-cache-ifnatestcasedata.json": "8c1c7d2cf639ea6cde173485fa9958ffb303f72f88c4fd5f35dee68ad9b926b7",
+    "excel-compat-poi-cache-ifnatestcasedata.json": "2c5377ab387fed2aa2d7c1f1c0d4234d1bf1513a6b16d2302cc22eea2312e9ef",
     "excel-compat-poi-cache-imaginaryfunctiontestcasedata.json": "9f6271c0d94b7d63c80935d2d2d5a7194ffc564cf40fdb01ccf5ff65e410d205",
     "excel-compat-poi-cache-imrealfunctiontestcasedata.json": "6d02a2dce79c42aaaf9fddc0399c0b596d7db866b33cac7baf3389868f9e5267",
     "excel-compat-poi-cache-indexfunctiontestcasedata.json": "36a1cb9b367285e72fa2cb63b5a73580ce285be3046b3fba04e01b6963d962f1",
     "excel-compat-poi-cache-irrnpvtestcasedata.json": "6e7c4f905ad25c2df30dfb72b38a9eeb10e31450543cc045908b6d2a42869b95",
     "excel-compat-poi-cache-logicalfunctionstestcasedata.json": "585c7a637f8e86789019272c362edc37c3418455a0efba67877aa9b433c8acc7",
-    "excel-compat-poi-cache-lookupfunctionstestcasedata.json": "ea57503ba47d10cb9bfd3180147f3ffdf6fd50e2c71ebd502623d2ed8fb295fb",
+    "excel-compat-poi-cache-lookupfunctionstestcasedata.json": "3688bf3db2780fa8318bb11995116b443c5feb3ee9b135af19cf537c36ec3def",
     "excel-compat-poi-cache-matchfunctiontestcasedata.json": "6da23363694a10efb9b97d603fe6b443f888b4d9cfc53066dc7e7b5c66b7c37b",
     "excel-compat-poi-cache-matrixformulaevaltestdata.json": "275c9b2b3c5aee43261abe96c4356698c84a75ccdaa885bf93e13627d886f80e",
     "excel-compat-poi-cache-rank.json": "83c90c314c46b40c816ac13681478beafb9ca9c37091e82d14fc555a7fd840f0",
@@ -3702,5 +3702,44 @@
     "checks": 250,
     "corroborated_scenarios": 238,
     "corroborated_checks": 250
-  }
+  },
+  "source_reverification": [
+    {
+      "evidence": "worksheet-publication-libreoffice.json",
+      "verified_at": "2026-10-18T01:38:39.579478+00:00",
+      "reason": "Removed only resolved known-gap annotations; formulas and independently authored expected values are unchanged. Fresh isolated Calc snapshots corroborate all 555 checks in the four changed suites. Saved cache corroboration does not imply Calc live type introspection matches Excel.",
+      "previous_suite_sha256": {
+        "excel-compat-poi-cache-formulaevaltestdata-consumers.json": "1c559c3b157d40d30182dc42201aa07a2c9edeb6e9917d74b7f5b4364906c054",
+        "excel-compat-poi-cache-ifnatestcasedata.json": "8c1c7d2cf639ea6cde173485fa9958ffb303f72f88c4fd5f35dee68ad9b926b7",
+        "excel-compat-poi-cache-lookupfunctionstestcasedata.json": "ea57503ba47d10cb9bfd3180147f3ffdf6fd50e2c71ebd502623d2ed8fb295fb"
+      },
+      "suite_sha256": {
+        "excel-compat-poi-cache-formulaevaltestdata-consumers.json": "ec7195ca7b7e6f2b999a43db0871096770caa8b41dd31e61556e1ae016016526",
+        "excel-compat-poi-cache-ifnatestcasedata.json": "2c5377ab387fed2aa2d7c1f1c0d4234d1bf1513a6b16d2302cc22eea2312e9ef",
+        "excel-compat-poi-cache-lookupfunctionstestcasedata.json": "3688bf3db2780fa8318bb11995116b443c5feb3ee9b135af19cf537c36ec3def"
+      }
+    },
+    {
+      "evidence": "sumproduct-admission-libreoffice.json",
+      "verified_at": "2026-10-18T02:41:08.223240+00:00",
+      "reason": "Only the resolved SUMPRODUCT gap marker changed; formulas and independent typed expectations remain unchanged. Fresh isolated snapshots corroborate all 149 checks in the changed suite.",
+      "previous_suite_sha256": {
+        "excel-compat-poi-cache-formulaevaltestdata-consumers.json": "ec7195ca7b7e6f2b999a43db0871096770caa8b41dd31e61556e1ae016016526"
+      },
+      "suite_sha256": {
+        "excel-compat-poi-cache-formulaevaltestdata-consumers.json": "0ec0bc0ff658d289fb1e271b287b658fd9375b95cdccfa594248bb6ddffaf346"
+      }
+    },
+    {
+      "evidence": "text-format-admission-libreoffice.json",
+      "verified_at": "2026-10-18T02:47:37.700399+00:00",
+      "reason": "Only the resolved TEXT time-text gap marker changed; formulas and independent typed expectations remain unchanged. Fresh isolated snapshots corroborate all three checks in the changed suite.",
+      "previous_suite_sha256": {
+        "excel-compat-poi-cache-datetimetonumbertestcases.json": "e7e5a50ce9957da77888ddb8a3e331e3dacccd4e2db5cd3c76388d98ee35a76d"
+      },
+      "suite_sha256": {
+        "excel-compat-poi-cache-datetimetonumbertestcases.json": "4987332d5e30e57ac936b2f7ea59f51a476b90850ef95e8999742fed46aec411"
+      }
+    }
+  ]
 }

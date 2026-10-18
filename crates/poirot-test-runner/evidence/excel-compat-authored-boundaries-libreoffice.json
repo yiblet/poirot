@@ -6,15 +6,15 @@
   "suite_sha256": {
     "excel-compat-arbitrary-radix.json": "b821295f6662e707a56bca9012c50cde320a588eea558ed2c82e94a28cda2377",
     "excel-compat-array-criteria.json": "d06e033e82b5e02d8a1c94f3f2be20e2e482c6222ff7215aac5573aa6c081648",
-    "excel-compat-conditional-array-consumers.json": "0747759f504cb040b06d0ed05078308790d500a959de8424b93067e6d76b66ca",
+    "excel-compat-conditional-array-consumers.json": "ac4767365280f65f401dd856d7baf6a2005f02fe042ad79c700745b07c94d8af",
     "excel-compat-criteria-error-masking.json": "6aba1c735fb89cedf64ff3ac5c8160781719bc23ac891105b3b5aa59b838700e",
     "excel-compat-criteria-number-grammars.json": "6b1adfcf49cd1b5de96a9c9f6352820e43398ab03c62b578e5b3cf830d42906c",
     "excel-compat-distribution-boundaries.json": "90a75dd124ab5db10fd5e13038369428750e311dff52fe3dc59c845ad38ebc82",
     "excel-compat-operator-array-shapes.json": "39c79e519fd71024f9676900eee7e02fdd459b745d7dae3af1387c8b97384d86",
     "excel-compat-power-series.json": "1bd61f932876e010b256ff03de905a94cc59d4588d14b8a6d77c81c7c65d1cee",
-    "excel-compat-predicate-arrays.json": "5e55ecee6ec238278304a99b208b0af82dd6c1fc41e8031b1552905395881256",
+    "excel-compat-predicate-arrays.json": "81c5f221b0e45a70f9de2eae2d7d63439b92c9232f38d38d1a999d99c51d5678",
     "excel-compat-rank-and-quantiles.json": "985712c047e2522576ae9976af3bc2a3f635e818a3cce9773d0df655be10c298",
-    "excel-compat-selector-sibling-arrays.json": "fe48543413035dee9bdd2fa9af58e651ac3586b0c275e52a752453aa572dac7b"
+    "excel-compat-selector-sibling-arrays.json": "789f942d90698f51bacf60ac22e5a6c858fe651be4ba44548a688c9ade0d376b"
   },
   "results": [
     {
@@ -5907,5 +5907,36 @@
     "checks": 466,
     "corroborated_scenarios": 308,
     "corroborated_checks": 466
+  },
+  "refreshed_suites": {
+    "excel-compat-conditional-array-consumers.json": {
+      "verified_at": "2026-10-18T01:58:13.102748+00:00",
+      "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+      "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used."
+    },
+    "excel-compat-predicate-arrays.json": {
+      "verified_at": "2026-10-18T02:11:26.673300+00:00",
+      "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+      "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+      "previous_suite_sha256": "5e55ecee6ec238278304a99b208b0af82dd6c1fc41e8031b1552905395881256"
+    },
+    "excel-compat-selector-sibling-arrays.json": {
+      "verified_at": "2026-10-18T02:32:12.791630+00:00",
+      "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+      "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+      "previous_suite_sha256": "099a2a7f9c60a1948ff3ae88a1991bf7e8ef81a6a20122b11c4a25f6d7187348",
+      "previous_refresh": {
+        "verified_at": "2026-10-18T02:27:11.141985+00:00",
+        "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+        "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+        "previous_suite_sha256": "3b237aa24c57f15ed26b601a9319ce8bba355d03945bf01b34b9ea829178e5bd",
+        "previous_refresh": {
+          "verified_at": "2026-10-18T02:20:14.083176+00:00",
+          "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+          "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+          "previous_suite_sha256": "fe48543413035dee9bdd2fa9af58e651ac3586b0c275e52a752453aa572dac7b"
+        }
+      }
+    }
   }
 }

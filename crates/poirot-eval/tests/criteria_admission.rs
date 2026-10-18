@@ -3,7 +3,7 @@ use poirot_eval::{
     overlay::{EvaluationContext, Overlay, OverlayPolicy},
     *,
 };
-use poirot_model::{CellValue, Workbook};
+use poirot_model::{CellError, CellValue, Workbook};
 
 fn target(at: &str) -> EvaluationTarget {
     EvaluationTarget {
@@ -219,6 +219,254 @@ fn omitted_criteria_and_operational_failures_escape_iferror() {
                 &excel(),
                 EvaluationBudgets {
                     text_bytes: 1,
+                    ..Default::default()
+                }
+            ),
+            EvaluationOutcome::Aborted { .. }
+        ));
+    }
+}
+
+#[test]
+fn contextual_thresholds_keep_literal_wildcard_boolean_and_error_criteria_typed() {
+    let mut w = Workbook::new();
+    let sheet = w.add_sheet("S").unwrap();
+    for (at, value) in [
+        ("A1", CellValue::Number(0.04)),
+        ("A2", CellValue::Text("4%".into())),
+        ("A3", CellValue::Text("3%%".into())),
+        ("A4", CellValue::Text("$3x".into())),
+        ("A5", CellValue::Text("1 1/0".into())),
+        ("A6", CellValue::Text("32/32/2020".into())),
+        ("A7", CellValue::Text("3%abc".into())),
+        ("A8", CellValue::Text("3%*".into())),
+        ("A9", CellValue::Boolean(true)),
+        ("A10", CellValue::Error(poirot_model::CellError::NA)),
+    ] {
+        sheet.set_value(target(at).address, value).unwrap();
+    }
+    // These neighboring expectations were authored before either engine ran and
+    // independently corroborated in isolated Calc snapshots.
+    for (f, expected) in [
+        (r#"COUNTIF(A1:A2,">3%")"#, 1.),
+        (r#"COUNTIF(A2,"4%")"#, 1.),
+        (r#"COUNTIF(A2,"<>4%")"#, 0.),
+        (r#"COUNTIF(A3,"3%%")"#, 1.),
+        (r#"COUNTIF(A3,">3%%")"#, 0.),
+        (r#"COUNTIF(A4,"$3x")"#, 1.),
+        (r#"COUNTIF(A5,"1 1/0")"#, 1.),
+        (r#"COUNTIF(A6,"32/32/2020")"#, 1.),
+        (r#"COUNTIF(A7:A8,"3%*")"#, 2.),
+        (r#"COUNTIF(A8,"3%~*")"#, 1.),
+        (r#"COUNTIF(A9,"TRUE")"#, 1.),
+        (r##"COUNTIF(A10,"#N/A")"##, 1.),
+    ] {
+        assert_eq!(value(&w, f, &excel()), CellValue::Number(expected), "{f}");
+    }
+    // The pinned source profile retains its plain-number threshold grammar.
+    assert_eq!(
+        value(&w, r#"COUNTIF(A1,">3%")"#, &Default::default()),
+        0.0.into()
+    );
+    let localized = excel().with_number_locale(
+        poirot_coercionv2::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap(),
+    );
+    assert_eq!(value(&w, r#"COUNTIF(A1,">€0,03")"#, &localized), 1.0.into());
+    for budgets in [
+        EvaluationBudgets {
+            run_work: 20,
+            ..Default::default()
+        },
+        EvaluationBudgets {
+            text_bytes: 2,
+            ..Default::default()
+        },
+    ] {
+        assert!(matches!(
+            run_formula_with_configuration(
+                &w,
+                0,
+                target("Z1").address,
+                r#"IFERROR(COUNTIF(A1,">$0.03"),99)"#,
+                &excel(),
+                budgets,
+            ),
+            EvaluationOutcome::Aborted { .. }
+        ));
+    }
+}
+
+#[test]
+fn contextual_criteria_invalidate_retained_locale_and_date_order_reads() {
+    let mut w = Workbook::new();
+    let sheet = w.add_sheet("S").unwrap();
+    sheet.set_value(target("A1").address, 10.).unwrap();
+    sheet.set_value(target("A2").address, 43840.).unwrap();
+    sheet
+        .set_formula(
+            target("B1").address,
+            r#"COUNTIF(A1,">1,234")"#,
+            CellValue::Blank,
+        )
+        .unwrap();
+    sheet
+        .set_formula(
+            target("B2").address,
+            r#"COUNTIF(A2,">1/2/2020")"#,
+            CellValue::Blank,
+        )
+        .unwrap();
+    let mut overlay = Overlay::with_workbook(&w)
+        .with_policy(OverlayPolicy {
+            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
+    let mut context = EvaluationContext::default();
+    assert_eq!(
+        overlay
+            .evaluation(&context)
+            .unwrap()
+            .cell(target("B1"))
+            .unwrap(),
+        0.0.into()
+    );
+    assert_eq!(
+        overlay
+            .evaluation(&context)
+            .unwrap()
+            .cell(target("B2"))
+            .unwrap(),
+        1.0.into()
+    );
+    context.number_locale =
+        poirot_coercionv2::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap();
+    assert_eq!(
+        overlay
+            .evaluation(&context)
+            .unwrap()
+            .cell(target("B1"))
+            .unwrap(),
+        1.0.into()
+    );
+    context.localization.date_order = DateOrder::DayMonthYear;
+    assert_eq!(
+        overlay
+            .evaluation(&context)
+            .unwrap()
+            .cell(target("B2"))
+            .unwrap(),
+        0.0.into()
+    );
+    context.localization.date_order = DateOrder::MonthDayYear;
+    assert_eq!(
+        overlay
+            .evaluation(&context)
+            .unwrap()
+            .cell(target("B2"))
+            .unwrap(),
+        1.0.into()
+    );
+}
+
+#[test]
+fn criterion_calendar_threshold_uses_workbook_epoch() {
+    let mut w = Workbook::new();
+    w.add_sheet("S")
+        .unwrap()
+        .set_value(target("A1").address, 1.)
+        .unwrap();
+    let f = r#"COUNTIF(A1,">1/1/1904")"#;
+    assert_eq!(value(&w, f, &excel()), 0.0.into());
+    w.date_system = poirot_model::DateSystem::Excel1904;
+    assert_eq!(value(&w, f, &excel()), 1.0.into());
+}
+
+#[test]
+fn selected_result_errors_follow_the_aggregate_profile_after_row_selection() {
+    let mut w = book();
+    for (at, v) in [
+        ("A1", 1.0.into()),
+        ("A2", 2.0.into()),
+        ("A3", 2.0.into()),
+        ("B1", CellValue::Error(CellError::Div0)),
+        ("B2", 20.0.into()),
+        ("B3", CellValue::Error(CellError::NA)),
+    ] {
+        w.sheet_mut(0)
+            .unwrap()
+            .set_value(target(at).address, v)
+            .unwrap();
+    }
+    for (config, is_excel) in [(excel(), true), (RunConfiguration::default(), false)] {
+        for name in [
+            "SUMIF",
+            "AVERAGEIF",
+            "SUMIFS",
+            "AVERAGEIFS",
+            "MAXIFS",
+            "MINIFS",
+        ] {
+            let f = if matches!(name, "SUMIF" | "AVERAGEIF") {
+                format!("{name}(A1:A3,2,B1:B3)")
+            } else {
+                format!("{name}(B1:B3,A1:A3,2)")
+            };
+            let expected = if name == "AVERAGEIF" && !is_excel {
+                20.0.into()
+            } else {
+                CellValue::Error(CellError::NA)
+            };
+            assert_eq!(value(&w, &f, &config), expected, "{f}");
+        }
+        assert_eq!(
+            value(&w, "AVERAGEIF(A1:A3,99,B1:B3)", &config),
+            CellValue::Error(CellError::Div0)
+        );
+        assert_eq!(value(&w, "AVERAGEIF(A2:A2,2,B2:B2)", &config), 20.0.into());
+        assert_eq!(
+            value(&w, "AVERAGEIFS(B1:B3,A1:A3,2,A1:A3,99)", &config),
+            CellValue::Error(CellError::Div0)
+        );
+        assert_eq!(value(&w, "COUNTIFS(A1:A3,2)", &config), 2.0.into());
+    }
+}
+
+#[test]
+fn averageif_preserves_target_read_order_and_operational_failures() {
+    let mut w = book();
+    // This unsupported operation must abort even though the first target row is rejected.
+    w.sheet_mut(0)
+        .unwrap()
+        .set_formula(
+            target("B1").address,
+            "COUNTIF(A1:A4,D1:D2)",
+            CellValue::Blank,
+        )
+        .unwrap();
+    for config in [excel(), RunConfiguration::default()] {
+        assert_eq!(value(&w, "SUMIF(A1:A4,2,B1:B4)", &config), 40.0.into());
+        assert!(matches!(
+            run_formula_with_configuration(
+                &w,
+                0,
+                target("Z1").address,
+                "IFERROR(AVERAGEIF(A1:A4,2,B1:B4),99)",
+                &config,
+                EvaluationBudgets::default()
+            ),
+            EvaluationOutcome::Aborted { .. }
+        ));
+        assert!(matches!(
+            run_formula_with_configuration(
+                &w,
+                0,
+                target("Z1").address,
+                "IFERROR(AVERAGEIF(A1:A4,2,B1:B4),99)",
+                &config,
+                EvaluationBudgets {
+                    run_work: 1,
                     ..Default::default()
                 }
             ),

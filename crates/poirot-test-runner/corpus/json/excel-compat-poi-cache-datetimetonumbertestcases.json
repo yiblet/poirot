@@ -48,13 +48,6 @@
           "expected": {
             "type": "text",
             "value": "3:43:09 PM"
-          },
-          "known_gap": {
-            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "text",
-              "value": "15:43:09"
-            }
           }
         }
       ]

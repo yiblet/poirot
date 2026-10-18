@@ -102,7 +102,7 @@ display, mode, and change-list differences always fail. `--strict` additionally
 fails recognized gaps. There is no automatic baseline refresh.
 
 The seed corpus covers rounding precision, number-to-text coercion, blank lookup
-consumers, numeric formatting, and the unresolved inline missing-IF-result gap.
+consumers, numeric formatting, and inline versus worksheet-published empty results.
 These are small authored scenarios informed by the prior compatibility research,
 not an imported third-party test suite. Extend the same structure as new behaviors
 are investigated.
@@ -110,14 +110,14 @@ are investigated.
 ## Excel compatibility expansion
 
 The complete corpus now contains **2,400 scenarios / 3,176 checks**:
-**2,254 passing scenarios and 146 precisely recognized gap scenarios** (159 gap
+**2,387 passing scenarios and 13 precisely recognized gap scenarios** (13 gap
 checks). Both execution modes agree on observations and raw final change lists.
 These counts include all authored suites, rather than only the ClosedXML collection.
 
 The `excel-compat-*.json` suites add **936 scenarios / 1,106 checks** on top of
 master's 1,464 scenarios. Every new suite explicitly uses
-`"builtin_policy": "ExcelDocumentation"`. The additions have **792 passing scenarios
-and 144 known-gap scenarios** (157 gap checks), including 110 multi-check scenarios.
+`"builtin_policy": "ExcelDocumentation"`. The additions have **925 passing scenarios
+and 11 known-gap scenarios** (11 gap checks), including 110 multi-check scenarios.
 No expected value was derived from Poirot output.
 
 | Batch | Scenarios | Checks | Evidence and purpose |
@@ -142,12 +142,19 @@ blank inputs and coordinates are preserved. No whole upstream workbook is import
 into the executable corpus.
 
 Every retained check was also recalculated through fresh isolated en-US LibreOffice
-snapshots. The exact installed suites and action indices are bound by SHA-256 in
+snapshots. The original suites and action indices are bound by SHA-256 in
 [authored-boundary evidence](evidence/excel-compat-authored-boundaries-libreoffice.json),
 [saved-value evidence](evidence/excel-compat-saved-values-libreoffice.json), and
 [saved-consumer evidence](evidence/excel-compat-saved-consumers-libreoffice.json).
-Reproduce with the same optional verifier described below, passing
-`corpus/excel-compat-*.json` and a fresh output path.
+The [integrated reconciliation](evidence/master-compat-reconciliation.md) links
+current suite hashes to refreshed reports while preserving historical hashes,
+source provenance and diagnostic disagreements. It accounts for all 144 original
+new gaps: 133 scenarios / 146 checks fixed, seven inequality-grammar and four
+approximate MATCH gaps deliberately retained. The two other current gaps are
+inherited NUMBERVALUE range disputes outside that scope. No original new-scenario
+formula, action, expected value or tolerance was changed. Reproduce with the same
+optional verifier described below, passing `corpus/excel-compat-*.json` and a fresh
+output path.
 
 The [selection audit](evidence/excel-compat-selection.json) records 2,101 screened
 candidates, rejected expectations, comparisons with existing master semantic
@@ -310,3 +317,75 @@ public contract. Omitted policy metadata retains `PinnedPoi`; both normal and
 overlay execution use the same selected policy, reported in each mode result.
 This is suite metadata, not an override on individual expected values. Unknown
 policy names are rejected during schema parsing.
+
+Relational criteria thresholds (`<`, `<=`, `>`, `>=`) under
+`ExcelDocumentation` reuse the contextual numeric and calendar grammar. Equality
+and inequality retain their established literal matching contract. Seven
+parenthesized-negative `<>` cases remain recognized gaps: broadening numeric
+interpretation would regress literal text matching unless a richer matching model
+were introduced. Independent Calc candidate-pair probes are retained in
+`evidence/criteria-threshold-controls-libreoffice.json`, including disagreements;
+they are not fresh native Excel results. The deliberately bounded change resolves
+42 scenarios without adding dual text/numeric criterion state. Refreshed source-bound
+observations for the two changed suites are in
+`evidence/criteria-relational-thresholds-libreoffice.json`.
+
+Selected result-field errors propagate through criteria aggregates under
+`ExcelDocumentation`, including AVERAGEIF. The `PinnedPoi` profile retains the
+pinned AverageIf aggregator's numeric-only target admission. Nonmatching rows
+still do not contribute worksheet errors; AVERAGEIF retains its established target
+read order, including operational failures. All 18 criteria-error scenarios were
+independently refreshed in
+`evidence/excel-compat-criteria-error-masking-libreoffice.json` after the change.
+
+
+IFS under ExcelDocumentation now selects the first true result independently at
+each retained array position, resolving the sixteen authored IFS gaps in
+`excel-compat-selector-sibling-arrays.json`. Scalar selection and PinnedPoi keep
+their existing lazy reference and omission contracts. Needed rectangular inputs
+broadcast singleton axes; incompatible non-singleton extents are rejected rather
+than emulating Calc's unused-argument shape effects or padding variations.
+The [IFS contract](evidence/ifs-array-selection-contract.md) records these limits,
+including materialized-array omission identity. Fresh source-bound Calc
+observations corroborate all 48 checks in the sibling-selector suite; diagnostic
+probes and their disagreements are preserved separately.
+
+SWITCH under ExcelDocumentation now selects the first matching case and optional
+default independently at each retained array position, resolving sixteen further
+scenarios in `excel-compat-selector-sibling-arrays.json`. It shares IFS's concrete
+rectangular selection storage and uses the existing scalar equality policy for
+every comparison. Scalar reference identity, typed comparison/error admission and
+PinnedPoi behavior are preserved. The [SWITCH contract](evidence/switch-array-selection-contract.md)
+records deliberately retained Calc differences in coercion, errors, unused shapes
+and short-result padding. All 48 suite checks were independently refreshed in
+`evidence/switch-array-selection-libreoffice.json`; diagnostic disagreements are
+retained in `evidence/switch-array-selection-probes.json`.
+
+CHOOSE under ExcelDocumentation now selects each retained index by position,
+resolving thirteen further sibling-selector scenarios. It uses the existing
+scalar numeric index policy and shared rectangular result helpers, while scalar
+selection and PinnedPoi retain their original behavior. The
+[CHOOSE contract](evidence/choose-array-selection-contract.md) records why
+Calc's boolean-index rejection and unequal-extent padding are not copied.
+All 48 suite checks were independently refreshed in
+`evidence/choose-array-selection-libreoffice.json`; diagnostic disagreements
+remain in `evidence/choose-array-selection-probes.json`.
+
+Four saved-workbook approximate `MATCH` wildcard cases remain explicit known gaps.
+The [bounded assessment](evidence/match-wildcard-contract.md) explains why matching
+predicates do not provide ordered comparisons and why the current evidence does
+not justify a wildcard-specific traversal exception. The original expectations
+and gap markers remain unchanged.
+
+The [SUMPRODUCT admission investigation](evidence/sumproduct-admission-contract.md)
+fixes the single-cell text-area gap through uniform conformable argument handling.
+Its 188 independent probes retain boolean/omission disagreements; the changed saved
+consumer suite is freshly corroborated in all 149 checks.
+
+TEXT under `ExcelDocumentation` admits numeric, formatted-number and calendar
+text through the existing contextual argument parser before applying the requested
+format. PinnedPoi keeps its arithmetic-text grammar; rejected text, booleans and
+malformed UTF16 retain their established contract. The [admission investigation](evidence/text-format-admission-contract.md)
+records the three options, diagnostic disagreements and validation limits.
+`evidence/text-format-admission-libreoffice.json` refreshes all three checks in the
+changed saved-source suite without changing expected values or formulas.

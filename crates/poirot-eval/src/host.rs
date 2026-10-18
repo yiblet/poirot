@@ -26,6 +26,7 @@ use traversal::TraversalPolicy;
 #[derive(Clone, Copy)]
 enum ArgumentDemand {
     Scalar,
+    Inherited(expression_execution::ExpressionDemand),
     ArrayPrefix(usize),
     SelectedResults {
         first: usize,
@@ -37,6 +38,7 @@ impl ArgumentDemand {
     fn at(self, index: usize) -> expression_execution::ExpressionDemand {
         use expression_execution::ExpressionDemand;
         match self {
+            Self::Inherited(demand) => demand,
             Self::ArrayPrefix(count) if index < count => ExpressionDemand::Array,
             Self::SelectedResults {
                 first,
@@ -113,6 +115,25 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             memo: HashMap::new(),
             argument_demand: ArgumentDemand::Scalar,
         }
+    }
+    /// Type-preserving consumers inherit the caller's expression demand.
+    pub(crate) fn new_inheriting(
+        session: &'call mut Session<'workbook>,
+        sheet: usize,
+        address: CellAddress,
+        arguments: impl Into<ArgumentsRef<'call>>,
+    ) -> Self {
+        let demand = session.expression_demand;
+        let mut host = Self::new(session, sheet, address, arguments);
+        host.argument_demand = ArgumentDemand::Inherited(demand);
+        host
+    }
+    /// Inspect whether an evaluated argument retains its rectangular value channel.
+    pub(crate) fn retains_array(&mut self, index: usize) -> FunctionResult<bool> {
+        self.prepare(index)?;
+        Ok(self
+            .session
+            .retains_array(&self.memo.get(&index).ok_or(VALUE_ERROR)?.value))
     }
     /// Matrix consumers request array expression execution before any operand inspection.
     pub(crate) fn new_array(

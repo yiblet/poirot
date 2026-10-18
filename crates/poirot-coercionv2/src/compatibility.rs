@@ -440,17 +440,35 @@ pub fn coercev2_concat_member_text<'a, E: From<CellError>>(
     )
 }
 
+/// Numeric text grammar requested by TEXT's value argument.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TextFormatPolicy {
+    /// Preserve the pinned arithmetic grammar and UTF8 fast path.
+    PinnedPoi,
+    /// Defer both text representations to the host's contextual numeric grammar.
+    Contextual,
+}
+
 /// TEXT retains nonnumeric strings, converts blank to zero, and spells booleans directly.
-/// The projection continuation preserves host admission and malformed-UTF16 handling.
+/// The continuation returns `None` for rejected text, preserving the original value;
+/// operational failures escape. The host supplies the selected contextual grammar
+/// and checked UTF16 projection without duplicating TEXT's value admission rules.
 pub fn coercev2_text_format_value<E>(
     value: CellValue,
+    policy: TextFormatPolicy,
     project: impl FnOnce(TextRef<'_>) -> Result<Option<f64>, E>,
 ) -> Result<(CellValue, bool), E> {
     match value {
         CellValue::Blank => Ok((CellValue::Number(0.), true)),
-        CellValue::Text(ref text) => match coercev2_arithmetic_text(text) {
-            Ok(n) => Ok((CellValue::Number(n), true)),
-            Err(_) => Ok((value, false)),
+        CellValue::Text(ref text) if policy == TextFormatPolicy::PinnedPoi => {
+            match coercev2_arithmetic_text(text) {
+                Ok(n) => Ok((CellValue::Number(n), true)),
+                Err(_) => Ok((value, false)),
+            }
+        }
+        CellValue::Text(ref text) => match project(TextRef::Utf8(text))? {
+            Some(n) => Ok((CellValue::Number(n), true)),
+            None => Ok((value, false)),
         },
         CellValue::TextUtf16(ref text) => match project(TextRef::Utf16(text.units()))? {
             Some(n) => Ok((CellValue::Number(n), true)),

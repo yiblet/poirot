@@ -1,0 +1,1285 @@
+{
+  "purpose": "Independent SWITCH shape, origin, error and laziness diagnostics. All original zero expectations are placeholders and disagreements are retained. The RAND observation is nondeterministic and is not a numeric expectation. No Poirot output supplied expectations. See switch-array-selection-contract.md for bounded target behavior and intentional differences.",
+  "primary_contract": "https://support.microsoft.com/en-us/excel/functions/switch-function",
+  "source": {
+    "schema_version": 1,
+    "builtin_policy": "ExcelDocumentation",
+    "workbook": {
+      "sheets": [
+        "S"
+      ],
+      "cells": [
+        {
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 100
+          }
+        },
+        {
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 200
+          }
+        },
+        {
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 300
+          }
+        },
+        {
+          "cell": "S!C1",
+          "content": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "cell": "S!C2",
+          "content": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "cell": "S!C3",
+          "content": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "cell": "S!D1",
+          "content": {
+            "formula": "1/0"
+          }
+        },
+        {
+          "cell": "S!E1",
+          "content": {
+            "formula": "NA()"
+          }
+        },
+        {
+          "cell": "S!F1",
+          "content": {
+            "formula": "1"
+          }
+        },
+        {
+          "cell": "S!G1",
+          "content": {
+            "formula": "1/0"
+          }
+        },
+        {
+          "cell": "S!H1",
+          "content": {
+            "formula": "1/0"
+          }
+        },
+        {
+          "cell": "S!I1",
+          "content": {
+            "formula": "2"
+          }
+        },
+        {
+          "cell": "S!D1",
+          "content": {
+            "formula": "1/0"
+          }
+        },
+        {
+          "cell": "S!E1",
+          "content": {
+            "formula": "NA()"
+          }
+        }
+      ]
+    },
+    "scenarios": [
+      {
+        "name": "SUM(SWITCH({1,2,1},1,{3,100,7},2,5,11))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1,2,1},1,{3,100,7},2,5,11))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({1,3,2},1,4,1,99,2,5,9))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1,3,2},1,4,1,99,2,5,9))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({1,2},1,{1,2,3},9))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1,2},1,{1,2,3},9))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({1,2,1},1,{1,2},9))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1,2,1},1,{1,2},9))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({1;2},1,{1,2,3},9))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1;2},1,{1,2,3},9))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH(1,{1,2},2,3))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH(1,{1,2},2,3))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({1,2},{1;2},2,3))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1,2},{1;2},2,3))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({1,1},1,2,3,{10,20,30},9))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1,1},1,2,3,{10,20,30},9))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({1,1},1,2,{10,20,30}))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1,1},1,2,{10,20,30}))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({1,2},1,2))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1,2},1,2))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({\"1\",1,TRUE},1,2,TRUE,3,9))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({\"1\",1,TRUE},1,2,TRUE,3,9))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({\"a\",\"A\"},\"a\",2,9))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({\"a\",\"A\"},\"a\",2,9))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({1,2},1,2,2,1/0))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1,2},1,2,2,1/0))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({1,1},1,2,2,1/0))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1,1},1,2,2,1/0))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({1,2},1,2,1/0,3,9))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1,2},1,2,1/0,3,9))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({1,1},1,2,1/0,3,9))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1,1},1,2,1/0,3,9))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({1,2},D1,3,1,2,9))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1,2},D1,3,1,2,9))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH(D1:E1,1,2,9))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH(D1:E1,1,2,9))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "COUNT(SWITCH({1,2},1,J1,2,3))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "COUNT(SWITCH({1,2},1,J1,2,3))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "COUNT(SWITCH({1,2},1,,2,3))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "COUNT(SWITCH({1,2},1,,2,3))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "ISREF(SWITCH(1,1,A1:A3,0))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "ISREF(SWITCH(1,1,A1:A3,0))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "ISREF(SWITCH({1},1,A1:A3,0))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "ISREF(SWITCH({1},1,A1:A3,0))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({1,2},1,2,{4,8}))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1,2},1,2,{4,8}))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({1,2},1,2,{4;8}))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1,2},1,2,{4;8}))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUMPRODUCT(SWITCH(C1:C3,TRUE,A1:A3,FALSE,B1:B3))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUMPRODUCT(SWITCH(C1:C3,TRUE,A1:A3,FALSE,B1:B3))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({0,1},J1,2,9))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({0,1},J1,2,9))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SWITCH(1/0,1,2,9)",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SWITCH(1/0,1,2,9)"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SWITCH(1,1/0,2,9)",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SWITCH(1,1/0,2,9)"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SWITCH(1,1,2,1/0,3,9)",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SWITCH(1,1,2,1/0,3,9)"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "name": "SUM(SWITCH({1,2},1,2,2,RAND(),RAND()))",
+        "evidence": [
+          "Independent diagnostic; expected zero placeholder, retain all mismatches."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "SUM(SWITCH({1,2},1,2,2,RAND(),RAND()))"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "number",
+              "value": 0
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "observations": {
+    "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+    "verified_at": "2026-10-18T02:23:27.324458+00:00",
+    "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+    "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+    "suite_sha256": {
+      "switch-array-probes.json": "f394980214231ae3cae6a6372d0d097a0359eea306ece5fc48e79c066d4f09e2"
+    },
+    "results": [
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1,2,1},1,{3,100,7},2,5,11))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 15.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1,3,2},1,4,1,99,2,5,9))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 18.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1,2},1,{1,2,3},9))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1,2,1},1,{1,2},9))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1;2},1,{1,2,3},9))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 33.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH(1,{1,2},2,3))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 5.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1,2},{1;2},2,3))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 10.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1,1},1,2,3,{10,20,30},9))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1,1},1,2,{10,20,30}))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1,2},1,2))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({\"1\",1,TRUE},1,2,TRUE,3,9))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 6.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({\"a\",\"A\"},\"a\",2,9))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 4.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1,2},1,2,2,1/0))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "error",
+              "value": "#DIV/0!"
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1,1},1,2,2,1/0))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 4.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1,2},1,2,1/0,3,9))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 11.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1,1},1,2,1/0,3,9))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 4.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1,2},D1,3,1,2,9))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 11.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH(D1:E1,1,2,9))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "COUNT(SWITCH({1,2},1,J1,2,3))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 1.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "COUNT(SWITCH({1,2},1,,2,3))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "ISREF(SWITCH(1,1,A1:A3,0))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "boolean",
+              "value": true
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "ISREF(SWITCH({1},1,A1:A3,0))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "boolean",
+              "value": false
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1,2},1,2,{4,8}))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 10.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1,2},1,2,{4;8}))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 16.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUMPRODUCT(SWITCH(C1:C3,TRUE,A1:A3,FALSE,B1:B3))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 6.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({0,1},J1,2,9))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 11.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SWITCH(1/0,1,2,9)",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "error",
+              "value": "#DIV/0!"
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SWITCH(1,1/0,2,9)",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 9.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SWITCH(1,1,2,1/0,3,9)",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      },
+      {
+        "suite": "switch-array-probes.json",
+        "name": "SUM(SWITCH({1,2},1,2,2,RAND(),RAND()))",
+        "checks": [
+          {
+            "action": 1,
+            "actual": {
+              "type": "number",
+              "value": 2.81732018136161
+            },
+            "agrees": false
+          }
+        ],
+        "agrees": false
+      }
+    ],
+    "summary": {
+      "scenarios": 30,
+      "checks": 30,
+      "corroborated_scenarios": 0,
+      "corroborated_checks": 0
+    }
+  }
+}
