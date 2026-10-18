@@ -4,7 +4,7 @@
 
 Poirot is a Rust 2024 workspace for reading, editing, evaluating, and writing Excel workbooks. `src/lib.rs` exposes the public facade; `src/artifact/` handles snapshot files. Component crates in `crates/` separate workbook models, formula parsing, evaluation, formatting, and XLS/XLSX I/O. Spreadsheet functions live in `poirot-functions-*` crates. Keep their algorithms independent of workbook and evaluator implementations; internal dependencies are limited to function-family crates, `poirot-numeric`, and the workbook-independent `poirot-coercionv2`.
 
-Root `tests/` exercises public workflows; individual crates contain unit and integration tests. Compatibility fixtures live in `crates/poirot-test-fods/corpus/`, authored JSON workbook scenarios in `crates/poirot-test-json/corpus/`, and Excel specifications in `crates/poirot-test-excel-specs/test-specs/`. See `examples/` for runnable workflows and `docs/` for API and persistence contracts.
+Root `tests/` exercises public workflows; individual crates contain unit and integration tests. Compatibility fixtures live in `crates/poirot-test-runner/corpus/fods/`, authored JSON workbook scenarios in `crates/poirot-test-runner/corpus/json/`, and Excel specifications in `crates/poirot-test-excel-specs/test-specs/`. See `examples/` for runnable workflows and `docs/` for API and persistence contracts.
 
 ## Build, Test, and Development Commands
 
@@ -12,10 +12,10 @@ Run commands from the repository root:
 
 - `cargo build --workspace` builds every workspace package.
 - `cargo run --example direct_evaluation` demonstrates direct formula evaluation.
-- `cargo test --workspace` runs workspace unit, integration, and documentation tests. Plain `cargo test` selects the root package, FODS runner, and JSON scenario runner by default.
+- `cargo test --workspace` runs workspace unit, integration, and documentation tests. Plain `cargo test` selects the root package and combined test runner by default.
 - `cargo test -p poirot-eval` targets evaluator tests.
-- `cargo run -p poirot-test-json -- --filter lookup` runs authored scenarios in normal and overlay modes and compares final change lists; add `--strict` to fail on known gaps too.
-- `cargo run --bin poirot-test-fods -- run --filter text` runs text compatibility fixtures; add `--strict` to fail on known gaps too.
+- `cargo run -p poirot-test-runner -- run --source json --filter lookup` runs authored scenarios in normal and overlay modes and compares final change lists; add `--strict` to fail on known gaps too.
+- `cargo run -p poirot-test-runner -- run --source fods --group text` runs text compatibility fixtures; add `--strict` to fail on known gaps too.
 - `python3 tools/test_function_architecture.py` checks function-crate dependency boundaries; requires Python 3.11+.
 - `cargo fmt --all -- --check` checks formatting.
 - `cargo clippy --workspace --all-targets --all-features -- -D warnings` checks lints.

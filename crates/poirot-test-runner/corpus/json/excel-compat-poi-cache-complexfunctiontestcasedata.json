@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "Read Me",
+      "Complex"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-complexfunctiontestcasedata: Complex B13 COMPLEX(1.0,\"ABCD\")",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/ComplexFunctionTestCaseData.xls",
+        "Pinned source SHA-256 e64097dffec5a2c7ce9226efc204aa1187430a2e6bea57d0aa40deee60006bcd; original worksheet 'Complex', cached cell B13, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Complex'!B13",
+          "content": {
+            "formula": "COMPLEX(1.0,\"ABCD\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Complex'!B13",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-complexfunctiontestcasedata: Complex B12 COMPLEX(\"ABCD\",0.0)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/ComplexFunctionTestCaseData.xls",
+        "Pinned source SHA-256 e64097dffec5a2c7ce9226efc204aa1187430a2e6bea57d0aa40deee60006bcd; original worksheet 'Complex', cached cell B12, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Complex'!B12",
+          "content": {
+            "formula": "COMPLEX(\"ABCD\",0.0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Complex'!B12",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-complexfunctiontestcasedata: Complex B8 COMPLEX(1.0,0.0)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/ComplexFunctionTestCaseData.xls",
+        "Pinned source SHA-256 e64097dffec5a2c7ce9226efc204aa1187430a2e6bea57d0aa40deee60006bcd; original worksheet 'Complex', cached cell B8, BIFF/OOXML typed value {\"type\": \"text\", \"value\": \"1\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Complex'!B8",
+          "content": {
+            "formula": "COMPLEX(1.0,0.0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Complex'!B8",
+          "expected": {
+            "type": "text",
+            "value": "1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-complexfunctiontestcasedata: Complex B6 COMPLEX(3.0,4.0,\"j\")",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/ComplexFunctionTestCaseData.xls",
+        "Pinned source SHA-256 e64097dffec5a2c7ce9226efc204aa1187430a2e6bea57d0aa40deee60006bcd; original worksheet 'Complex', cached cell B6, BIFF/OOXML typed value {\"type\": \"text\", \"value\": \"3+4j\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Complex'!B6",
+          "content": {
+            "formula": "COMPLEX(3.0,4.0,\"j\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Complex'!B6",
+          "expected": {
+            "type": "text",
+            "value": "3+4j"
+          }
+        }
+      ]
+    }
+  ]
+}

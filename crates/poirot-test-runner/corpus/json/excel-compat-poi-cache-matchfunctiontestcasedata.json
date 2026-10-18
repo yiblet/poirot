@@ -1,0 +1,409 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "Read Me",
+      "Match"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-matchfunctiontestcasedata: Match B51 MATCH(\"*\"&E51&\"*\",H3:H8,F51)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/MatchFunctionTestCaseData.xls",
+        "Pinned source SHA-256 1ebc7f281811efc6f6d09b1bb80f6d9e336cdaee19840c6c12ea5c2ac650afd0; original worksheet 'Match', cached cell B51, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 5.0}. Saved creating application: not recorded. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Match'!E51",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H3",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H4",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H5",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H6",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H7",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H8",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!F51",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!B51",
+          "content": {
+            "formula": "MATCH(\"*\"&E51&\"*\",H3:H8,F51)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Match'!B51",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          },
+          "known_gap": {
+            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-matchfunctiontestcasedata: Match B50 MATCH(\"G\"&\"*?\"&E50,H3:H8,F50)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/MatchFunctionTestCaseData.xls",
+        "Pinned source SHA-256 1ebc7f281811efc6f6d09b1bb80f6d9e336cdaee19840c6c12ea5c2ac650afd0; original worksheet 'Match', cached cell B50, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 4.0}. Saved creating application: not recorded. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Match'!E50",
+          "content": {
+            "type": "text",
+            "value": "eg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H3",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H4",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H5",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H6",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H7",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H8",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!F50",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!B50",
+          "content": {
+            "formula": "MATCH(\"G\"&\"*?\"&E50,H3:H8,F50)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Match'!B50",
+          "expected": {
+            "type": "number",
+            "value": 4.0
+          },
+          "known_gap": {
+            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-matchfunctiontestcasedata: Match B49 MATCH(\"G\"&\"?\"&E49,H3:H8,F49)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/MatchFunctionTestCaseData.xls",
+        "Pinned source SHA-256 1ebc7f281811efc6f6d09b1bb80f6d9e336cdaee19840c6c12ea5c2ac650afd0; original worksheet 'Match', cached cell B49, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 4.0}. Saved creating application: not recorded. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Match'!E49",
+          "content": {
+            "type": "text",
+            "value": "eg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H3",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H4",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H5",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H6",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H7",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H8",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!F49",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!B49",
+          "content": {
+            "formula": "MATCH(\"G\"&\"?\"&E49,H3:H8,F49)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Match'!B49",
+          "expected": {
+            "type": "number",
+            "value": 4.0
+          },
+          "known_gap": {
+            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-matchfunctiontestcasedata: Match B48 MATCH(\"??\"&E48,H3:H8,F48)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/MatchFunctionTestCaseData.xls",
+        "Pinned source SHA-256 1ebc7f281811efc6f6d09b1bb80f6d9e336cdaee19840c6c12ea5c2ac650afd0; original worksheet 'Match', cached cell B48, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 4.0}. Saved creating application: not recorded. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Match'!E48",
+          "content": {
+            "type": "text",
+            "value": "eg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H3",
+          "content": {
+            "type": "text",
+            "value": "Albert"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H4",
+          "content": {
+            "type": "text",
+            "value": "Charles"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H5",
+          "content": {
+            "type": "text",
+            "value": "Ed"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H6",
+          "content": {
+            "type": "text",
+            "value": "Greg"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H7",
+          "content": {
+            "type": "text",
+            "value": "Ian"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!H8",
+          "content": {
+            "type": "text",
+            "value": "Cedric"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!F48",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Match'!B48",
+          "content": {
+            "formula": "MATCH(\"??\"&E48,H3:H8,F48)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Match'!B48",
+          "expected": {
+            "type": "number",
+            "value": 4.0
+          },
+          "known_gap": {
+            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

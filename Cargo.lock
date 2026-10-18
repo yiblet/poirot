@@ -762,16 +762,15 @@ dependencies = [
 name = "poirot-test-excel-specs"
 version = "0.1.0"
 dependencies = [
- "poirot",
- "serde",
- "serde_json",
+ "poirot-test-runner",
 ]
 
 [[package]]
-name = "poirot-test-fods"
+name = "poirot-test-runner"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "poirot",
  "poirot-eval",
  "poirot-formula",
  "poirot-model",
@@ -781,16 +780,6 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
-]
-
-[[package]]
-name = "poirot-test-json"
-version = "0.1.0"
-dependencies = [
- "clap",
- "poirot",
- "serde",
- "serde_json",
 ]
 
 [[package]]

@@ -1,0 +1,423 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML extension date-domains: NetWorkDays with end date earlier than start date \u2014 NETWORKDAYS(\"3/01/2009\", \"10/01/2008\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L542: NetWorkDays_with_end_date_earlier_than_start_date",
+        "Expected behavior adapted from this upstream assertion. NetWorkDays with end date earlier than start date. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Business-day serial-calendar and signed endpoint contract uses ExcelDocumentation. Holiday duplicates are a set; start/end and holiday serials are truncated. See ../evidence/business-days-libreoffice.json and business-days-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(\"3/01/2009\", \"10/01/2008\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -108
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(1, 10, {\"2\", 3})",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L553: NetWorkDays_behavior",
+        "Expected behavior adapted from this upstream assertion. NetWorkDays behavior. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Business-day serial-calendar and signed endpoint contract uses ExcelDocumentation. Holiday duplicates are a set; start/end and holiday serials are truncated. See ../evidence/business-days-libreoffice.json and business-days-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(1, 10, {\"2\", 3})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension date-domains: Weekday without flag \u2014 WEEKDAY(\"2/14/2008\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L719: Weekday_without_flag",
+        "Expected behavior adapted from this upstream assertion. Weekday without flag. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(\"2/14/2008\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension date-domains: Weekday behavior \u2014 WEEKDAY(\"0 2/2\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L726: Weekday_behavior",
+        "Expected behavior adapted from this upstream assertion. Weekday behavior. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(\"0 2/2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension date-domains: NetWorkDays with end date earlier than start date \u2014 NETWORKDAYS(\"2016-01-01\", \"2015-12-23\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L542: NetWorkDays_with_end_date_earlier_than_start_date",
+        "Expected behavior adapted from this upstream assertion. NetWorkDays with end date earlier than start date. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Business-day serial-calendar and signed endpoint contract uses ExcelDocumentation. Holiday duplicates are a set; start/end and holiday serials are truncated. See ../evidence/business-days-libreoffice.json and business-days-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(\"2016-01-01\", \"2015-12-23\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -8
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension date-domains: Weekday behavior \u2014 WEEKDAY(1, \"1 0/2\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L726: Weekday_behavior",
+        "Expected behavior adapted from this upstream assertion. Weekday behavior. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(1, \"1 0/2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension date-domains: Weekday behavior \u2014 WEEKDAY(1, \"text\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L726: Weekday_behavior",
+        "Expected behavior adapted from this upstream assertion. Weekday behavior. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(1, \"text\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension date-domains: Weekday behavior \u2014 WEEKDAY(5, #N/A)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L726: Weekday_behavior",
+        "Expected behavior adapted from this upstream assertion. Weekday behavior. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(5, #N/A)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension date-domains: DateValue propagates error \u2014 DATEVALUE(#DIV/0!)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L161: DateValue_propagates_error",
+        "Expected behavior adapted from this upstream assertion. DateValue propagates error. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DATEVALUE(#DIV/0!)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension date-domains: Days360 Europe1 \u2014 DAYS360(\"1/1/2008\", \"3/31/2008\",TRUE)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L261: Days360_Europe1",
+        "Expected behavior adapted from this upstream assertion. Days360 Europe1. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DAYS360(\"1/1/2008\", \"3/31/2008\",TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 89
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension date-domains: Days360 Europe2 \u2014 DAYS360(\"3/31/2008\", \"1/1/2008\",TRUE)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L268: Days360_Europe2",
+        "Expected behavior adapted from this upstream assertion. Days360 Europe2. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DAYS360(\"3/31/2008\", \"1/1/2008\",TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -89
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension date-domains: Hour accepts only serial time between zero and upper limit of date system \u2014 HOUR(0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L406: Hour_accepts_only_serial_time_between_zero_and_upper_limit_of_date_system",
+        "Expected behavior adapted from this upstream assertion. Hour accepts only serial time between zero and upper limit of date system. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "HOUR(0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension date-domains: Minute accepts only serial time between zero and upper limit of date system \u2014 MINUTE(0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L433: Minute_accepts_only_serial_time_between_zero_and_upper_limit_of_date_system",
+        "Expected behavior adapted from this upstream assertion. Minute accepts only serial time between zero and upper limit of date system. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINUTE(0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension date-domains: Month serial date must be between zero and upper limit of date system \u2014 MONTH(DATE(9999,12,31) + 0.9)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L475: Month_serial_date_must_be_between_zero_and_upper_limit_of_date_system",
+        "Expected behavior adapted from this upstream assertion. Month serial date must be between zero and upper limit of date system. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MONTH(DATE(9999,12,31) + 0.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension date-domains: NetWorkDays behavior \u2014 NETWORKDAYS(DATE(2006, 1, 1), DATE(2006, 2, 1), { \"2006-01-02\", \"2006-01-16\" })",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L553: NetWorkDays_behavior",
+        "Expected behavior adapted from this upstream assertion. NetWorkDays behavior. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Business-day serial-calendar and signed endpoint contract uses ExcelDocumentation. Holiday duplicates are a set; start/end and holiday serials are truncated. See ../evidence/business-days-libreoffice.json and business-days-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(DATE(2006, 1, 1), DATE(2006, 2, 1), { \"2006-01-02\", \"2006-01-16\" })"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 21
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension date-domains: Second accepts only serial time between zero and upper limit of date system \u2014 SECOND(0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L625: Second_accepts_only_serial_time_between_zero_and_upper_limit_of_date_system",
+        "Expected behavior adapted from this upstream assertion. Second accepts only serial time between zero and upper limit of date system. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SECOND(0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    }
+  ]
+}

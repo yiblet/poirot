@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML extension logical: explicit missing false result differs from omitted false result",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LogicalTests.cs#L179: If_MissingValues_ReturnBlank",
+        "Expected behavior adapted from this upstream assertion. If MissingValues ReturnBlank. Not derived from Poirot output.",
+        "LogicalTests.cs If_2_Params_false explicitly asserts IF(1=2,\"T\") is logical FALSE. This contrasts an omitted false argument with an explicitly missing selected result; expected values are taken from the two upstream assertions.",
+        "LibreOffice 26.2.6.3 independently corroborates the explicit missing-result assertion; both final controls are rechecked in ../evidence/closedxml-extension-libreoffice.json.",
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ISBLANK(IF(FALSE,,))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IF(1=2,\"T\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        }
+      ]
+    }
+  ]
+}

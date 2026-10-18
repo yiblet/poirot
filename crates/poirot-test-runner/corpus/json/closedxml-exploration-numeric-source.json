@@ -1,0 +1,615 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML exploration numeric-source: CEILING Ceiling fraction positions (0,)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L473: Ceiling",
+        "Ceiling",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CEILING(24.3,5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 25
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: CEILING.MATH CeilingMath negative positions (0, 1, 2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L511: CeilingMath",
+        "CeilingMath",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CEILING.MATH(5.5,-2.1,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6.3
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: CEILING.MATH CeilingMath fraction positions (0, 1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L511: CeilingMath",
+        "CeilingMath",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CEILING.MATH(5.5,2.1,10)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6.3
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: CEILING.MATH CeilingMath negative positions (0, 1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L511: CeilingMath",
+        "CeilingMath",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CEILING.MATH(5.5,-2.1,10)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6.3
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: FLOOR Floor negative positions (0, 1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1064: Floor",
+        "Floor",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FLOOR(-5.5,2.1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -6.3
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: FLOOR.MATH FloorMath fraction positions (0, 1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1107: FloorMath",
+        "FloorMath",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FLOOR.MATH(5.5,2.1,10)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4.2
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: FLOOR.MATH FloorMath negative positions (0, 1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1107: FloorMath",
+        "FloorMath",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FLOOR.MATH(5.5,-2.1,10)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4.2
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: MROUND MRound zero positions (1,)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1579: MRound",
+        "MRound",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MROUND(3,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: ROUND Round negative positions (1,)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1839: Round",
+        "Round",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROUND(1,-1e+100)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: ROUNDDOWN RoundDown negative positions (0, 1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1850: RoundDown",
+        "RoundDown",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROUNDDOWN(31415.92654,-2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 31400.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: ROUNDUP RoundUp negative positions (0, 1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1862: RoundUp",
+        "RoundUp",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROUNDUP(31415.92654,-2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 31500.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: ROUNDUP RoundUp zero positions (1,)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1862: RoundUp",
+        "RoundUp",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROUNDUP(11,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: EVEN Even fraction positions (0,)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L918: Even",
+        "Even",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EVEN(1.5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: ODD Odd negative positions (0,)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1648: Odd",
+        "Odd",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ODD(-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: COMBIN Combin_calculates_combinations zero positions (1,)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L555: Combin_calculates_combinations",
+        "Combin calculates combinations",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COMBIN(1,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: COMBIN Combin_returns_value_error_for_any_non_numeric_argument text positions ()",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L613: Combin_returns_value_error_for_any_non_numeric_argument",
+        "Combin returns value error for any non numeric argument",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COMBIN(\"\"\"no number\"\"\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: MOD rounding controls contrasts",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1541: Mod",
+        "Mod",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MOD(1.5,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.5
+          },
+          "tolerance": 1e-09
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MOD(0.7,0.6)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.1
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: TRUNC rounding controls contrasts",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L2873: Trunc",
+        "Trunc",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See the hash-bound exploration evidence record for this suite. Calc corroboration is not a native Excel execution claim.",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L2883: Trunc_Specify_Digits",
+        "Trunc Specify Digits"
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TRUNC(27.64799257,)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 27
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TRUNC(-4.3,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TRUNC(-8.9,)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -8
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TRUNC(27.64799257,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TRUNC(27.64799257,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 27.6
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numeric-source: INT rounding controls contrasts",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1173: Int",
+        "Int",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "INT(8.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 8
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "INT(-8.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -9
+          }
+        }
+      ]
+    }
+  ]
+}

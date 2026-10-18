@@ -1,0 +1,243 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML exploration financial-periods: NPV numeric text ignored",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/npv-function",
+        "Cash flows occur at period ends. numeric text ignored. At rate 1, divide each retained flow by successive powers of two; skipped referenced values do not occupy a period.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 100
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "200"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 400
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NPV(1,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 150
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration financial-periods: NPV blank ignored",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/npv-function",
+        "Cash flows occur at period ends. blank ignored. At rate 1, divide each retained flow by successive powers of two; skipped referenced values do not occupy a period.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 100
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 400
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NPV(1,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 150
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration financial-periods: NPV zero occupies a period",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/npv-function",
+        "Cash flows occur at period ends. zero occupies a period. At rate 1, divide each retained flow by successive powers of two; skipped referenced values do not occupy a period.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 100
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 400
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NPV(1,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 100
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration financial-periods: NPV negative flow keeps sign",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/npv-function",
+        "Cash flows occur at period ends. negative flow keeps sign. At rate 1, divide each retained flow by successive powers of two; skipped referenced values do not occupy a period.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": -100
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 200
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NPV(1,A1:A2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration financial-periods: NPV initial flow discounted",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/npv-function",
+        "Cash flows occur at period ends. initial flow discounted. At rate 1, divide each retained flow by successive powers of two; skipped referenced values do not occupy a period.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 100
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NPV(1,A1:A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 50
+          }
+        }
+      ]
+    }
+  ]
+}

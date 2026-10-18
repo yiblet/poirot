@@ -1,0 +1,431 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "Read Me",
+      "Index"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-indexfunctiontestcasedata: Index B138 SUM(INDEX(Index!$J$123:$M$125,E138,F138))",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IndexFunctionTestCaseData.xls",
+        "Pinned source SHA-256 69417abbe4a48207ba408d6cd4e803afbef7bf765813462760ee3bfc7a3b04c7; original worksheet 'Index', cached cell B138, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#REF!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Index'!J123",
+          "content": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!K123",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!L123",
+          "content": {
+            "type": "number",
+            "value": 3.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!M123",
+          "content": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!J124",
+          "content": {
+            "type": "number",
+            "value": 0.1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!K124",
+          "content": {
+            "type": "number",
+            "value": 0.3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!L124",
+          "content": {
+            "type": "number",
+            "value": 0.2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!M124",
+          "content": {
+            "type": "number",
+            "value": 0.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!J125",
+          "content": {
+            "type": "number",
+            "value": 10.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!K125",
+          "content": {
+            "type": "number",
+            "value": 20.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!L125",
+          "content": {
+            "type": "number",
+            "value": 50.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!M125",
+          "content": {
+            "type": "number",
+            "value": 40.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!E138",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!F138",
+          "content": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!B138",
+          "content": {
+            "formula": "SUM(INDEX(Index!$J$123:$M$125,E138,F138))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Index'!B138",
+          "expected": {
+            "type": "error",
+            "value": "#REF!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-indexfunctiontestcasedata: Index B133 SUM(INDEX(Index!$J$123:$M$125,E133,F133))",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IndexFunctionTestCaseData.xls",
+        "Pinned source SHA-256 69417abbe4a48207ba408d6cd4e803afbef7bf765813462760ee3bfc7a3b04c7; original worksheet 'Index', cached cell B133, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#REF!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Index'!J123",
+          "content": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!K123",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!L123",
+          "content": {
+            "type": "number",
+            "value": 3.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!M123",
+          "content": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!J124",
+          "content": {
+            "type": "number",
+            "value": 0.1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!K124",
+          "content": {
+            "type": "number",
+            "value": 0.3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!L124",
+          "content": {
+            "type": "number",
+            "value": 0.2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!M124",
+          "content": {
+            "type": "number",
+            "value": 0.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!J125",
+          "content": {
+            "type": "number",
+            "value": 10.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!K125",
+          "content": {
+            "type": "number",
+            "value": 20.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!L125",
+          "content": {
+            "type": "number",
+            "value": 50.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!M125",
+          "content": {
+            "type": "number",
+            "value": 40.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!E133",
+          "content": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!F133",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!B133",
+          "content": {
+            "formula": "SUM(INDEX(Index!$J$123:$M$125,E133,F133))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Index'!B133",
+          "expected": {
+            "type": "error",
+            "value": "#REF!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-indexfunctiontestcasedata: Index B135 SUM(INDEX(Index!$J$123:$M$125,E135,F135))",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IndexFunctionTestCaseData.xls",
+        "Pinned source SHA-256 69417abbe4a48207ba408d6cd4e803afbef7bf765813462760ee3bfc7a3b04c7; original worksheet 'Index', cached cell B135, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 22.3}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Index'!J123",
+          "content": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!K123",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!L123",
+          "content": {
+            "type": "number",
+            "value": 3.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!M123",
+          "content": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!J124",
+          "content": {
+            "type": "number",
+            "value": 0.1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!K124",
+          "content": {
+            "type": "number",
+            "value": 0.3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!L124",
+          "content": {
+            "type": "number",
+            "value": 0.2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!M124",
+          "content": {
+            "type": "number",
+            "value": 0.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!J125",
+          "content": {
+            "type": "number",
+            "value": 10.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!K125",
+          "content": {
+            "type": "number",
+            "value": 20.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!L125",
+          "content": {
+            "type": "number",
+            "value": 50.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!M125",
+          "content": {
+            "type": "number",
+            "value": 40.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!E135",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!F135",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Index'!B135",
+          "content": {
+            "formula": "SUM(INDEX(Index!$J$123:$M$125,E135,F135))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Index'!B135",
+          "expected": {
+            "type": "number",
+            "value": 22.3
+          },
+          "tolerance": 2.23e-10
+        }
+      ]
+    }
+  ]
+}

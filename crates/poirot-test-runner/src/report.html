@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poirot test results</title>
+<style>
+:root{font:15px system-ui;color:#dfe6ef;background:#101720;color-scheme:dark}body{max-width:1200px;margin:36px auto;padding:0 24px}h1{font-size:28px;margin-bottom:8px}.muted{color:#9eafc1}nav{display:flex;gap:12px;flex-wrap:wrap;margin:28px 0}input,select{background:#192432;border:1px solid #35465b;border-radius:6px;padding:10px;color:inherit}input{flex:1;min-width:220px}summary{cursor:pointer;padding:14px;border-bottom:1px solid #35465b}details{margin:8px 0;background:#192432;border-radius:6px}.case{padding:14px 20px;border-bottom:1px solid #35465b}.bad{color:#ffada5}.good{color:#95d9b2}.tag{font-size:12px;border:1px solid #52677f;border-radius:4px;padding:2px 6px;margin-right:8px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px ui-monospace,monospace;background:#101720;padding:14px;border-radius:4px}button{cursor:pointer;border:1px solid #52677f;padding:6px 10px;border-radius:4px;background:transparent;color:inherit}#counts{line-height:1.8}label{display:flex;gap:5px;align-items:center}
+</style>
+<h1>Poirot test results</h1><div id="baseline" class="muted"></div><div id="counts"></div><div id="changes" class="muted"></div>
+<nav><input id="search" type="search" placeholder="Search tests, formulas, locations…" aria-label="Search tests">
+<select id="source" aria-label="Source"><option value="">All sources</option></select>
+<select id="group" aria-label="Group"><option value="">All groups</option></select>
+<select id="outcome" aria-label="Outcome"><option value="">All outcomes</option></select>
+<select id="change" aria-label="Baseline change"><option value="">All baseline changes</option></select></nav>
+<div id="matches" class="muted" aria-live="polite"></div><main id="results"></main>
+<script type="application/json" id="data">__REPORT_DATA__</script>
+<script>
+const report=JSON.parse(document.getElementById('data').textContent);
+const el=id=>document.getElementById(id);
+const node=(tag,text,cls)=>{const n=document.createElement(tag);n.textContent=text;if(cls)n.className=cls;return n};
+const observationText=o=>o?o.outcome+(o.category?' / '+o.category:''):'no recorded observation';
+el('baseline').textContent='Compared with '+report.header.baseline_path+' · '+report.header.baseline_digest;
+el('counts').textContent=(report.summary.successful?'PASS':'FAIL')+' · '+report.summary.selected+' selected · '+Object.entries(report.summary.outcomes).map(([k,v])=>v+' '+k).join(' · ');
+el('changes').textContent='Changes since baseline · '+Object.entries(report.summary.changes).filter(([k])=>k!=='unchanged').map(([k,v])=>v+' '+k).concat(report.summary.removed+' removed').join(' · ');
+for(const [id,values] of [['source',report.cases.map(r=>r.case.source)],['group',report.cases.map(r=>r.case.group)],['outcome',report.cases.map(r=>r.observation.outcome)],['change',report.cases.map(r=>r.change)]]){
+ for(const value of [...new Set(values)].sort()){const o=node('option',value);o.value=value;el(id).append(o)}
+ el(id).addEventListener('change',render);
+}
+el('search').addEventListener('input',render);
+function render(){
+ const text=el('search').value.toLowerCase();
+ const rows=report.cases.filter(r=>(!el('source').value||r.case.source===el('source').value)&&(!el('group').value||r.case.group===el('group').value)&&(!el('outcome').value||r.observation.outcome===el('outcome').value)&&(!el('change').value||r.change===el('change').value)&&[r.case.id,r.case.suite,r.case.name,r.case.location,r.case.formula||''].join(' ').toLowerCase().includes(text));
+ el('matches').textContent=rows.length+' matching cases';el('results').replaceChildren();
+ const groups=new Map();for(const r of rows){const key=r.case.source+' / '+r.case.group+' / '+r.case.suite;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r)}
+ for(const [key,cases] of [...groups.entries()].sort(([a],[b])=>a.localeCompare(b))){
+  const d=document.createElement('details');const counts=new Map();for(const r of cases){const k=r.observation.outcome;counts.set(k,(counts.get(k)||0)+1)}
+  d.append(node('summary',key+' — '+[...counts].map(([k,v])=>v+' '+k).join(' · ')));
+  let populated=false;d.addEventListener('toggle',()=>{if(!d.open||populated)return;populated=true;
+   for(const r of cases){const c=node('section','', 'case');c.append(node('span',r.observation.outcome,'tag'),node('span',r.change,'tag'),node('strong',r.case.name));
+    const detail=document.createElement('details');detail.append(node('summary',r.case.id));
+    detail.append(node('pre','Location: '+r.case.location+'\nAuthority: '+r.case.authority+'\nFormula: '+(r.case.formula||'')+'\nBaseline: '+observationText(r.baseline)+'\nCurrent: '+observationText(r.observation)+'\n\n'+r.reason+'\n\nEvidence:\n'+r.case.evidence.join('\n')));
+    const command="cargo run -p poirot-test-runner -- run --case '"+r.case.id.replaceAll("'","'\\''")+"'";detail.append(node('pre',command));
+    const raw=document.createElement('details');raw.append(node('summary','Native result — typed observations and ordered change lists'),node('pre',JSON.stringify(r.details,null,2)));detail.append(raw);c.append(detail);d.append(c);
+   }
+  });el('results').append(d);
+ }
+ if(report.removed.length){const d=document.createElement('details');d.append(node('summary',report.removed.length+' removed tests since baseline'),node('pre',report.removed.join('\n')));el('results').append(d)}
+}
+render();
+</script></html>

@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "roundup avoids binary multiplication residue",
+      "evidence": [
+        "https://github.com/apache/poi/blob/REL_5_4_1/poi/src/test/java/org/apache/poi/ss/formula/functions/TestRoundFuncs.java: testRoundUp"
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "ROUNDUP(3987*0.2,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 797.4
+          }
+        }
+      ]
+    },
+    {
+      "name": "round decimal near half",
+      "evidence": [
+        "https://github.com/apache/poi/blob/REL_5_4_1/poi/src/test/java/org/apache/poi/ss/formula/functions/TestMathX.java: round regression"
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "ROUND(0.049999999999999975,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 0.1
+          }
+        }
+      ]
+    },
+    {
+      "name": "rounddown control",
+      "evidence": [
+        "https://github.com/apache/poi/blob/REL_5_4_1/poi/src/test/java/org/apache/poi/ss/formula/functions/TestRoundFuncs.java"
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "ROUNDDOWN(3987*0.2,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 797.4
+          }
+        }
+      ]
+    }
+  ]
+}

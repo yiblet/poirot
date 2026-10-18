@@ -1,0 +1,2115 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "Sheet1"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-matrixformulaevaltestdata: Sheet1 original array H34 contrasting controls",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/MatrixFormulaEvalTestData.xls",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell H34, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell I34, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell H35, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell I35, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "The reconstructed BIFF array components are observed sequentially through one output cell. INDEX carries each original component coordinate explicitly. A proposed multi-output observation workflow produced a normal/overlay change-list mismatch and was excluded; it is not annotated as a scalar gap.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B34",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C34",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D34",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B35",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C35",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D35",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B36",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C36",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D36",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H34",
+          "content": {
+            "formula": "INDEX(MINVERSE(B34:D36),1,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H34",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B34",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C34",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D34",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B35",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C35",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D35",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B36",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C36",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D36",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H34",
+          "content": {
+            "formula": "INDEX(MINVERSE(B34:D36),1,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H34",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B34",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C34",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D34",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B35",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C35",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D35",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B36",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C36",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D36",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H34",
+          "content": {
+            "formula": "INDEX(MINVERSE(B34:D36),2,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H34",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B34",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C34",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D34",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B35",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C35",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D35",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B36",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C36",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D36",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H34",
+          "content": {
+            "formula": "INDEX(MINVERSE(B34:D36),2,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H34",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-matrixformulaevaltestdata: Sheet1 H30 MDETERM(B30:D32)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/MatrixFormulaEvalTestData.xls",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell H30, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B30",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C30",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D30",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B31",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C31",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D31",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B32",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C32",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D32",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H30",
+          "content": {
+            "formula": "MDETERM(B30:D32)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H30",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-matrixformulaevaltestdata: Sheet1 original array H14 contrasting controls",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/MatrixFormulaEvalTestData.xls",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell H14, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell I14, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell H15, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell I15, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "The reconstructed BIFF array components are observed sequentially through one output cell. INDEX carries each original component coordinate explicitly. A proposed multi-output observation workflow produced a normal/overlay change-list mismatch and was excluded; it is not annotated as a scalar gap.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B14",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C14",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D14",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B15",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C15",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D15",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B16",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C16",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D16",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H14",
+          "content": {
+            "formula": "INDEX(MINVERSE(B14:D16),1,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H14",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B14",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C14",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D14",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B15",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C15",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D15",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B16",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C16",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D16",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H14",
+          "content": {
+            "formula": "INDEX(MINVERSE(B14:D16),1,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H14",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B14",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C14",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D14",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B15",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C15",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D15",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B16",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C16",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D16",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H14",
+          "content": {
+            "formula": "INDEX(MINVERSE(B14:D16),2,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H14",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B14",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C14",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D14",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B15",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C15",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D15",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B16",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C16",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D16",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H14",
+          "content": {
+            "formula": "INDEX(MINVERSE(B14:D16),2,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H14",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-matrixformulaevaltestdata: Sheet1 H10 MDETERM(B10:D12)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/MatrixFormulaEvalTestData.xls",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell H10, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B10",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C10",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D10",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B11",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C11",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D11",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B12",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C12",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D12",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H10",
+          "content": {
+            "formula": "MDETERM(B10:D12)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H10",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-matrixformulaevaltestdata: Sheet1 original array H38 contrasting controls",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/MatrixFormulaEvalTestData.xls",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell H38, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell I38, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell H39, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell I39, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "The reconstructed BIFF array components are observed sequentially through one output cell. INDEX carries each original component coordinate explicitly. A proposed multi-output observation workflow produced a normal/overlay change-list mismatch and was excluded; it is not annotated as a scalar gap.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B38",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C38",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D38",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E38",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F38",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G38",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H38",
+          "content": {
+            "formula": "INDEX(MMULT(B38:D40,E38:G40),1,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H38",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B38",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C38",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D38",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E38",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F38",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G38",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H38",
+          "content": {
+            "formula": "INDEX(MMULT(B38:D40,E38:G40),1,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H38",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B38",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C38",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D38",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E38",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F38",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G38",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H38",
+          "content": {
+            "formula": "INDEX(MMULT(B38:D40,E38:G40),2,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H38",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B38",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C38",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D38",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E38",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F38",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G38",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G39",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G40",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H38",
+          "content": {
+            "formula": "INDEX(MMULT(B38:D40,E38:G40),2,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H38",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-matrixformulaevaltestdata: Sheet1 H90 MDETERM(B90:B91)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/MatrixFormulaEvalTestData.xls",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell H90, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B90",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B91",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H90",
+          "content": {
+            "formula": "MDETERM(B90:B91)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H90",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-matrixformulaevaltestdata: Sheet1 original array H18 contrasting controls",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/MatrixFormulaEvalTestData.xls",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell H18, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell I18, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell H19, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell I19, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "The reconstructed BIFF array components are observed sequentially through one output cell. INDEX carries each original component coordinate explicitly. A proposed multi-output observation workflow produced a normal/overlay change-list mismatch and was excluded; it is not annotated as a scalar gap.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H18",
+          "content": {
+            "formula": "INDEX(MMULT(B18:D20,E18:G20),1,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H18",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H18",
+          "content": {
+            "formula": "INDEX(MMULT(B18:D20,E18:G20),1,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H18",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H18",
+          "content": {
+            "formula": "INDEX(MMULT(B18:D20,E18:G20),2,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H18",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G19",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H18",
+          "content": {
+            "formula": "INDEX(MMULT(B18:D20,E18:G20),2,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H18",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-matrixformulaevaltestdata: Sheet1 H70 MDETERM(B70:C70)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/MatrixFormulaEvalTestData.xls",
+        "Pinned source SHA-256 4d3c458a201f6577614d3a15d6102f2cc474ce862ae11e4ccfbb059447c25a72; original worksheet 'Sheet1', cached cell H70, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B70",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C70",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H70",
+          "content": {
+            "formula": "MDETERM(B70:C70)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!H70",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    }
+  ]
+}

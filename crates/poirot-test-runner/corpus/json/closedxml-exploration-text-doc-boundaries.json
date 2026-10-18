@@ -1,0 +1,2034 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: LEFT missing length is one",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/left-function",
+        "Documented text operation composed at this boundary: missing length is one.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "LEFT(\"edge\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "e"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: LEFT explicit missing length is zero",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/left-function",
+        "Documented text operation composed at this boundary: explicit missing length is zero.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "LEFT(\"edge\",)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: LEFT fraction length truncated",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/left-function",
+        "Documented text operation composed at this boundary: fraction length truncated.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "LEFT(\"edge\",2.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "ed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: LEFT negative length rejected",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/left-function",
+        "Documented text operation composed at this boundary: negative length rejected.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "LEFT(\"edge\",-0.1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: LEFT numeric text length",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/left-function",
+        "Documented text operation composed at this boundary: numeric text length.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "LEFT(\"edge\",\"2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "ed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: LEFT error length propagates",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/left-function",
+        "Documented text operation composed at this boundary: error length propagates.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "LEFT(\"edge\",#N/A)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: RIGHT missing length is one",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/right-function",
+        "Documented text operation composed at this boundary: missing length is one.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "RIGHT(\"edge\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "e"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: RIGHT explicit missing length zero",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/right-function",
+        "Documented text operation composed at this boundary: explicit missing length zero.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "RIGHT(\"edge\",)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: RIGHT fraction length truncated",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/right-function",
+        "Documented text operation composed at this boundary: fraction length truncated.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "RIGHT(\"edge\",2.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "ge"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: RIGHT negative length rejected",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/right-function",
+        "Documented text operation composed at this boundary: negative length rejected.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "RIGHT(\"edge\",-0.1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: RIGHT numeric text length",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/right-function",
+        "Documented text operation composed at this boundary: numeric text length.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "RIGHT(\"edge\",\"2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "ge"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: RIGHT error length propagates",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/right-function",
+        "Documented text operation composed at this boundary: error length propagates.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "RIGHT(\"edge\",#N/A)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: MID fraction start and length truncate",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mid-function",
+        "Documented text operation composed at this boundary: fraction start and length truncate.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MID(\"abcdef\",2.9,2.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "bc"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: MID start zero rejected even empty result",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mid-function",
+        "Documented text operation composed at this boundary: start zero rejected even empty result.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MID(\"abc\",0,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: MID beyond end returns empty",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mid-function",
+        "Documented text operation composed at this boundary: beyond end returns empty.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MID(\"abc\",99,4)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: MID overshoot clips",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mid-function",
+        "Documented text operation composed at this boundary: overshoot clips.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MID(\"abc\",2,99)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "bc"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: MID negative length rejected",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mid-function",
+        "Documented text operation composed at this boundary: negative length rejected.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MID(\"abc\",2,-0.1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: MID text start grammar",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L82: mixed-fraction grammar transferred to a text index/count consumer.",
+        "https://support.microsoft.com/en-us/excel/functions/mid-function",
+        "Documented text operation composed at this boundary: text start grammar.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MID(\"abc\",\"1 1/2\",1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "a"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: MID empty source still validates start",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mid-function",
+        "Documented text operation composed at this boundary: empty source still validates start.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MID(\"\",0,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: REPLACE zero count inserts",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/replace-function",
+        "Documented text operation composed at this boundary: zero count inserts.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "REPLACE(\"abcd\",3,0,\"X\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "abXcd"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: REPLACE start beyond end appends",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/replace-function",
+        "Documented text operation composed at this boundary: start beyond end appends.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "REPLACE(\"abcd\",99,2,\"X\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "abcdX"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: REPLACE overshoot removes remainder",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/replace-function",
+        "Documented text operation composed at this boundary: overshoot removes remainder.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "REPLACE(\"abcd\",3,99,\"X\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "abX"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: REPLACE fraction positions truncate",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/replace-function",
+        "Documented text operation composed at this boundary: fraction positions truncate.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "REPLACE(\"abcd\",2.9,1.9,\"X\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "aXcd"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: REPLACE zero start rejected",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/replace-function",
+        "Documented text operation composed at this boundary: zero start rejected.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "REPLACE(\"abcd\",0,0,\"X\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: REPLACE empty replacement deletes",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/replace-function",
+        "Documented text operation composed at this boundary: empty replacement deletes.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "REPLACE(\"abcd\",2,2,\"\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "ad"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: REPLACE negative count rejected",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/replace-function",
+        "Documented text operation composed at this boundary: negative count rejected.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "REPLACE(\"abcd\",2,-1,\"X\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: SUBSTITUTE nonoverlapping all occurrences",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/substitute-function",
+        "Documented text operation composed at this boundary: nonoverlapping all occurrences.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUBSTITUTE(\"aaaaa\",\"aa\",\"X\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "XXa"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: SUBSTITUTE nth occurrence scans source",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/substitute-function",
+        "Documented text operation composed at this boundary: nth occurrence scans source.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUBSTITUTE(\"aaaaa\",\"aa\",\"X\",2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "aaXa"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: SUBSTITUTE case sensitive",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/substitute-function",
+        "Documented text operation composed at this boundary: case sensitive.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUBSTITUTE(\"aAa\",\"a\",\"x\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "xAx"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: SUBSTITUTE empty needle no insertions",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/substitute-function",
+        "Documented text operation composed at this boundary: empty needle no insertions.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUBSTITUTE(\"abc\",\"\",\"X\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "abc"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: SUBSTITUTE absent occurrence unchanged",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/substitute-function",
+        "Documented text operation composed at this boundary: absent occurrence unchanged.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUBSTITUTE(\"aba\",\"a\",\"x\",3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "aba"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: SUBSTITUTE instance zero invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/substitute-function",
+        "Documented text operation composed at this boundary: instance zero invalid.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUBSTITUTE(\"aba\",\"a\",\"x\",0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: SUBSTITUTE fraction instance truncates",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/substitute-function",
+        "Documented text operation composed at this boundary: fraction instance truncates.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUBSTITUTE(\"aba\",\"a\",\"x\",1.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "xba"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: SUBSTITUTE replacement not rescanned",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/substitute-function",
+        "Documented text operation composed at this boundary: replacement not rescanned.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUBSTITUTE(\"ab\",\"a\",\"aa\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "aab"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: REPT fraction count truncates",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/rept-function",
+        "Documented text operation composed at this boundary: fraction count truncates.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "REPT(\"ab\",2.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "abab"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: REPT zero count empty",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/rept-function",
+        "Documented text operation composed at this boundary: zero count empty.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "REPT(\"ab\",0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: REPT empty source large repetition stays empty",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/rept-function",
+        "Documented text operation composed at this boundary: empty source large repetition stays empty.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "REPT(\"\",32768)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: REPT output maximum exact",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/rept-function",
+        "Documented text operation composed at this boundary: output maximum exact.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "LEN(REPT(\"x\",32767))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 32767
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: REPT negative fractional count invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/rept-function",
+        "Documented text operation composed at this boundary: negative fractional count invalid.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "REPT(\"x\",-0.1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: REPT numeric text repeat count",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L82: mixed-fraction grammar transferred to a text index/count consumer.",
+        "https://support.microsoft.com/en-us/excel/functions/rept-function",
+        "Documented text operation composed at this boundary: numeric text repeat count.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "REPT(\"x\",\"1 1/2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "x"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: TRIM NBSP preserved",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/trim-function",
+        "Documented text operation composed at this boundary: NBSP preserved.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TRIM(\" \u00a0a\u00a0 \")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "\u00a0a\u00a0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: TRIM tab preserved",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/trim-function",
+        "Documented text operation composed at this boundary: tab preserved.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TRIM(\"a\"&CHAR(9)&\"b\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "a\tb"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: TRIM only spaces removed",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/trim-function",
+        "Documented text operation composed at this boundary: only spaces removed.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TRIM(\"     \")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: TRIM internal runs collapse",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/trim-function",
+        "Documented text operation composed at this boundary: internal runs collapse.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TRIM(\"  a   b  \")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "a b"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: TRIM zero string retained",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/trim-function",
+        "Documented text operation composed at this boundary: zero string retained.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TRIM(0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: CLEAN ASCII tab and LF removed",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/clean-function",
+        "Documented text operation composed at this boundary: ASCII tab and LF removed.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CLEAN(\"a\"&CHAR(9)&CHAR(10)&\"b\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "ab"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: CLEAN spaces retained",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/clean-function",
+        "Documented text operation composed at this boundary: spaces retained.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CLEAN(\" a  b \")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": " a  b "
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: EXACT number requests text conversion",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/exact-function",
+        "Documented text operation composed at this boundary: number requests text conversion.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EXACT(12,\"12\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: EXACT comparison remains case sensitive",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/exact-function",
+        "Documented text operation composed at this boundary: comparison remains case sensitive.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EXACT(\"True\",\"TRUE\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: EXACT blank reference differs from zero",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/exact-function",
+        "Documented text operation composed at this boundary: blank reference differs from zero.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EXACT(A1,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: EXACT blank reference equals empty text",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/exact-function",
+        "Documented text operation composed at this boundary: blank reference equals empty text.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EXACT(A1,\"\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: FIND wildcard treated literally",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/find-function",
+        "Documented text operation composed at this boundary: wildcard treated literally.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FIND(\"?\",\"ab?cd\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: FIND case sensitive",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/find-function",
+        "Documented text operation composed at this boundary: case sensitive.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FIND(\"A\",\"abc\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: FIND start zero invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/find-function",
+        "Documented text operation composed at this boundary: start zero invalid.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FIND(\"a\",\"abc\",0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: FIND search starts after earlier match",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/find-function",
+        "Documented text operation composed at this boundary: search starts after earlier match.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FIND(\"a\",\"abac\",2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: FIND numeric text fractional start",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L82: mixed-fraction grammar transferred to a text index/count consumer.",
+        "https://support.microsoft.com/en-us/excel/functions/find-function",
+        "Documented text operation composed at this boundary: numeric text fractional start.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FIND(\"b\",\"abc\",\"1 1/2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: SEARCH escaped star literal",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/search-function",
+        "Documented text operation composed at this boundary: escaped star literal.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SEARCH(\"~*\",\"ab*cd\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: SEARCH escaped question literal",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/search-function",
+        "Documented text operation composed at this boundary: escaped question literal.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SEARCH(\"~?\",\"ab?cd\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: SEARCH case insensitive",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/search-function",
+        "Documented text operation composed at this boundary: case insensitive.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SEARCH(\"AB\",\"zab\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: SEARCH wildcard suffix can be empty",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/search-function",
+        "Documented text operation composed at this boundary: wildcard suffix can be empty.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SEARCH(\"b*\",\"ab\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration text-doc-boundaries: SEARCH unmatched pattern error",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/search-function",
+        "Documented text operation composed at this boundary: unmatched pattern error.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SEARCH(\"a?c\",\"ac\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    }
+  ]
+}

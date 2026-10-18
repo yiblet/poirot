@@ -1,0 +1,601 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML origins: ISBLANK observes referenced scalar type after edits \u2014 ISBLANK(A1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/InformationTests.cs#L38: IsBlank_EmptyCell_True; IsBlank_NonEmptyCell_False; IsBlank_NonEmptyValue_False",
+        "Adapted from the cited assertion and its fixture. ISBLANK observes referenced scalar type after edits. Expected values are authored from upstream, not Poirot.",
+        "The formula stays unchanged while A1 is edited; subsequent checks exercise dependency invalidation in both evaluation modes.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ISBLANK(A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML origins: ISTEXT observes referenced scalar type after edits \u2014 ISTEXT(A1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/InformationTests.cs#L447: IsText_BlankCell_False; IsText_NonText_False; IsText_CellWithText_True",
+        "Adapted from the cited assertion and its fixture. ISTEXT observes referenced scalar type after edits. Expected values are authored from upstream, not Poirot.",
+        "The formula stays unchanged while A1 is edited; subsequent checks exercise dependency invalidation in both evaluation modes.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ISTEXT(A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML origins: ISLOGICAL observes referenced scalar type after edits \u2014 ISLOGICAL(A1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/InformationTests.cs#L200: IsLogical_OnlyLogical_True; IsLogical_NonLogicalValue_False; IsLogical_ReferenceToLogicalValue_True",
+        "Adapted from the cited assertion and its fixture. ISLOGICAL observes referenced scalar type after edits. Expected values are authored from upstream, not Poirot.",
+        "The formula stays unchanged while A1 is edited; subsequent checks exercise dependency invalidation in both evaluation modes.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ISLOGICAL(A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML origins: ISERROR observes referenced scalar type after edits \u2014 ISERROR(A1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/InformationTests.cs#L114: IsError_Errors_True; IsError_NonErrors_False",
+        "Adapted from the cited assertion and its fixture. ISERROR observes referenced scalar type after edits. Expected values are authored from upstream, not Poirot.",
+        "The formula stays unchanged while A1 is edited; subsequent checks exercise dependency invalidation in both evaluation modes.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ISERROR(A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML origins: COUNTA counts typed reference edits \u2014 COUNTA(A1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L183: CountA_counts_non_blank_values",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L244: CountA_counts_empty_string supports the empty-text control.",
+        "Adapted from the cited assertion and its fixture. COUNTA counts typed reference edits. Expected values are authored from upstream, not Poirot.",
+        "The formula stays unchanged while A1 is edited; subsequent checks exercise dependency invalidation in both evaluation modes.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTA(A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML origins: COUNTBLANK counts typed reference edits \u2014 COUNTBLANK(A1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L253: CountBlank",
+        "Adapted from the cited assertion and its fixture. COUNTBLANK counts typed reference edits. Expected values are authored from upstream, not Poirot.",
+        "The formula stays unchanged while A1 is edited; subsequent checks exercise dependency invalidation in both evaluation modes.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTBLANK(A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    }
+  ]
+}

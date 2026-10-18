@@ -1,0 +1,498 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility distribution-boundaries: distribution text mean invalid contrasting controls",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/norm-dist-function",
+        "Normal distribution boundary text mean invalid. At its mean a continuous symmetric CDF is one half; density is 1/(sigma*sqrt(2*pi)).",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NORM.DIST(0,\"bad\",1,TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NORMDIST(0,\"bad\",1,TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility distribution-boundaries: distribution at mean CDF half contrasting controls",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/norm-dist-function",
+        "Normal distribution boundary at mean CDF half. At its mean a continuous symmetric CDF is one half; density is 1/(sigma*sqrt(2*pi)).",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NORM.DIST(7,7,3,TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.5
+          },
+          "tolerance": 1e-12
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NORMDIST(7,7,3,TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.5
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility distribution-boundaries: distribution density includes scale contrasting controls",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/norm-dist-function",
+        "Normal distribution boundary density includes scale. At its mean a continuous symmetric CDF is one half; density is 1/(sigma*sqrt(2*pi)).",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NORM.DIST(7,7,3,FALSE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.1329807601338109
+          },
+          "tolerance": 1e-12
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NORMDIST(7,7,3,FALSE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.1329807601338109
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility distribution-boundaries: distribution numeric text spread accepted contrasting controls",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/norm-dist-function",
+        "Normal distribution boundary numeric text spread accepted. At its mean a continuous symmetric CDF is one half; density is 1/(sigma*sqrt(2*pi)).",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NORM.DIST(0,0,\"2\",TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.5
+          },
+          "tolerance": 1e-12
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NORMDIST(0,0,\"2\",TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.5
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility distribution-boundaries: distribution symmetric tails partition probability contrasting controls",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/norm-dist-function",
+        "Complementary CDF values at symmetric positions sum to one.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NORM.DIST(-1,0,2,TRUE)+NORM.DIST(1,0,2,TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          },
+          "tolerance": 1e-12
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NORMDIST(-1,0,2,TRUE)+NORMDIST(1,0,2,TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility distribution-boundaries: inverse median equals location contrasting controls",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/norm-inv-function",
+        "Inverse normal domain: median equals location. Its probability interval is open and spread is strictly positive.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NORM.INV(0.5,3,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-12
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NORMINV(0.5,3,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility distribution-boundaries: T.DIST zero endpoint",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/t-dist-function",
+        "Student t boundary zero endpoint. With one degree of freedom, use the Cauchy CDF 1/2+atan(x)/pi; legacy tails and modern cumulative forms are distinct.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "T.DIST(0,1,TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.5
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility distribution-boundaries: T.DIST fractional degree truncation",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/t-dist-function",
+        "Student t boundary fractional degree truncation. With one degree of freedom, use the Cauchy CDF 1/2+atan(x)/pi; legacy tails and modern cumulative forms are distinct.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "T.DIST(1,1.9,TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.75
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility distribution-boundaries: T.DIST.RT zero endpoint",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/t-dist-rt-function",
+        "Student t boundary zero endpoint. With one degree of freedom, use the Cauchy CDF 1/2+atan(x)/pi; legacy tails and modern cumulative forms are distinct.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "T.DIST.RT(0,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.5
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility distribution-boundaries: T.DIST.RT fractional degree truncation",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/t-dist-rt-function",
+        "Student t boundary fractional degree truncation. With one degree of freedom, use the Cauchy CDF 1/2+atan(x)/pi; legacy tails and modern cumulative forms are distinct.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "T.DIST.RT(1,1.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.25
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility distribution-boundaries: T.DIST.2T zero endpoint",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/t-dist-2t-function",
+        "Student t boundary zero endpoint. With one degree of freedom, use the Cauchy CDF 1/2+atan(x)/pi; legacy tails and modern cumulative forms are distinct.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "T.DIST.2T(0,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility distribution-boundaries: T.DIST.2T fractional degree truncation",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/t-dist-2t-function",
+        "Student t boundary fractional degree truncation. With one degree of freedom, use the Cauchy CDF 1/2+atan(x)/pi; legacy tails and modern cumulative forms are distinct.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "T.DIST.2T(1,1.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.5
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility distribution-boundaries: TDIST zero endpoint",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/tdist-function",
+        "Student t boundary zero endpoint. With one degree of freedom, use the Cauchy CDF 1/2+atan(x)/pi; legacy tails and modern cumulative forms are distinct.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TDIST(0,1,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility distribution-boundaries: TDIST fractional degree truncation",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/tdist-function",
+        "Student t boundary fractional degree truncation. With one degree of freedom, use the Cauchy CDF 1/2+atan(x)/pi; legacy tails and modern cumulative forms are distinct.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TDIST(1,1.9,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.5
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    }
+  ]
+}

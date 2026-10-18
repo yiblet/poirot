@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "number",
+          "value": 123.45678901234568
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "concatenation uses spreadsheet number text",
+      "evidence": [
+        "https://github.com/apache/poi/blob/REL_5_4_1/poi/src/test/java/org/apache/poi/ss/util/NumberToTextConversionExamples.java: 123.45678901234568 rendering vector, adapted through concatenation"
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "A1&\"\""
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "123.456789012346"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "42"
+          }
+        }
+      ]
+    },
+    {
+      "name": "numeric formatting preserves number type",
+      "evidence": [
+        "Repository formatting contract: CellEvaluation.value preserves the source binary64 number; optional formatting controls display. Currency rounding follows authored $#,##0.00."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "A1"
+          }
+        },
+        {
+          "action": "format",
+          "cell": "S!B1",
+          "number_format": "$#,##0.00"
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 123.45678901234568
+          },
+          "number_format": "$#,##0.00",
+          "display": "$123.46"
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 42
+          },
+          "number_format": "$#,##0.00",
+          "display": "$42.00"
+        }
+      ]
+    }
+  ]
+}

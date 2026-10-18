@@ -1,0 +1,372 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "IRR-NPV",
+      "Sheet2",
+      "Sheet3"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-irrnpvtestcasedata: IRR-NPV A14 IRR(A2:A4,-10.0%)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IrrNpvTestCaseData.xls",
+        "Pinned source SHA-256 4ef3ea13f41d3866e6cd91d1d065fa0408e9e6e4ba76e2b3d08de0757a572790; original worksheet 'IRR-NPV', cached cell A14, BIFF/OOXML typed value {\"type\": \"number\", \"value\": -0.443506941334654}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A2",
+          "content": {
+            "type": "number",
+            "value": -70000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A3",
+          "content": {
+            "type": "number",
+            "value": 12000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A4",
+          "content": {
+            "type": "number",
+            "value": 15000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A14",
+          "content": {
+            "formula": "IRR(A2:A4,-10.0%)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'IRR-NPV'!A14",
+          "expected": {
+            "type": "number",
+            "value": -0.443506941334654
+          },
+          "tolerance": 4.43506941334654e-12
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-irrnpvtestcasedata: IRR-NPV B18 NPV(10.0%,-70000.0,12000.0,15000.0)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IrrNpvTestCaseData.xls",
+        "Pinned source SHA-256 4ef3ea13f41d3866e6cd91d1d065fa0408e9e6e4ba76e2b3d08de0757a572790; original worksheet 'IRR-NPV', cached cell B18, BIFF/OOXML typed value {\"type\": \"number\", \"value\": -42449.28625093914}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!B18",
+          "content": {
+            "formula": "NPV(10.0%,-70000.0,12000.0,15000.0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'IRR-NPV'!B18",
+          "expected": {
+            "type": "number",
+            "value": -42449.28625093914
+          },
+          "tolerance": 4.244928625093914e-07
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-irrnpvtestcasedata: IRR-NPV A12 IRR(A2:A7,10.0%)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IrrNpvTestCaseData.xls",
+        "Pinned source SHA-256 4ef3ea13f41d3866e6cd91d1d065fa0408e9e6e4ba76e2b3d08de0757a572790; original worksheet 'IRR-NPV', cached cell A12, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 0.0866309480363425}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A2",
+          "content": {
+            "type": "number",
+            "value": -70000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A3",
+          "content": {
+            "type": "number",
+            "value": 12000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A4",
+          "content": {
+            "type": "number",
+            "value": 15000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A5",
+          "content": {
+            "type": "number",
+            "value": 18000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A6",
+          "content": {
+            "type": "number",
+            "value": 21000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A7",
+          "content": {
+            "type": "number",
+            "value": 26000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A12",
+          "content": {
+            "formula": "IRR(A2:A7,10.0%)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'IRR-NPV'!A12",
+          "expected": {
+            "type": "number",
+            "value": 0.0866309480363425
+          },
+          "tolerance": 8.663094803634249e-13
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-irrnpvtestcasedata: IRR-NPV B14 NPV(-10.0%,A2:A4)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IrrNpvTestCaseData.xls",
+        "Pinned source SHA-256 4ef3ea13f41d3866e6cd91d1d065fa0408e9e6e4ba76e2b3d08de0757a572790; original worksheet 'IRR-NPV', cached cell B14, BIFF/OOXML typed value {\"type\": \"number\", \"value\": -42386.83127572017}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A2",
+          "content": {
+            "type": "number",
+            "value": -70000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A3",
+          "content": {
+            "type": "number",
+            "value": 12000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A4",
+          "content": {
+            "type": "number",
+            "value": 15000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!B14",
+          "content": {
+            "formula": "NPV(-10.0%,A2:A4)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'IRR-NPV'!B14",
+          "expected": {
+            "type": "number",
+            "value": -42386.83127572017
+          },
+          "tolerance": 4.238683127572017e-07
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-irrnpvtestcasedata: IRR-NPV A11 IRR(A2:A7)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IrrNpvTestCaseData.xls",
+        "Pinned source SHA-256 4ef3ea13f41d3866e6cd91d1d065fa0408e9e6e4ba76e2b3d08de0757a572790; original worksheet 'IRR-NPV', cached cell A11, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 0.0866309480363425}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A2",
+          "content": {
+            "type": "number",
+            "value": -70000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A3",
+          "content": {
+            "type": "number",
+            "value": 12000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A4",
+          "content": {
+            "type": "number",
+            "value": 15000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A5",
+          "content": {
+            "type": "number",
+            "value": 18000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A6",
+          "content": {
+            "type": "number",
+            "value": 21000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A7",
+          "content": {
+            "type": "number",
+            "value": 26000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A11",
+          "content": {
+            "formula": "IRR(A2:A7)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'IRR-NPV'!A11",
+          "expected": {
+            "type": "number",
+            "value": 0.0866309480363425
+          },
+          "tolerance": 8.663094803634249e-13
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-irrnpvtestcasedata: IRR-NPV B10 NPV(10.0%,A2:A6)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IrrNpvTestCaseData.xls",
+        "Pinned source SHA-256 4ef3ea13f41d3866e6cd91d1d065fa0408e9e6e4ba76e2b3d08de0757a572790; original worksheet 'IRR-NPV', cached cell B10, BIFF/OOXML typed value {\"type\": \"number\", \"value\": -17115.69627012562}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A2",
+          "content": {
+            "type": "number",
+            "value": -70000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A3",
+          "content": {
+            "type": "number",
+            "value": 12000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A4",
+          "content": {
+            "type": "number",
+            "value": 15000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A5",
+          "content": {
+            "type": "number",
+            "value": 18000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!A6",
+          "content": {
+            "type": "number",
+            "value": 21000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IRR-NPV'!B10",
+          "content": {
+            "formula": "NPV(10.0%,A2:A6)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'IRR-NPV'!B10",
+          "expected": {
+            "type": "number",
+            "value": -17115.69627012562
+          },
+          "tolerance": 1.711569627012562e-07
+        }
+      ]
+    }
+  ]
+}

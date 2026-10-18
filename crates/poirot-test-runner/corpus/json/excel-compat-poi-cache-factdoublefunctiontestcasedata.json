@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "Read Me",
+      "FactDouble"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-factdoublefunctiontestcasedata: FactDouble B9 FACTDOUBLE(0.0)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/FactDoubleFunctionTestCaseData.xls",
+        "Pinned source SHA-256 09ff9ed74434f63953d0c1a2b447066182edad0ac53d529d05a370c1e1f9f6e2; original worksheet 'FactDouble', cached cell B9, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 1.0}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'FactDouble'!B9",
+          "content": {
+            "formula": "FACTDOUBLE(0.0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'FactDouble'!B9",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,372 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML extension numeric-domains: Roman has optional second argument with default value 0 \u2014 ROMAN(999)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1807: Roman_has_optional_second_argument_with_default_value_0",
+        "Expected behavior adapted from this upstream assertion. Roman has optional second argument with default value 0. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Whole suite selects ExcelDocumentation for the optional ROMAN form. Every existing expectation is retained; see ../evidence/roman-numerals-contract.md and source-hash-bound roman-numerals-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(999)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "CMXCIX"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Combin returns num error when k is larger than n \u2014 COMBIN(5, 5.5)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L575: Combin_returns_num_error_when_k_is_larger_than_n",
+        "Expected behavior adapted from this upstream assertion. Combin returns num error when k is larger than n. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COMBIN(5, 5.5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Combin returns num error when value is too large \u2014 COMBIN(5E+301, 6)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L584: Combin_returns_num_error_when_value_is_too_large",
+        "Expected behavior adapted from this upstream assertion. Combin returns num error when value is too large. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COMBIN(5E+301, 6)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#NUM!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Fact coercion fails for non numeric input \u2014 FACT(\"x\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1003: Fact_coercion_fails_for_non_numeric_input",
+        "Expected behavior adapted from this upstream assertion. Fact coercion fails for non numeric input. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FACT(\"x\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: FactDouble ThrowsValueExceptionForNonNumericInput \u2014 FACTDOUBLE(\"x\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1051: FactDouble_ThrowsValueExceptionForNonNumericInput",
+        "Expected behavior adapted from this upstream assertion. FactDouble ThrowsValueExceptionForNonNumericInput. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FACTDOUBLE(\"x\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Log default base is 10 \u2014 LOG(100)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1254: Log_default_base_is_10",
+        "Expected behavior adapted from this upstream assertion. Log default base is 10. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "LOG(100)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: MDeterm examples \u2014 MDETERM({3,6,1;1,1,0;3,10,2})",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1318: MDeterm_examples",
+        "Expected behavior adapted from this upstream assertion. MDeterm examples. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM({3,6,1;1,1,0;3,10,2})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          },
+          "tolerance": 1e-10
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: MDeterm requires equal number of rows and columns \u2014 MDETERM({1,2})",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1339: MDeterm_requires_equal_number_of_rows_and_columns",
+        "Expected behavior adapted from this upstream assertion. MDeterm requires equal number of rows and columns. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM({1,2})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: MDeterm singular matrix returns zero \u2014 MDETERM({1,2;1,2})",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1345: MDeterm_singular_matrix_returns_zero",
+        "Expected behavior adapted from this upstream assertion. MDeterm singular matrix returns zero. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM({1,2;1,2})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: MInverse requires square matrix \u2014 MINVERSE({1,2,3;7,5,5})",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1414: MInverse_requires_square_matrix",
+        "Expected behavior adapted from this upstream assertion. MInverse requires square matrix. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE({1,2,3;7,5,5})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Mod divisor zero returns error \u2014 MOD(1, 0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1548: Mod_divisor_zero_returns_error",
+        "Expected behavior adapted from this upstream assertion. Mod divisor zero returns error. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MOD(1, 0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Power errors \u2014 POWER(-5, 0.5)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1670: Power_errors",
+        "Expected behavior adapted from this upstream assertion. Power errors. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "POWER(-5, 0.5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#NUM!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: Product \u2014 PRODUCT({1,2;3,4})",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1686: Product",
+        "Expected behavior adapted from this upstream assertion. Product. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PRODUCT({1,2;3,4})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 24
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension numeric-domains: SumSq \u2014 SUMSQ({ 2.5, -3.6}, 2.4)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L2784: SumSq",
+        "Expected behavior adapted from this upstream assertion. SumSq. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMSQ({ 2.5, -3.6}, 2.4)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 24.97
+          },
+          "tolerance": 1e-10
+        }
+      ]
+    }
+  ],
+  "builtin_policy": "ExcelDocumentation"
+}

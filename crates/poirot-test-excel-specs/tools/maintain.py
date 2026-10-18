@@ -8,7 +8,10 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUTS = ['cases.json', 'sources.json', 'coverage.json', 'coverage.md']
+sys.path.insert(0, str(ROOT / 'test-specs'))
+from case_table import read_table
+
+OUTPUTS = ['sources.json', 'coverage.json', 'coverage.md']
 
 
 def rebuild(root):
@@ -26,12 +29,14 @@ def main():
         return
     with tempfile.TemporaryDirectory(prefix='poirot-test-excel-specs-check-') as directory:
         scratch = Path(directory)
-        # Every required input is copied from this package. No repository root,
-        # external fixture directory or remembered /tmp artifact is an input.
+        # The shared normative table is materialized only in scratch; authored
+        # inputs and generated outputs are otherwise copied from this package.
         shutil.copytree(ROOT / 'test-specs', scratch / 'test-specs', ignore=shutil.ignore_patterns('__pycache__'))
         shutil.copytree(ROOT / 'tests', scratch / 'tests')
+        (scratch / 'test-specs/cases.json').write_text(json.dumps(read_table(ROOT), ensure_ascii=True, indent=2) + '\n')
         shutil.copytree(ROOT / 'tools', scratch / 'tools', ignore=shutil.ignore_patterns('__pycache__'))
         rebuild(scratch)
+        assert json.loads((scratch / 'test-specs/cases.json').read_text()) == read_table(ROOT), 'Stale case table'
         for name in OUTPUTS:
             generated, checked_in = scratch / 'test-specs' / name, ROOT / 'test-specs' / name
             if name.endswith('.json'):

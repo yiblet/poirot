@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility power-series: negative exponent step",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "Sum c[i]*x^(n+i*m) with coefficients [1, 2, 3]: negative exponent step.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(2,2,-1,{1,2,3})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 11
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility power-series: zero exponent step",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "Sum c[i]*x^(n+i*m) with coefficients [1, 2, 3]: zero exponent step.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(2,3,0,{1,2,3})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 48
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility power-series: negative initial exponent",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "Sum c[i]*x^(n+i*m) with coefficients [2, 3, 4]: negative initial exponent.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(2,-1,1,{2,3,4})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 12
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility power-series: negative base integer exponents",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "Sum c[i]*x^(n+i*m) with coefficients [1, 2, 3]: negative base integer exponents.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(-2,0,1,{1,2,3})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility power-series: zero coefficient does not skip index",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "Sum c[i]*x^(n+i*m) with coefficients [1, 0, 3]: zero coefficient does not skip index.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(2,0,1,{1,0,3})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 13
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility power-series: negative coefficients keep sign",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "Sum c[i]*x^(n+i*m) with coefficients [1, -2, 3]: negative coefficients keep sign.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(2,0,1,{1,-2,3})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    }
+  ]
+}

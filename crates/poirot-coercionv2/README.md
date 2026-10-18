@@ -171,7 +171,7 @@ range admission and additionally rejects negative inputs.
 
 The corrected paired and text-boundary corpus suites were freshly recalculated
 in isolated LibreOffice instances; their hash-bound reports are in
-`poirot-test-json/evidence/coercionv2-*-libreoffice.json`. These observations do not
+`poirot-test-runner/evidence/coercionv2-*-libreoffice.json`. These observations do not
 claim native Excel execution.
 
 ## Blank admission and scalar channels
@@ -199,7 +199,7 @@ formatter's `ALLOCATION_BOUND`; hosts admit that storage before conversion.
 The checked mathematical alphabet is in `poirot-numeric::radix`; BASE rendering
 is in `poirot-functions-math::radix`. Engineering signed-width grammars remain
 separate. Independent observations and documented Calc differences are in
-`poirot-test-json/evidence/radix-domains-contract.md`.
+`poirot-test-runner/evidence/radix-domains-contract.md`.
 
 ## Roman numeral arguments
 
@@ -210,4 +210,4 @@ inputs, and counts at most 255 UTF-16 units before trimming ASCII outer spaces.
 Its bounded symbol scan admits case-insensitive symbols and one leading minus;
 it does not require formatter canonicality. Undocumented noncanonical spellings
 remain unverified against native Excel. See the independent contract in
-`poirot-test-json/evidence/roman-numerals-contract.md`.
+`poirot-test-runner/evidence/roman-numerals-contract.md`.

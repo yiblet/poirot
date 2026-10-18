@@ -1,0 +1,773 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel serial weekday modes retain the phantom-day calendar",
+      "evidence": [
+        "https://learn.microsoft.com/en-us/troubleshoot/microsoft-365-apps/excel/wrongly-assumes-1900-is-leap-year: Excel deliberately preserves its early-1900 weekday discrepancy.",
+        "https://support.microsoft.com/en-us/excel/functions/weekday-function: Return-type origins and invalid-mode handling.",
+        "Expected serial weekdays use the documented continuous serial cycle including 1900-02-29, not Gregorian conversion. Calc 26.2.6.3 independently corroborates these numeric serial results; this does not identify the same early civil date in Calc and Excel.",
+        "Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json. The Rust excel_date_policy tests cover both date systems, pinned behavior, fractional days, errors and every ISO boundary family."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(0,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 7.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(0,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 6.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(0,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(0,11)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 6.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(0,12)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(0,13)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(0,14)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 3.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(0,15)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(0,16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(0,17)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 7.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(1,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(1,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 7.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(1,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 6.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(1,11)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 7.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(1,12)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 6.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(1,13)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(1,14)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(1,15)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 3.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(1,16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(1,17)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(59,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 3.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(59,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(59,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(59,11)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(59,12)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(59,13)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 7.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(59,14)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 6.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(59,15)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(59,16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(59,17)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 3.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(60,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(60,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 3.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(60,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(60,11)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 3.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(60,12)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(60,13)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(60,14)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 7.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(60,15)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 6.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(60,16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(60,17)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(61,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(61,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(61,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 3.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(61,11)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(61,12)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 3.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(61,13)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(61,14)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(61,15)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 7.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(61,16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 6.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "WEEKDAY(61,17)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          }
+        }
+      ]
+    }
+  ]
+}

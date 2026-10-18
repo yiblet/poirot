@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML calendar: EDATE end-of-month clipping and fractional offsets \u2014 EDATE(\"2008-03-31\",-1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L320: EDate_returns_end_date_from_start_date_and_month_offset",
+        "Adapted from the cited assertion. EDATE end-of-month clipping and fractional offsets. Expected values are authored from upstream, not Poirot.",
+        "The numeric DATE control represents the same start date, distinguishing month arithmetic from the ISO text grammar.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EDATE(\"2008-03-31\",-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 39507
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EDATE(DATE(2008,3,31),-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 39507
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: EDATE end-of-month clipping and fractional offsets \u2014 EDATE(\"1983-07-31\",-77)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L320: EDate_returns_end_date_from_start_date_and_month_offset",
+        "Adapted from the cited assertion. EDATE end-of-month clipping and fractional offsets. Expected values are authored from upstream, not Poirot.",
+        "The numeric DATE control represents the same start date, distinguishing month arithmetic from the ISO text grammar.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EDATE(\"1983-07-31\",-77)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 28184
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EDATE(DATE(1983,7,31),-77)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 28184
+          }
+        }
+      ]
+    }
+  ],
+  "builtin_policy": "ExcelDocumentation"
+}

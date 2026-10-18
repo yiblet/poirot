@@ -5,6 +5,7 @@ behavior exercised by a fixture is linked; uncovered obligations remain visible.
 """
 
 import copy
+from case_table import read_table, write_table
 import json
 import re
 from pathlib import Path
@@ -74,7 +75,7 @@ def assemble(cases, baseline_sources):
     # reviewed matrix prefix is regenerated independently; authored cases are
     # preserved rather than duplicated in a second Python data dump.
     assert len(cases) == 1500, "Keep baseline IDs stable; append authored cases."
-    existing = json.loads((ROOT / "cases.json").read_text())
+    existing = read_table(ROOT.parent)
     authored = [case for case in existing if case["id"] >= len(cases)]
 
     inventory = json.loads((ROOT / "inventory.json").read_text())
@@ -120,6 +121,6 @@ def assemble(cases, baseline_sources):
             for child in node:
                 normalize_blanks(child)
     normalize_blanks(combined)
-    (ROOT / "cases.json").write_text(json.dumps(combined, ensure_ascii=True, indent=2) + "\n")
+    write_table(ROOT.parent, combined)
     (ROOT / "sources.json").write_text(json.dumps(sources, indent=2) + "\n")
     return combined

@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "Read Me",
+      "Rept"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-reptfunctiontestcasedata: Rept B10 REPT(\"*-\",\"ABCDE\")",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/ReptFunctionTestCaseData.xls",
+        "Pinned source SHA-256 f2bfb09f805bb19bb4aee2e022b7219f8d99f5b9016a14d347986cbbcce06dd6; original worksheet 'Rept', cached cell B10, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Rept'!B10",
+          "content": {
+            "formula": "REPT(\"*-\",\"ABCDE\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Rept'!B10",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-reptfunctiontestcasedata: Rept B8 REPT(\"*_\",3.2)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/ReptFunctionTestCaseData.xls",
+        "Pinned source SHA-256 f2bfb09f805bb19bb4aee2e022b7219f8d99f5b9016a14d347986cbbcce06dd6; original worksheet 'Rept', cached cell B8, BIFF/OOXML typed value {\"type\": \"text\", \"value\": \"*_*_*_\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Rept'!B8",
+          "content": {
+            "formula": "REPT(\"*_\",3.2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Rept'!B8",
+          "expected": {
+            "type": "text",
+            "value": "*_*_*_"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-reptfunctiontestcasedata: Rept B7 REPT(\"*-\",0.0)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/ReptFunctionTestCaseData.xls",
+        "Pinned source SHA-256 f2bfb09f805bb19bb4aee2e022b7219f8d99f5b9016a14d347986cbbcce06dd6; original worksheet 'Rept', cached cell B7, BIFF/OOXML typed value {\"type\": \"text\", \"value\": \"\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Rept'!B7",
+          "content": {
+            "formula": "REPT(\"*-\",0.0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Rept'!B7",
+          "expected": {
+            "type": "text",
+            "value": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-reptfunctiontestcasedata: Rept B6 REPT(\"-\",10.0)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/ReptFunctionTestCaseData.xls",
+        "Pinned source SHA-256 f2bfb09f805bb19bb4aee2e022b7219f8d99f5b9016a14d347986cbbcce06dd6; original worksheet 'Rept', cached cell B6, BIFF/OOXML typed value {\"type\": \"text\", \"value\": \"----------\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Rept'!B6",
+          "content": {
+            "formula": "REPT(\"-\",10.0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Rept'!B6",
+          "expected": {
+            "type": "text",
+            "value": "----------"
+          }
+        }
+      ]
+    }
+  ]
+}

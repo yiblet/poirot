@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "text",
+          "value": "a"
+        }
+      },
+      {
+        "cell": "S!B1",
+        "content": {
+          "type": "text",
+          "value": "b"
+        }
+      },
+      {
+        "cell": "S!B2",
+        "content": {
+          "type": "text",
+          "value": "d"
+        }
+      },
+      {
+        "cell": "S!C1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "CONCAT: row-major ranges invalidate after member and absent-blank edits",
+      "evidence": [
+        "https://support.microsoft.com/en-gb/excel/functions/concat-function: CONCAT admits strings, arrays and ranges in argument order; these row-major examples use that documented contract.",
+        "Independently recalculated with Calc; see ../evidence/concat-traversal-libreoffice.json. The range-expression intersection probe records legacy scalar-expression demand, independently of collection traversal."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CONCAT(\"<\",A1:B2,\">\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "<abd>"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "c"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "<abcd>"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "<acd>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "CONCAT: composed array expressions",
+      "evidence": [
+        "https://support.microsoft.com/en-gb/excel/functions/concat-function: CONCAT admits strings, arrays and ranges in argument order; these row-major examples use that documented contract.",
+        "Independently recalculated with Calc; see ../evidence/concat-traversal-libreoffice.json. The range-expression intersection probe records legacy scalar-expression demand, independently of collection traversal."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CONCAT({1,2}+{10;20},\"|\",{\"a\",\"b\"}&{1;2})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "11122122|a1b1a2b2"
+          }
+        }
+      ]
+    },
+    {
+      "name": "CONCAT: omission and blank members",
+      "evidence": [
+        "https://support.microsoft.com/en-gb/excel/functions/concat-function: CONCAT admits strings, arrays and ranges in argument order; these row-major examples use that documented contract.",
+        "Independently recalculated with Calc; see ../evidence/concat-traversal-libreoffice.json. The range-expression intersection probe records legacy scalar-expression demand, independently of collection traversal."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CONCAT(,C1,\"\",\"x\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "x"
+          }
+        }
+      ]
+    },
+    {
+      "name": "CONCAT: row-major error precedence",
+      "evidence": [
+        "https://support.microsoft.com/en-gb/excel/functions/concat-function: CONCAT admits strings, arrays and ranges in argument order; these row-major examples use that documented contract.",
+        "Independently recalculated with Calc; see ../evidence/concat-traversal-libreoffice.json. The range-expression intersection probe records legacy scalar-expression demand, independently of collection traversal."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CONCAT({\"x\",#N/A;#VALUE!,\"z\"},#DIV/0!)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "CONCAT: Unicode members",
+      "evidence": [
+        "https://support.microsoft.com/en-gb/excel/functions/concat-function: CONCAT admits strings, arrays and ranges in argument order; these row-major examples use that documented contract.",
+        "Independently recalculated with Calc; see ../evidence/concat-traversal-libreoffice.json. The range-expression intersection probe records legacy scalar-expression demand, independently of collection traversal."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CONCAT({\"\ud83d\ude00\",\"e\u0301\";\"\u754c\",\"\"},\"Z\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "\ud83d\ude00e\u0301\u754cZ"
+          }
+        }
+      ]
+    },
+    {
+      "name": "CONCAT: reference expressions retain scalar demand",
+      "evidence": [
+        "https://support.microsoft.com/en-gb/excel/functions/concat-function: CONCAT admits strings, arrays and ranges in argument order; these row-major examples use that documented contract.",
+        "Independently recalculated with Calc; see ../evidence/concat-traversal-libreoffice.json. The range-expression intersection probe records legacy scalar-expression demand, independently of collection traversal."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CONCAT(A1:B2&\"x\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    }
+  ]
+}

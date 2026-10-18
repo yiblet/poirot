@@ -135,7 +135,7 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
 Use `--workspace` to test every crate; plain `cargo test` selects the root
-package, FODS runner, and [JSON scenario runner](crates/poirot-test-json/README.md).
+package and [combined workbook test runner](crates/poirot-test-runner/README.md).
 Generate the Rust API documentation with
 `cargo doc -p poirot --no-deps --open`.
 

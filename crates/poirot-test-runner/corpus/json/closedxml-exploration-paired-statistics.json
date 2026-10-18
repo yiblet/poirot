@@ -1,0 +1,5002 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML exploration paired-statistics: CORREL zero is included",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/correl-function",
+        "Paired data rule: zero is included. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CORREL(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: CORREL text rejects the whole pair",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/correl-function",
+        "Paired data rule: text rejects the whole pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "ignored"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CORREL(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: CORREL numeric text is still excluded",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/correl-function",
+        "Paired data rule: numeric text is still excluded. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CORREL(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: CORREL blank pair rejected",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/correl-function",
+        "Paired data rule: blank pair rejected. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CORREL(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: CORREL nonnumeric opposite coordinate",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/correl-function",
+        "Paired data rule: nonnumeric opposite coordinate. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "ignored"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CORREL(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: CORREL constant x",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/correl-function",
+        "Paired data rule: constant x. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CORREL(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: CORREL constant y",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/correl-function",
+        "Paired data rule: constant y. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CORREL(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: CORREL single pair",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/correl-function",
+        "Paired data rule: single pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CORREL(A1:A1,B1:B1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: CORREL error is not missing",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/correl-function",
+        "Paired data rule: error is not missing. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CORREL(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: PEARSON zero is included",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/pearson-function",
+        "Paired data rule: zero is included. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PEARSON(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: PEARSON text rejects the whole pair",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/pearson-function",
+        "Paired data rule: text rejects the whole pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "ignored"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PEARSON(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: PEARSON numeric text is still excluded",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/pearson-function",
+        "Paired data rule: numeric text is still excluded. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PEARSON(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: PEARSON blank pair rejected",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/pearson-function",
+        "Paired data rule: blank pair rejected. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PEARSON(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: PEARSON nonnumeric opposite coordinate",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/pearson-function",
+        "Paired data rule: nonnumeric opposite coordinate. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "ignored"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PEARSON(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: PEARSON constant x",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/pearson-function",
+        "Paired data rule: constant x. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PEARSON(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: PEARSON constant y",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/pearson-function",
+        "Paired data rule: constant y. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PEARSON(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: PEARSON single pair",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/pearson-function",
+        "Paired data rule: single pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PEARSON(A1:A1,B1:B1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: PEARSON error is not missing",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/pearson-function",
+        "Paired data rule: error is not missing. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PEARSON(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S zero is included",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
+        "Paired data rule: zero is included. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.S(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S text rejects the whole pair",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
+        "Paired data rule: text rejects the whole pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "ignored"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.S(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S numeric text is still excluded",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
+        "Paired data rule: numeric text is still excluded. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.S(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S blank pair rejected",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
+        "Paired data rule: blank pair rejected. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.S(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S nonnumeric opposite coordinate",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
+        "Paired data rule: nonnumeric opposite coordinate. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "ignored"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.S(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S constant x",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
+        "Paired data rule: constant x. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.S(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S constant y",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
+        "Paired data rule: constant y. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.S(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: COVARIANCE.S error is not missing",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
+        "Paired data rule: error is not missing. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.S(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: SLOPE zero is included",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/slope-function",
+        "Paired data rule: zero is included. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SLOPE(B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: SLOPE text rejects the whole pair",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/slope-function",
+        "Paired data rule: text rejects the whole pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "ignored"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SLOPE(B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: SLOPE numeric text is still excluded",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/slope-function",
+        "Paired data rule: numeric text is still excluded. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SLOPE(B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: SLOPE blank pair rejected",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/slope-function",
+        "Paired data rule: blank pair rejected. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SLOPE(B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: SLOPE nonnumeric opposite coordinate",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/slope-function",
+        "Paired data rule: nonnumeric opposite coordinate. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "ignored"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SLOPE(B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: SLOPE constant x",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/slope-function",
+        "Paired data rule: constant x. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SLOPE(B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: SLOPE constant y",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/slope-function",
+        "Paired data rule: constant y. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SLOPE(B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: SLOPE single pair",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/slope-function",
+        "Paired data rule: single pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SLOPE(B1:B1,A1:A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: SLOPE error is not missing",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/slope-function",
+        "Paired data rule: error is not missing. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SLOPE(B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT zero is included",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/intercept-function",
+        "Paired data rule: zero is included. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "INTERCEPT(B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT text rejects the whole pair",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/intercept-function",
+        "Paired data rule: text rejects the whole pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "ignored"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "INTERCEPT(B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT numeric text is still excluded",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/intercept-function",
+        "Paired data rule: numeric text is still excluded. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "INTERCEPT(B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT blank pair rejected",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/intercept-function",
+        "Paired data rule: blank pair rejected. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "INTERCEPT(B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT nonnumeric opposite coordinate",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/intercept-function",
+        "Paired data rule: nonnumeric opposite coordinate. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "ignored"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "INTERCEPT(B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT constant x",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/intercept-function",
+        "Paired data rule: constant x. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "INTERCEPT(B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT constant y",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/intercept-function",
+        "Paired data rule: constant y. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "INTERCEPT(B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT single pair",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/intercept-function",
+        "Paired data rule: single pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "INTERCEPT(B1:B1,A1:A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: INTERCEPT error is not missing",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/intercept-function",
+        "Paired data rule: error is not missing. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "INTERCEPT(B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: FORECAST zero is included",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/forecast-function",
+        "Paired data rule: zero is included. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FORECAST(4,B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: FORECAST text rejects the whole pair",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/forecast-function",
+        "Paired data rule: text rejects the whole pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "ignored"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FORECAST(4,B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: FORECAST numeric text is still excluded",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/forecast-function",
+        "Paired data rule: numeric text is still excluded. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FORECAST(4,B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: FORECAST blank pair rejected",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/forecast-function",
+        "Paired data rule: blank pair rejected. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FORECAST(4,B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: FORECAST nonnumeric opposite coordinate",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/forecast-function",
+        "Paired data rule: nonnumeric opposite coordinate. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "ignored"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FORECAST(4,B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: FORECAST constant x",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/forecast-function",
+        "Paired data rule: constant x. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FORECAST(4,B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: FORECAST constant y",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/forecast-function",
+        "Paired data rule: constant y. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FORECAST(4,B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: FORECAST single pair",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/forecast-function",
+        "Paired data rule: single pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FORECAST(4,B1:B1,A1:A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: FORECAST error is not missing",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/forecast-function",
+        "Paired data rule: error is not missing. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FORECAST(4,B1:B3,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: zero is included contrasts",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covar-function",
+        "Paired data rule: zero is included. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See the hash-bound exploration evidence record for this suite. Calc corroboration is not a native Excel execution claim.",
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function"
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVAR(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.3333333333333333
+          },
+          "tolerance": 1e-09
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.P(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.3333333333333333
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: text rejects the whole pair contrasts",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covar-function",
+        "Paired data rule: text rejects the whole pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See the hash-bound exploration evidence record for this suite. Calc corroboration is not a native Excel execution claim.",
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function"
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "ignored"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVAR(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          },
+          "tolerance": 1e-09
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "ignored"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.P(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: numeric text is still excluded contrasts",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covar-function",
+        "Paired data rule: numeric text is still excluded. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See the hash-bound exploration evidence record for this suite. Calc corroboration is not a native Excel execution claim.",
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function"
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVAR(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          },
+          "tolerance": 1e-09
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.P(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: blank pair rejected contrasts",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covar-function",
+        "Paired data rule: blank pair rejected. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See the hash-bound exploration evidence record for this suite. Calc corroboration is not a native Excel execution claim.",
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function"
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVAR(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          },
+          "tolerance": 1e-09
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 900
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.P(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: nonnumeric opposite coordinate contrasts",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covar-function",
+        "Paired data rule: nonnumeric opposite coordinate. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See the hash-bound exploration evidence record for this suite. Calc corroboration is not a native Excel execution claim.",
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function"
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "ignored"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVAR(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          },
+          "tolerance": 1e-09
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "ignored"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.P(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: constant x contrasts",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covar-function",
+        "Paired data rule: constant x. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See the hash-bound exploration evidence record for this suite. Calc corroboration is not a native Excel execution claim.",
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function"
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVAR(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.0
+          },
+          "tolerance": 1e-09
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.P(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: constant y contrasts",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covar-function",
+        "Paired data rule: constant y. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See the hash-bound exploration evidence record for this suite. Calc corroboration is not a native Excel execution claim.",
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function"
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVAR(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.0
+          },
+          "tolerance": 1e-09
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.P(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: single pair contrasts",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covar-function",
+        "Paired data rule: single pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See the hash-bound exploration evidence record for this suite. Calc corroboration is not a native Excel execution claim.",
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function"
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVAR(A1:A1,B1:B1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.0
+          },
+          "tolerance": 1e-09
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.P(A1:A1,B1:B1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration paired-statistics: error is not missing contrasts",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covar-function",
+        "Paired data rule: error is not missing. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See the hash-bound exploration evidence record for this suite. Calc corroboration is not a native Excel execution claim.",
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function"
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVAR(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.P(A1:A3,B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    }
+  ],
+  "builtin_policy": "ExcelDocumentation"
+}

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML exploration financial-fractions: DOLLARDE truncate denominator",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dollarde-function",
+        "Fractional dollar rule: truncate denominator. Denominator is truncated; decimal-digit scaling depends on its decimal width.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DOLLARDE(1.02,16.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.125
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration financial-fractions: DOLLARFR truncate denominator",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dollarfr-function",
+        "Fractional dollar rule: truncate denominator. Denominator is truncated; decimal-digit scaling depends on its decimal width.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DOLLARFR(1.02,16.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.0032
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1103 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML calendar: DATEDIF completed periods leap years and pathological month-day mode \u2014 DATEDIF(\"1/1/2006\",\"12/12/2010\",\"MD\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L99: DateDif",
+        "Adapted from the cited assertion. DATEDIF completed periods leap years and pathological month-day mode. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DATEDIF(\"1/1/2006\",\"12/12/2010\",\"MD\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: DATEDIF completed periods leap years and pathological month-day mode \u2014 DATEDIF(\"1/1/2006\",\"12/12/2010\",\"YM\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L99: DateDif",
+        "Adapted from the cited assertion. DATEDIF completed periods leap years and pathological month-day mode. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DATEDIF(\"1/1/2006\",\"12/12/2010\",\"YM\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: DATE normalization and 1900 leap-year boundary \u2014 DATE(2008,15,1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L22: Date_returns_serial_date",
+        "Adapted from the cited assertion. DATE normalization and 1900 leap-year boundary. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DATE(2008,15,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 39873
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: DATE floors negative fractional components: Month -5.1 behaves as -6 \u2014 DATE(2000,-5,1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L44: Date_floors_arguments",
+        "Adapted from the cited assertion. DATE floors negative fractional components: Month -5.1 behaves as -6. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DATE(2000,-5,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 36342
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: DATE extreme component handling: Month can be [-32767..32767) \u2014 DATE(10000,-32767,3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L63: Date_matches_excel_behavior_for_out_of_range_arguments",
+        "Adapted from the cited assertion. DATE extreme component handling: Month can be [-32767..32767). Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DATE(10000,-32767,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1961112
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: EOMONTH date normalization and leap-day end \u2014 EOMONTH(DATE(1985,4,15),9)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L354: Eomonth_returns_end_of_month_from_start_date_plus_month_offset",
+        "Adapted from the cited assertion. EOMONTH date normalization and leap-day end. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EOMONTH(DATE(1985,4,15),9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 31443
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(0,0,1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L649: Time_returns_serial_date_time",
+        "Adapted from the cited assertion. TIME overflow and fractional components. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TIME(0,0,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.15740740741e-05
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Tue \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-01\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L534: NetWorkDays_non_full_weeks_are_counted_correctly",
+        "Adapted from the cited assertion. NETWORKDAYS partial-week endpoints: Tue-Tue. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(\"2024-10-01\",\"2024-10-01\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: DATE normalization and 1900 leap-year boundary \u2014 DATE(2008,-50,1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L22: Date_returns_serial_date",
+        "Adapted from the cited assertion. DATE normalization and 1900 leap-year boundary. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DATE(2008,-50,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 37895
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: DATE floors negative fractional components: Day -10.1 behaves as -11 \u2014 DATE(2000,2,-10)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L44: Date_floors_arguments",
+        "Adapted from the cited assertion. DATE floors negative fractional components: Day -10.1 behaves as -11. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DATE(2000,2,-10)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 36546
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: DATE extreme component handling \u2014 DATE(2000,32766.9,1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L63: Date_matches_excel_behavior_for_out_of_range_arguments",
+        "Adapted from the cited assertion. DATE extreme component handling. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DATE(2000,32766.9,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1033789
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: EOMONTH date normalization and leap-day end: Spec examples \u2014 EOMONTH(DATE(2006,1,31),5)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L354: Eomonth_returns_end_of_month_from_start_date_plus_month_offset",
+        "Adapted from the cited assertion. EOMONTH date normalization and leap-day end: Spec examples. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EOMONTH(DATE(2006,1,31),5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 38898
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(0,0,2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L649: Time_returns_serial_date_time",
+        "Adapted from the cited assertion. TIME overflow and fractional components. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TIME(0,0,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.31481481481e-05
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Thu \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-03\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L534: NetWorkDays_non_full_weeks_are_counted_correctly",
+        "Adapted from the cited assertion. NETWORKDAYS partial-week endpoints: Tue-Thu. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(\"2024-10-01\",\"2024-10-03\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: DATE normalization and 1900 leap-year boundary \u2014 DATE(2008,5,63)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L22: Date_returns_serial_date",
+        "Adapted from the cited assertion. DATE normalization and 1900 leap-year boundary. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DATE(2008,5,63)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 39631
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: DATE extreme component handling: Day is clamped to at most 32767 \u2014 DATE(2000,1,32767.9)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L63: Date_matches_excel_behavior_for_out_of_range_arguments",
+        "Adapted from the cited assertion. DATE extreme component handling: Day is clamped to at most 32767. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DATE(2000,1,32767.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 69292
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: EOMONTH date normalization and leap-day end \u2014 EOMONTH(DATE(2004,2,29),12)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L354: Eomonth_returns_end_of_month_from_start_date_plus_month_offset",
+        "Adapted from the cited assertion. EOMONTH date normalization and leap-day end. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EOMONTH(DATE(2004,2,29),12)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 38411
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(0,0,20)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L649: Time_returns_serial_date_time",
+        "Adapted from the cited assertion. TIME overflow and fractional components. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TIME(0,0,20)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.0002314814814815
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Fri \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-04\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L534: NetWorkDays_non_full_weeks_are_counted_correctly",
+        "Adapted from the cited assertion. NETWORKDAYS partial-week endpoints: Tue-Fri. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(\"2024-10-01\",\"2024-10-04\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: DATE normalization and 1900 leap-year boundary \u2014 DATE(2008,13,63)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L22: Date_returns_serial_date",
+        "Adapted from the cited assertion. DATE normalization and 1900 leap-year boundary. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DATE(2008,13,63)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 39876
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: DATE extreme component handling: When day is < -32768, day uses 32767 value instead \u2014 DATE(2000,1,-32768)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L63: Date_matches_excel_behavior_for_out_of_range_arguments",
+        "Adapted from the cited assertion. DATE extreme component handling: When day is < -32768, day uses 32767 value instead. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DATE(2000,1,-32768)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3757
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: EOMONTH date normalization and leap-day end \u2014 EOMONTH(DATE(2004,2,28),12)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L354: Eomonth_returns_end_of_month_from_start_date_plus_month_offset",
+        "Adapted from the cited assertion. EOMONTH date normalization and leap-day end. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EOMONTH(DATE(2004,2,28),12)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 38411
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(2,3,20)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L649: Time_returns_serial_date_time",
+        "Adapted from the cited assertion. TIME overflow and fractional components. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TIME(2,3,20)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.0856481481481481
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Sat \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-05\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L534: NetWorkDays_non_full_weeks_are_counted_correctly",
+        "Adapted from the cited assertion. NETWORKDAYS partial-week endpoints: Tue-Sat. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(\"2024-10-01\",\"2024-10-05\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: DATE normalization and 1900 leap-year boundary \u2014 DATE(2008,15,-120)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L22: Date_returns_serial_date",
+        "Adapted from the cited assertion. DATE normalization and 1900 leap-year boundary. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DATE(2008,15,-120)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 39752
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: DATE extreme component handling: Year is clamped to 10000 \u2014 DATE(10000,-32000,1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L63: Date_matches_excel_behavior_for_out_of_range_arguments",
+        "Adapted from the cited assertion. DATE extreme component handling: Year is clamped to 10000. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DATE(10000,-32000,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1984455
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: EOMONTH date normalization and leap-day end \u2014 EOMONTH(DATE(2004,1,15),-23)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L354: Eomonth_returns_end_of_month_from_start_date_plus_month_offset",
+        "Adapted from the cited assertion. EOMONTH date normalization and leap-day end. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EOMONTH(DATE(2004,1,15),-23)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 37315
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(12,0,0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L649: Time_returns_serial_date_time",
+        "Adapted from the cited assertion. TIME overflow and fractional components. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TIME(12,0,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.5
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Sun \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-06\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L534: NetWorkDays_non_full_weeks_are_counted_correctly",
+        "Adapted from the cited assertion. NETWORKDAYS partial-week endpoints: Tue-Sun. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(\"2024-10-01\",\"2024-10-06\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(23,59,59)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L649: Time_returns_serial_date_time",
+        "Adapted from the cited assertion. TIME overflow and fractional components. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TIME(23,59,59)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.999988425925926
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Tue-Mon \u2014 NETWORKDAYS(\"2024-10-01\",\"2024-10-07\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L534: NetWorkDays_non_full_weeks_are_counted_correctly",
+        "Adapted from the cited assertion. NETWORKDAYS partial-week endpoints: Tue-Mon. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(\"2024-10-01\",\"2024-10-07\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(26,120,240)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L649: Time_returns_serial_date_time",
+        "Adapted from the cited assertion. TIME overflow and fractional components. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TIME(26,120,240)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.169444444444445
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Sat \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-12\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L534: NetWorkDays_non_full_weeks_are_counted_correctly",
+        "Adapted from the cited assertion. NETWORKDAYS partial-week endpoints: Sun-Sat. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(\"2024-09-29\",\"2024-10-12\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(1,2,3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L649: Time_returns_serial_date_time",
+        "Adapted from the cited assertion. TIME overflow and fractional components. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TIME(1,2,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.043090277777778
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Sun \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-13\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L534: NetWorkDays_non_full_weeks_are_counted_correctly",
+        "Adapted from the cited assertion. NETWORKDAYS partial-week endpoints: Sun-Sun. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(\"2024-09-29\",\"2024-10-13\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(24,0,0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L649: Time_returns_serial_date_time",
+        "Adapted from the cited assertion. TIME overflow and fractional components. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TIME(24,0,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Mon \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-14\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L534: NetWorkDays_non_full_weeks_are_counted_correctly",
+        "Adapted from the cited assertion. NETWORKDAYS partial-week endpoints: Sun-Mon. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(\"2024-09-29\",\"2024-10-14\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: TIME overflow and fractional components \u2014 TIME(120,240,347)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L649: Time_returns_serial_date_time",
+        "Adapted from the cited assertion. TIME overflow and fractional components. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TIME(120,240,347)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.17068287037
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Tue \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-15\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L534: NetWorkDays_non_full_weeks_are_counted_correctly",
+        "Adapted from the cited assertion. NETWORKDAYS partial-week endpoints: Sun-Tue. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(\"2024-09-29\",\"2024-10-15\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Wed \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-16\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L534: NetWorkDays_non_full_weeks_are_counted_correctly",
+        "Adapted from the cited assertion. NETWORKDAYS partial-week endpoints: Sun-Wed. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(\"2024-09-29\",\"2024-10-16\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 13
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Thu \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-17\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L534: NetWorkDays_non_full_weeks_are_counted_correctly",
+        "Adapted from the cited assertion. NETWORKDAYS partial-week endpoints: Sun-Thu. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(\"2024-09-29\",\"2024-10-17\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 14
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Fri \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-18\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L534: NetWorkDays_non_full_weeks_are_counted_correctly",
+        "Adapted from the cited assertion. NETWORKDAYS partial-week endpoints: Sun-Fri. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(\"2024-09-29\",\"2024-10-18\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 15
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML calendar: NETWORKDAYS partial-week endpoints: Sun-Sat \u2014 NETWORKDAYS(\"2024-09-29\",\"2024-10-19\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L534: NetWorkDays_non_full_weeks_are_counted_correctly",
+        "Adapted from the cited assertion. NETWORKDAYS partial-week endpoints: Sun-Sat. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NETWORKDAYS(\"2024-09-29\",\"2024-10-19\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 15
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,273 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML exploration upstream text-policies: Replace start position must be from 1 to 32767 \u2014 REPLACE(\"ABC\",0.9,0,\"D\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L704: Replace_start_position_must_be_from_1_to_32767",
+        "Expected behavior adapted from this upstream assertion. Replace start position must be from 1 to 32767. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "REPLACE(\"ABC\",0.9,0,\"D\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Replace start position must be from 1 to 32767 \u2014 REPLACE(\"ABC\",-1,0,\"D\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L704: Replace_start_position_must_be_from_1_to_32767",
+        "Expected behavior adapted from this upstream assertion. Replace start position must be from 1 to 32767. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "REPLACE(\"ABC\",-1,0,\"D\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Replace start position must be from 1 to 32767 \u2014 REPLACE(\"ABC\",1,32767.9,\"D\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L704: Replace_start_position_must_be_from_1_to_32767",
+        "Expected behavior adapted from this upstream assertion. Replace start position must be from 1 to 32767. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "REPLACE(\"ABC\",1,32767.9,\"D\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "D"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Replace length must be from 0 to 32767 \u2014 REPLACE(\"ABC\",1,-0.1,\"D\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L714: Replace_length_must_be_from_0_to_32767",
+        "Expected behavior adapted from this upstream assertion. Replace length must be from 0 to 32767. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "REPLACE(\"ABC\",1,-0.1,\"D\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Search Tilde Escapes Next Char \u2014 SEARCH(\"a~?\", \"ab\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L866: Search_Tilde_Escapes_Next_Char",
+        "Expected behavior adapted from this upstream assertion. Search Tilde Escapes Next Char. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SEARCH(\"a~?\", \"ab\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Text returns empty string on empty string \u2014 TEXT(1913415.93,\"\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L1039: Text_returns_empty_string_on_empty_string",
+        "Expected behavior adapted from this upstream assertion. Text returns empty string on empty string. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TEXT(1913415.93,\"\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration upstream text-policies: Upper empty string returns empty string \u2014 UPPER(\"\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L1149: Upper_empty_string_returns_empty_string",
+        "Expected behavior adapted from this upstream assertion. Upper empty string returns empty string. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "UPPER(\"\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration upstream-text-policies: FIND error argument positions contrasts",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L405: Find_Error_Arguments_Return_The_Error",
+        "Expected behavior adapted from this upstream assertion. Find Error Arguments Return The Error. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FIND(\"\", #N/A)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FIND(\"a\", \"a\", #N/A)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration upstream-text-policies: SEARCH error argument positions contrasts",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L901: Search_Error_Arguments_Return_The_Error",
+        "Expected behavior adapted from this upstream assertion. Search Error Arguments Return The Error. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SEARCH(\"\", #N/A)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SEARCH(\"a\", \"a\", #N/A)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    }
+  ]
+}

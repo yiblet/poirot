@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "text",
+          "value": "key"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "missing IF result remains blank through a cell reference",
+      "evidence": [
+        "Explicit project contract requested by the user: A1=IF(TRUE,,) should evaluate to blank, and ISBLANK(A1) should return TRUE. ISBLANK uses the Excel function spelling of the requested IS_BLANK predicate. This is not a native Excel observation."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "IF(TRUE,,)"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "ISBLANK(A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "blank lookup reaches consumer before numeric coercion",
+      "evidence": [
+        "Research reproduction independently evaluated with Apache POI 5.4.1: MIN(HLOOKUP(\"key\",A1:A2,2,FALSE),0.03) returns 0.03 with A1=\"key\" and A2 absent. Local coercion contract preserves the selected blank until its consumer. Not a native Excel observation."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "MIN(HLOOKUP(\"key\",A1:A2,2,FALSE),0.03)"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "formula": "ISBLANK(HLOOKUP(\"key\",A1:A2,2,FALSE))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 0.03
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B2",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 0.03
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B2",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 0.03
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B2",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "inline missing IF result remains blank",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/InformationTests.cs: IsBlank_InlineBlank_True"
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "ISBLANK(IF(TRUE,,))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,461 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML financial: Ipmt EdgeCases: Zero interest rate \u2014 IPMT(0,1,1,1000)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L67: Ipmt_EdgeCases",
+        "Adapted from the cited assertion. Ipmt EdgeCases: Zero interest rate. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IPMT(0,1,1,1000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML financial: Ipmt EdgeCases: Zero interest rate with future value \u2014 IPMT(0,1,5,10000,5000)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L67: Ipmt_EdgeCases",
+        "Adapted from the cited assertion. Ipmt EdgeCases: Zero interest rate with future value. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IPMT(0,1,5,10000,5000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML financial: Ipmt EdgeCases: No principal, but future value \u2014 IPMT(0.1,1,2,0,4)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L67: Ipmt_EdgeCases",
+        "Adapted from the cited assertion. Ipmt EdgeCases: No principal, but future value. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IPMT(0.1,1,2,0,4)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML financial: Fv EdgeCases: Zero interest rate \u2014 FV(0,1,1000)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L27: Fv_EdgeCases",
+        "Adapted from the cited assertion. Fv EdgeCases: Zero interest rate. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FV(0,1,1000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -1000
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML financial: Ipmt EdgeCases: Negative interest rate \u2014 IPMT(-0.4,1,2,1000)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L67: Ipmt_EdgeCases",
+        "Adapted from the cited assertion. Ipmt EdgeCases: Negative interest rate. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IPMT(-0.4,1,2,1000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 400.0
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML financial: Pmt EdgeCases: Zero interest rate \u2014 PMT(0,1,1000)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L130: Pmt_EdgeCases",
+        "Adapted from the cited assertion. Pmt EdgeCases: Zero interest rate. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PMT(0,1,1000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -1000
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML financial: Fv EdgeCases: Zero interest rate with present value \u2014 FV(0,5,10000,5000)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L27: Fv_EdgeCases",
+        "Adapted from the cited assertion. Fv EdgeCases: Zero interest rate with present value. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FV(0,5,10000,5000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -55000.0
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML financial: Ipmt EdgeCases: Different non-integer period \u2014 IPMT(0.01,1,1.4,1000)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L67: Ipmt_EdgeCases",
+        "Adapted from the cited assertion. Ipmt EdgeCases: Different non-integer period. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IPMT(0.01,1,1.4,1000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -10.0
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML financial: Pmt EdgeCases: Zero interest rate for 5 years, (10k principal, pay all and have 5k in bank at the end = payment is 3k/year) \u2014 PMT(0,5,10000,5000)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L130: Pmt_EdgeCases",
+        "Adapted from the cited assertion. Pmt EdgeCases: Zero interest rate for 5 years, (10k principal, pay all and have 5k in bank at the end = payment is 3k/year). Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PMT(0,5,10000,5000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -3000
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML financial: Fv EdgeCases: Negative interest rate \u2014 FV(-0.4,2,1000)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L27: Fv_EdgeCases",
+        "Adapted from the cited assertion. Fv EdgeCases: Negative interest rate. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FV(-0.4,2,1000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -1600.0
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML financial: Ipmt EdgeCases: Negative principal - money is paid to us \u2014 IPMT(0.1,1,2,-1000)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L67: Ipmt_EdgeCases",
+        "Adapted from the cited assertion. Ipmt EdgeCases: Negative principal - money is paid to us. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IPMT(0.1,1,2,-1000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 100
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML financial: Pmt EdgeCases: Negative interest rate \u2014 PMT(-0.4,2,1000)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L130: Pmt_EdgeCases",
+        "Adapted from the cited assertion. Pmt EdgeCases: Negative interest rate. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PMT(-0.4,2,1000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -225
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML financial: Fv EdgeCases: Non-integer period \u2014 FV(0.01,0.5,1000)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L27: Fv_EdgeCases",
+        "Adapted from the cited assertion. Fv EdgeCases: Non-integer period. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FV(0.01,0.5,1000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -498.756211208895
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML financial: Ipmt EdgeCases: Small number and high number of periods, check for stability \u2014 IPMT(0.000001,1,1000,1000)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L67: Ipmt_EdgeCases",
+        "Adapted from the cited assertion. Ipmt EdgeCases: Small number and high number of periods, check for stability. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IPMT(0.000001,1,1000,1000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -0.001
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML financial: Pmt EdgeCases: Non-integer period \u2014 PMT(0.01,0.5,1000)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L130: Pmt_EdgeCases",
+        "Adapted from the cited assertion. Pmt EdgeCases: Non-integer period. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PMT(0.01,0.5,1000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -2014.98756211209
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML financial: Fv EdgeCases: Negative periods \u2014 FV(0.1,-2,1000)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L27: Fv_EdgeCases",
+        "Adapted from the cited assertion. Fv EdgeCases: Negative periods. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FV(0.1,-2,1000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1735.5371900826453
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML financial: Pmt EdgeCases: Negative periods \u2014 PMT(0.1,-2,1000)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/FinancialTests.cs#L130: Pmt_EdgeCases",
+        "Adapted from the cited assertion. Pmt EdgeCases: Negative periods. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PMT(0.1,-2,1000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 476.19047619048
+          },
+          "tolerance": 1e-06
+        }
+      ]
+    }
+  ],
+  "builtin_policy": "ExcelDocumentation"
+}

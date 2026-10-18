@@ -1,0 +1,330 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2008,3,31),0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L1032: YearFrac_calculates_fraction_of_a_year",
+        "Expected behavior adapted from this upstream assertion. YEARFRAC basis leap-year and endpoint rules. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "YEARFRAC(DATE(2008,1,1),DATE(2008,3,31),0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.25
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2013,3,31),0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L1032: YearFrac_calculates_fraction_of_a_year",
+        "Expected behavior adapted from this upstream assertion. YEARFRAC basis leap-year and endpoint rules. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "YEARFRAC(DATE(2008,1,1),DATE(2013,3,31),0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5.25
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2008,3,31),1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L1032: YearFrac_calculates_fraction_of_a_year",
+        "Expected behavior adapted from this upstream assertion. YEARFRAC basis leap-year and endpoint rules. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "YEARFRAC(DATE(2008,1,1),DATE(2008,3,31),1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.2459016393442623
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2013,3,31),1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L1032: YearFrac_calculates_fraction_of_a_year",
+        "Expected behavior adapted from this upstream assertion. YEARFRAC basis leap-year and endpoint rules. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "YEARFRAC(DATE(2008,1,1),DATE(2013,3,31),1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5.24452554744526
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(1924,6,25),DATE(2025,2,28),1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L1032: YearFrac_calculates_fraction_of_a_year",
+        "Expected behavior adapted from this upstream assertion. YEARFRAC basis leap-year and endpoint rules. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "YEARFRAC(DATE(1924,6,25),DATE(2025,2,28),1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 100.67763581705
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2008,3,31),2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L1032: YearFrac_calculates_fraction_of_a_year",
+        "Expected behavior adapted from this upstream assertion. YEARFRAC basis leap-year and endpoint rules. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "YEARFRAC(DATE(2008,1,1),DATE(2008,3,31),2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.25
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2013,3,31),2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L1032: YearFrac_calculates_fraction_of_a_year",
+        "Expected behavior adapted from this upstream assertion. YEARFRAC basis leap-year and endpoint rules. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "YEARFRAC(DATE(2008,1,1),DATE(2013,3,31),2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5.32222222222222
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2008,3,31),3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L1032: YearFrac_calculates_fraction_of_a_year",
+        "Expected behavior adapted from this upstream assertion. YEARFRAC basis leap-year and endpoint rules. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "YEARFRAC(DATE(2008,1,1),DATE(2008,3,31),3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.2465753424657534
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2013,3,31),3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L1032: YearFrac_calculates_fraction_of_a_year",
+        "Expected behavior adapted from this upstream assertion. YEARFRAC basis leap-year and endpoint rules. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "YEARFRAC(DATE(2008,1,1),DATE(2013,3,31),3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5.24931506849315
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2008,3,31),4)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L1032: YearFrac_calculates_fraction_of_a_year",
+        "Expected behavior adapted from this upstream assertion. YEARFRAC basis leap-year and endpoint rules. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "YEARFRAC(DATE(2008,1,1),DATE(2008,3,31),4)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.24722222222222223
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2008,1,1),DATE(2013,3,31),4)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L1032: YearFrac_calculates_fraction_of_a_year",
+        "Expected behavior adapted from this upstream assertion. YEARFRAC basis leap-year and endpoint rules. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "YEARFRAC(DATE(2008,1,1),DATE(2013,3,31),4)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5.24722222222222
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension day-count: YEARFRAC basis leap-year and endpoint rules \u2014 YEARFRAC(DATE(2006,1,1),DATE(2006,3,26),0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L1032: YearFrac_calculates_fraction_of_a_year",
+        "Expected behavior adapted from this upstream assertion. YEARFRAC basis leap-year and endpoint rules. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "YEARFRAC(DATE(2006,1,1),DATE(2006,3,26),0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.23611111111
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    }
+  ]
+}

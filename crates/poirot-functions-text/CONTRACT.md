@@ -82,4 +82,4 @@ lazy form skip and spreadsheet-error masking. Numeric text uses the host's
 contextual locale-aware conversion. The existing formatter remains unchanged.
 ARABIC is a new text adapter operation under both policies; central admission and
 decoding live in `poirot-coercionv2::roman`, not the formatting kernel. See
-`poirot-test-json/evidence/roman-numerals-contract.md` for oracle limits.
+`poirot-test-runner/evidence/roman-numerals-contract.md` for oracle limits.

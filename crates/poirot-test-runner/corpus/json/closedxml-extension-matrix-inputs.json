@@ -1,0 +1,823 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML extension matrix-inputs: MDETERM rejects or propagates text matrix member \u2014 MDETERM(A1:B2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1351: MDeterm_requires_all_array_elements_are_numbers",
+        "Expected behavior adapted from this upstream assertion. MDETERM rejects or propagates text matrix member. Not derived from Poirot output.",
+        "Numeric restoration uses the original matrix. Determinant 2*5-4*3=-2; inverse of [[1,2],[8,4]] has top-left 4/(4-16)=-1/3. This arithmetic is independent of either engine.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This suite selects ExcelDocumentation for its numeric matrix contract. Refreshed source-hash-bound Calc reproduction: ../evidence/matrix-numeric-admission-libreoffice.json; the older report is retained as historical evidence."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "1"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -2
+          },
+          "tolerance": 1e-10
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension matrix-inputs: MINVERSE rejects or propagates blank matrix member \u2014 MINVERSE(A1:B2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1420: MInverse_all_array_elements_must_be_numbers",
+        "Expected behavior adapted from this upstream assertion. MINVERSE rejects or propagates blank matrix member. Not derived from Poirot output.",
+        "Numeric restoration uses the original matrix. Determinant 2*5-4*3=-2; inverse of [[1,2],[8,4]] has top-left 4/(4-16)=-1/3. This arithmetic is independent of either engine.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This suite selects ExcelDocumentation for its numeric matrix contract. Refreshed source-hash-bound Calc reproduction: ../evidence/matrix-numeric-admission-libreoffice.json; the older report is retained as historical evidence."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 8
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -0.3333333333333333
+          },
+          "tolerance": 1e-10
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension matrix-inputs: MINVERSE rejects or propagates text matrix member \u2014 MINVERSE(A1:B2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1420: MInverse_all_array_elements_must_be_numbers",
+        "Expected behavior adapted from this upstream assertion. MINVERSE rejects or propagates text matrix member. Not derived from Poirot output.",
+        "Numeric restoration uses the original matrix. Determinant 2*5-4*3=-2; inverse of [[1,2],[8,4]] has top-left 4/(4-16)=-1/3. This arithmetic is independent of either engine.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This suite selects ExcelDocumentation for its numeric matrix contract. Refreshed source-hash-bound Calc reproduction: ../evidence/matrix-numeric-admission-libreoffice.json; the older report is retained as historical evidence."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 8
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "1"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -0.3333333333333333
+          },
+          "tolerance": 1e-10
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension matrix-inputs: MDETERM rejects or propagates blank matrix member \u2014 MDETERM(A1:B2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1351: MDeterm_requires_all_array_elements_are_numbers",
+        "Expected behavior adapted from this upstream assertion. MDETERM rejects or propagates blank matrix member. Not derived from Poirot output.",
+        "Numeric restoration uses the original matrix. Determinant 2*5-4*3=-2; inverse of [[1,2],[8,4]] has top-left 4/(4-16)=-1/3. This arithmetic is independent of either engine.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This suite selects ExcelDocumentation for its numeric matrix contract. Refreshed source-hash-bound Calc reproduction: ../evidence/matrix-numeric-admission-libreoffice.json; the older report is retained as historical evidence."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -2
+          },
+          "tolerance": 1e-10
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension matrix-inputs: MINVERSE rejects or propagates error matrix member \u2014 MINVERSE(A1:B2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1420: MInverse_all_array_elements_must_be_numbers",
+        "Expected behavior adapted from this upstream assertion. MINVERSE rejects or propagates error matrix member. Not derived from Poirot output.",
+        "Numeric restoration uses the original matrix. Determinant 2*5-4*3=-2; inverse of [[1,2],[8,4]] has top-left 4/(4-16)=-1/3. This arithmetic is independent of either engine.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This suite selects ExcelDocumentation for its numeric matrix contract. Refreshed source-hash-bound Calc reproduction: ../evidence/matrix-numeric-admission-libreoffice.json; the older report is retained as historical evidence."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 8
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -0.3333333333333333
+          },
+          "tolerance": 1e-10
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension matrix-inputs: MMULT requires inner dimensions to agree: 1x3 and 1x3 \u2014 MMULT(A2:C2,A3:C3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1500: MMult_array1_rows_must_match_array2_column",
+        "Expected behavior adapted from this upstream assertion. MMULT requires inner dimensions to agree: 1x3 and 1x3. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This suite selects ExcelDocumentation for its numeric matrix contract. Refreshed source-hash-bound Calc reproduction: ../evidence/matrix-numeric-admission-libreoffice.json; the older report is retained as historical evidence."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MMULT(A2:C2,A3:C3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension matrix-inputs: MDETERM rejects or propagates error matrix member \u2014 MDETERM(A1:B2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1351: MDeterm_requires_all_array_elements_are_numbers",
+        "Expected behavior adapted from this upstream assertion. MDETERM rejects or propagates error matrix member. Not derived from Poirot output.",
+        "Numeric restoration uses the original matrix. Determinant 2*5-4*3=-2; inverse of [[1,2],[8,4]] has top-left 4/(4-16)=-1/3. This arithmetic is independent of either engine.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This suite selects ExcelDocumentation for its numeric matrix contract. Refreshed source-hash-bound Calc reproduction: ../evidence/matrix-numeric-admission-libreoffice.json; the older report is retained as historical evidence."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#NAME?"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#NAME?"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -2
+          },
+          "tolerance": 1e-10
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension matrix-inputs: MMULT requires inner dimensions to agree: 3x3 and 1x3 \u2014 MMULT(A2:C4,A5:C5)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1500: MMult_array1_rows_must_match_array2_column",
+        "Expected behavior adapted from this upstream assertion. MMULT requires inner dimensions to agree: 3x3 and 1x3. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This suite selects ExcelDocumentation for its numeric matrix contract. Refreshed source-hash-bound Calc reproduction: ../evidence/matrix-numeric-admission-libreoffice.json; the older report is retained as historical evidence."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B5",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C5",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MMULT(A2:C4,A5:C5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension matrix-inputs: MMULT requires inner dimensions to agree: 3x4 and 1x4 \u2014 MMULT(A2:C5,A6:D6)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1500: MMult_array1_rows_must_match_array2_column",
+        "Expected behavior adapted from this upstream assertion. MMULT requires inner dimensions to agree: 3x4 and 1x4. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This suite selects ExcelDocumentation for its numeric matrix contract. Refreshed source-hash-bound Calc reproduction: ../evidence/matrix-numeric-admission-libreoffice.json; the older report is retained as historical evidence."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A5",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B5",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C5",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A6",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B6",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C6",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D6",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MMULT(A2:C5,A6:D6)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    }
+  ],
+  "builtin_policy": "ExcelDocumentation"
+}

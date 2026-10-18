@@ -1,0 +1,621 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML exploration numbervalue-grammar: embedded spaces ignored",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "NUMBERVALUE locale-independent rule: embedded spaces ignored.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\" 1 2 3 \",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 123
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numbervalue-grammar: repeated percent scales repeatedly",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "NUMBERVALUE locale-independent rule: repeated percent scales repeatedly.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"25%%\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.0025
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numbervalue-grammar: grouping before decimal ignored",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "NUMBERVALUE locale-independent rule: grouping before decimal ignored.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1,2,34.5\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1234.5
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numbervalue-grammar: grouping after decimal invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "NUMBERVALUE locale-independent rule: grouping after decimal invalid.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1.2,3\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numbervalue-grammar: repeated decimal invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "NUMBERVALUE locale-independent rule: repeated decimal invalid.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1.2.3\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numbervalue-grammar: identical separators invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "NUMBERVALUE locale-independent rule: identical separators invalid.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1.2\",\".\",\".\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numbervalue-grammar: percent after trailing spaces",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "NUMBERVALUE locale-independent rule: percent after trailing spaces.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\" 25 % \",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.25
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numbervalue-grammar: percent between digits invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "NUMBERVALUE locale-independent rule: percent between digits invalid.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"2%5\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numbervalue-grammar: custom punctuation",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "NUMBERVALUE locale-independent rule: custom punctuation.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1_234:5\",\":\",\"_\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1234.5
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration numbervalue-grammar: group separator repeated accepted",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "NUMBERVALUE locale-independent rule: group separator repeated accepted.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1,,2\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 12
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "NUMBERVALUE explicit grammar: trailing repeated decimal is invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "Documented decimal/exponent numeric grammar with percent operations following successful numeric input parsing. Independently corroborated with fresh typed Calc OOXML snapshots; see ../evidence/numbervalue-explicit-grammar-libreoffice.json. Pinned Java double/split behavior is intentionally a separate policy."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"12..\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "NUMBERVALUE explicit grammar: hexadecimal double spelling is invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "Documented decimal/exponent numeric grammar with percent operations following successful numeric input parsing. Independently corroborated with fresh typed Calc OOXML snapshots; see ../evidence/numbervalue-explicit-grammar-libreoffice.json. Pinned Java double/split behavior is intentionally a separate policy."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"0x1p2\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "NUMBERVALUE explicit grammar: Java suffix double spelling is invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "Documented decimal/exponent numeric grammar with percent operations following successful numeric input parsing. Independently corroborated with fresh typed Calc OOXML snapshots; see ../evidence/numbervalue-explicit-grammar-libreoffice.json. Pinned Java double/split behavior is intentionally a separate policy."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"7D\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "NUMBERVALUE explicit grammar: explicit exponent overflow is invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "Documented decimal/exponent numeric grammar with percent operations following successful numeric input parsing. Independently corroborated with fresh typed Calc OOXML snapshots; see ../evidence/numbervalue-explicit-grammar-libreoffice.json. Pinned Java double/split behavior is intentionally a separate policy."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1e309\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "NUMBERVALUE explicit grammar: percent cannot rescue input overflow",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "Documented decimal/exponent numeric grammar with percent operations following successful numeric input parsing. Independently corroborated with fresh typed Calc OOXML snapshots; see ../evidence/numbervalue-explicit-grammar-libreoffice.json. Pinned Java double/split behavior is intentionally a separate policy."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1e309%\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "NUMBERVALUE explicit grammar: explicit nonzero exponent underflow is invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "Documented decimal/exponent numeric grammar with percent operations following successful numeric input parsing. Independently corroborated with fresh typed Calc OOXML snapshots; see ../evidence/numbervalue-explicit-grammar-libreoffice.json. Pinned Java double/split behavior is intentionally a separate policy."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1e-999\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "NUMBERVALUE explicit grammar: percent may underflow after input parsing",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "Documented decimal/exponent numeric grammar with percent operations following successful numeric input parsing. Independently corroborated with fresh typed Calc OOXML snapshots; see ../evidence/numbervalue-explicit-grammar-libreoffice.json. Pinned Java double/split behavior is intentionally a separate policy."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1e-320%%\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "NUMBERVALUE explicit grammar: zero significand survives huge exponent",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "Documented decimal/exponent numeric grammar with percent operations following successful numeric input parsing. Independently corroborated with fresh typed Calc OOXML snapshots; see ../evidence/numbervalue-explicit-grammar-libreoffice.json. Pinned Java double/split behavior is intentionally a separate policy."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"0e999\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "NUMBERVALUE explicit grammar: percent scales admitted large input",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "Documented decimal/exponent numeric grammar with percent operations following successful numeric input parsing. Independently corroborated with fresh typed Calc OOXML snapshots; see ../evidence/numbervalue-explicit-grammar-libreoffice.json. Pinned Java double/split behavior is intentionally a separate policy."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1e308%\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1e+306
+          }
+        }
+      ]
+    },
+    {
+      "name": "NUMBERVALUE explicit grammar: empty grouping disables group recognition",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "Explicit separator roles are independent of regex syntax. Fresh Calc snapshots corroborate the authored result; see ../evidence/numbervalue-explicit-grammar-libreoffice.json. Empty grouping disables grouping in Calc; ClosedXML instead rejects the argument, a documented source disagreement."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1,234\",\".\",\"\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "NUMBERVALUE explicit grammar: empty grouping permits ungrouped decimal",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "Explicit separator roles are independent of regex syntax. Fresh Calc snapshots corroborate the authored result; see ../evidence/numbervalue-explicit-grammar-libreoffice.json. Empty grouping disables grouping in Calc; ClosedXML instead rejects the argument, a documented source disagreement."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1.5\",\".\",\"\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.5
+          }
+        }
+      ]
+    },
+    {
+      "name": "NUMBERVALUE explicit grammar: grouping before any decimal includes exponent text",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "Explicit separator roles are independent of regex syntax. Fresh Calc snapshots corroborate the authored result; see ../evidence/numbervalue-explicit-grammar-libreoffice.json. Empty grouping disables grouping in Calc; ClosedXML instead rejects the argument, a documented source disagreement."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1e,2\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 100
+          }
+        }
+      ]
+    },
+    {
+      "name": "NUMBERVALUE explicit grammar: grouping after decimal in exponent is invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "Explicit separator roles are independent of regex syntax. Fresh Calc snapshots corroborate the authored result; see ../evidence/numbervalue-explicit-grammar-libreoffice.json. Empty grouping disables grouping in Calc; ClosedXML instead rejects the argument, a documented source disagreement."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1.5e,2\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "NUMBERVALUE explicit grammar: literal regex metacharacter decimal",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/numbervalue-function",
+        "Explicit separator roles are independent of regex syntax. Fresh Calc snapshots corroborate the authored result; see ../evidence/numbervalue-explicit-grammar-libreoffice.json. Empty grouping disables grouping in Calc; ClosedXML instead rejects the argument, a documented source disagreement."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1^5\",\"^\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.5
+          }
+        }
+      ]
+    }
+  ],
+  "builtin_policy": "ExcelDocumentation"
+}

@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML extension implicit-intersection: ImplicitIntersection DoesNotAffectSingleCellReference \u2014 ABS(B3:B3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L12: ImplicitIntersection_DoesNotAffectSingleCellReference",
+        "Expected behavior adapted from this upstream assertion. ImplicitIntersection DoesNotAffectSingleCellReference. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": -1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D5",
+          "content": {
+            "formula": "ABS(B3:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D5",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension implicit-intersection: ImplicitIntersection TakesReferenceFromHorizontalLine \u2014 ABS(B1:B10)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L23: ImplicitIntersection_TakesReferenceFromHorizontalLine",
+        "Expected behavior adapted from this upstream assertion. ImplicitIntersection TakesReferenceFromHorizontalLine. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": -1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "formula": "ABS(B1:B10)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D3",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension implicit-intersection: ImplicitIntersection TakesReferenceFromVerticalLine \u2014 ABS(A3:Z3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L34: ImplicitIntersection_TakesReferenceFromVerticalLine",
+        "Expected behavior adapted from this upstream assertion. ImplicitIntersection TakesReferenceFromVerticalLine. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": -1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B5",
+          "content": {
+            "formula": "ABS(A3:Z3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B5",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension implicit-intersection: ImplicitIntersection WithoutIntersectionResultsInValueError \u2014 ABS(B1:B4)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L58: ImplicitIntersection_WithoutIntersectionResultsInValueError",
+        "Expected behavior adapted from this upstream assertion. ImplicitIntersection WithoutIntersectionResultsInValueError. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": -1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D5",
+          "content": {
+            "formula": "ABS(B1:B4)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D5",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension implicit-intersection: ImplicitIntersection IntersectionMustHaveSpanOfOneCell \u2014 ABS(A1:B5)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L80: ImplicitIntersection_IntersectionMustHaveSpanOfOneCell",
+        "Expected behavior adapted from this upstream assertion. ImplicitIntersection IntersectionMustHaveSpanOfOneCell. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": -1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "formula": "ABS(A1:B5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D3",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    }
+  ]
+}

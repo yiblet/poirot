@@ -1,0 +1,1218 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility conditional-array-consumers: SUM scalar true branch broadcasts",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [2, 5, 2]. scalar true branch broadcasts. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(IF({TRUE,FALSE,TRUE},2,{30,5,70}))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: SUM nested conditional preserves every position",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [11, 19, 7]. nested conditional preserves every position. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(IF({TRUE,FALSE,TRUE},IF({FALSE,TRUE,TRUE},{3,5,7},{11,13,17}),19))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 37
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 41.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: PRODUCT scalar true branch broadcasts",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [2, 5, 2]. scalar true branch broadcasts. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PRODUCT(IF({TRUE,FALSE,TRUE},2,{30,5,70}))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: PRODUCT nested conditional preserves every position",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [11, 19, 7]. nested conditional preserves every position. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PRODUCT(IF({TRUE,FALSE,TRUE},IF({FALSE,TRUE,TRUE},{3,5,7},{11,13,17}),19))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1463
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 2431.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: MIN scalar true branch broadcasts",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [2, 5, 2]. scalar true branch broadcasts. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MIN(IF({TRUE,FALSE,TRUE},2,{30,5,70}))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: MIN nested conditional preserves every position",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [11, 19, 7]. nested conditional preserves every position. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MIN(IF({TRUE,FALSE,TRUE},IF({FALSE,TRUE,TRUE},{3,5,7},{11,13,17}),19))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 7
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 11.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: MAX scalar true branch broadcasts",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [2, 5, 2]. scalar true branch broadcasts. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAX(IF({TRUE,FALSE,TRUE},2,{30,5,70}))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: MAX nested conditional preserves every position",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [11, 19, 7]. nested conditional preserves every position. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAX(IF({TRUE,FALSE,TRUE},IF({FALSE,TRUE,TRUE},{3,5,7},{11,13,17}),19))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 19
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 17.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: COUNT scalar true branch broadcasts",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [2, 5, 2]. scalar true branch broadcasts. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNT(IF({TRUE,FALSE,TRUE},2,{30,5,70}))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 1.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: COUNT nested conditional preserves every position",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [11, 19, 7]. nested conditional preserves every position. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNT(IF({TRUE,FALSE,TRUE},IF({FALSE,TRUE,TRUE},{3,5,7},{11,13,17}),19))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: AVERAGE scalar true branch broadcasts",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [2, 5, 2]. scalar true branch broadcasts. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGE(IF({TRUE,FALSE,TRUE},2,{30,5,70}))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3.0
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 2.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: AVERAGE nested conditional preserves every position",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [11, 19, 7]. nested conditional preserves every position. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGE(IF({TRUE,FALSE,TRUE},IF({FALSE,TRUE,TRUE},{3,5,7},{11,13,17}),19))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 12.333333333333334
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 13.666666666666666
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: MEDIAN scalar true branch broadcasts",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [2, 5, 2]. scalar true branch broadcasts. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MEDIAN(IF({TRUE,FALSE,TRUE},2,{30,5,70}))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: MEDIAN nested conditional preserves every position",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [11, 19, 7]. nested conditional preserves every position. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MEDIAN(IF({TRUE,FALSE,TRUE},IF({FALSE,TRUE,TRUE},{3,5,7},{11,13,17}),19))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 11
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 13.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: SUMSQ scalar true branch broadcasts",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [2, 5, 2]. scalar true branch broadcasts. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMSQ(IF({TRUE,FALSE,TRUE},2,{30,5,70}))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 33
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 4.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: SUMSQ nested conditional preserves every position",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [11, 19, 7]. nested conditional preserves every position. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMSQ(IF({TRUE,FALSE,TRUE},IF({FALSE,TRUE,TRUE},{3,5,7},{11,13,17}),19))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 531
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 579.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: SUM false branch origin contrasting controls",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [3, 7]. omitted false branch remains logical. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "Elementwise conditional selection yields the admissible numeric population [3, 0, 7]. numeric zero false branch participates. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Elementwise conditional selection yields the admissible numeric population [3, 7]. empty text false branch filtered. The surrounding consumer must apply its own filtering and denominator policy.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(IF({TRUE,FALSE,TRUE},{3,100,7}))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 10
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 110.0
+            }
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(IF({TRUE,FALSE,TRUE},{3,100,7},0))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 10
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 110.0
+            }
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(IF({TRUE,FALSE,TRUE},{3,100,7},\"\"))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 10
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 110.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: PRODUCT false branch origin contrasting controls",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [3, 7]. omitted false branch remains logical. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "Elementwise conditional selection yields the admissible numeric population [3, 0, 7]. numeric zero false branch participates. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Elementwise conditional selection yields the admissible numeric population [3, 7]. empty text false branch filtered. The surrounding consumer must apply its own filtering and denominator policy.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PRODUCT(IF({TRUE,FALSE,TRUE},{3,100,7}))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 21
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 2100.0
+            }
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PRODUCT(IF({TRUE,FALSE,TRUE},{3,100,7},0))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 2100.0
+            }
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PRODUCT(IF({TRUE,FALSE,TRUE},{3,100,7},\"\"))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 21
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 2100.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: MIN false branch origin contrasting controls",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [3, 7]. omitted false branch remains logical. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "Elementwise conditional selection yields the admissible numeric population [3, 0, 7]. numeric zero false branch participates. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Elementwise conditional selection yields the admissible numeric population [3, 7]. empty text false branch filtered. The surrounding consumer must apply its own filtering and denominator policy.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MIN(IF({TRUE,FALSE,TRUE},{3,100,7}))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MIN(IF({TRUE,FALSE,TRUE},{3,100,7},0))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 3.0
+            }
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MIN(IF({TRUE,FALSE,TRUE},{3,100,7},\"\"))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: MAX false branch origin contrasting controls",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [3, 7]. omitted false branch remains logical. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "Elementwise conditional selection yields the admissible numeric population [3, 0, 7]. numeric zero false branch participates. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Elementwise conditional selection yields the admissible numeric population [3, 7]. empty text false branch filtered. The surrounding consumer must apply its own filtering and denominator policy.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAX(IF({TRUE,FALSE,TRUE},{3,100,7}))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 7
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 100.0
+            }
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAX(IF({TRUE,FALSE,TRUE},{3,100,7},0))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 7
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 100.0
+            }
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAX(IF({TRUE,FALSE,TRUE},{3,100,7},\"\"))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 7
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 100.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: COUNT false branch origin contrasting controls",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [3, 7]. omitted false branch remains logical. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "Elementwise conditional selection yields the admissible numeric population [3, 0, 7]. numeric zero false branch participates. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Elementwise conditional selection yields the admissible numeric population [3, 7]. empty text false branch filtered. The surrounding consumer must apply its own filtering and denominator policy.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNT(IF({TRUE,FALSE,TRUE},{3,100,7}))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 3.0
+            }
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNT(IF({TRUE,FALSE,TRUE},{3,100,7},0))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNT(IF({TRUE,FALSE,TRUE},{3,100,7},\"\"))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 3.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: AVERAGE false branch origin contrasting controls",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [3, 7]. omitted false branch remains logical. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "Elementwise conditional selection yields the admissible numeric population [3, 0, 7]. numeric zero false branch participates. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Elementwise conditional selection yields the admissible numeric population [3, 7]. empty text false branch filtered. The surrounding consumer must apply its own filtering and denominator policy.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGE(IF({TRUE,FALSE,TRUE},{3,100,7}))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 36.666666666666664
+            }
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGE(IF({TRUE,FALSE,TRUE},{3,100,7},0))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3.3333333333333335
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 36.666666666666664
+            }
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGE(IF({TRUE,FALSE,TRUE},{3,100,7},\"\"))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 36.666666666666664
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: MEDIAN false branch origin contrasting controls",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [3, 7]. omitted false branch remains logical. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "Elementwise conditional selection yields the admissible numeric population [3, 0, 7]. numeric zero false branch participates. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Elementwise conditional selection yields the admissible numeric population [3, 7]. empty text false branch filtered. The surrounding consumer must apply its own filtering and denominator policy.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MEDIAN(IF({TRUE,FALSE,TRUE},{3,100,7}))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 7.0
+            }
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MEDIAN(IF({TRUE,FALSE,TRUE},{3,100,7},0))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 7.0
+            }
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MEDIAN(IF({TRUE,FALSE,TRUE},{3,100,7},\"\"))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 7.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility conditional-array-consumers: SUMSQ false branch origin contrasting controls",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/if-function",
+        "Elementwise conditional selection yields the admissible numeric population [3, 7]. omitted false branch remains logical. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "Elementwise conditional selection yields the admissible numeric population [3, 0, 7]. numeric zero false branch participates. The surrounding consumer must apply its own filtering and denominator policy.",
+        "Elementwise conditional selection yields the admissible numeric population [3, 7]. empty text false branch filtered. The surrounding consumer must apply its own filtering and denominator policy.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMSQ(IF({TRUE,FALSE,TRUE},{3,100,7}))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 58
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 10058.0
+            }
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMSQ(IF({TRUE,FALSE,TRUE},{3,100,7},0))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 58
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 10058.0
+            }
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMSQ(IF({TRUE,FALSE,TRUE},{3,100,7},\"\"))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 58
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 10058.0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

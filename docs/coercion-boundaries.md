@@ -347,7 +347,7 @@ policy is introduced. The host records builtin-policy dependencies in both
 approximate MATCH profiles, so retained results cannot cross profiles.
 
 The independent evidence in
-`crates/poirot-test-json/evidence/classic-match-probes-libreoffice.json` records
+`crates/poirot-test-runner/evidence/classic-match-probes-libreoffice.json` records
 actual Calc disagreements on duplicates, type coercion, and error entries. The
 source-authored expectations remain unchanged; native Excel was unavailable.
 
@@ -361,7 +361,7 @@ at this consumer. BASE number/padding and DECIMAL radix/length/finite-overflow
 checks retain distinct domains. `poirot-numeric::radix::Radix` shares checked
 ASCII digit admission and uppercase spelling without importing engineering
 signed-width rules. BASE result rendering is an audited non-argument conversion.
-See the [independent contract and limitations](../crates/poirot-test-json/evidence/radix-domains-contract.md).
+See the [independent contract and limitations](../crates/poirot-test-runner/evidence/radix-domains-contract.md).
 
 ### Roman numeral consumers
 
@@ -371,4 +371,4 @@ host conversion, including locale dependency reads. ARABIC accepts exact text
 or blank at scalar selection; numbers, booleans and missing syntax are not
 stringified. Host text/work admission precedes projection and bounded decoding.
 The 255-unit signed ASCII grammar is independent of the existing text-family
-formatter. See the [independent contract and limits](../crates/poirot-test-json/evidence/roman-numerals-contract.md).
+formatter. See the [independent contract and limits](../crates/poirot-test-runner/evidence/roman-numerals-contract.md).

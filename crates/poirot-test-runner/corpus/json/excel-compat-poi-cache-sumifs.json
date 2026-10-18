@@ -1,0 +1,923 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "Example 1",
+      "Example 2",
+      "Example 3",
+      "Example 4",
+      "Example 5"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-sumifs: Example 5 C10 AVERAGEIFS(G2:G6,C2:C6,\">2\",E2:E6,C7,F2:F6,\">1999\",F2:F6,\"<2004\")",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "Pinned source SHA-256 ed34698a6c9bd269acb80874e820edd8cdbd246a3f939544a44ebeb3d2cb888c; original worksheet 'Example 5', cached cell C10, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 312500.0}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Example 5'!G2",
+          "content": {
+            "type": "number",
+            "value": 125000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!G3",
+          "content": {
+            "type": "number",
+            "value": 217000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!G4",
+          "content": {
+            "type": "number",
+            "value": 376000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!G5",
+          "content": {
+            "type": "number",
+            "value": 249000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!G6",
+          "content": {
+            "type": "number",
+            "value": 199000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!C2",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!C3",
+          "content": {
+            "type": "number",
+            "value": 3.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!C4",
+          "content": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!C5",
+          "content": {
+            "type": "number",
+            "value": 3.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!C6",
+          "content": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!E2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!E3",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!E4",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!E5",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!E6",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!C7",
+          "content": {
+            "formula": "\"y*\""
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!F2",
+          "content": {
+            "type": "number",
+            "value": 1940.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!F3",
+          "content": {
+            "type": "number",
+            "value": 1965.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!F4",
+          "content": {
+            "type": "number",
+            "value": 2003.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!F5",
+          "content": {
+            "type": "number",
+            "value": 2001.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!F6",
+          "content": {
+            "type": "number",
+            "value": 1998.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!C10",
+          "content": {
+            "formula": "AVERAGEIFS(G2:G6,C2:C6,\">2\",E2:E6,C7,F2:F6,\">1999\",F2:F6,\"<2004\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Example 5'!C10",
+          "expected": {
+            "type": "number",
+            "value": 312500.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-sumifs: Example 2 C8 SUMIFS(B2:E2,B5:E5,\">=1%\",B5:E5,\"<=3%\",B4:E4,\">1%\")",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "Pinned source SHA-256 ed34698a6c9bd269acb80874e820edd8cdbd246a3f939544a44ebeb3d2cb888c; original worksheet 'Example 2', cached cell C8, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 8711.0}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Example 2'!B2",
+          "content": {
+            "type": "number",
+            "value": 100.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!C2",
+          "content": {
+            "type": "number",
+            "value": 390.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!D2",
+          "content": {
+            "type": "number",
+            "value": 8321.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!E2",
+          "content": {
+            "type": "number",
+            "value": 500.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!B5",
+          "content": {
+            "type": "number",
+            "value": 0.005
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!C5",
+          "content": {
+            "type": "number",
+            "value": 0.03
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!D5",
+          "content": {
+            "type": "number",
+            "value": 0.01
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!E5",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!B4",
+          "content": {
+            "type": "number",
+            "value": 0.01
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!C4",
+          "content": {
+            "type": "number",
+            "value": 0.013
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!D4",
+          "content": {
+            "type": "number",
+            "value": 0.021
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!E4",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!C8",
+          "content": {
+            "formula": "SUMIFS(B2:E2,B5:E5,\">=1%\",B5:E5,\"<=3%\",B4:E4,\">1%\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Example 2'!C8",
+          "expected": {
+            "type": "number",
+            "value": 8711.0
+          },
+          "known_gap": {
+            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-sumifs: Example 5 C7 \"y*\"",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "Pinned source SHA-256 ed34698a6c9bd269acb80874e820edd8cdbd246a3f939544a44ebeb3d2cb888c; original worksheet 'Example 5', cached cell C7, BIFF/OOXML typed value {\"type\": \"text\", \"value\": \"y*\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Example 5'!C7",
+          "content": {
+            "formula": "\"y*\""
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Example 5'!C7",
+          "expected": {
+            "type": "text",
+            "value": "y*"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-sumifs: Example 2 C7 SUMIFS(B2:E2,B3:E3,\">3%\",B4:E4,\">=2%\")",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "Pinned source SHA-256 ed34698a6c9bd269acb80874e820edd8cdbd246a3f939544a44ebeb3d2cb888c; original worksheet 'Example 2', cached cell C7, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 500.0}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Example 2'!B2",
+          "content": {
+            "type": "number",
+            "value": 100.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!C2",
+          "content": {
+            "type": "number",
+            "value": 390.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!D2",
+          "content": {
+            "type": "number",
+            "value": 8321.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!E2",
+          "content": {
+            "type": "number",
+            "value": 500.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!B3",
+          "content": {
+            "type": "number",
+            "value": 0.01
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!C3",
+          "content": {
+            "type": "number",
+            "value": 0.005
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!D3",
+          "content": {
+            "type": "number",
+            "value": 0.03
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!E3",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!B4",
+          "content": {
+            "type": "number",
+            "value": 0.01
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!C4",
+          "content": {
+            "type": "number",
+            "value": 0.013
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!D4",
+          "content": {
+            "type": "number",
+            "value": 0.021
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!E4",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 2'!C7",
+          "content": {
+            "formula": "SUMIFS(B2:E2,B3:E3,\">3%\",B4:E4,\">=2%\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Example 2'!C7",
+          "expected": {
+            "type": "number",
+            "value": 500.0
+          },
+          "known_gap": {
+            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-sumifs: Example 5 C9 SUMIFS(G2:G6,C2:C6,A7,E2:E6,B7,F2:F6,\">1999\",F2:F6,\"<2004\")",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "Pinned source SHA-256 ed34698a6c9bd269acb80874e820edd8cdbd246a3f939544a44ebeb3d2cb888c; original worksheet 'Example 5', cached cell C9, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 625000.0}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Example 5'!G2",
+          "content": {
+            "type": "number",
+            "value": 125000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!G3",
+          "content": {
+            "type": "number",
+            "value": 217000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!G4",
+          "content": {
+            "type": "number",
+            "value": 376000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!G5",
+          "content": {
+            "type": "number",
+            "value": 249000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!G6",
+          "content": {
+            "type": "number",
+            "value": 199000.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!C2",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!C3",
+          "content": {
+            "type": "number",
+            "value": 3.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!C4",
+          "content": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!C5",
+          "content": {
+            "type": "number",
+            "value": 3.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!C6",
+          "content": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!A7",
+          "content": {
+            "formula": "\">\"&ROUND(SUM(1.0,1.0),0.0)"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!E2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!E3",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!E4",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!E5",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!E6",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!B7",
+          "content": {
+            "formula": "\"yes\""
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!F2",
+          "content": {
+            "type": "number",
+            "value": 1940.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!F3",
+          "content": {
+            "type": "number",
+            "value": 1965.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!F4",
+          "content": {
+            "type": "number",
+            "value": 2003.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!F5",
+          "content": {
+            "type": "number",
+            "value": 2001.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!F6",
+          "content": {
+            "type": "number",
+            "value": 1998.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 5'!C9",
+          "content": {
+            "formula": "SUMIFS(G2:G6,C2:C6,A7,E2:E6,B7,F2:F6,\">1999\",F2:F6,\"<2004\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Example 5'!C9",
+          "expected": {
+            "type": "number",
+            "value": 625000.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-sumifs: Example 1 C12 SUMIFS(A2:A9,B2:B9,\"<>Bananas\",C2:C9,1.0)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "Pinned source SHA-256 ed34698a6c9bd269acb80874e820edd8cdbd246a3f939544a44ebeb3d2cb888c; original worksheet 'Example 1', cached cell C12, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 30.0}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Example 1'!A2",
+          "content": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A3",
+          "content": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A4",
+          "content": {
+            "type": "number",
+            "value": 15.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A5",
+          "content": {
+            "type": "number",
+            "value": 3.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A6",
+          "content": {
+            "type": "number",
+            "value": 22.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A7",
+          "content": {
+            "type": "number",
+            "value": 12.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A8",
+          "content": {
+            "type": "number",
+            "value": 10.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A9",
+          "content": {
+            "type": "number",
+            "value": 33.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!B2",
+          "content": {
+            "type": "text",
+            "value": "Apples"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!B3",
+          "content": {
+            "type": "text",
+            "value": "Apples"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!B4",
+          "content": {
+            "type": "text",
+            "value": "Artichokes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!B5",
+          "content": {
+            "type": "text",
+            "value": "Artichokes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!B6",
+          "content": {
+            "type": "text",
+            "value": "Bananas"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!B7",
+          "content": {
+            "type": "text",
+            "value": "Bananas"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!B8",
+          "content": {
+            "type": "text",
+            "value": "Carrots"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!B9",
+          "content": {
+            "type": "text",
+            "value": "Carrots"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!C2",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!C3",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!C4",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!C5",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!C6",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!C7",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!C8",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!C9",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!C12",
+          "content": {
+            "formula": "SUMIFS(A2:A9,B2:B9,\"<>Bananas\",C2:C9,1.0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Example 1'!C12",
+          "expected": {
+            "type": "number",
+            "value": 30.0
+          }
+        }
+      ]
+    }
+  ]
+}

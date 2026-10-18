@@ -1,0 +1,818 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "General radix domains: BASE(255,2,3)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE(255,2,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "11111111"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: BASE(100,16)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE(100,16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "64"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: BASE(15,2,10)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE(15,2,10)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "0000001111"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: BASE(45745,36)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE(45745,36)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "ZAP"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: BASE(15.9,16.9,3.9)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE(15.9,16.9,3.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "00F"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: BASE(0,10)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE(0,10)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: BASE(9007199254740991,16)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE(9007199254740991,16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "1FFFFFFFFFFFFF"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: BASE(\"15\",16)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE(\"15\",16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "F"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: BASE(TRUE,16)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE(TRUE,16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: BASE(FALSE,16)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE(FALSE,16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: BASE(A1,16)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE(A1,16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: BASE(,16)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE(,16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: BASE(15,16,)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE(15,16,)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "F"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: BASE(15,16,\"3\")",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE(15,16,\"3\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "00F"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: LEN(BASE(15,16,255))",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "LEN(BASE(15,16,255))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 255
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: DECIMAL(\"zap\",36)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "DECIMAL(\"zap\",36)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 45745
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: DECIMAL(\"FF\",16)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "DECIMAL(\"FF\",16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 255
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: DECIMAL(111,2)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "DECIMAL(111,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: DECIMAL(\"123\",10)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "DECIMAL(\"123\",10)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 123
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: DECIMAL(\"\",36)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "DECIMAL(\"\",36)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: DECIMAL(\" F\",36)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "DECIMAL(\" F\",36)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 15
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: DECIMAL(TRUE,16)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "DECIMAL(TRUE,16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: DECIMAL(FALSE,16)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "DECIMAL(FALSE,16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: DECIMAL(A1,16)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "DECIMAL(A1,16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: DECIMAL(,16)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "DECIMAL(,16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: DECIMAL({\"ff\"},16)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "DECIMAL({\"ff\"},16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 255
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: BASE({15},16)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE({15},16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "text",
+            "value": "F"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: DECIMAL(\"9007199254740992\",10)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "DECIMAL(\"9007199254740992\",10)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 9007199254740992
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: DECIMAL(BASE(45745,36),36)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "DECIMAL(BASE(45745,36),36)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "number",
+            "value": 45745
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: BASE(-1,1/0)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE(-1,1/0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: BASE(1,1,1/0)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "BASE(1,1,1/0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "General radix domains: DECIMAL(\"?\",1/0)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Valid positional values follow the documented digit arithmetic; additional scalar admission, empty-text and leading-space behavior are Calc observations, not native Excel claims. See ../evidence/radix-domains-contract.md and radix-domains-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "formula": "DECIMAL(\"?\",1/0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!B1",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    }
+  ]
+}

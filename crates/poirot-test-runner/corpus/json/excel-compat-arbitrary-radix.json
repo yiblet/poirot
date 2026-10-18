@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility arbitrary-radix: fractional number truncates",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "Documented radix boundary: fractional number truncates. BASE returns text and DECIMAL returns a number; neither uses a sign bit.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "BASE(31.9,16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "1F"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility arbitrary-radix: fractional radix truncates",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "Documented radix boundary: fractional radix truncates. BASE returns text and DECIMAL returns a number; neither uses a sign bit.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "BASE(31,16.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "1F"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility arbitrary-radix: fractional width truncates",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "Documented radix boundary: fractional width truncates. BASE returns text and DECIMAL returns a number; neither uses a sign bit.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "BASE(31,16,4.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "001F"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility arbitrary-radix: padding is minimum not truncation",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/base-function",
+        "Documented radix boundary: padding is minimum not truncation. BASE returns text and DECIMAL returns a number; neither uses a sign bit.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "BASE(31,2,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "11111"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility arbitrary-radix: lowercase decimal digits",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/decimal-function",
+        "Documented radix boundary: lowercase decimal digits. BASE returns text and DECIMAL returns a number; neither uses a sign bit.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DECIMAL(\"aBc\",16)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2748
+          }
+        }
+      ]
+    }
+  ]
+}

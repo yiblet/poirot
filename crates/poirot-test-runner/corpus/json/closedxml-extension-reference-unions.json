@@ -1,0 +1,1169 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S",
+      "Other"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!A2",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!A3",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!A4",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!A5",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!A6",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!A7",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!A8",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!A9",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!A10",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!B1",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!B2",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!B3",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!B4",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!B5",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!B6",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!B7",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!B8",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!B9",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!B10",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!C1",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!C2",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!C3",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!C4",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!C5",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!C6",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!C7",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!C8",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!C9",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!C10",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!D1",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!D2",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!D3",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!D4",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!D5",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!D6",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!D7",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!D8",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!D9",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!D10",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!E1",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!E2",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!E3",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!E4",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!E5",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!E6",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!E7",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!E8",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!E9",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!E10",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!F1",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!F2",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!F3",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!F4",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!F5",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!F6",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!F7",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!F8",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!F9",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!F10",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "Other!A1",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!A2",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!A3",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!A4",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!A5",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!A6",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!A7",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!A8",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!A9",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!A10",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!B1",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!B2",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!B3",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!B4",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!B5",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!B6",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!B7",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!B8",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!B9",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!B10",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!C1",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!C2",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!C3",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!C4",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!C5",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!C6",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!C7",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!C8",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!C9",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!C10",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!D1",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!D2",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!D3",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!D4",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!D5",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!D6",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!D7",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!D8",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!D9",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!D10",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!E1",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!E2",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!E3",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!E4",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!E5",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!E6",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!E7",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!E8",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!E9",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!E10",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!F1",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!F2",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!F3",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!F4",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!F5",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!F6",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!F7",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!F8",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!F9",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      },
+      {
+        "cell": "Other!F10",
+        "content": {
+          "type": "number",
+          "value": 10
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity:  \u2014 SUM((A1,A2))",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L175: Union_CanJoinAnyTwoRanges",
+        "Expected behavior adapted from this upstream assertion. Union preserves overlap multiplicity and sheet identity: . Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM((A1,A2))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity:  \u2014 SUM((A1:A3,B1))",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L175: Union_CanJoinAnyTwoRanges",
+        "Expected behavior adapted from this upstream assertion. Union preserves overlap multiplicity and sheet identity: . Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM((A1:A3,B1))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity:  \u2014 SUM((A1,B1:B3))",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L175: Union_CanJoinAnyTwoRanges",
+        "Expected behavior adapted from this upstream assertion. Union preserves overlap multiplicity and sheet identity: . Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM((A1,B1:B3))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity:  \u2014 SUM((Other!A1,S!A1))",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L175: Union_CanJoinAnyTwoRanges",
+        "Expected behavior adapted from this upstream assertion. Union preserves overlap multiplicity and sheet identity: . Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM((Other!A1,S!A1))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity:  \u2014 SUM((A1,Other!A1))",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L175: Union_CanJoinAnyTwoRanges",
+        "Expected behavior adapted from this upstream assertion. Union preserves overlap multiplicity and sheet identity: . Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM((A1,Other!A1))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity: Full overlap \u2014 SUM((B2:D3,B2:D3))",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L175: Union_CanJoinAnyTwoRanges",
+        "Expected behavior adapted from this upstream assertion. Union preserves overlap multiplicity and sheet identity: Full overlap. Not derived from Poirot output.",
+        "B2 belongs to both source areas. Raising its value from one to two raises the union SUM by two, confirming multiplicity rather than deduplication; then restore it.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM((B2:D3,B2:D3))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity: Partial overlap \u2014 SUM((A1:B3,B1:C3))",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L175: Union_CanJoinAnyTwoRanges",
+        "Expected behavior adapted from this upstream assertion. Union preserves overlap multiplicity and sheet identity: Partial overlap. Not derived from Poirot output.",
+        "B2 belongs to both source areas. Raising its value from one to two raises the union SUM by two, confirming multiplicity rather than deduplication; then restore it.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM((A1:B3,B1:C3))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity:  \u2014 SUM((S!A1:B3,Other!B1:C3))",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L175: Union_CanJoinAnyTwoRanges",
+        "Expected behavior adapted from this upstream assertion. Union preserves overlap multiplicity and sheet identity: . Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM((S!A1:B3,Other!B1:C3))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 66
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity:  \u2014 SUM((A1,Other!A1,S!A1))",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L175: Union_CanJoinAnyTwoRanges",
+        "Expected behavior adapted from this upstream assertion. Union preserves overlap multiplicity and sheet identity: . Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM((A1,Other!A1,S!A1))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension reference-unions: Union preserves overlap multiplicity and sheet identity:  \u2014 SUM((A1:B2,Other!A1:B2,B2:C3,Other!E5:Other!F6))",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L175: Union_CanJoinAnyTwoRanges",
+        "Expected behavior adapted from this upstream assertion. Union preserves overlap multiplicity and sheet identity: . Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM((A1:B2,Other!A1:B2,B2:C3,Other!E5:Other!F6))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 88
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,772 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML exploration engineering-radix: BIN2DEC all ones means minus one",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/bin2dec-function",
+        "Signed radix parser rule: all ones means minus one. A full ten-character input uses two's complement in 10 bits; its sign boundary differs from an ordinary unsigned radix parser.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "BIN2DEC(\"1111111111\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: BIN2DEC minimum signed value",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/bin2dec-function",
+        "Signed radix parser rule: minimum signed value. A full ten-character input uses two's complement in 10 bits; its sign boundary differs from an ordinary unsigned radix parser.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "BIN2DEC(\"1000000000\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -512
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: BIN2DEC largest positive value",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/bin2dec-function",
+        "Signed radix parser rule: largest positive value. A full ten-character input uses two's complement in 10 bits; its sign boundary differs from an ordinary unsigned radix parser.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "BIN2DEC(\"111111111\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 511
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: BIN2DEC leading zeros keep short value positive",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/bin2dec-function",
+        "Signed radix parser rule: leading zeros keep short value positive. A full ten-character input uses two's complement in 10 bits; its sign boundary differs from an ordinary unsigned radix parser.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "BIN2DEC(\"0000000010\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: BIN2DEC empty input zero",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/bin2dec-function",
+        "Signed radix parser rule: empty input zero. A full ten-character input uses two's complement in 10 bits; its sign boundary differs from an ordinary unsigned radix parser.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "BIN2DEC(\"\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: HEX2DEC all ones means minus one",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/hex2dec-function",
+        "Signed radix parser rule: all ones means minus one. A full ten-character input uses two's complement in 40 bits; its sign boundary differs from an ordinary unsigned radix parser.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "HEX2DEC(\"FFFFFFFFFF\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: HEX2DEC minimum signed value",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/hex2dec-function",
+        "Signed radix parser rule: minimum signed value. A full ten-character input uses two's complement in 40 bits; its sign boundary differs from an ordinary unsigned radix parser.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "HEX2DEC(\"8000000000\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -549755813888
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: HEX2DEC largest positive value",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/hex2dec-function",
+        "Signed radix parser rule: largest positive value. A full ten-character input uses two's complement in 40 bits; its sign boundary differs from an ordinary unsigned radix parser.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "HEX2DEC(\"7FFFFFFFFF\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 549755813887
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: HEX2DEC leading zeros keep short value positive",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/hex2dec-function",
+        "Signed radix parser rule: leading zeros keep short value positive. A full ten-character input uses two's complement in 40 bits; its sign boundary differs from an ordinary unsigned radix parser.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "HEX2DEC(\"0000000010\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 16
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: HEX2DEC empty input zero",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/hex2dec-function",
+        "Signed radix parser rule: empty input zero. A full ten-character input uses two's complement in 40 bits; its sign boundary differs from an ordinary unsigned radix parser.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "HEX2DEC(\"\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: OCT2DEC all ones means minus one",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/oct2dec-function",
+        "Signed radix parser rule: all ones means minus one. A full ten-character input uses two's complement in 30 bits; its sign boundary differs from an ordinary unsigned radix parser.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "OCT2DEC(\"7777777777\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: OCT2DEC minimum signed value",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/oct2dec-function",
+        "Signed radix parser rule: minimum signed value. A full ten-character input uses two's complement in 30 bits; its sign boundary differs from an ordinary unsigned radix parser.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "OCT2DEC(\"4000000000\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -536870912
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: OCT2DEC largest positive value",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/oct2dec-function",
+        "Signed radix parser rule: largest positive value. A full ten-character input uses two's complement in 30 bits; its sign boundary differs from an ordinary unsigned radix parser.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "OCT2DEC(\"3777777777\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 536870911
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: OCT2DEC leading zeros keep short value positive",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/oct2dec-function",
+        "Signed radix parser rule: leading zeros keep short value positive. A full ten-character input uses two's complement in 30 bits; its sign boundary differs from an ordinary unsigned radix parser.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "OCT2DEC(\"0000000010\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: OCT2DEC empty input zero",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/oct2dec-function",
+        "Signed radix parser rule: empty input zero. A full ten-character input uses two's complement in 30 bits; its sign boundary differs from an ordinary unsigned radix parser.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "OCT2DEC(\"\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN fraction truncates toward zero",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dec2bin-function",
+        "Decimal-to-radix boundary: fraction truncates toward zero. Number and padding are truncated; negative output uses a fixed signed width, and positive output must fit places.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DEC2BIN(5.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "101"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN negative fraction truncates toward zero",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dec2bin-function",
+        "Decimal-to-radix boundary: negative fraction truncates toward zero. Number and padding are truncated; negative output uses a fixed signed width, and positive output must fit places.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DEC2BIN(-1.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "1111111111"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN minimum negative accepted",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dec2bin-function",
+        "Decimal-to-radix boundary: minimum negative accepted. Number and padding are truncated; negative output uses a fixed signed width, and positive output must fit places.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DEC2BIN(-512)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "1000000000"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN largest positive accepted",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dec2bin-function",
+        "Decimal-to-radix boundary: largest positive accepted. Number and padding are truncated; negative output uses a fixed signed width, and positive output must fit places.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DEC2BIN(511)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "111111111"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN negative ignores small padding",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dec2bin-function",
+        "Decimal-to-radix boundary: negative ignores small padding. Number and padding are truncated; negative output uses a fixed signed width, and positive output must fit places.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DEC2BIN(-1,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "1111111111"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN padding width fractional truncates",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dec2bin-function",
+        "Decimal-to-radix boundary: padding width fractional truncates. Number and padding are truncated; negative output uses a fixed signed width, and positive output must fit places.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DEC2BIN(5,4.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "0101"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2BIN nonnumeric places invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dec2bin-function",
+        "Decimal-to-radix boundary: nonnumeric places invalid. Number and padding are truncated; negative output uses a fixed signed width, and positive output must fit places.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DEC2BIN(5,\"x\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX fraction truncates toward zero",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dec2hex-function",
+        "Decimal-to-radix boundary: fraction truncates toward zero. Number and padding are truncated; negative output uses a fixed signed width, and positive output must fit places.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DEC2HEX(5.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "5"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX minimum negative accepted",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dec2hex-function",
+        "Decimal-to-radix boundary: minimum negative accepted. Number and padding are truncated; negative output uses a fixed signed width, and positive output must fit places.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DEC2HEX(-549755813888)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "8000000000"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX largest positive accepted",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dec2hex-function",
+        "Decimal-to-radix boundary: largest positive accepted. Number and padding are truncated; negative output uses a fixed signed width, and positive output must fit places.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DEC2HEX(549755813887)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "7FFFFFFFFF"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX negative ignores small padding",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dec2hex-function",
+        "Decimal-to-radix boundary: negative ignores small padding. Number and padding are truncated; negative output uses a fixed signed width, and positive output must fit places.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DEC2HEX(-1,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "FFFFFFFFFF"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX positive insufficient padding",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dec2hex-function",
+        "Decimal-to-radix boundary: positive insufficient padding. Number and padding are truncated; negative output uses a fixed signed width, and positive output must fit places.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DEC2HEX(15,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "F"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX padding width fractional truncates",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dec2hex-function",
+        "Decimal-to-radix boundary: padding width fractional truncates. Number and padding are truncated; negative output uses a fixed signed width, and positive output must fit places.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DEC2HEX(5,4.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "0005"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-radix: DEC2HEX nonnumeric places invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dec2hex-function",
+        "Decimal-to-radix boundary: nonnumeric places invalid. Number and padding are truncated; negative output uses a fixed signed width, and positive output must fit places.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DEC2HEX(5,\"x\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    }
+  ]
+}

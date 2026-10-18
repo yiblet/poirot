@@ -1,0 +1,5911 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-18T00:15:09.384120+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "excel-compat-arbitrary-radix.json": "b821295f6662e707a56bca9012c50cde320a588eea558ed2c82e94a28cda2377",
+    "excel-compat-array-criteria.json": "d06e033e82b5e02d8a1c94f3f2be20e2e482c6222ff7215aac5573aa6c081648",
+    "excel-compat-conditional-array-consumers.json": "0747759f504cb040b06d0ed05078308790d500a959de8424b93067e6d76b66ca",
+    "excel-compat-criteria-error-masking.json": "6aba1c735fb89cedf64ff3ac5c8160781719bc23ac891105b3b5aa59b838700e",
+    "excel-compat-criteria-number-grammars.json": "6b1adfcf49cd1b5de96a9c9f6352820e43398ab03c62b578e5b3cf830d42906c",
+    "excel-compat-distribution-boundaries.json": "90a75dd124ab5db10fd5e13038369428750e311dff52fe3dc59c845ad38ebc82",
+    "excel-compat-operator-array-shapes.json": "39c79e519fd71024f9676900eee7e02fdd459b745d7dae3af1387c8b97384d86",
+    "excel-compat-power-series.json": "1bd61f932876e010b256ff03de905a94cc59d4588d14b8a6d77c81c7c65d1cee",
+    "excel-compat-predicate-arrays.json": "5e55ecee6ec238278304a99b208b0af82dd6c1fc41e8031b1552905395881256",
+    "excel-compat-rank-and-quantiles.json": "985712c047e2522576ae9976af3bc2a3f635e818a3cce9773d0df655be10c298",
+    "excel-compat-selector-sibling-arrays.json": "fe48543413035dee9bdd2fa9af58e651ac3586b0c275e52a752453aa572dac7b"
+  },
+  "results": [
+    {
+      "suite": "excel-compat-arbitrary-radix.json",
+      "name": "Excel compatibility arbitrary-radix: fractional number truncates",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "1F"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-arbitrary-radix.json",
+      "name": "Excel compatibility arbitrary-radix: fractional radix truncates",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "1F"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-arbitrary-radix.json",
+      "name": "Excel compatibility arbitrary-radix: fractional width truncates",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "001F"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-arbitrary-radix.json",
+      "name": "Excel compatibility arbitrary-radix: padding is minimum not truncation",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "11111"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-arbitrary-radix.json",
+      "name": "Excel compatibility arbitrary-radix: lowercase decimal digits",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2748.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIF horizontal criteria preserve shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIF vertical criteria preserve shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIF per criterion results are not pre-summed",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIF duplicate criteria count contributions twice",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIF weighted consumer observes each result",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 27.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIF max consumer is different from sum",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIF unselected missing-match error stays local",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIF wildcard and literal criteria both evaluated",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIF horizontal criteria preserve shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIF vertical criteria preserve shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIF per criterion results are not pre-summed",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIF duplicate criteria count contributions twice",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIF weighted consumer observes each result",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIF max consumer is different from sum",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIF unselected missing-match error stays local",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIF wildcard and literal criteria both evaluated",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIF horizontal criteria preserve shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIF vertical criteria preserve shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIF per criterion results are not pre-summed",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.5
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIF duplicate criteria count contributions twice",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIF weighted consumer observes each result",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 13.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIF max consumer is different from sum",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.5
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIF unselected missing-match error stays local",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 1.5
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIF wildcard and literal criteria both evaluated",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIFS horizontal criteria preserve shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIFS vertical criteria preserve shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIFS per criterion results are not pre-summed",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIFS duplicate criteria count contributions twice",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIFS weighted consumer observes each result",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 27.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIFS max consumer is different from sum",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIFS unselected missing-match error stays local",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIFS wildcard and literal criteria both evaluated",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: SUMIFS several criteria pair element by element",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIFS horizontal criteria preserve shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIFS vertical criteria preserve shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIFS per criterion results are not pre-summed",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIFS duplicate criteria count contributions twice",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIFS weighted consumer observes each result",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIFS max consumer is different from sum",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIFS unselected missing-match error stays local",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIFS wildcard and literal criteria both evaluated",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: COUNTIFS several criteria pair element by element",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIFS horizontal criteria preserve shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIFS vertical criteria preserve shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIFS per criterion results are not pre-summed",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.5
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIFS duplicate criteria count contributions twice",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIFS weighted consumer observes each result",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 13.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIFS max consumer is different from sum",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.5
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIFS unselected missing-match error stays local",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 1.5
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIFS wildcard and literal criteria both evaluated",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: AVERAGEIFS several criteria pair element by element",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 5.5
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MINIFS horizontal criteria preserve shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MINIFS vertical criteria preserve shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MINIFS per criterion results are not pre-summed",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MINIFS duplicate criteria count contributions twice",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MINIFS weighted consumer observes each result",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MINIFS max consumer is different from sum",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MINIFS unselected missing-match error stays local",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MINIFS wildcard and literal criteria both evaluated",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MINIFS several criteria pair element by element",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MAXIFS horizontal criteria preserve shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MAXIFS vertical criteria preserve shape",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MAXIFS per criterion results are not pre-summed",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MAXIFS duplicate criteria count contributions twice",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MAXIFS weighted consumer observes each result",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 16.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MAXIFS max consumer is different from sum",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MAXIFS unselected missing-match error stays local",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MAXIFS wildcard and literal criteria both evaluated",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-array-criteria.json",
+      "name": "Excel compatibility array-criteria: MAXIFS several criteria pair element by element",
+      "checks": [
+        {
+          "action": 17,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 19,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: SUM scalar true branch broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: SUM nested conditional preserves every position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 37.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: PRODUCT scalar true branch broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: PRODUCT nested conditional preserves every position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1463.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: MIN scalar true branch broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: MIN nested conditional preserves every position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: MAX scalar true branch broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: MAX nested conditional preserves every position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 19.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: COUNT scalar true branch broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: COUNT nested conditional preserves every position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: AVERAGE scalar true branch broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: AVERAGE nested conditional preserves every position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.3333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: MEDIAN scalar true branch broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: MEDIAN nested conditional preserves every position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: SUMSQ scalar true branch broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 33.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: SUMSQ nested conditional preserves every position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 531.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: SUM false branch origin contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: PRODUCT false branch origin contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 21.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 21.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: MIN false branch origin contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: MAX false branch origin contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: COUNT false branch origin contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: AVERAGE false branch origin contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 3.33333333333333
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: MEDIAN false branch origin contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-conditional-array-consumers.json",
+      "name": "Excel compatibility conditional-array-consumers: SUMSQ false branch origin contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 58.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 58.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 58.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: SUMIF unmatched result error ignored",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: SUMIF matched result error propagated",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: SUMIF zero match does not mask matched error",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: SUMIFS unmatched result error ignored",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: SUMIFS matched result error propagated",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: SUMIFS zero match does not mask matched error",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIF unmatched result error ignored",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIF matched result error propagated",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIF zero match does not mask matched error",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIFS unmatched result error ignored",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIFS matched result error propagated",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIFS zero match does not mask matched error",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: MINIFS unmatched result error ignored",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: MINIFS matched result error propagated",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: MINIFS zero match does not mask matched error",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: MAXIFS unmatched result error ignored",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: MAXIFS matched result error propagated",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-error-masking.json",
+      "name": "Excel compatibility criteria-error-masking: MAXIFS zero match does not mask matched error",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF percent threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF scientific threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF currency threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF mixed fraction threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF calendar text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF time text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF space after operator",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF parenthesized negative criterion",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS percent threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS scientific threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS currency threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS mixed fraction threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS calendar text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS time text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS space after operator",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS parenthesized negative criterion",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIF percent threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIF scientific threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIF currency threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIF mixed fraction threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIF calendar text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIF time text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIF space after operator",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIF parenthesized negative criterion",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS percent threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS scientific threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS currency threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS mixed fraction threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS calendar text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS time text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS space after operator",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS parenthesized negative criterion",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 50.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF percent threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF scientific threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF currency threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF mixed fraction threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF calendar text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF time text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF space after operator",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF parenthesized negative criterion",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS percent threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS scientific threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS currency threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS mixed fraction threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS calendar text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS time text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS space after operator",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS parenthesized negative criterion",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MINIFS percent threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MINIFS scientific threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MINIFS currency threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MINIFS mixed fraction threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MINIFS calendar text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MINIFS time text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MINIFS space after operator",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MINIFS parenthesized negative criterion",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 20.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS percent threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS scientific threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS currency threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS mixed fraction threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS calendar text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS time text threshold",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS space after operator",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-criteria-number-grammars.json",
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS parenthesized negative criterion",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 30.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-distribution-boundaries.json",
+      "name": "Excel compatibility distribution-boundaries: distribution text mean invalid contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-distribution-boundaries.json",
+      "name": "Excel compatibility distribution-boundaries: distribution at mean CDF half contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-distribution-boundaries.json",
+      "name": "Excel compatibility distribution-boundaries: distribution density includes scale contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.132980760133811
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.132980760133811
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-distribution-boundaries.json",
+      "name": "Excel compatibility distribution-boundaries: distribution numeric text spread accepted contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-distribution-boundaries.json",
+      "name": "Excel compatibility distribution-boundaries: distribution symmetric tails partition probability contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-distribution-boundaries.json",
+      "name": "Excel compatibility distribution-boundaries: inverse median equals location contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-distribution-boundaries.json",
+      "name": "Excel compatibility distribution-boundaries: T.DIST zero endpoint",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-distribution-boundaries.json",
+      "name": "Excel compatibility distribution-boundaries: T.DIST fractional degree truncation",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.75
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-distribution-boundaries.json",
+      "name": "Excel compatibility distribution-boundaries: T.DIST.RT zero endpoint",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-distribution-boundaries.json",
+      "name": "Excel compatibility distribution-boundaries: T.DIST.RT fractional degree truncation",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.25
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-distribution-boundaries.json",
+      "name": "Excel compatibility distribution-boundaries: T.DIST.2T zero endpoint",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-distribution-boundaries.json",
+      "name": "Excel compatibility distribution-boundaries: T.DIST.2T fractional degree truncation",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-distribution-boundaries.json",
+      "name": "Excel compatibility distribution-boundaries: TDIST zero endpoint",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-distribution-boundaries.json",
+      "name": "Excel compatibility distribution-boundaries: TDIST fractional degree truncation",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: + singleton row broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 89.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: + singleton column broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 91.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: + both singleton axes expand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 67.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: + reversed broadcast operands",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 89.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: - singleton row broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -9.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: - singleton column broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: - both singleton axes expand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 17.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: - reversed broadcast operands",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: * singleton row broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 134.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: * singleton column broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 142.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: * both singleton axes expand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 70.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: * reversed broadcast operands",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 134.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: / singleton row broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 13.6666666666667
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: / singleton column broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 14.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: / both singleton axes expand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 28.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: / reversed broadcast operands",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 18.5
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: ^ singleton row broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 700.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: ^ singleton column broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 766.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: ^ both singleton axes expand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 94.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: ^ reversed broadcast operands",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 565.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: = singleton row broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: = singleton column broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: = both singleton axes expand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: = reversed broadcast operands",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: <> singleton row broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: <> singleton column broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: <> both singleton axes expand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 13.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: <> reversed broadcast operands",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: < singleton row broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: < singleton column broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: < both singleton axes expand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: < reversed broadcast operands",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: > singleton row broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: > singleton column broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: > both singleton axes expand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 13.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: > reversed broadcast operands",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: <= singleton row broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: <= singleton column broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 14.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: <= both singleton axes expand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: <= reversed broadcast operands",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: >= singleton row broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: >= singleton column broadcasts",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: >= both singleton axes expand",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-operator-array-shapes.json",
+      "name": "Excel compatibility operator-array-shapes: >= reversed broadcast operands",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-power-series.json",
+      "name": "Excel compatibility power-series: negative exponent step",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-power-series.json",
+      "name": "Excel compatibility power-series: zero exponent step",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 48.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-power-series.json",
+      "name": "Excel compatibility power-series: negative initial exponent",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-power-series.json",
+      "name": "Excel compatibility power-series: negative base integer exponents",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-power-series.json",
+      "name": "Excel compatibility power-series: zero coefficient does not skip index",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 13.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-power-series.json",
+      "name": "Excel compatibility power-series: negative coefficients keep sign",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-predicate-arrays.json",
+      "name": "Excel compatibility predicate-arrays: ISERROR two error classes",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-predicate-arrays.json",
+      "name": "Excel compatibility predicate-arrays: ISERR two error classes",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-predicate-arrays.json",
+      "name": "Excel compatibility predicate-arrays: ISNA two error classes",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-predicate-arrays.json",
+      "name": "Excel compatibility predicate-arrays: ISTEXT numeric text versus numbers",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 6.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-predicate-arrays.json",
+      "name": "Excel compatibility predicate-arrays: ISTEXT blank versus empty text",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 10.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-predicate-arrays.json",
+      "name": "Excel compatibility predicate-arrays: ISNONTEXT numeric text versus numbers",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-predicate-arrays.json",
+      "name": "Excel compatibility predicate-arrays: ISNONTEXT blank versus empty text",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-predicate-arrays.json",
+      "name": "Excel compatibility predicate-arrays: ISNUMBER numeric text versus numbers",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 9.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-predicate-arrays.json",
+      "name": "Excel compatibility predicate-arrays: ISNUMBER blank versus empty text",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-predicate-arrays.json",
+      "name": "Excel compatibility predicate-arrays: ISBLANK blank versus empty text",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-rank-and-quantiles.json",
+      "name": "Excel compatibility rank-and-quantiles: QUARTILE.INC fractional quart truncates",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-rank-and-quantiles.json",
+      "name": "Excel compatibility rank-and-quantiles: QUARTILE.INC minimum endpoint",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-rank-and-quantiles.json",
+      "name": "Excel compatibility rank-and-quantiles: QUARTILE.INC maximum endpoint",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 16.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-rank-and-quantiles.json",
+      "name": "Excel compatibility rank-and-quantiles: percent rank duplicate minimum uses first rank contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-rank-and-quantiles.json",
+      "name": "Excel compatibility rank-and-quantiles: percent rank duplicate maximum rank stable contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-rank-and-quantiles.json",
+      "name": "Excel compatibility rank-and-quantiles: percent rank interpolates value before truncation contrasting controls",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.583
+          },
+          "agrees": true
+        },
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.583
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under SUM array conditions with scalar default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under COUNT array conditions with scalar default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under PRODUCT array conditions with scalar default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 105.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MIN array conditions with scalar default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MAX array conditions with scalar default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under AVERAGE array conditions with scalar default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MEDIAN array conditions with scalar default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under SUMSQ array conditions with scalar default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 83.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under SUM first true condition at each position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 13.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under COUNT first true condition at each position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under PRODUCT first true condition at each position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 63.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MIN first true condition at each position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MAX first true condition at each position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under AVERAGE first true condition at each position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 4.33333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MEDIAN first true condition at each position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: IFS under SUMSQ first true condition at each position",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 67.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under SUM array expression with typed branch values",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under COUNT array expression with typed branch values",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under PRODUCT array expression with typed branch values",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 105.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MIN array expression with typed branch values",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MAX array expression with typed branch values",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under AVERAGE array expression with typed branch values",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MEDIAN array expression with typed branch values",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under SUMSQ array expression with typed branch values",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 83.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under SUM duplicate case uses first match and default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under COUNT duplicate case uses first match and default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under PRODUCT duplicate case uses first match and default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 105.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MIN duplicate case uses first match and default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MAX duplicate case uses first match and default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under AVERAGE duplicate case uses first match and default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MEDIAN duplicate case uses first match and default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under SUMSQ duplicate case uses first match and default",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 83.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under SUM array indices select corresponding branch positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under COUNT array indices select corresponding branch positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under PRODUCT array indices select corresponding branch positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 105.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MIN array indices select corresponding branch positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MAX array indices select corresponding branch positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under AVERAGE array indices select corresponding branch positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MEDIAN array indices select corresponding branch positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 5.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under SUMSQ array indices select corresponding branch positions",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 83.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under SUM array indices retain every selected scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 31.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under COUNT array indices retain every selected scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under PRODUCT array indices retain every selected scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1001.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MIN array indices retain every selected scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MAX array indices retain every selected scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 13.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under AVERAGE array indices retain every selected scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 10.3333333333333
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MEDIAN array indices retain every selected scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 11.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-selector-sibling-arrays.json",
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under SUMSQ array indices retain every selected scalar",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 339.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 308,
+    "checks": 466,
+    "corroborated_scenarios": 308,
+    "corroborated_checks": 466
+  }
+}

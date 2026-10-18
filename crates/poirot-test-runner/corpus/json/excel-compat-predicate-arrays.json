@@ -1,0 +1,688 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility predicate-arrays: ISERROR two error classes",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LogicalFunctionsTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/is-functions",
+        "Apply the type predicate independently to each cell before numeric negation. Binary positional weights distinguish the entire result vector: [0, 1, 1, 0].",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "A proposed plain INDEX observer did not establish array context in Calc and was removed. The retained SUMPRODUCT weighted checksum explicitly supplies array context and already matches every independently authored bit.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT(--ISERROR(A1:A4),{1;2;4;8})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6
+          },
+          "known_gap": {
+            "reason": "The information predicate is scalarized instead of mapping across the reference before positional weighting. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility predicate-arrays: ISERR two error classes",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LogicalFunctionsTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/is-functions",
+        "Apply the type predicate independently to each cell before numeric negation. Binary positional weights distinguish the entire result vector: [0, 0, 1, 0].",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "A proposed plain INDEX observer did not establish array context in Calc and was removed. The retained SUMPRODUCT weighted checksum explicitly supplies array context and already matches every independently authored bit.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT(--ISERR(A1:A4),{1;2;4;8})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          },
+          "known_gap": {
+            "reason": "The information predicate is scalarized instead of mapping across the reference before positional weighting. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility predicate-arrays: ISNA two error classes",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LogicalFunctionsTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/is-functions",
+        "Apply the type predicate independently to each cell before numeric negation. Binary positional weights distinguish the entire result vector: [0, 1, 0, 0].",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "A proposed plain INDEX observer did not establish array context in Calc and was removed. The retained SUMPRODUCT weighted checksum explicitly supplies array context and already matches every independently authored bit.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT(--ISNA(A1:A4),{1;2;4;8})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          },
+          "known_gap": {
+            "reason": "The information predicate is scalarized instead of mapping across the reference before positional weighting. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility predicate-arrays: ISTEXT numeric text versus numbers",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LogicalFunctionsTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/is-functions",
+        "Apply the type predicate independently to each cell before numeric negation. Binary positional weights distinguish the entire result vector: [0, 1, 1, 0].",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "A proposed plain INDEX observer did not establish array context in Calc and was removed. The retained SUMPRODUCT weighted checksum explicitly supplies array context and already matches every independently authored bit.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT(--ISTEXT(A1:A4),{1;2;4;8})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6
+          },
+          "known_gap": {
+            "reason": "The information predicate is scalarized instead of mapping across the reference before positional weighting. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility predicate-arrays: ISTEXT blank versus empty text",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LogicalFunctionsTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/is-functions",
+        "Apply the type predicate independently to each cell before numeric negation. Binary positional weights distinguish the entire result vector: [0, 1, 0, 1].",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "A proposed plain INDEX observer did not establish array context in Calc and was removed. The retained SUMPRODUCT weighted checksum explicitly supplies array context and already matches every independently authored bit.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT(--ISTEXT(A1:A4),{1;2;4;8})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 10
+          },
+          "known_gap": {
+            "reason": "The information predicate is scalarized instead of mapping across the reference before positional weighting. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility predicate-arrays: ISNONTEXT numeric text versus numbers",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LogicalFunctionsTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/is-functions",
+        "Apply the type predicate independently to each cell before numeric negation. Binary positional weights distinguish the entire result vector: [1, 0, 0, 1].",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "A proposed plain INDEX observer did not establish array context in Calc and was removed. The retained SUMPRODUCT weighted checksum explicitly supplies array context and already matches every independently authored bit.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT(--ISNONTEXT(A1:A4),{1;2;4;8})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9
+          },
+          "known_gap": {
+            "reason": "The information predicate is scalarized instead of mapping across the reference before positional weighting. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility predicate-arrays: ISNONTEXT blank versus empty text",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LogicalFunctionsTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/is-functions",
+        "Apply the type predicate independently to each cell before numeric negation. Binary positional weights distinguish the entire result vector: [1, 0, 1, 0].",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "A proposed plain INDEX observer did not establish array context in Calc and was removed. The retained SUMPRODUCT weighted checksum explicitly supplies array context and already matches every independently authored bit.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT(--ISNONTEXT(A1:A4),{1;2;4;8})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          },
+          "known_gap": {
+            "reason": "The information predicate is scalarized instead of mapping across the reference before positional weighting. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility predicate-arrays: ISNUMBER numeric text versus numbers",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LogicalFunctionsTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/is-functions",
+        "Apply the type predicate independently to each cell before numeric negation. Binary positional weights distinguish the entire result vector: [1, 0, 0, 1].",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "A proposed plain INDEX observer did not establish array context in Calc and was removed. The retained SUMPRODUCT weighted checksum explicitly supplies array context and already matches every independently authored bit.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT(--ISNUMBER(A1:A4),{1;2;4;8})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9
+          },
+          "known_gap": {
+            "reason": "The information predicate is scalarized instead of mapping across the reference before positional weighting. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility predicate-arrays: ISNUMBER blank versus empty text",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LogicalFunctionsTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/is-functions",
+        "Apply the type predicate independently to each cell before numeric negation. Binary positional weights distinguish the entire result vector: [0, 0, 1, 0].",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "A proposed plain INDEX observer did not establish array context in Calc and was removed. The retained SUMPRODUCT weighted checksum explicitly supplies array context and already matches every independently authored bit.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT(--ISNUMBER(A1:A4),{1;2;4;8})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          },
+          "known_gap": {
+            "reason": "The information predicate is scalarized instead of mapping across the reference before positional weighting. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility predicate-arrays: ISBLANK blank versus empty text",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LogicalFunctionsTestCaseData.xls",
+        "https://support.microsoft.com/en-us/excel/functions/is-functions",
+        "Apply the type predicate independently to each cell before numeric negation. Binary positional weights distinguish the entire result vector: [1, 0, 0, 0].",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "A proposed plain INDEX observer did not establish array context in Calc and was removed. The retained SUMPRODUCT weighted checksum explicitly supplies array context and already matches every independently authored bit.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT(--ISBLANK(A1:A4),{1;2;4;8})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          },
+          "known_gap": {
+            "reason": "The information predicate is scalarized instead of mapping across the reference before positional weighting. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

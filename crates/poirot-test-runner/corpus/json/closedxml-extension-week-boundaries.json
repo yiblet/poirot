@@ -1,0 +1,547 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1965,1,1),21)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L852: Weeknum_returns_week_number_for_date",
+        "Expected behavior adapted from this upstream assertion. Week numbering at year rollover. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This entire Excel-expectation suite explicitly selects ExcelDocumentation; PinnedPoi retains its separate calendar-year WEEKNUM contract. Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKNUM(DATE(1965,1,1),21)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 53
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L712: Weekday_calculates_week_day",
+        "Expected behavior adapted from this upstream assertion. Weekday flag changes the origin and day numbering. Not derived from Poirot output.",
+        "The numeric DATE control denotes the same 2008-02-14 date, separating date-text conversion from weekday flag semantics.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This entire Excel-expectation suite explicitly selects ExcelDocumentation; PinnedPoi retains its separate calendar-year WEEKNUM contract. Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(\"2/14/2008\",1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(DATE(2008,2,14),1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1965,1,3),21)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L852: Weeknum_returns_week_number_for_date",
+        "Expected behavior adapted from this upstream assertion. Week numbering at year rollover. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This entire Excel-expectation suite explicitly selects ExcelDocumentation; PinnedPoi retains its separate calendar-year WEEKNUM contract. Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKNUM(DATE(1965,1,3),21)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 53
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L712: Weekday_calculates_week_day",
+        "Expected behavior adapted from this upstream assertion. Weekday flag changes the origin and day numbering. Not derived from Poirot output.",
+        "The numeric DATE control denotes the same 2008-02-14 date, separating date-text conversion from weekday flag semantics.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This entire Excel-expectation suite explicitly selects ExcelDocumentation; PinnedPoi retains its separate calendar-year WEEKNUM contract. Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(\"2/14/2008\",2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(DATE(2008,2,14),2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1968,12,30),21)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L852: Weeknum_returns_week_number_for_date",
+        "Expected behavior adapted from this upstream assertion. Week numbering at year rollover. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This entire Excel-expectation suite explicitly selects ExcelDocumentation; PinnedPoi retains its separate calendar-year WEEKNUM contract. Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKNUM(DATE(1968,12,30),21)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L712: Weekday_calculates_week_day",
+        "Expected behavior adapted from this upstream assertion. Weekday flag changes the origin and day numbering. Not derived from Poirot output.",
+        "The numeric DATE control denotes the same 2008-02-14 date, separating date-text conversion from weekday flag semantics.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This entire Excel-expectation suite explicitly selects ExcelDocumentation; PinnedPoi retains its separate calendar-year WEEKNUM contract. Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(\"2/14/2008\",3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(DATE(2008,2,14),3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1968,12,31),21)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L852: Weeknum_returns_week_number_for_date",
+        "Expected behavior adapted from this upstream assertion. Week numbering at year rollover. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This entire Excel-expectation suite explicitly selects ExcelDocumentation; PinnedPoi retains its separate calendar-year WEEKNUM contract. Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKNUM(DATE(1968,12,31),21)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",11)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L712: Weekday_calculates_week_day",
+        "Expected behavior adapted from this upstream assertion. Weekday flag changes the origin and day numbering. Not derived from Poirot output.",
+        "The numeric DATE control denotes the same 2008-02-14 date, separating date-text conversion from weekday flag semantics.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This entire Excel-expectation suite explicitly selects ExcelDocumentation; PinnedPoi retains its separate calendar-year WEEKNUM contract. Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(\"2/14/2008\",11)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(DATE(2008,2,14),11)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",14)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L712: Weekday_calculates_week_day",
+        "Expected behavior adapted from this upstream assertion. Weekday flag changes the origin and day numbering. Not derived from Poirot output.",
+        "The numeric DATE control denotes the same 2008-02-14 date, separating date-text conversion from weekday flag semantics.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This entire Excel-expectation suite explicitly selects ExcelDocumentation; PinnedPoi retains its separate calendar-year WEEKNUM contract. Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(\"2/14/2008\",14)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(DATE(2008,2,14),14)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",15)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L712: Weekday_calculates_week_day",
+        "Expected behavior adapted from this upstream assertion. Weekday flag changes the origin and day numbering. Not derived from Poirot output.",
+        "The numeric DATE control denotes the same 2008-02-14 date, separating date-text conversion from weekday flag semantics.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This entire Excel-expectation suite explicitly selects ExcelDocumentation; PinnedPoi retains its separate calendar-year WEEKNUM contract. Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(\"2/14/2008\",15)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 7
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(DATE(2008,2,14),15)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Weekday flag changes the origin and day numbering \u2014 WEEKDAY(\"2/14/2008\",17)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L712: Weekday_calculates_week_day",
+        "Expected behavior adapted from this upstream assertion. Weekday flag changes the origin and day numbering. Not derived from Poirot output.",
+        "The numeric DATE control denotes the same 2008-02-14 date, separating date-text conversion from weekday flag semantics.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This entire Excel-expectation suite explicitly selects ExcelDocumentation; PinnedPoi retains its separate calendar-year WEEKNUM contract. Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(\"2/14/2008\",17)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKDAY(DATE(2008,2,14),17)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1987,1,1),1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L852: Weeknum_returns_week_number_for_date",
+        "Expected behavior adapted from this upstream assertion. Week numbering at year rollover. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This entire Excel-expectation suite explicitly selects ExcelDocumentation; PinnedPoi retains its separate calendar-year WEEKNUM contract. Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKNUM(DATE(1987,1,1),1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1987,1,4),1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L852: Weeknum_returns_week_number_for_date",
+        "Expected behavior adapted from this upstream assertion. Week numbering at year rollover. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This entire Excel-expectation suite explicitly selects ExcelDocumentation; PinnedPoi retains its separate calendar-year WEEKNUM contract. Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKNUM(DATE(1987,1,4),1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1989,1,1),2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L852: Weeknum_returns_week_number_for_date",
+        "Expected behavior adapted from this upstream assertion. Week numbering at year rollover. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This entire Excel-expectation suite explicitly selects ExcelDocumentation; PinnedPoi retains its separate calendar-year WEEKNUM contract. Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKNUM(DATE(1989,1,1),2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1991,1,1),11)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L852: Weeknum_returns_week_number_for_date",
+        "Expected behavior adapted from this upstream assertion. Week numbering at year rollover. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This entire Excel-expectation suite explicitly selects ExcelDocumentation; PinnedPoi retains its separate calendar-year WEEKNUM contract. Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKNUM(DATE(1991,1,1),11)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension week-boundaries: Week numbering at year rollover \u2014 WEEKNUM(DATE(1993,1,1),12)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L852: Weeknum_returns_week_number_for_date",
+        "Expected behavior adapted from this upstream assertion. Week numbering at year rollover. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "This entire Excel-expectation suite explicitly selects ExcelDocumentation; PinnedPoi retains its separate calendar-year WEEKNUM contract. Fresh source-hash-bound corroboration: ../evidence/calendar-week-boundaries-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WEEKNUM(DATE(1993,1,1),12)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    }
+  ]
+}

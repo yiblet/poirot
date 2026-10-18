@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "Read Me",
+      "Roman"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-romanfunctiontestcasedata: Roman B15 ROMAN(4000.0,0.0)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/RomanFunctionTestCaseData.xls",
+        "Pinned source SHA-256 4ecbd643ff495d24bca0f0a90228db52de00a62fcc1b2964b44d728a0e5dfab6; original worksheet 'Roman', cached cell B15, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Roman'!B15",
+          "content": {
+            "formula": "ROMAN(4000.0,0.0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Roman'!B15",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-romanfunctiontestcasedata: Roman B13 ROMAN(-1.0,0.0)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/RomanFunctionTestCaseData.xls",
+        "Pinned source SHA-256 4ecbd643ff495d24bca0f0a90228db52de00a62fcc1b2964b44d728a0e5dfab6; original worksheet 'Roman', cached cell B13, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Roman'!B13",
+          "content": {
+            "formula": "ROMAN(-1.0,0.0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Roman'!B13",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-romanfunctiontestcasedata: Roman B11 ROMAN(\"ABCDEF\",0.0)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/RomanFunctionTestCaseData.xls",
+        "Pinned source SHA-256 4ecbd643ff495d24bca0f0a90228db52de00a62fcc1b2964b44d728a0e5dfab6; original worksheet 'Roman', cached cell B11, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Roman'!B11",
+          "content": {
+            "formula": "ROMAN(\"ABCDEF\",0.0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Roman'!B11",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-romanfunctiontestcasedata: Roman B12 ROMAN(0.0,0.0)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/RomanFunctionTestCaseData.xls",
+        "Pinned source SHA-256 4ecbd643ff495d24bca0f0a90228db52de00a62fcc1b2964b44d728a0e5dfab6; original worksheet 'Roman', cached cell B12, BIFF/OOXML typed value {\"type\": \"text\", \"value\": \"\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Roman'!B12",
+          "content": {
+            "formula": "ROMAN(0.0,0.0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Roman'!B12",
+          "expected": {
+            "type": "text",
+            "value": ""
+          }
+        }
+      ]
+    }
+  ]
+}

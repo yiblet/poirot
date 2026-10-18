@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML exploration upstream operators: UnaryPercent ConvertsArgumentBeforePercentOperator \u2014 (1/0)%",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ArithmeticOperatorsTests.cs#L103: UnaryPercent_ConvertsArgumentBeforePercentOperator",
+        "Expected behavior adapted from this upstream assertion. UnaryPercent ConvertsArgumentBeforePercentOperator. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "(1/0)%"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration upstream operators: UnaryPercent ConvertsArgumentBeforePercentOperator \u2014 A1%",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ArithmeticOperatorsTests.cs#L103: UnaryPercent_ConvertsArgumentBeforePercentOperator",
+        "Expected behavior adapted from this upstream assertion. UnaryPercent ConvertsArgumentBeforePercentOperator. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "A1%"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.0
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration upstream-operators: percent logical operands contrasts",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ArithmeticOperatorsTests.cs#L103: UnaryPercent_ConvertsArgumentBeforePercentOperator",
+        "Expected behavior adapted from this upstream assertion. UnaryPercent ConvertsArgumentBeforePercentOperator. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TRUE%"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.01
+          },
+          "tolerance": 1e-12
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FALSE%"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    }
+  ]
+}

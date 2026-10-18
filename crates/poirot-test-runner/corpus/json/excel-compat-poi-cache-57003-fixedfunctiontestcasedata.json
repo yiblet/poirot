@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "Read Me",
+      "Code"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-57003-fixedfunctiontestcasedata: Code B18 FIXED(1.0,2.0,\"invalid\")",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/57003-FixedFunctionTestCaseData.xls",
+        "Pinned source SHA-256 9b9a2f462e918bd9f89d98d46176b9c59b8a58973cef1c32f280a1a82729c7ea; original worksheet 'Code', cached cell B18, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Code'!B18",
+          "content": {
+            "formula": "FIXED(1.0,2.0,\"invalid\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Code'!B18",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-57003-fixedfunctiontestcasedata: Code B17 FIXED(1.0,\"invalid\")",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/57003-FixedFunctionTestCaseData.xls",
+        "Pinned source SHA-256 9b9a2f462e918bd9f89d98d46176b9c59b8a58973cef1c32f280a1a82729c7ea; original worksheet 'Code', cached cell B17, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Code'!B17",
+          "content": {
+            "formula": "FIXED(1.0,\"invalid\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Code'!B17",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-57003-fixedfunctiontestcasedata: Code B7 FIXED(1.8,0.0,TRUE)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/57003-FixedFunctionTestCaseData.xls",
+        "Pinned source SHA-256 9b9a2f462e918bd9f89d98d46176b9c59b8a58973cef1c32f280a1a82729c7ea; original worksheet 'Code', cached cell B7, BIFF/OOXML typed value {\"type\": \"text\", \"value\": \"2\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Code'!B7",
+          "content": {
+            "formula": "FIXED(1.8,0.0,TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Code'!B7",
+          "expected": {
+            "type": "text",
+            "value": "2"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-57003-fixedfunctiontestcasedata: Code B22 FIXED(60.0,-2.0,TRUE)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/57003-FixedFunctionTestCaseData.xls",
+        "Pinned source SHA-256 9b9a2f462e918bd9f89d98d46176b9c59b8a58973cef1c32f280a1a82729c7ea; original worksheet 'Code', cached cell B22, BIFF/OOXML typed value {\"type\": \"text\", \"value\": \"100\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Code'!B22",
+          "content": {
+            "formula": "FIXED(60.0,-2.0,TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Code'!B22",
+          "expected": {
+            "type": "text",
+            "value": "100"
+          }
+        }
+      ]
+    }
+  ]
+}

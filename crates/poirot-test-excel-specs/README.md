@@ -2,7 +2,10 @@
 
 One table-driven E2E test creates workbooks, sets values/formulas/names, evaluates outputs, edits inputs, and checks typed results. Cases cite Microsoft documentation and link to the [coverage inventory](test-specs/inventory.json). [Coverage](test-specs/coverage.md) lists specified and missing obligations; specifications are not a claim of passing poirot behavior.
 
-All fixtures, evidence, generation code and maintenance inputs are package-local. poirot is the engine dependency.
+The single normative `cases.json` table is stored in
+`../poirot-test-runner/corpus/json/cases.json`. The combined JSON runner owns
+the typed schema and execution; this package retains evidence inventories,
+generation and maintenance tools, and the strict E2E compatibility entry point.
 
 Run from this crate directory:
 
@@ -14,7 +17,7 @@ python3 tools/maintain.py --check
 
 `python3 tools/maintain.py` regenerates the reviewed matrix prefix, source index and coverage reports while preserving authored cases in the one JSON table. Python tools use only the standard library. See [the schema and authoring guide](test-specs/README.md).
 
-To grow coverage, inventory the behavior first, research its rule, author a small case with explained evidence, then add variations for distinct semantic paths. Append authored cases directly to `cases.json`; update `generate.py`/`extend.py` only for reviewed matrix-generation rules. Never use poirot output as the expected-result authority.
+To grow coverage, inventory the behavior first, research its rule, author a small case with explained evidence, then add variations for distinct semantic paths. Append authored cases directly to the shared `../poirot-test-runner/corpus/json/cases.json`; update `generate.py`/`extend.py` only for reviewed matrix-generation rules. Never use poirot output as the expected-result authority.
 
 The runner checks the default 261-entry registry through poirot's public API; `registered` is reserved for that projection. `partial` features have explicitly scoped policy support in the inventory and generated coverage reports. The runner selects `ExcelDocumentation` builtin contracts, the Version 1 POI UTF-16 proxy or `ExcelCompatibilityV2Documented`, and `DynamicSpill` only for fixtures that request it. It reads every footprint cell from the public runtime and preserves exact UTF-16 units.
 

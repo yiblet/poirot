@@ -9,6 +9,10 @@ from decimal import Decimal, localcontext
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+import sys
+sys.path.insert(0, str(ROOT / 'test-specs'))
+from case_table import read_table
+
 
 
 def series(precision):
@@ -31,7 +35,7 @@ def main():
     value90, _, _ = series(90)
     assert abs(value70 - value90) < Decimal('1e-69')
     assert bound70 < Decimal('1e-324')
-    cases = json.loads((ROOT / 'test-specs/cases.json').read_text())
+    cases = read_table(ROOT)
     case = next(case for case in cases if case['id'] == 1513)
     assert case['cells'][0]['formula'] == '=BESSELJ(1.9,2)'
     assertion = case['steps'][0]['assertions'][0]

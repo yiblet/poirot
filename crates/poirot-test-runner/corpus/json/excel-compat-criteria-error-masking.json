@@ -1,0 +1,1099 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility criteria-error-masking: SUMIF unmatched result error ignored",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/sumif-function",
+        "Criterion matches only the second row: unmatched result error ignored. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIF(A1:A2,\"yes\",B1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: SUMIF matched result error propagated",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/sumif-function",
+        "Criterion matches only the second row: matched result error propagated. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIF(A1:A2,\"yes\",B1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: SUMIF zero match does not mask matched error",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/sumif-function",
+        "Criterion matches only the second row: zero match does not mask matched error. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIF(A1:A2,\"yes\",B1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: SUMIFS unmatched result error ignored",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/sumifs-function",
+        "Criterion matches only the second row: unmatched result error ignored. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIFS(B1:B2,A1:A2,\"yes\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: SUMIFS matched result error propagated",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/sumifs-function",
+        "Criterion matches only the second row: matched result error propagated. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIFS(B1:B2,A1:A2,\"yes\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: SUMIFS zero match does not mask matched error",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/sumifs-function",
+        "Criterion matches only the second row: zero match does not mask matched error. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIFS(B1:B2,A1:A2,\"yes\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIF unmatched result error ignored",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/averageif-function",
+        "Criterion matches only the second row: unmatched result error ignored. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIF(A1:A2,\"yes\",B1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIF matched result error propagated",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/averageif-function",
+        "Criterion matches only the second row: matched result error propagated. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIF(A1:A2,\"yes\",B1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          },
+          "known_gap": {
+            "reason": "The selected result-field error is masked or forwarded before criterion row selection. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#DIV/0!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIF zero match does not mask matched error",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/averageif-function",
+        "Criterion matches only the second row: zero match does not mask matched error. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIF(A1:A2,\"yes\",B1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIFS unmatched result error ignored",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/averageifs-function",
+        "Criterion matches only the second row: unmatched result error ignored. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIFS(B1:B2,A1:A2,\"yes\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIFS matched result error propagated",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/averageifs-function",
+        "Criterion matches only the second row: matched result error propagated. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIFS(B1:B2,A1:A2,\"yes\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: AVERAGEIFS zero match does not mask matched error",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/averageifs-function",
+        "Criterion matches only the second row: zero match does not mask matched error. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIFS(B1:B2,A1:A2,\"yes\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: MINIFS unmatched result error ignored",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/minifs-function",
+        "Criterion matches only the second row: unmatched result error ignored. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINIFS(B1:B2,A1:A2,\"yes\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: MINIFS matched result error propagated",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/minifs-function",
+        "Criterion matches only the second row: matched result error propagated. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINIFS(B1:B2,A1:A2,\"yes\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: MINIFS zero match does not mask matched error",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/minifs-function",
+        "Criterion matches only the second row: zero match does not mask matched error. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINIFS(B1:B2,A1:A2,\"yes\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: MAXIFS unmatched result error ignored",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/maxifs-function",
+        "Criterion matches only the second row: unmatched result error ignored. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAXIFS(B1:B2,A1:A2,\"yes\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: MAXIFS matched result error propagated",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/maxifs-function",
+        "Criterion matches only the second row: matched result error propagated. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAXIFS(B1:B2,A1:A2,\"yes\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-error-masking: MAXIFS zero match does not mask matched error",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestSumif.java",
+        "https://support.microsoft.com/en-us/excel/functions/maxifs-function",
+        "Criterion matches only the second row: zero match does not mask matched error. Unmatched result-field errors cannot participate; selected errors remain worksheet errors.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "no"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "yes"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAXIFS(B1:B2,A1:A2,\"yes\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    }
+  ]
+}

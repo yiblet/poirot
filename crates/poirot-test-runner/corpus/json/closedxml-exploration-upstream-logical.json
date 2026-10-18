@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML exploration upstream logical: And ScalarArgumentsCoercedFromBlankOrTextOrNumber \u2014 AND(IF(TRUE,,))",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LogicalTests.cs#L35: And_ScalarArgumentsCoercedFromBlankOrTextOrNumber",
+        "Expected behavior adapted from this upstream assertion. And ScalarArgumentsCoercedFromBlankOrTextOrNumber. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AND(IF(TRUE,,))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: If ConditionCoercedToLogical \u2014 IF(\"TRUE\", \"T\", \"F\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LogicalTests.cs#L164: If_ConditionCoercedToLogical",
+        "Expected behavior adapted from this upstream assertion. If ConditionCoercedToLogical. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IF(\"TRUE\", \"T\", \"F\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "T"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: If ConditionCoercedToLogical \u2014 IF(\"FALSE\", \"T\", \"F\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LogicalTests.cs#L164: If_ConditionCoercedToLogical",
+        "Expected behavior adapted from this upstream assertion. If ConditionCoercedToLogical. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IF(\"FALSE\", \"T\", \"F\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "F"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: If ConditionCoercedToLogical \u2014 IF(\"text\", \"T\", \"F\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LogicalTests.cs#L164: If_ConditionCoercedToLogical",
+        "Expected behavior adapted from this upstream assertion. If ConditionCoercedToLogical. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IF(\"text\", \"T\", \"F\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: IfError FirstArgumentError ReturnSecondArgument \u2014 IFERROR(#NULL!, TRUE)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LogicalTests.cs#L201: IfError_FirstArgumentError_ReturnSecondArgument",
+        "Expected behavior adapted from this upstream assertion. IfError FirstArgumentError ReturnSecondArgument. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IFERROR(#NULL!, TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration upstream logical: Or ScalarArgumentsCoercedFromBlankOrTextOrNumber \u2014 OR(IF(TRUE,,))",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LogicalTests.cs#L257: Or_ScalarArgumentsCoercedFromBlankOrTextOrNumber",
+        "Expected behavior adapted from this upstream assertion. Or ScalarArgumentsCoercedFromBlankOrTextOrNumber. Not derived from Poirot output.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "OR(IF(TRUE,,))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        }
+      ]
+    }
+  ]
+}

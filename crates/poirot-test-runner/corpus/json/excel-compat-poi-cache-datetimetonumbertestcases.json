@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "Read Me",
+      "DateTime"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-datetimetonumbertestcases: DateTime F12 TEXT(F5,\"H:MM:ss AM/PM\")",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/DateTimeToNumberTestCases.xls",
+        "Pinned source SHA-256 424f0d0c9a183458bfa3b7c09a8cbf4edcc9cec3d72b00e68e4bb0bf27292b6c; original worksheet 'DateTime', cached cell F12, BIFF/OOXML typed value {\"type\": \"text\", \"value\": \"3:43:09 PM\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'DateTime'!F4",
+          "content": {
+            "type": "number",
+            "value": 0.6549652777777778
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'DateTime'!F5",
+          "content": {
+            "formula": "TEXT(F4,\"hh:mm:ss\")"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'DateTime'!F12",
+          "content": {
+            "formula": "TEXT(F5,\"H:MM:ss AM/PM\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'DateTime'!F12",
+          "expected": {
+            "type": "text",
+            "value": "3:43:09 PM"
+          },
+          "known_gap": {
+            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "text",
+              "value": "15:43:09"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-datetimetonumbertestcases: DateTime B5 F5+0.0",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/DateTimeToNumberTestCases.xls",
+        "Pinned source SHA-256 424f0d0c9a183458bfa3b7c09a8cbf4edcc9cec3d72b00e68e4bb0bf27292b6c; original worksheet 'DateTime', cached cell B5, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 0.6549652777777778}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'DateTime'!F4",
+          "content": {
+            "type": "number",
+            "value": 0.6549652777777778
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'DateTime'!F5",
+          "content": {
+            "formula": "TEXT(F4,\"hh:mm:ss\")"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'DateTime'!B5",
+          "content": {
+            "formula": "F5+0.0"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'DateTime'!B5",
+          "expected": {
+            "type": "number",
+            "value": 0.6549652777777778
+          },
+          "tolerance": 6.5496527777777776e-12
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-datetimetonumbertestcases: DateTime B9 F9+0.0",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/DateTimeToNumberTestCases.xls",
+        "Pinned source SHA-256 424f0d0c9a183458bfa3b7c09a8cbf4edcc9cec3d72b00e68e4bb0bf27292b6c; original worksheet 'DateTime', cached cell B9, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'DateTime'!F4",
+          "content": {
+            "type": "number",
+            "value": 0.6549652777777778
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'DateTime'!F9",
+          "content": {
+            "formula": "TEXT(F4,\"hh.mm.ss\")"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'DateTime'!B9",
+          "content": {
+            "formula": "F9+0.0"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'DateTime'!B9",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    }
+  ]
+}

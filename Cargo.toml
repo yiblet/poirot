@@ -1,6 +1,6 @@
 [workspace]
 members = ["crates/*"]
-default-members = [".", "crates/poirot-test-fods", "crates/poirot-test-json"]
+default-members = [".", "crates/poirot-test-runner"]
 resolver = "3"
 
 [workspace.package]

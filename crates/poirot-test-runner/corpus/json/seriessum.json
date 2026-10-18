@@ -1,0 +1,557 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!A3",
+        "content": {
+          "type": "number",
+          "value": 3
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "SERIESSUM: single term",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(2,3,4,5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 40
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: row major",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(2,0,1,{1,2;3,4})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 49
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: negative step",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(-4,2,-1,{1,2,3})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: fractional exponents",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(4,0.5,0.5,{1,2,3})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 34
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: negative exponents",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(2,-1,-1,{2,4,8})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: blank coefficient positions",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(2,0,1,A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 17
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 13
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: scalar numeric text",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(2,0,1,\"2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: empty text",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(\"\",1,1,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: zero power zero",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(0,0,1,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: zero negative power",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(0,-1,1,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#NUM!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: zero coefficient invalid power",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(0,-1,1,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#NUM!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: zero fractional power",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(0,0.5,1,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: negative fractional power",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(-4,0.5,1,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#NUM!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: logical scalar",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(TRUE,0,1,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: text collection",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(2,0,1,{1,\"2\",3})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: logical collection",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(2,0,1,{1,TRUE,3})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: overflow before cancellation",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(1,0,0,{1E308,1E308,-1E308})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#NUM!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: cancellation",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(1,0,0,{3,-2,-1})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: ordered coefficient errors",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(2,0,1,{#N/A,\"bad\"})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SERIESSUM: term precedes later error",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/seriessum-function",
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/MathTrig.cs#L895",
+        "Independent derivation: sum coefficient[i]*x^(n+i*m) in row-major order. Pinned ClosedXML MathTrigTests.cs:1981-2045 and SignatureAdapter.cs:653-690 establish scalar text/blank admission and exact numeric-or-blank collections. Direct Math.Pow gives 0^0=1; nonreal/nonfinite terms and ordered overflowing sums yield NUM. This explicit contract is shared by both policies; Calc disagreements are retained in ../evidence/seriessum-libreoffice.json; no native Excel observation is claimed."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SERIESSUM(0,-1,1,{1,#N/A})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#NUM!"
+          }
+        }
+      ]
+    }
+  ]
+}

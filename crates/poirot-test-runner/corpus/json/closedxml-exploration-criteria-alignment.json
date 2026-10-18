@@ -1,0 +1,1188 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML exploration criteria-alignment: COUNTIFS aligns multiple criteria through edits",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/countifs-function",
+        "Each pair applies to the same row; initially only row2 matches, then only row3, then no rows. Criteria edits must invalidate the prior selection.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "y"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E1",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIFS(A1:A3,E1,B1:B3,E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E1",
+          "content": {
+            "type": "text",
+            "value": "y"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIFS(A1:A3,E1,B1:B3,E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIFS(A1:A3,E1,B1:B3,E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration criteria-alignment: COUNTIFS contradictory conditions share a range",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/countifs-function",
+        "Conditions are intersected on row identity even when they refer to the same range; each comparison matches something independently but their conjunction matches no record.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIFS(A1:A3,\">1\",A1:A3,\"<2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration criteria-alignment: SUMIFS aligns multiple criteria through edits",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/sumifs-function",
+        "Each pair applies to the same row; initially only row2 matches, then only row3, then no rows. Criteria edits must invalidate the prior selection.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "y"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E1",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIFS(C1:C3,A1:A3,E1,B1:B3,E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E1",
+          "content": {
+            "type": "text",
+            "value": "y"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIFS(C1:C3,A1:A3,E1,B1:B3,E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIFS(C1:C3,A1:A3,E1,B1:B3,E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration criteria-alignment: SUMIFS contradictory conditions share a range",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/sumifs-function",
+        "Conditions are intersected on row identity even when they refer to the same range; each comparison matches something independently but their conjunction matches no record.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIFS(C1:C3,A1:A3,\">1\",A1:A3,\"<2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration criteria-alignment: AVERAGEIFS aligns multiple criteria through edits",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/averageifs-function",
+        "Each pair applies to the same row; initially only row2 matches, then only row3, then no rows. Criteria edits must invalidate the prior selection.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "y"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E1",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIFS(C1:C3,A1:A3,E1,B1:B3,E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E1",
+          "content": {
+            "type": "text",
+            "value": "y"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIFS(C1:C3,A1:A3,E1,B1:B3,E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIFS(C1:C3,A1:A3,E1,B1:B3,E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration criteria-alignment: AVERAGEIFS contradictory conditions share a range",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/averageifs-function",
+        "Conditions are intersected on row identity even when they refer to the same range; each comparison matches something independently but their conjunction matches no record.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIFS(C1:C3,A1:A3,\">1\",A1:A3,\"<2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration criteria-alignment: MINIFS aligns multiple criteria through edits",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/minifs-function",
+        "Each pair applies to the same row; initially only row2 matches, then only row3, then no rows. Criteria edits must invalidate the prior selection.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "y"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E1",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINIFS(C1:C3,A1:A3,E1,B1:B3,E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E1",
+          "content": {
+            "type": "text",
+            "value": "y"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINIFS(C1:C3,A1:A3,E1,B1:B3,E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINIFS(C1:C3,A1:A3,E1,B1:B3,E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration criteria-alignment: MINIFS contradictory conditions share a range",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/minifs-function",
+        "Conditions are intersected on row identity even when they refer to the same range; each comparison matches something independently but their conjunction matches no record.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINIFS(C1:C3,A1:A3,\">1\",A1:A3,\"<2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration criteria-alignment: MAXIFS aligns multiple criteria through edits",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/maxifs-function",
+        "Each pair applies to the same row; initially only row2 matches, then only row3, then no rows. Criteria edits must invalidate the prior selection.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "y"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E1",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAXIFS(C1:C3,A1:A3,E1,B1:B3,E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E1",
+          "content": {
+            "type": "text",
+            "value": "y"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAXIFS(C1:C3,A1:A3,E1,B1:B3,E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAXIFS(C1:C3,A1:A3,E1,B1:B3,E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration criteria-alignment: MAXIFS contradictory conditions share a range",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/maxifs-function",
+        "Conditions are intersected on row identity even when they refer to the same range; each comparison matches something independently but their conjunction matches no record.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAXIFS(C1:C3,A1:A3,\">1\",A1:A3,\"<2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    }
+  ]
+}

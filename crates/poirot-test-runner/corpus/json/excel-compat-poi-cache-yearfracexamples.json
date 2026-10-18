@@ -1,0 +1,267 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "Sheet1"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-yearfracexamples: Sheet1 L4 YEARFRAC(J4,K4,B4)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/yearfracExamples.xls",
+        "Pinned source SHA-256 0b4fda2fa4f7ca2d07eee03e26d481a8bd23be4f33e27abd69c2458262c3d628; original worksheet 'Sheet1', cached cell L4, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 0.0027397260273972603}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C4",
+          "content": {
+            "type": "number",
+            "value": 1999.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D4",
+          "content": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E4",
+          "content": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!J4",
+          "content": {
+            "formula": "DATE(C4,D4,E4)"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F4",
+          "content": {
+            "type": "number",
+            "value": 1999.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G4",
+          "content": {
+            "type": "number",
+            "value": 4.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H4",
+          "content": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!K4",
+          "content": {
+            "formula": "DATE(F4,G4,H4)"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!B4",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!L4",
+          "content": {
+            "formula": "YEARFRAC(J4,K4,B4)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!L4",
+          "expected": {
+            "type": "number",
+            "value": 0.0027397260273972603
+          },
+          "tolerance": 2.73972602739726e-14
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-yearfracexamples: Sheet1 K7 DATE(F7,G7,H7)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/yearfracExamples.xls",
+        "Pinned source SHA-256 0b4fda2fa4f7ca2d07eee03e26d481a8bd23be4f33e27abd69c2458262c3d628; original worksheet 'Sheet1', cached cell K7, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 38353.0}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F7",
+          "content": {
+            "type": "number",
+            "value": 2005.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G7",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H7",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!K7",
+          "content": {
+            "formula": "DATE(F7,G7,H7)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!K7",
+          "expected": {
+            "type": "number",
+            "value": 38353.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-yearfracexamples: Sheet1 K11 DATE(F11,G11,H11)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/yearfracExamples.xls",
+        "Pinned source SHA-256 0b4fda2fa4f7ca2d07eee03e26d481a8bd23be4f33e27abd69c2458262c3d628; original worksheet 'Sheet1', cached cell K11, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 37988.0}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Sheet1'!F11",
+          "content": {
+            "type": "number",
+            "value": 2004.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!G11",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!H11",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!K11",
+          "content": {
+            "formula": "DATE(F11,G11,H11)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!K11",
+          "expected": {
+            "type": "number",
+            "value": 37988.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-yearfracexamples: Sheet1 J6 DATE(C6,D6,E6)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/yearfracExamples.xls",
+        "Pinned source SHA-256 0b4fda2fa4f7ca2d07eee03e26d481a8bd23be4f33e27abd69c2458262c3d628; original worksheet 'Sheet1', cached cell J6, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 38384.0}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Sheet1'!C6",
+          "content": {
+            "type": "number",
+            "value": 2005.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!D6",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!E6",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Sheet1'!J6",
+          "content": {
+            "formula": "DATE(C6,D6,E6)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Sheet1'!J6",
+          "expected": {
+            "type": "number",
+            "value": 38384.0
+          }
+        }
+      ]
+    }
+  ]
+}

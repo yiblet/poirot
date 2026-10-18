@@ -518,7 +518,7 @@ fn business_days_apply_signed_endpoints_and_holiday_rules() {
     // Microsoft WORKDAY.INTL documents truncation, signed offsets, mask order,
     // holiday bounds, and zero offset. ClosedXML's pinned assertions and Calc
     // independently corroborate the serial cycle and inclusive signed counts.
-    // See poirot-test-json/evidence/business-days-contract.md.
+    // See poirot-test-runner/evidence/business-days-contract.md.
     for system in [DateSystem::Excel1900, DateSystem::Excel1904] {
         let w = book(system);
         for (formula, expected) in [

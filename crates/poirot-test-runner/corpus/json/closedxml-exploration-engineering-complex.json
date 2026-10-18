@@ -1,0 +1,439 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML exploration engineering-complex: unit imaginary coefficient omitted",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/complex-function",
+        "COMPLEX serialization boundary: unit imaginary coefficient omitted. The output is a text representation, not a numeric scalar.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COMPLEX(0,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "i"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-complex: minus unit imaginary coefficient omitted",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/complex-function",
+        "COMPLEX serialization boundary: minus unit imaginary coefficient omitted. The output is a text representation, not a numeric scalar.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COMPLEX(0,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "-i"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-complex: zero imaginary omits suffix",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/complex-function",
+        "COMPLEX serialization boundary: zero imaginary omits suffix. The output is a text representation, not a numeric scalar.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COMPLEX(3,0,\"j\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "3"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-complex: both zero is text zero",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/complex-function",
+        "COMPLEX serialization boundary: both zero is text zero. The output is a text representation, not a numeric scalar.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COMPLEX(0,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-complex: negative imaginary sign",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/complex-function",
+        "COMPLEX serialization boundary: negative imaginary sign. The output is a text representation, not a numeric scalar.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COMPLEX(2,-3,\"j\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "2-3j"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-complex: uppercase suffix invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/complex-function",
+        "COMPLEX serialization boundary: uppercase suffix invalid. The output is a text representation, not a numeric scalar.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COMPLEX(2,3,\"I\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-complex: unrelated suffix invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/complex-function",
+        "COMPLEX serialization boundary: unrelated suffix invalid. The output is a text representation, not a numeric scalar.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COMPLEX(2,3,\"k\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-complex: invalid suffix even zero imaginary",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/complex-function",
+        "COMPLEX serialization boundary: invalid suffix even zero imaginary. The output is a text representation, not a numeric scalar.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COMPLEX(2,0,\"I\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-complex: IMREAL contrasts",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/imreal-function",
+        "Complex-number grammar boundary: unit suffix. Interpret implicit unit coefficients and preserve the sign independently of the real component.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See the hash-bound exploration evidence record for this suite. Calc corroboration is not a native Excel execution claim.",
+        "Complex-number grammar boundary: negative unit suffix. Interpret implicit unit coefficients and preserve the sign independently of the real component.",
+        "Complex-number grammar boundary: real number input. Interpret implicit unit coefficients and preserve the sign independently of the real component.",
+        "Complex-number grammar boundary: negative coefficient. Interpret implicit unit coefficients and preserve the sign independently of the real component.",
+        "Complex-number grammar boundary: imaginary only. Interpret implicit unit coefficients and preserve the sign independently of the real component.",
+        "Complex-number grammar boundary: explicit plus unit. Interpret implicit unit coefficients and preserve the sign independently of the real component."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IMREAL(\"i\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IMREAL(\"-j\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IMREAL(5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IMREAL(\"2-3j\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IMREAL(\"-2i\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IMREAL(\"2+i\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration engineering-complex: IMAGINARY contrasts",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/imaginary-function",
+        "Complex-number grammar boundary: unit suffix. Interpret implicit unit coefficients and preserve the sign independently of the real component.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See the hash-bound exploration evidence record for this suite. Calc corroboration is not a native Excel execution claim.",
+        "Complex-number grammar boundary: negative unit suffix. Interpret implicit unit coefficients and preserve the sign independently of the real component.",
+        "Complex-number grammar boundary: real number input. Interpret implicit unit coefficients and preserve the sign independently of the real component.",
+        "Complex-number grammar boundary: negative coefficient. Interpret implicit unit coefficients and preserve the sign independently of the real component.",
+        "Complex-number grammar boundary: imaginary only. Interpret implicit unit coefficients and preserve the sign independently of the real component.",
+        "Complex-number grammar boundary: explicit plus unit. Interpret implicit unit coefficients and preserve the sign independently of the real component."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IMAGINARY(\"i\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IMAGINARY(\"-j\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IMAGINARY(5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IMAGINARY(\"2-3j\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IMAGINARY(\"-2i\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "IMAGINARY(\"2+i\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    }
+  ],
+  "builtin_policy": "ExcelDocumentation"
+}

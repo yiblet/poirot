@@ -1,0 +1,1379 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      },
+      {
+        "cell": "S!A2",
+        "content": {
+          "type": "blank"
+        }
+      },
+      {
+        "cell": "S!A3",
+        "content": {
+          "type": "number",
+          "value": 0
+        }
+      },
+      {
+        "cell": "S!B1",
+        "content": {
+          "type": "number",
+          "value": 1
+        }
+      },
+      {
+        "cell": "S!C1",
+        "content": {
+          "type": "number",
+          "value": 3
+        }
+      },
+      {
+        "cell": "S!B2",
+        "content": {
+          "type": "number",
+          "value": 2
+        }
+      },
+      {
+        "cell": "S!C2",
+        "content": {
+          "type": "number",
+          "value": 5
+        }
+      },
+      {
+        "cell": "S!B3",
+        "content": {
+          "type": "number",
+          "value": 3
+        }
+      },
+      {
+        "cell": "S!C3",
+        "content": {
+          "type": "number",
+          "value": 7
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "singleton population \u2014 COVAR({2},{5})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVAR({2},{5})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "retained singleton \u2014 COVAR({\"a\",2},{5,6})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVAR({\"a\",2},{5,6})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "zero retained \u2014 COVAR({0,2},{1,5})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVAR({0,2},{1,5})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "paired exclusion \u2014 COVAR({0,\"a\",2},{1,8,5})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVAR({0,\"a\",2},{1,8,5})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "singleton population \u2014 COVARIANCE.P({2},{5})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.P({2},{5})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "retained singleton \u2014 COVARIANCE.P({\"a\",2},{5,6})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.P({\"a\",2},{5,6})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "zero retained \u2014 COVARIANCE.P({0,2},{1,5})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.P({0,2},{1,5})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "paired exclusion \u2014 COVARIANCE.P({0,\"a\",2},{1,8,5})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COVARIANCE.P({0,\"a\",2},{1,8,5})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 VARA({\"hello\"})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARA({\"hello\"})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 VARA({0})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARA({0})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 VARA({TRUE})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARA({TRUE})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 VARA(A1:A2)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARA(A1:A2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 VARA({\"hello\",FALSE})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARA({\"hello\",FALSE})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 STDEVA({\"hello\"})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "STDEVA({\"hello\"})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 STDEVA({0})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "STDEVA({0})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 STDEVA({TRUE})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "STDEVA({TRUE})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 STDEVA(A1:A2)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "STDEVA(A1:A2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 STDEVA({\"hello\",FALSE})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "STDEVA({\"hello\",FALSE})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 VARPA({\"hello\"})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARPA({\"hello\"})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 VARPA({0})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARPA({0})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 VARPA({TRUE})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARPA({TRUE})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 VARPA(A1:A2)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARPA(A1:A2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 VARPA({\"hello\",FALSE})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARPA({\"hello\",FALSE})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 STDEVPA({\"hello\"})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "STDEVPA({\"hello\"})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 STDEVPA({0})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "STDEVPA({0})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 STDEVPA({TRUE})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "STDEVPA({TRUE})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 STDEVPA(A1:A2)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "STDEVPA(A1:A2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample/population admitted count \u2014 STDEVPA({\"hello\",FALSE})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "STDEVPA({\"hello\",FALSE})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "text counts as zero \u2014 VARA({\"hello\",2})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARA({\"hello\",2})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "population text counts as zero \u2014 VARPA({\"hello\",2})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARPA({\"hello\",2})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "logical values count \u2014 VARA({FALSE,TRUE})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARA({FALSE,TRUE})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "name": "logical population \u2014 VARPA({FALSE,TRUE})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARPA({FALSE,TRUE})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.25
+          }
+        }
+      ]
+    },
+    {
+      "name": "reference blanks ignored \u2014 VARA(A1:A3)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARA(A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "reference retained singleton \u2014 VARPA(A1:A3)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARPA(A1:A3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ordered errors \u2014 VARA({#N/A,#DIV/0!})",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "VARA({#N/A,#DIV/0!})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "determined intercept \u2014 TREND({3;5},{1;2},{3},TRUE)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TREND({3;5},{1;2},{3},TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 7
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "determined row orientation \u2014 TREND({3,5},{1,2},{3},TRUE)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TREND({3,5},{1,2},{3},TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 7
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "determined origin \u2014 TREND({3},{1},{3},FALSE)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TREND({3},{1},{3},FALSE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "zero origin fit \u2014 TREND({0},{1},{3},FALSE)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TREND({0},{1},{3},FALSE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "overdetermined origin \u2014 TREND({3;6},{1;2},{3},FALSE)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TREND({3;6},{1;2},{3},FALSE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "overdetermined intercept \u2014 TREND({3;5;7},{1;2;3},{4},TRUE)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TREND({3;5;7},{1;2;3},{4},TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "overdetermined origin three \u2014 TREND({3;6;9},{1;2;3},{4},FALSE)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TREND({3;6;9},{1;2;3},{4},FALSE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 12
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "constant nonzero predictor origin \u2014 TREND({3;5},{1;1},{3},FALSE)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TREND({3;5},{1;1},{3},FALSE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 12
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "underdetermined intercept \u2014 TREND({3},{1},{3},TRUE)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TREND({3},{1},{3},TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "zero rank predictor \u2014 TREND({3;5},{0;0},{3},FALSE)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TREND({3;5},{0;0},{3},FALSE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "determined prediction consumed \u2014 TREND({3;5},{1;2},{3},TRUE)+1",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/covariance-p-function",
+        "https://support.microsoft.com/en-us/excel/functions/stdeva-function",
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from the documented denominator or determined linear fit; independently corroborated by ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TREND({3;5},{1;2},{3},TRUE)+1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 8
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "reference determined intercept",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from y=2x+1 or an exactly determined linear system. Initial numeric test tolerance 1e-9 follows existing matrix tests, allowing ordinary QR rounding; type and minimum-count checks remain exact. Independent Calc evidence: ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TREND(C1:C2,B1:B2,{3},TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 7
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "reference determined origin",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from y=2x+1 or an exactly determined linear system. Initial numeric test tolerance 1e-9 follows existing matrix tests, allowing ordinary QR rounding; type and minimum-count checks remain exact. Independent Calc evidence: ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TREND(C1:C1,B1:B1,{3},FALSE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "reference overdetermined intercept",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from y=2x+1 or an exactly determined linear system. Initial numeric test tolerance 1e-9 follows existing matrix tests, allowing ordinary QR rounding; type and minimum-count checks remain exact. Independent Calc evidence: ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TREND(C1:C3,B1:B3,{4},TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "determined two predictors",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/trend-function",
+        "Expected from y=2x+1 or an exactly determined linear system. Initial numeric test tolerance 1e-9 follows existing matrix tests, allowing ordinary QR rounding; type and minimum-count checks remain exact. Independent Calc evidence: ../evidence/statistical-sample-requirements-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TREND({1;3;4},{0,0;1,0;0,1},{1,1},TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6
+          },
+          "tolerance": 1e-09
+        }
+      ]
+    }
+  ]
+}

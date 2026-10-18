@@ -1,4 +1,4 @@
-//! POI 5.4.1 probe evidence: see poirot-test-fods/COUNTIF_PRECISION.md.
+//! POI 5.4.1 probe evidence: see poirot-test-runner/docs/fods-COUNTIF_PRECISION.md.
 use poirot_eval::{
     EvaluationOutcome, NumericOutcomePolicy, RunConfiguration, run_formula_with_configuration,
 };

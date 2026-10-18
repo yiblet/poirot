@@ -1,0 +1,5205 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF percent threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/countif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: percent threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIF(A1:A3,\">3%\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted percent threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF scientific threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/countif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: scientific threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIF(A1:A3,\">3E-2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF currency threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/countif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: currency threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIF(A1:A3,\">$3\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted currency threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF mixed fraction threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/countif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: mixed fraction threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIF(A1:A3,\">1 1/2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted mixed fraction threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF calendar text threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/countif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: calendar text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 43830
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 43831
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 43832
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIF(A1:A3,\">1/1/2020\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted calendar text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF time text threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/countif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: time text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.25
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.75
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIF(A1:A3,\">12:00\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted time text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF space after operator",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/countif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: space after operator. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIF(A1:A3,\"> 3\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: COUNTIF parenthesized negative criterion",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/countif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: parenthesized negative criterion. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": -2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIF(A1:A3,\"<>(2)\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted parenthesized negative criterion number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 3.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS percent threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/countifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: percent threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIFS(A1:A3,\">3%\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted percent threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS scientific threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/countifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: scientific threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIFS(A1:A3,\">3E-2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS currency threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/countifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: currency threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIFS(A1:A3,\">$3\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted currency threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS mixed fraction threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/countifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: mixed fraction threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIFS(A1:A3,\">1 1/2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted mixed fraction threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS calendar text threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/countifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: calendar text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 43830
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 43831
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 43832
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIFS(A1:A3,\">1/1/2020\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted calendar text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS time text threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/countifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: time text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.25
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.75
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIFS(A1:A3,\">12:00\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted time text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS space after operator",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/countifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: space after operator. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIFS(A1:A3,\"> 3\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: COUNTIFS parenthesized negative criterion",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/countifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: parenthesized negative criterion. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": -2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNTIFS(A1:A3,\"<>(2)\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted parenthesized negative criterion number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 3.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: SUMIF percent threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/sumif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: percent threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIF(A1:A3,\">3%\",B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 50
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted percent threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: SUMIF scientific threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/sumif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: scientific threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIF(A1:A3,\">3E-2\",B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 50
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: SUMIF currency threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/sumif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: currency threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIF(A1:A3,\">$3\",B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 50
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted currency threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: SUMIF mixed fraction threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/sumif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: mixed fraction threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIF(A1:A3,\">1 1/2\",B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted mixed fraction threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: SUMIF calendar text threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/sumif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: calendar text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 43830
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 43831
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 43832
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIF(A1:A3,\">1/1/2020\",B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted calendar text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: SUMIF time text threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/sumif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: time text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.25
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.75
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIF(A1:A3,\">12:00\",B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted time text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: SUMIF space after operator",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/sumif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: space after operator. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIF(A1:A3,\"> 3\",B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 50
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: SUMIF parenthesized negative criterion",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/sumif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: parenthesized negative criterion. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": -2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIF(A1:A3,\"<>(2)\",B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 50
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted parenthesized negative criterion number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 60.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS percent threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/sumifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: percent threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIFS(B1:B3,A1:A3,\">3%\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 50
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted percent threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS scientific threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/sumifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: scientific threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIFS(B1:B3,A1:A3,\">3E-2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 50
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS currency threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/sumifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: currency threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIFS(B1:B3,A1:A3,\">$3\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 50
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted currency threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS mixed fraction threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/sumifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: mixed fraction threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIFS(B1:B3,A1:A3,\">1 1/2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted mixed fraction threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS calendar text threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/sumifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: calendar text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 43830
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 43831
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 43832
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIFS(B1:B3,A1:A3,\">1/1/2020\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted calendar text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS time text threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/sumifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: time text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.25
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.75
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIFS(B1:B3,A1:A3,\">12:00\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted time text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS space after operator",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/sumifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: space after operator. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIFS(B1:B3,A1:A3,\"> 3\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 50
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: SUMIFS parenthesized negative criterion",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/sumifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: parenthesized negative criterion. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": -2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMIFS(B1:B3,A1:A3,\"<>(2)\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 50
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted parenthesized negative criterion number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 60.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF percent threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/averageif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: percent threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIF(A1:A3,\">3%\",B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 25.0
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted percent threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#DIV/0!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF scientific threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/averageif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: scientific threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIF(A1:A3,\">3E-2\",B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 25.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF currency threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/averageif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: currency threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIF(A1:A3,\">$3\",B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 25.0
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted currency threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#DIV/0!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF mixed fraction threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/averageif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: mixed fraction threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIF(A1:A3,\">1 1/2\",B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30.0
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted mixed fraction threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#DIV/0!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF calendar text threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/averageif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: calendar text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 43830
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 43831
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 43832
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIF(A1:A3,\">1/1/2020\",B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30.0
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted calendar text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#DIV/0!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF time text threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/averageif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: time text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.25
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.75
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIF(A1:A3,\">12:00\",B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30.0
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted time text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#DIV/0!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF space after operator",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/averageif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: space after operator. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIF(A1:A3,\"> 3\",B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 25.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIF parenthesized negative criterion",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/averageif-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: parenthesized negative criterion. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": -2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIF(A1:A3,\"<>(2)\",B1:B3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 25.0
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted parenthesized negative criterion number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 20.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS percent threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/averageifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: percent threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIFS(B1:B3,A1:A3,\">3%\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 25.0
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted percent threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#DIV/0!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS scientific threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/averageifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: scientific threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIFS(B1:B3,A1:A3,\">3E-2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 25.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS currency threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/averageifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: currency threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIFS(B1:B3,A1:A3,\">$3\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 25.0
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted currency threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#DIV/0!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS mixed fraction threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/averageifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: mixed fraction threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIFS(B1:B3,A1:A3,\">1 1/2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30.0
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted mixed fraction threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#DIV/0!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS calendar text threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/averageifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: calendar text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 43830
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 43831
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 43832
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIFS(B1:B3,A1:A3,\">1/1/2020\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30.0
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted calendar text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#DIV/0!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS time text threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/averageifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: time text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.25
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.75
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIFS(B1:B3,A1:A3,\">12:00\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30.0
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted time text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#DIV/0!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS space after operator",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/averageifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: space after operator. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIFS(B1:B3,A1:A3,\"> 3\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 25.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: AVERAGEIFS parenthesized negative criterion",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/averageifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: parenthesized negative criterion. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": -2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGEIFS(B1:B3,A1:A3,\"<>(2)\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 25.0
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted parenthesized negative criterion number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 20.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: MINIFS percent threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/minifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: percent threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINIFS(B1:B3,A1:A3,\">3%\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted percent threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: MINIFS scientific threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/minifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: scientific threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINIFS(B1:B3,A1:A3,\">3E-2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: MINIFS currency threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/minifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: currency threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINIFS(B1:B3,A1:A3,\">$3\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted currency threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: MINIFS mixed fraction threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/minifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: mixed fraction threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINIFS(B1:B3,A1:A3,\">1 1/2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted mixed fraction threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: MINIFS calendar text threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/minifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: calendar text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 43830
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 43831
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 43832
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINIFS(B1:B3,A1:A3,\">1/1/2020\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted calendar text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: MINIFS time text threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/minifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: time text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.25
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.75
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINIFS(B1:B3,A1:A3,\">12:00\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted time text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: MINIFS space after operator",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/minifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: space after operator. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINIFS(B1:B3,A1:A3,\"> 3\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: MINIFS parenthesized negative criterion",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/minifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: parenthesized negative criterion. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": -2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINIFS(B1:B3,A1:A3,\"<>(2)\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted parenthesized negative criterion number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 10.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS percent threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/maxifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: percent threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAXIFS(B1:B3,A1:A3,\">3%\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted percent threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS scientific threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/maxifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: scientific threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.02
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.04
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.05
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAXIFS(B1:B3,A1:A3,\">3E-2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS currency threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/maxifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: currency threshold. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAXIFS(B1:B3,A1:A3,\">$3\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted currency threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS mixed fraction threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/maxifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: mixed fraction threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 1.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAXIFS(B1:B3,A1:A3,\">1 1/2\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted mixed fraction threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS calendar text threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/maxifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: calendar text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 43830
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 43831
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 43832
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAXIFS(B1:B3,A1:A3,\">1/1/2020\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted calendar text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS time text threshold",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/maxifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: time text threshold. Independently specified matching row indices [3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 0.25
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 0.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 0.75
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAXIFS(B1:B3,A1:A3,\">12:00\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          },
+          "known_gap": {
+            "reason": "The criterion comparison does not use the independently accepted time text threshold number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS space after operator",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/maxifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: space after operator. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAXIFS(B1:B3,A1:A3,\"> 3\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility criteria-number-grammars: MAXIFS parenthesized negative criterion",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/sumifs.xls",
+        "https://support.microsoft.com/en-us/excel/functions/maxifs-function",
+        "Transfer the saved workbook's numeric criteria grammar to this sibling consumer: parenthesized negative criterion. Independently specified matching row indices [2, 3] contribute 10 times their index; use count, sum, mean or extremum as appropriate. En-US calendar serial 43831 is 2020-01-01.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": -2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 10
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 20
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 30
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAXIFS(B1:B3,A1:A3,\"<>(2)\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          }
+        }
+      ]
+    }
+  ]
+}

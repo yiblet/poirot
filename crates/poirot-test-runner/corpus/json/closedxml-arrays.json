@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML arrays: ArrayOperation RowOnlyArrayIsRepeatedToHaveSameNumberOfRowsAsOtherArray in both operand orders",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ArithmeticOperatorsTests.cs#L255: ArrayOperation_RowOnlyArrayIsRepeatedToHaveSameNumberOfRowsAsOtherArray",
+        "Adapted from the cited assertion. ArrayOperation RowOnlyArrayIsRepeatedToHaveSameNumberOfRowsAsOtherArray. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "Shape-preserving internal operators are independent of final worksheet array publication. Fresh source-hash-bound Calc corroboration: ../evidence/array-expression-context-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM({3,2}+{1,1;1,1})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM({1,1;1,1}+{3,2})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 14
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML arrays: ArrayOperation ColumnOnlyArrayIsRepeatedToHaveSameNumberOfColumnsAsOtherArray in both operand orders",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ArithmeticOperatorsTests.cs#L263: ArrayOperation_ColumnOnlyArrayIsRepeatedToHaveSameNumberOfColumnsAsOtherArray",
+        "Adapted from the cited assertion. ArrayOperation ColumnOnlyArrayIsRepeatedToHaveSameNumberOfColumnsAsOtherArray. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "Shape-preserving internal operators are independent of final worksheet array publication. Fresh source-hash-bound Calc corroboration: ../evidence/array-expression-context-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM({3;2}*{1,1;2,3})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 16
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM({1,1;2,3}*{3;2})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 16
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML arrays: ArrayOperation 1x1ArrayIsScaledToOtherArray \u2014 SUM({2}*{1,2;3,4})",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ArithmeticOperatorsTests.cs#L271: ArrayOperation_1x1ArrayIsScaledToOtherArray",
+        "Adapted from the cited assertion. ArrayOperation 1x1ArrayIsScaledToOtherArray. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "Shape-preserving internal operators are independent of final worksheet array publication. Fresh source-hash-bound Calc corroboration: ../evidence/array-expression-context-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM({2}*{1,2;3,4})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          }
+        }
+      ]
+    }
+  ]
+}

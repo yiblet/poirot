@@ -1,0 +1,2287 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "Read Me",
+      "VL-basic",
+      "VL-oddArgs",
+      "VL-unsorted",
+      "HL-basic",
+      "L-basic"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-lookupfunctionstestcasedata: HL-basic B20 HLOOKUP(F20,J$2:S$3,G20,H20)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LookupFunctionsTestCaseData.xls",
+        "Pinned source SHA-256 db71048f1034cf9b435469d7c8ab685501e62e5aa01bafe9209cd5717926f4ea; original worksheet 'HL-basic', cached cell B20, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#VALUE!\"}. Saved creating application: Microsoft Macintosh Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'HL-basic'!F20",
+          "content": {
+            "type": "number",
+            "value": 45.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!J2",
+          "content": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!K2",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!L2",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!M2",
+          "content": {
+            "type": "number",
+            "value": 45.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!N2",
+          "content": {
+            "type": "number",
+            "value": 46.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!O2",
+          "content": {
+            "type": "number",
+            "value": 47.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!P2",
+          "content": {
+            "type": "number",
+            "value": 50.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!Q2",
+          "content": {
+            "type": "number",
+            "value": 75.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!R2",
+          "content": {
+            "type": "number",
+            "value": 80.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!S2",
+          "content": {
+            "type": "number",
+            "value": 81.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!J3",
+          "content": {
+            "type": "text",
+            "value": "r0"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!K3",
+          "content": {
+            "type": "text",
+            "value": "r1"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!L3",
+          "content": {
+            "type": "text",
+            "value": "r2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!M3",
+          "content": {
+            "type": "text",
+            "value": "r3"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!N3",
+          "content": {
+            "type": "text",
+            "value": "r4"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!O3",
+          "content": {
+            "type": "text",
+            "value": "r5"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!P3",
+          "content": {
+            "type": "text",
+            "value": "r6"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!Q3",
+          "content": {
+            "type": "text",
+            "value": "r7"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!R3",
+          "content": {
+            "type": "text",
+            "value": "r8"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!S3",
+          "content": {
+            "type": "text",
+            "value": "r9"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!G20",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!H20",
+          "content": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!B20",
+          "content": {
+            "formula": "HLOOKUP(F20,J$2:S$3,G20,H20)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'HL-basic'!B20",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-lookupfunctionstestcasedata: L-basic B9 LOOKUP(F9,H$2:H$11,I$2:I$11)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LookupFunctionsTestCaseData.xls",
+        "Pinned source SHA-256 db71048f1034cf9b435469d7c8ab685501e62e5aa01bafe9209cd5717926f4ea; original worksheet 'L-basic', cached cell B9, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#N/A\"}. Saved creating application: Microsoft Macintosh Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'L-basic'!F9",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H2",
+          "content": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H3",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H4",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H5",
+          "content": {
+            "type": "number",
+            "value": 45.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H6",
+          "content": {
+            "type": "number",
+            "value": 46.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H7",
+          "content": {
+            "type": "number",
+            "value": 47.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H8",
+          "content": {
+            "type": "number",
+            "value": 50.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H9",
+          "content": {
+            "type": "number",
+            "value": 75.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H10",
+          "content": {
+            "type": "number",
+            "value": 80.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H11",
+          "content": {
+            "type": "number",
+            "value": 81.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I2",
+          "content": {
+            "type": "text",
+            "value": "r0"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I3",
+          "content": {
+            "type": "text",
+            "value": "r1"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I4",
+          "content": {
+            "type": "text",
+            "value": "r2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I5",
+          "content": {
+            "type": "text",
+            "value": "r3"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I6",
+          "content": {
+            "type": "text",
+            "value": "r4"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I7",
+          "content": {
+            "type": "text",
+            "value": "r5"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I8",
+          "content": {
+            "type": "text",
+            "value": "r6"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I9",
+          "content": {
+            "type": "text",
+            "value": "r7"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I10",
+          "content": {
+            "type": "text",
+            "value": "r8"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I11",
+          "content": {
+            "type": "text",
+            "value": "r9"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!B9",
+          "content": {
+            "formula": "LOOKUP(F9,H$2:H$11,I$2:I$11)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'L-basic'!B9",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-lookupfunctionstestcasedata: VL-basic B18 VLOOKUP(F18,J$2:K$13,G18,H18)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LookupFunctionsTestCaseData.xls",
+        "Pinned source SHA-256 db71048f1034cf9b435469d7c8ab685501e62e5aa01bafe9209cd5717926f4ea; original worksheet 'VL-basic', cached cell B18, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 0.0}. Saved creating application: Microsoft Macintosh Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'VL-basic'!F18",
+          "content": {
+            "type": "number",
+            "value": 75.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J2",
+          "content": {
+            "type": "number",
+            "value": -2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K2",
+          "content": {
+            "type": "text",
+            "value": "r-2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J3",
+          "content": {
+            "type": "number",
+            "value": 0.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K3",
+          "content": {
+            "type": "text",
+            "value": "rZero"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J4",
+          "content": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K4",
+          "content": {
+            "type": "text",
+            "value": "r0"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J5",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K5",
+          "content": {
+            "type": "text",
+            "value": "r1"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J6",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K6",
+          "content": {
+            "type": "text",
+            "value": "r2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J7",
+          "content": {
+            "type": "number",
+            "value": 45.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K7",
+          "content": {
+            "type": "text",
+            "value": "r3"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J8",
+          "content": {
+            "type": "number",
+            "value": 46.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K8",
+          "content": {
+            "type": "text",
+            "value": "r4"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J9",
+          "content": {
+            "type": "number",
+            "value": 47.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K9",
+          "content": {
+            "type": "text",
+            "value": "r5"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J10",
+          "content": {
+            "type": "number",
+            "value": 50.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K10",
+          "content": {
+            "type": "text",
+            "value": "r6"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J11",
+          "content": {
+            "type": "number",
+            "value": 75.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K11",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J12",
+          "content": {
+            "type": "number",
+            "value": 80.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K12",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J13",
+          "content": {
+            "type": "number",
+            "value": 81.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K13",
+          "content": {
+            "type": "text",
+            "value": "r9"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!G18",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!H18",
+          "content": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!B18",
+          "content": {
+            "formula": "VLOOKUP(F18,J$2:K$13,G18,H18)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'VL-basic'!B18",
+          "expected": {
+            "type": "number",
+            "value": 0.0
+          },
+          "known_gap": {
+            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "blank"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-lookupfunctionstestcasedata: HL-basic B68 HLOOKUP(F68&\"*\",J$25:P$26,G68,H68)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LookupFunctionsTestCaseData.xls",
+        "Pinned source SHA-256 db71048f1034cf9b435469d7c8ab685501e62e5aa01bafe9209cd5717926f4ea; original worksheet 'HL-basic', cached cell B68, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#N/A\"}. Saved creating application: Microsoft Macintosh Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'HL-basic'!F68",
+          "content": {
+            "type": "text",
+            "value": "CanNotBefound"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!J25",
+          "content": {
+            "type": "text",
+            "value": "BLA16"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!K25",
+          "content": {
+            "type": "text",
+            "value": "BLA23567"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!L25",
+          "content": {
+            "type": "text",
+            "value": "MEIER1234"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!M25",
+          "content": {
+            "type": "text",
+            "value": "BLA"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!N25",
+          "content": {
+            "type": "text",
+            "value": "BLATST234"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!O25",
+          "content": {
+            "type": "text",
+            "value": "MEIER3456"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!P25",
+          "content": {
+            "type": "text",
+            "value": "SOMEBLA"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!J26",
+          "content": {
+            "type": "text",
+            "value": "something1"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!K26",
+          "content": {
+            "type": "text",
+            "value": "something2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!L26",
+          "content": {
+            "type": "text",
+            "value": "something3"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!M26",
+          "content": {
+            "type": "text",
+            "value": "something4"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!N26",
+          "content": {
+            "type": "text",
+            "value": "something5"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!O26",
+          "content": {
+            "type": "text",
+            "value": "something6"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!P26",
+          "content": {
+            "type": "text",
+            "value": "something7"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!G68",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!H68",
+          "content": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!B68",
+          "content": {
+            "formula": "HLOOKUP(F68&\"*\",J$25:P$26,G68,H68)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'HL-basic'!B68",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-lookupfunctionstestcasedata: L-basic B30 LOOKUP(F30,J$2:S$2,I$2:I$11)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LookupFunctionsTestCaseData.xls",
+        "Pinned source SHA-256 db71048f1034cf9b435469d7c8ab685501e62e5aa01bafe9209cd5717926f4ea; original worksheet 'L-basic', cached cell B30, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#N/A\"}. Saved creating application: Microsoft Macintosh Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'L-basic'!F30",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!J2",
+          "content": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!K2",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!L2",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!M2",
+          "content": {
+            "type": "number",
+            "value": 45.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!N2",
+          "content": {
+            "type": "number",
+            "value": 46.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!O2",
+          "content": {
+            "type": "number",
+            "value": 47.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!P2",
+          "content": {
+            "type": "number",
+            "value": 50.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!Q2",
+          "content": {
+            "type": "number",
+            "value": 75.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!R2",
+          "content": {
+            "type": "number",
+            "value": 80.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!S2",
+          "content": {
+            "type": "number",
+            "value": 81.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I2",
+          "content": {
+            "type": "text",
+            "value": "r0"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I3",
+          "content": {
+            "type": "text",
+            "value": "r1"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I4",
+          "content": {
+            "type": "text",
+            "value": "r2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I5",
+          "content": {
+            "type": "text",
+            "value": "r3"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I6",
+          "content": {
+            "type": "text",
+            "value": "r4"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I7",
+          "content": {
+            "type": "text",
+            "value": "r5"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I8",
+          "content": {
+            "type": "text",
+            "value": "r6"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I9",
+          "content": {
+            "type": "text",
+            "value": "r7"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I10",
+          "content": {
+            "type": "text",
+            "value": "r8"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!I11",
+          "content": {
+            "type": "text",
+            "value": "r9"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!B30",
+          "content": {
+            "formula": "LOOKUP(F30,J$2:S$2,I$2:I$11)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'L-basic'!B30",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-lookupfunctionstestcasedata: VL-basic B28 VLOOKUP(F28,J$2:K$13,G28,H28)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LookupFunctionsTestCaseData.xls",
+        "Pinned source SHA-256 db71048f1034cf9b435469d7c8ab685501e62e5aa01bafe9209cd5717926f4ea; original worksheet 'VL-basic', cached cell B28, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#N/A\"}. Saved creating application: Microsoft Macintosh Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'VL-basic'!F28",
+          "content": {
+            "type": "number",
+            "value": 0.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J2",
+          "content": {
+            "type": "number",
+            "value": -2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K2",
+          "content": {
+            "type": "text",
+            "value": "r-2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J3",
+          "content": {
+            "type": "number",
+            "value": 0.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K3",
+          "content": {
+            "type": "text",
+            "value": "rZero"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J4",
+          "content": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K4",
+          "content": {
+            "type": "text",
+            "value": "r0"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J5",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K5",
+          "content": {
+            "type": "text",
+            "value": "r1"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J6",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K6",
+          "content": {
+            "type": "text",
+            "value": "r2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J7",
+          "content": {
+            "type": "number",
+            "value": 45.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K7",
+          "content": {
+            "type": "text",
+            "value": "r3"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J8",
+          "content": {
+            "type": "number",
+            "value": 46.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K8",
+          "content": {
+            "type": "text",
+            "value": "r4"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J9",
+          "content": {
+            "type": "number",
+            "value": 47.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K9",
+          "content": {
+            "type": "text",
+            "value": "r5"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J10",
+          "content": {
+            "type": "number",
+            "value": 50.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K10",
+          "content": {
+            "type": "text",
+            "value": "r6"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J11",
+          "content": {
+            "type": "number",
+            "value": 75.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K11",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J12",
+          "content": {
+            "type": "number",
+            "value": 80.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K12",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J13",
+          "content": {
+            "type": "number",
+            "value": 81.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K13",
+          "content": {
+            "type": "text",
+            "value": "r9"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!G28",
+          "content": {
+            "type": "text",
+            "value": "#DIV/0"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!H28",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!B28",
+          "content": {
+            "formula": "VLOOKUP(F28,J$2:K$13,G28,H28)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'VL-basic'!B28",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-lookupfunctionstestcasedata: HL-basic B32 HLOOKUP(F32,J$25:P$26,G32,H32)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LookupFunctionsTestCaseData.xls",
+        "Pinned source SHA-256 db71048f1034cf9b435469d7c8ab685501e62e5aa01bafe9209cd5717926f4ea; original worksheet 'HL-basic', cached cell B32, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#N/A\"}. Saved creating application: Microsoft Macintosh Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'HL-basic'!F32",
+          "content": {
+            "type": "text",
+            "value": "CanNotBefound*"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!J25",
+          "content": {
+            "type": "text",
+            "value": "BLA16"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!K25",
+          "content": {
+            "type": "text",
+            "value": "BLA23567"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!L25",
+          "content": {
+            "type": "text",
+            "value": "MEIER1234"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!M25",
+          "content": {
+            "type": "text",
+            "value": "BLA"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!N25",
+          "content": {
+            "type": "text",
+            "value": "BLATST234"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!O25",
+          "content": {
+            "type": "text",
+            "value": "MEIER3456"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!P25",
+          "content": {
+            "type": "text",
+            "value": "SOMEBLA"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!J26",
+          "content": {
+            "type": "text",
+            "value": "something1"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!K26",
+          "content": {
+            "type": "text",
+            "value": "something2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!L26",
+          "content": {
+            "type": "text",
+            "value": "something3"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!M26",
+          "content": {
+            "type": "text",
+            "value": "something4"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!N26",
+          "content": {
+            "type": "text",
+            "value": "something5"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!O26",
+          "content": {
+            "type": "text",
+            "value": "something6"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!P26",
+          "content": {
+            "type": "text",
+            "value": "something7"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!G32",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!H32",
+          "content": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!B32",
+          "content": {
+            "formula": "HLOOKUP(F32,J$25:P$26,G32,H32)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'HL-basic'!B32",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-lookupfunctionstestcasedata: L-basic B23 LOOKUP(F23,H$2:H$11,J$3:S$3)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LookupFunctionsTestCaseData.xls",
+        "Pinned source SHA-256 db71048f1034cf9b435469d7c8ab685501e62e5aa01bafe9209cd5717926f4ea; original worksheet 'L-basic', cached cell B23, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#N/A\"}. Saved creating application: Microsoft Macintosh Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'L-basic'!F23",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H2",
+          "content": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H3",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H4",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H5",
+          "content": {
+            "type": "number",
+            "value": 45.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H6",
+          "content": {
+            "type": "number",
+            "value": 46.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H7",
+          "content": {
+            "type": "number",
+            "value": 47.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H8",
+          "content": {
+            "type": "number",
+            "value": 50.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H9",
+          "content": {
+            "type": "number",
+            "value": 75.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H10",
+          "content": {
+            "type": "number",
+            "value": 80.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!H11",
+          "content": {
+            "type": "number",
+            "value": 81.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!J3",
+          "content": {
+            "type": "text",
+            "value": "r0"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!K3",
+          "content": {
+            "type": "text",
+            "value": "r1"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!L3",
+          "content": {
+            "type": "text",
+            "value": "r2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!M3",
+          "content": {
+            "type": "text",
+            "value": "r3"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!N3",
+          "content": {
+            "type": "text",
+            "value": "r4"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!O3",
+          "content": {
+            "type": "text",
+            "value": "r5"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!P3",
+          "content": {
+            "type": "text",
+            "value": "r6"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!Q3",
+          "content": {
+            "type": "text",
+            "value": "r7"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!R3",
+          "content": {
+            "type": "text",
+            "value": "r8"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!S3",
+          "content": {
+            "type": "text",
+            "value": "r9"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!B23",
+          "content": {
+            "formula": "LOOKUP(F23,H$2:H$11,J$3:S$3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'L-basic'!B23",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-lookupfunctionstestcasedata: VL-basic B7 VLOOKUP(F7,J$2:K$13,G7,H7)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LookupFunctionsTestCaseData.xls",
+        "Pinned source SHA-256 db71048f1034cf9b435469d7c8ab685501e62e5aa01bafe9209cd5717926f4ea; original worksheet 'VL-basic', cached cell B7, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#N/A\"}. Saved creating application: Microsoft Macintosh Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'VL-basic'!F7",
+          "content": {
+            "type": "number",
+            "value": 55.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J2",
+          "content": {
+            "type": "number",
+            "value": -2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K2",
+          "content": {
+            "type": "text",
+            "value": "r-2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J3",
+          "content": {
+            "type": "number",
+            "value": 0.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K3",
+          "content": {
+            "type": "text",
+            "value": "rZero"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J4",
+          "content": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K4",
+          "content": {
+            "type": "text",
+            "value": "r0"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J5",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K5",
+          "content": {
+            "type": "text",
+            "value": "r1"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J6",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K6",
+          "content": {
+            "type": "text",
+            "value": "r2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J7",
+          "content": {
+            "type": "number",
+            "value": 45.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K7",
+          "content": {
+            "type": "text",
+            "value": "r3"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J8",
+          "content": {
+            "type": "number",
+            "value": 46.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K8",
+          "content": {
+            "type": "text",
+            "value": "r4"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J9",
+          "content": {
+            "type": "number",
+            "value": 47.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K9",
+          "content": {
+            "type": "text",
+            "value": "r5"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J10",
+          "content": {
+            "type": "number",
+            "value": 50.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K10",
+          "content": {
+            "type": "text",
+            "value": "r6"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J11",
+          "content": {
+            "type": "number",
+            "value": 75.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K11",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J12",
+          "content": {
+            "type": "number",
+            "value": 80.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K12",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!J13",
+          "content": {
+            "type": "number",
+            "value": 81.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!K13",
+          "content": {
+            "type": "text",
+            "value": "r9"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!G7",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!H7",
+          "content": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'VL-basic'!B7",
+          "content": {
+            "formula": "VLOOKUP(F7,J$2:K$13,G7,H7)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'VL-basic'!B7",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-lookupfunctionstestcasedata: HL-basic B8 HLOOKUP(F8,J$2:S$3,G8,H8)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LookupFunctionsTestCaseData.xls",
+        "Pinned source SHA-256 db71048f1034cf9b435469d7c8ab685501e62e5aa01bafe9209cd5717926f4ea; original worksheet 'HL-basic', cached cell B8, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#N/A\"}. Saved creating application: Microsoft Macintosh Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'HL-basic'!F8",
+          "content": {
+            "type": "number",
+            "value": 55.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!J2",
+          "content": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!K2",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!L2",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!M2",
+          "content": {
+            "type": "number",
+            "value": 45.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!N2",
+          "content": {
+            "type": "number",
+            "value": 46.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!O2",
+          "content": {
+            "type": "number",
+            "value": 47.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!P2",
+          "content": {
+            "type": "number",
+            "value": 50.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!Q2",
+          "content": {
+            "type": "number",
+            "value": 75.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!R2",
+          "content": {
+            "type": "number",
+            "value": 80.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!S2",
+          "content": {
+            "type": "number",
+            "value": 81.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!J3",
+          "content": {
+            "type": "text",
+            "value": "r0"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!K3",
+          "content": {
+            "type": "text",
+            "value": "r1"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!L3",
+          "content": {
+            "type": "text",
+            "value": "r2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!M3",
+          "content": {
+            "type": "text",
+            "value": "r3"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!N3",
+          "content": {
+            "type": "text",
+            "value": "r4"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!O3",
+          "content": {
+            "type": "text",
+            "value": "r5"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!P3",
+          "content": {
+            "type": "text",
+            "value": "r6"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!Q3",
+          "content": {
+            "type": "text",
+            "value": "r7"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!R3",
+          "content": {
+            "type": "text",
+            "value": "r8"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!S3",
+          "content": {
+            "type": "text",
+            "value": "r9"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!G8",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!H8",
+          "content": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'HL-basic'!B8",
+          "content": {
+            "formula": "HLOOKUP(F8,J$2:S$3,G8,H8)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'HL-basic'!B8",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-lookupfunctionstestcasedata: L-basic B16 LOOKUP(F16,J$2:S$2,J$3:S$3)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/LookupFunctionsTestCaseData.xls",
+        "Pinned source SHA-256 db71048f1034cf9b435469d7c8ab685501e62e5aa01bafe9209cd5717926f4ea; original worksheet 'L-basic', cached cell B16, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#N/A\"}. Saved creating application: Microsoft Macintosh Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'L-basic'!F16",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!J2",
+          "content": {
+            "type": "number",
+            "value": 5.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!K2",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!L2",
+          "content": {
+            "type": "number",
+            "value": 30.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!M2",
+          "content": {
+            "type": "number",
+            "value": 45.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!N2",
+          "content": {
+            "type": "number",
+            "value": 46.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!O2",
+          "content": {
+            "type": "number",
+            "value": 47.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!P2",
+          "content": {
+            "type": "number",
+            "value": 50.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!Q2",
+          "content": {
+            "type": "number",
+            "value": 75.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!R2",
+          "content": {
+            "type": "number",
+            "value": 80.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!S2",
+          "content": {
+            "type": "number",
+            "value": 81.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!J3",
+          "content": {
+            "type": "text",
+            "value": "r0"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!K3",
+          "content": {
+            "type": "text",
+            "value": "r1"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!L3",
+          "content": {
+            "type": "text",
+            "value": "r2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!M3",
+          "content": {
+            "type": "text",
+            "value": "r3"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!N3",
+          "content": {
+            "type": "text",
+            "value": "r4"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!O3",
+          "content": {
+            "type": "text",
+            "value": "r5"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!P3",
+          "content": {
+            "type": "text",
+            "value": "r6"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!Q3",
+          "content": {
+            "type": "text",
+            "value": "r7"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!R3",
+          "content": {
+            "type": "text",
+            "value": "r8"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!S3",
+          "content": {
+            "type": "text",
+            "value": "r9"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'L-basic'!B16",
+          "content": {
+            "formula": "LOOKUP(F16,J$2:S$2,J$3:S$3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'L-basic'!B16",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    }
+  ]
+}

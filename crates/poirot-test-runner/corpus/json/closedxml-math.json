@@ -1,0 +1,1526 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(-5.5,2.1,10)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L511: CeilingMath",
+        "Adapted from the cited assertion. CEILING.MATH mode and default significance. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CEILING.MATH(-5.5,2.1,10)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -6.3
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: FLOOR zero significance and negative numbers \u2014 FLOOR(0,0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1064: Floor",
+        "Adapted from the cited assertion. FLOOR zero significance and negative numbers. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FLOOR(0,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(-5.5,2.1,10)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1107: FloorMath",
+        "Adapted from the cited assertion. FLOOR.MATH mode and default significance. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FLOOR.MATH(-5.5,2.1,10)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -4.2
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: ARABIC representation and truncation boundaries \u2014 ARABIC(\"mcmxii\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L164: Arabic_returns_correct_number",
+        "Adapted from the cited assertion. ARABIC representation and truncation boundaries. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md.",
+        "ARABIC registered with bounded central text decoding; see ../evidence/roman-numerals-contract.md and source-hash-bound roman-numerals-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(\"mcmxii\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1912
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: BASE representation and truncation boundaries \u2014 BASE(255,2,3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L421: Base_returns_text_of_at_least_minimal_length",
+        "Adapted from the cited assertion. BASE representation and truncation boundaries. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md.",
+        "General radix implementation and fresh source-bound independent evidence: ../evidence/radix-domains-libreoffice.json; contract and Calc disagreements: ../evidence/radix-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "BASE(255,2,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "11111111"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: COMBINA representation and truncation boundaries \u2014 COMBINA(4.23,3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L649: Combina_truncates_numbers_to_zero",
+        "Adapted from the cited assertion. COMBINA representation and truncation boundaries. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md.",
+        "COMBINA uses the documented nonnegative/truncated n>=k domain and bounded exact binomial arithmetic; see ../evidence/replacement-combinations-contract.md. Fresh source-bound Calc evidence: ../evidence/replacement-combinations-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COMBINA(4.23,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: DECIMAL representation and truncation boundaries: Case insensitive \u2014 DECIMAL(\"zap\",36)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L841: Decimal",
+        "Adapted from the cited assertion. DECIMAL representation and truncation boundaries: Case insensitive. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md.",
+        "General radix implementation and fresh source-bound independent evidence: ../evidence/radix-domains-libreoffice.json; contract and Calc disagreements: ../evidence/radix-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DECIMAL(\"zap\",36)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 45745
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(-5.5,-2.1,10)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L511: CeilingMath",
+        "Adapted from the cited assertion. CEILING.MATH mode and default significance. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CEILING.MATH(-5.5,-2.1,10)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -6.3
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(-5.5,-2.1,10)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1107: FloorMath",
+        "Adapted from the cited assertion. FLOOR.MATH mode and default significance. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FLOOR.MATH(-5.5,-2.1,10)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -4.2
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: CEILING sign and zero significance \u2014 CEILING(-8.1,2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L473: Ceiling",
+        "Adapted from the cited assertion. CEILING sign and zero significance. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CEILING(-8.1,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -8
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(-5.5,2,-1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L511: CeilingMath",
+        "Adapted from the cited assertion. CEILING.MATH mode and default significance. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CEILING.MATH(-5.5,2,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -6
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: FLOOR zero significance and negative numbers \u2014 FLOOR(24.3,5)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1064: Floor",
+        "Adapted from the cited assertion. FLOOR zero significance and negative numbers. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FLOOR(24.3,5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(5.5,2.1,0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1107: FloorMath",
+        "Adapted from the cited assertion. FLOOR.MATH mode and default significance. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FLOOR.MATH(5.5,2.1,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4.2
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: MOD sign follows divisor and decimal remainder \u2014 MOD(-3,2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1541: Mod",
+        "Adapted from the cited assertion. MOD sign follows divisor and decimal remainder. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MOD(-3,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: MROUND ties zero and decimal multiples \u2014 MROUND(10.5,3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1579: MRound",
+        "Adapted from the cited assertion. MROUND ties zero and decimal multiples. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MROUND(10.5,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 12.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: ODD rounds away from zero \u2014 ODD(1.5)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1648: Odd",
+        "Adapted from the cited assertion. ODD rounds away from zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ODD(1.5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: EVEN rounds away from zero \u2014 EVEN(3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L918: Even",
+        "Adapted from the cited assertion. EVEN rounds away from zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EVEN(3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: QUOTIENT truncates toward zero \u2014 QUOTIENT(4.5,3.1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1742: Quotient",
+        "Adapted from the cited assertion. QUOTIENT truncates toward zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "QUOTIENT(4.5,3.1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: ROUND ties negative precision and large exponents \u2014 ROUND(2.15,1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1839: Round",
+        "Adapted from the cited assertion. ROUND ties negative precision and large exponents. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROUND(2.15,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.2
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: ROUNDDOWN truncates toward zero \u2014 ROUNDDOWN(76.9,0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1850: RoundDown",
+        "Adapted from the cited assertion. ROUNDDOWN truncates toward zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROUNDDOWN(76.9,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 76.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: ROUNDUP rounds away from zero \u2014 ROUNDUP(76.9,0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1862: RoundUp",
+        "Adapted from the cited assertion. ROUNDUP rounds away from zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROUNDUP(76.9,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 77.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: Power errors \u2014 POWER(-1,0.5)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1670: Power_errors",
+        "Adapted from the cited assertion. Power errors. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "POWER(-1,0.5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#NUM!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: Mod divisor zero returns error \u2014 MOD(0,0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1548: Mod_divisor_zero_returns_error",
+        "Adapted from the cited assertion. Mod divisor zero returns error. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MOD(0,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: CEILING sign and zero significance \u2014 CEILING(5.5,2.1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L473: Ceiling",
+        "Adapted from the cited assertion. CEILING sign and zero significance. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CEILING(5.5,2.1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6.3
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(-5.5,2,-0.1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L511: CeilingMath",
+        "Adapted from the cited assertion. CEILING.MATH mode and default significance. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CEILING.MATH(-5.5,2,-0.1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -6
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: FLOOR zero significance and negative numbers \u2014 FLOOR(6.7,1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1064: Floor",
+        "Adapted from the cited assertion. FLOOR zero significance and negative numbers. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FLOOR(6.7,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(5.5,-2.1,0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1107: FloorMath",
+        "Adapted from the cited assertion. FLOOR.MATH mode and default significance. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FLOOR.MATH(5.5,-2.1,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4.2
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: MOD sign follows divisor and decimal remainder \u2014 MOD(-3,-2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1541: Mod",
+        "Adapted from the cited assertion. MOD sign follows divisor and decimal remainder. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MOD(-3,-2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: MROUND ties zero and decimal multiples \u2014 MROUND(10.4,3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1579: MRound",
+        "Adapted from the cited assertion. MROUND ties zero and decimal multiples. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MROUND(10.4,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: ODD rounds away from zero \u2014 ODD(2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1648: Odd",
+        "Adapted from the cited assertion. ODD rounds away from zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ODD(2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: EVEN rounds away from zero \u2014 EVEN(2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L918: Even",
+        "Adapted from the cited assertion. EVEN rounds away from zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EVEN(2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: QUOTIENT truncates toward zero \u2014 QUOTIENT(-10,3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1742: Quotient",
+        "Adapted from the cited assertion. QUOTIENT truncates toward zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "QUOTIENT(-10,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: ROUND ties negative precision and large exponents \u2014 ROUND(2.149,1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1839: Round",
+        "Adapted from the cited assertion. ROUND ties negative precision and large exponents. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROUND(2.149,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.1
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: ROUNDDOWN truncates toward zero \u2014 ROUNDDOWN(3.14159,3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1850: RoundDown",
+        "Adapted from the cited assertion. ROUNDDOWN truncates toward zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROUNDDOWN(3.14159,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3.141
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: ROUNDUP rounds away from zero \u2014 ROUNDUP(3.14159,3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1862: RoundUp",
+        "Adapted from the cited assertion. ROUNDUP rounds away from zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROUNDUP(3.14159,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3.142
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: CEILING sign and zero significance \u2014 CEILING(5.5,0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L473: Ceiling",
+        "Adapted from the cited assertion. CEILING sign and zero significance. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CEILING(5.5,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(5.5,2.1,0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L511: CeilingMath",
+        "Adapted from the cited assertion. CEILING.MATH mode and default significance. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CEILING.MATH(5.5,2.1,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6.3
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: FLOOR zero significance and negative numbers \u2014 FLOOR(-8.1,2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1064: Floor",
+        "Adapted from the cited assertion. FLOOR zero significance and negative numbers. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FLOOR(-8.1,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -10
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(5.5,0,0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1107: FloorMath",
+        "Adapted from the cited assertion. FLOOR.MATH mode and default significance. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FLOOR.MATH(5.5,0,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: MOD sign follows divisor and decimal remainder \u2014 MOD(-4.3,-0.5)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1541: Mod",
+        "Adapted from the cited assertion. MOD sign follows divisor and decimal remainder. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MOD(-4.3,-0.5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -0.3
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: MROUND ties zero and decimal multiples \u2014 MROUND(-10,-3)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1579: MRound",
+        "Adapted from the cited assertion. MROUND ties zero and decimal multiples. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MROUND(-10,-3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -9.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: ODD rounds away from zero \u2014 ODD(-2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1648: Odd",
+        "Adapted from the cited assertion. ODD rounds away from zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ODD(-2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: EVEN rounds away from zero \u2014 EVEN(-1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L918: Even",
+        "Adapted from the cited assertion. EVEN rounds away from zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EVEN(-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: QUOTIENT truncates toward zero \u2014 QUOTIENT(-10,-4)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1742: Quotient",
+        "Adapted from the cited assertion. QUOTIENT truncates toward zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "QUOTIENT(-10,-4)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: ROUND ties negative precision and large exponents \u2014 ROUND(-1.475,2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1839: Round",
+        "Adapted from the cited assertion. ROUND ties negative precision and large exponents. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROUND(-1.475,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -1.48
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: ROUNDDOWN truncates toward zero \u2014 ROUNDDOWN(-3.14159,1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1850: RoundDown",
+        "Adapted from the cited assertion. ROUNDDOWN truncates toward zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROUNDDOWN(-3.14159,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -3.1
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: ROUNDUP rounds away from zero \u2014 ROUNDUP(-3.14159,1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1862: RoundUp",
+        "Adapted from the cited assertion. ROUNDUP rounds away from zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROUNDUP(-3.14159,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -3.2
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: CEILING sign and zero significance \u2014 CEILING(-5.5,2.1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L473: Ceiling",
+        "Adapted from the cited assertion. CEILING sign and zero significance. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CEILING(-5.5,2.1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -4.2
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: CEILING.MATH mode and default significance \u2014 CEILING.MATH(5.5,2.1,-1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L511: CeilingMath",
+        "Adapted from the cited assertion. CEILING.MATH mode and default significance. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CEILING.MATH(5.5,2.1,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6.3
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: FLOOR zero significance and negative numbers \u2014 FLOOR(5.5,2.1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1064: Floor",
+        "Adapted from the cited assertion. FLOOR zero significance and negative numbers. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FLOOR(5.5,2.1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4.2
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: FLOOR.MATH mode and default significance \u2014 FLOOR.MATH(5.5,0,-2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1107: FloorMath",
+        "Adapted from the cited assertion. FLOOR.MATH mode and default significance. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "FLOOR.MATH(5.5,0,-2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: MOD sign follows divisor and decimal remainder \u2014 MOD(6.9,-0.2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1541: Mod",
+        "Adapted from the cited assertion. MOD sign follows divisor and decimal remainder. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MOD(6.9,-0.2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -0.1
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: MROUND ties zero and decimal multiples \u2014 MROUND(1.3,0.2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1579: MRound",
+        "Adapted from the cited assertion. MROUND ties zero and decimal multiples. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MROUND(1.3,0.2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.4
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: ODD rounds away from zero \u2014 ODD(0)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1648: Odd",
+        "Adapted from the cited assertion. ODD rounds away from zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ODD(0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: EVEN rounds away from zero \u2014 EVEN(-2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L918: Even",
+        "Adapted from the cited assertion. EVEN rounds away from zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "EVEN(-2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: QUOTIENT truncates toward zero \u2014 QUOTIENT(1e+100,1e+40)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1742: Quotient",
+        "Adapted from the cited assertion. QUOTIENT truncates toward zero. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "QUOTIENT(1e+100,1e+40)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1e+60
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML math: ROUND ties negative precision and large exponents \u2014 ROUND(21.5,-1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/MathTrigTests.cs#L1839: Round",
+        "Adapted from the cited assertion. ROUND ties negative precision and large exponents. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "The complete suite selects ExcelDocumentation for documented MATH direction flags. Source-hash-bound independent recalculation: ../evidence/rounding-domains-libreoffice.json; policy and oracle limits: ../evidence/rounding-domains-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROUND(21.5,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 20.0
+          }
+        }
+      ]
+    }
+  ]
+}

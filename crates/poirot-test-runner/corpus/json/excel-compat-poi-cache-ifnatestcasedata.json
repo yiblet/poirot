@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "Read Me",
+      "Ifna"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-ifnatestcasedata: Ifna B8 IFNA(E8,F8)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfNaTestCaseData.xls",
+        "Pinned source SHA-256 809f57c11771f5735af0b4ab371c9527eff52af3f3a83b1ad842466f682555bc; original worksheet 'Ifna', cached cell B8, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 0.0}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Ifna'!E8",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Ifna'!F8",
+          "content": {
+            "type": "number",
+            "value": 42.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Ifna'!B8",
+          "content": {
+            "formula": "IFNA(E8,F8)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Ifna'!B8",
+          "expected": {
+            "type": "number",
+            "value": 0.0
+          },
+          "known_gap": {
+            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "blank"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-ifnatestcasedata: Ifna E7 1.0/0.0",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfNaTestCaseData.xls",
+        "Pinned source SHA-256 809f57c11771f5735af0b4ab371c9527eff52af3f3a83b1ad842466f682555bc; original worksheet 'Ifna', cached cell E7, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#DIV/0!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Ifna'!E7",
+          "content": {
+            "formula": "1.0/0.0"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Ifna'!E7",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-ifnatestcasedata: Ifna C12 IFNA(F12,G12)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfNaTestCaseData.xls",
+        "Pinned source SHA-256 809f57c11771f5735af0b4ab371c9527eff52af3f3a83b1ad842466f682555bc; original worksheet 'Ifna', cached cell C12, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#DIV/0!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Ifna'!F12",
+          "content": {
+            "formula": "1.0/0.0"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Ifna'!G12",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Ifna'!C12",
+          "content": {
+            "formula": "IFNA(F12,G12)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Ifna'!C12",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-ifnatestcasedata: Ifna B7 IFNA(E7,F7)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfNaTestCaseData.xls",
+        "Pinned source SHA-256 809f57c11771f5735af0b4ab371c9527eff52af3f3a83b1ad842466f682555bc; original worksheet 'Ifna', cached cell B7, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#DIV/0!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Ifna'!E7",
+          "content": {
+            "formula": "1.0/0.0"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Ifna'!F7",
+          "content": {
+            "type": "number",
+            "value": 42.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Ifna'!B7",
+          "content": {
+            "formula": "IFNA(E7,F7)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Ifna'!B7",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-ifnatestcasedata: Ifna B12 IFNA(E12,F12)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfNaTestCaseData.xls",
+        "Pinned source SHA-256 809f57c11771f5735af0b4ab371c9527eff52af3f3a83b1ad842466f682555bc; original worksheet 'Ifna', cached cell B12, BIFF/OOXML typed value {\"type\": \"error\", \"value\": \"#DIV/0!\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Ifna'!E12",
+          "content": {
+            "formula": "NA()"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Ifna'!F12",
+          "content": {
+            "formula": "1.0/0.0"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Ifna'!B12",
+          "content": {
+            "formula": "IFNA(E12,F12)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Ifna'!B12",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    }
+  ]
+}

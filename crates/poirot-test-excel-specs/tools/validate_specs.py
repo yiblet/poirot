@@ -8,6 +8,10 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
+import sys
+sys.path.insert(0, str(ROOT / 'test-specs'))
+from case_table import read_table
+
 ERRORS = {'#NULL!', '#DIV/0!', '#VALUE!', '#REF!', '#NAME?', '#NUM!', '#N/A', '#GETTING_DATA', '#SPILL!', '#CALC!'}
 KINDS = {'documented_example', 'documented_derivation', 'excel_observation', 'unresolved'}
 
@@ -141,12 +145,12 @@ def main():
         for obligation in feature['obligations']:
             assert obligation['behavior'].strip()
             assert obligation['applicability'] in {'applicable', 'requires_research', 'not_applicable'}
-    cases = json.loads((ROOT / 'test-specs/cases.json').read_text())
+    cases = read_table(ROOT)
     assert len(cases) >= 1000
     assert [c['id'] for c in cases] == list(range(len(cases)))
     assert len({c['name'] for c in cases}) == len(cases)
     rust = (ROOT / 'tests/workbook_e2e.rs').read_text()
-    assert rust.count('#[test]') == 1 and '#[ignore' not in rust and 'support::run_table()' in rust
+    assert rust.count('#[test]') == 1 and '#[ignore' not in rust and 'poirot_test_runner::json::specs::check_table()' in rust
     for source_file in (ROOT / 'tests').rglob('*.rs'):
         content = source_file.read_text()
         resources = re.findall(r'include_str!\("([^\"]+)"\)', content)

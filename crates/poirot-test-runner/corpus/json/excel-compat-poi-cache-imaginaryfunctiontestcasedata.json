@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "Read Me",
+      "Imaginary"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-imaginaryfunctiontestcasedata: Imaginary B10 IMAGINARY(E10)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/ImaginaryFunctionTestCaseData.xls",
+        "Pinned source SHA-256 d75ca8896f8407543c1065110ae1a170a7e496624cbaaed941f54369ed19a1d6; original worksheet 'Imaginary', cached cell B10, BIFF/OOXML typed value {\"type\": \"number\", \"value\": -1.0}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Imaginary'!E10",
+          "content": {
+            "type": "text",
+            "value": "0-j"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Imaginary'!B10",
+          "content": {
+            "formula": "IMAGINARY(E10)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Imaginary'!B10",
+          "expected": {
+            "type": "number",
+            "value": -1.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-imaginaryfunctiontestcasedata: Imaginary B9 IMAGINARY(\"0+j\")",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/ImaginaryFunctionTestCaseData.xls",
+        "Pinned source SHA-256 d75ca8896f8407543c1065110ae1a170a7e496624cbaaed941f54369ed19a1d6; original worksheet 'Imaginary', cached cell B9, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 1.0}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Imaginary'!B9",
+          "content": {
+            "formula": "IMAGINARY(\"0+j\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Imaginary'!B9",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-imaginaryfunctiontestcasedata: Imaginary B7 IMAGINARY(\"14+0.88j\")",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/ImaginaryFunctionTestCaseData.xls",
+        "Pinned source SHA-256 d75ca8896f8407543c1065110ae1a170a7e496624cbaaed941f54369ed19a1d6; original worksheet 'Imaginary', cached cell B7, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 0.88}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Imaginary'!B7",
+          "content": {
+            "formula": "IMAGINARY(\"14+0.88j\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Imaginary'!B7",
+          "expected": {
+            "type": "number",
+            "value": 0.88
+          },
+          "tolerance": 8.8e-12
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,397 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML exploration order-statistics: LARGE fractional rank rounds upward",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L1160: Large",
+        "Transfer the LARGE rank/filter rule to its order-statistic sibling: fractional rank rounds upward.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Whole-suite ExcelDocumentation policy; refreshed source-hash-bound Calc report: ../evidence/closedxml-order-statistics-kth-rank-libreoffice.json. This suite does not disambiguate SMALL fractional ranks because its tied minima mask floor versus ceiling."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "LARGE({9,2,6,2},1.1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: LARGE ties occupy separate positions",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L1160: Large",
+        "Transfer the LARGE rank/filter rule to its order-statistic sibling: ties occupy separate positions.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Whole-suite ExcelDocumentation policy; refreshed source-hash-bound Calc report: ../evidence/closedxml-order-statistics-kth-rank-libreoffice.json. This suite does not disambiguate SMALL fractional ranks because its tied minima mask floor versus ceiling."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "LARGE({9,2,6,2},3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: LARGE numeric array text excluded",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L1160: Large",
+        "Transfer the LARGE rank/filter rule to its order-statistic sibling: numeric array text excluded.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Whole-suite ExcelDocumentation policy; refreshed source-hash-bound Calc report: ../evidence/closedxml-order-statistics-kth-rank-libreoffice.json. This suite does not disambiguate SMALL fractional ranks because its tied minima mask floor versus ceiling."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "LARGE({9,\"100\",2},2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: LARGE array logical excluded",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L1160: Large",
+        "Transfer the LARGE rank/filter rule to its order-statistic sibling: array logical excluded.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Whole-suite ExcelDocumentation policy; refreshed source-hash-bound Calc report: ../evidence/closedxml-order-statistics-kth-rank-libreoffice.json. This suite does not disambiguate SMALL fractional ranks because its tied minima mask floor versus ceiling."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "LARGE({9,TRUE,2},2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: LARGE positive rank below one",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L1160: Large",
+        "Transfer the LARGE rank/filter rule to its order-statistic sibling: positive rank below one.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Whole-suite ExcelDocumentation policy; refreshed source-hash-bound Calc report: ../evidence/closedxml-order-statistics-kth-rank-libreoffice.json. This suite does not disambiguate SMALL fractional ranks because its tied minima mask floor versus ceiling."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "LARGE({9,2},0.1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: SMALL fractional rank rounds upward",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L1160: Large",
+        "Transfer the LARGE rank/filter rule to its order-statistic sibling: fractional rank rounds upward.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Whole-suite ExcelDocumentation policy; refreshed source-hash-bound Calc report: ../evidence/closedxml-order-statistics-kth-rank-libreoffice.json. This suite does not disambiguate SMALL fractional ranks because its tied minima mask floor versus ceiling."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SMALL({9,2,6,2},1.1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: SMALL ties occupy separate positions",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L1160: Large",
+        "Transfer the LARGE rank/filter rule to its order-statistic sibling: ties occupy separate positions.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Whole-suite ExcelDocumentation policy; refreshed source-hash-bound Calc report: ../evidence/closedxml-order-statistics-kth-rank-libreoffice.json. This suite does not disambiguate SMALL fractional ranks because its tied minima mask floor versus ceiling."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SMALL({9,2,6,2},3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: SMALL numeric array text excluded",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L1160: Large",
+        "Transfer the LARGE rank/filter rule to its order-statistic sibling: numeric array text excluded.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Whole-suite ExcelDocumentation policy; refreshed source-hash-bound Calc report: ../evidence/closedxml-order-statistics-kth-rank-libreoffice.json. This suite does not disambiguate SMALL fractional ranks because its tied minima mask floor versus ceiling."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SMALL({9,\"100\",2},2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 9
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: PERCENTILE interpolated between adjacent ranks",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/percentile-function",
+        "Inclusive percentile boundary: interpolated between adjacent ranks.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Whole-suite ExcelDocumentation policy; refreshed source-hash-bound Calc report: ../evidence/closedxml-order-statistics-kth-rank-libreoffice.json. This suite does not disambiguate SMALL fractional ranks because its tied minima mask floor versus ceiling."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PERCENTILE({0,10,30},0.25)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: PERCENTILE endpoints include minimum",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/percentile-function",
+        "Inclusive percentile boundary: endpoints include minimum.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Whole-suite ExcelDocumentation policy; refreshed source-hash-bound Calc report: ../evidence/closedxml-order-statistics-kth-rank-libreoffice.json. This suite does not disambiguate SMALL fractional ranks because its tied minima mask floor versus ceiling."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PERCENTILE({0,10,30},0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: PERCENTILE endpoints include maximum",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/percentile-function",
+        "Inclusive percentile boundary: endpoints include maximum.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Whole-suite ExcelDocumentation policy; refreshed source-hash-bound Calc report: ../evidence/closedxml-order-statistics-kth-rank-libreoffice.json. This suite does not disambiguate SMALL fractional ranks because its tied minima mask floor versus ceiling."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PERCENTILE({0,10,30},1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 30
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: PERCENTILE single point all probabilities same",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/percentile-function",
+        "Inclusive percentile boundary: single point all probabilities same.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Whole-suite ExcelDocumentation policy; refreshed source-hash-bound Calc report: ../evidence/closedxml-order-statistics-kth-rank-libreoffice.json. This suite does not disambiguate SMALL fractional ranks because its tied minima mask floor versus ceiling."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PERCENTILE({7},0.37)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: PERCENTILE text values filtered",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/percentile-function",
+        "Inclusive percentile boundary: text values filtered.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Whole-suite ExcelDocumentation policy; refreshed source-hash-bound Calc report: ../evidence/closedxml-order-statistics-kth-rank-libreoffice.json. This suite does not disambiguate SMALL fractional ranks because its tied minima mask floor versus ceiling."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PERCENTILE({0,\"100\",10},0.5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration order-statistics: PERCENTILE error propagated",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/percentile-function",
+        "Inclusive percentile boundary: error propagated.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Whole-suite ExcelDocumentation policy; refreshed source-hash-bound Calc report: ../evidence/closedxml-order-statistics-kth-rank-libreoffice.json. This suite does not disambiguate SMALL fractional ranks because its tied minima mask floor versus ceiling."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PERCENTILE({0,#N/A,10},0.5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    }
+  ]
+}

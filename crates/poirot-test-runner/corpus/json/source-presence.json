@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "text",
+          "value": "a"
+        }
+      },
+      {
+        "cell": "S!B1",
+        "content": {
+          "type": "text",
+          "value": "b"
+        }
+      },
+      {
+        "cell": "S!B2",
+        "content": {
+          "type": "text",
+          "value": "d"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "source absence: CONCAT omission and blank members",
+      "evidence": [
+        "Project change-list contract: evaluating implicit blank input cells must not create authored cells; normal and overlay execution publish the same changes. Text x for this exact CONCAT probe was independently corroborated during issue005; see concat-members.json evidence."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CONCAT(,A2,\"\",\"x\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "x"
+          }
+        }
+      ]
+    },
+    {
+      "name": "source absence: scalar predicate",
+      "evidence": [
+        "Project contract: reads preserve implicit blank values and source absence; predicate, selector and branch consumers preserve blank identity. SUM ignores text range members and LEN of blank is zero. Public workflow tests separately assert raw changes never author the absent input."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ISBLANK(A2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "source absence: scalar text length",
+      "evidence": [
+        "Project contract: reads preserve implicit blank values and source absence; predicate, selector and branch consumers preserve blank identity. SUM ignores text range members and LEN of blank is zero. Public workflow tests separately assert raw changes never author the absent input."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "LEN(A2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "source absence: range aggregate",
+      "evidence": [
+        "Project contract: reads preserve implicit blank values and source absence; predicate, selector and branch consumers preserve blank identity. SUM ignores text range members and LEN of blank is zero. Public workflow tests separately assert raw changes never author the absent input."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(A2:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "source absence: selector",
+      "evidence": [
+        "Project contract: reads preserve implicit blank values and source absence; predicate, selector and branch consumers preserve blank identity. SUM ignores text range members and LEN of blank is zero. Public workflow tests separately assert raw changes never author the absent input."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ISBLANK(INDEX(A1:B2,2,1))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "source absence: branch",
+      "evidence": [
+        "Project contract: reads preserve implicit blank values and source absence; predicate, selector and branch consumers preserve blank identity. SUM ignores text range members and LEN of blank is zero. Public workflow tests separately assert raw changes never author the absent input."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ISBLANK(IF(TRUE,A2,7))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "source absence: direct read",
+      "evidence": [
+        "Project contract: reads preserve implicit blank values and source absence; predicate, selector and branch consumers preserve blank identity. SUM ignores text range members and LEN of blank is zero. Public workflow tests separately assert raw changes never author the absent input."
+      ],
+      "actions": [
+        {
+          "action": "check",
+          "cell": "S!A2",
+          "expected": {
+            "type": "blank"
+          }
+        }
+      ]
+    }
+  ]
+}

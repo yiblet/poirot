@@ -1,0 +1,3714 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML exploration reference-composition: OFFSET inherited dimensions",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/offset-function",
+        "Reference/selection composition: OFFSET inherited dimensions. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(OFFSET(A1:B2,1,1))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 110
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: OFFSET explicit dimensions",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/offset-function",
+        "Reference/selection composition: OFFSET explicit dimensions. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(OFFSET(A1,1,1,2,2))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 110
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: OFFSET negative movement",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/offset-function",
+        "Reference/selection composition: OFFSET negative movement. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(OFFSET(C3,-2,-2,2,2))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 66
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: OFFSET zero displacement retains shape",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/offset-function",
+        "Reference/selection composition: OFFSET zero displacement retains shape. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROWS(OFFSET(A1:B3,0,0))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: OFFSET width controls columns",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/offset-function",
+        "Reference/selection composition: OFFSET width controls columns. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COLUMNS(OFFSET(A1,0,0,2,3))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: OFFSET fractional displacement truncated",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/offset-function",
+        "Reference/selection composition: OFFSET fractional displacement truncated. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(OFFSET(A1,1.9,1.9))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 22
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: INDIRECT constructs reference not text",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/indirect-function",
+        "Reference/selection composition: INDIRECT constructs reference not text. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(INDIRECT(\"A1:B2\"))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 66
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: INDIRECT reference row count",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/indirect-function",
+        "Reference/selection composition: INDIRECT reference row count. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROWS(INDIRECT(\"A1:B3\"))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: INDIRECT reference column count",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/indirect-function",
+        "Reference/selection composition: INDIRECT reference column count. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COLUMNS(INDIRECT(\"A1:C2\"))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: INDIRECT invalid address",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/indirect-function",
+        "Reference/selection composition: INDIRECT invalid address. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "INDIRECT(\"not an address\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#REF!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: INDIRECT row above grid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/indirect-function",
+        "Reference/selection composition: INDIRECT row above grid. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "INDIRECT(\"A1048577\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#REF!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: INDIRECT column above grid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/indirect-function",
+        "Reference/selection composition: INDIRECT column above grid. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "INDIRECT(\"XFE1\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#REF!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: INDEX zero row returns entire column",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/index-function",
+        "Reference/selection composition: INDEX zero row returns entire column. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(INDEX(A1:C3,0,2))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 66
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: INDEX zero column returns entire row",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/index-function",
+        "Reference/selection composition: INDEX zero column returns entire row. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(INDEX(A1:C3,2,0))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 66
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: INDEX zeros return full array",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/index-function",
+        "Reference/selection composition: INDEX zeros return full array. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(INDEX(A1:C3,0,0))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 198
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: INDEX selected row shape",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/index-function",
+        "Reference/selection composition: INDEX selected row shape. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COLUMNS(INDEX(A1:C3,2,0))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: INDEX selected column shape",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/index-function",
+        "Reference/selection composition: INDEX selected column shape. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROWS(INDEX(A1:C3,0,2))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: CHOOSE selected range is not scalar",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Reference/selection composition: CHOOSE selected range is not scalar. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(CHOOSE(2,A1:A3,B1:B3))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 66
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: CHOOSE range preserves shape",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Reference/selection composition: CHOOSE range preserves shape. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROWS(CHOOSE(2,A1:B2,A1:C3))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: CHOOSE invalid zero index",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Reference/selection composition: CHOOSE invalid zero index. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CHOOSE(0,11,22)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: CHOOSE fractional index truncates",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Reference/selection composition: CHOOSE fractional index truncates. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CHOOSE(1.9,11,22)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 11
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: CHOOSE negative fraction invalid",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Reference/selection composition: CHOOSE negative fraction invalid. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CHOOSE(-0.1,11,22)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: CHOOSE unselected error ignored",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Reference/selection composition: CHOOSE unselected error ignored. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CHOOSE(2,#N/A,22)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 22
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration reference-composition: CHOOSE selected error propagated",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Reference/selection composition: CHOOSE selected error propagated. Numeric fixture cell (column c,row r) equals 10*c+r, yielding independently summed area totals.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 12
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "number",
+            "value": 13
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "number",
+            "value": 14
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 21
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 22
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 23
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 24
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C1",
+          "content": {
+            "type": "number",
+            "value": 31
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C2",
+          "content": {
+            "type": "number",
+            "value": 32
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C3",
+          "content": {
+            "type": "number",
+            "value": 33
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!C4",
+          "content": {
+            "type": "number",
+            "value": 34
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "type": "number",
+            "value": 41
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D2",
+          "content": {
+            "type": "number",
+            "value": 42
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D3",
+          "content": {
+            "type": "number",
+            "value": 43
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D4",
+          "content": {
+            "type": "number",
+            "value": 44
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "CHOOSE(1,#N/A,22)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    }
+  ]
+}

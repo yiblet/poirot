@@ -7,7 +7,7 @@ or their expected values. It emits a source-hash-bound record of typed Calc resu
 
 Example:
     /usr/bin/python3 tools/verify_json_scenarios_libreoffice.py \
-        crates/poirot-test-json/corpus/closedxml-*.json --output /tmp/calc.json
+        crates/poirot-test-runner/corpus/json/closedxml-*.json --output /tmp/calc.json
 """
 
 import argparse
@@ -35,7 +35,10 @@ FUTURE_FUNCTIONS = {
     "ARABIC", "BASE", "CEILING.MATH", "CEILING.PRECISE", "COMBINA", "CONCAT",
     "COVARIANCE.P", "COVARIANCE.S", "DECIMAL", "DAYS", "FLOOR.MATH",
     "FLOOR.PRECISE", "IFS", "ISOWEEKNUM", "MAXIFS", "MINIFS", "NUMBERVALUE",
-    "SWITCH", "TEXTJOIN",
+    "SWITCH", "TEXTJOIN", "IFNA", "XLOOKUP", "XMATCH", "RANK.EQ",
+    "PERCENTILE.INC", "QUARTILE.INC", "PERCENTRANK.INC", "PERCENTRANK.EXC",
+    "NORM.DIST", "NORM.INV", "NORM.S.DIST", "NORM.S.INV", "POISSON.DIST",
+    "T.DIST", "T.DIST.RT", "T.DIST.2T", "FORECAST.LINEAR", "UNICHAR", "UNICODE",
 }
 
 

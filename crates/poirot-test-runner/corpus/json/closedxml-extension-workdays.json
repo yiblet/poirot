@@ -1,0 +1,331 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(0,1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L941: Workdays",
+        "Expected behavior adapted from this upstream assertion. WORKDAY backward traversal and zero offset. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Business-day serial-calendar and signed endpoint contract uses ExcelDocumentation. Holiday duplicates are a set; start/end and holiday serials are truncated. See ../evidence/business-days-libreoffice.json and business-days-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WORKDAY(0,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,1,{2})",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L959: Workdays_with_holiday",
+        "Expected behavior adapted from this upstream assertion. WORKDAY holidays duplicates and weekend starts. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Business-day serial-calendar and signed endpoint contract uses ExcelDocumentation. Holiday duplicates are a set; start/end and holiday serials are truncated. See ../evidence/business-days-libreoffice.json and business-days-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WORKDAY(0,1,{2})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(0,5)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L941: Workdays",
+        "Expected behavior adapted from this upstream assertion. WORKDAY backward traversal and zero offset. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Business-day serial-calendar and signed endpoint contract uses ExcelDocumentation. Holiday duplicates are a set; start/end and holiday serials are truncated. See ../evidence/business-days-libreoffice.json and business-days-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WORKDAY(0,5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,5,{2,4})",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L959: Workdays_with_holiday",
+        "Expected behavior adapted from this upstream assertion. WORKDAY holidays duplicates and weekend starts. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Business-day serial-calendar and signed endpoint contract uses ExcelDocumentation. Holiday duplicates are a set; start/end and holiday serials are truncated. See ../evidence/business-days-libreoffice.json and business-days-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WORKDAY(0,5,{2,4})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(10,-2)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L941: Workdays",
+        "Expected behavior adapted from this upstream assertion. WORKDAY backward traversal and zero offset. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Business-day serial-calendar and signed endpoint contract uses ExcelDocumentation. Holiday duplicates are a set; start/end and holiday serials are truncated. See ../evidence/business-days-libreoffice.json and business-days-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WORKDAY(10,-2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,4,{2,4,6})",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L959: Workdays_with_holiday",
+        "Expected behavior adapted from this upstream assertion. WORKDAY holidays duplicates and weekend starts. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Business-day serial-calendar and signed endpoint contract uses ExcelDocumentation. Holiday duplicates are a set; start/end and holiday serials are truncated. See ../evidence/business-days-libreoffice.json and business-days-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WORKDAY(0,4,{2,4,6})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(9,-1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L941: Workdays",
+        "Expected behavior adapted from this upstream assertion. WORKDAY backward traversal and zero offset. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Business-day serial-calendar and signed endpoint contract uses ExcelDocumentation. Holiday duplicates are a set; start/end and holiday serials are truncated. See ../evidence/business-days-libreoffice.json and business-days-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WORKDAY(9,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,3,{2,3,4,6})",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L959: Workdays_with_holiday",
+        "Expected behavior adapted from this upstream assertion. WORKDAY holidays duplicates and weekend starts. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Business-day serial-calendar and signed endpoint contract uses ExcelDocumentation. Holiday duplicates are a set; start/end and holiday serials are truncated. See ../evidence/business-days-libreoffice.json and business-days-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WORKDAY(0,3,{2,3,4,6})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(8,-1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L941: Workdays",
+        "Expected behavior adapted from this upstream assertion. WORKDAY backward traversal and zero offset. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Business-day serial-calendar and signed endpoint contract uses ExcelDocumentation. Holiday duplicates are a set; start/end and holiday serials are truncated. See ../evidence/business-days-libreoffice.json and business-days-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WORKDAY(8,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,2,{2,3,4,5,6})",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L959: Workdays_with_holiday",
+        "Expected behavior adapted from this upstream assertion. WORKDAY holidays duplicates and weekend starts. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Business-day serial-calendar and signed endpoint contract uses ExcelDocumentation. Holiday duplicates are a set; start/end and holiday serials are truncated. See ../evidence/business-days-libreoffice.json and business-days-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WORKDAY(0,2,{2,3,4,5,6})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension workdays: WORKDAY backward traversal and zero offset \u2014 WORKDAY(7,-1)",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L941: Workdays",
+        "Expected behavior adapted from this upstream assertion. WORKDAY backward traversal and zero offset. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Business-day serial-calendar and signed endpoint contract uses ExcelDocumentation. Holiday duplicates are a set; start/end and holiday serials are truncated. See ../evidence/business-days-libreoffice.json and business-days-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WORKDAY(7,-1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML extension workdays: WORKDAY holidays duplicates and weekend starts \u2014 WORKDAY(0,1,{2,3,5})",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/DateAndTimeTests.cs#L959: Workdays_with_holiday",
+        "Expected behavior adapted from this upstream assertion. WORKDAY holidays duplicates and weekend starts. Not derived from Poirot output.",
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Business-day serial-calendar and signed endpoint contract uses ExcelDocumentation. Holiday duplicates are a set; start/end and holiday serials are truncated. See ../evidence/business-days-libreoffice.json and business-days-contract.md."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "WORKDAY(0,1,{2,3,5})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    }
+  ],
+  "builtin_policy": "ExcelDocumentation"
+}

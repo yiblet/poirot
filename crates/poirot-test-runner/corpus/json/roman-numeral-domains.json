@@ -1,0 +1,912 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Roman numeral domains: ROMAN(999)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(999)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "CMXCIX"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ROMAN(999,)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(999,)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "CMXCIX"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ROMAN(3999.9)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(3999.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "MMMCMXCIX"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ROMAN(-0.9)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(-0.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ROMAN(4000)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(4000)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ROMAN(499,-0.9)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(499,-0.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ROMAN(499,4.9)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(499,4.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ROMAN(499,0)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(499,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "CDXCIX"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ROMAN(499,1)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(499,1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "LDVLIV"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ROMAN(499,2)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(499,2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "XDIX"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ROMAN(499,3)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(499,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "VDIV"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ROMAN(499,4)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(499,4)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ROMAN(499,TRUE)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(499,TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "CDXCIX"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ROMAN(499,FALSE)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(499,FALSE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ROMAN(0,1/0)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(0,1/0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ROMAN(1,1/0)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(1,1/0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#NUM!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ROMAN(1/0,0)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ROMAN(1/0,0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(\"mcmxii\")",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(\"mcmxii\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1912
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(\"MXMVII\")",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(\"MXMVII\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1997
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(\"\")",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(\"\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(\"LVII\")",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(\"LVII\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 57
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(\"IIII\")",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(\"IIII\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(\"IL\")",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(\"IL\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 49
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(\"IC\")",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(\"IC\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 99
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(\"IM\")",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(\"IM\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 999
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(\"-MMXI\")",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(\"-MMXI\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -2011
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(\" X \")",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(\" X \")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(\"MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM\")",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(\"MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 255000
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(\"MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM\")",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(\"MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(\"+IV\")",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(\"+IV\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(\"N\")",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(\"N\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(\"I I\")",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(\"I I\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(0)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(TRUE)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(TRUE)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(1/0)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(1/0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roman numeral domains: ARABIC(A1)",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+        "https://support.microsoft.com/en-us/excel/functions/roman-function",
+        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "ARABIC(A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    }
+  ]
+}

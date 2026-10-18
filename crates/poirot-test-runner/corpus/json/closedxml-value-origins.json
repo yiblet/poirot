@@ -1,0 +1,667 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML: unary plus preserves scalar types",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ArithmeticOperatorsTests.cs#L68: UnaryPlus_IsNonOpThatKeepsValueAndType",
+        "Unary plus is a no-op, unlike unary minus and arithmetic coercion. Expectations are ClosedXML test assertions, not a native Excel reproduction.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained.",
+        "Fresh source-hash-bound Calc corroboration for unary-plus scalar preservation: see ../evidence/unary-plus-libreoffice.json. Reference identity and mixed-array behavior are separate Poirot contracts, tested in poirot-eval/tests/unary_plus.rs."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "+\"1\""
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "text",
+            "value": "1"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "+TRUE"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "+FALSE"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "+#DIV/0!"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "-\"1\""
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "number",
+            "value": -1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "-TRUE"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "number",
+            "value": -1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML: unary plus preserves blank before ISBLANK",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ArithmeticOperatorsTests.cs#L68: UnaryPlus_IsNonOpThatKeepsValueAndType",
+        "The source explicitly asserts ISBLANK(+A1) for an absent A1. Expectations are ClosedXML test assertions, not a native Excel reproduction.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained.",
+        "Fresh source-hash-bound Calc corroboration for unary-plus scalar preservation: see ../evidence/unary-plus-libreoffice.json. Reference identity and mixed-array behavior are separate Poirot contracts, tested in poirot-eval/tests/unary_plus.rs."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "ISBLANK(+A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML: IF forwards the selected reference",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LogicalTests.cs#L131: If_CanReturnReference; IfError_ReferenceNeverReturned",
+        "IF returns the selected reference in either branch, which ISREF observes before materialization. Source: If_CanReturnReference.",
+        "Only the assertions corroborated by LibreOffice are retained from the original source-method group; related assertions with engine disagreement are excluded.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "ISREF(IF(TRUE,A1))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "ISREF(IF(FALSE,,A1))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML: IFERROR preserves a successful inline blank",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LogicalTests.cs#L186: IfError_FirstArgumentNonError_ReturnFirstArgument",
+        "The successful first argument is blank rather than numeric zero or the fallback. Expectations are ClosedXML test assertions, not a native Excel reproduction.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "ISBLANK(IFERROR(IF(TRUE,),5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "IFERROR(\"\",5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "IFERROR(FALSE,5)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML: IFERROR preserves a fallback inline blank",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LogicalTests.cs#L201: IfError_FirstArgumentError_ReturnSecondArgument",
+        "An error selects the missing IF result without changing its blank type. Expectations are ClosedXML test assertions, not a native Excel reproduction.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "ISBLANK(IFERROR(#VALUE!,IF(TRUE,)))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "IFERROR(#REF!,#NAME?)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "error",
+            "value": "#NAME?"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML: ROWS rejects an inline blank",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LookupTests.cs#L618: Rows_Blank_ReturnsValueError; Rows_ScalarValues_ReturnsOne",
+        "The source Rows_Blank_ReturnsValueError assertion rejects an inline missing IF result with #VALUE!.",
+        "Only the assertions corroborated by LibreOffice are retained from the original source-method group; related assertions with engine disagreement are excluded.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "ROWS(IF(TRUE,,))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML: logical functions ignore text references across typed edits",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LogicalTests.cs#L35: And_ScalarArgumentsCoercedFromBlankOrTextOrNumber; And_OnlyLogicalOrNumberElementsOfCollectionUsed; Or_ScalarArgumentsCoercedFromBlankOrTextOrNumber; Or_OnlyLogicalOrNumberElementsOfCollectionUsed",
+        "Logical-looking text in a referenced cell is ignored. Editing that cell to a boolean makes it contribute to AND or OR.",
+        "Only the assertions corroborated by LibreOffice are retained from the original source-method group; related assertions with engine disagreement are excluded.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "FALSE"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "AND(TRUE,A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "AND(TRUE,A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "TRUE"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "OR(FALSE,A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": false
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "OR(FALSE,A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML: blank equals false zero and empty text",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/CompareOperatorsTests.cs#L151: Comparison_BlankIsEqualToFalseOrZeroOrEmptyString",
+        "A blank comparison uses the other operand type instead of assigning blank one fixed scalar type. Expectations are ClosedXML test assertions, not a native Excel reproduction.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "FALSE=A1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "A1=FALSE"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "A1=0"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "0=A1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "\"\"=A1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "A1=\"\""
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML: VALUE distinguishes a blank reference from empty text",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L1177: Value_FromBlankIsZero; Value_FromEmptyStringIsError; Value_PassingUnexpectedTypes",
+        "VALUE accepts a blank reference as zero but rejects empty text. The referenced cell is edited from blank to literal empty text, preserving the upstream scalar-type distinction.",
+        "Only the assertions corroborated by LibreOffice are retained from the original source-method group; related assertions with engine disagreement are excluded.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "VALUE(A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "VALUE(A1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "VALUE(\"\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML: exact MATCH preserves element types",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LookupTests.cs#L561: Match_edge_conditions; Match_from_unsorted",
+        "Exact MATCH distinguishes numbers, numeric text, and booleans rather than coercing the candidate elements.",
+        "Only the assertions corroborated by LibreOffice are retained from the original source-method group; related assertions with engine disagreement are excluded.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "MATCH(35,{\"35\",38,24,35,70},0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "MATCH(\"35\",{35,38,24,\"35\",70},0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "MATCH(TRUE,{0,\"TRUE\",FALSE,TRUE,1},0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML: ascending MATCH chooses the last duplicate",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LookupTests.cs#L533: Match_from_ascending; Match_from_descending",
+        "Ascending approximate MATCH selects the final qualifying duplicate.",
+        "Only the assertions corroborated by LibreOffice are retained from the original source-method group; related assertions with engine disagreement are excluded.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!D1",
+          "content": {
+            "formula": "MATCH(39,{25,38,38,38,40,41},1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!D1",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    }
+  ]
+}

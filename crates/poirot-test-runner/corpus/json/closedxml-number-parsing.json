@@ -1,0 +1,1182 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML number-parsing: NUMBERVALUE invalid grammar and range: Group separator same as decimal separator \u2014 NUMBERVALUE(\"123.45\", \".\", \".\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L657: NumberValue_returns_error_on_unparsable_texts_out_of_range",
+        "Adapted from the cited assertion. NUMBERVALUE invalid grammar and range: Group separator same as decimal separator. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"123.45\", \".\", \".\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_Format9 \u2014 \"1%\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L29: Percent_Format9",
+        "Adapted from the cited assertion. Arithmetic text coercion: Percent_Format9. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"1%\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.01
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_Format10 \u2014 \"100.5%\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L41: Percent_Format10",
+        "Adapted from the cited assertion. Arithmetic text coercion: Percent_Format10. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"100.5%\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.005
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_UnlistedFormats \u2014 \"1,000.00%\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L52: Percent_UnlistedFormats",
+        "Adapted from the cited assertion. Arithmetic text coercion: Percent_UnlistedFormats. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"1,000.00%\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 10
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Fraction_Format12_13 \u2014 \"0 1/32767\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L76: Fraction_Format12_13",
+        "Adapted from the cited assertion. Arithmetic text coercion: Fraction_Format12_13. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"0 1/32767\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3.051850947599719e-05
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format20: Minutes can be can be over 60 \u2014 \"90:00\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L207: TimeSpan_Format20",
+        "Adapted from the cited assertion. Arithmetic text coercion: TimeSpan_Format20: Minutes can be can be over 60. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"90:00\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3.75
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format21: Extra padding \u2014 \"  24   :  00  :   59  \"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L224: TimeSpan_Format21",
+        "Adapted from the cited assertion. Arithmetic text coercion: TimeSpan_Format21: Extra padding. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"  24   :  00  :   59  \"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.00068287
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format47: Minutes part can be outside of normal range \u2014 \"140:30.0\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L238: TimeSpan_Format47",
+        "Adapted from the cited assertion. Arithmetic text coercion: TimeSpan_Format47: Minutes part can be outside of normal range. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"140:30.0\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.097569444
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Number_Format37_38 \u2014 \"(1,000)\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L250: Number_Format37_38",
+        "Adapted from the cited assertion. Arithmetic text coercion: Number_Format37_38. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"(1,000)\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -1000
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: NUMBERVALUE invalid grammar and range: Too large \u2014 NUMBERVALUE(\"1.234567890E+308\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L657: NumberValue_returns_error_on_unparsable_texts_out_of_range",
+        "Adapted from the cited assertion. NUMBERVALUE invalid grammar and range: Too large. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1.234567890E+308\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "known_gap": {
+            "reason": "NUMBERVALUE accepts this separator or numeric-range combination instead of returning the source and Calc error. The pinned ClosedXML assertion and independent LibreOffice reproduction both support expected; actual recognizes only the current Poirot mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 1.23456789e+308
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_Format9 \u2014 \"+1%\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L29: Percent_Format9",
+        "Adapted from the cited assertion. Arithmetic text coercion: Percent_Format9. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"+1%\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.01
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_Format10 \u2014 \".5%\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L41: Percent_Format10",
+        "Adapted from the cited assertion. Arithmetic text coercion: Percent_Format10. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\".5%\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.005
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Fraction_Format12_13 \u2014 \"0 32767/1\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L76: Fraction_Format12_13",
+        "Adapted from the cited assertion. Arithmetic text coercion: Fraction_Format12_13. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"0 32767/1\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 32767
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format20: Even if looks like mm:ss, it is actually parsed as h:mm \u2014 \"59:59\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L207: TimeSpan_Format20",
+        "Adapted from the cited assertion. Arithmetic text coercion: TimeSpan_Format20: Even if looks like mm:ss, it is actually parsed as h:mm. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"59:59\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2.499305556
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format21: Last part can be omitted \u2014 \"24:0:\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L224: TimeSpan_Format21",
+        "Adapted from the cited assertion. Arithmetic text coercion: TimeSpan_Format21: Last part can be omitted. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"24:0:\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format47: Can specify 3 digit ms \u2014 \"00:57.180\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L238: TimeSpan_Format47",
+        "Adapted from the cited assertion. Arithmetic text coercion: TimeSpan_Format47: Can specify 3 digit ms. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"00:57.180\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.000661806
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Number_Format37_38 \u2014 \"(100)\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L250: Number_Format37_38",
+        "Adapted from the cited assertion. Arithmetic text coercion: Number_Format37_38. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"(100)\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -100
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: NUMBERVALUE invalid grammar and range: Too tiny \u2014 NUMBERVALUE(\"1.234567890E-310\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L657: NumberValue_returns_error_on_unparsable_texts_out_of_range",
+        "Adapted from the cited assertion. NUMBERVALUE invalid grammar and range: Too tiny. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1.234567890E-310\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "known_gap": {
+            "reason": "NUMBERVALUE accepts this separator or numeric-range combination instead of returning the source and Calc error. The pinned ClosedXML assertion and independent LibreOffice reproduction both support expected; actual recognizes only the current Poirot mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 1.23456789e-310
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_Format9 \u2014 \" -75 % \"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L29: Percent_Format9",
+        "Adapted from the cited assertion. Arithmetic text coercion: Percent_Format9. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\" -75 % \"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -0.75
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_Format10 \u2014 \"  -.375 % \"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L41: Percent_Format10",
+        "Adapted from the cited assertion. Arithmetic text coercion: Percent_Format10. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"  -.375 % \"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -0.00375
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Fraction_Format12_13 \u2014 \"1 00100/025\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L76: Fraction_Format12_13",
+        "Adapted from the cited assertion. Arithmetic text coercion: Fraction_Format12_13. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"1 00100/025\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format20: Last part can be omitted and zero is used \u2014 \"10:\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L207: TimeSpan_Format20",
+        "Adapted from the cited assertion. Arithmetic text coercion: TimeSpan_Format20: Last part can be omitted and zero is used. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"10:\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.416666667
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_Format10 \u2014 \"100.%\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L41: Percent_Format10",
+        "Adapted from the cited assertion. Arithmetic text coercion: Percent_Format10. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"100.%\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Fraction_Format12_13: can use minus sign \u2014 \"- 1 1/2\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L76: Fraction_Format12_13",
+        "Adapted from the cited assertion. Arithmetic text coercion: Fraction_Format12_13: can use minus sign. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"- 1 1/2\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -1.5
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format20: Upper limit of first part is parseable \u2014 \"9999:\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L207: TimeSpan_Format20",
+        "Adapted from the cited assertion. Arithmetic text coercion: TimeSpan_Format20: Upper limit of first part is parseable. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"9999:\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 416.625
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Fraction_Format12_13: or plus sign \u2014 \"+1 1/2\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L76: Fraction_Format12_13",
+        "Adapted from the cited assertion. Arithmetic text coercion: Fraction_Format12_13: or plus sign. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"+1 1/2\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.5
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format20: Hour part can be over 23 \u2014 \"30:59\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L207: TimeSpan_Format20",
+        "Adapted from the cited assertion. Arithmetic text coercion: TimeSpan_Format20: Hour part can be over 23. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"30:59\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1.290972222
+          },
+          "tolerance": 1e-08
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: NUMBERVALUE grammar \u2014 NUMBERVALUE(\"+ 1\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L623: NumberValue_converts_text_to_number",
+        "Adapted from the cited assertion. NUMBERVALUE grammar. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"+ 1\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: NUMBERVALUE explicit separator grammar \u2014 NUMBERVALUE(\"1,234.56\",\".\",\",\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L640: NumberValue_optional_parameters_can_set_decimal_and_group_separators",
+        "Adapted from the cited assertion. NUMBERVALUE explicit separator grammar. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1,234.56\",\".\",\",\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1234.56
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: NUMBERVALUE invalid grammar and range: Two decimal separators \u2014 NUMBERVALUE(\"1.234.5\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L657: NumberValue_returns_error_on_unparsable_texts_out_of_range",
+        "Adapted from the cited assertion. NUMBERVALUE invalid grammar and range: Two decimal separators. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1.234.5\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_Format10 \u2014 \"100 . 5%\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L41: Percent_Format10",
+        "Adapted from the cited assertion. Arithmetic text coercion: Percent_Format10. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"100 . 5%\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_UnlistedFormats: Can't have minus sign inside the brackets \u2014 \"(-100%)\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L52: Percent_UnlistedFormats",
+        "Adapted from the cited assertion. Arithmetic text coercion: Percent_UnlistedFormats: Can't have minus sign inside the brackets. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"(-100%)\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Fraction_Format12_13 \u2014 \"0 /20\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L76: Fraction_Format12_13",
+        "Adapted from the cited assertion. Arithmetic text coercion: Fraction_Format12_13. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"0 /20\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format20: Can't omit first part \u2014 \":5\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L207: TimeSpan_Format20",
+        "Adapted from the cited assertion. Arithmetic text coercion: TimeSpan_Format20: Can't omit first part. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\":5\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format21: Extra zeros. \u2014 \"000:01:01\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L224: TimeSpan_Format21",
+        "Adapted from the cited assertion. Arithmetic text coercion: TimeSpan_Format21: Extra zeros.. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"000:01:01\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format47: Both hours and minutes are out of range \u2014 \"140:60.0\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L238: TimeSpan_Format47",
+        "Adapted from the cited assertion. Arithmetic text coercion: TimeSpan_Format47: Both hours and minutes are out of range. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"140:60.0\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Number_Format37_38 \u2014 \"(-1)\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L250: Number_Format37_38",
+        "Adapted from the cited assertion. Arithmetic text coercion: Number_Format37_38. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"(-1)\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: NUMBERVALUE grammar \u2014 NUMBERVALUE(\"75825%\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L623: NumberValue_converts_text_to_number",
+        "Adapted from the cited assertion. NUMBERVALUE grammar. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"75825%\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 758.25
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: NUMBERVALUE explicit separator grammar \u2014 NUMBERVALUE(\"1.234,56\",\",\",\".\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L640: NumberValue_optional_parameters_can_set_decimal_and_group_separators",
+        "Adapted from the cited assertion. NUMBERVALUE explicit separator grammar. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1.234,56\",\",\",\".\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1234.56
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: NUMBERVALUE invalid grammar and range: Decimal separator before group separator \u2014 NUMBERVALUE(\"1.234,5\")",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L657: NumberValue_returns_error_on_unparsable_texts_out_of_range",
+        "Adapted from the cited assertion. NUMBERVALUE invalid grammar and range: Decimal separator before group separator. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "NUMBERVALUE(\"1.234,5\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Percent_UnlistedFormats: Can't have minus sign outside the brackets \u2014 \"-(100%)\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L52: Percent_UnlistedFormats",
+        "Adapted from the cited assertion. Arithmetic text coercion: Percent_UnlistedFormats: Can't have minus sign outside the brackets. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"-(100%)\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: Fraction_Format12_13: Fractions can't be negative \u2014 \"1 100/-2\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L76: Fraction_Format12_13",
+        "Adapted from the cited assertion. Arithmetic text coercion: Fraction_Format12_13: Fractions can't be negative. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"1 100/-2\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format20: Only one part can be outside of limit, here are both \u2014 \"24:60\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L207: TimeSpan_Format20",
+        "Adapted from the cited assertion. Arithmetic text coercion: TimeSpan_Format20: Only one part can be outside of limit, here are both. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"24:60\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format21: Only one part can be over the limit, but here are minutes and seconds \u2014 \"00:60:60\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L224: TimeSpan_Format21",
+        "Adapted from the cited assertion. Arithmetic text coercion: TimeSpan_Format21: Only one part can be over the limit, but here are minutes and seconds. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"00:60:60\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML number-parsing: Arithmetic text coercion: TimeSpan_Format47: The minutes part starts with 0, but has over 2 digits \u2014 \"60:000.0\"*1",
+      "evidence": [
+        "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextToNumberCoercionTests.cs#L238: TimeSpan_Format47",
+        "Adapted from the cited assertion. Arithmetic text coercion: TimeSpan_Format47: The minutes part starts with 0, but has over 2 digits. Expected values are authored from upstream, not Poirot.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "\"60:000.0\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    }
+  ],
+  "builtin_policy": "ExcelDocumentation"
+}

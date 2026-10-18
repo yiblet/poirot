@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "Read Me",
+      "IF"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-iffunctiontestcasedata: IF B18 IF(E18=\"\",\"Closed\",\"Open\")",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "Pinned source SHA-256 cc757102a22d88304bc71dd43a5bc7dfbc34788cc6531875cbc580d68fcaf579; original worksheet 'IF', cached cell B18, BIFF/OOXML typed value {\"type\": \"text\", \"value\": \"Closed\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'IF'!E18",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IF'!B18",
+          "content": {
+            "formula": "IF(E18=\"\",\"Closed\",\"Open\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'IF'!B18",
+          "expected": {
+            "type": "text",
+            "value": "Closed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-iffunctiontestcasedata: IF B17 IF(E17=\"\",\"Closed\",\"Open\")",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/IfFunctionTestCaseData.xls",
+        "Pinned source SHA-256 cc757102a22d88304bc71dd43a5bc7dfbc34788cc6531875cbc580d68fcaf579; original worksheet 'IF', cached cell B17, BIFF/OOXML typed value {\"type\": \"text\", \"value\": \"Open\"}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'IF'!E17",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'IF'!B17",
+          "content": {
+            "formula": "IF(E17=\"\",\"Closed\",\"Open\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'IF'!B17",
+          "expected": {
+            "type": "text",
+            "value": "Open"
+          }
+        }
+      ]
+    }
+  ]
+}

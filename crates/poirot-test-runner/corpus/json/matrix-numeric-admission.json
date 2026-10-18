@@ -1,0 +1,1410 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "MDETERM rejects blank at coordinate 1",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MDETERM rejects blank at coordinate 3",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MDETERM rejects text at coordinate 1",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MDETERM rejects text at coordinate 3",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MDETERM rejects numeric text at coordinate 1",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MDETERM rejects numeric text at coordinate 3",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MDETERM reference precedence #N/A then x",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MDETERM reference precedence x then #N/A",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MDETERM reference precedence #N/A then #DIV/0!",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MDETERM reference precedence #DIV/0! then #N/A",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MDETERM keeps numeric zero coordinates",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM({0,1;1,0})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -1
+          }
+        }
+      ]
+    },
+    {
+      "name": "MDETERM accepts singleton array",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM({2})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "MDETERM rejects nonsquare numeric array",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM({1,2,3})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINVERSE rejects blank at coordinate 1",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINVERSE rejects blank at coordinate 3",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINVERSE rejects text at coordinate 1",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINVERSE rejects text at coordinate 3",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINVERSE rejects numeric text at coordinate 1",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINVERSE rejects numeric text at coordinate 3",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINVERSE reference precedence #N/A then x",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINVERSE reference precedence x then #N/A",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINVERSE reference precedence #N/A then #DIV/0!",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINVERSE reference precedence #DIV/0! then #N/A",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE(A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINVERSE keeps numeric zero coordinates",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE({0,1;1,0})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINVERSE accepts singleton array",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE({2})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINVERSE rejects nonsquare numeric array",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE({1,2,3})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MDETERM rejects nonsquare reference despite embedded error",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json.",
+        "Typed nonsquare reference probes in Calc return #VALUE! even when B1 contains #N/A; square-shape admission precedes propagation."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MDETERM(A1:B1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MINVERSE rejects nonsquare reference despite embedded error",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/mdeterm-function: numeric square arrays; blank/text and nonsquare matrices produce #VALUE!.",
+        "https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.minverse: numeric square matrices; blank/text produce #VALUE!, noninvertible matrices produce #NUM!.",
+        "Typed reference probes with LibreOffice 26.2.6.3 establish invalid-member rejection before embedded errors and first row-major error among otherwise numeric members. Array-literal error imports are not used as the precedence oracle.",
+        "Independent analytic controls: determinant([0,1;1,0])=-1, inverse is the same matrix; determinant([2])=2, inverse([2])=0.5. Source-hash-bound Calc evidence: ../evidence/matrix-numeric-admission-libreoffice.json.",
+        "Typed nonsquare reference probes in Calc return #VALUE! even when B1 contains #N/A; square-shape admission precedes propagation."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MINVERSE(A1:B1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    }
+  ]
+}

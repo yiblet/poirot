@@ -1,0 +1,332 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "Calendar intervals: DATEDIF(\"1/1/2006\",\"12/12/2010\",\"Y\")",
+      "evidence": [
+        "Pinned ClosedXML DateAndTimeTests.DateDif at 09f2f21a60e821ce7fb18ca3576b272e5dd6d921; see ../evidence/datedif-contract.md. Serial boundary cases also follow pinned DateParts. Expectations are independent of Poirot."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "DATEDIF(\"1/1/2006\",\"12/12/2010\",\"Y\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar intervals: DATEDIF(\"1/1/2006\",\"12/12/2010\",\"M\")",
+      "evidence": [
+        "Pinned ClosedXML DateAndTimeTests.DateDif at 09f2f21a60e821ce7fb18ca3576b272e5dd6d921; see ../evidence/datedif-contract.md. Serial boundary cases also follow pinned DateParts. Expectations are independent of Poirot."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "DATEDIF(\"1/1/2006\",\"12/12/2010\",\"M\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 59
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar intervals: DATEDIF(\"1/1/2006\",\"12/12/2010\",\"D\")",
+      "evidence": [
+        "Pinned ClosedXML DateAndTimeTests.DateDif at 09f2f21a60e821ce7fb18ca3576b272e5dd6d921; see ../evidence/datedif-contract.md. Serial boundary cases also follow pinned DateParts. Expectations are independent of Poirot."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "DATEDIF(\"1/1/2006\",\"12/12/2010\",\"D\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 1806
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar intervals: DATEDIF(\"1/1/2006\",\"12/12/2010\",\"YD\")",
+      "evidence": [
+        "Pinned ClosedXML DateAndTimeTests.DateDif at 09f2f21a60e821ce7fb18ca3576b272e5dd6d921; see ../evidence/datedif-contract.md. Serial boundary cases also follow pinned DateParts. Expectations are independent of Poirot."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "DATEDIF(\"1/1/2006\",\"12/12/2010\",\"YD\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 345
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar intervals: DATEDIF(\"2020-01-31\",\"2024-03-01\",\"MD\")",
+      "evidence": [
+        "Pinned ClosedXML DateAndTimeTests.DateDif at 09f2f21a60e821ce7fb18ca3576b272e5dd6d921; see ../evidence/datedif-contract.md. Serial boundary cases also follow pinned DateParts. Expectations are independent of Poirot."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "DATEDIF(\"2020-01-31\",\"2024-03-01\",\"MD\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": -1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar intervals: DATEDIF(\"1990-01-20\",\"2002-12-15\",\"YM\")",
+      "evidence": [
+        "Pinned ClosedXML DateAndTimeTests.DateDif at 09f2f21a60e821ce7fb18ca3576b272e5dd6d921; see ../evidence/datedif-contract.md. Serial boundary cases also follow pinned DateParts. Expectations are independent of Poirot."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "DATEDIF(\"1990-01-20\",\"2002-12-15\",\"YM\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar intervals: DATEDIF(\"2001-12-31\",\"2002-4-15\",\"YM\")",
+      "evidence": [
+        "Pinned ClosedXML DateAndTimeTests.DateDif at 09f2f21a60e821ce7fb18ca3576b272e5dd6d921; see ../evidence/datedif-contract.md. Serial boundary cases also follow pinned DateParts. Expectations are independent of Poirot."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "DATEDIF(\"2001-12-31\",\"2002-4-15\",\"YM\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar intervals: DATEDIF(\"2001-12-15\",\"2002-4-15\",\"YM\")",
+      "evidence": [
+        "Pinned ClosedXML DateAndTimeTests.DateDif at 09f2f21a60e821ce7fb18ca3576b272e5dd6d921; see ../evidence/datedif-contract.md. Serial boundary cases also follow pinned DateParts. Expectations are independent of Poirot."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "DATEDIF(\"2001-12-15\",\"2002-4-15\",\"YM\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar intervals: DATEDIF(\"2000-02-20\",\"2100-02-10\",\"YD\")",
+      "evidence": [
+        "Pinned ClosedXML DateAndTimeTests.DateDif at 09f2f21a60e821ce7fb18ca3576b272e5dd6d921; see ../evidence/datedif-contract.md. Serial boundary cases also follow pinned DateParts. Expectations are independent of Poirot."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "DATEDIF(\"2000-02-20\",\"2100-02-10\",\"YD\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 356
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar intervals: DATEDIF(\"2001-02-20\",\"2100-02-10\",\"YD\")",
+      "evidence": [
+        "Pinned ClosedXML DateAndTimeTests.DateDif at 09f2f21a60e821ce7fb18ca3576b272e5dd6d921; see ../evidence/datedif-contract.md. Serial boundary cases also follow pinned DateParts. Expectations are independent of Poirot."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "DATEDIF(\"2001-02-20\",\"2100-02-10\",\"YD\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 355
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar intervals: DATEDIF(\"2020-11-22\",\"2020-11-23 9:00\",\"D\")",
+      "evidence": [
+        "Pinned ClosedXML DateAndTimeTests.DateDif at 09f2f21a60e821ce7fb18ca3576b272e5dd6d921; see ../evidence/datedif-contract.md. Serial boundary cases also follow pinned DateParts. Expectations are independent of Poirot."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "DATEDIF(\"2020-11-22\",\"2020-11-23 9:00\",\"D\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar intervals: DATEDIF(60,61,\"MD\")",
+      "evidence": [
+        "Pinned ClosedXML DateAndTimeTests.DateDif at 09f2f21a60e821ce7fb18ca3576b272e5dd6d921; see ../evidence/datedif-contract.md. Serial boundary cases also follow pinned DateParts. Expectations are independent of Poirot."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "DATEDIF(60,61,\"MD\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar intervals: DATEDIF(0,61,\"M\")",
+      "evidence": [
+        "Pinned ClosedXML DateAndTimeTests.DateDif at 09f2f21a60e821ce7fb18ca3576b272e5dd6d921; see ../evidence/datedif-contract.md. Serial boundary cases also follow pinned DateParts. Expectations are independent of Poirot."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "DATEDIF(0,61,\"M\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar intervals: DATEDIF(1.9,1.1,\"D\")",
+      "evidence": [
+        "Pinned ClosedXML DateAndTimeTests.DateDif at 09f2f21a60e821ce7fb18ca3576b272e5dd6d921; see ../evidence/datedif-contract.md. Serial boundary cases also follow pinned DateParts. Expectations are independent of Poirot."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "DATEDIF(1.9,1.1,\"D\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        }
+      ]
+    }
+  ]
+}

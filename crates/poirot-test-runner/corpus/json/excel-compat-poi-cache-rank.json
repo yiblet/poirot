@@ -1,0 +1,352 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "Example 1",
+      "Example 2",
+      "Example 3"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility poi-cache-rank: Example 3 F2 D2+E2",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/rank.xls",
+        "Pinned source SHA-256 b4932ead7e8cd7e3c4da876bdaf183fbce4474937b90a483b0464f27a30ad16c; original worksheet 'Example 3', cached cell F2, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 1.0}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Example 3'!B2",
+          "content": {
+            "type": "number",
+            "value": 46.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!B3",
+          "content": {
+            "type": "number",
+            "value": 31.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!B4",
+          "content": {
+            "type": "number",
+            "value": 39.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!B5",
+          "content": {
+            "type": "number",
+            "value": 32.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!B6",
+          "content": {
+            "type": "number",
+            "value": 36.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!B7",
+          "content": {
+            "type": "number",
+            "value": 20.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!B8",
+          "content": {
+            "type": "number",
+            "value": 45.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!B9",
+          "content": {
+            "type": "number",
+            "value": 23.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!B10",
+          "content": {
+            "type": "number",
+            "value": 38.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!B11",
+          "content": {
+            "type": "number",
+            "value": 38.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!D2",
+          "content": {
+            "formula": "RANK(B2,$B$2:$B$11)"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!C2",
+          "content": {
+            "type": "number",
+            "value": 22.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!C3",
+          "content": {
+            "type": "number",
+            "value": 25.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!C4",
+          "content": {
+            "type": "number",
+            "value": 28.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!C5",
+          "content": {
+            "type": "number",
+            "value": 28.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!C6",
+          "content": {
+            "type": "number",
+            "value": 27.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!C7",
+          "content": {
+            "type": "number",
+            "value": 21.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!C8",
+          "content": {
+            "type": "number",
+            "value": 29.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!C9",
+          "content": {
+            "type": "number",
+            "value": 20.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!C10",
+          "content": {
+            "type": "number",
+            "value": 29.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!C11",
+          "content": {
+            "type": "number",
+            "value": 27.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!E2",
+          "content": {
+            "formula": "IF(COUNTIF($B$2:$B$11,B2)>1.0,RANK(C2,$C$2:$C$11,1.0)/100.0,0.0)"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 3'!F2",
+          "content": {
+            "formula": "D2+E2"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Example 3'!F2",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-rank: Example 1 A9 RANK(A2,A2:A6,1.0)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/rank.xls",
+        "Pinned source SHA-256 b4932ead7e8cd7e3c4da876bdaf183fbce4474937b90a483b0464f27a30ad16c; original worksheet 'Example 1', cached cell A9, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 5.0}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Example 1'!A2",
+          "content": {
+            "type": "number",
+            "value": 7.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A3",
+          "content": {
+            "type": "number",
+            "value": 3.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A4",
+          "content": {
+            "type": "number",
+            "value": 3.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A5",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A6",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A9",
+          "content": {
+            "formula": "RANK(A2,A2:A6,1.0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Example 1'!A9",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility poi-cache-rank: Example 1 A8 RANK(A3,A2:A6,1.0)",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/test-data/spreadsheet/rank.xls",
+        "Pinned source SHA-256 b4932ead7e8cd7e3c4da876bdaf183fbce4474937b90a483b0464f27a30ad16c; original worksheet 'Example 1', cached cell A8, BIFF/OOXML typed value {\"type\": \"number\", \"value\": 3.0}. Saved creating application: Microsoft Excel. Cached upstream evidence is not a fresh native Excel execution.",
+        "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "'Example 1'!A3",
+          "content": {
+            "type": "number",
+            "value": 3.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A2",
+          "content": {
+            "type": "number",
+            "value": 7.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A4",
+          "content": {
+            "type": "number",
+            "value": 3.5
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A5",
+          "content": {
+            "type": "number",
+            "value": 1.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A6",
+          "content": {
+            "type": "number",
+            "value": 2.0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "'Example 1'!A8",
+          "content": {
+            "formula": "RANK(A3,A2:A6,1.0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "'Example 1'!A8",
+          "expected": {
+            "type": "number",
+            "value": 3.0
+          }
+        }
+      ]
+    }
+  ]
+}

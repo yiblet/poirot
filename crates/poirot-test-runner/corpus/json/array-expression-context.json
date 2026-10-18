@@ -1,0 +1,731 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "number",
+          "value": 2
+        }
+      },
+      {
+        "cell": "S!A2",
+        "content": {
+          "type": "number",
+          "value": 3
+        }
+      },
+      {
+        "cell": "S!B1",
+        "content": {
+          "type": "number",
+          "value": 5
+        }
+      },
+      {
+        "cell": "S!B2",
+        "content": {
+          "type": "number",
+          "value": 7
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "Array expression context: reference products reach SUMPRODUCT",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUMPRODUCT(A1:A2*B1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 31.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: ordinary SUM intersects reference products",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUM(A1:A2*B1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 21.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: ordinary SUM intersects reference before literal broadcast",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUM(A1:A2+{10;20})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 36.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: ordinary SUM intersects reversed reference operand",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUM({10;20}+A1:A2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 36.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: row and column broadcast",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUM({1,2}+{10;20})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 66.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: column and row broadcast",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUM({10;20}+{1,2})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 66.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: ordinary SUM rejects unmatched two-dimensional reference intersection",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUM({2}*A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: ordinary SUM rejects reversed unmatched reference intersection",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUM(A1:B2*{2})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: comparison members feed numeric unary",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUMPRODUCT(--(A1:A2>2))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: concatenation members survive comparison",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUMPRODUCT(--((A1:A2&\"x\")=\"3x\"))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: ordinary SUM unary minus intersects reference",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUM(-A1:A2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": -3.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: ordinary SUM percent intersects reference",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUM(A1:A2%)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 0.03
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: ordinary COLUMNS does not request array evaluation",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "COLUMNS(A1:B2/0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: ordinary ROWS does not request array evaluation",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "ROWS(A1:B2/0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: scalar consumer requests reference intersection",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "ABS(A1:A2*2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 6.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: scalar sibling does not inherit aggregate demand",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUMPRODUCT(A1:A2*B1:B2)+ABS(A1:A2*2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 37.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: ordinary SUM selected branch keeps scalar demand",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUM(IF(TRUE,A1:A2*B1:B2,1/0))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 21.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: member division error propagates",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUM({1,2}/{1,0})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "error",
+            "value": "#DIV/0!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: matrix branch inherits array demand",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUMPRODUCT(IF(TRUE,A1:A2*B1:B2,1/0))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 31
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: matrix unary minus retains reference shape",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUMPRODUCT(-A1:A2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": -5
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: matrix singleton scales full reference",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUMPRODUCT({2}*A1:B2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 34
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: matrix reference scales singleton",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUMPRODUCT(A1:B2*{2})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 34
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: matrix reference and column literal broadcast",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUMPRODUCT(A1:A2+{10;20})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 35
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: matrix column literal and reference broadcast",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUMPRODUCT({10;20}+A1:A2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 35
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: explicit error members preserve observed shape",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "COLUMNS({1,2;3,4}/0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: TREND scalar true const intersects reference expression",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "TREND({2;4;6},{1;2;3},{4},A1:A2>2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: TREND scalar false const admits numeric prediction",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim.",
+        "This checks admission of the scalar Boolean const role, independently of the regression kernel's floating-point prediction precision."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "ISNUMBER(TREND({2;4;6},{1;2;3},{4},A1:A2<2))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: IFS result inherits array demand",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUMPRODUCT(IFS(FALSE,99,TRUE,A1:A2*B1:B2))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 31
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: SWITCH result inherits array demand",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUMPRODUCT(SWITCH(2,1,99,2,A1:A2*B1:B2))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 31
+          }
+        }
+      ]
+    },
+    {
+      "name": "Array expression context: SWITCH default inherits array demand",
+      "evidence": [
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!F2",
+          "content": {
+            "formula": "SUMPRODUCT(SWITCH(3,1,99,A1:A2*B1:B2))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!F2",
+          "expected": {
+            "type": "number",
+            "value": 31
+          }
+        }
+      ]
+    }
+  ]
+}

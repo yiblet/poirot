@@ -1,0 +1,282 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML exploration sumproduct-policies: numeric text ignored",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/sumproduct-function",
+        "SUMPRODUCT rule: numeric text ignored. Corresponding multiplication is summed only after the argument policy or explicit operator conversion.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT({2,\"3\",4},{5,6,7})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 38
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration sumproduct-policies: text ignored",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/sumproduct-function",
+        "SUMPRODUCT rule: text ignored. Corresponding multiplication is summed only after the argument policy or explicit operator conversion.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT({2,\"x\",4},{5,6,7})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 38
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration sumproduct-policies: same count different shape rejected",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/sumproduct-function",
+        "SUMPRODUCT rule: same count different shape rejected. Corresponding multiplication is summed only after the argument policy or explicit operator conversion.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT({1,2},{3;4})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration sumproduct-policies: different width rejected",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/sumproduct-function",
+        "SUMPRODUCT rule: different width rejected. Corresponding multiplication is summed only after the argument policy or explicit operator conversion.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT({1,2},{3,4,5})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration sumproduct-policies: zero does not mask error",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/sumproduct-function",
+        "SUMPRODUCT rule: zero does not mask error. Corresponding multiplication is summed only after the argument policy or explicit operator conversion.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT({0,2},{#N/A,3})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#N/A"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration sumproduct-policies: arithmetic forces numeric text",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/sumproduct-function",
+        "SUMPRODUCT rule: arithmetic forces numeric text. Corresponding multiplication is summed only after the argument policy or explicit operator conversion.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Shape-preserving internal operators are independent of final worksheet array publication. Fresh source-hash-bound Calc corroboration: ../evidence/array-expression-context-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT({2,\"3\",4}*{5,6,7})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 56
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration sumproduct-policies: arithmetic forces booleans",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/sumproduct-function",
+        "SUMPRODUCT rule: arithmetic forces booleans. Corresponding multiplication is summed only after the argument policy or explicit operator conversion.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Shape-preserving internal operators are independent of final worksheet array publication. Fresh source-hash-bound Calc corroboration: ../evidence/array-expression-context-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT({2,TRUE,4}*{5,6,7})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 44
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration sumproduct-policies: arithmetic rejects ordinary text",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/sumproduct-function",
+        "SUMPRODUCT rule: arithmetic rejects ordinary text. Corresponding multiplication is summed only after the argument policy or explicit operator conversion.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Shape-preserving internal operators are independent of final worksheet array publication. Fresh source-hash-bound Calc corroboration: ../evidence/array-expression-context-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT({2,\"x\",4}*{5,6,7})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration sumproduct-policies: two dimensional correspondence",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/sumproduct-function",
+        "SUMPRODUCT rule: two dimensional correspondence. Corresponding multiplication is summed only after the argument policy or explicit operator conversion.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT({1,2;3,4},{5,6;7,8})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 70
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration sumproduct-policies: subtraction before sum",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/sumproduct-function",
+        "SUMPRODUCT rule: subtraction before sum. Corresponding multiplication is summed only after the argument policy or explicit operator conversion.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-criteria-text-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
+        "Shape-preserving internal operators are independent of final worksheet array publication. Fresh source-hash-bound Calc corroboration: ../evidence/array-expression-context-libreoffice.json."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMPRODUCT({1,2;3,4}-{5,6;7,8})"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": -16
+          }
+        }
+      ]
+    }
+  ]
+}

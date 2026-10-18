@@ -1,0 +1,5867 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-18T00:15:09.039488+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "excel-compat-poi-cache-formulaevaltestdata-values.json": "a82241106730237e1b4ab8e175f9a0a1992fa41406695db26f2940e1bd4ea9d7"
+  },
+  "results": [
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M96 ABS(K7:N7)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests P104 ACOS(O7:P8)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O108 ACOSH(N9:O10)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K156 ASIN(E7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests P160 ASINH(O9:P11)",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests P164 ATAN(O7:P8)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L168 ATAN2(K9:L10,2.0)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N172 ATANH(M9:O10)",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L216 CEILING(G10,G7)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D248 CLEAN(CHAR(7.0)&\"text\"&CHAR(7.0))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "text"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G264 COMBIN(E13:F13,1.0)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G268 CONCAT(E9,F12)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "text",
+            "value": "sp ace ssp ace s"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J272 CONCATENATE(F13:G15,E16)",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E284 COS(E7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N288 COSH(M8:N9)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L328 DATE(E8,E9,E10)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D348 DAY(C20)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 25.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D352 DAYS360(B10,C10)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": -526.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J376 DEC2BIN(\"ABCDEF\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests P380 DEC2HEX(\"ABCDEF\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O384 DEGREES(N8:O9)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J488 EVEN(E7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J492 EXACT(F12:G12,F12:G12)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J504 EXP(E10)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests P516 FACT(G12)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E540 FIND(\"O\",E8)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M564 FLOOR(G7:H8,H10)",
+      "checks": [
+        {
+          "action": 6,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K736 HEX2DEC(\"001\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H744 HOUR(E8)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O788 INT(N8:O9)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J804 ISBLANK(J14:K14)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K812 ISERROR(I810:I813)",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E816 ISLOGICAL(B16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G820 ISNA(AA8)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L824 ISNONTEXT(D7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K828 ISNUMBER(D7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K840 ISTEXT(B34:B35)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J856 LEFT(G7:H9,H10)",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E864 LEN(F20)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests P880 LN(O878:O881)",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 1.81125113282731
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I884 LOG(B11,12.0)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 9.26628408025102
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O888 LOG10(N887:N889)",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 0.404460660780122
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests P908 LOWER(AA8)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G932 MID(E20,1.0,2.0)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F948 MINUTE(E9)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I964 MOD(D17,D16)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I972 MONTH(C20+60.0)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D1036 OCT2DEC(0.0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M1040 ODD(L7:N7)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K1104 POWER(E7,C9)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J1136 QUOTIENT(5.0,\"ABCD\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J1140 RADIANS(E7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H1176 REPLACE(\"ABCDEF\",-3.0,4.0,\"xx\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J1208 RIGHT(G383:H385,H386)",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L1220 ROUND(C7,E7)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K1224 ROUNDDOWN(E7,1.0)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O1228 ROUNDUP(N8:O10,0.0)",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G1256 SEARCH(\"S\",$E$8,4.0)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F1264 SECOND(E11)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L1288 SIGN(E7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O1292 SIN(N8:O9)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O1296 SINH(N8:O9)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests P1320 SQRT(O7:P8)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests W1352 SUBSTITUTE(\"ABCBBDBEB\",\"B\",\"x\",-1.0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H1392 T(D8)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M1396 TAN(L7:M8)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N1400 TANH(I8:K8)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests R1448 TRIM(E7:E8)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F1460 TRUNC(-8.9)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests Q1476 UPPER(AA12)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#NUM!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D1484 VALUE(\"0.33\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.33
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I1540 YEAR(C20+2000.0)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 2006.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M59 \"\"*\"1\"",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests S63 \"\"<>D7",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O35 \"\"=0.0",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N59 \"1\"*1.0",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I35 \"1.1\"=C9",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E67 \"250\"%",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2.5
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E63 \"TRUE\"<>B16",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F63 \"TRUE\"<>B18",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N63 \"blanksIncl\"<>G11",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E59 \"test\"*0.0",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E87 +C14",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": -2.99999
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F87 +D7",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L87 +E7",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G87 +F9:H9",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.3456
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H87 +G85:G87",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 2.3456
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I87 +H12:J12",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "number",
+            "value": 454.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J87 +I7:J8",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K87 +J11:L11",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M87 +L10:N10",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "text",
+            "value": "col"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N87 -\"hello\"",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: StatsLibTests G1 -1.0*B1",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": -1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: StatsLibTests G2 -1.0*B2",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": -2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K35 -200.0=200.0",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F23 -8888.0+8887.9",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -0.100000000000364
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E83 -B12",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 9999999999.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F83 -B16",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": -1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D83 -B9",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": -2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J83 -E7",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K83 -F10",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": -1e-05
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G83 -F10:H10",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H83 -G11:I11",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "number",
+            "value": -0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I83 -H10:J10",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L83 -K7:L8",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M83 -M7:M10",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D27 0.0&1.0",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "01"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D23 0.0+0.0",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D31 0.0/1.0",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests T63 0.0<>D7",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D59 1.0*0.0",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K63 1.0<>E15",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J35 1.1=C16",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E27 2.0&\"hello world\"",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "2hello world"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E79 9999.0-9999.0",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J59 A7:J7*B15",
+      "checks": [
+        {
+          "action": 12,
+          "actual": {
+            "type": "number",
+            "value": -4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G59 B10*C11",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1601.99466
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D79 B10-C9",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 532.9
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L71 B10^B14",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 3.50685238956922e-06
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E31 B11/B12",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": -1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E43 B11>B7",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E39 B11>=C12",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G43 B13>C15",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F71 B13^0.0",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F67 B16%",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.01
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J79 B16-B17",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L79 B17-B16",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": -1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I23 B7+C7+D7+E7",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H23 B7+C7+D7+F7",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D55 B7<B8",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D51 B7<=C7",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D63 B7<>B7",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D43 B7>B11",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F43 B7>B12",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E55 B8<B7",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E51 B8<=C9",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D35 B8=B8",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H71 B8^C9",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G23 B9+C9+F10",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 3.10001
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J71 B9^C9",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.14354692507259
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F55 C10<C9",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F39 C10>=1.00001",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F31 C13/C17",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 99999999999.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K71 C15^B9",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0000200001
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G71 C15^C9",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#NUM!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K23 C7+G7:J7",
+      "checks": [
+        {
+          "action": 6,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I71 C7^C9",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I31 C8/D7",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F51 C8<=C16",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H63 C8<>1.001e-05",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F79 C9-C16",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H55 C9<E16",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H51 C9<=E11",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F11 D7",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H59 D7*C8",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J23 D7+D8",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H79 D7-C9",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": -1.1
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I43 D7>C17",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H43 D7>C8",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G39 D7>=D8",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G79 D8-D7",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G31 E10/D7",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N31 E15/C9",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.909090909090909
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K43 E15>E9",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K51 E17<=C11",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L63 E17<>C17",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I59 E7*C7",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I79 E7-C7",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N71 E7^C7",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G55 E8<E9",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G51 E8<=E9",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G35 E8=E8",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H39 E8>=E10",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H31 E9/C8",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L31 E9/E15",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I63 E9<>\"spaces\"",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I51 F10<=F11",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J51 F12<=E12",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G67 F13%",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0299999
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M63 F14<>F14",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J43 F14>F13",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J31 F7/E17",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K31 F7/E9",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G27 F9&B7&D7&E19",
+      "checks": [
+        {
+          "action": 6,
+          "actual": {
+            "type": "text",
+            "value": "99999999990alph4Num3ric"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J39 F9>=F9",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests P59 FALSE*2.0",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G63 FALSE<>B19",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M71 G10^C7",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O31 G7:J7/B8",
+      "checks": [
+        {
+          "action": 6,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L51 G7:J7<=F8",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O63 G7:J7<>G7:J7",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L43 G7:J7>F8",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K39 G7:J7>=G7:J7",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O71 H7:J7^C7",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests P79 I7-M9",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L59 J1:J59*B8",
+      "checks": [
+        {
+          "action": 82,
+          "actual": {
+            "type": "number",
+            "value": -4.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K59 K7:K10*B10",
+      "checks": [
+        {
+          "action": 6,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests P31 K7:K10/B8",
+      "checks": [
+        {
+          "action": 6,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M43 K7:K10>F11",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L39 K7:K10>=K7:K10",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H27 K7:L10&D7&F7",
+      "checks": [
+        {
+          "action": 12,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N79 L10:O10-N9",
+      "checks": [
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": -344.99999
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M51 L7:L10<=B7",
+      "checks": [
+        {
+          "action": 6,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M79 M7:M10-N7:N10",
+      "checks": [
+        {
+          "action": 9,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O79 N10:P10-O8:O11",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests P71 N7:Q7^Q9",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests R71 P70:P71^R9",
+      "checks": [
+        {
+          "action": 11,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests R63 P7:P10<>S7:S10",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests Q71 P7:Q9^R7",
+      "checks": [
+        {
+          "action": 9,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I27 P7:S10&\"test\"",
+      "checks": [
+        {
+          "action": 20,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests Q63 P7:S7<>Q7:R7",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests Q31 P7:S8/B8",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests P63 P7:S8<>P7:S8",
+      "checks": [
+        {
+          "action": 9,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O59 TRUE*34.0",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 34.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L96 ABS(G7:G12)",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M104 ACOS(G9)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#NUM!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G108 ACOSH(B16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G156 ASIN(B13)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#NUM!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M160 ASINH(J10:M10)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M164 ATAN(K10:N10)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K168 ATAN2(K7:K8,J9:K9)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I172 ATANH(E7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K216 CEILING(J8:K9,1.0)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F264 COMBIN(E13:G13,2.0)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L268 CONCAT(H7,I8)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "text",
+            "value": "23.5"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K272 CONCATENATE(K8:L9,K10)",
+      "checks": [
+        {
+          "action": 6,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O284 COS(K8:K10)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I288 COSH(D8)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I380 DEC2HEX(-54.0,2.0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "FFFFFFFFCA"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N384 DEGREES(L374:L385)",
+      "checks": [
+        {
+          "action": 15,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I488 EVEN(D7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H492 EXACT(D8,D9)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H504 EXP(B16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 2.71828182845905
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests T516 FACT(I11:J11)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H540 FIND(\"s\",E9,3.0)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 8.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L564 FLOOR(F562:F565,G564)",
+      "checks": [
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": -2.00002
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J736 HEX2DEC(\"0000250001\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 2424833.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G744 HOUR(D7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F788 INT(B16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K804 ISBLANK(K13:L14)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J812 ISERROR(I11:K11)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L816 ISLOGICAL(B16:B17)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F820 ISNA(AA13)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G824 ISNONTEXT(\"true\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E828 ISNUMBER(\"a\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H840 ISTEXT(B23)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H856 LEFT(E12,E17)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "text",
+            "value": "no"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L864 LEN(AA12)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#NUM!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G880 LN(B16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G884 LOG(B10,534.0)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H888 LOG10(B16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K908 LOWER(E11:G11)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F932 MID(E9,4.0,1.0)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "a"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E948 MINUTE(TIME(0.0,15.0,0.0))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M964 MOD(I8:J9,2.0)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D972 MONTH(C20)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 12.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N1040 ODD(K8:L9)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J1104 POWER(C9,E7)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I1136 QUOTIENT(\"ABCD\",2.0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N1140 RADIANS(K8:L9)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F1176 REPLACE(\"ABCDEF\",\"3.9\",\"40\",\"x\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "ABx"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H1208 RIGHT(E11,E17)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "text",
+            "value": "ce"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K1220 ROUND(E7,C7)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M1224 ROUNDDOWN(G7:I7,3.0)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J1228 ROUNDUP(E7,0.0)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E1256 SEARCH(\"s\",$E$8)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E1264 SECOND(TIME(0.0,0.0,15.0))",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 15.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O1288 SIGN(N9:O10)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H1292 SIN(B16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.841470984807897
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I1296 SINH(D7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L1320 SQRT(E7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D1352 SUBSTITUTE(E12,\"n\",\"N\")",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "NoN-Numeric"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F1392 T(B16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I1396 TAN(E7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E1400 TANH(B8:C9)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E1412 TEXT(321.321111111111,\"#.##\")&\"'\"",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "321.32'"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests Q1448 TRIM(E20)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E1028 TRUNC(NPV(10.0%,-10000.0,3000.0,4200.0,6800.0),2.0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1188.44
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O1476 UPPER(N7:P8)",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J1524 WEEKNUM(\"99/9/2008\",-1.0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D1540 YEAR(C20)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 2000.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O96 ABS(N88:N96)",
+      "checks": [
+        {
+          "action": 14,
+          "actual": {
+            "type": "number",
+            "value": 345.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K104 ACOS(E7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M108 ACOSH(K8:N8)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 1.76274717403909
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F156 ASIN(B10)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#NUM!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K160 ASINH(\"\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H164 ATAN(E7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J168 ATAN2(I167:I169,I11:K11)",
+      "checks": [
+        {
+          "action": 11,
+          "actual": {
+            "type": "number",
+            "value": 0.000668778569178071
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H172 ATANH(B17)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G216 CEILING(C12,D11)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L264 COMBIN(23.0,D263:D265)",
+      "checks": [
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 253.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D268 CONCAT(B7,B15)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "text",
+            "value": "0-1"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G272 CONCATENATE(E9,F12)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "text",
+            "value": "sp ace ssp ace s"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N284 COS(I8:K8)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G288 COSH(B16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 1.54308063481524
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H380 DEC2HEX(-54.0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "FFFFFFFFCA"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I384 DEGREES(E7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M488 EVEN(J11:M11)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I492 EXACT(E9,F12)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F504 EXP(B17)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K516 FACT(D9)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D540 FIND(\"o\",E8)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F564 FLOOR(C14,C16)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": -2.2
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I736 HEX2DEC(\"F000000001\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -68719476735.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N788 INT(M786:M789)",
+      "checks": [
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H812 ISERROR(C16:E16)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K816 ISLOGICAL(TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I820 ISNA(B16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F824 ISNONTEXT(\"1\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D828 ISNUMBER(0.0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G840 ISTEXT(\"true\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K856 LEFT(\"a string\",TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "a"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K864 LEN(K8:L10)",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O880 LN(M9:O9)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "number",
+            "value": 6.11809719804135
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F884 LOG(B8,2.0)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N888 LOG10(L9:N9)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "number",
+            "value": 2.53781909507327
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L908 LOWER(F11:F14)",
+      "checks": [
+        {
+          "action": 9,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E932 MID(E8,2.0,4.0)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "ospa"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J964 MOD(D17,E16)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K1040 ODD(J1035:J1041)",
+      "checks": [
+        {
+          "action": 11,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N1104 POWER(H1102:H1105,L1104)",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": -2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G1136 QUOTIENT(-5.5,2.0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": -2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M1140 RADIANS(I1134:I1141)",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E1176 REPLACE(\"ABCDEF\",TRUE,TRUE,\"xxx\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "xxxBCDEF"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K1208 RIGHT(\"a string\",TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "g"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests P1220 ROUND(N1218:N1221,O10)",
+      "checks": [
+        {
+          "action": 10,
+          "actual": {
+            "type": "number",
+            "value": 345.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests P1224 ROUNDDOWN(K8:L9,2.0)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L1228 ROUNDUP(G9:I9,2.0)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H1256 SEARCH(B8,C8)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 7.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I1288 SIGN(B17)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N1292 SIN(L1291:L1293)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 0.777831107909478
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G1296 SINH(B16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 1.1752011936438
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O1320 SQRT(J1319:J1321)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests T1352 SUBSTITUTE(\"   \",\" \",\"\",1.0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "  "
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J1392 T(E12)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "non-numeric"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H1396 TAN(D7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K1400 TANH(B16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.761594155955765
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F1412 TEXT(B10,\"$#,##0.00\")&\"'\"",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "$534.00'"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E1448 TRIM(E8)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "nospaces"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F800 TRUNC(IRR(AL7:AL9,-10.0%),4.0)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "number",
+            "value": -0.4435
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests P1476 UPPER(M9:N10)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H1524 WEEKNUM(\"ABCDEF\",1.0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H96 ABS(E7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E104 ACOS(B9)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#NUM!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N108 ACOSH(M106:M109)",
+      "checks": [
+        {
+          "action": 9,
+          "actual": {
+            "type": "number",
+            "value": 1.1676387512082
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N156 ASIN(H12:J12)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J160 ASINH(E7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G164 ATAN(D7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G168 ATAN2(B15,B16)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.35619449019235
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L172 ATANH(K11:M11)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F216 CEILING(D9,D10)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D264 COMBIN(B9,B8)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H268 CONCAT(F13,E16)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "text",
+            "value": "2.999991.1"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: misc E6 CONCATENATE(E2,\"1\")",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "31"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I284 COS(B17)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M288 COSH(K287:K289)",
+      "checks": [
+        {
+          "action": 5,
+          "actual": {
+            "type": "number",
+            "value": 2.44635200744916
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H384 DEGREES(D7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N488 EVEN(L486:L489)",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "number",
+            "value": 2.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D492 EXACT(123.0,\"123\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests K504 EXP(H12:L12)",
+      "checks": [
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I516 FACT(B16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E564 FLOOR(B10,B9)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 534.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F736 HEX2DEC(\"3DA408B9\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "number",
+            "value": 1034160313.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J788 INT(E14)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I812 ISERROR(F14)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests G816 ISLOGICAL(B18)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H820 ISNA(AA14)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": false
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests E824 ISNONTEXT(TRUE)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J828 ISNUMBER(C10)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F840 ISTEXT(\"1\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "boolean",
+            "value": true
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F856 LEFT(\"a string\",10.0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "a string"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I864 LEN(H11:J11)",
+      "checks": [
+        {
+          "action": 4,
+          "actual": {
+            "type": "number",
+            "value": 3.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L880 LN(E16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0953101798043249
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M884 LOG(B10,B9)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 9.06069593168756
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L888 LOG10(E15)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O908 LOWER(N8:O10)",
+      "checks": [
+        {
+          "action": 7,
+          "actual": {
+            "type": "error",
+            "value": "#VALUE!"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests D932 MID(E8,1.0,3.0)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "text",
+            "value": "nos"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F964 MOD(B14,B16)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I1040 ODD(B16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I1104 POWER(C9,D7)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests I1140 RADIANS(D7)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests F1208 RIGHT(\"a string\",10.0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": "a string"
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests J1220 ROUND(D7,D8)",
+      "checks": [
+        {
+          "action": 3,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests O1224 ROUNDDOWN(N1224:N1226,-2.0)",
+      "checks": [
+        {
+          "action": 8,
+          "actual": {
+            "type": "number",
+            "value": 300.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H1228 ROUNDUP(B17,-1.0)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests H1288 SIGN(B16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 1.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests L1292 SIN(E16)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.891207360061435
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests N1296 SINH(L1295:L1297)",
+      "checks": [
+        {
+          "action": 6,
+          "actual": {
+            "type": "number",
+            "value": 1.46501882481823
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests M1320 SQRT(K13)",
+      "checks": [
+        {
+          "action": 2,
+          "actual": {
+            "type": "number",
+            "value": 0.0
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    },
+    {
+      "suite": "excel-compat-poi-cache-formulaevaltestdata-values.json",
+      "name": "Excel compatibility poi-cache-formulaevaltestdata: EverythingTests S1352 SUBSTITUTE(\"   \",\" \",\"\")",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "text",
+            "value": ""
+          },
+          "agrees": true
+        }
+      ],
+      "agrees": true
+    }
+  ],
+  "summary": {
+    "scenarios": 390,
+    "checks": 390,
+    "corroborated_scenarios": 390,
+    "corroborated_checks": 390
+  }
+}

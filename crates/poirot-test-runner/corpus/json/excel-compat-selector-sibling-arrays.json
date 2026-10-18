@@ -1,0 +1,1671 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility selector-sibling-arrays: IFS under SUM array conditions with scalar default",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+        "Array selection at each position yields [3, 5, 7]. array conditions with scalar default. The outer SUM must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(IFS({TRUE,FALSE,TRUE},{3,100,7},TRUE,5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 15
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: IFS under COUNT array conditions with scalar default",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+        "Array selection at each position yields [3, 5, 7]. array conditions with scalar default. The outer COUNT must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNT(IFS({TRUE,FALSE,TRUE},{3,100,7},TRUE,5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: IFS under PRODUCT array conditions with scalar default",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+        "Array selection at each position yields [3, 5, 7]. array conditions with scalar default. The outer PRODUCT must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PRODUCT(IFS({TRUE,FALSE,TRUE},{3,100,7},TRUE,5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 105
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MIN array conditions with scalar default",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+        "Array selection at each position yields [3, 5, 7]. array conditions with scalar default. The outer MIN must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MIN(IFS({TRUE,FALSE,TRUE},{3,100,7},TRUE,5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MAX array conditions with scalar default",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+        "Array selection at each position yields [3, 5, 7]. array conditions with scalar default. The outer MAX must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAX(IFS({TRUE,FALSE,TRUE},{3,100,7},TRUE,5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 7
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: IFS under AVERAGE array conditions with scalar default",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+        "Array selection at each position yields [3, 5, 7]. array conditions with scalar default. The outer AVERAGE must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGE(IFS({TRUE,FALSE,TRUE},{3,100,7},TRUE,5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MEDIAN array conditions with scalar default",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+        "Array selection at each position yields [3, 5, 7]. array conditions with scalar default. The outer MEDIAN must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MEDIAN(IFS({TRUE,FALSE,TRUE},{3,100,7},TRUE,5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: IFS under SUMSQ array conditions with scalar default",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+        "Array selection at each position yields [3, 5, 7]. array conditions with scalar default. The outer SUMSQ must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMSQ(IFS({TRUE,FALSE,TRUE},{3,100,7},TRUE,5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 83
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: IFS under SUM first true condition at each position",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+        "Array selection at each position yields [3, 3, 7]. first true condition at each position. The outer SUM must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(IFS({TRUE,TRUE,FALSE},3,{TRUE,FALSE,TRUE},7,TRUE,11))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 13
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: IFS under COUNT first true condition at each position",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+        "Array selection at each position yields [3, 3, 7]. first true condition at each position. The outer COUNT must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNT(IFS({TRUE,TRUE,FALSE},3,{TRUE,FALSE,TRUE},7,TRUE,11))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: IFS under PRODUCT first true condition at each position",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+        "Array selection at each position yields [3, 3, 7]. first true condition at each position. The outer PRODUCT must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PRODUCT(IFS({TRUE,TRUE,FALSE},3,{TRUE,FALSE,TRUE},7,TRUE,11))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 63
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MIN first true condition at each position",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+        "Array selection at each position yields [3, 3, 7]. first true condition at each position. The outer MIN must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MIN(IFS({TRUE,TRUE,FALSE},3,{TRUE,FALSE,TRUE},7,TRUE,11))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MAX first true condition at each position",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+        "Array selection at each position yields [3, 3, 7]. first true condition at each position. The outer MAX must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAX(IFS({TRUE,TRUE,FALSE},3,{TRUE,FALSE,TRUE},7,TRUE,11))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 7
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: IFS under AVERAGE first true condition at each position",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+        "Array selection at each position yields [3, 3, 7]. first true condition at each position. The outer AVERAGE must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGE(IFS({TRUE,TRUE,FALSE},3,{TRUE,FALSE,TRUE},7,TRUE,11))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4.333333333333333
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: IFS under MEDIAN first true condition at each position",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+        "Array selection at each position yields [3, 3, 7]. first true condition at each position. The outer MEDIAN must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MEDIAN(IFS({TRUE,TRUE,FALSE},3,{TRUE,FALSE,TRUE},7,TRUE,11))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: IFS under SUMSQ first true condition at each position",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/ifs-function",
+        "Array selection at each position yields [3, 3, 7]. first true condition at each position. The outer SUMSQ must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMSQ(IFS({TRUE,TRUE,FALSE},3,{TRUE,FALSE,TRUE},7,TRUE,11))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 67
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under SUM array expression with typed branch values",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/switch-function",
+        "Array selection at each position yields [3, 5, 7]. array expression with typed branch values. The outer SUM must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(SWITCH({1,2,1},1,{3,100,7},2,5,11))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 15
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under COUNT array expression with typed branch values",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/switch-function",
+        "Array selection at each position yields [3, 5, 7]. array expression with typed branch values. The outer COUNT must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNT(SWITCH({1,2,1},1,{3,100,7},2,5,11))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under PRODUCT array expression with typed branch values",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/switch-function",
+        "Array selection at each position yields [3, 5, 7]. array expression with typed branch values. The outer PRODUCT must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PRODUCT(SWITCH({1,2,1},1,{3,100,7},2,5,11))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 105
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MIN array expression with typed branch values",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/switch-function",
+        "Array selection at each position yields [3, 5, 7]. array expression with typed branch values. The outer MIN must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MIN(SWITCH({1,2,1},1,{3,100,7},2,5,11))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MAX array expression with typed branch values",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/switch-function",
+        "Array selection at each position yields [3, 5, 7]. array expression with typed branch values. The outer MAX must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAX(SWITCH({1,2,1},1,{3,100,7},2,5,11))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 7
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under AVERAGE array expression with typed branch values",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/switch-function",
+        "Array selection at each position yields [3, 5, 7]. array expression with typed branch values. The outer AVERAGE must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGE(SWITCH({1,2,1},1,{3,100,7},2,5,11))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MEDIAN array expression with typed branch values",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/switch-function",
+        "Array selection at each position yields [3, 5, 7]. array expression with typed branch values. The outer MEDIAN must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MEDIAN(SWITCH({1,2,1},1,{3,100,7},2,5,11))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under SUMSQ array expression with typed branch values",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/switch-function",
+        "Array selection at each position yields [3, 5, 7]. array expression with typed branch values. The outer SUMSQ must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMSQ(SWITCH({1,2,1},1,{3,100,7},2,5,11))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 83
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under SUM duplicate case uses first match and default",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/switch-function",
+        "Array selection at each position yields [3, 5, 7]. duplicate case uses first match and default. The outer SUM must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(SWITCH({1,2,3},1,3,1,100,2,5,7))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 15
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under COUNT duplicate case uses first match and default",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/switch-function",
+        "Array selection at each position yields [3, 5, 7]. duplicate case uses first match and default. The outer COUNT must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNT(SWITCH({1,2,3},1,3,1,100,2,5,7))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under PRODUCT duplicate case uses first match and default",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/switch-function",
+        "Array selection at each position yields [3, 5, 7]. duplicate case uses first match and default. The outer PRODUCT must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PRODUCT(SWITCH({1,2,3},1,3,1,100,2,5,7))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 105
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MIN duplicate case uses first match and default",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/switch-function",
+        "Array selection at each position yields [3, 5, 7]. duplicate case uses first match and default. The outer MIN must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MIN(SWITCH({1,2,3},1,3,1,100,2,5,7))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MAX duplicate case uses first match and default",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/switch-function",
+        "Array selection at each position yields [3, 5, 7]. duplicate case uses first match and default. The outer MAX must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAX(SWITCH({1,2,3},1,3,1,100,2,5,7))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 7
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under AVERAGE duplicate case uses first match and default",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/switch-function",
+        "Array selection at each position yields [3, 5, 7]. duplicate case uses first match and default. The outer AVERAGE must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGE(SWITCH({1,2,3},1,3,1,100,2,5,7))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under MEDIAN duplicate case uses first match and default",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/switch-function",
+        "Array selection at each position yields [3, 5, 7]. duplicate case uses first match and default. The outer MEDIAN must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MEDIAN(SWITCH({1,2,3},1,3,1,100,2,5,7))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: SWITCH under SUMSQ duplicate case uses first match and default",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/switch-function",
+        "Array selection at each position yields [3, 5, 7]. duplicate case uses first match and default. The outer SUMSQ must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMSQ(SWITCH({1,2,3},1,3,1,100,2,5,7))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 83
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "error",
+              "value": "#N/A"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under SUM array indices select corresponding branch positions",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Array selection at each position yields [3, 5, 7]. array indices select corresponding branch positions. The outer SUM must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(CHOOSE({1,2,1},{3,100,7},5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 15
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 110.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under COUNT array indices select corresponding branch positions",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Array selection at each position yields [3, 5, 7]. array indices select corresponding branch positions. The outer COUNT must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNT(CHOOSE({1,2,1},{3,100,7},5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under PRODUCT array indices select corresponding branch positions",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Array selection at each position yields [3, 5, 7]. array indices select corresponding branch positions. The outer PRODUCT must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PRODUCT(CHOOSE({1,2,1},{3,100,7},5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 105
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 2100.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MIN array indices select corresponding branch positions",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Array selection at each position yields [3, 5, 7]. array indices select corresponding branch positions. The outer MIN must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MIN(CHOOSE({1,2,1},{3,100,7},5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MAX array indices select corresponding branch positions",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Array selection at each position yields [3, 5, 7]. array indices select corresponding branch positions. The outer MAX must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAX(CHOOSE({1,2,1},{3,100,7},5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 7
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 100.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under AVERAGE array indices select corresponding branch positions",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Array selection at each position yields [3, 5, 7]. array indices select corresponding branch positions. The outer AVERAGE must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGE(CHOOSE({1,2,1},{3,100,7},5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5.0
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 36.666666666666664
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MEDIAN array indices select corresponding branch positions",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Array selection at each position yields [3, 5, 7]. array indices select corresponding branch positions. The outer MEDIAN must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MEDIAN(CHOOSE({1,2,1},{3,100,7},5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 5
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 7.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under SUMSQ array indices select corresponding branch positions",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Array selection at each position yields [3, 5, 7]. array indices select corresponding branch positions. The outer SUMSQ must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMSQ(CHOOSE({1,2,1},{3,100,7},5))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 83
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 10058.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under SUM array indices retain every selected scalar",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Array selection at each position yields [7, 11, 13]. array indices retain every selected scalar. The outer SUM must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUM(CHOOSE({1,2,3},7,11,13))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 31
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 7.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under COUNT array indices retain every selected scalar",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Array selection at each position yields [7, 11, 13]. array indices retain every selected scalar. The outer COUNT must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "COUNT(CHOOSE({1,2,3},7,11,13))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 1.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under PRODUCT array indices retain every selected scalar",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Array selection at each position yields [7, 11, 13]. array indices retain every selected scalar. The outer PRODUCT must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PRODUCT(CHOOSE({1,2,3},7,11,13))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1001
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 7.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MIN array indices retain every selected scalar",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Array selection at each position yields [7, 11, 13]. array indices retain every selected scalar. The outer MIN must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MIN(CHOOSE({1,2,3},7,11,13))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 7
+          },
+          "tolerance": 1e-11
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MAX array indices retain every selected scalar",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Array selection at each position yields [7, 11, 13]. array indices retain every selected scalar. The outer MAX must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MAX(CHOOSE({1,2,3},7,11,13))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 13
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 7.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under AVERAGE array indices retain every selected scalar",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Array selection at each position yields [7, 11, 13]. array indices retain every selected scalar. The outer AVERAGE must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "AVERAGE(CHOOSE({1,2,3},7,11,13))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 10.333333333333334
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 7.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under MEDIAN array indices retain every selected scalar",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Array selection at each position yields [7, 11, 13]. array indices retain every selected scalar. The outer MEDIAN must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "MEDIAN(CHOOSE({1,2,3},7,11,13))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 11
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 7.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility selector-sibling-arrays: CHOOSE under SUMSQ array indices retain every selected scalar",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/choose-function",
+        "Array selection at each position yields [7, 11, 13]. array indices retain every selected scalar. The outer SUMSQ must see the complete selected sequence, without premature scalarization or concatenating full branches.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "SUMSQ(CHOOSE({1,2,3},7,11,13))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 339
+          },
+          "tolerance": 1e-11,
+          "known_gap": {
+            "reason": "Array selector results are reduced to one branch or fail to select the corresponding value at each index before the aggregate consumes them. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
+            "actual": {
+              "type": "number",
+              "value": 49.0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

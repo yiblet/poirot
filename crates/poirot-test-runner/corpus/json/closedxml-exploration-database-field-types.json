@@ -1,0 +1,730 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": [
+      {
+        "cell": "S!A1",
+        "content": {
+          "type": "blank"
+        }
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "ClosedXML exploration database-field-types: DCOUNTA includes empty text but skips blank",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dcounta-function",
+        "Database result-field policy: DCOUNTA includes empty text but skips blank. Selection criterion and field data types are independent; retain the selected field type until its consumer requests a counting or numeric policy.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Key"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "text",
+            "value": "Value"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E1",
+          "content": {
+            "type": "text",
+            "value": "Key"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E2",
+          "content": {
+            "type": "text",
+            "value": "=x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "text",
+            "value": ""
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DCOUNTA(A1:B4,2,E1:E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration database-field-types: DSUM referenced numeric text is not a number",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dsum-function",
+        "Database result-field policy: DSUM referenced numeric text is not a number. Selection criterion and field data types are independent; retain the selected field type until its consumer requests a counting or numeric policy.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Key"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "text",
+            "value": "Value"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E1",
+          "content": {
+            "type": "text",
+            "value": "Key"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E2",
+          "content": {
+            "type": "text",
+            "value": "=x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DSUM(A1:B4,2,E1:E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DSUM(A1:B4,2,E1:E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration database-field-types: DGET retains selected numeric text type",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dget-function",
+        "Database result-field policy: DGET retains selected numeric text type. Selection criterion and field data types are independent; retain the selected field type until its consumer requests a counting or numeric policy.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Key"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "text",
+            "value": "Value"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "one"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "two"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "three"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E1",
+          "content": {
+            "type": "text",
+            "value": "Key"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E2",
+          "content": {
+            "type": "text",
+            "value": "=two"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 11
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "text",
+            "value": "19"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 29
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DGET(A1:B4,2,E1:E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "text",
+            "value": "19"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "TYPE(DGET(A1:B4,2,E1:E2))"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration database-field-types: DAVERAGE zero contributes to denominator",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/daverage-function",
+        "Database result-field policy: DAVERAGE zero contributes to denominator. Selection criterion and field data types are independent; retain the selected field type until its consumer requests a counting or numeric policy.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-statistics-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Key"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "text",
+            "value": "Value"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E1",
+          "content": {
+            "type": "text",
+            "value": "Key"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E2",
+          "content": {
+            "type": "text",
+            "value": "=x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DAVERAGE(A1:B4,2,E1:E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DAVERAGE(A1:B4,2,E1:E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "ClosedXML exploration database-field-types: DCOUNT record count versus numeric field count contrasts",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/dcount-function",
+        "Database result-field policy: DCOUNT omitted field counts matching records. Selection criterion and field data types are independent; retain the selected field type until its consumer requests a counting or numeric policy.",
+        "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See the hash-bound exploration evidence record for this suite. Calc corroboration is not a native Excel execution claim.",
+        "Database result-field policy: DCOUNT text field counts no numeric records. Selection criterion and field data types are independent; retain the selected field type until its consumer requests a counting or numeric policy."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Key"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "text",
+            "value": "Value"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E1",
+          "content": {
+            "type": "text",
+            "value": "Key"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E2",
+          "content": {
+            "type": "text",
+            "value": "=x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "text",
+            "value": "2"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "blank"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DCOUNT(A1:B4,,E1:E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DCOUNT(A1:B4,2,E1:E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "type": "text",
+            "value": "Key"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B1",
+          "content": {
+            "type": "text",
+            "value": "Value"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A2",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A3",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!A4",
+          "content": {
+            "type": "text",
+            "value": "x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E1",
+          "content": {
+            "type": "text",
+            "value": "Key"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!E2",
+          "content": {
+            "type": "text",
+            "value": "=x"
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B2",
+          "content": {
+            "type": "number",
+            "value": 2
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B3",
+          "content": {
+            "type": "number",
+            "value": 3
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!B4",
+          "content": {
+            "type": "number",
+            "value": 4
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DCOUNT(A1:B4,\"Key\",E1:E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          }
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "DCOUNTA(A1:B4,\"Key\",E1:E2)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 3
+          }
+        }
+      ]
+    }
+  ]
+}

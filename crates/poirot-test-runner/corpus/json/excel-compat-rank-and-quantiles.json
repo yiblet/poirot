@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "builtin_policy": "ExcelDocumentation",
+  "workbook": {
+    "sheets": [
+      "S"
+    ],
+    "cells": []
+  },
+  "scenarios": [
+    {
+      "name": "Excel compatibility rank-and-quantiles: QUARTILE.INC fractional quart truncates",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/quartile-inc-function",
+        "Inclusive quartile fractional quart truncates. The five sorted positions make quartile one exactly 4; quart is integer-truncated before selecting its probability.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "QUARTILE.INC({1,4,9,16,16},1.9)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility rank-and-quantiles: QUARTILE.INC minimum endpoint",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/quartile-inc-function",
+        "Inclusive quartile minimum endpoint. The five sorted positions make quartile one exactly 4; quart is integer-truncated before selecting its probability.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "QUARTILE.INC({1,4,9,16,16},0)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility rank-and-quantiles: QUARTILE.INC maximum endpoint",
+      "evidence": [
+        "https://support.microsoft.com/en-us/excel/functions/quartile-inc-function",
+        "Inclusive quartile maximum endpoint. The five sorted positions make quartile one exactly 4; quart is integer-truncated before selecting its probability.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "QUARTILE.INC({1,4,9,16,16},4)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 16
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility rank-and-quantiles: percent rank duplicate minimum uses first rank contrasting controls",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestPercentRank.java",
+        "Adapt the source percent-rank rule: duplicate minimum uses first rank. Data include three copies of the minimum; precision removes later decimal places.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PERCENTRANK({1,1,1,2,3,4,8,11,12,13},1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          },
+          "tolerance": 1e-12
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PERCENTRANK.INC({1,1,1,2,3,4,8,11,12,13},1)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility rank-and-quantiles: percent rank duplicate maximum rank stable contrasting controls",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestPercentRank.java",
+        "Adapt the source percent-rank rule: duplicate maximum rank stable. Data include three copies of the minimum; precision removes later decimal places.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PERCENTRANK({1,1,1,2,3,4,8,11,12,13},13)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          },
+          "tolerance": 1e-12
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PERCENTRANK.INC({1,1,1,2,3,4,8,11,12,13},13)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 1
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    },
+    {
+      "name": "Excel compatibility rank-and-quantiles: percent rank interpolates value before truncation contrasting controls",
+      "evidence": [
+        "https://github.com/apache/poi/blob/dc577a8cbcdec22ae5547615502d63b2051f35a6/poi/src/test/java/org/apache/poi/ss/formula/functions/TestPercentRank.java",
+        "Adapt the source percent-rank rule: interpolates value before truncation. Data include three copies of the minimum; precision removes later decimal places.",
+        "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
+        "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-authored-boundaries-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+      ],
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PERCENTRANK({1,1,1,2,3,4,8,11,12,13},5,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.583
+          },
+          "tolerance": 1e-12
+        },
+        {
+          "action": "set",
+          "cell": "S!Z100",
+          "content": {
+            "formula": "PERCENTRANK.INC({1,1,1,2,3,4,8,11,12,13},5,3)"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!Z100",
+          "expected": {
+            "type": "number",
+            "value": 0.583
+          },
+          "tolerance": 1e-12
+        }
+      ]
+    }
+  ]
+}
