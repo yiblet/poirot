@@ -80,13 +80,10 @@ impl NumberPlan {
     /// Compile tokens under the selected source-compatibility contract.
     pub(super) fn compile_with_source(
         tokens: &[Token],
-        strict: bool,
-        source: crate::FormatSourcePolicy,
+        decimal_format: bool,
     ) -> Result<Self, FormatError> {
-        let mut plan = Self::compile_numeric(tokens, strict)?;
-        if source == crate::FormatSourcePolicy::Poi7321209DataFormatter
-            && let NumberProgram::Numeric(p) = &mut plan.program
-        {
+        let mut plan = Self::compile_numeric(tokens)?;
+        if decimal_format && let NumberProgram::Numeric(p) = &mut plan.program {
             // DecimalFormat normalization excludes spacing placeholders.
             if !p.integer.contains(&'?') && !p.decimal.contains(&'?') {
                 p.minimum_visible_digit = true;

@@ -34,7 +34,6 @@ mod scalar;
 pub use context::{CoercionV2Context, CoercionV2Failure, Limits, Mismatch, Resource, Usage};
 pub use input::Input;
 pub use poirot_functions_core::{CellError, CellValue, Origin, TextRef};
-pub use poirot_numeric::number_text::SourceVersion as NumberTextSource;
 pub use request::{Choice, CoerceV2, FirstOf, Signature, coercev2, coercev2_args};
 pub use scalar::{
     ArrayMember, DecimalNumber, Direct, ExactBoolean, ExactError, ExactNumber, ExactText,

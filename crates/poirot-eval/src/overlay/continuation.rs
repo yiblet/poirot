@@ -50,7 +50,7 @@ impl Continuation {
             currency: _,
             number_locale: _,
             text_policy: _,
-            numeric_policy: _,
+
             builtin_policy: _,
             array_result_policy: _,
             expression_demand: _,

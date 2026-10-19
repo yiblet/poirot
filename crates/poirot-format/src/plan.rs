@@ -1,5 +1,4 @@
 //! Compilation is pure: policy and syntax produce an immutable reusable program.
-//! Fractions use compiled bounded layouts; LegacyFraction retains its public name.
 use super::*;
 
 mod compile;
@@ -14,10 +13,8 @@ pub use compile::{
 /// Source identity is immutable and separate from validation and resource budgets.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum FormatSourcePolicy {
-    /// Use the library's legacy Excel-style rendering contract.
-    #[default]
-    LegacyExcelStyle,
     /// Use the pinned POI DataFormatter source contract.
+    #[default]
     Poi7321209DataFormatter,
 }
 /// Value-dependent rendering of an already compiled format program.
@@ -26,19 +23,9 @@ pub use execute::render_value;
 #[cfg(test)]
 mod tests;
 
-/// Eager validation for new consumers, or deferred layout errors for legacy wrappers.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ValidationPolicy {
-    /// Validate every section while compiling the format.
-    AllSections,
-    /// Defer invalid-layout errors until their section is selected.
-    SelectedSection,
-}
 /// Compile budgets may tighten existing limits; they do not enable unsupported grammar.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FormatCompilePolicy {
-    /// Whether unsupported/invalid sections fail eagerly or when selected.
-    pub validation: ValidationPolicy,
     /// Maximum token count admitted for one section.
     pub max_tokens_per_section: usize,
     /// Maximum literal text admitted during compilation.
@@ -49,22 +36,13 @@ pub struct FormatCompilePolicy {
 impl Default for FormatCompilePolicy {
     fn default() -> Self {
         Self {
-            validation: ValidationPolicy::AllSections,
             max_tokens_per_section: 32768,
             max_literal_characters: 32767,
             max_output_characters: 32767,
         }
     }
 }
-impl FormatCompilePolicy {
-    /// Select deferred section validation for legacy formatting wrappers.
-    pub fn legacy_compatible() -> Self {
-        Self {
-            validation: ValidationPolicy::SelectedSection,
-            ..Self::default()
-        }
-    }
-}
+
 /// English names and invariant numeric punctuation are the supported display locale.
 /// System selectors use a pinned US regional policy (never the host locale):
 /// `dddd, mmmm d, yyyy` and `h:mm:ss AM/PM`. Other LCIDs fail explicitly.
@@ -143,8 +121,7 @@ impl From<FormatError> for FormatCompileError {
         }
     }
 }
-/// Compiled modes and named legacy paths are inspectable.
-/// LegacyFraction is retained for API stability; its layout is now compiled.
+/// Compiled section rendering modes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SectionKind {
     /// Fixed-point numeric layout.
@@ -156,21 +133,18 @@ pub enum SectionKind {
     /// Literal-only section.
     Literal,
     /// Compiled fraction layout exposed under its established name.
-    LegacyFraction,
+    Fraction,
     /// Compiled calendar or elapsed-time layout.
-    LegacyDateTime,
-    /// Invalid numeric layout whose error is deferred until selection.
-    DeferredInvalidNumber,
+    DateTime,
 }
 /// Executable section payload retained after pure format compilation.
 #[derive(Debug, Clone, PartialEq)]
 enum SectionProgram {
     Number(NumberPlan),
-    LegacyFraction(number::FractionPlan),
-    LegacyDateTime(date::DatePlan),
-    DeferredInvalidNumber(FormatError),
+    Fraction(number::FractionPlan),
+    DateTime(date::DatePlan),
 }
-/// Immutable section. Text substitution is currently an explicit legacy adapter.
+/// Immutable section with text-substitution tokens.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SectionPlan {
     kind: SectionKind,
@@ -199,15 +173,9 @@ impl SectionPlan {
             _ => None,
         }
     }
-    /// Inspect an invalid-layout diagnostic retained for deferred validation.
-    pub fn deferred_error(&self) -> Option<&FormatError> {
-        match &self.program {
-            SectionProgram::DeferredInvalidNumber(e) => Some(e),
-            _ => None,
-        }
-    }
+
     /// Whether text values pass through the section's text-substitution adapter.
-    pub fn uses_legacy_text_adapter(&self) -> bool {
+    pub fn uses_text_adapter(&self) -> bool {
         true
     }
 }
@@ -236,9 +204,5 @@ impl FormatPlan {
     /// identity or a substitute for equality when authorizing cache reuse.
     pub fn fingerprint(&self) -> u64 {
         self.fingerprint
-    }
-    /// Whether any section retains a diagnostic until value selection.
-    pub fn has_deferred_errors(&self) -> bool {
-        self.sections.iter().any(|s| s.deferred_error().is_some())
     }
 }

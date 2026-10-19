@@ -1,4 +1,4 @@
-#![doc = include_str!("../../FORMULA.md")]
+//! Formula scanning, parsing, and rendering.
 
 mod ast;
 /// Allocation-light token classification used for safe compiler-template rebinding.

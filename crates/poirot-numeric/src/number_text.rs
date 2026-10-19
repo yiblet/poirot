@@ -2,39 +2,23 @@
 //! Pinned POI7321209 NumberToTextConverter.toText delegates to the shared
 //! NormalisedDecimal / MutableFPNumber kernel; arithmetic values remain untouched.
 
-/// Numeric-to-text source contract selected independently of display formatting.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum SourceVersion {
-    /// Legacy ROI numeric-text conversion contract.
-    PoirotF6c572d,
-    /// Pinned POI number-to-text conversion contract.
-    Poi7321209,
-}
-
 /// Admit this bound before rendering. It preserves the evaluator's existing
 /// conservative numeric-text admission; the kernel itself has bounded precision.
 pub const ALLOCATION_BOUND: usize = 512;
 
 /// Render binary64 input using the selected numeric-text source contract.
-pub fn render(value: f64, source: SourceVersion) -> String {
-    match source {
-        SourceVersion::PoirotF6c572d => value.to_string(),
-        SourceVersion::Poi7321209 => super::coerce_number_to_text(value),
-    }
+pub fn render(value: f64) -> String {
+    super::coerce_number_to_text(value)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn source_selection_preserves_value_and_legacy_projection() {
+    fn spreadsheet_projection_preserves_numeric_value() {
         let value = -14.000000000000002_f64;
         let bits = value.to_bits();
-        assert_eq!(render(value, SourceVersion::Poi7321209), "-14");
-        assert_eq!(
-            render(value, SourceVersion::PoirotF6c572d),
-            "-14.000000000000002"
-        );
+        assert_eq!(render(value), "-14");
         assert_eq!(value.to_bits(), bits);
     }
     #[test]
@@ -59,10 +43,7 @@ mod tests {
             0x7ff0_0000_0000_0001,
             0xfff8_0000_0000_0000,
         ] {
-            assert_eq!(
-                render(f64::from_bits(bits), SourceVersion::Poi7321209),
-                "2.6965397022935E+308"
-            );
+            assert_eq!(render(f64::from_bits(bits)), "2.6965397022935E+308");
         }
     }
 }

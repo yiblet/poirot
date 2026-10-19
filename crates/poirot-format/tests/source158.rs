@@ -8,27 +8,27 @@ use poirot_model::CellValue;
 fn source_identity_normalization_and_observed_zero_controls() {
     let policy = FormatCompilePolicy::default();
     let source = FormatSourcePolicy::Poi7321209DataFormatter;
-    for (pattern, number, expected, legacy) in [
-        ("$###,###", 0., "$0", "$"),
-        ("###", 0., "0", ""),
-        ("$###,###", 0.4, "$0", "$"),
-        ("$###,###", -0.4, "-$0", "-$"),
-        ("$###,###", 0.5, "$1", "$1"),
-        ("$###,###", -0.5, "-$1", "-$1"),
-        ("$#,##0", 0., "$0", "$0"),
-        ("#.##", 0., "0", ""),
-        (".###", 0., ".0", ""),
-        (".###", 0.4, ".4", ".4"),
-        ("###.", 0., "0.", "."),
-        ("#.##", 0.4, "0.4", ".4"),
-        ("###%", 0.004, "0%", "%"),
-        ("###,", 400., "0", ""),
+    for (pattern, number, expected) in [
+        ("$###,###", 0., "$0"),
+        ("###", 0., "0"),
+        ("$###,###", 0.4, "$0"),
+        ("$###,###", -0.4, "-$0"),
+        ("$###,###", 0.5, "$1"),
+        ("$###,###", -0.5, "-$1"),
+        ("$#,##0", 0., "$0"),
+        ("#.##", 0., "0"),
+        (".###", 0., ".0"),
+        (".###", 0.4, ".4"),
+        ("###.", 0., "0."),
+        ("#.##", 0.4, "0.4"),
+        ("###%", 0.004, "0%"),
+        ("###,", 400., "0"),
     ] {
         let pinned = compile_format_with_source(pattern, policy, source).unwrap();
         let old = compile_format(pattern, policy).unwrap();
         assert_eq!(pinned.source_policy(), source);
-        assert_ne!(pinned, old);
-        assert_ne!(pinned.fingerprint(), old.fingerprint());
+        assert_eq!(pinned, old);
+        assert_eq!(pinned.fingerprint(), old.fingerprint());
         assert_eq!(
             pinned,
             compile_program_with_source(&parse_format(pattern).unwrap(), policy, source).unwrap()
@@ -45,7 +45,7 @@ fn source_identity_normalization_and_observed_zero_controls() {
                 .unwrap(),
             expected
         );
-        for (plan, want) in [(&pinned, expected), (&old, legacy)] {
+        for (plan, want) in [(&pinned, expected)] {
             assert_eq!(
                 render_value(&CellValue::Number(number), plan, Default::default())
                     .unwrap()
@@ -87,18 +87,15 @@ fn unobserved_routes_preserve_existing_layouts_and_intentional_hiding() {
 
 #[test]
 fn observed_fraction_and_section_routes_preserve_source_specific_layouts() {
-    for (pattern, number, pinned, legacy) in [
-        ("# ?/?", 0., "0", "0    "),
-        ("# ?/?", 1., "1", "1    "),
-        ("# ?/?", 0.5, "1/2", " 1/2"),
-        ("#.0;(#.00)", 1.25, "1.3", "1.3"),
-        ("#.0;(#.00)", -1.25, "(1.3)", "(1.25)"),
-        ("$###,###;-$###,###;\"ZERO\"", 0., "ZERO", "ZERO"),
+    for (pattern, number, pinned) in [
+        ("# ?/?", 0., "0"),
+        ("# ?/?", 1., "1"),
+        ("# ?/?", 0.5, "1/2"),
+        ("#.0;(#.00)", 1.25, "1.3"),
+        ("#.0;(#.00)", -1.25, "(1.3)"),
+        ("$###,###;-$###,###;\"ZERO\"", 0., "ZERO"),
     ] {
-        for (source, want) in [
-            (FormatSourcePolicy::LegacyExcelStyle, legacy),
-            (FormatSourcePolicy::Poi7321209DataFormatter, pinned),
-        ] {
+        for (source, want) in [(FormatSourcePolicy::Poi7321209DataFormatter, pinned)] {
             let plan = compile_format_with_source(pattern, Default::default(), source).unwrap();
             assert_eq!(plan.source_policy(), source);
             assert_eq!(

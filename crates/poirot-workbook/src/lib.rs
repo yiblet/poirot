@@ -1,4 +1,4 @@
-#![doc = include_str!("../README.md")]
+//! Workbook editing, evaluation contexts and explicit save planning for poirot.
 
 /// Formula compilation and bounded overlay execution APIs.
 pub use poirot_eval as eval;
@@ -26,7 +26,7 @@ pub use eval::overlay::{
 /// Source workbook and owned changes that can be applied atomically.
 pub use model::{Workbook, WorkbookChange};
 /// File-backed source facade and borrowed checked export plans.
-pub use public::{SavePlan, Spreadsheet, WorkbookError};
+pub use public::{SavePlan, Spreadsheet, WorkbookError, XlsSaveBuilder, XlsxSaveBuilder};
 
 /// Serde view retaining overlay source, compiled programs, and incremental results.
 pub use eval::overlay::snapshot::Snapshot as OverlaySnapshot;

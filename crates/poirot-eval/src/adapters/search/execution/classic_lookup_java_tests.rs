@@ -20,10 +20,7 @@ fn explicit_java_profile_alone_admits_plain_lone_surrogates() {
         ("IFERROR(VLOOKUP(D1,A1:B1,2,FALSE),99)", Number(42.)),
         ("IFERROR(HLOOKUP(D1,A1:A2,2,FALSE),99)", Number(42.)),
     ] {
-        for source in [
-            TextSourceVersion::PoirotF6c572d,
-            TextSourceVersion::Poi7321209OpenJdk21Unicode15,
-        ] {
+        for source in [TextSourceVersion::Poi7321209OpenJdk21Unicode15] {
             let outcome = run_formula_with_configuration(
                 &w,
                 0,
@@ -32,15 +29,7 @@ fn explicit_java_profile_alone_admits_plain_lone_surrogates() {
                 &configuration(source),
                 EvaluationBudgets::default(),
             );
-            if source == TextSourceVersion::PoirotF6c572d {
-                assert!(matches!(
-                    outcome,
-                    EvaluationOutcome::Aborted {
-                        failure: EvaluationFailure::UnsupportedCapability { .. },
-                        ..
-                    }
-                ));
-            } else {
+            {
                 assert!(
                     matches!(outcome, EvaluationOutcome::Complete { value, .. } if value == expected)
                 );
@@ -98,9 +87,7 @@ fn numeric_lookup_has_no_java_mapping_admission() {
             },
         )
     };
-    let legacy = run(TextSourceVersion::PoirotF6c572d);
     let java = run(TextSourceVersion::Poi7321209OpenJdk21Unicode15);
-    assert_eq!(legacy.usage(), java.usage());
     assert!(matches!(
         java,
         EvaluationOutcome::Complete {
@@ -108,84 +95,4 @@ fn numeric_lookup_has_no_java_mapping_admission() {
             ..
         }
     ));
-}
-
-fn historical_legacy_compare(
-    key: &CellValue,
-    value: &CellValue,
-    mode: SearchMode,
-    is_match: bool,
-    budget: &mut BudgetMeter,
-) -> FunctionResult<Option<Ordering>> {
-    budget.charge(WorkKind::Comparison, 1)?;
-    let zero = Number(0.);
-    let key = if *key == Blank { &zero } else { key };
-    let same = (key.text_ref().is_some() && value.text_ref().is_some())
-        || matches!(
-            (key, value),
-            (Number(_), Number(_)) | (Boolean(_), Boolean(_))
-        );
-    if !same {
-        return Ok(None);
-    }
-    if let (Some(pattern), Some(candidate)) = (key.text_ref(), value.text_ref()) {
-        // MATCH uses wildcard comparison in all modes; V/H lookup uses it only in exact mode.
-        if is_match || mode == SearchMode::Exact {
-            let pattern = checked_text_view(pattern, budget)?;
-            if pattern.contains(['*', '?']) {
-                let candidate = checked_text_view(candidate, budget)?;
-                return Ok(Some(if wildcard(&pattern, &candidate, budget)? {
-                    Ordering::Equal
-                } else {
-                    Ordering::Less
-                }));
-            }
-        }
-    }
-    compare(key, value, budget).map(Some)
-}
-
-#[test]
-fn legacy_comparison_preserves_pre146_result_and_exact_admission_effects() {
-    let values = [
-        Text("plain".into()),
-        Text("PLAIN".into()),
-        Text("p*".into()),
-        Text("p?ain".into()),
-        CellValue::from(poirot_model::ExcelText::from_units(vec![0xd800])),
-        Number(1.),
-        Blank,
-    ];
-    for key in &values {
-        for value in &values {
-            for mode in [
-                SearchMode::Exact,
-                SearchMode::Ascending,
-                SearchMode::Descending,
-            ] {
-                for is_match in [false, true] {
-                    for work in [1, 8, 10000] {
-                        let limits = EvaluationBudgets {
-                            run_work: work,
-                            ..Default::default()
-                        };
-                        let mut old = BudgetMeter::new(limits).unwrap();
-                        let mut current = BudgetMeter::new(limits).unwrap();
-                        let expected =
-                            historical_legacy_compare(key, value, mode, is_match, &mut old);
-                        let actual = lookup_compare(
-                            key,
-                            value,
-                            mode,
-                            is_match,
-                            TextSourceVersion::PoirotF6c572d,
-                            &mut current,
-                        );
-                        assert_eq!(actual, expected);
-                        assert_eq!(current.usage, old.usage);
-                    }
-                }
-            }
-        }
-    }
 }

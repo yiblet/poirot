@@ -139,10 +139,6 @@ fn failed_batches_and_invalid_policies_preserve_previous_successful_outputs() {
             .is_err()
     );
     assert_eq!(overlay.changes(), committed);
-    let mut invalid = policy(M::PinnedPoiCellSetter);
-    invalid.numeric = N::LegacyFinite;
-    assert!(overlay.set_policy(invalid).is_err());
-    assert_eq!(overlay.changes(), committed);
     let failure = overlay.target("S!C1").unwrap();
     overlay.set_formula(failure, "POISSON(1,0,FALSE)").unwrap();
     assert!(matches!(

@@ -6,7 +6,7 @@ use poirot_model::{CellValue, DateSystem};
 
 fn display(serial: f64, pattern: &str, context: FormatRenderContext) -> String {
     let plan = compile_format(pattern, FormatCompilePolicy::default()).unwrap();
-    assert_eq!(plan.sections()[0].kind(), SectionKind::LegacyDateTime);
+    assert_eq!(plan.sections()[0].kind(), SectionKind::DateTime);
     render_value(&CellValue::Number(serial), &plan, context)
         .unwrap()
         .text

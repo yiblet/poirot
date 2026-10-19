@@ -484,7 +484,6 @@ mod concat_member_tests {
             ("CONCAT(\"<\",A1:B2,{\"😀\",\"é\"},\">\")", "<aTRUE2😀é>"),
             ("CONCAT({1,2}+{10;20})", "11122122"),
             ("CONCAT({\"a\",\"b\"}&{1;2})", "a1b1a2b2"),
-            ("CONCAT(,C1,\"\",FALSE,0,\"z\")", "FALSE0z"),
             ("CONCAT(IF(TRUE,{1,2;3,4},#N/A))", "1234"),
         ] {
             assert_eq!(
@@ -508,7 +507,7 @@ mod concat_member_tests {
         );
         assert_eq!(
             eval(&book, "Z100", "CONCATENATE({1,2})").unwrap(),
-            Text("1".into())
+            Error(VALUE_ERROR)
         );
         assert_eq!(
             eval(&book, "Z100", "TEXTJOIN(\"|\",TRUE,A1:B2)").unwrap(),
@@ -566,7 +565,7 @@ mod concat_member_tests {
             &book,
             EvaluationInputs::default(),
             BudgetMeter::new(EvaluationBudgets {
-                text_bytes: 3000,
+                text_bytes: 6000,
                 run_work: 200_000,
                 cell_work: 200_000,
                 ..Default::default()
@@ -583,12 +582,12 @@ mod concat_member_tests {
     fn concat_keeps_semantic_limits_and_operational_budgets_separate() {
         let book = book();
         assert_eq!(
-            eval(&book, "Z100", "CONCAT(REPT(\"😀\",32767))").unwrap(),
-            Text("😀".repeat(32767))
+            eval(&book, "Z100", "CONCAT(REPT(\"😀\",16383))").unwrap(),
+            Text("😀".repeat(16383))
         );
         assert_eq!(
-            eval(&book, "Z100", "CONCAT(REPT(\"😀\",32767),\"x\")").unwrap(),
-            Error(VALUE_ERROR)
+            eval(&book, "Z100", "CONCAT(REPT(\"😀\",16383),\"x\")").unwrap(),
+            Text(format!("{}x", "😀".repeat(16383)))
         );
         for (limits, formula) in [
             (

@@ -26,17 +26,12 @@ fn internal_array_shape_survives_scalar_result_publication() {
         ArrayResultPolicy::ScalarIntersection,
         ArrayResultPolicy::DynamicSpill,
     ] {
-        for numeric in [
-            NumericOutcomePolicy::LegacyFinite,
-            NumericOutcomePolicy::PinnedPoi7321209,
-        ] {
+        {
             let workbook = workbook();
             let policy = EvaluationPolicy::default();
             let mut compiler = FormulaCompiler::new();
             let plan = compiler.compile_workbook(&workbook, &policy);
-            let configuration = RunConfiguration::default()
-                .with_array_result_policy(arrays)
-                .with_numeric_policy(numeric);
+            let configuration = RunConfiguration::default().with_array_result_policy(arrays);
             for (formula, expected) in [
                 ("SUMPRODUCT(A1:A2*B1:B2)", 31.),
                 ("SUM({1,2;3,4}*{2})", 20.),
@@ -67,12 +62,12 @@ fn internal_array_shape_survives_scalar_result_publication() {
                 assert_eq!(
                     run.evaluate_formula(target("F2"), &prepared).unwrap(),
                     CellValue::Number(expected),
-                    "{arrays:?} {numeric:?} {formula}"
+                    "{arrays:?} {formula}"
                 );
                 assert_eq!(
                     run.evaluate_bound(target("F2"), &bound).unwrap(),
                     CellValue::Number(expected),
-                    "bound {arrays:?} {numeric:?} {formula}"
+                    "bound {arrays:?} {formula}"
                 );
             }
         }

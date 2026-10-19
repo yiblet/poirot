@@ -1,16 +1,10 @@
 # poirot-xls
 
-Write bounded BIFF8 XLS workbooks from poirot's sparse model. The writer uses a
-reusable CFB container and follows supported HSSF record layouts from Apache POI.
-It does not call Java or evaluate formulas.
+Write the shared workbook model to legacy BIFF8 `.xls` files.
 
-`XlsExportPlan::new(&workbook, policy)` validates the source and retains its borrow.
-`to_buffer` serializes it; `write_file` writes the result after serialization.
-`poirot-workbook::Spreadsheet::plan_xls_save` exposes the same plan in the composed
-workflow. See [export planning](EXPORT_PLANS.md) for supported records, formula
-representation and resource limits.
+Use `XlsExportPlan` with `XlsExportPolicy` to check representation and resource
+limits before writing, or `write_xls` for the default workflow. Unsupported
+formulas and features can be refused during planning. Export preserves saved
+formula results without recalculating them.
 
-Unsupported formulas or fidelity requirements return typed errors rather than
-replacing formulas with cached literals. Rich formatting, arbitrary opaque
-records and general external/array formula encoding are outside scope. Import
-belongs to `poirot-io`; calculation belongs to `poirot-eval`.
+XLS import lives in [poirot-io](../poirot-io/README.md).

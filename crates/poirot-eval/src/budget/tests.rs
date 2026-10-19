@@ -210,7 +210,7 @@ fn matrix_and_text_limits_abort_before_growth_and_dense_reads() {
         limited,
     ));
     assert_eq!(error.kind, BudgetKind::TextBytes);
-    assert_eq!(error.requested, 6);
+    assert_eq!(error.requested, 12);
     let limited = EvaluationBudgets {
         materialized_values: 2,
         ..EvaluationBudgets::default()
@@ -557,15 +557,17 @@ fn expanding_text_checks_output_bytes_before_growth() {
     let context = EvaluationInputs::default();
     for (formula, limit, requested) in [
         ("SUBSTITUTE(\"aaaa\",\"a\",\"bbbb\")", 8, 16),
-        ("REPLACE(\"abc\",2,1,\"123456\")", 7, 8),
+        ("REPLACE(\"abc\",2,1,\"123456\")", 7, 12),
         ("UPPER(\"ΐ\")", 4, 6),
     ] {
-        let (error, _) = failure(run_plan(
+        let (error, _) = failure(run_plan_with_configuration(
             &workbook,
             0,
             AT,
             &plan(formula),
-            context,
+            &RunConfiguration::from(context).with_text_policy(TextSemanticsPolicy {
+                source: TextSourceVersion::Poi7321209OpenJdk21Unicode15,
+            }),
             EvaluationBudgets {
                 text_bytes: limit,
                 ..EvaluationBudgets::default()

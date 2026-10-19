@@ -7,16 +7,14 @@ fn book() -> Workbook {
 fn at(col: u32) -> CellAddress {
     CellAddress { row: 0, col }
 }
-fn configured(policy: NumericOutcomePolicy) -> RunConfiguration {
-    RunConfiguration::default().with_numeric_policy(policy)
-}
-fn run(w: &Workbook, formula: &str, policy: NumericOutcomePolicy) -> EvaluationOutcome<CellValue> {
+
+fn run(w: &Workbook, formula: &str) -> EvaluationOutcome<CellValue> {
     run_formula_with_configuration(
         w,
         0,
         at(25),
         formula,
-        &configured(policy),
+        &RunConfiguration::default(),
         EvaluationBudgets::default(),
     )
 }
@@ -47,36 +45,21 @@ fn configured_all_inverse_spellings_consume_raw_source_result_contract() {
         "NORM.INV(A1,0,1)",
     ] {
         assert_eq!(
-            complete(run(&w, formula, NumericOutcomePolicy::LegacyFinite)),
-            Error(Num),
-            "{formula}"
-        );
-        assert_eq!(
-            bits(complete(run(
-                &w,
-                formula,
-                NumericOutcomePolicy::PinnedPoi7321209
-            ))),
+            bits(complete(run(&w, formula))),
             f64::NEG_INFINITY.to_bits(),
             "{formula}"
         );
     }
-    for p in [
-        NumericOutcomePolicy::LegacyFinite,
-        NumericOutcomePolicy::PinnedPoi7321209,
-    ] {
+    {
         for f in [
             "NORMSINV(0)",
             "NORM.S.INV(1)",
             "NORMINV(0,0,1)",
             "NORM.INV(1,0,1)",
         ] {
-            assert_eq!(complete(run(&w, f, p)), Error(Num));
+            assert_eq!(complete(run(&w, f)), Error(Num));
         }
-        assert_eq!(
-            bits(complete(run(&w, "NORMSINV(0.5)", p))),
-            0.0f64.to_bits()
-        );
+        assert_eq!(bits(complete(run(&w, "NORMSINV(0.5)"))), 0.0f64.to_bits());
     }
 }
 #[test]
@@ -86,61 +69,55 @@ fn actual_consumers_distinguish_cell_errors_source_numbers_and_source_exceptions
         .unwrap()
         .set_formula(at(0), "NORMSINV(1E-300)", Blank)
         .unwrap();
-    let p = NumericOutcomePolicy::PinnedPoi7321209;
     for f in ["A1", "IFERROR(A1,42)", "IFERROR(NORMSINV(1E-300),42)"] {
-        assert_eq!(bits(complete(run(&w, f, p))), f64::NEG_INFINITY.to_bits());
+        assert_eq!(bits(complete(run(&w, f))), f64::NEG_INFINITY.to_bits());
     }
-    assert_eq!(complete(run(&w, "ISNUMBER(A1)", p)), Boolean(true));
+    assert_eq!(complete(run(&w, "ISNUMBER(A1)")), Boolean(true));
     for f in ["SUM(A1)", "SUM(NORMSINV(1E-300))", "ABS(A1)"] {
-        assert_eq!(complete(run(&w, f, p)), Error(Num));
+        assert_eq!(complete(run(&w, f)), Error(Num));
     }
-    assert_eq!(complete(run(&w, "IFERROR(SUM(A1),42)", p)), Number(42.0));
-    assert_eq!(complete(run(&w, "SUM(A1,#DIV/0!)", p)), Error(Div0));
+    assert_eq!(complete(run(&w, "IFERROR(SUM(A1),42)")), Number(42.0));
+    assert_eq!(complete(run(&w, "SUM(A1,#DIV/0!)")), Error(Div0));
     for f in ["A1<0", "IFERROR(A1<0,42)"] {
         assert!(
-            matches!(run(&w,f,p),EvaluationOutcome::Aborted {failure:EvaluationFailure::KnownSourceException {
+            matches!(run(&w,f),EvaluationOutcome::Aborted {failure:EvaluationFailure::KnownSourceException {
             exception: KnownSourceException::SpecialDoubleComparison { argument:0,bits },.. },.. } if bits.bits()==f64::NEG_INFINITY.to_bits())
         );
     }
-    assert_eq!(complete(run(&w, "A1<\"text\"", p)), Boolean(true));
-    assert_eq!(complete(run(&w, "\"text\">A1", p)), Boolean(true));
+    assert_eq!(complete(run(&w, "A1<\"text\"")), Boolean(true));
+    assert_eq!(complete(run(&w, "\"text\">A1")), Boolean(true));
 }
 #[test]
 fn construction_stages_flush_both_subnormal_signs_preserve_existing_negative_zero() {
-    let p = NumericOutcomePolicy::PinnedPoi7321209;
     for raw in [1, 0x8000_0000_0000_0001] {
         let mut w = book();
         w.sheet_mut(0)
             .unwrap()
             .set_value(at(0), Number(f64::from_bits(raw)))
             .unwrap();
-        assert_eq!(bits(complete(run(&w, "A1", p))), 0);
-        assert_eq!(
-            bits(complete(run(&w, "A1", NumericOutcomePolicy::LegacyFinite))),
-            raw
-        );
-        assert_eq!(complete(run(&w, "NORMSINV(A1)", p)), Error(Num));
+        assert_eq!(bits(complete(run(&w, "A1"))), 0);
+        assert_eq!(complete(run(&w, "NORMSINV(A1)")), Error(Num));
     }
     let mut w = book();
     w.sheet_mut(0)
         .unwrap()
         .set_value(at(0), Number(-0.0))
         .unwrap();
-    assert_eq!(bits(complete(run(&w, "A1", p))), (-0.0f64).to_bits());
-    assert_eq!(bits(complete(run(&w, "-A1", p))), 0);
-    assert_eq!(bits(complete(run(&w, "A1*1", p))), 0);
-    assert_eq!(bits(complete(run(&w, "A1-0", p))), (-0.0f64).to_bits());
-    assert_eq!(complete(run(&w, "A1<0", p)), Boolean(true));
-    assert_eq!(bits(complete(run(&w, "2.2250738585072014E-308/2", p))), 0);
-    assert_eq!(bits(complete(run(&w, "2.2250738585072014E-308%", p))), 0);
+    assert_eq!(bits(complete(run(&w, "A1"))), (-0.0f64).to_bits());
+    assert_eq!(bits(complete(run(&w, "-A1"))), 0);
+    assert_eq!(bits(complete(run(&w, "A1*1"))), 0);
+    assert_eq!(bits(complete(run(&w, "A1-0"))), (-0.0f64).to_bits());
+    assert_eq!(complete(run(&w, "A1<0")), Boolean(true));
+    assert_eq!(bits(complete(run(&w, "2.2250738585072014E-308/2"))), 0);
+    assert_eq!(bits(complete(run(&w, "2.2250738585072014E-308%"))), 0);
     assert_eq!(
-        complete(run(&w, "NORMSINV(4.9406564584124654E-324)", p)),
+        complete(run(&w, "NORMSINV(4.9406564584124654E-324)")),
         Error(Num)
     );
     for mean in ["4.9406564584124654E-324", "-4.9406564584124654E-324"] {
         let f = format!("NORM.INV(0.5,\"{mean}\",1)");
         assert_eq!(
-            bits(complete(run(&w, &f, p))),
+            bits(complete(run(&w, &f))),
             0,
             "function-result NumberEval flushes either sign"
         );
@@ -151,34 +128,26 @@ fn construction_stages_flush_both_subnormal_signs_preserve_existing_negative_zer
         EvaluationInputs::default(),
         BudgetMeter::new(EvaluationBudgets::default()).unwrap(),
     );
-    session.numeric_policy = p;
+
     let admitted = session
         .expr(0, at(1), &Expr::Number(f64::INFINITY))
         .unwrap();
     assert_eq!(session.scalar(at(1), admitted).unwrap(), Error(Num));
     assert_eq!(
-        bits(p.coerce_numeric_stage(
-            numeric_outcome::NumericConstruction::NumberEvalResult,
-            f64::from_bits(1)
-        )),
+        bits(numeric_outcome::coerce_numeric_outcome(f64::from_bits(1))),
         0
     );
     w.sheet_mut(0)
         .unwrap()
         .set_value(at(0), Number(f64::INFINITY))
         .unwrap();
-    assert_eq!(bits(complete(run(&w, "A1", p))), f64::INFINITY.to_bits());
-    assert_eq!(
-        complete(run(&w, "A1", NumericOutcomePolicy::LegacyFinite)),
-        Error(Num)
-    );
+    assert_eq!(bits(complete(run(&w, "A1"))), f64::INFINITY.to_bits());
 }
 #[test]
 fn configured_source_constructor_exception_is_explicit() {
     let w = book();
-    let p = NumericOutcomePolicy::PinnedPoi7321209;
     assert!(matches!(
-        run(&w, "IFERROR(POISSON(1,0,FALSE),42)", p),
+        run(&w, "IFERROR(POISSON(1,0,FALSE),42)"),
         EvaluationOutcome::Aborted {
             failure: EvaluationFailure::KnownSourceException {
                 exception: KnownSourceException::PoissonMeanZeroConstructor,
@@ -189,7 +158,7 @@ fn configured_source_constructor_exception_is_explicit() {
     ));
 }
 #[test]
-fn retained_overlay_reuses_infinity_and_invalidates_numeric_profile() {
+fn retained_overlay_reuses_source_infinity() {
     use crate::overlay::{EvaluationContext, Overlay, OverlayPolicy};
     let mut w = book();
     w.sheet_mut(0)
@@ -202,7 +171,6 @@ fn retained_overlay_reuses_infinity_and_invalidates_numeric_profile() {
         .unwrap();
     let mut overlay = Overlay::with_workbook(&w)
         .with_policy(OverlayPolicy {
-            numeric: NumericOutcomePolicy::PinnedPoi7321209,
             ..Default::default()
         })
         .build()
@@ -225,35 +193,6 @@ fn retained_overlay_reuses_infinity_and_invalidates_numeric_profile() {
         &raw,
         &overlay.cached_value(target).unwrap()
     ));
-    let mut policy = overlay.policy().clone();
-    policy.numeric = NumericOutcomePolicy::LegacyFinite;
-    overlay.set_policy(policy).unwrap();
-    assert!(overlay.cached_value(target).is_none());
-    assert_eq!(
-        overlay.evaluation(&context).unwrap().cell(target).unwrap(),
-        Error(Num)
-    );
-    let legacy = configured(NumericOutcomePolicy::LegacyFinite);
-    let text_only = legacy
-        .clone()
-        .with_text_policy(poirot_text::TextSemanticsPolicy {
-            source: poirot_text::SourceVersion::Poi7321209,
-        });
-    assert_eq!(
-        text_only.numeric_policy(),
-        NumericOutcomePolicy::LegacyFinite
-    );
-    assert_eq!(
-        complete(run_formula_with_configuration(
-            &w,
-            0,
-            at(25),
-            "NORMSINV(1E-300)",
-            &text_only,
-            Default::default()
-        )),
-        Error(Num)
-    );
 }
 #[test]
 fn retained_overlay_normalization_keeps_raw_source_dependency_identity() {
@@ -269,7 +208,6 @@ fn retained_overlay_normalization_keeps_raw_source_dependency_identity() {
         .unwrap();
     let mut overlay = Overlay::with_workbook(&w)
         .with_policy(OverlayPolicy {
-            numeric: NumericOutcomePolicy::PinnedPoi7321209,
             ..Default::default()
         })
         .build()

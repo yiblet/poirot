@@ -38,9 +38,6 @@ pub(crate) enum MissingPolicy {
 /// Numeric coercion contract used by the deferred host.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum NumericPolicy {
-    /// Test path preserving legacy conversion behavior.
-    #[cfg(test)]
-    LegacyCompatible,
     /// Pinned Apache POI conversion behavior.
     PinnedPoi,
 }

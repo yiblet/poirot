@@ -19,11 +19,6 @@ impl<'a> OverlayEvaluation<'a> {
         overlay: &'a mut Overlay<'_, W>,
         context: &'a EvaluationContext,
     ) -> Result<Self, OverlayError> {
-        overlay
-            .source
-            .policy
-            .materialization
-            .validate(overlay.source.policy.numeric)?;
         let meter = crate::budget::BudgetMeter::new(context.budgets)?;
         overlay.cache.get_mut().begin(context.key());
         let mut session = overlay.source.session(context, meter);

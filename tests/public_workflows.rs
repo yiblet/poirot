@@ -1,5 +1,5 @@
 //! Exercise the primary workbook -> overlay -> evaluation -> changes workflow.
-use poirot::{CellValue, EvaluationContext, Overlay, Spreadsheet, Workbook, eval, io};
+use poirot::{CellValue, EvaluationContext, Overlay, Spreadsheet, Workbook, eval};
 fn at(reference: &str) -> eval::EvaluationTarget {
     eval::EvaluationTarget {
         sheet: 0,
@@ -36,11 +36,7 @@ fn overlay_edits_evaluate_and_apply_without_mutating_the_borrowed_source() {
     };
     model.apply(changes).unwrap();
     let book = Spreadsheet::from_workbook(model);
-    let bytes = book
-        .plan_xlsx_save(io::WriteOptions::default())
-        .unwrap()
-        .to_buffer()
-        .unwrap();
+    let bytes = book.save_xlsx().to_buffer().unwrap();
     let reopened = Spreadsheet::from_bytes(&bytes).unwrap();
     let cell = reopened
         .workbook()
@@ -125,11 +121,7 @@ fn evaluated_formats_preserve_precision_text_and_overlay_edits_through_xlsx() {
     };
     model.apply(changes).unwrap();
     let book = Spreadsheet::from_workbook(model);
-    let bytes = book
-        .plan_xlsx_save(io::WriteOptions::default())
-        .unwrap()
-        .to_buffer()
-        .unwrap();
+    let bytes = book.save_xlsx().to_buffer().unwrap();
     let reopened = Spreadsheet::from_bytes(&bytes).unwrap();
     for cell in ["A1", "B1"] {
         let stored = reopened
@@ -189,8 +181,7 @@ fn lookup_blank_consumers_survive_overlay_reset_materialization_and_xlsx() {
     };
     model.apply(changes).unwrap();
     let bytes = Spreadsheet::from_workbook(model)
-        .plan_xlsx_save(io::WriteOptions::default())
-        .unwrap()
+        .save_xlsx()
         .to_buffer()
         .unwrap();
     let reopened = Spreadsheet::from_bytes(&bytes).unwrap();
@@ -238,8 +229,7 @@ fn flushed_sources_export_materialized_formula_and_spill_caches_to_xlsx() {
     let mut saved = overlay.workbook().clone();
     saved.apply(overlay.changes()).unwrap();
     let bytes = Spreadsheet::from_workbook(saved)
-        .plan_xlsx_save(io::WriteOptions::default())
-        .unwrap()
+        .save_xlsx()
         .to_buffer()
         .unwrap();
     let reopened = Spreadsheet::from_bytes(&bytes).unwrap();

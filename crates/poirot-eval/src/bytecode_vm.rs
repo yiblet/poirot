@@ -92,12 +92,11 @@ impl Session<'_> {
                         }
                     }
                     Opcode::Number => values.push(
-                        self.numeric_policy
-                            // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
-                            .coerce_numeric_literal(f64::from_bits(
-                                u64::from(instruction.a) | u64::from(instruction.b) << 32,
-                            ))?
-                            .into(),
+                        // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+                        numeric_outcome::coerce_numeric_literal(f64::from_bits(
+                            u64::from(instruction.a) | u64::from(instruction.b) << 32,
+                        ))?
+                        .into(),
                     ),
                     Opcode::Text => {
                         let text = program.text(instruction.a, instruction.b)?;
@@ -597,10 +596,7 @@ mod tests {
         budgets: EvaluationBudgets,
         registry: Option<&extensions::ExtensionRegistry>,
     ) {
-        for numeric in [
-            NumericOutcomePolicy::LegacyFinite,
-            NumericOutcomePolicy::PinnedPoi7321209,
-        ] {
+        {
             for builtin in [
                 BuiltinSemanticsPolicy::PinnedPoi,
                 BuiltinSemanticsPolicy::ExcelDocumentation,
@@ -609,7 +605,6 @@ mod tests {
                     syntax,
                     budgets,
                     registry,
-                    numeric,
                     builtin,
                     ArrayResultPolicy::ScalarIntersection,
                 );
@@ -620,7 +615,6 @@ mod tests {
         syntax: &poirot_parsing::formula::Expr,
         budgets: EvaluationBudgets,
         registry: Option<&extensions::ExtensionRegistry>,
-        numeric: NumericOutcomePolicy,
         builtin: BuiltinSemanticsPolicy,
         arrays: ArrayResultPolicy,
     ) {
@@ -644,7 +638,7 @@ mod tests {
                 address: AT,
             });
             session.extensions = registry;
-            session.numeric_policy = numeric;
+
             session.builtin_policy = builtin;
             session.array_result_policy = arrays;
             session.execution_observer = Some(&mut tree_events);
@@ -668,7 +662,7 @@ mod tests {
                 address: AT,
             });
             session.extensions = registry;
-            session.numeric_policy = numeric;
+
             session.builtin_policy = builtin;
             session.array_result_policy = arrays;
             session.execution_observer = Some(&mut vm_events);
@@ -734,10 +728,7 @@ mod tests {
             "ISBLANK(IFS(TRUE,))",
         ] {
             let syntax = poirot_parsing::formula::parse_formula(source).unwrap();
-            for numeric in [
-                NumericOutcomePolicy::LegacyFinite,
-                NumericOutcomePolicy::PinnedPoi7321209,
-            ] {
+            {
                 for builtin in [
                     BuiltinSemanticsPolicy::PinnedPoi,
                     BuiltinSemanticsPolicy::ExcelDocumentation,
@@ -757,7 +748,7 @@ mod tests {
                             ArrayResultPolicy::ScalarIntersection,
                             ArrayResultPolicy::DynamicSpill,
                         ] {
-                            compare_configured(&syntax, budgets, None, numeric, builtin, arrays);
+                            compare_configured(&syntax, budgets, None, builtin, arrays);
                         }
                     }
                 }

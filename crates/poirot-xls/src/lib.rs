@@ -1,4 +1,4 @@
-#![doc = include_str!("../README.md")]
+//! Checked BIFF8 workbook export to XLS files and byte buffers.
 use poirot_model::{CellValue, Workbook};
 use poirot_parsing::formula::parse_formula;
 use std::{

@@ -10,10 +10,6 @@ pub(super) use poirot_coercionv2::compatibility::NumericTextDecision as Coercion
 #[cfg(test)]
 pub(super) fn decide(text: &str, policy: NumericPolicy) -> CoercionV2Decision {
     match policy {
-        #[cfg(test)]
-        NumericPolicy::LegacyCompatible => CoercionV2Decision::Number(
-            poirot_coercionv2::compatibility::coercev2_arithmetic_text(text),
-        ),
         NumericPolicy::PinnedPoi => poirot_coercionv2::compatibility::coercev2_numeric_text(text),
     }
 }

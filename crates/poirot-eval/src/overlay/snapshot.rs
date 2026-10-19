@@ -7,7 +7,7 @@ const VERSION: u32 = 39;
 /// Bump when wire layout or execution semantics invalidate prepared snapshots,
 /// including changes that leave Serde field layouts intact. This is separate from
 /// durable workbook-source versioning owned by the public file envelope.
-pub const COMPATIBILITY_REVISION: u64 = 40;
+pub const COMPATIBILITY_REVISION: u64 = 41;
 
 /// Serde view of a baseline workbook and its sparse overlay state.
 pub struct Snapshot<'a> {
@@ -316,7 +316,6 @@ impl<'a> Snapshot<'a> {
         }
         let workbook = payload.model.restore()?;
         let policy = payload.policy.into_owned();
-        policy.materialization.validate(policy.numeric)?;
         let preparation = payload.preparation.into_owned();
         let compiler = payload
             .compiler

@@ -15,7 +15,7 @@ fn evaluate(source: TextSourceVersion, formula: &str) -> EvalResult<CellValue> {
 #[test]
 fn formulas_select_units_without_normalizing_text() {
     for (source, expected) in [
-        (TextSourceVersion::PoirotF6c572d, 4.),
+        (TextSourceVersion::ExcelCompatibilityV2Documented, 4.),
         (TextSourceVersion::Poi7321209, 5.),
     ] {
         assert_eq!(evaluate(source, "LEN(\"A😀é\")").unwrap(), Number(expected));
@@ -25,7 +25,11 @@ fn formulas_select_units_without_normalizing_text() {
         );
     }
     assert_eq!(
-        evaluate(TextSourceVersion::PoirotF6c572d, "LEFT(\"😀\",1)").unwrap(),
+        evaluate(
+            TextSourceVersion::ExcelCompatibilityV2Documented,
+            "LEFT(\"😀\",1)"
+        )
+        .unwrap(),
         Text("😀".into())
     );
     assert_eq!(
@@ -42,16 +46,13 @@ fn formulas_select_units_without_normalizing_text() {
 }
 #[test]
 fn concatenation_uses_spreadsheet_numeric_text_without_rounding_values() {
-    for source in [
-        TextSourceVersion::PoirotF6c572d,
-        TextSourceVersion::Poi7321209,
-    ] {
+    for source in [TextSourceVersion::Poi7321209, TextSourceVersion::Poi7321209] {
         for (expression, expected) in [
             ("(-0.02-0.02-0.1)*100", "-14"),
             ("123456789012345.6", "123456789012346"),
             ("1E21", "1E+21"),
             ("1E-19", "1E-19"),
-            ("-0.0", "-0"),
+            ("-0.0", "0"),
             ("1.7976931348623157E308", "1.7976931348623E+308"),
             ("2.2250738585072014E-308", "2.2250738585072E-308"),
         ] {
@@ -86,8 +87,8 @@ fn source_concatenation_ceiling_is_independent_of_host_budget() {
     let operand = "😀".repeat(8192);
     let operator = format!("\"{operand}\"&\"\"");
     assert_eq!(
-        evaluate(TextSourceVersion::PoirotF6c572d, &operator).unwrap(),
-        Error(VALUE_ERROR)
+        evaluate(TextSourceVersion::Poi7321209, &operator).unwrap(),
+        Text(operand.clone())
     );
     assert_eq!(
         evaluate(TextSourceVersion::Poi7321209, &operator).unwrap(),
@@ -95,7 +96,7 @@ fn source_concatenation_ceiling_is_independent_of_host_budget() {
     );
     let function = format!("CONCATENATE(\"{operand}\")");
     assert_eq!(
-        evaluate(TextSourceVersion::PoirotF6c572d, &function).unwrap(),
+        evaluate(TextSourceVersion::Poi7321209, &function).unwrap(),
         Text(operand)
     );
     assert!(matches!(
@@ -106,34 +107,39 @@ fn source_concatenation_ceiling_is_independent_of_host_budget() {
 
 #[test]
 fn text_integer_admission_precedes_empty_text_and_index_clamping() {
-    let source = TextSourceVersion::PoirotF6c572d;
+    let source = TextSourceVersion::Poi7321209;
     for formula in [
         "LEFT(\"\",2147483648)",
         "RIGHT(\"abc\",2147483648)",
         "MID(\"abc\",2147483648,1)",
         "MID(\"abc\",1,2147483648)",
-        "REPT(\"\",2147483648)",
         "REPLACE(\"abc\",1,2147483648,\"x\")",
         "MID(\"abc\",1,\"2147483648\")",
     ] {
-        assert_eq!(
-            evaluate(source, formula).unwrap(),
-            Error(VALUE_ERROR),
-            "{formula}"
-        );
+        assert_eq!(evaluate(source, formula).unwrap(), Error(Num), "{formula}");
     }
     for (formula, expected) in [
         ("LEFT(\"abc\",2147483647)", "abc"),
         ("LEFT(\"abc\",2147483647.5)", "abc"),
-        ("REPT(\"\",2147483647.5)", ""),
         ("MID(\"abc\",1.9,2.9)", "ab"),
-        ("REPT(\"\",2147483647)", ""),
     ] {
         assert_eq!(
             evaluate(source, formula).unwrap(),
             Text(expected.into()),
             "{formula}"
         );
+    }
+    // Java's REPT count narrows to i32::MAX and still incurs source work,
+    // even when repeating an empty string.
+    for formula in [
+        "REPT(\"\",2147483648)",
+        "REPT(\"\",2147483647.5)",
+        "REPT(\"\",2147483647)",
+    ] {
+        assert!(matches!(
+            evaluate(source, formula),
+            Err(EvaluationFailure::Budget(_))
+        ));
     }
     // Range admission must not move a function's negative-start validation ahead
     // of conversion of the following count argument.

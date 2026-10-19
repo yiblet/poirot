@@ -31,7 +31,7 @@ fn scalar(
 }
 impl EvaluationPort for CallHost<'_, '_> {
     fn pinned_numeric_outcomes(&self) -> bool {
-        self.numeric_outcome_policy() == NumericOutcomePolicy::PinnedPoi7321209
+        true
     }
     /// Deferred argument identity supplied to the family's host port.
     type Argument = usize;
@@ -112,7 +112,6 @@ pub(crate) fn execute(
     match adapter::evaluate_with_policy(&mut host, function, &indices, policy) {
         Ok(number) => {
             use adapter::StatisticsFunction::*;
-            let policy = host.numeric_outcome_policy();
             let value = if matches!(
                 function,
                 NormInv
@@ -125,13 +124,10 @@ pub(crate) fn execute(
                     | NormSDistLegacy
             ) {
                 // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
-                policy.coerce_numeric_stage(
-                    numeric_outcome::NumericConstruction::NumberEvalResult,
-                    number,
-                )
+                numeric_outcome::coerce_numeric_outcome(number)
             } else {
                 // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
-                policy.coerce_checked_numeric_result(number)
+                numeric_outcome::coerce_checked_numeric_result(number)
             };
             Ok(value.into())
         }

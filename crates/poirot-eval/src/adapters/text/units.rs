@@ -22,6 +22,9 @@ fn rendered(h: &mut TextHost<'_, '_>, s: &ScalarOperand) -> Result<Vec<u16>, Tex
     if s.missing {
         return Err(h.source_fault("POI string coercion rejects MissingArgEval"));
     }
+    if matches!(s.value, Blank) {
+        return Ok(Vec::new());
+    }
     if let Some(text) = s.value.text_ref() {
         let len = text.len_units();
         let r = plan(h, units::Reservation::units(len, len))?;
@@ -88,7 +91,7 @@ pub(crate) fn execute(
     }
     let result = (|| -> Result<CellValue, TextFailure> {
         if matches!(name, TextFunction::Concat | TextFunction::Concatenate) {
-            let mut parts: Vec<Vec<u16>> = Vec::new();
+            let mut output: Vec<u16> = Vec::new();
             let mut total = 0usize;
             for index in 0..n {
                 let description = if name == TextFunction::Concat {
@@ -103,11 +106,8 @@ pub(crate) fn execute(
                 let additional = rows
                     .checked_mul(columns)
                     .ok_or_else(|| unsupported(&h, units::PlanFailure::SizeOverflow))?;
-                let elements = parts
-                    .len()
-                    .checked_add(additional)
-                    .ok_or_else(|| unsupported(&h, units::PlanFailure::SizeOverflow))?;
-                h.check_collection(elements).map_err(Failure::Operational)?;
+                h.check_collection(additional)
+                    .map_err(Failure::Operational)?;
                 for row in 0..rows {
                     for column in 0..columns {
                         h.charge_work(1).map_err(Failure::Operational)?;
@@ -123,17 +123,19 @@ pub(crate) fn execute(
                         total = total
                             .checked_add(text.len())
                             .ok_or_else(|| unsupported(&h, units::PlanFailure::SizeOverflow))?;
-                        let r = plan(&h, units::Reservation::units(total, 0))?;
-                        reserve(&mut h, r)?;
-                        parts.push(text);
+                        let r = plan(&h, units::Reservation::units(total, text.len()))?;
+                        h.host
+                            .get_mut()
+                            .check_text_capacity(r.text_bytes)
+                            .map_err(failure)?;
+                        h.host
+                            .get_mut()
+                            .check_values_capacity(r.elements)
+                            .map_err(failure)?;
+                        h.charge_work(r.work).map_err(Failure::Operational)?;
+                        output.extend_from_slice(&text);
                     }
                 }
-            }
-            let r = plan(&h, units::Reservation::units(total, total))?;
-            reserve(&mut h, r)?;
-            let mut output = Vec::with_capacity(total);
-            for part in parts {
-                output.extend_from_slice(&part);
             }
             return Ok(value(output));
         }

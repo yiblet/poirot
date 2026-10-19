@@ -18,12 +18,8 @@ fn numeric_projection_uses_spreadsheet_precision_and_preserves_numeric_bits() {
         .set_value(input, CellValue::Number(number))
         .unwrap();
     let legacy = RunConfiguration::default();
-    assert_eq!(
-        legacy.text_policy().source,
-        TextSourceVersion::PoirotF6c572d
-    );
+    assert_eq!(legacy.text_policy().source, TextSourceVersion::Poi7321209);
     for (source, expected) in [
-        (TextSourceVersion::PoirotF6c572d, "-14"),
         (TextSourceVersion::Poi7321209, "-14"),
         (TextSourceVersion::Poi7321209OpenJdk21Unicode15, "-14"),
     ] {

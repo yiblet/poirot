@@ -1,7 +1,5 @@
 //! POI 5.4.1 probe evidence: see poirot-test-runner/docs/fods-COUNTIF_PRECISION.md.
-use poirot_eval::{
-    EvaluationOutcome, NumericOutcomePolicy, RunConfiguration, run_formula_with_configuration,
-};
+use poirot_eval::{EvaluationOutcome, RunConfiguration, run_formula_with_configuration};
 use poirot_model::{CellValue, Workbook};
 
 #[test]
@@ -12,10 +10,7 @@ fn countif_text_precision_preserves_poi_comparison_and_raw_numeric_criteria() {
         .unwrap()
         .set_value("A1".parse().unwrap(), 86.47 / 86400.0)
         .unwrap();
-    for configuration in [
-        RunConfiguration::default(),
-        RunConfiguration::default().with_numeric_policy(NumericOutcomePolicy::PinnedPoi7321209),
-    ] {
+    for configuration in [RunConfiguration::default(), RunConfiguration::default()] {
         for (formula, expected) in [
             ("A1", CellValue::Number(86.47 / 86400.0)),
             ("\"=\"&A1", CellValue::Text("=0.00100081018518519".into())),

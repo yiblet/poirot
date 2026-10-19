@@ -41,8 +41,6 @@ struct SparseGroup {
 struct StoredBaseline {
     schema_version: u8,
     fods_source_commit: String,
-    #[serde(default, deserialize_with = "unique_entries")]
-    cases: BTreeMap<String, Entry>,
     #[serde(default)]
     passing: Vec<String>,
     #[serde(default)]
@@ -52,13 +50,10 @@ struct StoredBaseline {
 impl Serialize for Baseline {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeStruct;
-        let mut state = serializer
-            .serialize_struct("Baseline", if self.schema_version == 1 { 3 } else { 4 })?;
+        let mut state = serializer.serialize_struct("Baseline", 4)?;
         state.serialize_field("schema_version", &self.schema_version)?;
         state.serialize_field("fods_source_commit", &self.fods_source_commit)?;
-        if self.schema_version == 1 {
-            state.serialize_field("cases", &self.cases)?;
-        } else {
+        {
             let mut passing = Vec::new();
             let mut nonpassing: BTreeMap<String, SparseGroup> = BTreeMap::new();
             for (id, entry) in &self.cases {
@@ -90,10 +85,9 @@ impl<'de> Deserialize<'de> for Baseline {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         use serde::de::Error;
         let stored = StoredBaseline::deserialize(deserializer)?;
-        let mut cases = stored.cases;
+        let mut cases = BTreeMap::new();
         match stored.schema_version {
-            1 if stored.passing.is_empty() && stored.nonpassing.is_empty() => {}
-            2 if cases.is_empty() => {
+            2 => {
                 let mut insert = |id: String, observation: Observation, reason: Option<String>| {
                     let source = if id.starts_with("fods:") {
                         Source::Fods
@@ -141,48 +135,19 @@ impl<'de> Deserialize<'de> for Baseline {
     }
 }
 
-fn unique_entries<'de, D: serde::Deserializer<'de>>(
-    deserializer: D,
-) -> Result<BTreeMap<String, Entry>, D::Error> {
-    struct Entries;
-    impl<'de> serde::de::Visitor<'de> for Entries {
-        type Value = BTreeMap<String, Entry>;
-        fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            f.write_str("unique baseline case IDs")
-        }
-        fn visit_map<M: serde::de::MapAccess<'de>>(
-            self,
-            mut map: M,
-        ) -> Result<Self::Value, M::Error> {
-            let mut entries = BTreeMap::new();
-            while let Some((id, entry)) = map.next_entry::<String, Entry>()? {
-                if entries.insert(id.clone(), entry).is_some() {
-                    return Err(serde::de::Error::custom(format!(
-                        "duplicate baseline case ID: {id}"
-                    )));
-                }
-            }
-            Ok(entries)
-        }
-    }
-    deserializer.deserialize_map(Entries)
-}
-
 impl Baseline {
     pub fn load(path: &Path) -> Result<Self, Error> {
         let baseline: Self = serde_json::from_slice(&std::fs::read(path)?)?;
-        if !matches!(baseline.schema_version, 1 | 2)
+        if baseline.schema_version != 2
             || baseline.fods_source_commit != crate::fods::xml::SOURCE_COMMIT
         {
             return Err(invalid(
-                "baseline must use schema 1 or 2 and the pinned FODS source revision",
+                "baseline must use schema 2 and the pinned FODS source revision",
             ));
         }
         for (id, entry) in &baseline.cases {
             if id.is_empty()
                 || !id.starts_with(&format!("{}:", entry.source))
-                || (baseline.schema_version == 1
-                    && (entry.source == Source::Fods) != entry.fods.is_some())
                 || matches!(entry.observation.outcome, Outcome::HarnessError)
                 || (entry.observation.outcome == Outcome::Passed
                     && (entry.observation.category.is_some()

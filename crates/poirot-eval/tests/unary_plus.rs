@@ -1,4 +1,4 @@
-//! Unary plus preserves selected values; it does not forward a reference channel.
+//! Pinned POI unary plus retains text and coerces other selected scalar types.
 use poirot_eval::overlay::{EvaluationContext, Overlay, OverlayPolicy};
 use poirot_eval::*;
 use poirot_model::{CellError, CellValue, ExcelText, Workbook};
@@ -28,10 +28,9 @@ fn workbook() -> Workbook {
 }
 
 #[test]
-fn unary_plus_preserves_selected_value_types() {
-    // Scalar expectations are independently corroborated by Calc. Array member
-    // preservation and loss of reference identity are explicit Poirot contracts;
-    // Calc instead preserves +reference identity and coerces mixed array literals.
+fn unary_plus_retains_text_and_consumes_other_scalar_types() {
+    // Pinned POI retains text for unary plus, while booleans and blank
+    // operands pass through numeric argument conversion.
     for arrays in [
         ArrayResultPolicy::ScalarIntersection,
         ArrayResultPolicy::DynamicSpill,
@@ -54,20 +53,20 @@ fn unary_plus_preserves_selected_value_types() {
             ("+\"1\"", text("1")),
             ("+\"pear\"", text("pear")),
             ("+\"\"", text("")),
-            ("+TRUE", CellValue::Boolean(true)),
-            ("+FALSE", CellValue::Boolean(false)),
+            ("+TRUE", CellValue::Number(1.)),
+            ("+FALSE", CellValue::Number(0.)),
             ("+#DIV/0!", CellValue::Error(CellError::Div0)),
             ("+#N/A", CellValue::Error(CellError::NA)),
-            ("+A1", CellValue::Blank),
+            ("+A1", CellValue::Number(0.)),
             (
                 "+A5",
                 CellValue::TextUtf16(ExcelText::from_units(vec![0xd800, 0x61, 0xdc00])),
             ),
-            ("ISBLANK(+A1)", CellValue::Boolean(true)),
-            ("ISBLANK(+IF(TRUE,))", CellValue::Boolean(true)),
+            ("ISBLANK(+A1)", CellValue::Boolean(false)),
+            ("ISBLANK(+IF(TRUE,))", CellValue::Boolean(false)),
             ("ISNUMBER(+\"1\")", CellValue::Boolean(false)),
             ("ISTEXT(+\"😀\")", CellValue::Boolean(true)),
-            ("ISLOGICAL(+A3)", CellValue::Boolean(true)),
+            ("ISLOGICAL(+A3)", CellValue::Boolean(false)),
             ("ISREF(+A2)", CellValue::Boolean(false)),
             ("ISREF(+IF(TRUE,A2))", CellValue::Boolean(false)),
             ("ISREF(IF(TRUE,A2))", CellValue::Boolean(true)),
@@ -77,8 +76,8 @@ fn unary_plus_preserves_selected_value_types() {
             ("-\"pear\"", CellValue::Error(CellError::Value)),
             ("-A1", CellValue::Number(0.)),
             ("+\"1\"+2", CellValue::Number(3.)),
-            ("SUM(+{\"1\",TRUE,2})", CellValue::Number(2.)),
-            // SUMPRODUCT admits the preserved boolean as one and ignores text.
+            ("SUM(+{\"1\",TRUE,2})", CellValue::Number(3.)),
+            // SUMPRODUCT consumes the numeric boolean projection and ignores text.
             ("SUMPRODUCT(+A2:A4)", CellValue::Number(3.)),
             (
                 "ISTEXT(INDEX(+{\"1\",TRUE,2},1,1))",
@@ -86,7 +85,7 @@ fn unary_plus_preserves_selected_value_types() {
             ),
             (
                 "ISLOGICAL(INDEX(+{\"1\",TRUE,2},1,2))",
-                CellValue::Boolean(true),
+                CellValue::Boolean(false),
             ),
             ("SUM(+{1,#N/A})", CellValue::Error(CellError::NA)),
         ] {
@@ -126,10 +125,9 @@ fn unary_plus_preserves_selected_value_types() {
 }
 
 #[test]
-fn pinned_numeric_policy_retains_its_unary_plus_source_contract() {
+fn default_numeric_execution_uses_the_poi_unary_plus_contract() {
     let book = workbook();
-    let configuration =
-        RunConfiguration::default().with_numeric_policy(NumericOutcomePolicy::PinnedPoi7321209);
+    let configuration = RunConfiguration::default();
     for (formula, expected) in [
         ("+TRUE", CellValue::Number(1.)),
         ("+FALSE", CellValue::Number(0.)),

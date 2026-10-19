@@ -88,8 +88,6 @@ pub(crate) struct ContextKey {
 pub struct OverlayPolicy {
     /// Formula grammar and preparation limits.
     pub parse: poirot_parsing::formula::FormulaParsePolicy,
-    /// Numeric result and error handling rules.
-    pub numeric: crate::NumericOutcomePolicy,
     /// Selected builtin compatibility behavior.
     pub builtin: crate::BuiltinSemanticsPolicy,
     /// Rules for returning and publishing array results.
@@ -104,7 +102,6 @@ impl Default for OverlayPolicy {
         let configuration = crate::RunConfiguration::default();
         Self {
             parse: Default::default(),
-            numeric: configuration.numeric_policy(),
             builtin: configuration.builtin_policy(),
             arrays: configuration.array_result_policy(),
             text: configuration.text_policy(),

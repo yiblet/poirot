@@ -1,4 +1,4 @@
-#![doc = include_str!("../README.md")]
+//! XLS/XLSX imports and checked XLSX export with resource and fidelity controls.
 /// Checked BIFF fidelity recovery around the backend XLS decoder.
 pub mod biff_overlay;
 mod biff_preflight;

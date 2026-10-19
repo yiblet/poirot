@@ -215,7 +215,7 @@ class CoercionArchitectureTests(unittest.TestCase):
 
     def test_v2_crate_keeps_conversion_names_searchable(self):
         crate = ROOT / 'crates' / 'poirot-coercionv2'
-        for path in [crate / 'Cargo.toml', crate / 'README.md', *crate.rglob('*.rs')]:
+        for path in [crate / 'Cargo.toml', *crate.rglob('*.rs')]:
             source = path.read_text()
             if path.suffix == '.rs':
                 source = searchable_v2_source(source)

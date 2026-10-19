@@ -41,7 +41,6 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         policy: OverlayPolicy,
         extensions: Option<Registry<'a>>,
     ) -> Result<Self, OverlayError> {
-        policy.materialization.validate(policy.numeric)?;
         let registry = extensions.as_ref().map(Registry::get).map_or_else(
             crate::RegistryIdentity::default,
             crate::RegistryIdentity::with_extensions,
@@ -224,7 +223,7 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         session.currency = context.formatting.currency();
         session.number_locale = &context.number_locale;
         session.text_policy = self.policy.text;
-        session.numeric_policy = self.policy.numeric;
+
         session.builtin_policy = self.policy.builtin;
         session.array_result_policy = self.policy.arrays;
         session.memo_limits = Some(context.retention);
@@ -331,7 +330,6 @@ macro_rules! source_methods {
         }
         /// Replace policies; reusable programs survive changes outside parser preparation.
         pub fn set_policy(&mut self, policy: OverlayPolicy) -> Result<(), OverlayError> {
-            policy.materialization.validate(policy.numeric)?;
             if self.source.policy != policy {
                 if self.source.policy.parse != policy.parse {
                     self.source.compiler = RefCell::new(FormulaCompiler::new());

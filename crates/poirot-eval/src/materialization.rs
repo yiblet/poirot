@@ -1,9 +1,9 @@
 //! Explicit worksheet cache publication, independent of computed numeric results.
-use crate::{EvaluationFailure, EvaluationTarget, NumericOutcomePolicy};
+use crate::EvaluationTarget;
 use poirot_model::{CellError, CellValue, IeeeNumberBits, IeeeNumberClass};
 /// How a computed scalar is stored as a formula's saved result.
 /// Default preserves the computed value; `PinnedPoiCellSetter` models the pinned
-/// setter's normalization and requires the corresponding numeric outcome policy.
+/// setter's normalization.
 #[derive(
     Clone, Copy, Debug, Default, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize,
 )]
@@ -73,13 +73,6 @@ pub struct FormulaCacheWriteReceipt {
     pub formula_retained: bool,
 }
 impl FormulaCacheMaterializationPolicy {
-    /// Reject a setter policy incompatible with the selected numeric outcomes.
-    pub fn validate(self, numeric: NumericOutcomePolicy) -> Result<(), EvaluationFailure> {
-        if self == Self::PinnedPoiCellSetter && numeric != NumericOutcomePolicy::PinnedPoi7321209 {
-            return Err(EvaluationFailure::IncompatibleMaterializationPolicy);
-        }
-        Ok(())
-    }
     /// Return the immutable pinned setter source contract, when selected.
     pub const fn source_binding(self) -> Option<CellSetterSourceBinding> {
         match self {

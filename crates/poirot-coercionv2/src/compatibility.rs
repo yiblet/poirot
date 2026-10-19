@@ -1,6 +1,6 @@
 //! Explicit compatibility profiles for existing argument consumers.
 use poirot_functions_core::{CellError, CellValue, Scalar, TextRef};
-use poirot_numeric::number_text::{SourceVersion, render};
+use poirot_numeric::number_text::render;
 pub fn coercev2_criteria_number_text(s: &str) -> Option<f64> {
     poirot_parsing::number::parse_criteria_number(s)
 }
@@ -152,7 +152,7 @@ pub fn coercev2_logical_test(value: &CellValue) -> Result<bool, CellError> {
 }
 /// Shared source number spelling; callers admit their required output bound first.
 pub fn coercev2_number_to_text(number: f64) -> String {
-    render(number, SourceVersion::Poi7321209)
+    render(number)
 }
 /// Minimum rank admission for the existing ceiling-based kth selection consumer.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -450,9 +450,9 @@ pub fn coercev2_missing_scalar(policy: MissingScalarPolicy) -> Result<CellValue,
     }
 }
 /// Selected rendering profile and finite admission for numeric string arguments.
-pub fn coercev2_number_text_finite(value: f64, source: SourceVersion) -> Result<String, CellError> {
+pub fn coercev2_number_text_finite(value: f64) -> Result<String, CellError> {
     if value.is_finite() {
-        Ok(render(value, source))
+        Ok(render(value))
     } else {
         Err(CellError::Num)
     }
@@ -487,20 +487,19 @@ pub fn coercev2_truncated_text(text: &str) -> Result<f64, CellError> {
         .ok_or(CellError::Num)
 }
 /// Number rendering with an explicit source profile, following host admission.
-pub fn coercev2_render_number(value: f64, source: SourceVersion) -> String {
-    render(value, source)
+pub fn coercev2_render_number(value: f64) -> String {
+    render(value)
 }
 /// Reject nonfinite input before asking the host to reserve rendering resources.
 pub fn coercev2_render_finite_number<E: From<CellError>>(
     value: f64,
-    source: SourceVersion,
     admit: impl FnOnce() -> Result<(), E>,
 ) -> Result<String, E> {
     if !value.is_finite() {
         return Err(CellError::Num.into());
     }
     admit()?;
-    Ok(render(value, source))
+    Ok(render(value))
 }
 
 /// Source database field rounding and bounds.

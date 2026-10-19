@@ -26,7 +26,7 @@ poirot = { git = "https://github.com/yiblet/poirot.git", branch = "master" }
 Create a workbook, calculate `B1` as `42`, and save it to `output.xlsx`:
 
 ```rust
-use poirot::{CellValue, EvaluationContext, Overlay, Spreadsheet, io};
+use poirot::{CellValue, EvaluationContext, Overlay, Spreadsheet};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut book = Spreadsheet::new();
@@ -42,8 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     book.workbook_mut().apply(changes)?;
 
-    book.plan_xlsx_save(io::WriteOptions::default())?
-        .write_file("output.xlsx")?;
+    book.save_xlsx().write_file("output.xlsx")?;
     Ok(())
 }
 ```
@@ -92,3 +91,6 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 - [ClosedXML](https://github.com/ClosedXML/ClosedXML) and
   [IronCalc](https://github.com/ironcalc/IronCalc) offered additional inspiration
   for our approach to building a spreadsheet library.
+
+First-party code is [MIT licensed](LICENSE). See [NOTICE](NOTICE) for third-party
+licenses and attribution.

@@ -98,8 +98,8 @@ fn prediction_requires_a_fit_without_residual_degrees_of_freedom() {
         ("TREND({3;6;9},{1;2;3},{4},FALSE)", 12.),
         ("TREND({1;3;4},{0,0;1,0;0,1},{1,1},TRUE)", 6.),
         ("TREND({2;3},{1,0;0,1},{1,1},FALSE)", 5.),
-        // Existing mean shortcut retained for intercept fits. Calc rejects this
-        // rank-deficient input; this is an explicit Poirot compatibility contract.
+        // Constant-predictor intercept fits currently use the mean response.
+        // Calc rejects this rank-deficient input; this remains a numerical gap.
         ("TREND({3;5},{1;1},{3},TRUE)", 4.),
         ("TREND({3;5;7},{1;1;1},{3},TRUE)", 5.),
         ("TREND({3;5},{1;1},{3},FALSE)", 12.),

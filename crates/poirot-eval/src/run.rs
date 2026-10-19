@@ -215,12 +215,11 @@ impl<'a> EvaluationRun<'a> {
         configuration: &'a crate::RunConfiguration,
         budgets: EvaluationBudgets,
     ) -> Result<Self, EvaluationFailure> {
-        configuration.validate()?;
         let mut run = Self::new(view, configuration.context(), budgets)?;
         run.session.currency = configuration.formatting().currency();
         run.session.number_locale = configuration.number_locale();
         run.session.text_policy = configuration.text_policy();
-        run.session.numeric_policy = configuration.numeric_policy();
+
         run.session.builtin_policy = configuration.builtin_policy();
         run.session.array_result_policy = configuration.array_result_policy();
         Ok(run)
@@ -232,12 +231,11 @@ impl<'a> EvaluationRun<'a> {
         budgets: EvaluationBudgets,
         registry: &'a crate::extensions::ExtensionRegistry,
     ) -> Result<Self, EvaluationFailure> {
-        configuration.validate()?;
         let mut run = Self::new_with_extensions(view, configuration.context(), budgets, registry)?;
         run.session.currency = configuration.formatting().currency();
         run.session.number_locale = configuration.number_locale();
         run.session.text_policy = configuration.text_policy();
-        run.session.numeric_policy = configuration.numeric_policy();
+
         run.session.builtin_policy = configuration.builtin_policy();
         run.session.array_result_policy = configuration.array_result_policy();
         Ok(run)

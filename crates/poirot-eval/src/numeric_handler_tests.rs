@@ -8,7 +8,7 @@ fn at(col: u32) -> CellAddress {
     CellAddress { row: 0, col }
 }
 fn pinned() -> RunConfiguration {
-    RunConfiguration::default().with_numeric_policy(NumericOutcomePolicy::PinnedPoi7321209)
+    RunConfiguration::default()
 }
 fn formula(w: &Workbook, f: &str, c: &RunConfiguration) -> EvaluationOutcome<CellValue> {
     run_formula_with_configuration(w, 0, at(25), f, c, EvaluationBudgets::default())
@@ -63,12 +63,10 @@ fn actual_bound_nonfinite_number_ptg_is_catchable_num_and_not_a_number() {
     }
 }
 #[test]
-fn selected_add_sub_follow_source_cancellation_and_legacy_is_unchanged() {
+fn add_sub_follow_source_cancellation() {
     let mut w = book();
     let c = pinned();
-    let legacy = RunConfiguration::default();
     assert_eq!(bits(value(formula(&w, "0.1+0.2-0.3", &c))), 0);
-    assert_ne!(bits(value(formula(&w, "0.1+0.2-0.3", &legacy))), 0);
     let s = w.sheet_mut(0).unwrap();
     s.set_value(at(0), Number(1.0)).unwrap();
     s.set_value(at(1), Number(f64::from_bits(1.0f64.to_bits() + 1)))
@@ -78,7 +76,6 @@ fn selected_add_sub_follow_source_cancellation_and_legacy_is_unchanged() {
         assert_eq!(bits(value(formula(&w, f, &c))), 0);
     }
     assert_eq!(value(formula(&w, "C1-A1", &c)), Number(1.0));
-    assert_ne!(bits(value(formula(&w, "B1-A1", &legacy))), 0);
     w.sheet_mut(0)
         .unwrap()
         .set_value(at(0), Number(f64::INFINITY))
@@ -210,10 +207,6 @@ fn selected_numeric_comparer_admits_bound_before_biguint_kernel() {
                 }),
                 ..
             }
-        ));
-        assert!(matches!(
-            run_formula_with_configuration(&w, 0, at(25), f, &RunConfiguration::default(), budgets),
-            EvaluationOutcome::Complete { .. }
         ));
     }
 }

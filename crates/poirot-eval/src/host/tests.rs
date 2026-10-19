@@ -176,13 +176,13 @@ fn indexed_reads_preserve_reference_kind_and_resize_only_references() {
     ));
 }
 #[test]
-fn explicit_numeric_policies_do_not_change_legacy_handlers() {
+fn pinned_numeric_conversion_preserves_inputs_and_source_precision() {
     let workbook = workbook();
     let arguments = [expression("2.9999999999999996"), expression(r#"" 1e2 ""#)];
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
     let mut host = CallHost::new(&mut session, 0, AT, &arguments);
     let n = host
-        .coercev2_argument_number(0, MissingPolicy::Reject, NumericPolicy::LegacyCompatible)
+        .coercev2_argument_number(0, MissingPolicy::Reject, NumericPolicy::PinnedPoi)
         .unwrap();
     assert_eq!(
         n.to_bits(),
@@ -207,11 +207,6 @@ fn explicit_numeric_policies_do_not_change_legacy_handlers() {
     );
     assert!(
         host.equal(&Number(n), &Number(3.), NumericPolicy::PinnedPoi)
-            .unwrap()
-    );
-    assert!(
-        !host
-            .equal(&Number(n), &Number(3.), NumericPolicy::LegacyCompatible)
             .unwrap()
     );
 }

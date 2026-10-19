@@ -1,16 +1,14 @@
 //! Prospective actual poirot facade operations; no HSSF in-cell/backend parity claim.
 use eval::{
     EvaluationOutcome, FormulaCacheMaterializationPolicy as M, MaterializedScalarSummary as S,
-    NumericOutcomePolicy as N, RunConfiguration,
+    RunConfiguration,
 };
 use poirot::{CellAddress, CellError, CellValue, Spreadsheet, eval, model};
 fn at(row: u32, col: u32) -> CellAddress {
     CellAddress { row, col }
 }
 fn config(m: M) -> RunConfiguration {
-    RunConfiguration::default()
-        .with_numeric_policy(N::PinnedPoi7321209)
-        .with_materialization_policy(m)
+    RunConfiguration::default().with_materialization_policy(m)
 }
 fn book() -> Spreadsheet {
     let mut b = Spreadsheet::new();
@@ -47,7 +45,6 @@ fn target(row: u32, col: u32) -> eval::EvaluationTarget {
 }
 fn policy(materialization: M) -> poirot::OverlayPolicy {
     poirot::OverlayPolicy {
-        numeric: N::PinnedPoi7321209,
         materialization,
         ..Default::default()
     }

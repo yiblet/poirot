@@ -363,11 +363,6 @@ fn numeric_rendering_is_explicit_and_reserves_output_before_allocation() {
         coercev2::<FormulaText>(Input::direct(&number), &mut context).unwrap(),
         "-14"
     );
-    context.number_text_source = poirot_coercionv2::NumberTextSource::PoirotF6c572d;
-    assert_eq!(
-        coercev2::<FormulaText>(Input::direct(&number), &mut context).unwrap(),
-        "-14.000000000000002"
-    );
     let mut limited = CoercionV2Context::new(Limits {
         work: 100,
         text_bytes: 0,

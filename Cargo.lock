@@ -557,14 +557,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "poirot-coercion"
-version = "0.1.0"
-dependencies = [
- "nom",
- "poirot-coercionv2",
-]
-
-[[package]]
 name = "poirot-coercionv2"
 version = "0.1.0"
 dependencies = [

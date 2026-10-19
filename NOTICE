@@ -1,0 +1,29 @@
+Poirot's first-party contributions are licensed under the MIT license in
+LICENSE. Third-party material retains its own license; the MIT grant does
+not replace its terms or notices.
+
+Apache POI
+Poirot includes Rust translations and adaptations of Apache POI code.
+Source bindings identify revision 732120980140d5ed64b482c470e0b625cdb1ab15.
+https://github.com/apache/poi
+Apache-2.0; see LICENSES/Apache-2.0.txt.
+
+Apache Commons Math
+The statistical kernels include adaptations from Apache Commons Math 3.6.1.
+Copyright 2001-2016 The Apache Software Foundation.
+This product includes software developed at The Apache Software Foundation
+(http://www.apache.org/).
+https://github.com/apache/commons-math/tree/MATH_3_6_1
+Apache-2.0; see LICENSES/Apache-2.0.txt and source-file notices.
+
+Unicode data
+Generated case-mapping assets retain their Unicode copyright and permission
+notice in crates/poirot-functions-text/src/UNICODE-LICENSE.txt.
+
+LibreOffice test data
+The FODS corpus is separate test material, not MIT-licensed library code.
+Its manifest records source paths, hashes, and LibreOffice revision
+cd35bc0879ed5e4b8138b724033ea5937751a84d. Its MPL-2.0 license is retained at
+crates/poirot-test-runner/corpus/fods/COPYING.MPL.
+
+Per-file notices and dependency license terms continue to apply.

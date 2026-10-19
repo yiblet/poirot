@@ -111,7 +111,7 @@ impl<'a> Session<'a> {
         }
         match expression {
             // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
-            Expr::Number(value) => Ok(self.numeric_policy.coerce_numeric_literal(*value)?.into()),
+            Expr::Number(value) => Ok(numeric_outcome::coerce_numeric_literal(*value)?.into()),
             Expr::String(text) => {
                 self.budget.text(text.len())?;
                 Ok(Text(text.clone()).into())
@@ -236,49 +236,34 @@ impl<'a> Session<'a> {
         let value = self.scalar(at, value)?;
         // Selection above materializes references while preserving the scalar type.
         // The pinned POI numeric contract retains its text-only plus exception.
-        if *op == UnaryOp::ImplicitIntersection
-            || (*op == UnaryOp::Plus && self.numeric_policy == NumericOutcomePolicy::LegacyFinite)
-        {
+        if *op == UnaryOp::ImplicitIntersection {
             return Ok(value.into());
         }
-        if self.numeric_policy == NumericOutcomePolicy::PinnedPoi7321209 {
-            if *op == UnaryOp::Plus && value.text_ref().is_some() {
-                return Ok(value.into());
-            }
-            return Ok(
-                // TODO(coercion-non-argument): [LOW] Unary numeric coercion can erase blank or text identity if applied before the operator consumes it.
-                match semantic(self.coercev2_operator_number(&value))? {
-                    Ok(n) => match op {
-                        // SAFETY: ImplicitIntersection returns before either numeric unary match in this function.
-                        UnaryOp::ImplicitIntersection => unreachable!("selected above"),
-                        // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
-                        UnaryOp::Plus => self.numeric_policy.coerce_numeric_outcome(n),
-                        UnaryOp::Minus => {
-                            self.numeric_policy
-                                // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
-                                .coerce_numeric_outcome(if n == 0.0 { 0.0 } else { -n })
-                        }
-                        UnaryOp::Percent => {
-                            self.numeric_policy
-                                // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
-                                .coerce_numeric_outcome(if n == 0.0 { 0.0 } else { n / 100.0 })
-                        }
-                    }
-                    .into(),
-                    Err(error) => err(error),
-                },
-            );
+
+        if *op == UnaryOp::Plus && value.text_ref().is_some() {
+            return Ok(value.into());
         }
         Ok(
-            // TODO(coercion-non-argument): [LOW] Unary numeric coercion must stay at the operator; applying it during operand acquisition would affect selectors.
-            match semantic(self.coercev2_scalar_number(&value))? {
-                Ok(number) => finite(match op {
+            // TODO(coercion-non-argument): [LOW] Unary numeric coercion can erase blank or text identity if applied before the operator consumes it.
+            match semantic(self.coercev2_operator_number(&value))? {
+                Ok(n) => match op {
                     // SAFETY: ImplicitIntersection returns before either numeric unary match in this function.
                     UnaryOp::ImplicitIntersection => unreachable!("selected above"),
-                    UnaryOp::Plus => number,
-                    UnaryOp::Minus => -number,
-                    UnaryOp::Percent => number / 100.,
-                })
+                    // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+                    UnaryOp::Plus => numeric_outcome::coerce_numeric_outcome(n),
+                    UnaryOp::Minus => {
+                        // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+                        numeric_outcome::coerce_numeric_outcome(if n == 0.0 { 0.0 } else { -n })
+                    }
+                    UnaryOp::Percent => {
+                        // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
+                        numeric_outcome::coerce_numeric_outcome(if n == 0.0 {
+                            0.0
+                        } else {
+                            n / 100.0
+                        })
+                    }
+                }
                 .into(),
                 Err(error) => err(error),
             },

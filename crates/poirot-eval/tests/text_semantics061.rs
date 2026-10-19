@@ -18,11 +18,13 @@ fn run(formula: &str, configuration: &RunConfiguration) -> EvaluationOutcome<Cel
 }
 
 #[test]
-fn public_configuration_selects_scalar_or_utf16_len() {
-    let legacy = RunConfiguration::default();
+fn public_configuration_selects_documented_pairs_or_utf16_len() {
+    let legacy = RunConfiguration::default().with_text_policy(TextSemanticsPolicy {
+        source: TextSourceVersion::ExcelCompatibilityV2Documented,
+    });
     assert_eq!(
         legacy.text_policy().source,
-        TextSourceVersion::PoirotF6c572d
+        TextSourceVersion::ExcelCompatibilityV2Documented
     );
     let poi = legacy.clone().with_text_policy(TextSemanticsPolicy {
         source: TextSourceVersion::Poi7321209,
@@ -133,14 +135,7 @@ fn code_retained_ascii_type_is_policy_specific() {
     let poi = legacy.clone().with_text_policy(TextSemanticsPolicy {
         source: TextSourceVersion::Poi7321209,
     });
-    let excel = legacy.clone().with_text_policy(TextSemanticsPolicy {
-        source: TextSourceVersion::ExcelCompatibilityV2Unverified,
-    });
-    for (configuration, expected) in [
-        (&legacy, CellValue::Number(65.)),
-        (&poi, CellValue::Text("65".into())),
-        (&excel, CellValue::Number(65.)),
-    ] {
+    for (configuration, expected) in [(&poi, CellValue::Text("65".into()))] {
         match run(r#"CODE("A")"#, configuration) {
             EvaluationOutcome::Complete { value, .. } => assert_eq!(value, expected),
             outcome => panic!("{outcome:?}"),

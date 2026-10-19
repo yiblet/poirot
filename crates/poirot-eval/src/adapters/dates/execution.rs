@@ -490,11 +490,9 @@ impl Session<'_> {
                 Number(0.)
             };
             if name == DateFunction::Days360 {
-                return Ok(Number(days360(
-                    d,
-                    e,
-                    core_projection::coercev2_operand_boolean(&c, self.numeric_policy)?,
-                ) as f64));
+                return Ok(Number(
+                    days360(d, e, core_projection::coercev2_operand_boolean(&c)?) as f64,
+                ));
             }
             let basis = yearfrac_basis.unwrap_or(0);
             return Ok(Number(yearfrac(start, end, d, e, basis)?));

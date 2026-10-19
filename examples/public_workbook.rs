@@ -1,5 +1,5 @@
 //! Edit, evaluate, apply owned changes, and save without a separate calculator.
-use poirot::{CellValue, EvaluationContext, Overlay, Spreadsheet, eval, io, xls};
+use poirot::{CellValue, EvaluationContext, Overlay, Spreadsheet, eval};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut book = Spreadsheet::new();
     let sheet = book.workbook_mut().add_sheet("Inputs")?;
@@ -27,12 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         overlay.changes()
     };
     book.workbook_mut().apply(changes)?;
-    for bytes in [
-        book.plan_xlsx_save(io::WriteOptions::default())?
-            .to_buffer()?,
-        book.plan_xls_save(xls::XlsExportPolicy::default())?
-            .to_buffer()?,
-    ] {
+    for bytes in [book.save_xlsx().to_buffer()?, book.save_xls().to_buffer()?] {
         let reopened = Spreadsheet::from_bytes(&bytes)?;
         let saved = reopened
             .workbook()

@@ -4,22 +4,10 @@ use super::*;
 // Bounded dynamic programming; '~' escapes wildcards and matching is case-insensitive.
 /// Match the entire value with case-insensitive, tilde-escaped wildcard semantics.
 pub(super) fn wildcard(pattern: &str, value: &str, budget: &mut BudgetMeter) -> EvalResult<bool> {
-    wildcard_impl(pattern, value, false, budget)
+    wildcard_impl(pattern, value, budget)
 }
-/// Match a value prefix under the same metered wildcard rules.
-pub(super) fn wildcard_prefix(
-    pattern: &str,
-    value: &str,
-    budget: &mut BudgetMeter,
-) -> EvalResult<bool> {
-    wildcard_impl(pattern, value, true, budget)
-}
-fn wildcard_impl(
-    pattern: &str,
-    value: &str,
-    prefix: bool,
-    budget: &mut BudgetMeter,
-) -> EvalResult<bool> {
+
+fn wildcard_impl(pattern: &str, value: &str, budget: &mut BudgetMeter) -> EvalResult<bool> {
     budget.text(pattern.len())?;
     budget.text(value.len())?;
     budget.check_allocation(pattern.chars().flat_map(char::to_lowercase).count())?;
@@ -81,10 +69,6 @@ fn wildcard_impl(
         }
         dp = next
     }
-    Ok(if prefix {
-        dp.iter().any(|b| *b)
-    } else {
-        // SAFETY: Both local state vectors have value.len() + 1 entries; j ranges from one through value.len(), so j/j-1 and the terminal index are in bounds.
-        dp[value.len()]
-    })
+    // SAFETY: dp is initialized with value.len() + 1 elements, and every replacement has that same length.
+    Ok(dp[value.len()])
 }

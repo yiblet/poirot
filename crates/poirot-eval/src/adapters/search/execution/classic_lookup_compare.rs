@@ -107,7 +107,7 @@ mod java_tests {
                 &right,
                 SearchMode::Ascending,
                 false,
-                TextSourceVersion::PoirotF6c572d,
+                TextSourceVersion::Poi7321209,
                 &mut budget
             ),
             Ok(Some(Ordering::Equal))

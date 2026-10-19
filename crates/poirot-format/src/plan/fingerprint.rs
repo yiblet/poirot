@@ -1,5 +1,5 @@
 //! Deterministic encoding of complete syntax and raw compilation policy.
-use super::{Condition, Format, FormatCompilePolicy, FormatSourcePolicy, Token, ValidationPolicy};
+use super::{Condition, Format, FormatCompilePolicy, FormatSourcePolicy, Token};
 use std::hash::Hasher;
 
 /// Deterministic accumulator for exact formatting-program configuration identities.
@@ -33,12 +33,7 @@ pub(super) fn program_fingerprint(
 ) -> u64 {
     let mut h = Fingerprint(0xcbf29ce484222325);
     h.write_u8(match source {
-        FormatSourcePolicy::LegacyExcelStyle => 0,
         FormatSourcePolicy::Poi7321209DataFormatter => 1,
-    });
-    h.write_u8(match p.validation {
-        ValidationPolicy::AllSections => 0,
-        ValidationPolicy::SelectedSection => 1,
     });
     for n in [
         p.max_tokens_per_section,

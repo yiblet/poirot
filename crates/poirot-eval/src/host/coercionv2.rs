@@ -32,29 +32,7 @@ impl CallHost<'_, '_> {
     pub(crate) fn coercev2_scalar_text(&mut self, value: &CellValue) -> FunctionResult<String> {
         coercev2_formula_text(value, &mut self.session.budget)
     }
-    /// Render one legacy CONCAT member after preserving omission and origin.
-    pub(crate) fn coercev2_concat_member_text(
-        &mut self,
-        scalar: &ScalarOperand,
-    ) -> FunctionResult<String> {
-        use poirot_coercionv2::compatibility::{DeferredText, ScalarRef};
-        if matches!(scalar.value, Boolean(_)) {
-            self.check_text(5)?;
-        }
-        let input = if scalar.missing {
-            ScalarRef::Missing
-        } else {
-            (&scalar.value).into()
-        };
-        poirot_coercionv2::compatibility::coercev2_concat_member_text(
-            input,
-            |request| match request {
-                DeferredText::Number(number) => self.coercev2_scalar_text(&Number(number)),
-                DeferredText::Text(text) => self.project_text(text),
-                DeferredText::Missing => Err(VALUE_ERROR.into()),
-            },
-        )
-    }
+
     /// Project model text into a checked owned helper string.
     pub(crate) fn project_text(
         &mut self,
@@ -70,8 +48,6 @@ impl CallHost<'_, '_> {
     ) -> FunctionResult<f64> {
         self.check_text(text.len())?;
         let decision = match policy {
-            #[cfg(test)]
-            NumericPolicy::LegacyCompatible => numeric_policy::decide(text, policy),
             NumericPolicy::PinnedPoi => self.session.coercev2_formatted_text(text)?,
         };
         match decision {
@@ -85,14 +61,9 @@ impl CallHost<'_, '_> {
     pub(crate) fn coercev2_number_to_text(
         &mut self,
         value: f64,
-        policy: NumericPolicy,
+        _policy: NumericPolicy,
     ) -> FunctionResult<String> {
-        let source = match policy {
-            #[cfg(test)]
-            NumericPolicy::LegacyCompatible => poirot_coercionv2::NumberTextSource::PoirotF6c572d,
-            NumericPolicy::PinnedPoi => poirot_coercionv2::NumberTextSource::Poi7321209,
-        };
-        poirot_coercionv2::compatibility::coercev2_render_finite_number(value, source, || {
+        poirot_coercionv2::compatibility::coercev2_render_finite_number(value, || {
             self.check_text(poirot_numeric::number_text::ALLOCATION_BOUND)
         })
     }

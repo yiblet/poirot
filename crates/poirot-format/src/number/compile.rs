@@ -5,8 +5,8 @@ use crate::{FormatError, RenderedText, Token, error};
 
 impl NumberPlan {
     /// Resolve numeric tokens into checked digit, scaling, and affix state.
-    pub(super) fn compile_numeric(tokens: &[Token], strict: bool) -> Result<Self, FormatError> {
-        if strict {
+    pub(super) fn compile_numeric(tokens: &[Token]) -> Result<Self, FormatError> {
+        {
             let general = tokens.iter().any(|t| matches!(t, Token::General));
             let digits = tokens.iter().any(|t| matches!(t, Token::Digit(_)));
             let exponent = tokens.iter().any(|t| matches!(t, Token::Exponent { .. }));
@@ -65,15 +65,14 @@ impl NumberPlan {
         let exponent = tokens
             .iter()
             .position(|t| matches!(t, Token::Exponent { .. }));
-        if strict
-            && (exponent.is_some_and(|e| e < last)
-                || decimal.is_some_and(|d| {
-                    tokens
-                        .get(d + 1..last + 1)
-                        .unwrap_or(&[])
-                        .iter()
-                        .any(|t| matches!(t, Token::Comma))
-                }))
+        if exponent.is_some_and(|e| e < last)
+            || decimal.is_some_and(|d| {
+                tokens
+                    .get(d + 1..last + 1)
+                    .unwrap_or(&[])
+                    .iter()
+                    .any(|t| matches!(t, Token::Comma))
+            })
         {
             return Err(error("unsupported numeric placeholder placement"));
         }

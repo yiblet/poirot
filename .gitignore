@@ -2,3 +2,4 @@
 /board/
 __pycache__/
 *.py[cod]
+/.ignore/

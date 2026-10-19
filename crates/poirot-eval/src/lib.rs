@@ -1,4 +1,4 @@
-#![doc = include_str!("../README.md")]
+//! poirot eval.
 use CellError::*;
 use CellValue::{Blank, Boolean, Error, Number, Text};
 use poirot_model::{CellAddress, CellError, CellValue, MAX_COLUMNS, MAX_ROWS, Workbook};
@@ -26,7 +26,7 @@ pub use run::shared_workbook;
 /// Numeric result classification and compatibility policy.
 pub mod numeric_outcome;
 /// Numeric policy and its pinned source identity.
-pub use numeric_outcome::{NumericOutcomePolicy, NumericSourceBinding};
+pub use numeric_outcome::NumericSourceBinding;
 /// Identified exceptions to pinned source behavior.
 pub use poirot_model::KnownSourceException;
 /// Execution policies and formatting identities.
@@ -266,12 +266,6 @@ fn execute_configuration<T>(
     budgets: EvaluationBudgets,
     operation: impl FnOnce(&mut Session<'_>) -> EvalResult<T>,
 ) -> EvaluationOutcome<T> {
-    if let Err(failure) = configuration.validate() {
-        return EvaluationOutcome::Aborted {
-            failure,
-            usage: EvaluationUsage::default(),
-        };
-    }
     // Validate budgets before preparation to preserve the compatibility error order.
     let meter = match BudgetMeter::new(budgets) {
         Ok(meter) => meter,
@@ -287,7 +281,7 @@ fn execute_configuration<T>(
     session.currency = configuration.formatting().currency();
     session.number_locale = configuration.number_locale();
     session.text_policy = configuration.text_policy();
-    session.numeric_policy = configuration.numeric_policy();
+
     session.builtin_policy = configuration.builtin_policy();
     session.array_result_policy = configuration.array_result_policy();
     session.plan = Some(&plan);
@@ -492,7 +486,7 @@ struct Session<'a> {
     currency: Option<&'a CurrencyContext>,
     number_locale: &'a poirot_parsing::number::NumberLocaleV2,
     text_policy: poirot_text::TextSemanticsPolicy,
-    numeric_policy: NumericOutcomePolicy,
+
     builtin_policy: BuiltinSemanticsPolicy,
     array_result_policy: ArrayResultPolicy,
     expression_demand: expression_execution::ExpressionDemand,
@@ -536,7 +530,7 @@ mod namespace_resolution;
 mod session_execution;
 mod value_projection;
 mod wildcard_engine;
-use wildcard_engine::{wildcard, wildcard_prefix};
+use wildcard_engine::wildcard;
 
 #[cfg(test)]
 mod identifier_consumer_tests;

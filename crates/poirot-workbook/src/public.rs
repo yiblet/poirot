@@ -121,22 +121,79 @@ impl Spreadsheet {
             warnings: self.import_warnings,
         }
     }
-    /// Validate and borrow the source for XLSX serialization without calculation.
-    pub fn plan_xlsx_save(&self, options: io::WriteOptions) -> Result<SavePlan<'_>, WorkbookError> {
+    /// Configure an XLSX save with default options. Saving never recalculates.
+    pub fn save_xlsx(&self) -> XlsxSaveBuilder<'_> {
+        XlsxSaveBuilder {
+            workbook: &self.workbook,
+            options: io::WriteOptions::default(),
+        }
+    }
+    /// Configure a BIFF8 XLS save with the default export policy.
+    pub fn save_xls(&self) -> XlsSaveBuilder<'_> {
+        XlsSaveBuilder {
+            workbook: &self.workbook,
+            policy: xls::XlsExportPolicy::default(),
+        }
+    }
+}
+
+/// Configure an XLSX save before validating or writing the borrowed workbook.
+#[derive(Debug)]
+#[must_use = "Call build, to_buffer, or write_file to save the workbook"]
+pub struct XlsxSaveBuilder<'a> {
+    workbook: &'a Workbook,
+    options: io::WriteOptions,
+}
+impl<'a> XlsxSaveBuilder<'a> {
+    /// Replace the default resource and output options.
+    pub fn options(mut self, options: io::WriteOptions) -> Self {
+        self.options = options;
+        self
+    }
+    /// Validate the workbook without serializing or writing a file.
+    pub fn build(self) -> Result<SavePlan<'a>, WorkbookError> {
         Ok(SavePlan::Xlsx(io::plan_xlsx_export(
-            &self.workbook,
-            options,
+            self.workbook,
+            self.options,
         )?))
     }
-    /// Validate and borrow the source for bounded BIFF8 XLS serialization.
-    pub fn plan_xls_save(
-        &self,
-        policy: xls::XlsExportPolicy,
-    ) -> Result<SavePlan<'_>, WorkbookError> {
+    /// Validate and serialize the workbook to an owned buffer.
+    pub fn to_buffer(self) -> Result<Vec<u8>, WorkbookError> {
+        self.build()?.to_buffer()
+    }
+    /// Validate and serialize before opening the destination file.
+    pub fn write_file(self, path: impl AsRef<Path>) -> Result<(), WorkbookError> {
+        self.build()?.write_file(path)
+    }
+}
+
+/// Configure a BIFF8 XLS save before validating or writing the borrowed workbook.
+#[derive(Debug)]
+#[must_use = "Call build, to_buffer, or write_file to save the workbook"]
+pub struct XlsSaveBuilder<'a> {
+    workbook: &'a Workbook,
+    policy: xls::XlsExportPolicy,
+}
+impl<'a> XlsSaveBuilder<'a> {
+    /// Replace the default representation and resource policy.
+    pub fn policy(mut self, policy: xls::XlsExportPolicy) -> Self {
+        self.policy = policy;
+        self
+    }
+    /// Validate the workbook without serializing or writing a file.
+    pub fn build(self) -> Result<SavePlan<'a>, WorkbookError> {
         Ok(SavePlan::Xls(xls::XlsExportPlan::new(
-            &self.workbook,
-            policy,
+            self.workbook,
+            self.policy,
         )?))
+    }
+    /// Validate and serialize the workbook to an owned buffer.
+    pub fn to_buffer(self) -> Result<Vec<u8>, WorkbookError> {
+        self.build()?.to_buffer()
+    }
+    /// Validate and serialize before opening the destination file.
+    pub fn write_file(self, path: impl AsRef<Path>) -> Result<(), WorkbookError> {
+        self.build()?.write_file(path)
     }
 }
 

@@ -183,7 +183,7 @@ impl Session<'_> {
                     if indirect && matches!(v, Text(_) | CellValue::TextUtf16(_) | Blank) {
                         continue;
                     }
-                    match core_projection::coercev2_operand_boolean(&v, self.numeric_policy) {
+                    match core_projection::coercev2_operand_boolean(&v) {
                         Ok(b) => {
                             self.budget.check_allocation(truth.len() + 1)?;
                             self.budget.charge(WorkKind::Materialization, 1)?;
@@ -199,12 +199,8 @@ impl Session<'_> {
                 if matches!(v, Blank) {
                     continue;
                 }
-                let raw_sum = self.numeric_policy == NumericOutcomePolicy::PinnedPoi7321209
-                    && name == AggregateFunction::Statistics(StatisticsFunction::Sum);
-                if self.numeric_policy == NumericOutcomePolicy::PinnedPoi7321209
-                    && !raw_sum
-                    && matches!(v, Number(n) if !n.is_finite())
-                {
+                let raw_sum = name == AggregateFunction::Statistics(StatisticsFunction::Sum);
+                if !raw_sum && matches!(v, Number(n) if !n.is_finite()) {
                     return Err(EvaluationFailure::UnsupportedCapability {
                         capability: CapabilityId::FunctionAdapter,
                         source: Some(EvaluationTarget { sheet:s, address:at }),
@@ -306,11 +302,7 @@ impl Session<'_> {
                 | StatisticsFunction::TDist2T,
             ) => return Ok(err(VALUE_ERROR)),
             AggregateFunction::Statistics(StatisticsFunction::Sum) => {
-                if self.numeric_policy == NumericOutcomePolicy::PinnedPoi7321209 {
-                    nums.iter().fold(0.0, |acc, n| acc + *n)
-                } else {
-                    sum
-                }
+                nums.iter().fold(0.0, |acc, n| acc + *n)
             }
             AggregateFunction::Statistics(StatisticsFunction::SumSq) => {
                 nums.iter().map(|x| x * x).sum()
@@ -389,9 +381,6 @@ impl Session<'_> {
             ) => unreachable!("handled before numeric aggregation"),
         };
         // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
-        Ok(self
-            .numeric_policy
-            .coerce_checked_numeric_result(result)
-            .into())
+        Ok(numeric_outcome::coerce_checked_numeric_result(result).into())
     }
 }

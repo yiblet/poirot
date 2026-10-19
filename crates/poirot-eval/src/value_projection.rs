@@ -234,11 +234,7 @@ impl<'a> Session<'a> {
                 | BinaryOp::Greater
                 | BinaryOp::GreaterEqual
         ) {
-            let c = if self.numeric_policy == NumericOutcomePolicy::PinnedPoi7321209 {
-                core_projection::source_compare(&l, &r, &mut self.budget)?
-            } else {
-                compare(&l, &r, &mut self.budget)?
-            };
+            let c = core_projection::source_compare(&l, &r, &mut self.budget)?;
             return Ok(Boolean(match op {
                 BinaryOp::Equal => c.is_eq(),
                 BinaryOp::NotEqual => !c.is_eq(),
@@ -251,20 +247,8 @@ impl<'a> Session<'a> {
         let l = self.coercev2_operator_number(&l)?;
         let r = self.coercev2_operator_number(&r)?;
         let result = match op {
-            BinaryOp::Add => {
-                if self.numeric_policy == NumericOutcomePolicy::PinnedPoi7321209 {
-                    source_arithmetic::add(l, r, &mut self.budget)?
-                } else {
-                    l + r
-                }
-            }
-            BinaryOp::Subtract => {
-                if self.numeric_policy == NumericOutcomePolicy::PinnedPoi7321209 {
-                    source_arithmetic::subtract(l, r, &mut self.budget)?
-                } else {
-                    l - r
-                }
-            }
+            BinaryOp::Add => source_arithmetic::add(l, r, &mut self.budget)?,
+            BinaryOp::Subtract => source_arithmetic::subtract(l, r, &mut self.budget)?,
             BinaryOp::Multiply => l * r,
             BinaryOp::Divide => {
                 if r == 0. {
@@ -283,16 +267,13 @@ impl<'a> Session<'a> {
             }
             _ => return Err(VALUE_ERROR.into()),
         };
-        let result = if self.numeric_policy == NumericOutcomePolicy::PinnedPoi7321209
-            && op != BinaryOp::Subtract
-            && result == 0.0
-        {
+        let result = if op != BinaryOp::Subtract && result == 0.0 {
             0.0
         } else {
             result
         };
         // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
-        Ok(self.numeric_policy.coerce_checked_numeric_result(result))
+        Ok(numeric_outcome::coerce_checked_numeric_result(result))
     }
     // A reference or array supplies only stored cells; aggregate functions ignore blanks.
     /// Collect aggregation members, retaining reference origin and sparse traversal behavior.

@@ -105,7 +105,6 @@ impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
     fn policy_changed(&mut self, previous: &OverlayPolicy) {
         let policy = &self.source.policy;
         if previous.parse != policy.parse
-            || previous.numeric != policy.numeric
             || previous.builtin != policy.builtin
             || previous.arrays != policy.arrays
         {

@@ -455,7 +455,6 @@ fn publication_policy_reuses_raw_results_and_changes_only_saved_values() {
         .set_formula(at("E1").address, "NORMSINV(1E-300)", CellValue::Blank)
         .unwrap();
     let policy = OverlayPolicy {
-        numeric: crate::NumericOutcomePolicy::PinnedPoi7321209,
         ..Default::default()
     };
     let context = EvaluationContext::default();
@@ -1214,7 +1213,7 @@ fn roman_policy_locale_and_arabic_reference_edits_invalidate_after_snapshot_rest
 #[test]
 fn search_start_policy_switch_invalidates_restored_values_for_both_text_routes() {
     for source in [
-        crate::TextSourceVersion::PoirotF6c572d,
+        crate::TextSourceVersion::Poi7321209,
         crate::TextSourceVersion::Poi7321209OpenJdk21Unicode15,
     ] {
         let mut workbook = book();

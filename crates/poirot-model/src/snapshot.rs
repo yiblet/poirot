@@ -33,42 +33,6 @@ struct Sheet<'a> {
     cells: Vec<SnapshotCell<'a>>,
     spill_cache: Vec<(CellAddress, CellAddress, Option<Cow<'a, Cell>>)>,
 }
-/// Historical schema1 wire layout. Decode only through a schema-aware bounded envelope.
-#[derive(Deserialize)]
-pub struct LegacySnapshot<'a> {
-    sheets: Vec<LegacySheet<'a>>,
-    date_system: DateSystem,
-    names: Cow<'a, [NamedRange]>,
-}
-#[derive(Deserialize)]
-struct LegacySheet<'a> {
-    name: Cow<'a, str>,
-    rows: Vec<u32>,
-    visibility: Vec<(u32, RowVisibility)>,
-    cells: Vec<SnapshotCell<'a>>,
-    spill_cache: Vec<(CellAddress, CellAddress, Option<Cow<'a, Cell>>)>,
-}
-impl<'a> LegacySnapshot<'a> {
-    /// Add explicit visible/no-color defaults without decoding old bytes as schema2.
-    pub fn migrate(self) -> Snapshot<'a> {
-        Snapshot {
-            sheets: self
-                .sheets
-                .into_iter()
-                .map(|s| Sheet {
-                    name: s.name,
-                    presentation: SheetPresentation::default(),
-                    rows: s.rows,
-                    visibility: s.visibility,
-                    cells: s.cells,
-                    spill_cache: s.spill_cache,
-                })
-                .collect(),
-            date_system: self.date_system,
-            names: self.names,
-        }
-    }
-}
 /// Lossless snapshot value encoding numeric bits and exact UTF-16 units.
 #[derive(PartialEq, Eq, Serialize, Deserialize)]
 pub enum Value<'a> {

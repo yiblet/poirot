@@ -29,8 +29,8 @@ fn save_plans_refuse_raw_nonfinite_cache_and_accept_explicit_materialization() {
     let raw = overlay.cached_value(target(0, 0)).unwrap();
     let result = output(&mut overlay, &source);
     for error in [
-        result.plan_xlsx_save(Default::default()).unwrap_err(),
-        result.plan_xls_save(Default::default()).unwrap_err(),
+        result.save_xlsx().build().unwrap_err(),
+        result.save_xls().build().unwrap_err(),
     ] {
         let refusal = numeric_refusal(&error).expect("typed numeric fidelity refusal");
         assert_eq!(refusal.bits.bits(), f64::NEG_INFINITY.to_bits());
@@ -47,16 +47,8 @@ fn save_plans_refuse_raw_nonfinite_cache_and_accept_explicit_materialization() {
     ));
     let result = output(&mut overlay, &source);
     for bytes in [
-        result
-            .plan_xlsx_save(Default::default())
-            .unwrap()
-            .to_buffer()
-            .unwrap(),
-        result
-            .plan_xls_save(Default::default())
-            .unwrap()
-            .to_buffer()
-            .unwrap(),
+        result.save_xlsx().to_buffer().unwrap(),
+        result.save_xls().to_buffer().unwrap(),
     ] {
         let reopened = Spreadsheet::from_bytes(&bytes).unwrap();
         assert_eq!(get(&reopened, 0, 0), CellValue::Error(CellError::Div0));
@@ -109,16 +101,8 @@ fn nan_save_roundtrip_preserves_raw_computation_and_writes_num_errors() {
     assert_eq!(bits((*raw).clone()), nan);
     let result = output(&mut overlay, &source);
     for bytes in [
-        result
-            .plan_xlsx_save(Default::default())
-            .unwrap()
-            .to_buffer()
-            .unwrap(),
-        result
-            .plan_xls_save(Default::default())
-            .unwrap()
-            .to_buffer()
-            .unwrap(),
+        result.save_xlsx().to_buffer().unwrap(),
+        result.save_xls().to_buffer().unwrap(),
     ] {
         let reopened = Spreadsheet::from_bytes(&bytes).unwrap();
         for col in [0, 1] {

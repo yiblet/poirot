@@ -170,9 +170,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         self.session.builtin_policy
     }
     /// Return the run's numeric result construction policy.
-    pub(crate) fn numeric_outcome_policy(&self) -> NumericOutcomePolicy {
-        self.session.numeric_policy
-    }
+
     /// Attribute a pinned source exception to the current call's cell.
     pub(crate) fn known_source_exception(
         &self,
@@ -325,10 +323,15 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
     pub(crate) fn check_text(&mut self, bytes: usize) -> FunctionResult<()> {
         Ok(self.session.budget.text(bytes)?)
     }
-    /// Admit a growing text buffer; its appended bytes are charged separately.
-    pub(crate) fn check_text_capacity(&mut self, bytes: usize) -> FunctionResult<()> {
+    /// Check growing text capacity when copied bytes are charged separately.
+    pub(crate) fn check_text_capacity(&self, bytes: usize) -> FunctionResult<()> {
         Ok(self.session.budget.check_text(bytes)?)
     }
+    /// Check output capacity when materialization work is charged separately.
+    pub(crate) fn check_values_capacity(&self, elements: usize) -> FunctionResult<()> {
+        Ok(self.session.budget.check_allocation(elements)?)
+    }
+
     /// Charge helper work against active run and formula limits.
     pub(crate) fn charge_work(&mut self, units: u64) -> FunctionResult<()> {
         Ok(self

@@ -36,7 +36,7 @@ impl Session<'_> {
                 } else {
                     self.argument(s, at, args, 0)?
                 };
-                match core_projection::coercev2_operand_boolean(&condition, self.numeric_policy) {
+                match core_projection::coercev2_operand_boolean(&condition) {
                     Err(e) => err(e),
                     Ok(condition) => match args.get(if condition { 1 } else { 2 }) {
                         Some(expression) if expression.is_missing() => Blank.into(),
@@ -130,7 +130,6 @@ impl Session<'_> {
                 Ok(values) if arity.accepts(values.len()) => {
                     match core_projection::coercev2_operand_boolean(
                         values.first().ok_or(EvaluationFailure::StalePlan)?,
-                        self.numeric_policy,
                     ) {
                         Ok(value) => Boolean(!value).into(),
                         Err(e) => err(e),
@@ -159,16 +158,14 @@ impl Session<'_> {
         let mut needs_false = false;
         let condition = self.rectangular_values(at, condition_shape, |session, row, column| {
             let value = session.rectangular_element(&condition, condition_shape, row, column)?;
-            Ok(
-                match core_projection::coercev2_operand_boolean(&value, session.numeric_policy) {
-                    Ok(value) => {
-                        needs_true |= value;
-                        needs_false |= !value;
-                        Boolean(value)
-                    }
-                    Err(error) => Error(error),
-                },
-            )
+            Ok(match core_projection::coercev2_operand_boolean(&value) {
+                Ok(value) => {
+                    needs_true |= value;
+                    needs_false |= !value;
+                    Boolean(value)
+                }
+                Err(error) => Error(error),
+            })
         })?;
         // Only requested branches are evaluated, once per invocation. References remain
         // deferred so skipped member reads do not create dependencies or operational errors.

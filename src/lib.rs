@@ -1,4 +1,4 @@
-#![doc = include_str!("../README.md")]
+//! Read, edit, evaluate and write Excel workbooks.
 
 /// Versioned snapshot files, bounded decoding, and recoverable prepared state.
 pub mod artifact;
@@ -30,5 +30,5 @@ pub use poirot_workbook::{
     CellEvaluation, CompilationUsage, Evaluation, EvaluationBuilder, EvaluationContext,
     EvaluationFailure, EvaluationTarget, Overlay, OverlayBuilder, OverlayError, OverlayEvaluation,
     OverlayPolicy, OverlaySnapshot, SavePlan, Spreadsheet, WorkbookError, WorkbookSnapshot,
-    WorkspaceState, edit, public, translation_edit,
+    WorkspaceState, XlsSaveBuilder, XlsxSaveBuilder, edit, public, translation_edit,
 };

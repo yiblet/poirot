@@ -459,7 +459,13 @@ mod membership_tests {
             if suffix == Number(2.) {
                 run.budget.limits.materialized_values = 4;
             }
-            assert_eq!(lookup(&mut run, "MATCH(3,A1:A3,0)").unwrap(), Number(3.));
+            // POI numeric ingress retains infinity; comparison rejects it as NUM.
+            let expected = if matches!(suffix, Number(n) if !n.is_finite()) {
+                Error(Num)
+            } else {
+                Number(3.)
+            };
+            assert_eq!(lookup(&mut run, "MATCH(3,A1:A3,0)").unwrap(), expected);
             assert!(run.lookup_prefixes.members.is_empty(), "{suffix:?}");
             assert!(run.lookup_prefixes.axes.is_empty(), "{suffix:?}");
             run.lookup_prefixes.publish();

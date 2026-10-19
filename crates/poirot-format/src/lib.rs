@@ -1,4 +1,4 @@
-#![doc = include_str!("../README.md")]
+//! poirot format.
 use nom::{
     IResult, Parser,
     branch::alt,
@@ -326,8 +326,7 @@ pub fn format_value(
     format: &Format,
     options: FormatOptions,
 ) -> Result<FormattedValue, FormatError> {
-    let plan =
-        compile_program(format, FormatCompilePolicy::legacy_compatible()).map_err(|e| e.source)?;
+    let plan = compile_program(format, FormatCompilePolicy::default()).map_err(|e| e.source)?;
     render_value(value, &plan, options.into())
 }
 
@@ -368,8 +367,8 @@ pub use number::{NumberLayout, NumberPlan};
 /// Pure format compilation and bounded execution of immutable rendering programs.
 pub use plan::{
     FormatCompileError, FormatCompilePolicy, FormatLocale, FormatPlan, FormatRenderContext,
-    FormatSourcePolicy, SectionKind, SectionPlan, ValidationPolicy, compile_format,
-    compile_format_with_source, compile_program, compile_program_with_source, render_value,
+    FormatSourcePolicy, SectionKind, SectionPlan, compile_format, compile_format_with_source,
+    compile_program, compile_program_with_source, render_value,
 };
 
 #[cfg(test)]
@@ -394,7 +393,7 @@ mod tests {
             (1250000., "0.00,,", "1.25"),
             (2., "0.##", "2"),
             (2., "0.00", "2.00"),
-            (0.5, "#.##", ".5"),
+            (0.5, "#.##", "0.5"),
             (3., "000", "003"),
             (1.005, "0.00", "1.01"),
             (-1234., "#,##0;(#,##0)", "(1,234)"),
@@ -428,7 +427,7 @@ mod tests {
             (12345., "##0.0E+0", "12.3E+3"),
             (1.5, "# ?/?", "1 1/2"),
             (0.125, "?/8", "1/8"),
-            (2.75, "# ??/??", "2  3/ 4"),
+            (2.75, "# ??/??", "2 3/4"),
         ] {
             assert_eq!(render(n, f), want, "{f}");
         }

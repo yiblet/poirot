@@ -47,7 +47,7 @@ impl<'a> Session<'a> {
             context,
             currency: None,
             number_locale: &poirot_parsing::number::NumberLocaleV2::EN_US,
-            numeric_policy: NumericOutcomePolicy::LegacyFinite,
+
             builtin_policy: BuiltinSemanticsPolicy::default(),
             array_result_policy: ArrayResultPolicy::default(),
             expression_demand: Default::default(),
@@ -56,7 +56,7 @@ impl<'a> Session<'a> {
             blank_reads: Default::default(),
             spill_read_ranges: Default::default(),
             text_policy: poirot_text::TextSemanticsPolicy {
-                source: poirot_text::SourceVersion::PoirotF6c572d,
+                source: poirot_text::SourceVersion::Poi7321209,
             },
             cache: Default::default(),
             memo_limits: None,
@@ -391,10 +391,7 @@ impl<'a> Session<'a> {
                         }
                         Ok(match &cell.value {
                             // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
-                            Number(value) => self.numeric_policy.coerce_numeric_stage(
-                                numeric_outcome::NumericConstruction::CellNumericInput,
-                                *value,
-                            ),
+                            Number(value) => numeric_outcome::coerce_numeric_outcome(*value),
                             value => value.clone(),
                         })
                     }

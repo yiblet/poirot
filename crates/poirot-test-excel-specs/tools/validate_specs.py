@@ -266,21 +266,6 @@ def main():
         'unsupported_features': [{'id': f['id'], 'name': f['name'], 'source_urls': f['source_urls']} for f in features if f['implementation_status'] == 'unsupported']}
     if args.write_report:
         (ROOT / 'test-specs/coverage.json').write_text(json.dumps(report, indent=2) + '\n')
-        counts = summary['obligation_status_counts']
-        md = '# Excel E2E coverage inventory\n\n'
-        md += f"The single table contains {len(cases):,} cases, {steps_count:,} evaluation steps and {assertions_count:,} assertions citing {len(sources)} Microsoft sources. {summary['registered_functions_with_specifications']} of {len(registered)} registered function contracts have source-backed specifications. This is specification breadth, not verified passing coverage.\n\n"
-        md += f"Of {len(rows):,} potential obligations, {counts.get('specified_with_evidence', 0)} have documented assertion examples, {counts.get('missing', 0)} have no case, {counts.get('unresolved', 0)} have unresolved expectations, and {counts.get('not_applicable', 0)} are not applicable. Generic facets marked requires_research are not considered exhaustive merely because examples exist.\n\n"
-        md += f"Workbook coverage includes {summary['multi_step_cases']} multistep cases, {summary['named_cases']} named fixtures, {summary['date1904_cases']} fixtures in the 1904 date system, and {summary['array_assertions']} complete worksheet-footprint assertions.\n\n"
-        md += 'Evidence: ' + ', '.join(f'{n:,} {kind.replace("_", " ")}' for kind, n in sorted(evidence_counts.items())) + '. No ROI evaluator tests or Excel observations were run during authoring.\n\n'
-        md += 'The complete machine-readable missing-obligation and capability lists are in [coverage.json](coverage.json), with scope and individual obligations in [inventory.json](inventory.json). Passing behavior remains unverified.\n\n'
-        md += '## Scoped execution capabilities\n\n'
-        md += f'Registered means membership in the default {len(registered)}-entry registry. Entries below describe bounded policy-specific support; neither status establishes complete compatibility or live runtime verification.\n\n'
-        for feature in report['scoped_capabilities']:
-            scope = feature['implementation_scope']
-            md += '- **' + feature['id'] + '** (' + feature['implementation_status'] + '; ' + ', '.join(scope['policies']) + '): ' + scope['supported'] + ' Limits: ' + ' '.join(scope['limitations']) + '\n'
-        md += '\n'
-        md += '## Explicit capability gaps\n\n' + '\n'.join('- ' + f['id'] for f in report['unsupported_features']) + '\n'
-        (ROOT / 'test-specs/coverage.md').write_text(md)
     print(json.dumps(summary, indent=2))
 
 

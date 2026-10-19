@@ -103,7 +103,7 @@ fn frozen_external_names_reuse_first_spelling_without_widening_the_finder() {
     let workbook = workbook();
     let mut registry = ExtensionRegistry::new();
     // Independent fresh names keep the direct finder boundary: native POI throws
-    // NotImplementedException here; legacy poirot represents unknown as #NAME?.
+    // NotImplementedException here; unknown functions return the spreadsheet #NAME? error.
     for spelling in ["_XLFN.IFNA", "_Xlfn.IfNa"] {
         assert_eq!(
             value(run(&workbook, &registry, &format!("{spelling}(#N/A,2)"))),

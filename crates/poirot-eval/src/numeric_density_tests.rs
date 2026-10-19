@@ -8,7 +8,7 @@ fn at(col: u32) -> CellAddress {
     CellAddress { row: 0, col }
 }
 fn c() -> RunConfiguration {
-    RunConfiguration::default().with_numeric_policy(NumericOutcomePolicy::PinnedPoi7321209)
+    RunConfiguration::default()
 }
 fn run(w: &Workbook, f: &str) -> EvaluationOutcome<CellValue> {
     run_formula_with_configuration(w, 0, at(25), f, &c(), EvaluationBudgets::default())
@@ -53,15 +53,15 @@ fn tiny_string_density_is_raw_number_through_actual_aliases_and_consumers() {
             assert_eq!(value(run(&w, &wrapped)), Error(Num));
         }
         assert_eq!(
-            value(run_formula_with_configuration(
+            bits(value(run_formula_with_configuration(
                 &w,
                 0,
                 at(25),
                 &f,
                 &RunConfiguration::default(),
                 EvaluationBudgets::default()
-            )),
-            Error(Num)
+            ))),
+            f64::INFINITY.to_bits()
         );
         assert_eq!(
             bits(value(run(&w, &format!("{name}(0,0,\"5e-324\",TRUE)")))),

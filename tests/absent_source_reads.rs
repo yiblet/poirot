@@ -1,7 +1,7 @@
 //! Reading an implicit blank must not author a cell during result publication.
 use poirot::{
     CellStyle, CellValue, Evaluation, EvaluationContext, EvaluationTarget, Overlay, Spreadsheet,
-    Workbook, WorkbookChange, io,
+    Workbook, WorkbookChange,
 };
 
 fn at(cell: &str) -> EvaluationTarget {
@@ -25,11 +25,30 @@ macro_rules! source_read_test {
         #[test]
         fn $name() {
             let source = book();
-            let mut runtime = ($construct)(&source);
             let read = $read;
-            // The exact issue029 reproducer, plus scalar, range, and selector consumers.
+            {
+            let mut runtime = ($construct)(&source);
+            // The pinned POI string consumer refuses omitted syntax. That refusal
+            // must not create the adjacent absent cell or publish a formula result.
+            runtime.set_formula(at("Z100"), "CONCAT(,A2,\"\",\"x\")").unwrap();
+            assert!(matches!(read(&mut runtime, at("Z100")),
+                Err(poirot::eval::EvaluationFailure::UnsupportedCapability { .. })));
+            assert!(!runtime.changes().iter().any(|change| matches!(change,
+                WorkbookChange::SetValue { address, .. } if *address == at("A2").address
+            )));
+            let changes = runtime.changes();
+            assert!(!changes.iter().any(|change| matches!(change,
+                WorkbookChange::SetCachedValue { address, .. } if *address == at("Z100").address
+            )));
+            let mut applied = source.clone();
+            applied.apply(changes).unwrap();
+            assert!(applied.sheet(0).unwrap().get(at("A2").address).is_none());
+            }
+            let mut runtime = ($construct)(&source);
+            // Explicit empty text and referenced blanks remain distinct from omission.
+            // These valid scalar, range, and selector reads must preserve absence.
             for (formula, expected) in [
-                ("CONCAT(,A2,\"\",\"x\")", CellValue::Text("x".into())),
+                ("CONCAT(A2,\"\",\"x\")", CellValue::Text("x".into())),
                 ("ISBLANK(A2)", CellValue::Boolean(true)),
                 ("LEN(A2)", CellValue::Number(0.)),
                 ("SUM(A2:B2)", CellValue::Number(0.)),
@@ -37,8 +56,8 @@ macro_rules! source_read_test {
                 ("ISBLANK(IF(TRUE,A2,7))", CellValue::Boolean(true)),
             ] {
                 runtime.set_formula(at("Z100"), formula).unwrap();
-                assert_eq!(read(&mut runtime, at("Z100")), expected, "{formula}");
-                assert_eq!(read(&mut runtime, at("A2")), CellValue::Blank);
+                assert_eq!(read(&mut runtime, at("Z100")).unwrap(), expected, "{formula}");
+                assert_eq!(read(&mut runtime, at("A2")).unwrap(), CellValue::Blank);
                 let changes = runtime.changes();
                 assert!(!changes.iter().any(|change| matches!(change,
                     WorkbookChange::SetValue { address, .. } if *address == at("A2").address
@@ -50,10 +69,10 @@ macro_rules! source_read_test {
             // Authored blank/style edits must still create real cells and invalidate reads.
             runtime.set_value(at("A2"), 7.).unwrap();
             runtime.set_formula(at("Z100"), "ISBLANK(A2)").unwrap();
-            assert_eq!(read(&mut runtime, at("Z100")), CellValue::Boolean(false));
+            assert_eq!(read(&mut runtime, at("Z100")).unwrap(), CellValue::Boolean(false));
             runtime.set_value(at("A2"), CellValue::Blank).unwrap();
             runtime.set_style(at("A2"), CellStyle { number_format: Some("0.00".into()) }).unwrap();
-            assert_eq!(read(&mut runtime, at("Z100")), CellValue::Boolean(true));
+            assert_eq!(read(&mut runtime, at("Z100")).unwrap(), CellValue::Boolean(true));
             let changes = runtime.changes();
             assert!(changes.iter().any(|change| matches!(change,
                 WorkbookChange::SetValue { address, value: CellValue::Blank, .. }
@@ -66,13 +85,13 @@ macro_rules! source_read_test {
             assert_eq!(cell.style.number_format.as_deref(), Some("0.00"));
             // Removing that override restores absence; the next read must not recreate it.
             runtime.remove_cell(at("A2")).unwrap();
-            assert_eq!(read(&mut runtime, at("Z100")), CellValue::Boolean(true));
+            assert_eq!(read(&mut runtime, at("Z100")).unwrap(), CellValue::Boolean(true));
             let mut applied = source.clone();
             applied.apply(runtime.changes()).unwrap();
             assert!(applied.sheet(0).unwrap().get(at("A2").address).is_none());
             // Removing baseline content likewise preserves a real RemoveCell change.
             runtime.remove_cell(at("A1")).unwrap();
-            assert_eq!(read(&mut runtime, at("A1")), CellValue::Blank);
+            assert_eq!(read(&mut runtime, at("A1")).unwrap(), CellValue::Blank);
             let changes = runtime.changes();
             assert!(changes.iter().any(|change| matches!(change,
                 WorkbookChange::RemoveCell { address, .. } if *address == at("A1").address
@@ -83,7 +102,7 @@ macro_rules! source_read_test {
             // Worksheet publication replaces a stale cache with zero and retains the formula.
             runtime.set_formula(at("Z100"), "IF(TRUE,,)").unwrap();
             runtime.set_cached_value(at("Z100"), 99.).unwrap();
-            assert_eq!(read(&mut runtime, at("Z100")), CellValue::Number(0.));
+            assert_eq!(read(&mut runtime, at("Z100")).unwrap(), CellValue::Number(0.));
             let changes = runtime.changes();
             assert!(changes.iter().any(|change| matches!(change,
                 WorkbookChange::SetCachedValue { address, value: CellValue::Number(0.), .. }
@@ -92,7 +111,7 @@ macro_rules! source_read_test {
             let mut applied = source.clone();
             applied.apply(changes).unwrap();
             let bytes = Spreadsheet::from_workbook(applied)
-                .plan_xlsx_save(io::WriteOptions::default()).unwrap().to_buffer().unwrap();
+                .save_xlsx().to_buffer().unwrap();
             let reopened = Spreadsheet::from_bytes(&bytes).unwrap();
             assert!(reopened.workbook().sheet(0).unwrap().get(at("A2").address).is_none());
             let cell = reopened.workbook().sheet(0).unwrap().get(at("Z100").address).unwrap();
@@ -107,7 +126,7 @@ source_read_test!(
     |source| Evaluation::with_workbook(source)
         .build(EvaluationContext::default())
         .unwrap(),
-    |runtime: &mut Evaluation<'_>, target| runtime.cell(target).unwrap()
+    |runtime: &mut Evaluation<'_>, target| runtime.cell(target)
 );
 source_read_test!(
     overlay_reads_preserve_source_presence,
@@ -116,7 +135,6 @@ source_read_test!(
         .evaluation(&EvaluationContext::default())
         .unwrap()
         .cell(target)
-        .unwrap()
 );
 
 #[test]
@@ -127,7 +145,7 @@ fn absent_reads_and_retained_results_survive_snapshot_without_authoring_cells() 
         .build(context.clone())
         .unwrap();
     let mut overlay = Overlay::with_workbook(&source).build().unwrap();
-    let formula = "CONCAT(,A2,\"\",\"x\")";
+    let formula = "CONCAT(A2,\"\",\"x\")";
     direct.set_formula(at("Z100"), formula).unwrap();
     overlay.set_formula(at("Z100"), formula).unwrap();
     let expected = CellValue::Text("x".into());

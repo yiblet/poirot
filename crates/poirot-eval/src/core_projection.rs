@@ -111,14 +111,11 @@ pub(super) fn coercev2_logical_boolean(v: &CellValue) -> Result<bool, CellError>
     .ok_or(VALUE_ERROR)
 }
 /// Source OperandResolver consumers reject NaN; lookup range flags keep coercev2_logical_boolean().
-pub(super) fn coercev2_operand_boolean(
-    v: &CellValue,
-    policy: NumericOutcomePolicy,
-) -> Result<bool, CellError> {
+pub(super) fn coercev2_operand_boolean(v: &CellValue) -> Result<bool, CellError> {
     poirot_coercionv2::compatibility::coercev2_boolean(
         v.into(),
         poirot_coercionv2::compatibility::BooleanPolicy {
-            reject_nan: policy == NumericOutcomePolicy::PinnedPoi7321209,
+            reject_nan: true,
             blank: true,
         },
     )?
@@ -310,9 +307,7 @@ impl Session<'_> {
     }
     /// Existing numeric operator inputs retain their bits under the pinned policy.
     pub(super) fn coercev2_operator_number(&mut self, value: &CellValue) -> FunctionResult<f64> {
-        if self.numeric_policy == NumericOutcomePolicy::PinnedPoi7321209
-            && let Number(n) = value
-        {
+        if let Number(n) = value {
             return Ok(*n);
         }
         self.coercev2_scalar_number(value)

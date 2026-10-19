@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'test-specs'))
 from case_table import read_table
 
-OUTPUTS = ['sources.json', 'coverage.json', 'coverage.md']
+OUTPUTS = ['sources.json', 'coverage.json']
 
 
 def rebuild(root):

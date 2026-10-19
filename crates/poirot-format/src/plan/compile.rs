@@ -2,8 +2,7 @@
 use super::fingerprint::program_fingerprint;
 use super::{
     Format, FormatCompileError, FormatCompilePolicy, FormatError, FormatPlan, FormatSourcePolicy,
-    NumberPlan, SectionKind, SectionPlan, SectionProgram, Token, ValidationPolicy, date, error,
-    number, parse_format,
+    NumberPlan, SectionKind, SectionPlan, SectionProgram, Token, date, error, number, parse_format,
 };
 
 fn diagnostic(section: usize, token: Option<usize>, source: FormatError) -> FormatCompileError {
@@ -87,26 +86,12 @@ pub fn compile_program_with_source(
             && section.tokens.iter().any(|t| matches!(t, Token::Slash));
         let (kind, program) = if dates {
             match date::DatePlan::compile(&section.tokens) {
-                Ok(p) => (
-                    SectionKind::LegacyDateTime,
-                    SectionProgram::LegacyDateTime(p),
-                ),
-                Err(e) if policy.validation == ValidationPolicy::SelectedSection => (
-                    SectionKind::DeferredInvalidNumber,
-                    SectionProgram::DeferredInvalidNumber(e),
-                ),
+                Ok(p) => (SectionKind::DateTime, SectionProgram::DateTime(p)),
                 Err(e) => return Err(diagnostic(index, None, e)),
             }
         } else if fraction {
             match number::FractionPlan::compile_with_source(&section.tokens, source) {
-                Ok(p) => (
-                    SectionKind::LegacyFraction,
-                    SectionProgram::LegacyFraction(p),
-                ),
-                Err(e) if policy.validation == ValidationPolicy::SelectedSection => (
-                    SectionKind::DeferredInvalidNumber,
-                    SectionProgram::DeferredInvalidNumber(e),
-                ),
+                Ok(p) => (SectionKind::Fraction, SectionProgram::Fraction(p)),
                 Err(e) => return Err(diagnostic(index, None, e)),
             }
         } else {
@@ -127,20 +112,12 @@ pub fn compile_program_with_source(
                 && format.sections.len() <= 2
                 && format.sections.iter().all(|s| s.condition.is_none())
             {
-                source
+                true
             } else {
-                FormatSourcePolicy::LegacyExcelStyle
+                false
             };
-            match NumberPlan::compile_with_source(
-                &section.tokens,
-                policy.validation == ValidationPolicy::AllSections,
-                decimal_source,
-            ) {
+            match NumberPlan::compile_with_source(&section.tokens, decimal_source) {
                 Ok(p) => (kind, SectionProgram::Number(p)),
-                Err(e) if policy.validation == ValidationPolicy::SelectedSection => (
-                    SectionKind::DeferredInvalidNumber,
-                    SectionProgram::DeferredInvalidNumber(e),
-                ),
                 Err(e) => return Err(diagnostic(index, None, e)),
             }
         };

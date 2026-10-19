@@ -62,9 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for warning in output.import_warnings() {
         eprintln!("{warning}");
     }
-    output
-        .plan_xlsx_save(Default::default())?
-        .write_file(&output_path)?;
+    output.save_xlsx().build()?.write_file(&output_path)?;
     let reopened = Spreadsheet::open(&output_path)?;
     let address = "B1".parse()?;
     let saved = reopened

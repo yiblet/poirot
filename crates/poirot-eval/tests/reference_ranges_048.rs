@@ -62,7 +62,7 @@ fn names_remain_lazy_scoped_operands_instead_of_speculative_columns() {
         value(&w, 0, "ROWS(A1:Loop)"),
         CellValue::Error(CellError::Ref)
     );
-    // Existing poirot compatibility guard; POI RangeEval does not impose it.
+    // Range operands must address one sheet; multi-sheet ranges are unsupported.
     assert_eq!(
         value(&w, 0, "ROWS(Data!A1:Other!C4)"),
         CellValue::Error(CellError::Ref)

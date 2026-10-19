@@ -4,8 +4,6 @@
 /// Sources are explicit. No authentic modern Excel observations are available.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum SourceVersion {
-    /// Legacy ROI text behavior pinned to the named source revision.
-    PoirotF6c572d,
     /// Text counting and indexing from the pinned POI revision.
     Poi7321209,
     /// Explicit OpenJDK21.0.8 Unicode15 ROOT tables; no runtime equivalence claim.
@@ -88,12 +86,6 @@ impl TextSemanticsPolicy {
                 (Units::Utf16SurrogatePairs, None)
             }
             (SourceVersion::ExcelCompatibilityV2Documented, _) => (Units::Utf16CodeUnits, None),
-            (SourceVersion::PoirotF6c572d, Concat) => {
-                return Err(Unsupported::MissingSourceOperation);
-            }
-            (SourceVersion::PoirotF6c572d, ConcatOperator) => (Units::Utf8Bytes, Some(32767)),
-            (SourceVersion::PoirotF6c572d, Concatenate) => (Units::UnicodeScalars, Some(32767)),
-            (SourceVersion::PoirotF6c572d, Len | Index) => (Units::UnicodeScalars, None),
             (SourceVersion::Poi7321209 | SourceVersion::Poi7321209OpenJdk21Unicode15, _) => {
                 (Units::Utf16CodeUnits, None)
             }
@@ -259,11 +251,11 @@ mod tests {
     #[test]
     fn source_limits_and_allocation_units_are_separate() {
         let policy = TextSemanticsPolicy {
-            source: SourceVersion::PoirotF6c572d,
+            source: SourceVersion::Poi7321209,
         };
         let text = "😀".repeat(8192);
         assert!(
-            !measure_concat(
+            measure_concat(
                 [text.as_str()],
                 policy.operation(Operation::ConcatOperator).unwrap()
             )

@@ -1,4 +1,4 @@
-#![doc = include_str!("../README.md")]
+//! Workbook-independent formula scanning and spreadsheet text grammars.
 
 pub mod criteria;
 pub mod date;

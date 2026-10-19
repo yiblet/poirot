@@ -185,10 +185,7 @@ impl<'a> CoerceV2<'a> for FormulaText {
             CellValue::Boolean(false) => Ok(Cow::Borrowed("FALSE")),
             CellValue::Number(number) if number.is_finite() => {
                 context.admit_text(poirot_numeric::number_text::ALLOCATION_BOUND)?;
-                Ok(Cow::Owned(poirot_numeric::number_text::render(
-                    *number,
-                    context.number_text_source,
-                )))
+                Ok(Cow::Owned(poirot_numeric::number_text::render(*number)))
             }
             CellValue::Number(_) => Err(CoercionV2Failure::Worksheet(CellError::Num)),
             value => {

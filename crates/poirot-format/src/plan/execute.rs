@@ -78,7 +78,7 @@ fn select(plan: &FormatPlan, n: f64) -> Result<(&SectionPlan, bool), FormatError
     ))
 }
 /// Execute an immutable plan using precomputed decimal/scientific/fraction layouts.
-/// General uses compiled segments; date/text remain explicit legacy adapters.
+/// General, date, and text sections render from compiled layouts.
 pub fn render_value(
     value: &CellValue,
     plan: &FormatPlan,
@@ -139,11 +139,8 @@ pub fn render_value(
                 .program
             {
                 SectionProgram::Number(p) => p.render_output(n)?,
-                SectionProgram::LegacyFraction(p) => p.render_output(n)?,
-                SectionProgram::LegacyDateTime(t) => {
-                    t.render(n, context.date_system, context.locale)?
-                }
-                SectionProgram::DeferredInvalidNumber(e) => return Err(e.clone()),
+                SectionProgram::Fraction(p) => p.render_output(n)?,
+                SectionProgram::DateTime(t) => t.render(n, context.date_system, context.locale)?,
             }
         }
     };

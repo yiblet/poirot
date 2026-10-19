@@ -74,7 +74,7 @@ pub struct RunConfiguration {
     formatting: FormattingConfiguration,
     number_locale: poirot_parsing::number::NumberLocaleV2,
     text_policy: TextSemanticsPolicy,
-    numeric_policy: crate::NumericOutcomePolicy,
+
     builtin_policy: BuiltinSemanticsPolicy,
     array_result_policy: ArrayResultPolicy,
     materialization_policy: crate::FormulaCacheMaterializationPolicy,
@@ -86,12 +86,12 @@ impl RunConfiguration {
             context,
             formatting,
             number_locale: Default::default(),
-            numeric_policy: crate::NumericOutcomePolicy::LegacyFinite,
+
             builtin_policy: BuiltinSemanticsPolicy::default(),
             array_result_policy: ArrayResultPolicy::default(),
             materialization_policy: crate::FormulaCacheMaterializationPolicy::PreserveComputed,
             text_policy: TextSemanticsPolicy {
-                source: SourceVersion::PoirotF6c572d,
+                source: SourceVersion::Poi7321209,
             },
         }
     }
@@ -120,7 +120,7 @@ impl RunConfiguration {
     pub fn number_locale(&self) -> &poirot_parsing::number::NumberLocaleV2 {
         &self.number_locale
     }
-    /// Select a source-version policy explicitly. Existing constructors preserve legacy ROI units.
+    /// Select an explicit text source contract.
     pub fn with_text_policy(mut self, text_policy: TextSemanticsPolicy) -> Self {
         self.text_policy = text_policy;
         self
@@ -129,11 +129,7 @@ impl RunConfiguration {
     pub fn text_policy(&self) -> TextSemanticsPolicy {
         self.text_policy
     }
-    /// Select numeric result classification behavior.
-    pub fn with_numeric_policy(mut self, policy: crate::NumericOutcomePolicy) -> Self {
-        self.numeric_policy = policy;
-        self
-    }
+
     /// Select builtin compatibility behavior.
     pub fn with_builtin_policy(mut self, policy: BuiltinSemanticsPolicy) -> Self {
         self.builtin_policy = policy;
@@ -152,10 +148,7 @@ impl RunConfiguration {
     pub fn array_result_policy(&self) -> ArrayResultPolicy {
         self.array_result_policy
     }
-    /// Return the selected numeric result behavior.
-    pub fn numeric_policy(&self) -> crate::NumericOutcomePolicy {
-        self.numeric_policy
-    }
+
     /// Select conversion behavior for saved workbook formula caches.
     pub fn with_materialization_policy(
         mut self,
@@ -168,10 +161,7 @@ impl RunConfiguration {
     pub fn materialization_policy(&self) -> crate::FormulaCacheMaterializationPolicy {
         self.materialization_policy
     }
-    /// Reject incompatible computation and cache materialization policies.
-    pub fn validate(&self) -> Result<(), crate::EvaluationFailure> {
-        self.materialization_policy.validate(self.numeric_policy)
-    }
+
     /// Complete exact identity, including text source and every owned currency field.
     pub fn fingerprint(&self) -> ConfigurationFingerprint {
         ConfigurationFingerprint {
@@ -179,10 +169,10 @@ impl RunConfiguration {
             formatting: self.formatting.clone(),
             number_locale: self.number_locale.clone(),
             text_policy: self.text_policy,
-            numeric_policy: self.numeric_policy,
+
             builtin_policy: self.builtin_policy,
             array_result_policy: self.array_result_policy,
-            numeric_source: self.numeric_policy.source_binding(),
+            numeric_source: crate::numeric_outcome::source_binding(),
             materialization: self.materialization_policy.identity(),
         }
     }
@@ -210,13 +200,13 @@ pub struct ConfigurationFingerprint {
     /// Selected text source semantics.
     pub text_policy: TextSemanticsPolicy,
     /// Selected numeric result semantics.
-    pub numeric_policy: crate::NumericOutcomePolicy,
+
     /// Selected builtin compatibility behavior.
     pub builtin_policy: BuiltinSemanticsPolicy,
     /// Selected array publication behavior.
     pub array_result_policy: ArrayResultPolicy,
     /// Pinned numeric source identity, when selected.
-    pub numeric_source: Option<crate::NumericSourceBinding>,
+    pub numeric_source: crate::NumericSourceBinding,
     /// Saved-cache conversion identity.
     pub materialization: crate::FormulaCacheMaterializationIdentity,
 }
@@ -226,19 +216,18 @@ pub struct ConfigurationFingerprint {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ComputationFingerprint {
     /// Numeric result behavior affecting raw computation.
-    pub numeric_policy: crate::NumericOutcomePolicy,
+
     /// Builtin compatibility behavior affecting raw computation.
     pub builtin_policy: BuiltinSemanticsPolicy,
     /// Array publication behavior affecting computed results.
     pub array_result_policy: ArrayResultPolicy,
     /// Pinned numeric implementation identity, when selected.
-    pub numeric_source: Option<crate::NumericSourceBinding>,
+    pub numeric_source: crate::NumericSourceBinding,
 }
 impl ConfigurationFingerprint {
     /// Extract policies that affect computation independently of consumed context fields.
     pub fn computation(&self) -> ComputationFingerprint {
         ComputationFingerprint {
-            numeric_policy: self.numeric_policy,
             builtin_policy: self.builtin_policy,
             array_result_policy: self.array_result_policy,
             numeric_source: self.numeric_source,

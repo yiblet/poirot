@@ -1,4 +1,4 @@
-#![doc = include_str!("../README.md")]
+//! Sparse workbook storage, typed cell values, and checked workbook edits.
 use std::{collections::BTreeMap, fmt, str::FromStr};
 
 mod numeric_fidelity;

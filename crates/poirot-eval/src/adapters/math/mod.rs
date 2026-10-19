@@ -95,15 +95,7 @@ pub(crate) fn execute(
     match helper::evaluate_with_policy(&mut host, function, &indices, policy) {
         Ok(number) => {
             host.check_values(1).map_err(operational_only)?;
-            Ok(
-                if host.numeric_outcome_policy() == NumericOutcomePolicy::PinnedPoi7321209 {
-                    // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
-                    host.numeric_outcome_policy().coerce_numeric_outcome(number)
-                } else {
-                    Number(number)
-                }
-                .into(),
-            )
+            Ok(numeric_outcome::coerce_numeric_outcome(number).into())
         }
         Err(Failure::Spreadsheet(error)) => Ok(err(error)),
         Err(Failure::Operational(failure)) => Err(failure),

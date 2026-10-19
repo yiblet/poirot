@@ -8,14 +8,8 @@ fn saved_typed_formula_evidence_and_import_losses_remain_discoverable() {
         .set_formula("A1".parse().unwrap(), "1=1", CellValue::Boolean(true))
         .unwrap();
     for bytes in [
-        book.plan_xlsx_save(io::WriteOptions::default())
-            .unwrap()
-            .to_buffer()
-            .unwrap(),
-        book.plan_xls_save(xls::XlsExportPolicy::default())
-            .unwrap()
-            .to_buffer()
-            .unwrap(),
+        book.save_xlsx().to_buffer().unwrap(),
+        book.save_xls().to_buffer().unwrap(),
     ] {
         let reopened = Spreadsheet::load_bytes(
             &bytes,
@@ -52,7 +46,7 @@ fn pure_planning_preserves_source_and_budget_failure_has_typed_cause() {
         max_source_bytes: 0,
         ..Default::default()
     };
-    let error = book.plan_xlsx_save(options).unwrap_err();
+    let error = book.save_xlsx().options(options).build().unwrap_err();
     assert!(
         error
             .source()
@@ -61,8 +55,18 @@ fn pure_planning_preserves_source_and_budget_failure_has_typed_cause() {
             .is_some()
     );
     assert_eq!(book.workbook(), &before);
-    let plan = book.plan_xls_save(xls::XlsExportPolicy::default()).unwrap();
+    let plan = book.save_xls().build().unwrap();
     assert!(matches!(plan, poirot::SavePlan::Xls(_)));
+    assert_eq!(book.workbook(), &before);
+    let error = book
+        .save_xls()
+        .policy(xls::XlsExportPolicy {
+            max_cells: 0,
+            ..Default::default()
+        })
+        .build()
+        .unwrap_err();
+    assert!(matches!(error, poirot::WorkbookError::Xls(_)));
     assert_eq!(book.workbook(), &before);
 }
 
@@ -142,6 +146,11 @@ fn formatting_context_and_text_policy_invalidate_actual_consumers() {
     };
     context.formatting = poirot::eval::FormattingConfiguration::with_currency(currency.clone());
     overlay.evaluation(&context).unwrap().all().unwrap();
+    // The default POI contract counts the emoji's two UTF16 units.
+    assert_eq!(
+        *overlay.cached_value(target("B1")).unwrap(),
+        CellValue::Number(2.)
+    );
     currency.positive_prefix = "USD ".into();
     context.formatting = poirot::eval::FormattingConfiguration::with_currency(currency);
     let mut evaluation = overlay.evaluation(&context).unwrap();
@@ -152,13 +161,13 @@ fn formatting_context_and_text_policy_invalidate_actual_consumers() {
     assert_eq!(evaluation.usage().formula_executions, 1);
     drop(evaluation);
     let mut policy = overlay.policy().clone();
-    policy.text.source = poirot::eval::TextSourceVersion::Poi7321209;
+    policy.text.source = poirot::eval::TextSourceVersion::ExcelCompatibilityV2Documented;
     overlay.set_policy(policy).unwrap();
     let mut evaluation = overlay.evaluation(&context).unwrap();
     let outputs = evaluation
         .outputs(&[target("A1"), target("B1"), target("C1")])
         .unwrap();
-    assert_eq!(outputs[1].value, CellValue::Number(2.));
+    assert_eq!(outputs[1].value, CellValue::Number(1.));
     assert_eq!(evaluation.usage().formula_executions, 1);
 }
 #[test]
@@ -242,9 +251,7 @@ fn unsupported_signature_and_xls_formula_keep_typed_error_chains() {
         )
         .unwrap();
     let saved = book.workbook().clone();
-    let error = book
-        .plan_xls_save(xls::XlsExportPolicy::default())
-        .unwrap_err();
+    let error = book.save_xls().build().unwrap_err();
     assert!(
         error
             .source()
@@ -259,18 +266,16 @@ fn unsupported_signature_and_xls_formula_keep_typed_error_chains() {
 fn serialization_failure_preserves_existing_destination() {
     use std::error::Error;
     let book = formula_book(&[("A1", "1+2")]);
-    let plan = book
-        .plan_xlsx_save(io::WriteOptions {
-            max_output_bytes: 0,
-            ..Default::default()
-        })
-        .unwrap();
+    let save = book.save_xlsx().options(io::WriteOptions {
+        max_output_bytes: 0,
+        ..Default::default()
+    });
     let path = std::env::temp_dir().join(format!(
         "poirot-facade039-preserve-{}.xlsx",
         std::process::id()
     ));
     std::fs::write(&path, b"existing destination").unwrap();
-    let error = plan.write_file(&path).unwrap_err();
+    let error = save.write_file(&path).unwrap_err();
     assert!(
         error
             .source()

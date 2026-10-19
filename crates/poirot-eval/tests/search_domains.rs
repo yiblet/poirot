@@ -33,7 +33,6 @@ fn search_validates_empty_pattern_and_text_domains() {
     // permits empty find_text at start_num. Calc confirms the nonempty-needle
     // fractional boundary, but disagrees with empty needles in nonempty text.
     for source in [
-        TextSourceVersion::PoirotF6c572d,
         TextSourceVersion::Poi7321209,
         TextSourceVersion::Poi7321209OpenJdk21Unicode15,
     ] {
@@ -86,14 +85,10 @@ fn search_validates_empty_pattern_and_text_domains() {
             );
         }
         let missing = r#"SEARCH("","abc",)"#;
-        if source == TextSourceVersion::PoirotF6c572d {
-            assert_eq!(value(missing, &config), CellValue::Error(CellError::Value));
-        } else {
-            assert!(matches!(
-                run(missing, &config, Default::default()),
-                EvaluationOutcome::Aborted { .. }
-            ));
-        }
+        assert!(matches!(
+            run(missing, &config, Default::default()),
+            EvaluationOutcome::Aborted { .. }
+        ));
         let pinned = config
             .clone()
             .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
@@ -126,23 +121,11 @@ fn search_source_matching_and_unicode_contracts_survive_domain_validation() {
         BuiltinSemanticsPolicy::PinnedPoi,
         BuiltinSemanticsPolicy::ExcelDocumentation,
     ] {
-        let legacy = RunConfiguration::default().with_builtin_policy(builtin);
-        for (formula, expected) in [
-            (r#"SEARCH("soft*2010","Microsoft Excel 2010")"#, 6.),
-            (r#"SEARCH("a~*","a*")"#, 1.),
-            (r#"SEARCH("?","abc",3.9)"#, 3.),
-            (r#"SEARCH("*","abc",3)"#, 3.),
-            (r#"FIND("x","😀x")"#, 2.),
-        ] {
-            assert_eq!(
-                value(formula, &legacy),
-                CellValue::Number(expected),
-                "{formula}"
-            );
-        }
-        let poi = legacy.with_text_policy(TextSemanticsPolicy {
-            source: TextSourceVersion::Poi7321209OpenJdk21Unicode15,
-        });
+        let poi = RunConfiguration::default()
+            .with_builtin_policy(builtin)
+            .with_text_policy(TextSemanticsPolicy {
+                source: TextSourceVersion::Poi7321209OpenJdk21Unicode15,
+            });
         assert_eq!(
             value(r#"SEARCH("*","abc")"#, &poi),
             CellValue::Error(CellError::Value)

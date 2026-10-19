@@ -52,7 +52,8 @@ fn source_file_rehydrates_evaluates_and_writes_xlsx_with_diagnostics() {
     assert_eq!(output.import_warnings(), warnings);
     let path = dir.join("output.xlsx");
     output
-        .plan_xlsx_save(Default::default())
+        .save_xlsx()
+        .build()
         .unwrap()
         .write_file(&path)
         .unwrap();
@@ -375,83 +376,16 @@ fn restored_execution_keeps_operational_failure_separate_from_spreadsheet_error(
 }
 
 #[test]
-fn historical_schema1_recovers_authored_source_and_discards_prepared5() {
-    for (bytes, expected, status) in [
-        (
-            include_bytes!("../../tests/fixtures/schema1-source.poirot").as_slice(),
-            3.,
-            PreparedStatus::Absent,
-        ),
-        (
-            include_bytes!("../../tests/fixtures/schema1-prepared5.poirot").as_slice(),
-            7.,
-            PreparedStatus::DiscardedIncompatible,
-        ),
-    ] {
-        let restored = decode_default(bytes).unwrap();
-        assert_eq!(restored.import_warnings, ["historical schema1 fixture"]);
-        assert_eq!(restored.prepared_status, status);
-        assert!(restored.workspace.is_none());
-        let mut book = restored.workbook;
-        assert_eq!(
-            book.sheets().iter().map(|s| s.name()).collect::<Vec<_>>(),
-            ["Legacy", "Other"]
-        );
-        assert!(
-            book.sheets()
-                .iter()
-                .all(|s| s.presentation() == Default::default())
-        );
-        let sheet = book.sheet(0).unwrap();
-        assert_eq!(
-            sheet.get("A1".parse().unwrap()).unwrap().value,
-            CellValue::Number(expected)
-        );
-        assert_eq!(
-            sheet.get("B1".parse().unwrap()).unwrap().formula.as_deref(),
-            Some("A1*2")
-        );
-        assert_eq!(
-            sheet.get("D1".parse().unwrap()).unwrap().value,
-            CellValue::Text("λ😀".into())
-        );
-        assert_eq!(sheet.get("C1".parse().unwrap()).is_none(), expected == 7.);
-        let changes = {
-            let mut evaluation = Evaluation::with_workbook(&book)
-                .build(EvaluationContext::default())
-                .unwrap();
-            evaluation.all().unwrap();
-            evaluation.changes()
-        };
-        book.apply(changes).unwrap();
-        assert_eq!(
-            book.sheet(0)
-                .unwrap()
-                .get("B1".parse().unwrap())
-                .unwrap()
-                .value,
-            CellValue::Number(expected * 2.)
-        );
-        assert!(
-            decode(
-                bytes,
-                SnapshotLimits {
-                    max_decoded_values: 4,
-                    ..Default::default()
-                },
-                PreparedPolicy::ReuseCompatible
-            )
-            .is_err()
-        );
+fn older_source_schemas_are_rejected_before_decoding() {
+    let workbook = Workbook::new();
+    let mut bytes = encode_workbook(&workbook, &[], SnapshotLimits::default()).unwrap();
+    for schema in [0u16, 1] {
+        bytes[10..12].copy_from_slice(&schema.to_le_bytes());
+        assert!(matches!(
+            decode_default(&bytes),
+            Err(SnapshotError::Envelope("unsupported source schema"))
+        ));
     }
-    assert!(
-        decode(
-            include_bytes!("../../tests/fixtures/schema1-prepared5.poirot"),
-            SnapshotLimits::default(),
-            PreparedPolicy::RequireCompatible
-        )
-        .is_err()
-    );
 }
 
 #[test]

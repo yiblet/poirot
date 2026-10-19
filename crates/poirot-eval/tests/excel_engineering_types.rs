@@ -77,7 +77,6 @@ fn numeric_results_flow_through_predicates_references_and_arithmetic() {
 #[test]
 fn code_uses_exact_first_unit_independently_of_text_policy() {
     for source in [
-        TextSourceVersion::PoirotF6c572d,
         TextSourceVersion::Poi7321209,
         TextSourceVersion::Poi7321209OpenJdk21Unicode15,
         TextSourceVersion::ExcelCompatibilityV2Unverified,

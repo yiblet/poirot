@@ -382,7 +382,7 @@ mod tests {
                     &candidates[i],
                     mode,
                     true,
-                    TextSourceVersion::PoirotF6c572d,
+                    TextSourceVersion::Poi7321209,
                     &mut budget,
                 )
             })

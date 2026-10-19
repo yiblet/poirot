@@ -124,11 +124,6 @@ struct SourcePayload<'a> {
     warnings: Cow<'a, [String]>,
 }
 
-#[derive(Deserialize)]
-struct LegacySourcePayload<'a> {
-    model: crate::model::snapshot::LegacySnapshot<'a>,
-    warnings: Cow<'a, [String]>,
-}
 /// Encode source-only storage. Preserve import diagnostics by passing the original
 /// Spreadsheet's `import_warnings()`. No engine compatibility revision is required.
 pub fn encode_workbook(
@@ -221,15 +216,7 @@ pub fn decode(
         limits.max_decoded_bytes,
         limits.max_depth,
     );
-    let source: SourcePayload<'static> = if schema == 1 {
-        let legacy: LegacySourcePayload<'static> = deserialize(source, &budget)?;
-        SourcePayload {
-            model: legacy.model.migrate(),
-            warnings: legacy.warnings,
-        }
-    } else {
-        deserialize(source, &budget)?
-    };
+    let source: SourcePayload<'static> = deserialize(source, &budget)?;
     let workbook = Workbook::from_snapshot(source.model).map_err(SnapshotError::Source)?;
     let warnings = source.warnings.into_owned();
     let status = if prepared.is_empty() {
@@ -299,7 +286,7 @@ fn sections(bytes: &[u8], max: usize) -> Result<(&[u8], &[u8], u64), SnapshotErr
         return Err(invalid("unsupported file version"));
     }
     // SAFETY: The header guard requires at least HEADER (40) bytes; section lengths are checked against bytes.len() before slicing.
-    if ![1, SOURCE_SCHEMA].contains(&u16::from_le_bytes([bytes[10], bytes[11]])) {
+    if u16::from_le_bytes([bytes[10], bytes[11]]) != SOURCE_SCHEMA {
         return Err(invalid("unsupported source schema"));
     }
     // SAFETY: The header guard requires at least HEADER (40) bytes; section lengths are checked against bytes.len() before slicing.

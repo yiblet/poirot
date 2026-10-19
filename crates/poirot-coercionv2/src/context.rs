@@ -1,4 +1,4 @@
-use crate::{CellError, NumberTextSource};
+use crate::CellError;
 use std::fmt;
 
 /// A candidate does not accept these inputs; only this failure permits fallback.
@@ -96,8 +96,6 @@ pub struct Usage {
 pub struct CoercionV2Context {
     limits: Limits,
     usage: Usage,
-    /// Numeric rendering primitive; independent of cell display formatting.
-    pub number_text_source: NumberTextSource,
 }
 
 impl Default for CoercionV2Context {
@@ -111,7 +109,6 @@ impl CoercionV2Context {
         Self {
             limits,
             usage: Usage::default(),
-            number_text_source: NumberTextSource::Poi7321209,
         }
     }
 

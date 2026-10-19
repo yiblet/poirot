@@ -3,7 +3,7 @@ use super::*;
 fn actual_days360_nan_is_value_infinities_are_true_and_legacy_helper_is_unchanged() {
     let mut w = Workbook::new();
     w.add_sheet("S").unwrap();
-    let c = RunConfiguration::default().with_numeric_policy(NumericOutcomePolicy::PinnedPoi7321209);
+    let c = RunConfiguration::default();
     let at = CellAddress { row: 0, col: 10 };
     let run = |f: &str| match run_formula_with_configuration(
         &w,
@@ -31,10 +31,7 @@ fn actual_days360_nan_is_value_infinities_are_true_and_legacy_helper_is_unchange
     // Legacy finite ingress cannot produce raw NaN; test its unchanged pure coercion explicitly.
     assert_eq!(coercev2_logical_boolean(&Number(f64::NAN)), Ok(true));
     assert_eq!(
-        core_projection::coercev2_operand_boolean(
-            &Number(f64::NAN),
-            NumericOutcomePolicy::LegacyFinite
-        ),
-        Ok(true)
+        core_projection::coercev2_operand_boolean(&Number(f64::NAN)),
+        Err(VALUE_ERROR)
     );
 }

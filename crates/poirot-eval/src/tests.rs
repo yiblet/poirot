@@ -260,27 +260,44 @@ fn resource_and_function_contracts() {
     assert_eq!(eval(&w, "OR(TRUE,#N/A)"), Error(NA));
 }
 #[test]
-fn invalid_public_model_numbers_never_compare_equal() {
+fn special_numbers_are_preserved_but_numeric_comparison_refuses_them() {
     let mut w = book();
     for n in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
         w.sheet_mut(0)
             .unwrap()
             .set_value("A1".parse().unwrap(), n)
             .unwrap();
-        assert_eq!(
-            match crate::run_cell(
-                &w,
-                0,
-                "A1".parse().unwrap(),
-                Default::default(),
-                Default::default()
-            ) {
-                crate::EvaluationOutcome::Complete { value, .. } => value,
-                outcome => panic!("evaluation aborted: {outcome:?}"),
-            },
-            Error(Num)
-        );
-        for formula in ["A1=1", "A1=A1", "SUM(A1)", "A1+0", "MATCH(A1,{1,2},0)"] {
+        let result = match crate::run_cell(
+            &w,
+            0,
+            "A1".parse().unwrap(),
+            Default::default(),
+            Default::default(),
+        ) {
+            crate::EvaluationOutcome::Complete {
+                value: Number(value),
+                ..
+            } => value,
+            outcome => panic!("{outcome:?}"),
+        };
+        assert_eq!(result.to_bits(), n.to_bits());
+        for formula in ["A1=1", "A1=A1"] {
+            assert!(matches!(
+                crate::run_formula(
+                    &w,
+                    0,
+                    "Z20".parse().unwrap(),
+                    formula,
+                    Default::default(),
+                    Default::default()
+                ),
+                crate::EvaluationOutcome::Aborted {
+                    failure: EvaluationFailure::KnownSourceException { .. },
+                    ..
+                }
+            ));
+        }
+        for formula in ["SUM(A1)", "A1+0", "MATCH(A1,{1,2},0)"] {
             assert_eq!(eval(&w, formula), Error(Num), "{formula}");
         }
     }
@@ -308,8 +325,11 @@ fn arrays_statistics_text_and_lookup() {
         ("AVERAGE({1,2,3})", Number(2.)),
         ("VAR.P({1,2,3})", Number(2. / 3.)),
         ("MEDIAN(3,1,2,4)", Number(2.5)),
-        ("LEN(\"a😀b\")", Number(3.)),
-        ("MID(\"a😀b\",2,1)", Text("😀".into())),
+        ("LEN(\"a😀b\")", Number(4.)),
+        (
+            "MID(\"a😀b\",2,1)",
+            CellValue::TextUtf16(poirot_model::ExcelText::from_units(vec![0xd83d])),
+        ),
         ("TRIM(\"  a   b  \")", Text("a b".into())),
         ("MATCH(\"b*\",{\"a\",\"Bee\",\"c\"},0)", Number(2.)),
         ("VLOOKUP(2,{1,10;2,20},2,FALSE)", Number(20.)),
