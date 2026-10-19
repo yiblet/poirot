@@ -541,7 +541,13 @@ fn reused_lookup_prefixes_record_dependencies_for_every_consumer() {
     sheet
         .set_formula(at("C3").address, "MATCH(300,A1:A200,0)", CellValue::Blank)
         .unwrap();
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book)
+        .with_policy(OverlayPolicy {
+            arrays: crate::ArrayResultPolicy::ScalarIntersection,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     let context = EvaluationContext::default();
     let mut evaluation = overlay.evaluation(&context).unwrap();
     evaluation.outputs(&[at("C1"), at("D2"), at("C3")]).unwrap();
@@ -757,7 +763,13 @@ fn indexed_lookup_book() -> Workbook {
 #[test]
 fn lookup_indices_survive_new_evaluations_needle_and_return_value_edits() {
     let book = indexed_lookup_book();
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book)
+        .with_policy(OverlayPolicy {
+            arrays: crate::ArrayResultPolicy::ScalarIntersection,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     let context = EvaluationContext::default();
     let mut first = overlay.evaluation(&context).unwrap();
     assert_eq!(first.cell(at("E1")).unwrap(), CellValue::Number(1500.));
@@ -791,7 +803,13 @@ fn lookup_indices_expire_for_transitively_changed_formula_candidates() {
     sheet
         .set_formula(at("A50").address, "G1", CellValue::Blank)
         .unwrap();
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book)
+        .with_policy(OverlayPolicy {
+            arrays: crate::ArrayResultPolicy::ScalarIntersection,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     let context = EvaluationContext::default();
     value(&mut overlay, "E1", &context);
     overlay.set_value(at("G1"), 100.).unwrap();
@@ -815,7 +833,13 @@ fn lookup_indices_expire_for_sparse_gap_insertions_and_overlapping_ranges() {
             .set_formula(at(cell).address, formula, CellValue::Blank)
             .unwrap();
     }
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book)
+        .with_policy(OverlayPolicy {
+            arrays: crate::ArrayResultPolicy::ScalarIntersection,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     let context = EvaluationContext::default();
     overlay
         .evaluation(&context)
@@ -838,7 +862,13 @@ fn lookup_indices_expire_for_sparse_gap_insertions_and_overlapping_ranges() {
 #[test]
 fn retained_lookup_indices_revalidate_smaller_materialization_limits() {
     let book = indexed_lookup_book();
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book)
+        .with_policy(OverlayPolicy {
+            arrays: crate::ArrayResultPolicy::ScalarIntersection,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     let context = EvaluationContext::default();
     value(&mut overlay, "E1", &context);
     overlay.set_value(at("D1"), 100.).unwrap();
@@ -868,7 +898,13 @@ fn failed_output_batch_does_not_publish_lookup_indices() {
         .unwrap()
         .set_formula(at("F1").address, "REPT(\"x\",100)", CellValue::Blank)
         .unwrap();
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book)
+        .with_policy(OverlayPolicy {
+            arrays: crate::ArrayResultPolicy::ScalarIntersection,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     let limited = EvaluationContext {
         budgets: crate::EvaluationBudgets {
             text_bytes: 50,
@@ -897,7 +933,13 @@ fn lookup_indices_expire_for_context_sensitive_formula_candidates() {
         .unwrap()
         .set_formula(at("A50").address, "IF(NOW()>0,100,50)", CellValue::Blank)
         .unwrap();
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book)
+        .with_policy(OverlayPolicy {
+            arrays: crate::ArrayResultPolicy::ScalarIntersection,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     let context = EvaluationContext::default();
     value(&mut overlay, "E1", &context);
     overlay.set_value(at("D1"), 100.).unwrap();
@@ -927,7 +969,13 @@ fn horizontal_lookup_indices_preserve_untouched_suffixes_and_reset_on_snapshot()
             CellValue::Blank,
         )
         .unwrap();
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book)
+        .with_policy(OverlayPolicy {
+            arrays: crate::ArrayResultPolicy::ScalarIntersection,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     let context = EvaluationContext::default();
     assert_eq!(value(&mut overlay, "E4", &context), CellValue::Number(500.));
     // An unconsumed suffix remains outside the retained prefix.
@@ -953,7 +1001,13 @@ fn horizontal_lookup_indices_preserve_untouched_suffixes_and_reset_on_snapshot()
 #[test]
 fn lookup_index_invalidation_does_not_require_retained_formula_results() {
     let book = indexed_lookup_book();
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book)
+        .with_policy(OverlayPolicy {
+            arrays: crate::ArrayResultPolicy::ScalarIntersection,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     let context = EvaluationContext::default();
     value(&mut overlay, "E1", &context);
     overlay.cache.get_mut().remove((0, at("E1").address));
@@ -1053,11 +1107,11 @@ fn numeric_locale_identity_and_consumption_survive_retained_snapshot() {
 fn raw_snapshot_restore_rejects_previous_execution_semantics_versions() {
     let workbook = book();
     let overlay = Overlay::with_workbook(&workbook).build().unwrap();
-    for previous in 8..39 {
+    for previous in 8..41 {
         let mut bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
         // Payload's first field is its small postcard varint version.
         let version = bytes.first_mut().unwrap();
-        assert_eq!(*version, 39);
+        assert_eq!(*version, 41);
         *version = previous;
         let snapshot = postcard::from_bytes(&bytes).unwrap();
         assert!(
@@ -1144,7 +1198,13 @@ fn approximate_match_policy_switch_and_snapshot_restore_recompute_typed_candidat
             .unwrap();
     }
     let context = EvaluationContext::default();
-    let mut overlay = Overlay::with_workbook(&workbook).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&workbook)
+        .with_policy(OverlayPolicy {
+            builtin: crate::BuiltinSemanticsPolicy::PinnedPoi,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(1.));
     assert_eq!(value(&mut overlay, "F1", &context), CellValue::Number(6.));
     let bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
@@ -1178,7 +1238,13 @@ fn roman_policy_locale_and_arabic_reference_edits_invalidate_after_snapshot_rest
     sheet
         .set_formula(at("D1").address, r#"ROMAN("1,234",0)"#, CellValue::Blank)
         .unwrap();
-    let mut overlay = Overlay::with_workbook(&workbook).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&workbook)
+        .with_policy(OverlayPolicy {
+            builtin: crate::BuiltinSemanticsPolicy::PinnedPoi,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     let mut context = EvaluationContext::default();
     assert_eq!(value(&mut overlay, "B1", &context), CellValue::Number(10.));
     assert_eq!(
@@ -1228,6 +1294,7 @@ fn search_start_policy_switch_invalidates_restored_values_for_both_text_routes()
         let mut overlay = Overlay::with_workbook(&workbook)
             .with_policy(OverlayPolicy {
                 text: crate::TextSemanticsPolicy { source },
+                builtin: crate::BuiltinSemanticsPolicy::PinnedPoi,
                 ..Default::default()
             })
             .build()

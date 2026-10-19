@@ -159,12 +159,12 @@ fn prediction_requires_a_fit_without_residual_degrees_of_freedom() {
     }
     // Preserve pinned errors and the legacy constant-predictor shortcut.
     assert!(matches!(
-        run_formula(
+        poirot_eval::run_formula_with_configuration(
             &book,
             0,
             at(),
             "TREND({3;5},{1;2},{3},TRUE)",
-            Default::default(),
+            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
             Default::default()
         ),
         EvaluationOutcome::Complete {
@@ -173,12 +173,12 @@ fn prediction_requires_a_fit_without_residual_degrees_of_freedom() {
         }
     ));
     assert!(matches!(
-        run_formula(
+        poirot_eval::run_formula_with_configuration(
             &book,
             0,
             at(),
             "TREND({3;5},{1;1},{3},FALSE)",
-            Default::default(),
+            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
             Default::default()
         ),
         EvaluationOutcome::Complete {

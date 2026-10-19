@@ -464,7 +464,10 @@ fn scalar_writeback_clears_saved_spill_children_on_both_paths() {
         let policy = if switch_policy {
             dynamic.clone()
         } else {
-            OverlayPolicy::default()
+            OverlayPolicy {
+                arrays: ArrayResultPolicy::ScalarIntersection,
+                ..Default::default()
+            }
         };
         let mut direct = Evaluation::with_workbook(&book)
             .with_policy(policy.clone())
@@ -481,8 +484,18 @@ fn scalar_writeback_clears_saved_spill_children_on_both_paths() {
                 .unwrap()
                 .cell(at("H2"))
                 .unwrap();
-            direct.set_policy(OverlayPolicy::default()).unwrap();
-            overlay.set_policy(OverlayPolicy::default()).unwrap();
+            direct
+                .set_policy(OverlayPolicy {
+                    arrays: ArrayResultPolicy::ScalarIntersection,
+                    ..Default::default()
+                })
+                .unwrap();
+            overlay
+                .set_policy(OverlayPolicy {
+                    arrays: ArrayResultPolicy::ScalarIntersection,
+                    ..Default::default()
+                })
+                .unwrap();
         }
         assert_eq!(direct.cell(at("G1")).unwrap(), CellValue::Number(1.));
         let mut evaluated = overlay.evaluation(&context).unwrap();

@@ -131,25 +131,28 @@ fn dependency_port_records_actual_text_policy_consumption() {
 
 #[test]
 fn code_retained_ascii_type_is_policy_specific() {
-    let legacy = RunConfiguration::default();
+    let legacy = RunConfiguration::default()
+        .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi);
     let poi = legacy.clone().with_text_policy(TextSemanticsPolicy {
         source: TextSourceVersion::Poi7321209,
     });
-    for (configuration, expected) in [(&poi, CellValue::Text("65".into()))] {
-        match run(r#"CODE("A")"#, configuration) {
-            EvaluationOutcome::Complete { value, .. } => assert_eq!(value, expected),
-            outcome => panic!("{outcome:?}"),
+    match run(r#"CODE("A")"#, &poi) {
+        EvaluationOutcome::Complete { value, .. } => {
+            assert_eq!(value, CellValue::Text("65".into()))
         }
-        assert!(matches!(run(r#"UNICODE("A")"#, configuration),
-            EvaluationOutcome::Complete { value: CellValue::Number(value), .. } if value == 65.));
+        outcome => panic!("{outcome:?}"),
     }
+    assert!(matches!(run(r#"UNICODE("A")"#, &poi),
+        EvaluationOutcome::Complete { value: CellValue::Number(value), .. } if value == 65.));
 }
 
 #[test]
 fn poi_code_decimal_output_is_admitted_before_allocation_and_iferror_cannot_catch_budget() {
-    let configuration = RunConfiguration::default().with_text_policy(TextSemanticsPolicy {
-        source: TextSourceVersion::Poi7321209,
-    });
+    let configuration = RunConfiguration::default()
+        .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi)
+        .with_text_policy(TextSemanticsPolicy {
+            source: TextSourceVersion::Poi7321209,
+        });
     let mut workbook = Workbook::new();
     workbook.add_sheet("Sheet1").unwrap();
     // Preparation has its own spelling budget. Bind normally so these limits

@@ -2,12 +2,14 @@
 use serde::de::{self, DeserializeSeed, EnumAccess, MapAccess, SeqAccess, VariantAccess, Visitor};
 use std::{cell::Cell, fmt};
 
+/// Shared budget for decoded values, payload bytes, and nesting.
 pub(super) struct Budget {
     values: Cell<usize>,
     bytes: Cell<usize>,
     depth: usize,
 }
 impl Budget {
+    /// Create one cumulative decoding budget.
     pub fn new(values: usize, bytes: usize, depth: usize) -> Self {
         Self {
             values: Cell::new(values),
@@ -46,22 +48,26 @@ impl Budget {
     }
 }
 
+/// Deserializer applying cumulative limits before allocating payloads.
 pub(super) struct Decoder<'a, D> {
     pub inner: D,
     pub budget: &'a Budget,
     pub depth: usize,
 }
+/// Visitor that charges each decoded value before forwarding it.
 struct Guard<'a, V> {
     inner: V,
     budget: &'a Budget,
     depth: usize,
 }
+/// Nested seed retaining the shared decode budget.
 struct Seed<'a, S> {
     inner: S,
     budget: &'a Budget,
     depth: usize,
 }
 impl<'de, S: DeserializeSeed<'de>> DeserializeSeed<'de> for Seed<'_, S> {
+    /// Decoded value forwarded to the original visitor.
     type Value = S::Value;
     fn deserialize<D: de::Deserializer<'de>>(self, inner: D) -> Result<Self::Value, D::Error> {
         self.inner.deserialize(Decoder {
@@ -80,6 +86,7 @@ macro_rules! decode {
     )*};
 }
 impl<'de, D: de::Deserializer<'de>> de::Deserializer<'de> for Decoder<'_, D> {
+    /// Underlying codec error used for budget refusals.
     type Error = D::Error;
     decode! {
         deserialize_any; deserialize_bool; deserialize_i8; deserialize_i16; deserialize_i32;
@@ -103,6 +110,7 @@ macro_rules! scalar {
     )*};
 }
 impl<'de, V: Visitor<'de>> Visitor<'de> for Guard<'_, V> {
+    /// Decoded value forwarded to the original visitor.
     type Value = V::Value;
     fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.inner.expecting(f)
@@ -182,6 +190,7 @@ impl<'de, V: Visitor<'de>> Visitor<'de> for Guard<'_, V> {
     }
 }
 impl<'de, A: SeqAccess<'de>> SeqAccess<'de> for Guard<'_, A> {
+    /// Underlying codec error used for budget refusals.
     type Error = A::Error;
     fn next_element_seed<S: DeserializeSeed<'de>>(
         &mut self,
@@ -199,6 +208,7 @@ impl<'de, A: SeqAccess<'de>> SeqAccess<'de> for Guard<'_, A> {
     }
 }
 impl<'de, A: MapAccess<'de>> MapAccess<'de> for Guard<'_, A> {
+    /// Underlying codec error used for budget refusals.
     type Error = A::Error;
     fn next_key_seed<S: DeserializeSeed<'de>>(
         &mut self,
@@ -225,7 +235,9 @@ impl<'de, A: MapAccess<'de>> MapAccess<'de> for Guard<'_, A> {
     }
 }
 impl<'de, 'a, A: EnumAccess<'de>> EnumAccess<'de> for Guard<'a, A> {
+    /// Underlying codec error used for budget refusals.
     type Error = A::Error;
+    /// Bounded enum-variant decoder.
     type Variant = Guard<'a, A::Variant>;
     fn variant_seed<S: DeserializeSeed<'de>>(
         self,
@@ -247,6 +259,7 @@ impl<'de, 'a, A: EnumAccess<'de>> EnumAccess<'de> for Guard<'a, A> {
     }
 }
 impl<'de, A: VariantAccess<'de>> VariantAccess<'de> for Guard<'_, A> {
+    /// Underlying codec error used for budget refusals.
     type Error = A::Error;
     fn unit_variant(self) -> Result<(), Self::Error> {
         self.inner.unit_variant()

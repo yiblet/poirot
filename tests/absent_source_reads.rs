@@ -1,7 +1,7 @@
 //! Reading an implicit blank must not author a cell during result publication.
 use poirot::{
-    CellStyle, CellValue, Evaluation, EvaluationContext, EvaluationTarget, Overlay, Spreadsheet,
-    Workbook, WorkbookChange,
+    CellStyle, CellValue, Evaluation, EvaluationContext, EvaluationTarget, Overlay, Workbook,
+    WorkbookChange,
 };
 
 fn at(cell: &str) -> EvaluationTarget {
@@ -28,16 +28,15 @@ macro_rules! source_read_test {
             let read = $read;
             {
             let mut runtime = ($construct)(&source);
-            // The pinned POI string consumer refuses omitted syntax. That refusal
-            // must not create the adjacent absent cell or publish a formula result.
+            // An omitted CONCAT member contributes empty text without creating
+            // the adjacent absent cell.
             runtime.set_formula(at("Z100"), "CONCAT(,A2,\"\",\"x\")").unwrap();
-            assert!(matches!(read(&mut runtime, at("Z100")),
-                Err(poirot::eval::EvaluationFailure::UnsupportedCapability { .. })));
+            assert_eq!(read(&mut runtime, at("Z100")).unwrap(), CellValue::Text("x".into()));
             assert!(!runtime.changes().iter().any(|change| matches!(change,
                 WorkbookChange::SetValue { address, .. } if *address == at("A2").address
             )));
             let changes = runtime.changes();
-            assert!(!changes.iter().any(|change| matches!(change,
+            assert!(changes.iter().any(|change| matches!(change,
                 WorkbookChange::SetCachedValue { address, .. } if *address == at("Z100").address
             )));
             let mut applied = source.clone();
@@ -110,11 +109,11 @@ macro_rules! source_read_test {
             )));
             let mut applied = source.clone();
             applied.apply(changes).unwrap();
-            let bytes = Spreadsheet::from_workbook(applied)
+            let bytes = applied
                 .save_xlsx().to_buffer().unwrap();
-            let reopened = Spreadsheet::from_bytes(&bytes).unwrap();
-            assert!(reopened.workbook().sheet(0).unwrap().get(at("A2").address).is_none());
-            let cell = reopened.workbook().sheet(0).unwrap().get(at("Z100").address).unwrap();
+            let reopened = Workbook::from_bytes(&bytes).unwrap();
+            assert!(reopened.model().sheet(0).unwrap().get(at("A2").address).is_none());
+            let cell = reopened.model().sheet(0).unwrap().get(at("Z100").address).unwrap();
             assert_eq!(cell.formula.as_deref(), Some("IF(TRUE,,)"));
             assert_eq!(cell.value, CellValue::Number(0.));
         }

@@ -1,5 +1,6 @@
 //! Pure checked OPC identity planning. ZIP execution lives in the OOXML adapter.
 use crate::IoError;
+use poirot_model::{ImportDiagnostic, ImportDiagnosticKind};
 use quick_xml::{events::Event, name::ResolveResult, reader::NsReader};
 use std::collections::{BTreeMap, BTreeSet};
 const REL: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/";
@@ -80,7 +81,7 @@ pub struct OpcReadPlan {
     /// Checked source worksheet identities in workbook order.
     pub sheets: Vec<SheetIdentity>,
     /// External or unsupported relationships omitted under policy.
-    pub warnings: Vec<String>,
+    pub warnings: Vec<ImportDiagnostic>,
 }
 /// Expanded XLSX package entries keyed by their checked ZIP part names.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -230,7 +231,7 @@ impl PackageInventory {
     fn relationships(
         &self,
         owner: &str,
-        warnings: &mut Vec<String>,
+        warnings: &mut Vec<ImportDiagnostic>,
         policy: OpcImportPolicy,
     ) -> Result<BTreeMap<String, Relationship>, IoError> {
         let path = relationship_part(owner);
@@ -270,7 +271,7 @@ impl PackageInventory {
                                     "{owner}#{id}"
                                 ))));
                             }
-                            warnings.push(format!("external relationship {owner}#{id} ({kind}) is not followed or preserved"));
+                            warnings.push(ImportDiagnostic { kind: ImportDiagnosticKind::ExternalLink, detail: format!("external relationship {owner}#{id} ({kind}) is not followed or preserved") });
                             None
                         }
                         _ => {
@@ -405,9 +406,9 @@ impl PackageInventory {
                     for previous in &names {
                         match poirot_model::identifiers::compare(previous, &name) {
                             poirot_model::identifiers::IdentifierComparison::Equal => duplicate_name = true,
-                            poirot_model::identifiers::IdentifierComparison::UnsupportedMapping => warnings.push(format!(
+                            poirot_model::identifiers::IdentifierComparison::UnsupportedMapping => warnings.push(ImportDiagnostic { kind: ImportDiagnosticKind::IdentifierIdentity, detail: format!(
                                 "identifier comparison unsupported: sheet {previous:?} versus {name:?}; preserving raw identities"
-                            )),
+                            ) }),
                             poirot_model::identifiers::IdentifierComparison::Different => {},
                         }
                     }
@@ -421,10 +422,10 @@ impl PackageInventory {
                         return Err(fail(OpcError::DuplicateIdentity(name)));
                     }
                     if !supported {
-                        warnings.push(format!(
-                            "sheet {name} ({}) is unsupported and omitted",
-                            r.kind
-                        ));
+                        warnings.push(ImportDiagnostic {
+                            kind: ImportDiagnosticKind::RepresentationLoss,
+                            detail: format!("sheet {name} ({}) is unsupported and omitted", r.kind),
+                        });
                     }
                     sheets.push(SheetIdentity {
                         source_index: sheets.len(),

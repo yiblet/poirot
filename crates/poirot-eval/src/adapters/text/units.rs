@@ -4,7 +4,7 @@ use poirot_functions_text::{java_case, units};
 use poirot_model::ExcelText;
 
 fn unsupported(h: &TextHost<'_, '_>, detail: impl std::fmt::Debug) -> TextFailure {
-    h.source_fault(&format!("lossless POI text: {detail:?}"))
+    h.source_fault(&format!("lossless UTF-16 text: {detail:?}"))
 }
 fn plan<T>(h: &TextHost<'_, '_>, result: Result<T, units::PlanFailure>) -> Result<T, TextFailure> {
     result.map_err(|e| match e {
@@ -20,7 +20,17 @@ fn reserve(h: &mut TextHost<'_, '_>, r: units::Reservation) -> Result<(), TextFa
 }
 fn rendered(h: &mut TextHost<'_, '_>, s: &ScalarOperand) -> Result<Vec<u16>, TextFailure> {
     if s.missing {
-        return Err(h.source_fault("POI string coercion rejects MissingArgEval"));
+        let excel = h
+            .host
+            .try_borrow()
+            .map_err(|_| Failure::Operational(EvaluationFailure::StalePlan))?
+            .builtin_semantics_policy()
+            == BuiltinSemanticsPolicy::ExcelDocumentation;
+        return if excel {
+            Ok(Vec::new())
+        } else {
+            Err(h.source_fault("POI string coercion rejects MissingArgEval"))
+        };
     }
     if matches!(s.value, Blank) {
         return Ok(Vec::new());
@@ -62,9 +72,7 @@ pub(crate) fn execute(
     arguments: ArgumentsRef<'_>,
     full_case: bool,
 ) -> EvalResult<Value> {
-    if matches!(name, TextFunction::Find | TextFunction::Search) {
-        session.read(DependencyRead::BuiltinPolicy);
-    }
+    session.read(DependencyRead::BuiltinPolicy);
     let excel = session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation;
     let paired = session.text_policy.source == TextSourceVersion::ExcelCompatibilityV2Documented;
     let mut h = TextHost {
@@ -204,23 +212,16 @@ pub(crate) fn execute(
         match name {
             TextFunction::Len => Ok(Number(length as f64)),
             TextFunction::Proper => {
-                if text.iter().any(|unit| *unit > 127) {
-                    return Err(h.source_fault("non-ASCII PROPER needs pinned per-UTF16-char category and casing admission"));
-                }
-                let r = plan(&h, units::Reservation::units(text.len(), text.len()))?;
+                let r = plan(&h, units::case_reservation(text.len()))?;
                 reserve(&mut h, r)?;
-                let mut output = text;
-                let mut uppercase = true;
-                for unit in &mut output {
-                    let original = *unit as u8;
-                    *unit = u16::from(if uppercase {
-                        original.to_ascii_uppercase()
+                Ok(value(units::proper(
+                    &text,
+                    if excel {
+                        units::ProperUnits::UnicodeScalars
                     } else {
-                        original.to_ascii_lowercase()
-                    });
-                    uppercase = !original.is_ascii_alphabetic();
-                }
-                Ok(value(output))
+                        units::ProperUnits::JavaChars
+                    },
+                )))
             }
             TextFunction::Left | TextFunction::Right => {
                 let count = if n == 2 {
@@ -297,8 +298,11 @@ pub(crate) fn execute(
                 } else {
                     java_case::Direction::Upper
                 };
-                let output =
-                    java_case::convert(&text, direction).map_err(|e| unsupported(&h, e))?;
+                let output = if excel {
+                    units::case(&text, name == TextFunction::Upper)
+                } else {
+                    java_case::convert(&text, direction).map_err(|e| unsupported(&h, e))?
+                };
                 Ok(value(output))
             }
             TextFunction::Find | TextFunction::Search => {
@@ -309,16 +313,25 @@ pub(crate) fn execute(
                 } else {
                     1
                 };
+                let hay_length = if paired {
+                    units::paired_length(&hay)
+                } else {
+                    hay.len()
+                };
                 let start = if excel {
                     poirot_coercionv2::compatibility::coercev2_text_search_start(
                         f64::from(start),
-                        hay.len(),
+                        hay_length,
                     )
                     .map_err(Failure::Spreadsheet)?
                 } else {
                     plan(&h, units::find_start(start))?
                 };
-                let position = if name == TextFunction::Search {
+                let position = if name == TextFunction::Search && excel {
+                    let r = plan(&h, units::wildcard_reservation(hay.len(), text.len()))?;
+                    reserve(&mut h, r)?;
+                    units::search(&hay, &text, start, paired)
+                } else if name == TextFunction::Search {
                     if !full_case && hay.iter().chain(&text).any(|u| *u > 127) {
                         return Err(h.source_fault(
                             "non-ASCII SEARCH requires Poi7321209OpenJdk21Unicode15",
@@ -333,7 +346,18 @@ pub(crate) fn execute(
                         .checked_mul(text.len())
                         .ok_or_else(|| unsupported(&h, units::PlanFailure::SizeOverflow))?;
                     h.charge_work(work).map_err(Failure::Operational)?;
-                    java_case::index_of(&hay, &text, start)
+                    let offset = if paired {
+                        units::paired_offset(&hay, start)
+                    } else {
+                        start
+                    };
+                    java_case::index_of(&hay, &text, offset).map(|offset| {
+                        if paired {
+                            units::paired_length(hay.get(..offset).unwrap_or_default())
+                        } else {
+                            offset
+                        }
+                    })
                 };
                 Ok(Number(
                     position.ok_or(Failure::Spreadsheet(VALUE_ERROR))? as f64 + 1.,
@@ -364,7 +388,17 @@ pub(crate) fn execute(
                     Failure::Spreadsheet(_) => Failure::Spreadsheet(VALUE_ERROR),
                     other => other,
                 })?;
-                let (count, r) = plan(&h, units::rept(text.len(), count))?;
+                if excel {
+                    poirot_coercionv2::compatibility::coercev2_text_integer_number(
+                        count,
+                        poirot_coercionv2::compatibility::TextIntegerPolicy::Checked,
+                    )
+                    .map_err(Failure::Spreadsheet)?;
+                }
+                let (count, mut r) = plan(&h, units::rept(text.len(), count))?;
+                if excel && text.is_empty() {
+                    r.work = 0;
+                }
                 reserve(&mut h, r)?;
                 let mut output = Vec::with_capacity(r.elements);
                 // Empty repeats can skip source loop after accounting its work.

@@ -21,8 +21,8 @@ fn text_source_coercion_and_lazy_error_order() {
         ),
         ("PROPER(TRUE)", CellValue::Text("True".into())),
         ("PROPER(2.9999999999999996)", CellValue::Text("3".into())),
-        // Default CODE returns a number; the explicit POI text policy returns text.
-        (r#"CODE("A")"#, CellValue::Number(65.)),
+        // The default POI text policy returns CODE as text.
+        (r#"CODE("A")"#, CellValue::Text("65".into())),
         // ROMAN requires its form argument under this source policy.
         ("ROMAN(14)", CellValue::Error(CellError::Value)),
         ("ROMAN(14,0)", CellValue::Text("XIV".into())),
@@ -60,12 +60,16 @@ fn text_source_coercion_and_lazy_error_order() {
         ),
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
+            match poirot_eval::run_formula_with_configuration(
                 &w,
                 0,
                 AT,
                 formula,
-                Default::default(),
+                &poirot_eval::RunConfiguration::default()
+                    .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi)
+                    .with_text_policy(poirot_eval::TextSemanticsPolicy {
+                        source: poirot_eval::TextSourceVersion::Poi7321209OpenJdk21Unicode15
+                    }),
                 Default::default()
             ) {
                 poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
@@ -232,7 +236,7 @@ fn unknown_name_remains_a_catchable_spreadsheet_error() {
 fn numbervalue_validates_explicit_separator_and_result_domains() {
     use poirot_eval::{BuiltinSemanticsPolicy, RunConfiguration, run_formula_with_configuration};
     let w = workbook();
-    let pinned = RunConfiguration::default();
+    let pinned = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
     let excel = pinned
         .clone()
         .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation);

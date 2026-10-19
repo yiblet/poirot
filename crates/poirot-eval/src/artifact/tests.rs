@@ -1,5 +1,7 @@
 use super::*;
-use crate::{CellValue, Evaluation, EvaluationContext, Spreadsheet, eval, io};
+use crate as eval;
+use crate::{CellValue, overlay::Evaluation, overlay::EvaluationContext};
+use poirot_io as io;
 
 fn workbook() -> Workbook {
     let mut book = Workbook::new();
@@ -24,16 +26,23 @@ fn decode_default(bytes: &[u8]) -> Result<RestoredArtifact, SnapshotError> {
 #[test]
 fn source_file_rehydrates_evaluates_and_writes_xlsx_with_diagnostics() {
     let limits = SnapshotLimits::default();
-    let book = workbook();
-    let warnings = vec!["source feature omitted".to_owned()];
-    let bytes = encode_workbook(&book, &warnings, limits).unwrap();
+    let mut book = workbook();
+    let metadata = poirot_model::FileMetadata {
+        format: poirot_model::FileFormat::Xlsx,
+        import_warnings: vec![poirot_model::ImportDiagnostic {
+            kind: poirot_model::ImportDiagnosticKind::OmittedFeatures,
+            detail: "source feature omitted".into(),
+        }],
+    };
+    book.file_metadata = Some(metadata.clone());
+    let bytes = encode_workbook(&book, limits).unwrap();
     let dir = std::env::temp_dir().join(format!("poirot-artifact-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("source.poirot");
     std::fs::write(&path, &bytes).unwrap();
     let restored = read_file(&path, limits, PreparedPolicy::ReuseCompatible).unwrap();
     assert_eq!(restored.prepared_status, PreparedStatus::Absent);
-    assert_eq!(restored.import_warnings, warnings);
+    assert_eq!(restored.workbook.file_metadata, Some(metadata.clone()));
     assert!(restored.workspace.is_none());
     let mut book = restored.workbook;
     let changes = {
@@ -44,21 +53,15 @@ fn source_file_rehydrates_evaluates_and_writes_xlsx_with_diagnostics() {
         evaluation.changes()
     };
     book.apply(changes).unwrap();
-    let report = io::ImportReport {
-        workbook: book,
-        warnings: restored.import_warnings,
-    };
-    let output = Spreadsheet::from_import(report);
-    assert_eq!(output.import_warnings(), warnings);
+    assert_eq!(book.file_metadata, Some(metadata));
     let path = dir.join("output.xlsx");
-    output
-        .save_xlsx()
-        .build()
+    let bytes = io::plan_xlsx_export(&book, Default::default())
         .unwrap()
-        .write_file(&path)
+        .execute()
         .unwrap();
-    let reopened = Spreadsheet::open(&path).unwrap();
-    let s = reopened.workbook().sheet(0).unwrap();
+    std::fs::write(&path, bytes).unwrap();
+    let reopened = io::read_workbook(&path).unwrap();
+    let s = reopened.sheet(0).unwrap();
     assert_eq!(
         s.get("B1".parse().unwrap()).unwrap().value,
         CellValue::Number(6.)
@@ -81,8 +84,7 @@ fn prepared_restore_reuses_programs_and_fallback_preserves_edits_and_deletions()
     evaluation.set_value(input, 7.).unwrap();
     evaluation.remove_cell(removed).unwrap();
     evaluation.compile_all();
-    let mut bytes =
-        encode_workspace(evaluation.snapshot(), &[], SnapshotLimits::default()).unwrap();
+    let mut bytes = encode_workspace(evaluation.snapshot(), SnapshotLimits::default()).unwrap();
     let restored = decode_default(&bytes).unwrap();
     assert_eq!(restored.prepared_status, PreparedStatus::Restored);
     let mut run = restored
@@ -130,8 +132,7 @@ fn explicit_source_only_does_not_decode_preparation() {
     let evaluation = Evaluation::with_workbook(&book)
         .build(EvaluationContext::default())
         .unwrap();
-    let mut bytes =
-        encode_workspace(evaluation.snapshot(), &[], SnapshotLimits::default()).unwrap();
+    let mut bytes = encode_workspace(evaluation.snapshot(), SnapshotLimits::default()).unwrap();
     let split = HEADER + u64::from_le_bytes(bytes[24..32].try_into().unwrap()) as usize;
     bytes[split..].fill(255);
     let source = decode(
@@ -146,7 +147,7 @@ fn explicit_source_only_does_not_decode_preparation() {
 
 #[test]
 fn envelope_rejects_kind_versions_lengths_and_trailing_bytes_before_decode() {
-    let bytes = encode_workbook(&workbook(), &[], SnapshotLimits::default()).unwrap();
+    let bytes = encode_workbook(&workbook(), SnapshotLimits::default()).unwrap();
     for (offset, replacement) in [
         (0, b'X'),
         (8, 255),
@@ -178,12 +179,7 @@ fn envelope_rejects_kind_versions_lengths_and_trailing_bytes_before_decode() {
 
 #[test]
 fn limits_reject_before_oversized_reservation_and_string_copy() {
-    let bytes = encode_workbook(
-        &workbook(),
-        &["diagnostic text".into()],
-        SnapshotLimits::default(),
-    )
-    .unwrap();
+    let bytes = encode_workbook(&workbook(), SnapshotLimits::default()).unwrap();
     for limits in [
         SnapshotLimits {
             max_file_bytes: bytes.len() - 1,
@@ -207,7 +203,6 @@ fn limits_reject_before_oversized_reservation_and_string_copy() {
     assert!(
         encode_workbook(
             &workbook(),
-            &[],
             SnapshotLimits {
                 max_file_bytes: HEADER,
                 ..Default::default()
@@ -237,7 +232,7 @@ fn prepared_source_mismatch_is_rejected() {
     let evaluation = Evaluation::with_workbook(&book)
         .build(EvaluationContext::default())
         .unwrap();
-    let bytes = encode_workspace(evaluation.snapshot(), &[], SnapshotLimits::default()).unwrap();
+    let bytes = encode_workspace(evaluation.snapshot(), SnapshotLimits::default()).unwrap();
     let (_, prepared, revision) = sections(&bytes, usize::MAX).unwrap();
     let mut other = workbook();
     other
@@ -245,7 +240,7 @@ fn prepared_source_mismatch_is_rejected() {
         .unwrap()
         .set_value("A1".parse().unwrap(), 99.)
         .unwrap();
-    let bad = encode(&other, &[], prepared, revision, SnapshotLimits::default()).unwrap();
+    let bad = encode(&other, prepared, revision, SnapshotLimits::default()).unwrap();
     assert!(matches!(
         decode_default(&bad),
         Err(SnapshotError::Envelope(
@@ -296,7 +291,7 @@ fn provider_implementations_remain_external_and_identity_checked() {
         .build(EvaluationContext::default())
         .unwrap();
     evaluation.compile_all();
-    let bytes = encode_workspace(evaluation.snapshot(), &[], SnapshotLimits::default()).unwrap();
+    let bytes = encode_workspace(evaluation.snapshot(), SnapshotLimits::default()).unwrap();
     let restored = decode_default(&bytes).unwrap();
     assert!(matches!(
         restored.workspace.unwrap().attach(&restored.workbook),
@@ -337,10 +332,10 @@ fn source_files_preserve_numeric_bits_and_exact_utf16() {
     sheet
         .set_value(
             "A4".parse().unwrap(),
-            CellValue::TextUtf16(crate::ExcelText::from_units(vec![0xd800, 65])),
+            CellValue::TextUtf16(poirot_model::ExcelText::from_units(vec![0xd800, 65])),
         )
         .unwrap();
-    let bytes = encode_workbook(&book, &[], SnapshotLimits::default()).unwrap();
+    let bytes = encode_workbook(&book, SnapshotLimits::default()).unwrap();
     let restored = decode_default(&bytes).unwrap();
     assert!(book.snapshot().matches(&restored.workbook));
 }
@@ -352,7 +347,7 @@ fn restored_execution_keeps_operational_failure_separate_from_spreadsheet_error(
         .unwrap()
         .set_formula("D1".parse().unwrap(), "SQRT(-1)", CellValue::Blank)
         .unwrap();
-    let bytes = encode_workbook(&book, &[], SnapshotLimits::default()).unwrap();
+    let bytes = encode_workbook(&book, SnapshotLimits::default()).unwrap();
     let restored = decode_default(&bytes).unwrap();
     let mut context = EvaluationContext::default();
     context.budgets.run_work = 0;
@@ -378,8 +373,8 @@ fn restored_execution_keeps_operational_failure_separate_from_spreadsheet_error(
 #[test]
 fn older_source_schemas_are_rejected_before_decoding() {
     let workbook = Workbook::new();
-    let mut bytes = encode_workbook(&workbook, &[], SnapshotLimits::default()).unwrap();
-    for schema in [0u16, 1] {
+    let mut bytes = encode_workbook(&workbook, SnapshotLimits::default()).unwrap();
+    for schema in [0u16, 1, 2] {
         bytes[10..12].copy_from_slice(&schema.to_le_bytes());
         assert!(matches!(
             decode_default(&bytes),
@@ -391,16 +386,45 @@ fn older_source_schemas_are_rejected_before_decoding() {
 #[test]
 fn presentation_roundtrip_and_prepared_identity_are_complete() {
     let mut book = workbook();
-    let mut p = crate::SheetPresentation {
-        visibility: crate::SheetVisibility::VeryHidden,
+    let mut p = poirot_model::SheetPresentation {
+        visibility: poirot_model::SheetVisibility::VeryHidden,
         tab_color: Some([1, 127, 255]),
     };
     book.sheet_mut(0).unwrap().set_presentation(p);
-    let bytes = encode_workbook(&book, &[], Default::default()).unwrap();
-    assert_eq!(&bytes[10..12], &2u16.to_le_bytes());
+    let bytes = encode_workbook(&book, Default::default()).unwrap();
+    assert_eq!(
+        &bytes[10..12],
+        &poirot_model::snapshot::SCHEMA_VERSION.to_le_bytes()
+    );
     let restored = decode_default(&bytes).unwrap().workbook;
     assert!(restored.snapshot().matches(&book));
     p.tab_color = None;
     book.sheet_mut(0).unwrap().set_presentation(p);
     assert!(!restored.snapshot().matches(&book));
+}
+
+#[test]
+fn durable_source_and_prepared_metadata_must_agree_even_without_calculation_identity() {
+    let book = workbook();
+    let evaluation = Evaluation::with_workbook(&book)
+        .build(EvaluationContext::default())
+        .unwrap();
+    let bytes = evaluation.save_snapshot().to_buffer().unwrap();
+    let (_, prepared, revision) = sections(&bytes, usize::MAX).unwrap();
+    let mut changed = workbook();
+    changed.file_metadata = Some(poirot_model::FileMetadata {
+        format: poirot_model::FileFormat::Xlsx,
+        import_warnings: vec![poirot_model::ImportDiagnostic {
+            kind: poirot_model::ImportDiagnosticKind::ExternalLink,
+            detail: "omitted external relationship".into(),
+        }],
+    });
+    assert!(book.snapshot().matches(&changed));
+    let inconsistent = encode(&changed, prepared, revision, Default::default()).unwrap();
+    assert!(matches!(
+        decode_default(&inconsistent),
+        Err(SnapshotError::Envelope(
+            "source and prepared state disagree"
+        ))
+    ));
 }

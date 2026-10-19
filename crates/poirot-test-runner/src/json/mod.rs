@@ -63,27 +63,29 @@ impl ScenarioResult {
 
 // The same action interpreter drives both public APIs.
 enum Session<'a> {
-    Normal(Box<Evaluation<'a>>),
-    Overlay(Box<Overlay<'a>>),
+    Normal(Box<Evaluation<'a, &'a poirot::model::Workbook>>),
+    Overlay(Box<Overlay<'a, &'a poirot::model::Workbook>>),
 }
 impl<'a> Session<'a> {
     fn new(
         book: &'a Workbook,
         normal: bool,
         builtin: poirot::eval::BuiltinSemanticsPolicy,
+        arrays: poirot::eval::ArrayResultPolicy,
     ) -> Result<Self, String> {
         let policy = poirot::OverlayPolicy {
             builtin,
+            arrays,
             ..Default::default()
         };
         if normal {
-            Evaluation::with_workbook(book)
+            Evaluation::with_workbook(book.model())
                 .with_policy(policy)
                 .build(EvaluationContext::default())
                 .map(|e| Self::Normal(Box::new(e)))
                 .map_err(|e| format!("{e:?}"))
         } else {
-            Overlay::with_workbook(book)
+            Overlay::with_workbook(book.model())
                 .with_policy(policy)
                 .build()
                 .map(|e| Self::Overlay(Box::new(e)))
@@ -232,7 +234,12 @@ fn workbook(suite: &Suite) -> Result<Workbook, String> {
         book.add_sheet(sheet).map_err(|e| e.to_string())?;
     }
     let changes = {
-        let mut session = Session::new(&book, false, suite.builtin_policy)?;
+        let mut session = Session::new(
+            &book,
+            false,
+            suite.builtin_policy,
+            suite.array_result_policy,
+        )?;
         let mut cells = BTreeSet::new();
         for cell in &suite.workbook.cells {
             let target = session.target(&cell.cell)?;
@@ -262,6 +269,7 @@ fn run_mode(
     scenario: &Scenario,
     normal: bool,
     builtin_policy: poirot::eval::BuiltinSemanticsPolicy,
+    arrays: poirot::eval::ArrayResultPolicy,
 ) -> ModeResult {
     let mut result = ModeResult {
         mode: if normal { "normal" } else { "overlay" },
@@ -271,7 +279,7 @@ fn run_mode(
         error: None,
     };
     let mut execute = || -> Result<(), String> {
-        let mut session = Session::new(book, normal, builtin_policy)?;
+        let mut session = Session::new(book, normal, builtin_policy, arrays)?;
         for (index, action) in scenario.actions.iter().enumerate() {
             let action_result = (|| -> Result<(), String> {
                 match action {
@@ -385,8 +393,20 @@ pub fn run_selected(suite: &Suite, names: &BTreeSet<&str>) -> Result<Vec<Scenari
         if !names.contains(scenario.name.as_str()) {
             continue;
         }
-        let normal = run_mode(&book, scenario, true, suite.builtin_policy);
-        let overlay = run_mode(&book, scenario, false, suite.builtin_policy);
+        let normal = run_mode(
+            &book,
+            scenario,
+            true,
+            suite.builtin_policy,
+            suite.array_result_policy,
+        );
+        let overlay = run_mode(
+            &book,
+            scenario,
+            false,
+            suite.builtin_policy,
+            suite.array_result_policy,
+        );
         results.push(compare_modes(scenario.name.clone(), normal, overlay));
     }
     Ok(results)

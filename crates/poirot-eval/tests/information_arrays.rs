@@ -199,12 +199,14 @@ fn pinned_predicate_array_projection_and_nonpredicate_information_functions_are_
             "Z100"
         };
         assert_eq!(
-            value(run_formula(
+            value(run_formula_with_configuration(
                 &book(),
                 0,
                 target(at).address,
                 formula,
-                EvaluationInputs::default(),
+                &RunConfiguration::default()
+                    .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
+                    .with_array_result_policy(ArrayResultPolicy::ScalarIntersection),
                 EvaluationBudgets::default()
             )),
             expected,

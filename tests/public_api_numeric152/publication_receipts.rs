@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn actual_nonincremental_publication_retains_raw_receipts_and_mutates_only_formula_caches() {
     let mut b = book();
-    let s = b.workbook_mut().sheet_mut(0).unwrap();
+    let s = b.model_mut().sheet_mut(0).unwrap();
     s.set_value(at(0, 0), CellValue::Number(f64::INFINITY))
         .unwrap();
     s.set_value(
@@ -22,7 +22,7 @@ fn actual_nonincremental_publication_retains_raw_receipts_and_mutates_only_formu
     }
     let c = config(M::PinnedPoiCellSetter);
     let receipt = match eval::run_recalculation_with_receipts(
-        b.workbook_mut(),
+        b.model_mut(),
         &c,
         eval::EvaluationBudgets::default(),
     ) {
@@ -50,7 +50,7 @@ fn actual_nonincremental_publication_retains_raw_receipts_and_mutates_only_formu
     let raw = config(M::PreserveComputed);
     assert!(matches!(
         eval::run_recalculation_with_configuration(
-            b.workbook_mut(),
+            b.model_mut(),
             &raw,
             eval::EvaluationBudgets::default()
         ),
@@ -63,9 +63,13 @@ fn actual_nonincremental_publication_retains_raw_receipts_and_mutates_only_formu
 fn receipt_allocation_is_admitted_after_computation_and_before_any_write() {
     let mut b = book();
     set_formula(&mut b, 0, 0, "NORMSINV(1E-300)");
-    let before = b.workbook().clone();
+    let before = b.model().clone();
     let cfg = config(M::PinnedPoiCellSetter);
-    let work = match eval::run_workbook_with_configuration(b.workbook(), &cfg, Default::default()) {
+    let work = match eval::run_recalculation_with_configuration(
+        &mut b.model().clone(),
+        &cfg,
+        Default::default(),
+    ) {
         EvaluationOutcome::Complete { usage, .. } => usage.work_units,
         other => panic!("{other:?}"),
     };
@@ -73,7 +77,7 @@ fn receipt_allocation_is_admitted_after_computation_and_before_any_write() {
         run_work: work,
         ..Default::default()
     };
-    match eval::run_recalculation_with_receipts(b.workbook_mut(), &cfg, budget) {
+    match eval::run_recalculation_with_receipts(b.model_mut(), &cfg, budget) {
         EvaluationOutcome::Aborted {
             failure: eval::EvaluationFailure::Budget(failure),
             usage,
@@ -84,9 +88,9 @@ fn receipt_allocation_is_admitted_after_computation_and_before_any_write() {
         }
         other => panic!("{other:?}"),
     }
-    assert_eq!(b.workbook(), &before);
+    assert_eq!(b.model(), &before);
     assert!(matches!(
-        eval::run_recalculation_with_configuration(b.workbook_mut(), &cfg, budget),
+        eval::run_recalculation_with_configuration(b.model_mut(), &cfg, budget),
         EvaluationOutcome::Complete { .. }
     ));
     assert_eq!(get(&b, 0, 0), CellValue::Error(CellError::Div0));

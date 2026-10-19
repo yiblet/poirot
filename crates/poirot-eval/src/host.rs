@@ -169,8 +169,6 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
     pub(crate) fn builtin_semantics_policy(&self) -> BuiltinSemanticsPolicy {
         self.session.builtin_policy
     }
-    /// Return the run's numeric result construction policy.
-
     /// Attribute a pinned source exception to the current call's cell.
     pub(crate) fn known_source_exception(
         &self,

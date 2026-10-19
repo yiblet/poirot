@@ -8,7 +8,7 @@ fn at(col: u32) -> CellAddress {
     CellAddress { row: 0, col }
 }
 fn c() -> RunConfiguration {
-    RunConfiguration::default()
+    RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
 }
 fn run(w: &Workbook, f: &str) -> EvaluationOutcome<CellValue> {
     run_formula_with_configuration(w, 0, at(25), f, &c(), EvaluationBudgets::default())

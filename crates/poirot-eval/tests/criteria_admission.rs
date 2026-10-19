@@ -100,7 +100,11 @@ fn criteria_admission_distinguishes_empty_references_from_empty_text() {
             0.0.into()
         };
         assert_eq!(
-            value(&w, &formula(name, "D1"), &RunConfiguration::default()),
+            value(
+                &w,
+                &formula(name, "D1"),
+                &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
+            ),
             expected
         );
     }
@@ -120,7 +124,13 @@ fn policy_switches_invalidate_retained_criteria_results() {
             CellValue::Blank,
         )
         .unwrap();
-    let mut overlay = Overlay::with_workbook(&w).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&w)
+        .with_policy(poirot_eval::overlay::OverlayPolicy {
+            builtin: poirot_eval::BuiltinSemanticsPolicy::PinnedPoi,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     let context = EvaluationContext::default();
     assert_eq!(
         overlay
@@ -162,7 +172,12 @@ fn policy_switches_invalidate_retained_criteria_results() {
             .unwrap(),
         20.0.into()
     );
-    overlay.set_policy(OverlayPolicy::default()).unwrap();
+    overlay
+        .set_policy(OverlayPolicy {
+            builtin: BuiltinSemanticsPolicy::PinnedPoi,
+            ..Default::default()
+        })
+        .unwrap();
     assert_eq!(
         overlay
             .evaluation(&context)
@@ -265,7 +280,11 @@ fn contextual_thresholds_keep_literal_wildcard_boolean_and_error_criteria_typed(
     }
     // The pinned source profile retains its plain-number threshold grammar.
     assert_eq!(
-        value(&w, r#"COUNTIF(A1,">3%")"#, &Default::default()),
+        value(
+            &w,
+            r#"COUNTIF(A1,">3%")"#,
+            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
+        ),
         0.0.into()
     );
     let localized = excel().with_number_locale(
@@ -399,7 +418,13 @@ fn selected_result_errors_follow_the_aggregate_profile_after_row_selection() {
             .set_value(target(at).address, v)
             .unwrap();
     }
-    for (config, is_excel) in [(excel(), true), (RunConfiguration::default(), false)] {
+    for (config, is_excel) in [
+        (excel(), true),
+        (
+            RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
+            false,
+        ),
+    ] {
         for name in [
             "SUMIF",
             "AVERAGEIF",
@@ -445,7 +470,10 @@ fn averageif_preserves_target_read_order_and_operational_failures() {
             CellValue::Blank,
         )
         .unwrap();
-    for config in [excel(), RunConfiguration::default()] {
+    for config in [
+        excel(),
+        RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
+    ] {
         assert_eq!(value(&w, "SUMIF(A1:A4,2,B1:B4)", &config), 40.0.into());
         assert!(matches!(
             run_formula_with_configuration(

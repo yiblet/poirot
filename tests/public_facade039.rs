@@ -1,9 +1,9 @@
-use poirot::{CellValue, Spreadsheet, io, xls};
+use poirot::{CellValue, Workbook, io, xls};
 
 #[test]
 fn saved_typed_formula_evidence_and_import_losses_remain_discoverable() {
-    let mut book = Spreadsheet::new();
-    let sheet = book.workbook_mut().add_sheet("Data").unwrap();
+    let mut book = Workbook::new();
+    let sheet = book.model_mut().add_sheet("Data").unwrap();
     sheet
         .set_formula("A1".parse().unwrap(), "1=1", CellValue::Boolean(true))
         .unwrap();
@@ -11,37 +11,48 @@ fn saved_typed_formula_evidence_and_import_losses_remain_discoverable() {
         book.save_xlsx().to_buffer().unwrap(),
         book.save_xls().to_buffer().unwrap(),
     ] {
-        let reopened = Spreadsheet::load_bytes(
-            &bytes,
-            io::ReadOptions::default(),
-            io::opc::OpcImportPolicy::default(),
-            io::ResourceBudget::default(),
-        )
-        .unwrap();
+        let reopened = Workbook::load().from_bytes(&bytes).unwrap();
         let cell = reopened
-            .workbook()
+            .model()
             .sheet(0)
             .unwrap()
             .get("A1".parse().unwrap())
             .unwrap();
         assert_eq!(cell.value, CellValue::Boolean(true));
         assert!(cell.formula.is_some());
-        assert!(!reopened.import_warnings().is_empty());
-        let warnings = reopened.import_warnings().to_vec();
-        assert_eq!(reopened.into_import_report().warnings, warnings);
+        assert!(
+            !reopened
+                .file_metadata
+                .as_ref()
+                .unwrap()
+                .import_warnings
+                .as_slice()
+                .is_empty()
+        );
+        let warnings = reopened
+            .file_metadata
+            .as_ref()
+            .unwrap()
+            .import_warnings
+            .as_slice()
+            .to_vec();
+        assert_eq!(
+            reopened.into_model().file_metadata.unwrap().import_warnings,
+            warnings
+        );
     }
 }
 
 #[test]
 fn pure_planning_preserves_source_and_budget_failure_has_typed_cause() {
     use std::error::Error;
-    let mut book = Spreadsheet::new();
-    book.workbook_mut()
+    let mut book = Workbook::new();
+    book.model_mut()
         .add_sheet("Data")
         .unwrap()
         .set_value("A1".parse().unwrap(), "payload")
         .unwrap();
-    let before = book.workbook().clone();
+    let before = book.model().clone();
     let options = io::WriteOptions {
         max_source_bytes: 0,
         ..Default::default()
@@ -54,10 +65,10 @@ fn pure_planning_preserves_source_and_budget_failure_has_typed_cause() {
             .downcast_ref::<io::IoError>()
             .is_some()
     );
-    assert_eq!(book.workbook(), &before);
+    assert_eq!(book.model(), &before);
     let plan = book.save_xls().build().unwrap();
     assert!(matches!(plan, poirot::SavePlan::Xls(_)));
-    assert_eq!(book.workbook(), &before);
+    assert_eq!(book.model(), &before);
     let error = book
         .save_xls()
         .policy(xls::XlsExportPolicy {
@@ -67,12 +78,12 @@ fn pure_planning_preserves_source_and_budget_failure_has_typed_cause() {
         .build()
         .unwrap_err();
     assert!(matches!(error, poirot::WorkbookError::Xls(_)));
-    assert_eq!(book.workbook(), &before);
+    assert_eq!(book.model(), &before);
 }
 
-fn formula_book(formulas: &[(&str, &str)]) -> Spreadsheet {
-    let mut book = Spreadsheet::new();
-    let sheet = book.workbook_mut().add_sheet("Data").unwrap();
+fn formula_book(formulas: &[(&str, &str)]) -> Workbook {
+    let mut book = Workbook::new();
+    let sheet = book.model_mut().add_sheet("Data").unwrap();
     for (address, formula) in formulas {
         sheet
             .set_formula(
@@ -93,7 +104,7 @@ fn target(reference: &str) -> poirot::eval::EvaluationTarget {
 #[test]
 fn overlay_recursively_invalidates_and_applies_owned_cached_changes() {
     let book = formula_book(&[("B1", "A1+1"), ("C1", "B1+1"), ("D1", "8")]);
-    let mut overlay = poirot::Overlay::with_workbook(book.workbook())
+    let mut overlay = poirot::Overlay::with_workbook(book.model())
         .build()
         .unwrap();
     let context = poirot::EvaluationContext::default();
@@ -118,7 +129,7 @@ fn overlay_recursively_invalidates_and_applies_owned_cached_changes() {
 fn volatile_cells_are_reexecuted_for_each_evaluation_instance() {
     let book = formula_book(&[("A1", "RAND()"), ("B1", "A1+1"), ("C1", "8")]);
     let context = poirot::EvaluationContext::default();
-    let mut overlay = poirot::Overlay::with_workbook(book.workbook())
+    let mut overlay = poirot::Overlay::with_workbook(book.model())
         .build()
         .unwrap();
     overlay.evaluation(&context).unwrap().all().unwrap();
@@ -130,7 +141,13 @@ fn volatile_cells_are_reexecuted_for_each_evaluation_instance() {
 #[test]
 fn formatting_context_and_text_policy_invalidate_actual_consumers() {
     let book = formula_book(&[("A1", "DOLLAR(1,2)"), ("B1", r#"LEN("😀")"#), ("C1", "8")]);
-    let mut overlay = poirot::Overlay::with_workbook(book.workbook())
+    let mut overlay = poirot::Overlay::with_workbook(book.model())
+        .with_policy(poirot::OverlayPolicy {
+            text: poirot::eval::TextSemanticsPolicy {
+                source: poirot::eval::TextSourceVersion::Poi7321209,
+            },
+            ..Default::default()
+        })
         .build()
         .unwrap();
     let mut context = poirot::EvaluationContext::default();
@@ -146,7 +163,7 @@ fn formatting_context_and_text_policy_invalidate_actual_consumers() {
     };
     context.formatting = poirot::eval::FormattingConfiguration::with_currency(currency.clone());
     overlay.evaluation(&context).unwrap().all().unwrap();
-    // The default POI contract counts the emoji's two UTF16 units.
+    // The explicit POI contract counts the emoji's two UTF16 units.
     assert_eq!(
         *overlay.cached_value(target("B1")).unwrap(),
         CellValue::Number(2.)
@@ -173,8 +190,8 @@ fn formatting_context_and_text_policy_invalidate_actual_consumers() {
 #[test]
 fn budget_failure_preserves_source_and_previously_completed_cache() {
     let book = formula_book(&[("A1", "1+2")]);
-    let before = book.workbook().clone();
-    let mut overlay = poirot::Overlay::with_workbook(book.workbook())
+    let before = book.model().clone();
+    let mut overlay = poirot::Overlay::with_workbook(book.model())
         .build()
         .unwrap();
     overlay
@@ -193,7 +210,7 @@ fn budget_failure_preserves_source_and_previously_completed_cache() {
     assert!(evaluation.cell(target("A1")).is_err());
     assert!(evaluation.result_changes().unwrap().is_empty());
     drop(evaluation);
-    assert_eq!(book.workbook(), &before);
+    assert_eq!(book.model(), &before);
     assert_eq!(
         *overlay.cached_value(target("A1")).unwrap(),
         CellValue::Number(3.)
@@ -201,15 +218,15 @@ fn budget_failure_preserves_source_and_previously_completed_cache() {
 }
 #[test]
 fn empty_rows_and_defined_names_flow_through_overlay_evaluation() {
-    let mut book = Spreadsheet::new();
-    let sheet = book.workbook_mut().add_sheet("Data").unwrap();
+    let mut book = Workbook::new();
+    let sheet = book.model_mut().add_sheet("Data").unwrap();
     sheet.create_row(5).unwrap();
     sheet.set_value("A1".parse().unwrap(), 4.).unwrap();
     sheet
         .set_formula("B1".parse().unwrap(), "Rate*A1", CellValue::Blank)
         .unwrap();
-    book.workbook_mut().define_name("Rate", "2", None).unwrap();
-    let mut overlay = poirot::Overlay::with_workbook(book.workbook())
+    book.model_mut().define_name("Rate", "2", None).unwrap();
+    let mut overlay = poirot::Overlay::with_workbook(book.model())
         .build()
         .unwrap();
     assert_eq!(
@@ -220,28 +237,22 @@ fn empty_rows_and_defined_names_flow_through_overlay_evaluation() {
             .unwrap(),
         CellValue::Number(8.)
     );
-    assert!(book.workbook().sheet(0).unwrap().row(5).is_some());
+    assert!(book.model().sheet(0).unwrap().row(5).is_some());
 }
 
 #[test]
 fn unsupported_signature_and_xls_formula_keep_typed_error_chains() {
     use std::error::Error;
-    let error = Spreadsheet::load_bytes(
-        b"unsupported",
-        io::ReadOptions::default(),
-        io::opc::OpcImportPolicy::default(),
-        io::ResourceBudget::default(),
-    )
-    .unwrap_err();
+    let error = Workbook::load().from_bytes(b"unsupported").unwrap_err();
     assert!(matches!(
         error.source().unwrap().downcast_ref::<io::IoError>(),
         Some(io::IoError::Unsupported(_))
     ));
-    let mut book = Spreadsheet::new();
+    let mut book = Workbook::new();
     for name in ["Sheet1", "Sheet2", "Sheet3"] {
-        book.workbook_mut().add_sheet(name).unwrap();
+        book.model_mut().add_sheet(name).unwrap();
     }
-    book.workbook_mut()
+    book.model_mut()
         .sheet_mut(0)
         .unwrap()
         .set_formula(
@@ -250,7 +261,7 @@ fn unsupported_signature_and_xls_formula_keep_typed_error_chains() {
             CellValue::Number(-999.0),
         )
         .unwrap();
-    let saved = book.workbook().clone();
+    let saved = book.model().clone();
     let error = book.save_xls().build().unwrap_err();
     assert!(
         error
@@ -259,7 +270,7 @@ fn unsupported_signature_and_xls_formula_keep_typed_error_chains() {
             .downcast_ref::<xls::XlsError>()
             .is_some()
     );
-    assert_eq!(book.workbook(), &saved);
+    assert_eq!(book.model(), &saved);
 }
 
 #[test]

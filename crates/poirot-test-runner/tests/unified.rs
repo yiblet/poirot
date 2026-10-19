@@ -41,7 +41,7 @@ impl Fixture {
             std::fs::write(root.join("fods").join(name), value.to_string()).unwrap();
         }
         let baseline = Baseline {
-            schema_version: 1,
+            schema_version: 2,
             fods_source_commit: revision.into(),
             cases: BTreeMap::new(),
         };
@@ -318,12 +318,9 @@ fn source_selection_does_not_open_an_unrelated_corpus() {
 #[test]
 fn duplicate_baseline_keys_are_rejected_instead_of_silently_overwritten() {
     let fixture = Fixture::new(1, false);
-    let entry = json!({"source":"json","group":"lookup","suite":"suite.json","observation":{"outcome":"passed"}});
     let text = format!(
-        r#"{{"schema_version":1,"fods_source_commit":"{}","cases":{{"json:suite.json:selected result":{},"json:suite.json:selected result":{}}}}}"#,
+        r#"{{"schema_version":2,"fods_source_commit":"{}","passing":["json:suite.json:selected result","json:suite.json:selected result"],"nonpassing":[]}}"#,
         poirot_test_runner::fods::xml::SOURCE_COMMIT,
-        entry,
-        entry
     );
     std::fs::write(&fixture.options.baseline, text).unwrap();
     assert!(

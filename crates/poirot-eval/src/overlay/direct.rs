@@ -116,6 +116,10 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
     pub fn usage(&self) -> &crate::RunUsage {
         self.state.usage()
     }
+    /// Configure native persistence of authored edits and calculation preparation.
+    pub fn save_snapshot(&self) -> crate::artifact::SnapshotSaveBuilder<'_> {
+        crate::artifact::SnapshotSaveBuilder::checkpoint(self.snapshot())
+    }
     /// Borrow serializable source and bytecode; local results are deliberately not restored.
     pub fn snapshot(&self) -> snapshot::Snapshot<'_> {
         snapshot::Snapshot::borrowed(&self.source, None)

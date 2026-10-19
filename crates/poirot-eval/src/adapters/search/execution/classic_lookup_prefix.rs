@@ -452,6 +452,7 @@ mod membership_tests {
                 .unwrap();
             sheet.set_value("A3".parse().unwrap(), 3.).unwrap();
             let mut run = Session::with_context(&book, EvaluationInputs::default());
+            run.array_result_policy = ArrayResultPolicy::ScalarIntersection;
             run.lookup_prefixes.enable();
             assert_eq!(lookup(&mut run, "MATCH(1,A1:A3,0)").unwrap(), Number(1.));
             run.lookup_prefixes.publish();

@@ -13,12 +13,14 @@ fn book() -> Workbook {
     w
 }
 fn evaluate(w: &Workbook, formula: &str, budgets: EvaluationBudgets) -> CellValue {
-    match run_formula(
+    match run_formula_with_configuration(
         w,
         0,
         "Z20".parse().unwrap(),
         formula,
-        EvaluationInputs::default(),
+        &RunConfiguration::default()
+            .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
+            .with_array_result_policy(ArrayResultPolicy::ScalarIntersection),
         budgets,
     ) {
         EvaluationOutcome::Complete { value, .. } => value,
@@ -216,7 +218,11 @@ fn stored_formula_scalar_projection_remains_operational_and_lazy_branch_has_no_q
             0,
             "Z20".parse().unwrap(),
             "MATCH(\"*\",A:A,0)",
-            &RunConfiguration::default(),
+            &RunConfiguration::default()
+                .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
+                .with_text_policy(TextSemanticsPolicy {
+                    source: TextSourceVersion::Poi7321209
+                }),
             EvaluationBudgets::default()
         ),
         EvaluationOutcome::Aborted {

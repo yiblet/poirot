@@ -8,9 +8,12 @@ pub struct Suite {
     /// Optional display family; the suite filename is the default.
     #[serde(default)]
     pub group: Option<String>,
-    /// Explicit suite contract; omitted metadata preserves pinned legacy behavior.
+    /// Explicit suite builtin contract; omitted metadata uses modern Excel defaults.
     #[serde(default)]
     pub builtin_policy: poirot::eval::BuiltinSemanticsPolicy,
+    /// Array publication contract independently established by the fixture evidence.
+    #[serde(default)]
+    pub array_result_policy: poirot::eval::ArrayResultPolicy,
     pub workbook: WorkbookDefinition,
     pub scenarios: Vec<Scenario>,
 }

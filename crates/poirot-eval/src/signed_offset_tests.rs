@@ -24,12 +24,14 @@ fn formula(w: &Workbook, expression: &str) -> CellValue {
     let plan =
         bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(expression).unwrap())
             .unwrap();
-    match crate::run_plan(
+    match crate::run_plan_with_configuration(
         w,
         0,
         "P1".parse().unwrap(),
         &plan,
-        Default::default(),
+        &RunConfiguration::default()
+            .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
+            .with_array_result_policy(ArrayResultPolicy::ScalarIntersection),
         Default::default(),
     ) {
         crate::EvaluationOutcome::Complete { value, .. } => value,
@@ -98,6 +100,7 @@ fn signed_sparse_projection_reads_current_cells_and_excludes_unrelated_regions()
 fn ordinary_reference_representation_stays_unsigned_and_signed_reads_are_lazy() {
     let w = fixture();
     let mut session = Session::with_context(&w, EvaluationInputs::default());
+    session.array_result_policy = ArrayResultPolicy::ScalarIntersection;
     let at = "P1".parse().unwrap();
     let plan = bound::FormulaPlan::bind(
         &poirot_parsing::formula::parse_formula("OFFSET(G5:H6,1,-1,-2,3)").unwrap(),
@@ -121,12 +124,14 @@ fn formula_at(w: &Workbook, expression: &str, address: &str, sheet: usize) -> Ce
     let plan =
         bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(expression).unwrap())
             .unwrap();
-    match crate::run_plan(
+    match crate::run_plan_with_configuration(
         w,
         sheet,
         address.parse().unwrap(),
         &plan,
-        Default::default(),
+        &RunConfiguration::default()
+            .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
+            .with_array_result_policy(ArrayResultPolicy::ScalarIntersection),
         Default::default(),
     ) {
         crate::EvaluationOutcome::Complete { value, .. } => value,
@@ -232,6 +237,7 @@ fn traced_formula(
         EvaluationInputs::default(),
         BudgetMeter::new(budgets).unwrap(),
     );
+    session.array_result_policy = ArrayResultPolicy::ScalarIntersection;
     session.inputs = inputs;
     session.dependency_sink = Some(&mut reads);
     let plan =
@@ -325,7 +331,13 @@ fn signed_sparse_cached_membership_insert_remove_and_unrelated_edit() {
             .set_formula(address.parse().unwrap(), formula, Blank)
             .unwrap();
     }
-    let mut overlay = Overlay::with_workbook(&w).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&w)
+        .with_policy(overlay::OverlayPolicy {
+            arrays: ArrayResultPolicy::ScalarIntersection,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     let targets = ["Sheet1!P1", "Sheet1!Q1"].map(|name| overlay.target(name).unwrap());
     let context = EvaluationContext::default();
     overlay
@@ -402,6 +414,7 @@ fn signed_host_padding_origin_shape_and_relative_resize_are_preserved() {
         &poirot_parsing::formula::parse_formula("OFFSET(B3,0,0,-2,-2)").unwrap(),
     )];
     let mut session = Session::with_context(&w, EvaluationInputs::default());
+    session.array_result_policy = ArrayResultPolicy::ScalarIntersection;
     let mut host = CallHost::new(&mut session, 0, "P1".parse().unwrap(), &arguments);
     let description = host.describe(0).unwrap();
     assert_eq!(
@@ -447,6 +460,7 @@ fn signed_logical_algebra_retains_padding_union_and_range_geometry() {
     // Exercise the evaluated Range operator directly, without widening that grammar.
     let at = "P1".parse().unwrap();
     let mut session = Session::with_context(&w, EvaluationInputs::default());
+    session.array_result_policy = ArrayResultPolicy::ScalarIntersection;
     let read = |session: &mut Session<'_>, expression: &str| {
         let expression = bound::bind(&poirot_parsing::formula::parse_formula(expression).unwrap());
         session.expr(0, at, &expression).unwrap()
@@ -513,6 +527,7 @@ fn signed_sum_union_throw_precedes_physical_area_reads() {
         .unwrap();
     let mut reads = SignedReads::default();
     let mut session = Session::with_context(&w, EvaluationInputs::default());
+    session.array_result_policy = ArrayResultPolicy::ScalarIntersection;
     session.dependency_sink = Some(&mut reads);
     let expression = bound::bind(
         &poirot_parsing::formula::parse_formula("SUM((OFFSET(B3,0,0,-2,-2),A1:B2))").unwrap(),
@@ -617,6 +632,7 @@ fn range_envelopes_reject_empty_and_mixed_sheet_operands_in_both_channels() {
             }
         };
         let mut session = Session::with_context(&w, EvaluationInputs::default());
+        session.array_result_policy = ArrayResultPolicy::ScalarIntersection;
         for (left, right) in [
             (vec![], vec![a]),
             (vec![a], vec![]),

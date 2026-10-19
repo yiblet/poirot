@@ -1,5 +1,6 @@
 {
   "schema_version": 1,
+  "array_result_policy": "ScalarIntersection",
   "workbook": {
     "sheets": [
       "S"

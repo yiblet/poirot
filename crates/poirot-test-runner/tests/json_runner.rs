@@ -199,8 +199,8 @@ fn suites_select_one_builtin_contract_for_both_modes() {
     for (policy, expected, selected) in [
         (
             None,
-            json!({"type":"number","value":12}),
-            poirot::eval::BuiltinSemanticsPolicy::PinnedPoi,
+            json!({"type":"error","value":"#VALUE!"}),
+            poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation,
         ),
         (
             Some(json!("PinnedPoi")),

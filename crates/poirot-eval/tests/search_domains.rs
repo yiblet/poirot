@@ -85,10 +85,7 @@ fn search_validates_empty_pattern_and_text_domains() {
             );
         }
         let missing = r#"SEARCH("","abc",)"#;
-        assert!(matches!(
-            run(missing, &config, Default::default()),
-            EvaluationOutcome::Aborted { .. }
-        ));
+        assert_eq!(value(missing, &config), CellValue::Error(CellError::Value));
         let pinned = config
             .clone()
             .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
@@ -128,14 +125,29 @@ fn search_source_matching_and_unicode_contracts_survive_domain_validation() {
             });
         assert_eq!(
             value(r#"SEARCH("*","abc")"#, &poi),
-            CellValue::Error(CellError::Value)
+            if builtin == BuiltinSemanticsPolicy::ExcelDocumentation {
+                CellValue::Number(1.)
+            } else {
+                CellValue::Error(CellError::Value)
+            }
         );
         assert_eq!(
             value(r#"SEARCH("a~*","a*")"#, &poi),
-            CellValue::Error(CellError::Value)
+            if builtin == BuiltinSemanticsPolicy::ExcelDocumentation {
+                CellValue::Number(1.)
+            } else {
+                CellValue::Error(CellError::Value)
+            }
         );
         assert_eq!(value(r#"FIND("x","😀x")"#, &poi), CellValue::Number(3.));
         assert_eq!(value(r#"SEARCH("x","😀x")"#, &poi), CellValue::Number(3.));
-        assert_eq!(value(r#"SEARCH("x","ßx")"#, &poi), CellValue::Number(3.));
+        assert_eq!(
+            value(r#"SEARCH("x","ßx")"#, &poi),
+            CellValue::Number(if builtin == BuiltinSemanticsPolicy::ExcelDocumentation {
+                2.
+            } else {
+                3.
+            })
+        );
     }
 }

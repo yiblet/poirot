@@ -194,9 +194,9 @@ fn matrix_and_text_limits_abort_before_growth_and_dense_reads() {
     };
     assert_eq!(value, CellValue::Blank);
     assert_eq!(usage.cell_reads, 2);
-    // Two endpoint descriptors, one combined range, and two session memo entries.
+    // Two endpoint descriptors, one combined range, two memo entries, and dynamic blank-read tracking.
     // No six-cell dense table reservation is admitted; each reservation fits cap 2.
-    assert_eq!(usage.materialized_values, 5);
+    assert_eq!(usage.materialized_values, 6);
     let limited = EvaluationBudgets {
         text_bytes: 5,
         ..EvaluationBudgets::default()

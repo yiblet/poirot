@@ -421,55 +421,16 @@ pub fn run_recalculation_with_configuration(
     configuration: &RunConfiguration,
     budgets: EvaluationBudgets,
 ) -> EvaluationOutcome<usize> {
-    if configuration.array_result_policy() == ArrayResultPolicy::DynamicSpill {
-        return EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::UnsupportedCapability {
-                capability: CapabilityId::FunctionAdapter,
-                source: None,
-                detail: "dynamic array ownership cannot be materialized into model formula caches; use the read-only runtime".into(),
-            },
-            usage: EvaluationUsage::default(),
-        };
-    }
-    match run_workbook_with_configuration(workbook, configuration, budgets) {
+    match materialization::recalculate(workbook, configuration, budgets, false) {
+        EvaluationOutcome::Complete {
+            value: (count, _),
+            usage,
+        } => EvaluationOutcome::Complete {
+            value: count,
+            usage,
+        },
         EvaluationOutcome::Aborted { failure, usage } => {
             EvaluationOutcome::Aborted { failure, usage }
-        }
-        EvaluationOutcome::Complete {
-            value: updates,
-            usage,
-        } => {
-            let count = updates.len();
-            if updates.iter().any(|update| {
-                workbook
-                    .sheet(update.target.sheet)
-                    .and_then(|sheet| sheet.get(update.target.address))
-                    .is_none()
-            }) {
-                return crate::EvaluationOutcome::Aborted {
-                    failure: crate::EvaluationFailure::StalePlan,
-                    usage,
-                };
-            }
-            for update in updates {
-                let Some(cell) = workbook
-                    .sheet_mut(update.target.sheet)
-                    .and_then(|sheet| sheet.get_mut(update.target.address))
-                else {
-                    return crate::EvaluationOutcome::Aborted {
-                        failure: crate::EvaluationFailure::StalePlan,
-                        usage,
-                    };
-                };
-                // TODO(coercion-non-argument): [MEDIUM] Cache publication can replace a computed number with an error; storing the converted value as a live result would change subsequent evaluation.
-                cell.value = configuration
-                    .materialization_policy()
-                    .coerce_stored_value(update.value);
-            }
-            EvaluationOutcome::Complete {
-                value: count,
-                usage,
-            }
         }
     }
 }
@@ -555,3 +516,6 @@ mod signed_offset_tests;
 mod short_offset_tests;
 
 mod spill_publication;
+
+/// Bounded native workbook source and calculation checkpoint persistence.
+pub mod artifact;

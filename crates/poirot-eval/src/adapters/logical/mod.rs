@@ -80,7 +80,10 @@ pub(crate) fn execute(
     function: HelperFunction,
     arguments: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
-    if matches!(function, HelperFunction::Ifs | HelperFunction::Switch) {
+    if matches!(
+        function,
+        HelperFunction::Ifs | HelperFunction::Switch | HelperFunction::IsRef
+    ) {
         session.read(DependencyRead::BuiltinPolicy);
     }
     if function == HelperFunction::Switch
@@ -193,12 +196,13 @@ mod tests {
             ("IF(TRUE,ISREF(A1),UNKNOWN_FUNCTION())", Boolean(true)),
         ] {
             assert_eq!(
-                match crate::run_formula(
+                match crate::run_formula_with_configuration(
                     &workbook,
                     0,
                     at,
                     formula,
-                    Default::default(),
+                    &RunConfiguration::default()
+                        .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
                     Default::default()
                 ) {
                     crate::EvaluationOutcome::Complete { value, .. } => value,

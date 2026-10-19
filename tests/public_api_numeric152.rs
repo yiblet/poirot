@@ -3,27 +3,27 @@ use eval::{
     EvaluationOutcome, FormulaCacheMaterializationPolicy as M, MaterializedScalarSummary as S,
     RunConfiguration,
 };
-use poirot::{CellAddress, CellError, CellValue, Spreadsheet, eval, model};
+use poirot::{CellAddress, CellError, CellValue, Workbook, eval, model};
 fn at(row: u32, col: u32) -> CellAddress {
     CellAddress { row, col }
 }
 fn config(m: M) -> RunConfiguration {
     RunConfiguration::default().with_materialization_policy(m)
 }
-fn book() -> Spreadsheet {
-    let mut b = Spreadsheet::new();
-    b.workbook_mut().add_sheet("S").unwrap();
+fn book() -> Workbook {
+    let mut b = Workbook::new();
+    b.model_mut().add_sheet("S").unwrap();
     b
 }
-fn set_formula(b: &mut Spreadsheet, row: u32, col: u32, f: &str) {
-    b.workbook_mut()
+fn set_formula(b: &mut Workbook, row: u32, col: u32, f: &str) {
+    b.model_mut()
         .sheet_mut(0)
         .unwrap()
         .set_formula(at(row, col), f, CellValue::Blank)
         .unwrap();
 }
-fn get(b: &Spreadsheet, row: u32, col: u32) -> CellValue {
-    b.workbook()
+fn get(b: &Workbook, row: u32, col: u32) -> CellValue {
+    b.model()
         .sheet(0)
         .unwrap()
         .get(at(row, col))
@@ -49,10 +49,10 @@ fn policy(materialization: M) -> poirot::OverlayPolicy {
         ..Default::default()
     }
 }
-fn output(overlay: &mut poirot::Overlay<'_>, source: &Spreadsheet) -> Spreadsheet {
-    let mut workbook = source.workbook().clone();
+fn output(overlay: &mut poirot::eval::overlay::Overlay<'_>, source: &Workbook) -> Workbook {
+    let mut workbook = source.model().clone();
     workbook.apply(overlay.changes()).unwrap();
-    Spreadsheet::from_workbook(workbook)
+    Workbook::from_model(workbook)
 }
 #[path = "public_api_numeric152/publication_receipts.rs"]
 mod publication_receipts;

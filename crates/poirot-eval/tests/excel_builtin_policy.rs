@@ -45,8 +45,9 @@ fn value(source: &str, configuration: &RunConfiguration) -> CellValue {
     }
 }
 #[test]
-fn documented_aliases_are_opt_in_and_do_not_change_default_registry() {
-    let default = RunConfiguration::default();
+fn documented_aliases_are_default_and_pinned_registry_remains_explicit() {
+    let default =
+        RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
     let excel = excel();
     assert_eq!(default.builtin_policy(), BuiltinSemanticsPolicy::PinnedPoi);
     assert_ne!(
@@ -246,9 +247,12 @@ fn interest_payment_defaults_and_degenerate_cases_follow_one_contract() {
             "{formula}"
         );
     }
-    // The global default continues to select the pinned four-argument algorithm.
+    // The explicit source policy retains the pinned four-argument algorithm.
     assert_eq!(
-        value("IPMT(0,1,5,1000)", &RunConfiguration::default()),
+        value(
+            "IPMT(0,1,5,1000)",
+            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
+        ),
         CellValue::Error(CellError::Num)
     );
 }
@@ -258,7 +262,7 @@ fn rounding_modes_and_zero_domains_follow_function_policies() {
     // Microsoft CEILING.MATH/FLOOR.MATH examples define opposite negative
     // directions for nonzero mode; Calc independently confirms fractional flags.
     let modern = excel();
-    let pinned = RunConfiguration::default();
+    let pinned = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
     for (function, default_negative, reversed_negative, positive) in
         [("CEILING.MATH", -4., -6., 6.), ("FLOOR.MATH", -6., -4., 4.)]
     {

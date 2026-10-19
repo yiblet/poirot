@@ -19,7 +19,7 @@
 /// Explicit currency symbols, separators, grouping, and affixes.
 pub use crate::adapters::financial::policy::CurrencyContext;
 use crate::{ContextFingerprint, EvaluationInputs};
-use poirot_text::{SourceVersion, TextSemanticsPolicy};
+use poirot_text::TextSemanticsPolicy;
 
 /// Caller-supplied currency formatting settings for formula execution.
 /// Default leaves currency unspecified; the evaluator does not read the host locale.
@@ -46,9 +46,9 @@ impl FormattingConfiguration {
 )]
 pub enum BuiltinSemanticsPolicy {
     /// Preserve the existing registry and pinned source contracts.
-    #[default]
     PinnedPoi,
     /// Documented Excel contracts. This is not an Excel observation/parity claim.
+    #[default]
     ExcelDocumentation,
 }
 
@@ -58,9 +58,9 @@ pub enum BuiltinSemanticsPolicy {
 )]
 pub enum ArrayResultPolicy {
     /// Reduce final arrays to a scalar using intersection behavior.
-    #[default]
     ScalarIntersection,
     /// Publish rectangular results with tracked spill ownership and blocker checks.
+    #[default]
     DynamicSpill,
 }
 
@@ -80,7 +80,8 @@ pub struct RunConfiguration {
     materialization_policy: crate::FormulaCacheMaterializationPolicy,
 }
 impl RunConfiguration {
-    /// Combine execution inputs and formatting with default computation policies.
+    /// Combine execution inputs and formatting with documented Excel builtins,
+    /// Compatibility Version 2 text units, and dynamic worksheet arrays.
     pub fn new(context: EvaluationInputs, formatting: FormattingConfiguration) -> Self {
         Self {
             context,
@@ -90,9 +91,7 @@ impl RunConfiguration {
             builtin_policy: BuiltinSemanticsPolicy::default(),
             array_result_policy: ArrayResultPolicy::default(),
             materialization_policy: crate::FormulaCacheMaterializationPolicy::PreserveComputed,
-            text_policy: TextSemanticsPolicy {
-                source: SourceVersion::Poi7321209,
-            },
+            text_policy: TextSemanticsPolicy::default(),
         }
     }
     /// Return captured clock, seed, and localization inputs.

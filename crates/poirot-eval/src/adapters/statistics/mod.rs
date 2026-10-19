@@ -96,6 +96,7 @@ pub(crate) fn execute(
     function: adapter::StatisticsFunction,
     arguments: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
+    session.read(DependencyRead::BuiltinPolicy);
     let policy = if session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation {
         adapter::SemanticsPolicy::ExcelDocumentation
     } else {

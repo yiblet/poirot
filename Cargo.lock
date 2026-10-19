@@ -553,7 +553,6 @@ dependencies = [
  "poirot-workbook",
  "poirot-xls",
  "postcard",
- "serde",
 ]
 
 [[package]]
@@ -589,6 +588,7 @@ dependencies = [
  "poirot-functions-matrix",
  "poirot-functions-statistics",
  "poirot-functions-text",
+ "poirot-io",
  "poirot-model",
  "poirot-numeric",
  "poirot-parsing",

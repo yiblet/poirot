@@ -299,14 +299,9 @@ impl Session<'_> {
         self.budget.text(bound)?;
         if let Number(value) = value {
             self.read(DependencyRead::TextPolicy);
-            if matches!(
-                self.text_policy.source,
-                TextSourceVersion::Poi7321209 | TextSourceVersion::Poi7321209OpenJdk21Unicode15
-            ) {
-                return Ok(poirot_coercionv2::compatibility::coercev2_render_number(
-                    *value,
-                ));
-            }
+            return Ok(poirot_coercionv2::compatibility::coercev2_render_number(
+                *value,
+            ));
         }
         coercev2_formula_text(value, &mut self.budget)
     }

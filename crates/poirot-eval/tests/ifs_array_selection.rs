@@ -251,7 +251,13 @@ fn policy_and_condition_edits_invalidate_retained_results_after_restore() {
             CellValue::Blank,
         )
         .unwrap();
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book)
+        .with_policy(poirot_eval::overlay::OverlayPolicy {
+            builtin: poirot_eval::BuiltinSemanticsPolicy::PinnedPoi,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     let context = EvaluationContext::default();
     assert_eq!(
         overlay
@@ -294,7 +300,12 @@ fn policy_and_condition_edits_invalidate_retained_results_after_restore() {
             .unwrap(),
         CellValue::Number(205.)
     );
-    overlay.set_policy(OverlayPolicy::default()).unwrap();
+    overlay
+        .set_policy(OverlayPolicy {
+            builtin: poirot_eval::BuiltinSemanticsPolicy::PinnedPoi,
+            ..Default::default()
+        })
+        .unwrap();
     assert_eq!(
         overlay
             .evaluation(&context)

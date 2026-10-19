@@ -65,9 +65,13 @@ fn relocated_parts_alternate_prefix_and_skipped_scope_execute_correctly() {
     assert_eq!(report.workbook.named_ranges[0].sheet_scope, Some(0));
     assert!(
         report
-            .warnings
+            .workbook
+            .file_metadata
+            .as_ref()
+            .unwrap()
+            .import_warnings
             .iter()
-            .any(|w| w.contains("scoped to omitted sheet"))
+            .any(|w| w.detail.contains("scoped to omitted sheet"))
     );
 }
 #[test]
@@ -176,13 +180,9 @@ fn external_link_policy_is_inspectable_and_executed_by_byte_adapter() {
     let mut p = inventory();
     let rels = p.parts.get_mut("documents/_rels/book.xml.rels").unwrap();
     *rels = String::from_utf8(rels.clone()).unwrap().replace("</Relationships>", "<Relationship Id=\"link\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/externalLink\" TargetMode=\"External\" Target=\"https://example.invalid/book.xlsx\"/></Relationships>").into_bytes();
-    assert!(
-        p.plan()
-            .unwrap()
-            .warnings
-            .iter()
-            .any(|w| w.contains("external relationship"))
-    );
+    assert!(p.plan().unwrap().warnings.iter().any(|w| w.kind
+        == poirot_model::ImportDiagnosticKind::ExternalLink
+        && w.detail.contains("external relationship")));
     let policy = poirot_io::opc::OpcImportPolicy {
         external_relationships: poirot_io::opc::ExternalRelationshipPolicy::Reject,
     };
@@ -308,6 +308,6 @@ fn identifier_plan_uses_shared_policy_and_preserves_raw_names() {
     assert!(
         plan.warnings
             .iter()
-            .any(|w| w.contains("identifier comparison unsupported"))
+            .any(|w| w.detail.contains("identifier comparison unsupported"))
     );
 }

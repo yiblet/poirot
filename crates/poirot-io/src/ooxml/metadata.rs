@@ -5,6 +5,7 @@ use super::{
 };
 use crate::IoError;
 use poirot_model::{CellAddress, NamedRange, Workbook};
+use poirot_model::{ImportDiagnostic, ImportDiagnosticKind};
 use quick_xml::events::Event;
 use std::collections::BTreeMap;
 
@@ -46,7 +47,7 @@ pub(crate) fn apply_metadata(
     package: &Package,
     plan: &crate::opc::OpcReadPlan,
     workbook: &mut Workbook,
-    warnings: &mut Vec<String>,
+    warnings: &mut Vec<ImportDiagnostic>,
 ) -> Result<(), IoError> {
     // Read workbook sheet states independently of the cell backend.
     let mut states = events(part(package, &plan.workbook_part)?);
@@ -103,7 +104,7 @@ pub(crate) fn apply_metadata(
                             sheet.set_presentation(p);
                         }
                     } else {
-                        warnings.push(format!("{}: unsupported tab color representation omitted (only opaque RGB is retained)", identity.name));
+                        warnings.push(ImportDiagnostic { kind: ImportDiagnosticKind::RepresentationLoss, detail: format!("{}: unsupported tab color representation omitted (only opaque RGB is retained)", identity.name) });
                     }
                 }
                 Event::Eof => break,
@@ -129,10 +130,13 @@ pub(crate) fn apply_metadata(
                             )))
                         })?;
                         if !identity.supported {
-                            warnings.push(format!(
-                                "defined name {name} scoped to omitted sheet {} is omitted",
-                                identity.name
-                            ));
+                            warnings.push(ImportDiagnostic {
+                                kind: ImportDiagnosticKind::RepresentationLoss,
+                                detail: format!(
+                                    "defined name {name} scoped to omitted sheet {} is omitted",
+                                    identity.name
+                                ),
+                            });
                             continue;
                         }
                         Some(
@@ -228,10 +232,13 @@ pub(crate) fn apply_metadata(
                                 cell.style.number_format = Some(code);
                             }
                         } else {
-                            warnings.push(format!(
-                                "number-format ID {id} at {}!{address} has no known raw code",
-                                sheet.name()
-                            ));
+                            warnings.push(ImportDiagnostic {
+                                kind: ImportDiagnosticKind::RepresentationLoss,
+                                detail: format!(
+                                    "number-format ID {id} at {}!{address} has no known raw code",
+                                    sheet.name()
+                                ),
+                            });
                         }
                     }
                 }

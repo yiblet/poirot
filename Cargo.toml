@@ -41,8 +41,6 @@ license = "MIT"
 repository = "https://github.com/yiblet/poirot"
 
 [dependencies]
-serde.workspace = true
-postcard.workspace = true
 poirot-workbook = { path = "crates/poirot-workbook" }
 poirot-model = { path = "crates/poirot-model" }
 poirot-parsing = { path = "crates/poirot-parsing" }
@@ -50,6 +48,9 @@ poirot-eval = { path = "crates/poirot-eval" }
 poirot-io = { path = "crates/poirot-io" }
 poirot-format = { path = "crates/poirot-format" }
 poirot-xls = { path = "crates/poirot-xls" }
+
+[dev-dependencies]
+postcard.workspace = true
 
 [lints]
 workspace = true

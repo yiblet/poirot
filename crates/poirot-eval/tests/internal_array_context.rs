@@ -87,9 +87,11 @@ fn scalar_arguments_and_dependency_cells_keep_their_own_demand() {
     let policy = EvaluationPolicy::default();
     let mut compiler = FormulaCompiler::new();
     let plan = compiler.compile_workbook(&workbook, &policy);
-    let mut run = EvaluationRun::new(
+    let configuration =
+        RunConfiguration::default().with_array_result_policy(ArrayResultPolicy::ScalarIntersection);
+    let mut run = EvaluationRun::new_with_configuration(
         WorkbookView::new(&workbook, &plan, &policy).unwrap(),
-        Default::default(),
+        &configuration,
         Default::default(),
     )
     .unwrap();

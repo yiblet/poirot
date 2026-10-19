@@ -1,5 +1,5 @@
-//! Allocation-free plans for lossless POI text operations.
-//! Host checks Reservations before copying the selected/output units.
+//! Lossless UTF-16 selection, Unicode casing, and bounded wildcard search.
+//! Hosts admit reservations before executing allocating helpers.
 use std::ops::Range;
 
 /// Selection/reservation failure before copying UTF-16 text.
@@ -199,5 +199,155 @@ mod paired_tests {
         assert_eq!(replace(5, 1, -1), Err(PlanFailure::Value));
         assert_eq!(replace(5, i32::MAX, i32::MAX), Ok(5..5));
         assert_eq!(paired_mid(5, 2, i32::MAX), Ok(1..5));
+    }
+}
+
+/// Map case while preserving isolated UTF-16 units unchanged.
+pub fn case(text: &[u16], uppercase: bool) -> Vec<u16> {
+    let mut output = Vec::new();
+    let mut segment = String::new();
+    let flush = |segment: &mut String, output: &mut Vec<u16>| {
+        let mapped = if uppercase {
+            segment.to_uppercase()
+        } else {
+            segment.to_lowercase()
+        };
+        output.extend(mapped.encode_utf16());
+        segment.clear();
+    };
+    for decoded in char::decode_utf16(text.iter().copied()) {
+        match decoded {
+            Ok(character) => segment.push(character),
+            Err(unit) => {
+                flush(&mut segment, &mut output);
+                output.push(unit.unpaired_surrogate());
+            }
+        }
+    }
+    flush(&mut segment, &mut output);
+    output
+}
+
+/// Character boundaries used when capitalizing word starts.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ProperUnits {
+    /// Supplementary characters remain unchanged and restart the next Java char's word.
+    JavaChars,
+    /// Supplementary letters participate in Unicode words and case conversion.
+    UnicodeScalars,
+}
+
+/// Capitalize letter runs with explicit Java UTF-16 or Unicode-scalar boundaries.
+pub fn proper(text: &[u16], units: ProperUnits) -> Vec<u16> {
+    use crate::UnicodePolicy;
+    let policy = crate::ModernUnicode;
+    let mut output = Vec::new();
+    let mut upper = true;
+    for decoded in char::decode_utf16(text.iter().copied()) {
+        match decoded {
+            Ok(character) if units == ProperUnits::JavaChars && character.len_utf16() == 2 => {
+                output.extend(character.encode_utf16(&mut [0; 2]).iter().copied());
+                upper = true;
+            }
+            Ok(character) => {
+                output.extend(policy.case(character, upper).encode_utf16());
+                upper = !policy.is_letter(character);
+            }
+            Err(unit) => {
+                output.push(unit.unpaired_surrogate());
+                upper = true;
+            }
+        }
+    }
+    output
+}
+
+/// Bound logical-unit wildcard dynamic programming before allocation or execution.
+pub fn wildcard_reservation(hay: usize, needle: usize) -> Result<Reservation, PlanFailure> {
+    let cells = hay.checked_add(1).ok_or(PlanFailure::SizeOverflow)?;
+    let elements = cells
+        .checked_mul(3)
+        .and_then(|n| n.checked_add(needle))
+        .ok_or(PlanFailure::SizeOverflow)?;
+    let work = cells
+        .checked_mul(needle.checked_add(1).ok_or(PlanFailure::SizeOverflow)?)
+        .and_then(|n| n.checked_mul(8))
+        .ok_or(PlanFailure::SizeOverflow)?;
+    Reservation::units(
+        elements.checked_mul(8).ok_or(PlanFailure::SizeOverflow)?,
+        work,
+    )
+}
+
+/// Return the earliest wildcard substring start in original logical text units.
+/// Microsoft SEARCH documents *, ?, and ~ escapes; Version 2 counts surrogate pairs.
+/// <https://support.microsoft.com/en-us/excel/functions/search-function> (accessed 2026-10-19).
+/// Dynamic programming follows the same prefix recurrence as Poirot's wildcard engine.
+pub fn search(hay: &[u16], needle: &[u16], start: usize, paired: bool) -> Option<usize> {
+    let ranges = |text: &[u16]| {
+        let mut ranges = Vec::new();
+        let mut offset = 0;
+        while offset < text.len() {
+            let end = offset + if paired { pair_width(text, offset) } else { 1 };
+            ranges.push(offset..end);
+            offset = end;
+        }
+        ranges
+    };
+    let hay_ranges = ranges(hay);
+    let needle_ranges = ranges(needle);
+    let mut dp: Vec<Option<usize>> = (0..=hay_ranges.len())
+        .map(|i| (i >= start).then_some(i))
+        .collect();
+    let mut escaped = false;
+    for (index, range) in needle_ranges.iter().enumerate() {
+        let literal = needle.get(range.clone())?;
+        if !escaped && literal == [u16::from(b'~')] && index + 1 < needle_ranges.len() {
+            escaped = true;
+            continue;
+        }
+        let star = !escaped && literal == [u16::from(b'*')];
+        let question = !escaped && literal == [u16::from(b'?')];
+        escaped = false;
+        let mut next = vec![None; dp.len()];
+        for j in 0..dp.len() {
+            let previous = j
+                .checked_sub(1)
+                .and_then(|i| next.get(i))
+                .copied()
+                .flatten();
+            let current = dp.get(j).copied().flatten();
+            let matched = if star {
+                match (current, previous) {
+                    (Some(a), Some(b)) => Some(a.min(b)),
+                    (a, b) => a.or(b),
+                }
+            } else if j > 0 {
+                let range = hay_ranges.get(j - 1)?;
+                let candidate = hay.get(range.clone())?;
+                if question || folded_equal(literal, candidate) {
+                    dp.get(j - 1).copied().flatten()
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+            *next.get_mut(j)? = matched;
+        }
+        dp = next;
+    }
+    dp.into_iter().flatten().min()
+}
+
+fn folded_equal(left: &[u16], right: &[u16]) -> bool {
+    let scalar = |units: &[u16]| {
+        char::decode_utf16(units.iter().copied())
+            .next()
+            .and_then(Result::ok)
+    };
+    match (scalar(left), scalar(right)) {
+        (Some(a), Some(b)) => a.to_lowercase().eq(b.to_lowercase()),
+        _ => left == right,
     }
 }

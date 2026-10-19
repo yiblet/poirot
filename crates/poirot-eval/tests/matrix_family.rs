@@ -1,6 +1,6 @@
 use poirot_eval::{
     BudgetKind, CapabilityId, EvaluationBudgets, EvaluationFailure, EvaluationInputs,
-    EvaluationOutcome, run_formula,
+    EvaluationOutcome,
 };
 use poirot_model::{CellAddress, CellError, CellValue, Workbook};
 
@@ -38,14 +38,7 @@ fn genuine_arrays_and_reference_areas_reach_matrix_helpers() {
         ("INDEX(FREQUENCY({1,2,3,4},{2,3}),3,1)", 1.),
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
-                &w,
-                0,
-                AT,
-                formula,
-                Default::default(),
-                Default::default()
-            ) {
+            match pinned_formula(&w, 0, AT, formula, Default::default(), Default::default()) {
                 poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
                 outcome => panic!("evaluation aborted: {outcome:?}"),
             },
@@ -54,7 +47,7 @@ fn genuine_arrays_and_reference_areas_reach_matrix_helpers() {
         );
     }
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &w,
             0,
             AT,
@@ -68,7 +61,7 @@ fn genuine_arrays_and_reference_areas_reach_matrix_helpers() {
         CellValue::Error(CellError::Value)
     );
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &w,
             0,
             AT,
@@ -93,14 +86,7 @@ fn matrix_collector_compacts_ignored_values_then_pads_original_shape() {
         ("TRANSPOSE(TRUE)", 1.),
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
-                &w,
-                0,
-                AT,
-                formula,
-                Default::default(),
-                Default::default()
-            ) {
+            match pinned_formula(&w, 0, AT, formula, Default::default(), Default::default()) {
                 poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
                 outcome => panic!("evaluation aborted: {outcome:?}"),
             },
@@ -109,7 +95,7 @@ fn matrix_collector_compacts_ignored_values_then_pads_original_shape() {
         );
     }
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &w,
             0,
             AT,
@@ -148,14 +134,7 @@ fn cell_references_and_one_cell_areas_keep_distinct_source_coercions() {
         ("INDEX(FREQUENCY(TRUE,{1}),1,1)", CellValue::Number(1.)),
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
-                &w,
-                0,
-                AT,
-                formula,
-                Default::default(),
-                Default::default()
-            ) {
+            match pinned_formula(&w, 0, AT, formula, Default::default(), Default::default()) {
                 poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
                 outcome => panic!("evaluation aborted: {outcome:?}"),
             },
@@ -177,14 +156,7 @@ fn source_error_precedence_survives_shape_mismatch_and_scalar_dispatch() {
         ("MDETERM(1,UNKNOWN_FUNCTION())", CellError::Value),
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
-                &w,
-                0,
-                AT,
-                formula,
-                Default::default(),
-                Default::default()
-            ) {
+            match pinned_formula(&w, 0, AT, formula, Default::default(), Default::default()) {
                 poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
                 outcome => panic!("evaluation aborted: {outcome:?}"),
             },
@@ -196,7 +168,7 @@ fn source_error_precedence_survives_shape_mismatch_and_scalar_dispatch() {
 #[test]
 fn trend_retains_omitted_arguments_and_reports_source_malformed_area() {
     let w = workbook();
-    let n = match poirot_eval::run_formula(
+    let n = match pinned_formula(
         &w,
         0,
         AT,
@@ -209,7 +181,7 @@ fn trend_retains_omitted_arguments_and_reports_source_malformed_area() {
     };
     assert!(matches!(n, CellValue::Number(n) if (n-10.).abs()<1e-9));
     assert!(matches!(
-        run_formula(
+        pinned_formula(
             &w,
             0,
             AT,
@@ -228,7 +200,7 @@ fn trend_retains_omitted_arguments_and_reports_source_malformed_area() {
     // OperandResolver's MissingArgEval numeric coercion throws in the source;
     // preserve this capability gap instead of replacing syntax missing by blank.
     assert!(matches!(
-        run_formula(
+        pinned_formula(
             &w,
             0,
             AT,
@@ -248,7 +220,7 @@ fn trend_retains_omitted_arguments_and_reports_source_malformed_area() {
 #[test]
 fn operational_limits_abort_before_requested_reference_traversal() {
     let w = workbook();
-    let outcome = run_formula(
+    let outcome = pinned_formula(
         &w,
         0,
         AT,
@@ -271,7 +243,7 @@ fn operational_limits_abort_before_requested_reference_traversal() {
         other => panic!("resource exhaustion must remain operational: {other:?}"),
     }
     assert!(matches!(
-        run_formula(
+        pinned_formula(
             &w,
             0,
             AT,
@@ -304,14 +276,7 @@ fn nested_scalar_consumers_use_source_specific_computed_area_coordinates() {
             ("ABS(MMULT(A1:B2,{1,0;0,1}))", product),
         ] {
             assert_eq!(
-                match poirot_eval::run_formula(
-                    &w,
-                    0,
-                    at,
-                    formula,
-                    Default::default(),
-                    Default::default()
-                ) {
+                match pinned_formula(&w, 0, at, formula, Default::default(), Default::default()) {
                     poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
                     outcome => panic!("evaluation aborted: {outcome:?}"),
                 },
@@ -323,17 +288,11 @@ fn nested_scalar_consumers_use_source_specific_computed_area_coordinates() {
         // A small rounding allowance checks this numerical result without
         // claiming bitwise parity between LU implementations.
         let formula = "ABS(MINVERSE({1,2;3,4}))";
-        let actual = match poirot_eval::run_formula(
-            &w,
-            0,
-            at,
-            formula,
-            Default::default(),
-            Default::default(),
-        ) {
-            poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
-            outcome => panic!("evaluation aborted: {outcome:?}"),
-        };
+        let actual =
+            match pinned_formula(&w, 0, at, formula, Default::default(), Default::default()) {
+                poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
+                outcome => panic!("evaluation aborted: {outcome:?}"),
+            };
         let tolerance = 8. * f64::EPSILON * f64::max(inverse, 1.);
         assert!(
             matches!(actual, CellValue::Number(n) if (n - inverse).abs() <= tolerance),
@@ -346,7 +305,7 @@ fn nested_scalar_consumers_use_source_specific_computed_area_coordinates() {
         CellAddress { row: 9, col: 9 },
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
+            match pinned_formula(
                 &w,
                 0,
                 at,
@@ -359,7 +318,7 @@ fn nested_scalar_consumers_use_source_specific_computed_area_coordinates() {
             },
             CellValue::Number(2.)
         );
-        let value = match poirot_eval::run_formula(
+        let value = match pinned_formula(
             &w,
             0,
             at,
@@ -381,7 +340,7 @@ fn nested_scalar_consumers_use_source_specific_computed_area_coordinates() {
         "ABS(MMULT(A1:B2,{1,0;0,1}))",
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
+            match pinned_formula(
                 &w,
                 0,
                 CellAddress { row: 9, col: 9 },
@@ -425,14 +384,7 @@ fn tall_and_wide_computed_areas_intersect_only_their_varying_axis() {
         ),
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
-                &w,
-                0,
-                at,
-                formula,
-                Default::default(),
-                Default::default()
-            ) {
+            match pinned_formula(&w, 0, at, formula, Default::default(), Default::default()) {
                 poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
                 outcome => panic!("evaluation aborted: {outcome:?}"),
             },
@@ -441,7 +393,7 @@ fn tall_and_wide_computed_areas_intersect_only_their_varying_axis() {
         );
     }
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &w,
             0,
             AT,
@@ -506,14 +458,7 @@ fn matrix_output_preserves_non_a1_reference_origins_and_first_area_precedence() 
         ),
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
-                &w,
-                0,
-                at,
-                formula,
-                Default::default(),
-                Default::default()
-            ) {
+            match pinned_formula(&w, 0, at, formula, Default::default(), Default::default()) {
                 poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
                 outcome => panic!("evaluation aborted: {outcome:?}"),
             },
@@ -586,14 +531,7 @@ fn retained_poi_coordinate_observations_preserve_typed_results() {
     ] {
         for (at, expected) in callers.into_iter().zip(results) {
             assert_eq!(
-                match poirot_eval::run_formula(
-                    &w,
-                    0,
-                    at,
-                    formula,
-                    Default::default(),
-                    Default::default()
-                ) {
+                match pinned_formula(&w, 0, at, formula, Default::default(), Default::default()) {
                     poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
                     outcome => panic!("evaluation aborted: {outcome:?}"),
                 },
@@ -606,7 +544,7 @@ fn retained_poi_coordinate_observations_preserve_typed_results() {
         (callers[0], 2_f64, 1.9999999999999998_f64),
         (callers[1], 0.5_f64, 0.49999999999999994_f64),
     ] {
-        let actual = match poirot_eval::run_formula(
+        let actual = match pinned_formula(
             &w,
             0,
             at,
@@ -624,7 +562,7 @@ fn retained_poi_coordinate_observations_preserve_typed_results() {
         );
     }
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &w,
             0,
             callers[2],
@@ -638,7 +576,7 @@ fn retained_poi_coordinate_observations_preserve_typed_results() {
         CellValue::Error(CellError::Value)
     );
     for at in callers {
-        let actual = match poirot_eval::run_formula(
+        let actual = match pinned_formula(
             &w,
             0,
             at,
@@ -752,4 +690,25 @@ fn documented_numeric_matrix_admission_preserves_types_and_pinned_collectors() {
             }
         ));
     }
+}
+
+/// Execute the pinned source controls independently of the public modern defaults.
+fn pinned_formula(
+    workbook: &Workbook,
+    sheet: usize,
+    address: CellAddress,
+    formula: &str,
+    inputs: EvaluationInputs,
+    budgets: EvaluationBudgets,
+) -> EvaluationOutcome<CellValue> {
+    poirot_eval::run_formula_with_configuration(
+        workbook,
+        sheet,
+        address,
+        formula,
+        &poirot_eval::RunConfiguration::from(inputs)
+            .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi)
+            .with_array_result_policy(poirot_eval::ArrayResultPolicy::ScalarIntersection),
+        budgets,
+    )
 }

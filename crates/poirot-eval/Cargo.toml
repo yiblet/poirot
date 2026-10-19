@@ -29,13 +29,14 @@ rand_core = "0.9.5"
 
 
 
+postcard.workspace = true
 serde.workspace = true
 serde_bytes = "0.11.19"
 poirot-functions-core = { path = "../poirot-functions-core" }
 
 [dev-dependencies]
+poirot-io = { path = "../poirot-io" }
 allocation-counter.workspace = true
-postcard.workspace = true
 
 [lints]
 workspace = true

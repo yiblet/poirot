@@ -46,7 +46,9 @@ fn actual_formulas_cover_aggregates_order_statistics_and_aliases() {
         ("LARGE({1,3,2},2)", 2.),
         ("SMALL({1,3,2},2)", 2.),
         ("PERCENTILE({1,2,3},0.5)", 2.),
+        ("PERCENTILE.INC({1,2,3},0.5)", 2.),
         ("RANK(3,A1:A3)", 1.),
+        ("RANK(1,{1,2})", 2.),
         ("PERCENTRANK({1,2,3},2)", 0.5),
         ("PERCENTRANK.INC({1,2,3},2,3,UNKNOWN_FUNCTION())", 0.5),
         ("PERCENTRANK.EXC({1,2,3},2)", 0.5),
@@ -69,7 +71,7 @@ fn actual_formulas_cover_aggregates_order_statistics_and_aliases() {
         ("NORMSINV(0.5)", 0.),
         ("NORM.S.INV(0.5)", 0.),
         ("NORMSDIST(0)", 0.5),
-        ("NORM.S.DIST(0)", 0.5),
+        ("NORM.S.DIST(0,TRUE)", 0.5),
         ("STANDARDIZE(3,1,2)", 1.),
         ("POISSON(0,0,UNKNOWN_FUNCTION())", 1.),
         ("POISSON.DIST(0,0,UNKNOWN_FUNCTION())", 1.),
@@ -88,16 +90,14 @@ fn actual_formulas_cover_aggregates_order_statistics_and_aliases() {
     }
 }
 #[test]
-fn errors_arity_domain_and_operand_order_are_formula_visible() {
+fn pinned_errors_arity_domain_and_operand_order_are_formula_visible() {
     let book = workbook();
     for (formula, expected) in [
         ("AVEDEV()", CellError::Value),
-        ("PERCENTILE.INC({1,2,3},0.5)", CellError::Name),
         ("NORMSDIST(0,UNKNOWN_FUNCTION())", CellError::Value),
         ("LARGE({1,2},0)", CellError::Num),
         ("SMALL({1,2},1/0)", CellError::Value),
         ("PERCENTILE({1,2},2)", CellError::Num),
-        ("RANK(1,{1,2})", CellError::Value),
         ("RANK(1,1/0,-0.1)", CellError::Num),
         ("PERCENTRANK(1/0,NA())", CellError::Num),
         ("PERCENTRANK({1,2},1,0)", CellError::Num),
@@ -108,7 +108,18 @@ fn errors_arity_domain_and_operand_order_are_formula_visible() {
         ("TDIST(-1,UNKNOWN_FUNCTION(),2)", CellError::Num),
     ] {
         assert_eq!(
-            result(&book, formula),
+            match eval::run_formula_with_configuration(
+                &book,
+                0,
+                AT,
+                formula,
+                &eval::RunConfiguration::default()
+                    .with_builtin_policy(eval::BuiltinSemanticsPolicy::PinnedPoi),
+                Default::default()
+            ) {
+                EvaluationOutcome::Complete { value, .. } => value,
+                other => panic!("{other:?}"),
+            },
             CellValue::Error(expected),
             "{formula}"
         );

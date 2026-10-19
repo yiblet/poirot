@@ -1,8 +1,8 @@
 //! Publish source edits while retaining dependency-aware calculation in a worker.
-use poirot::{CellValue, EvaluationContext, Overlay, Spreadsheet, Workbook};
+use poirot::{CellValue, EvaluationContext, Overlay, Workbook};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut workbook = Workbook::new();
+    let mut workbook = poirot::model::Workbook::new();
     workbook
         .add_sheet("S")?
         .set_formula("B1".parse()?, "A1*2", CellValue::Blank)?;
@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Source flush does not itself update the workbook's saved formula results.
     let mut saved = overlay.workbook().clone();
     saved.apply(overlay.changes())?;
-    let bytes = Spreadsheet::from_workbook(saved).save_xlsx().to_buffer()?;
+    let bytes = Workbook::from_model(saved).save_xlsx().to_buffer()?;
     println!(
         "Exported {} XLSX bytes; calculation state remains warm",
         bytes.len()

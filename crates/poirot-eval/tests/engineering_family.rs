@@ -1,4 +1,4 @@
-use poirot_eval::{EvaluationBudgets, EvaluationInputs, EvaluationOutcome, run_formula};
+use poirot_eval::{EvaluationBudgets, EvaluationInputs, EvaluationOutcome};
 use poirot_model::{CellAddress, CellError, CellValue, Workbook};
 use std::time::{Duration, UNIX_EPOCH};
 
@@ -50,7 +50,7 @@ fn pinned_engineering_values_types_and_coercion() {
         ("BESSELJ(-1,2)", Error(CellError::Num)),
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
+            match pinned_formula(
                 &workbook(),
                 0,
                 AT,
@@ -86,7 +86,7 @@ fn unused_places_and_arity_do_not_execute_arguments() {
         ("IFERROR(DEC2BIN(512),7)", CellValue::Number(7.)),
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
+            match pinned_formula(
                 &workbook(),
                 0,
                 AT,
@@ -106,7 +106,7 @@ fn unused_places_and_arity_do_not_execute_arguments() {
 #[test]
 fn bessel_positive_order_and_formula_cell_errors() {
     let mut workbook = workbook();
-    match match poirot_eval::run_formula(
+    match match pinned_formula(
         &workbook,
         0,
         AT,
@@ -130,7 +130,7 @@ fn bessel_positive_order_and_formula_cell_errors() {
         )
         .unwrap();
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &workbook,
             0,
             AT,
@@ -144,7 +144,7 @@ fn bessel_positive_order_and_formula_cell_errors() {
         CellValue::Error(CellError::Div0)
     );
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &workbook,
             0,
             AT,
@@ -181,7 +181,7 @@ fn operational_failures_survive_iferror() {
     ] {
         assert!(
             matches!(
-                run_formula(
+                pinned_formula(
                     &workbook,
                     0,
                     AT,
@@ -197,7 +197,7 @@ fn operational_failures_survive_iferror() {
     // OperandResolver rejects unparseable text with catchable VALUE, while
     // an unsupported frozen clock remains an operational DateParsing abort.
     assert!(matches!(
-        run_formula(
+        pinned_formula(
             &workbook,
             0,
             AT,
@@ -211,7 +211,7 @@ fn operational_failures_survive_iferror() {
         }
     ));
     assert!(matches!(
-        run_formula(
+        pinned_formula(
             &workbook,
             0,
             AT,
@@ -249,7 +249,7 @@ fn binary_utf16_digit_paths_reach_the_actual_engineering_dispatch() {
         ("DELTA(\"١\",1)", CellValue::Error(CellError::Value)),
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
+            match pinned_formula(
                 &book,
                 0,
                 AT,
@@ -281,7 +281,7 @@ fn engineering_source_error_precedence_and_fractional_ranges() {
         ("DELTA(1)", CellValue::Error(CellError::Value)),
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
+            match pinned_formula(
                 &workbook(),
                 0,
                 AT,
@@ -296,4 +296,24 @@ fn engineering_source_error_precedence_and_fractional_ranges() {
             "{formula}"
         );
     }
+}
+
+/// Run the independently source-observed engineering controls under their source policy.
+fn pinned_formula(
+    book: &Workbook,
+    sheet: usize,
+    at: CellAddress,
+    source: &str,
+    context: EvaluationInputs,
+    budgets: EvaluationBudgets,
+) -> EvaluationOutcome<CellValue> {
+    poirot_eval::run_formula_with_configuration(
+        book,
+        sheet,
+        at,
+        source,
+        &poirot_eval::RunConfiguration::from(context)
+            .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi),
+        budgets,
+    )
 }

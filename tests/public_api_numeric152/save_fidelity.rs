@@ -16,7 +16,7 @@ fn numeric_refusal<'a>(
 fn save_plans_refuse_raw_nonfinite_cache_and_accept_explicit_materialization() {
     let mut source = book();
     set_formula(&mut source, 0, 0, "NORMSINV(1E-300)");
-    let mut overlay = poirot::Overlay::with_workbook(source.workbook())
+    let mut overlay = poirot::Overlay::with_workbook(source.model())
         .with_policy(policy(M::PreserveComputed))
         .build()
         .unwrap();
@@ -50,11 +50,11 @@ fn save_plans_refuse_raw_nonfinite_cache_and_accept_explicit_materialization() {
         result.save_xlsx().to_buffer().unwrap(),
         result.save_xls().to_buffer().unwrap(),
     ] {
-        let reopened = Spreadsheet::from_bytes(&bytes).unwrap();
+        let reopened = Workbook::from_bytes(&bytes).unwrap();
         assert_eq!(get(&reopened, 0, 0), CellValue::Error(CellError::Div0));
         assert!(
             reopened
-                .workbook()
+                .model()
                 .sheet(0)
                 .unwrap()
                 .get(at(0, 0))
@@ -75,7 +75,7 @@ fn nan_save_roundtrip_preserves_raw_computation_and_writes_num_errors() {
         "NORMDIST(\"1.7976931348623157e308\",\"-1.7976931348623157e308\",\"1.7976931348623157e308\",TRUE)",
     );
     set_formula(&mut source, 0, 1, "IFERROR(A1,42)");
-    let mut overlay = poirot::Overlay::with_workbook(source.workbook())
+    let mut overlay = poirot::Overlay::with_workbook(source.model())
         .with_policy(policy(M::PreserveComputed))
         .build()
         .unwrap();
@@ -104,7 +104,7 @@ fn nan_save_roundtrip_preserves_raw_computation_and_writes_num_errors() {
         result.save_xlsx().to_buffer().unwrap(),
         result.save_xls().to_buffer().unwrap(),
     ] {
-        let reopened = Spreadsheet::from_bytes(&bytes).unwrap();
+        let reopened = Workbook::from_bytes(&bytes).unwrap();
         for col in [0, 1] {
             assert_eq!(get(&reopened, 0, col), CellValue::Error(CellError::Num));
         }

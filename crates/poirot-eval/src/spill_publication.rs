@@ -116,6 +116,13 @@ impl Session<'_> {
             return Ok(Error(VALUE_ERROR));
         }
         let height = rows.len();
+        if height == 1 && width == 1 {
+            return rows
+                .first()
+                .and_then(|row| row.first())
+                .cloned()
+                .ok_or(EvaluationFailure::StalePlan);
+        }
         let bound = self.source_spill_shape(sheet, at);
         if bound.is_none_or(|(r, c)| height as u64 > r || width as u64 > c) {
             return Err(self.spill_unsupported(sheet,at,"dynamic producer has no supported static footprint bound (names, extensions and computed references are unsupported)"));
@@ -326,9 +333,13 @@ impl Session<'_> {
             Some(at),
         )
     }
-    fn source_spill_shape(&self, sheet: usize, at: CellAddress) -> Option<(u64, u64)> {
-        let prepared = self
-            .plan
+    /// Borrow or prepare one source formula for static spill admission checks.
+    fn source_formula(
+        &self,
+        sheet: usize,
+        at: CellAddress,
+    ) -> Option<std::sync::Arc<PreparedFormula>> {
+        self.plan
             .and_then(|plan| plan.formula(EvaluationTarget { sheet, address: at }))
             .cloned()
             .or_else(|| {
@@ -336,11 +347,31 @@ impl Session<'_> {
                     .cell(sheet, at)
                     .and_then(|cell| cell.formula.as_deref())
                     .map(|source| self.prepare_source(source))
-            })?;
-        match prepared.as_ref() {
+            })
+    }
+    /// Return static dimensions available for spill discovery and arbitration.
+    pub(super) fn source_spill_shape(&self, sheet: usize, at: CellAddress) -> Option<(u64, u64)> {
+        match self.source_formula(sheet, at)?.as_ref() {
             PreparedFormula::Ready(formula) => formula.spill.shape,
             _ => None,
         }
+    }
+    /// Refuse scalar cache reuse for bounded or unresolved array producers.
+    pub(super) fn source_can_spill(&self, sheet: usize, at: CellAddress) -> bool {
+        self.source_formula(sheet, at)
+            .is_some_and(|prepared| match prepared.as_ref() {
+                PreparedFormula::Ready(formula) => {
+                    formula.spill.unbounded
+                        || formula
+                            .spill
+                            .shape
+                            .is_some_and(|(rows, columns)| rows > 1 || columns > 1)
+                        || formula.bytecode().calls.iter().any(|call| {
+                            matches!(call.target, crate::bytecode::CallTarget::Extension(_))
+                        })
+                }
+                _ => false,
+            })
     }
     /// Resolve competing producers by ascending source address (row, then column),
     /// independent of request order. Only successfully admitted footprints reserve
@@ -354,7 +385,7 @@ impl Session<'_> {
         let Some((rows, cols)) = self.source_spill_shape(sheet, at) else {
             return Ok(());
         };
-        if rows == 0 || cols == 0 {
+        if rows <= 1 && cols <= 1 {
             return Ok(());
         }
         let area = Area {

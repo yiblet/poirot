@@ -14,6 +14,7 @@ fn evaluate(session: &mut Session<'_>, formula: &str) -> CellValue {
 }
 fn session(workbook: &Workbook) -> Session<'_> {
     let mut session = Session::with_context(workbook, EvaluationInputs::default());
+    session.array_result_policy = ArrayResultPolicy::ScalarIntersection;
     session.lookup_prefixes.enable();
     session
 }

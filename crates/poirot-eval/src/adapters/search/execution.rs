@@ -330,6 +330,8 @@ mod tests {
             let selected = bound::FormulaPlan::bind(&syntax).unwrap();
             let mut reads = Reads::default();
             let mut session = Session::with_context(&w, EvaluationInputs::default());
+            session.builtin_policy = BuiltinSemanticsPolicy::PinnedPoi;
+            session.array_result_policy = ArrayResultPolicy::ScalarIntersection;
             session.dependency_sink = Some(&mut reads);
             let at = "Z20".parse().unwrap();
             let value = session.expr(0, at, &selected.expression()).unwrap();

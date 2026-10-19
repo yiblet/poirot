@@ -88,6 +88,7 @@ pub(crate) fn execute(
     function: helper::FinancialFunction,
     arguments: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
+    session.read(DependencyRead::BuiltinPolicy);
     let policy = if session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation {
         helper::SemanticsPolicy::ExcelDocumentation
     } else {

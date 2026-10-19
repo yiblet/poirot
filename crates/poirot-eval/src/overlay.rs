@@ -146,6 +146,10 @@ impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
     ) -> Result<OverlayEvaluation<'e>, OverlayError> {
         OverlayEvaluation::new(self, context)
     }
+    /// Configure native persistence of authored edits and calculation preparation.
+    pub fn save_snapshot(&self) -> crate::artifact::SnapshotSaveBuilder<'_> {
+        crate::artifact::SnapshotSaveBuilder::checkpoint(self.snapshot())
+    }
     /// Borrow a Serde view of the baseline, edits, bytecode, and retained results.
     pub fn snapshot(&self) -> snapshot::Snapshot<'_> {
         snapshot::Snapshot::borrowed(&self.source, Some(&self.cache))

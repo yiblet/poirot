@@ -331,7 +331,13 @@ fn documented_text_version_switch_updates_index_consumers_and_dependents() {
 #[test]
 fn builtin_policy_switch_recomputes_semantics_and_unchanged_policy_reuses() {
     let w = book(&["PERCENTILE.INC({1,3},0.5)", "A1+1", "QUARTILE.INC({1,3},2)"]);
-    let mut overlay = Overlay::with_workbook(&w).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&w)
+        .with_policy(poirot_eval::overlay::OverlayPolicy {
+            builtin: poirot_eval::BuiltinSemanticsPolicy::PinnedPoi,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     let context = context();
     let targets = (0..3).map(target).collect::<Vec<_>>();
     let first = overlay

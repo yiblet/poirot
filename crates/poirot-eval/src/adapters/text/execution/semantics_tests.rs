@@ -5,6 +5,14 @@ fn evaluate(source: TextSourceVersion, formula: &str) -> EvalResult<CellValue> {
     workbook.add_sheet("Sheet1").unwrap();
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
     session.text_policy = TextSemanticsPolicy { source };
+    session.builtin_policy = if matches!(
+        source,
+        TextSourceVersion::Poi7321209 | TextSourceVersion::Poi7321209OpenJdk21Unicode15
+    ) {
+        BuiltinSemanticsPolicy::PinnedPoi
+    } else {
+        BuiltinSemanticsPolicy::ExcelDocumentation
+    };
     let value = session.expr(
         0,
         "A1".parse().unwrap(),

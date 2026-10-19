@@ -58,7 +58,10 @@ fn normal_gamma_iterations_are_charged_after_the_fixed_overhead() {
     let mut book = Workbook::new();
     book.add_sheet("Sheet1").unwrap();
     for name in ["NORMSDIST", "NORM.S.DIST", "_xlfn.NORM.S.DIST"] {
-        let center = format!("IFERROR({name}(0),42)");
+        let center = format!(
+            "IFERROR({name}({}),42)",
+            if name == "NORMSDIST" { "0" } else { "0,TRUE" }
+        );
         let control = run(&book, &center, 1_000_000);
         assert!(matches!(
             &control,
@@ -67,7 +70,10 @@ fn normal_gamma_iterations_are_charged_after_the_fixed_overhead() {
                 ..
             }
         ));
-        let formula = format!("IFERROR({name}(1),42)");
+        let formula = format!(
+            "IFERROR({name}({}),42)",
+            if name == "NORMSDIST" { "1" } else { "1,TRUE" }
+        );
         assert!(
             matches!(
                 run(&book, &formula, control.usage().work_units + 2),
@@ -122,7 +128,7 @@ fn poisson_mean_zero_source_exception_preserves_argument_order() {
                 matches!(
                     run(&book, &formula, 128),
                     EvaluationOutcome::Aborted {
-                        failure: EvaluationFailure::UnsupportedCapability { .. },
+                        failure: EvaluationFailure::KnownSourceException { .. },
                         ..
                     }
                 ),

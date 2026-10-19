@@ -7,7 +7,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     workbook
         .add_sheet("S")?
         .set_formula("B1".parse()?, "A1*2", CellValue::Blank)?;
-    let workbook = Arc::new(workbook);
+    let workbook = Arc::new(workbook.into_model());
     let mut evaluation =
         Evaluation::with_workbook(Arc::clone(&workbook)).build(EvaluationContext::default())?;
     let input = evaluation.target("S!A1")?;
@@ -20,10 +20,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if evaluation.cell(output)? != CellValue::Number(8.) {
         return Err("unexpected evaluation result".into());
     }
-    let bytes = postcard::to_allocvec(&evaluation.snapshot())?;
-    let (restored_workbook, state) = Evaluation::from_snapshot(postcard::from_bytes(&bytes)?)?;
-    let mut restored =
-        state.into_evaluation(Arc::new(restored_workbook), EvaluationContext::default())?;
+    let bytes = evaluation.save_snapshot().to_buffer()?;
+    let restored = Workbook::load_snapshot().from_bytes(&bytes)?;
+    let mut restored = restored
+        .into_evaluation(
+            EvaluationContext::default(),
+            poirot::OverlayPolicy::default(),
+        )?
+        .evaluation;
     if restored.cell(output)? != CellValue::Number(8.) {
         return Err("unexpected evaluation result".into());
     }

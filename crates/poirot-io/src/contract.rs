@@ -4,7 +4,7 @@ use poirot_model::{ModelError, Workbook};
 use std::fmt;
 
 /// Workbook import/export failure, including invalid input, resource limits, and fidelity refusal.
-/// A successful import can still report unsupported features in [`ImportReport::warnings`].
+/// A successful import retains fidelity diagnostics in workbook file metadata.
 #[derive(Debug)]
 pub enum IoError {
     /// Filesystem read/write failure.
@@ -83,8 +83,6 @@ impl From<rust_xlsxwriter::XlsxError> for IoError {
 pub struct ImportReport {
     /// Canonical decoded workbook, including saved formula results.
     pub workbook: Workbook,
-    /// Inspectable omitted or altered source features.
-    pub warnings: Vec<String>,
 }
 
 /// Operational resource budgets, not a claim that Excel rejects larger files.

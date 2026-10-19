@@ -1,7 +1,5 @@
 //! Source-derived scalar LogicalFunction classification, not Excel observations.
-use poirot_eval::{
-    EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome, run_formula,
-};
+use poirot_eval::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome};
 use poirot_model::{CellAddress, CellError, CellValue, Workbook};
 
 fn workbook() -> Workbook {
@@ -23,12 +21,14 @@ fn workbook() -> Workbook {
 }
 
 fn execute(formula: &str, address: &str) -> EvaluationOutcome<CellValue> {
-    run_formula(
+    poirot_eval::run_formula_with_configuration(
         &workbook(),
         0,
         address.parse::<CellAddress>().unwrap(),
         formula,
-        EvaluationInputs::default(),
+        &poirot_eval::RunConfiguration::default()
+            .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi)
+            .with_array_result_policy(poirot_eval::ArrayResultPolicy::ScalarIntersection),
         EvaluationBudgets::default(),
     )
 }

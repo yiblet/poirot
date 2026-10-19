@@ -29,7 +29,7 @@ fn source(model: model::Workbook) -> Result<model::Workbook, std::convert::Infal
 }
 /// Public overlay harness that retains the latest evaluation's observable values.
 struct SpillCase<'a> {
-    overlay: poirot::Overlay<'a>,
+    overlay: poirot::eval::overlay::Overlay<'a>,
     context: poirot::EvaluationContext,
     results: std::collections::BTreeMap<(usize, model::CellAddress), CellValue>,
 }
@@ -217,7 +217,11 @@ fn edits_shrink_and_policy_changes_clear_old_children() {
     assert_eq!(value(&ctx, "D1"), CellValue::Number(8.));
     ctx.set_input(target("A1"), CellValue::Boolean(true))
         .unwrap();
-    ctx.set_policy(Default::default()).unwrap();
+    ctx.set_policy(poirot::OverlayPolicy {
+        arrays: eval::ArrayResultPolicy::ScalarIntersection,
+        ..Default::default()
+    })
+    .unwrap();
     complete(&mut ctx, &["D1", "E2"]);
     assert_eq!(value(&ctx, "D1"), CellValue::Number(1.));
     assert_eq!(value(&ctx, "E2"), CellValue::Blank);
@@ -667,7 +671,11 @@ fn exhausted_non_singleton_axes_use_poi_value_errors_and_at_stays_scalar() {
     }
     let w = model(&[("D1", "{1,2}+1")]);
     let mut ctx = context(&w);
-    ctx.set_policy(Default::default()).unwrap();
+    ctx.set_policy(poirot::OverlayPolicy {
+        arrays: eval::ArrayResultPolicy::ScalarIntersection,
+        ..Default::default()
+    })
+    .unwrap();
     complete(&mut ctx, &["D1", "E1"]);
     assert_eq!(value(&ctx, "D1"), CellValue::Number(2.));
     assert_eq!(value(&ctx, "E1"), CellValue::Blank);

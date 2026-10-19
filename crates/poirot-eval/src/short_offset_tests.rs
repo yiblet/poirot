@@ -24,12 +24,14 @@ fn formula(w: &Workbook, expression: &str) -> CellValue {
     let plan =
         bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(expression).unwrap())
             .unwrap();
-    match crate::run_plan(
+    match crate::run_plan_with_configuration(
         w,
         0,
         "P1".parse().unwrap(),
         &plan,
-        Default::default(),
+        &RunConfiguration::default()
+            .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
+            .with_array_result_policy(ArrayResultPolicy::ScalarIntersection),
         Default::default(),
     ) {
         crate::EvaluationOutcome::Complete { value, .. } => value,
@@ -83,6 +85,7 @@ fn upper_grid_padding_and_nested_return_keep_reference_shape() {
         &poirot_parsing::formula::parse_formula("OFFSET(A1048576,1,0,1,1)").unwrap(),
     )];
     let mut session = Session::with_context(&w, EvaluationInputs::default());
+    session.array_result_policy = ArrayResultPolicy::ScalarIntersection;
     let mut host = host::CallHost::new(&mut session, 0, "P1".parse().unwrap(), &args);
     let blank = host.read_cell(0, 0, 0).unwrap();
     assert_eq!(blank.value, Blank);
@@ -154,6 +157,7 @@ fn wrapped_positive_dimension_physical_projection_matches_signed_arc() {
 fn zero_negative_source_dimensions_keep_metadata_and_empty_sparse_loop_policy() {
     let w = fixture();
     let mut session = Session::with_context(&w, EvaluationInputs::default());
+    session.array_result_policy = ArrayResultPolicy::ScalarIntersection;
     for (logical, dimension) in [
         (area((i32::MIN, 0)), -2147483647),
         (area((i32::MIN, i32::MAX)), 0),

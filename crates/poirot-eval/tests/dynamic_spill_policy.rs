@@ -20,7 +20,8 @@ fn workbook() -> Workbook {
 }
 #[test]
 fn exact_computation_identity_includes_array_publication_policy() {
-    let scalar = RunConfiguration::default();
+    let scalar =
+        RunConfiguration::default().with_array_result_policy(ArrayResultPolicy::ScalarIntersection);
     let dynamic = config();
     assert_ne!(scalar.fingerprint(), dynamic.fingerprint());
     assert_ne!(
@@ -33,7 +34,7 @@ fn exact_computation_identity_includes_array_publication_policy() {
     );
 }
 #[test]
-fn array_probes_refuse_without_overwriting_source_and_scalar_probes_stay_isolated() {
+fn array_probes_select_scalars_without_publishing_worksheet_spills() {
     let w = workbook();
     let policy = EvaluationPolicy::default();
     let mut compiler = FormulaCompiler::new();
@@ -49,15 +50,14 @@ fn array_probes_refuse_without_overwriting_source_and_scalar_probes_stay_isolate
         Default::default(),
     )
     .unwrap();
-    for result in [
-        run.evaluate_formula(target("D1"), &array),
-        run.evaluate_bound(target("D1"), &bound),
-    ] {
-        assert!(matches!(
-            result,
-            Err(EvaluationFailure::UnsupportedCapability { .. })
-        ));
-    }
+    assert_eq!(
+        run.evaluate_formula(target("D1"), &array).unwrap(),
+        CellValue::Number(1.)
+    );
+    assert_eq!(
+        run.evaluate_bound(target("D1"), &bound).unwrap(),
+        CellValue::Number(3.)
+    );
     assert_eq!(
         run.evaluate_formula(target("D1"), &scalar).unwrap(),
         CellValue::Number(9.)
@@ -71,7 +71,7 @@ fn array_probes_refuse_without_overwriting_source_and_scalar_probes_stay_isolate
     assert_eq!(retained.memo_usage.cells, 2);
 }
 #[test]
-fn default_array_probes_keep_scalar_intersection() {
+fn default_array_probes_return_a_scalar_without_modifying_source() {
     let w = workbook();
     let policy = EvaluationPolicy::default();
     let mut compiler = FormulaCompiler::new();
@@ -160,22 +160,28 @@ fn child_discovery_records_anchor_and_selected_source_dependencies() {
 }
 
 #[test]
-fn mutable_recalculation_refuses_dynamic_publication_before_mutation() {
+fn mutable_recalculation_publishes_dynamic_children_with_source_ownership() {
     let mut w = workbook();
     w.sheet_mut(0)
         .unwrap()
         .set_formula(target("F1").address, "{1,2}", CellValue::Number(99.))
         .unwrap();
-    let original = w.clone();
-    let report = run_recalculation_with_configuration(&mut w, &config(), Default::default());
     assert!(matches!(
-        report,
-        EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::UnsupportedCapability { .. },
-            ..
-        }
+        run_recalculation_with_configuration(&mut w, &config(), Default::default()),
+        EvaluationOutcome::Complete { value: 1, .. }
     ));
-    assert_eq!(w, original);
+    assert_eq!(
+        w.sheet(0).unwrap().get(target("F1").address).unwrap().value,
+        CellValue::Number(1.)
+    );
+    assert_eq!(
+        w.sheet(0).unwrap().get(target("G1").address).unwrap().value,
+        CellValue::Number(2.)
+    );
+    assert_eq!(
+        w.sheet(0).unwrap().spill_owner(target("G1").address),
+        Some(target("F1").address)
+    );
 }
 
 #[test]
@@ -222,10 +228,36 @@ fn scalar_external_cache_refuses_dynamic_spills_before_reader_invocation() {
         assert_eq!(retained.memo_usage.cells, 0);
         assert_eq!(reader.calls, 0);
     }
+    // A named array has no static dimensions; a scalar cache cannot establish ownership.
+    w.define_name("Pair", "{1,2}", None).unwrap();
+    w.sheet_mut(0)
+        .unwrap()
+        .set_formula(target("D1").address, "Pair", CellValue::Blank)
+        .unwrap();
+    let plan = FormulaCompiler::new().compile_workbook(&w, &policy);
+    for first in ["D1", "E1"] {
+        let mut reader = Reader::default();
+        let configuration = config();
+        let mut run = EvaluationRun::new_with_configuration(
+            WorkbookView::new(&w, &plan, &policy).unwrap(),
+            &configuration,
+            Default::default(),
+        )
+        .unwrap()
+        .with_cell_reader(&mut reader);
+        assert!(matches!(
+            run.evaluate_cell(target(first)),
+            Err(EvaluationFailure::UnsupportedCapability { .. })
+        ));
+        run.finish(Ok(()));
+        assert_eq!(reader.calls, 0);
+    }
     let mut reader = Reader::default();
-    let mut run = EvaluationRun::new(
+    let configuration =
+        RunConfiguration::default().with_array_result_policy(ArrayResultPolicy::ScalarIntersection);
+    let mut run = EvaluationRun::new_with_configuration(
         WorkbookView::new(&w, &plan, &policy).unwrap(),
-        Default::default(),
+        &configuration,
         Default::default(),
     )
     .unwrap()

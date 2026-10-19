@@ -37,7 +37,9 @@ fn unary_plus_retains_text_and_consumes_other_scalar_types() {
     ] {
         let book = workbook();
         let policy = EvaluationPolicy::default();
-        let configuration = RunConfiguration::default().with_array_result_policy(arrays);
+        let configuration = RunConfiguration::default()
+            .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
+            .with_array_result_policy(arrays);
         let mut compiler = FormulaCompiler::new();
         let plan = compiler.compile_workbook(&book, &policy);
         let mut run = EvaluationRun::new_with_configuration(
@@ -125,13 +127,13 @@ fn unary_plus_retains_text_and_consumes_other_scalar_types() {
 }
 
 #[test]
-fn default_numeric_execution_uses_the_poi_unary_plus_contract() {
+fn default_numeric_execution_preserves_selected_scalar_types() {
     let book = workbook();
     let configuration = RunConfiguration::default();
     for (formula, expected) in [
-        ("+TRUE", CellValue::Number(1.)),
-        ("+FALSE", CellValue::Number(0.)),
-        ("+A1", CellValue::Number(0.)),
+        ("+TRUE", CellValue::Boolean(true)),
+        ("+FALSE", CellValue::Boolean(false)),
+        ("+A1", CellValue::Blank),
         ("+\"1\"", CellValue::Text("1".into())),
     ] {
         assert!(

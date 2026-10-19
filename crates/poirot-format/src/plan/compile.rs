@@ -108,14 +108,9 @@ pub fn compile_program_with_source(
             } else {
                 SectionKind::Decimal
             };
-            let decimal_source = if kind == SectionKind::Decimal
+            let decimal_source = kind == SectionKind::Decimal
                 && format.sections.len() <= 2
-                && format.sections.iter().all(|s| s.condition.is_none())
-            {
-                true
-            } else {
-                false
-            };
+                && format.sections.iter().all(|s| s.condition.is_none());
             match NumberPlan::compile_with_source(&section.tokens, decimal_source) {
                 Ok(p) => (kind, SectionProgram::Number(p)),
                 Err(e) => return Err(diagnostic(index, None, e)),

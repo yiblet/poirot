@@ -10,9 +10,21 @@ writing Excel workbooks.
   independent of workbook and evaluator implementations.
 - Follow surrounding code and rustfmt conventions. Keep changes focused, and
   update examples and API docs when public behavior changes.
-- Add focused regression tests for fixes. Derive expected spreadsheet results
-  from documented evidence, never Poirot's output alone. Distinguish known
-  compatibility gaps from regressions.
+- Model meaning with types: use enums for named choices instead of strings,
+  booleans for genuinely binary properties, and newtypes where distinct values
+  should not be interchangeable.
+
+## Documentation and tests
+
+- Every public function and method, and every type declaration (including private
+  types, traits, and type aliases), requires a short `///` doc comment explaining
+  what it is for. Focus on purpose; include constraints or examples only when
+  needed to use it correctly.
+- Cover new and changed behavior with focused tests, including meaningful edge
+  cases and failure paths. Test public contracts through the public API and add
+  regression tests for fixes.
+- Derive expected spreadsheet results from documented evidence, never Poirot's
+  output alone. Distinguish known compatibility gaps from regressions.
 
 ## Safety
 

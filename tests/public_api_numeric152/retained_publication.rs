@@ -8,7 +8,7 @@ fn materialization_switch_reuses_raw_infinity_and_preserves_dependents() {
     set_formula(&mut source, 0, 0, "NORMSINV(1E-300)");
     set_formula(&mut source, 0, 1, "IFERROR(A1,42)");
     set_formula(&mut source, 0, 2, "ISNUMBER(A1)");
-    let mut overlay = Overlay::with_workbook(source.workbook())
+    let mut overlay = Overlay::with_workbook(source.model())
         .with_policy(policy(M::PreserveComputed))
         .build()
         .unwrap();
@@ -54,7 +54,7 @@ fn materialization_switch_reuses_raw_infinity_and_preserves_dependents() {
 fn density_and_nan_results_survive_reuse_and_snapshot_without_becoming_errors() {
     let mut source = book();
     source
-        .workbook_mut()
+        .model_mut()
         .sheet_mut(0)
         .unwrap()
         .set_value(at(0, 3), f64::MAX)
@@ -65,7 +65,7 @@ fn density_and_nan_results_survive_reuse_and_snapshot_without_becoming_errors() 
         set_formula(&mut source, row, 1, &format!("IFERROR(A{},42)", row + 1));
         set_formula(&mut source, row, 2, &format!("ISNUMBER(A{})", row + 1));
     }
-    let mut overlay = Overlay::with_workbook(source.workbook())
+    let mut overlay = Overlay::with_workbook(source.model())
         .with_policy(policy(M::PreserveComputed))
         .build()
         .unwrap();
@@ -91,7 +91,7 @@ fn density_and_nan_results_survive_reuse_and_snapshot_without_becoming_errors() 
     assert_eq!(evaluation.usage().formula_executions, 0);
     assert_eq!(bits(values[3].value.clone()), nan);
     drop(evaluation);
-    let result = output(&mut overlay, &Spreadsheet::from_workbook(restored.clone()));
+    let result = output(&mut overlay, &Workbook::from_model(restored.clone()));
     for (row, error) in [(0, CellError::Div0), (1, CellError::Num)] {
         assert_eq!(get(&result, row, 0), CellValue::Error(error));
         assert_eq!(get(&result, row, 1), CellValue::Error(error));
@@ -104,8 +104,8 @@ fn failed_batches_and_invalid_policies_preserve_previous_successful_outputs() {
     let mut source = book();
     set_formula(&mut source, 0, 0, "NORMSINV(1E-300)");
     set_formula(&mut source, 0, 1, "IFERROR(A1,42)");
-    let before = source.workbook().clone();
-    let mut overlay = Overlay::with_workbook(source.workbook())
+    let before = source.model().clone();
+    let mut overlay = Overlay::with_workbook(source.model())
         .with_policy(policy(M::PinnedPoiCellSetter))
         .build()
         .unwrap();
@@ -153,7 +153,7 @@ fn failed_batches_and_invalid_policies_preserve_previous_successful_outputs() {
         &raw,
         &overlay.cached_value(targets[0]).unwrap()
     ));
-    assert_eq!(source.workbook(), &before);
+    assert_eq!(source.model(), &before);
     let result = output(&mut overlay, &source);
     assert_eq!(get(&result, 0, 0), CellValue::Error(CellError::Div0));
 }
@@ -161,15 +161,15 @@ fn failed_batches_and_invalid_policies_preserve_previous_successful_outputs() {
 #[test]
 fn mixed_cross_sheet_results_publish_only_as_a_complete_explicit_batch() {
     let mut source = book();
-    source.workbook_mut().add_sheet("Other").unwrap();
+    source.model_mut().add_sheet("Other").unwrap();
     set_formula(&mut source, 0, 0, "NORMSINV(1E-300)");
     source
-        .workbook_mut()
+        .model_mut()
         .sheet_mut(1)
         .unwrap()
         .set_formula(at(0, 0), "S!A1", CellValue::Blank)
         .unwrap();
-    let mut overlay = Overlay::with_workbook(source.workbook())
+    let mut overlay = Overlay::with_workbook(source.model())
         .with_policy(policy(M::PinnedPoiCellSetter))
         .build()
         .unwrap();
@@ -187,7 +187,7 @@ fn mixed_cross_sheet_results_publish_only_as_a_complete_explicit_batch() {
     let result = output(&mut overlay, &source);
     assert_eq!(
         result
-            .workbook()
+            .model()
             .sheet(1)
             .unwrap()
             .get(at(0, 0))
@@ -197,7 +197,7 @@ fn mixed_cross_sheet_results_publish_only_as_a_complete_explicit_batch() {
     );
     assert_eq!(
         source
-            .workbook()
+            .model()
             .sheet(1)
             .unwrap()
             .get(at(0, 0))

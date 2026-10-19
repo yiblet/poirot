@@ -74,6 +74,13 @@ pub struct TextSemanticsPolicy {
     /// Explicit source/version contract used for text operations.
     pub source: SourceVersion,
 }
+impl Default for TextSemanticsPolicy {
+    fn default() -> Self {
+        Self {
+            source: SourceVersion::ExcelCompatibilityV2Documented,
+        }
+    }
+}
 impl TextSemanticsPolicy {
     /// Resolve indexing units and semantic length limits for one operation.
     pub fn operation(self, operation: Operation) -> Result<OperationPolicy, Unsupported> {

@@ -45,14 +45,12 @@ fn source_identity_normalization_and_observed_zero_controls() {
                 .unwrap(),
             expected
         );
-        for (plan, want) in [(&pinned, expected)] {
-            assert_eq!(
-                render_value(&CellValue::Number(number), plan, Default::default())
-                    .unwrap()
-                    .text,
-                want
-            );
-        }
+        assert_eq!(
+            render_value(&CellValue::Number(number), &pinned, Default::default())
+                .unwrap()
+                .text,
+            expected
+        );
     }
     let pinned = compile_format_with_source("#.##", policy, source).unwrap();
     assert_eq!(
@@ -95,16 +93,15 @@ fn observed_fraction_and_section_routes_preserve_source_specific_layouts() {
         ("#.0;(#.00)", -1.25, "(1.3)"),
         ("$###,###;-$###,###;\"ZERO\"", 0., "ZERO"),
     ] {
-        for (source, want) in [(FormatSourcePolicy::Poi7321209DataFormatter, pinned)] {
-            let plan = compile_format_with_source(pattern, Default::default(), source).unwrap();
-            assert_eq!(plan.source_policy(), source);
-            assert_eq!(
-                render_value(&CellValue::Number(number), &plan, Default::default())
-                    .unwrap()
-                    .text,
-                want,
-                "{pattern} {number}"
-            );
-        }
+        let source = FormatSourcePolicy::Poi7321209DataFormatter;
+        let plan = compile_format_with_source(pattern, Default::default(), source).unwrap();
+        assert_eq!(plan.source_policy(), source);
+        assert_eq!(
+            render_value(&CellValue::Number(number), &plan, Default::default())
+                .unwrap()
+                .text,
+            pinned,
+            "{pattern} {number}"
+        );
     }
 }

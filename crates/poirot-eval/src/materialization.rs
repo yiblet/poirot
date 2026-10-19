@@ -213,11 +213,41 @@ pub fn run_recalculation_with_receipts(
     configuration: &crate::RunConfiguration,
     budgets: crate::EvaluationBudgets,
 ) -> crate::EvaluationOutcome<FormulaCachePublicationReceipt> {
+    match recalculate(workbook, configuration, budgets, true) {
+        crate::EvaluationOutcome::Complete {
+            value: (_, receipt),
+            usage,
+        } => crate::EvaluationOutcome::Complete {
+            value: receipt,
+            usage,
+        },
+        crate::EvaluationOutcome::Aborted { failure, usage } => {
+            crate::EvaluationOutcome::Aborted { failure, usage }
+        }
+    }
+}
+
+/// Share atomic cache publication with optional per-formula receipts.
+pub(crate) fn recalculate(
+    workbook: &mut poirot_model::Workbook,
+    configuration: &crate::RunConfiguration,
+    budgets: crate::EvaluationBudgets,
+    capture_receipts: bool,
+) -> crate::EvaluationOutcome<(usize, FormulaCachePublicationReceipt)> {
     let prepared = crate::execute_configuration(workbook, configuration, budgets, |session| {
         let updates = formula_updates(workbook, session)?;
-        session.budget.allocation(updates.len())?;
+        let changes = publication_changes(
+            workbook,
+            session,
+            &updates,
+            configuration.materialization_policy(),
+        )?;
+        if capture_receipts {
+            session.budget.allocation(updates.len())?;
+        }
         let writes = updates
             .iter()
+            .filter(|_| capture_receipts)
             .map(|update| {
                 configuration
                     .materialization_policy()
@@ -225,7 +255,8 @@ pub fn run_recalculation_with_receipts(
             })
             .collect();
         Ok((
-            updates,
+            updates.len(),
+            changes,
             FormulaCachePublicationReceipt {
                 identity: configuration.materialization_policy().identity(),
                 writes,
@@ -237,39 +268,85 @@ pub fn run_recalculation_with_receipts(
             crate::EvaluationOutcome::Aborted { failure, usage }
         }
         crate::EvaluationOutcome::Complete {
-            value: (updates, receipt),
+            value: (count, changes, receipt),
             usage,
         } => {
-            if updates.iter().any(|update| {
-                workbook
-                    .sheet(update.target.sheet)
-                    .and_then(|sheet| sheet.get(update.target.address))
-                    .is_none()
-            }) {
+            if workbook.apply(changes).is_err() {
                 return crate::EvaluationOutcome::Aborted {
                     failure: crate::EvaluationFailure::StalePlan,
                     usage,
                 };
             }
-            for update in updates {
-                let Some(cell) = workbook
-                    .sheet_mut(update.target.sheet)
-                    .and_then(|s| s.get_mut(update.target.address))
-                else {
-                    return crate::EvaluationOutcome::Aborted {
-                        failure: crate::EvaluationFailure::StalePlan,
-                        usage,
-                    };
-                };
-                // TODO(coercion-non-argument): [MEDIUM] Cache publication can replace a computed number with an error; storing the converted value as a live result would change subsequent evaluation.
-                cell.value = configuration
-                    .materialization_policy()
-                    .coerce_stored_value(update.value);
-            }
             crate::EvaluationOutcome::Complete {
-                value: receipt,
+                value: (count, receipt),
                 usage,
             }
         }
     }
+}
+
+/// Stage formula and derived spill-cache writes for one atomic model publication.
+fn publication_changes(
+    workbook: &poirot_model::Workbook,
+    session: &mut crate::Session<'_>,
+    updates: &[crate::CellEvaluation],
+    policy: FormulaCacheMaterializationPolicy,
+) -> crate::EvalResult<Vec<poirot_model::WorkbookChange>> {
+    use poirot_model::WorkbookChange;
+    let count = updates
+        .len()
+        .checked_mul(2)
+        .and_then(|n| n.checked_add(session.spill_owners.len()))
+        .ok_or(crate::EvaluationFailure::StalePlan)?;
+    session.budget.allocation(count)?;
+    let mut changes = Vec::with_capacity(count);
+    for update in updates {
+        changes.push(WorkbookChange::ClearSpillCache {
+            sheet: update.target.sheet,
+            anchor: update.target.address,
+        });
+    }
+    for update in updates {
+        let formula = workbook
+            .sheet(update.target.sheet)
+            .and_then(|sheet| sheet.source_cell(update.target.address))
+            .and_then(|cell| cell.formula.as_deref())
+            .ok_or(crate::EvaluationFailure::StalePlan)?;
+        session.budget.text(formula.len())?;
+        changes.push(WorkbookChange::SetCachedValue {
+            sheet: update.target.sheet,
+            address: update.target.address,
+            expected_formula: formula.into(),
+            value: policy.coerce_stored_value(update.value.clone()),
+        });
+    }
+    let mut children: Vec<_> = session
+        .spill_owners
+        .iter()
+        .filter(|((_, address), anchor)| address != *anchor)
+        .map(|(key, anchor)| (*key, *anchor))
+        .collect();
+    children.sort_unstable();
+    for ((sheet, address), anchor) in children {
+        let formula = workbook
+            .sheet(sheet)
+            .and_then(|sheet| sheet.source_cell(anchor))
+            .and_then(|cell| cell.formula.as_deref())
+            .ok_or(crate::EvaluationFailure::StalePlan)?;
+        let value = session
+            .cache
+            .get(&(sheet, address))
+            .ok_or(crate::EvaluationFailure::StalePlan)?;
+        session
+            .budget
+            .text(formula.len().saturating_add(value.text_storage_bytes()))?;
+        changes.push(WorkbookChange::SetSpillCachedValue {
+            sheet,
+            address,
+            anchor,
+            expected_formula: formula.into(),
+            value: policy.coerce_stored_value(value.clone()),
+        });
+    }
+    Ok(changes)
 }

@@ -22,13 +22,15 @@ pub use poirot_xls as xls;
 
 /// Common model types exposed directly for source construction and mutation.
 pub use poirot_model::{
-    Cell, CellAddress, CellError, CellStyle, CellValue, DateSystem, ExcelText, SheetPresentation,
-    SheetVisibility, TextRef, TextUnits, TextUnitsError, Workbook, WorkbookChange, Worksheet,
+    Cell, CellAddress, CellError, CellStyle, CellValue, DateSystem, ExcelText, FileFormat,
+    FileMetadata, ImportDiagnostic, ImportDiagnosticKind, SheetPresentation, SheetVisibility,
+    TextRef, TextUnits, TextUnitsError, WorkbookChange, Worksheet,
 };
 /// Primary overlay/evaluation workflow, snapshot views, and checked file operations.
 pub use poirot_workbook::{
     CellEvaluation, CompilationUsage, Evaluation, EvaluationBuilder, EvaluationContext,
-    EvaluationFailure, EvaluationTarget, Overlay, OverlayBuilder, OverlayError, OverlayEvaluation,
-    OverlayPolicy, OverlaySnapshot, SavePlan, Spreadsheet, WorkbookError, WorkbookSnapshot,
-    WorkspaceState, XlsSaveBuilder, XlsxSaveBuilder, edit, public, translation_edit,
+    EvaluationFailure, EvaluationTarget, LoadBuilder, Overlay, OverlayBuilder, OverlayError,
+    OverlayEvaluation, OverlayPolicy, OverlaySnapshot, SavePlan, Workbook, WorkbookError,
+    WorkbookSnapshot, WorkspaceState, XlsSaveBuilder, XlsxSaveBuilder, edit, public,
+    translation_edit,
 };

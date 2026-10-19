@@ -175,7 +175,8 @@ fn source_ordered_spill_conflicts_match_direct_warm_and_restored_execution() {
 
 #[test]
 fn cache_hits_keep_result_admission_limits_but_save_actual_work() {
-    let book = workbook(&[("A1", "REPT(\"x\",100)"), ("D1", "{1,2;3,4}")]);
+    let sum = format!("SUM({})", vec!["1"; 100].join(","));
+    let book = workbook(&[("A1", "REPT(\"x\",100)"), ("D1", "{1,2;3,4}"), ("G1", &sum)]);
     for (output, budgets, kind) in [
         (
             "A1",
@@ -230,7 +231,7 @@ fn cache_hits_keep_result_admission_limits_but_save_actual_work() {
         }
     }
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
-    requests(&mut overlay, &Default::default(), &["A1"], true);
+    requests(&mut overlay, &Default::default(), &["G1"], true);
     let context = overlay::EvaluationContext {
         budgets: EvaluationBudgets {
             run_work: 150,
@@ -238,9 +239,19 @@ fn cache_hits_keep_result_admission_limits_but_save_actual_work() {
         },
         ..Default::default()
     };
-    assert!(overlay.evaluation(&context).unwrap().cell(at("A1")).is_ok());
+    assert_eq!(
+        overlay
+            .evaluation(&context)
+            .unwrap()
+            .cell(at("G1"))
+            .unwrap(),
+        CellValue::Number(100.)
+    );
     let mut fresh = Overlay::with_workbook(&book).build().unwrap();
-    assert!(fresh.evaluation(&context).unwrap().cell(at("A1")).is_err());
+    assert!(matches!(
+        fresh.evaluation(&context).unwrap().cell(at("G1")),
+        Err(EvaluationFailure::Budget(_))
+    ));
 }
 
 fn provider_registry(

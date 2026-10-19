@@ -83,6 +83,11 @@ impl CloneFootprint {
             result.text_bytes = result.text_bytes.checked_add(name.name.len())?;
             result.text_bytes = result.text_bytes.checked_add(name.formula.len())?;
         }
+        if let Some(metadata) = &workbook.file_metadata {
+            for diagnostic in &metadata.import_warnings {
+                result.text_bytes = result.text_bytes.checked_add(diagnostic.detail.len())?;
+            }
+        }
         Some(result)
     }
 }

@@ -1,4 +1,4 @@
-use poirot_eval::{EvaluationBudgets, EvaluationInputs, EvaluationOutcome, run_formula};
+use poirot_eval::{EvaluationBudgets, EvaluationInputs, EvaluationOutcome};
 use poirot_model::{CellAddress, CellError, CellValue, Workbook};
 
 fn workbook() -> Workbook {
@@ -33,7 +33,7 @@ fn math_formulas_preserve_pinned_rounding_and_error_order() {
         ),
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
+            match pinned_formula(
                 &workbook,
                 0,
                 AT,
@@ -70,7 +70,7 @@ fn scalar_reference_intersection_reads_only_selected_cell() {
         )
         .unwrap();
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &workbook,
             0,
             AT,
@@ -84,7 +84,7 @@ fn scalar_reference_intersection_reads_only_selected_cell() {
         CellValue::Number(120.)
     );
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &workbook,
             0,
             AT,
@@ -98,7 +98,7 @@ fn scalar_reference_intersection_reads_only_selected_cell() {
         CellValue::Number(1.)
     );
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &workbook,
             0,
             AT,
@@ -117,7 +117,7 @@ fn scalar_reference_intersection_reads_only_selected_cell() {
 fn helper_budget_abort_survives_iferror() {
     let workbook = workbook();
     assert!(matches!(
-        run_formula(
+        pinned_formula(
             &workbook,
             0,
             AT,
@@ -153,7 +153,7 @@ fn exact_binary_operands_reach_excel_arithmetic_through_references() {
         )
         .unwrap();
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &workbook,
             0,
             AT,
@@ -167,7 +167,7 @@ fn exact_binary_operands_reach_excel_arithmetic_through_references() {
         CellValue::Number(6.)
     );
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &workbook,
             0,
             AT,
@@ -181,7 +181,7 @@ fn exact_binary_operands_reach_excel_arithmetic_through_references() {
         CellValue::Number(0.3)
     );
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &workbook,
             0,
             AT,
@@ -210,7 +210,7 @@ fn lcm_uses_singleton_double_and_pairwise_output_limits() {
         ("LCM(1E16,0,-1)", CellValue::Error(CellError::Num)),
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
+            match pinned_formula(
                 &workbook,
                 0,
                 AT,
@@ -236,7 +236,7 @@ fn mround_sign_validation_uses_source_floating_product() {
         ("MROUND(-1E-100,1E-100)", CellValue::Error(CellError::Num)),
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
+            match pinned_formula(
                 &workbook,
                 0,
                 AT,
@@ -314,7 +314,7 @@ fn seriessum_preserves_term_domains_and_coefficient_order() {
         ),
     ] {
         assert_eq!(
-            match run_formula(
+            match pinned_formula(
                 &workbook,
                 0,
                 AT,
@@ -335,7 +335,7 @@ fn seriessum_preserves_term_domains_and_coefficient_order() {
 fn seriessum_reference_traversal_admission_aborts_outside_iferror() {
     let workbook = workbook();
     assert!(matches!(
-        run_formula(
+        pinned_formula(
             &workbook,
             0,
             AT,
@@ -375,4 +375,25 @@ fn seriessum_scalar_text_uses_real_locale_parser() {
             outcome => panic!("{formula}: {outcome:?}"),
         }
     }
+}
+
+/// Execute the pinned source controls independently of the public modern defaults.
+fn pinned_formula(
+    workbook: &Workbook,
+    sheet: usize,
+    address: CellAddress,
+    formula: &str,
+    inputs: EvaluationInputs,
+    budgets: EvaluationBudgets,
+) -> EvaluationOutcome<CellValue> {
+    poirot_eval::run_formula_with_configuration(
+        workbook,
+        sheet,
+        address,
+        formula,
+        &poirot_eval::RunConfiguration::from(inputs)
+            .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi)
+            .with_array_result_policy(poirot_eval::ArrayResultPolicy::ScalarIntersection),
+        budgets,
+    )
 }

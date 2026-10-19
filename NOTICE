@@ -25,5 +25,7 @@ The FODS corpus is separate test material, not MIT-licensed library code.
 Its manifest records source paths, hashes, and LibreOffice revision
 cd35bc0879ed5e4b8138b724033ea5937751a84d. Its MPL-2.0 license is retained at
 crates/poirot-test-runner/corpus/fods/COPYING.MPL.
+Redistribute these fixtures under MPL-2.0, preserving their notices and source
+metadata. This does not change the MIT license of Poirot's first-party code.
 
 Per-file notices and dependency license terms continue to apply.

@@ -10,6 +10,10 @@ workbook changes and calculate results without running Excel.
 - Explore different inputs in an overlay before applying changes to a workbook.
 - Save and restore evaluation state with snapshots.
 
+Evaluation defaults target modern Excel: documented builtin behavior, surrogate-pair
+text indexing (Compatibility Version 2), and dynamic array spills. Explicit source
+and scalar-intersection policies remain available for compatibility comparisons.
+
 Poirot is under active development. Excel compatibility is incomplete, and the API
 may change. Review import warnings and test your workbooks to check what survives
 loading and saving.
@@ -26,29 +30,29 @@ poirot = { git = "https://github.com/yiblet/poirot.git", branch = "master" }
 Create a workbook, calculate `B1` as `42`, and save it to `output.xlsx`:
 
 ```rust
-use poirot::{CellValue, EvaluationContext, Overlay, Spreadsheet};
+use poirot::{CellValue, EvaluationContext, Overlay, Workbook};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut book = Spreadsheet::new();
-    let sheet = book.workbook_mut().add_sheet("Inputs")?;
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("Inputs")?;
     sheet.set_value("A1".parse()?, 21.)?;
     sheet.set_formula("B1".parse()?, "A1*2", CellValue::Blank)?;
 
     let context = EvaluationContext::default();
     let changes = {
-        let mut overlay = Overlay::with_workbook(book.workbook()).build()?;
+        let mut overlay = Overlay::with_workbook(&book).build()?;
         overlay.evaluation(&context)?.all()?;
         overlay.changes()
     };
-    book.workbook_mut().apply(changes)?;
+    book.apply(changes)?;
 
     book.save_xlsx().write_file("output.xlsx")?;
     Ok(())
 }
 ```
 
-To load an existing workbook, use `Spreadsheet::open("input.xlsx")?`, then review
-`book.import_warnings()` for features changed or omitted during import. Saving
+To load an existing workbook, use `Workbook::open("input.xlsx")?`, then review
+`book.file_metadata` for features changed or omitted during import. Saving
 preserves the current results. To update them, evaluate formulas and apply the
 changes before saving, as shown above.
 

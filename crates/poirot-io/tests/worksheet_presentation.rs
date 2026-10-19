@@ -130,9 +130,13 @@ fn independent_xml_and_reload_preserve_first_hidden_very_hidden_and_rgb() {
         );
         assert!(
             report
-                .warnings
+                .workbook
+                .file_metadata
+                .as_ref()
+                .unwrap()
+                .import_warnings
                 .iter()
-                .any(|s| s.contains("Hidden: unsupported tab color")),
+                .any(|s| s.detail.contains("Hidden: unsupported tab color")),
             "{attributes}"
         );
     }

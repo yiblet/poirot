@@ -168,7 +168,13 @@ fn profile_changes_invalidate_singleton_results_in_both_directions_after_snapsho
             CellValue::Blank,
         )
         .unwrap();
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book)
+        .with_policy(poirot_eval::overlay::OverlayPolicy {
+            builtin: poirot_eval::BuiltinSemanticsPolicy::PinnedPoi,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     let context = EvaluationContext::default();
     assert_eq!(
         overlay
@@ -212,7 +218,12 @@ fn profile_changes_invalidate_singleton_results_in_both_directions_after_snapsho
             .unwrap(),
         CellValue::Number(0.)
     );
-    overlay.set_policy(OverlayPolicy::default()).unwrap();
+    overlay
+        .set_policy(OverlayPolicy {
+            builtin: poirot_eval::BuiltinSemanticsPolicy::PinnedPoi,
+            ..Default::default()
+        })
+        .unwrap();
     assert_eq!(
         overlay
             .evaluation(&context)

@@ -282,6 +282,7 @@ impl Session<'_> {
         name: DateFunction,
         args: ArgumentsRef<'_>,
     ) -> FunctionResult<CellValue> {
+        self.read(DependencyRead::BuiltinPolicy);
         let n = args.len();
         let system = self.workbook.date_system;
         let excel = self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation;

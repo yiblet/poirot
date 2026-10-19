@@ -325,11 +325,8 @@ fn arrays_statistics_text_and_lookup() {
         ("AVERAGE({1,2,3})", Number(2.)),
         ("VAR.P({1,2,3})", Number(2. / 3.)),
         ("MEDIAN(3,1,2,4)", Number(2.5)),
-        ("LEN(\"a😀b\")", Number(4.)),
-        (
-            "MID(\"a😀b\",2,1)",
-            CellValue::TextUtf16(poirot_model::ExcelText::from_units(vec![0xd83d])),
-        ),
+        ("LEN(\"a😀b\")", Number(3.)),
+        ("MID(\"a😀b\",2,1)", Text("😀".into())),
         ("TRIM(\"  a   b  \")", Text("a b".into())),
         ("MATCH(\"b*\",{\"a\",\"Bee\",\"c\"},0)", Number(2.)),
         ("VLOOKUP(2,{1,10;2,20},2,FALSE)", Number(20.)),

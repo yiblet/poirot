@@ -1,5 +1,5 @@
 //! Exercise the primary workbook -> overlay -> evaluation -> changes workflow.
-use poirot::{CellValue, EvaluationContext, Overlay, Spreadsheet, Workbook, eval};
+use poirot::{CellValue, EvaluationContext, Overlay, Workbook, eval};
 fn at(reference: &str) -> eval::EvaluationTarget {
     eval::EvaluationTarget {
         sheet: 0,
@@ -35,11 +35,11 @@ fn overlay_edits_evaluate_and_apply_without_mutating_the_borrowed_source() {
         overlay.changes()
     };
     model.apply(changes).unwrap();
-    let book = Spreadsheet::from_workbook(model);
+    let book = model;
     let bytes = book.save_xlsx().to_buffer().unwrap();
-    let reopened = Spreadsheet::from_bytes(&bytes).unwrap();
+    let reopened = Workbook::from_bytes(&bytes).unwrap();
     let cell = reopened
-        .workbook()
+        .model()
         .sheet(0)
         .unwrap()
         .get(at("B1").address)
@@ -51,13 +51,13 @@ fn overlay_edits_evaluate_and_apply_without_mutating_the_borrowed_source() {
 fn default_file_and_byte_imports_retain_the_same_model_and_warnings() {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("crates/poirot-io/tests/fixtures/stale-cache.xlsx");
-    let file = Spreadsheet::open(&path).unwrap().into_import_report();
-    let bytes = Spreadsheet::from_bytes(&std::fs::read(path).unwrap())
+    let file = Workbook::open(&path).unwrap().into_model();
+    let bytes = Workbook::from_bytes(&std::fs::read(path).unwrap())
         .unwrap()
-        .into_import_report();
-    assert_eq!(file.workbook, bytes.workbook);
-    assert_eq!(file.warnings, bytes.warnings);
-    assert!(Spreadsheet::from_bytes(b"not a workbook").is_err());
+        .into_model();
+    assert_eq!(file, bytes);
+    assert_eq!(file.file_metadata, bytes.file_metadata);
+    assert!(Workbook::from_bytes(b"not a workbook").is_err());
 }
 
 #[test]
@@ -120,12 +120,12 @@ fn evaluated_formats_preserve_precision_text_and_overlay_edits_through_xlsx() {
         overlay.changes()
     };
     model.apply(changes).unwrap();
-    let book = Spreadsheet::from_workbook(model);
+    let book = model;
     let bytes = book.save_xlsx().to_buffer().unwrap();
-    let reopened = Spreadsheet::from_bytes(&bytes).unwrap();
+    let reopened = Workbook::from_bytes(&bytes).unwrap();
     for cell in ["A1", "B1"] {
         let stored = reopened
-            .workbook()
+            .model()
             .sheet(0)
             .unwrap()
             .get(at(cell).address)
@@ -180,11 +180,8 @@ fn lookup_blank_consumers_survive_overlay_reset_materialization_and_xlsx() {
         overlay.changes()
     };
     model.apply(changes).unwrap();
-    let bytes = Spreadsheet::from_workbook(model)
-        .save_xlsx()
-        .to_buffer()
-        .unwrap();
-    let reopened = Spreadsheet::from_bytes(&bytes).unwrap();
+    let bytes = model.save_xlsx().to_buffer().unwrap();
+    let reopened = Workbook::from_bytes(&bytes).unwrap();
     for (cell, expected) in [
         ("B1", CellValue::Number(0.)),
         ("B2", CellValue::Number(0.03)),
@@ -193,7 +190,7 @@ fn lookup_blank_consumers_survive_overlay_reset_materialization_and_xlsx() {
     ] {
         assert_eq!(
             reopened
-                .workbook()
+                .model()
                 .sheet(0)
                 .unwrap()
                 .get(at(cell).address)
@@ -228,12 +225,9 @@ fn flushed_sources_export_materialized_formula_and_spill_caches_to_xlsx() {
     assert_eq!(overlay.flush().unwrap(), 2);
     let mut saved = overlay.workbook().clone();
     saved.apply(overlay.changes()).unwrap();
-    let bytes = Spreadsheet::from_workbook(saved)
-        .save_xlsx()
-        .to_buffer()
-        .unwrap();
-    let reopened = Spreadsheet::from_bytes(&bytes).unwrap();
-    let sheet = reopened.workbook().sheet(0).unwrap();
+    let bytes = Workbook::from_model(saved).save_xlsx().to_buffer().unwrap();
+    let reopened = Workbook::from_bytes(&bytes).unwrap();
+    let sheet = reopened.model().sheet(0).unwrap();
     assert_eq!(
         sheet.get(at("B1").address).unwrap().formula.as_deref(),
         Some("A1*3")

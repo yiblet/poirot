@@ -135,7 +135,14 @@ fn typed_caches_literals_names_dates_and_raw_format_roundtrip() {
     );
     assert_eq!(actual.defined_name("Rate", 0).unwrap().formula, "0.2");
     assert_eq!(actual.defined_name("Rate", 1).unwrap().formula, "0.1");
-    assert!(!imported.warnings.is_empty());
+    assert!(
+        !actual
+            .file_metadata
+            .as_ref()
+            .unwrap()
+            .import_warnings
+            .is_empty()
+    );
 }
 
 #[test]

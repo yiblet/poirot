@@ -5,20 +5,22 @@ fn book(system: DateSystem) -> Workbook {
     w.add_sheet("Sheet1").unwrap();
     w
 }
+// These expectations include the pinned POI phantom-slot and date-parser observations.
 fn evaluate(w: &Workbook, f: &str) -> CellValue {
-    match crate::run_formula(
+    match crate::run_formula_with_configuration(
         w,
         0,
         "Z20".parse().unwrap(),
         f,
-        EvaluationInputs {
+        &RunConfiguration::from(EvaluationInputs {
             as_of_time: UNIX_EPOCH + Duration::from_secs(1609502400),
             randomness_seed: 0,
             localization: Localization {
                 utc_offset_seconds: 0,
                 date_order: DateOrder::MonthDayYear,
             },
-        },
+        })
+        .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
         Default::default(),
     ) {
         crate::EvaluationOutcome::Complete { value, .. } => value,

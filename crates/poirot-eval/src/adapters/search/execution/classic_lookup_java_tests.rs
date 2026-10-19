@@ -20,21 +20,15 @@ fn explicit_java_profile_alone_admits_plain_lone_surrogates() {
         ("IFERROR(VLOOKUP(D1,A1:B1,2,FALSE),99)", Number(42.)),
         ("IFERROR(HLOOKUP(D1,A1:A2,2,FALSE),99)", Number(42.)),
     ] {
-        for source in [TextSourceVersion::Poi7321209OpenJdk21Unicode15] {
-            let outcome = run_formula_with_configuration(
-                &w,
-                0,
-                "Z20".parse().unwrap(),
-                formula,
-                &configuration(source),
-                EvaluationBudgets::default(),
-            );
-            {
-                assert!(
-                    matches!(outcome, EvaluationOutcome::Complete { value, .. } if value == expected)
-                );
-            }
-        }
+        let outcome = run_formula_with_configuration(
+            &w,
+            0,
+            "Z20".parse().unwrap(),
+            formula,
+            &configuration(TextSourceVersion::Poi7321209OpenJdk21Unicode15),
+            EvaluationBudgets::default(),
+        );
+        assert!(matches!(outcome, EvaluationOutcome::Complete { value, .. } if value == expected));
     }
 }
 fn asset_refusal() {

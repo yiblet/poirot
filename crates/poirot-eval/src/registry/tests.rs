@@ -145,7 +145,7 @@ fn descriptor_contracts_and_family_owned_execution_are_not_stubs() {
 #[test]
 fn policy_catalog_adds_only_excel_policy_registrations() {
     let pinned: Vec<_> =
-        super::descriptors_for_policy(crate::BuiltinSemanticsPolicy::default()).collect();
+        super::descriptors_for_policy(crate::BuiltinSemanticsPolicy::PinnedPoi).collect();
     assert_eq!(
         pinned,
         super::FUNCTION_DESCRIPTORS.iter().collect::<Vec<_>>()

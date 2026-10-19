@@ -123,7 +123,10 @@ fn errors_and_invalid_arity_preserve_semantic_order() {
     // Only DELTA's optional second operand receives the documented zero default.
     for (formula, config) in [
         ("DELTA(,0)", excel()),
-        ("DELTA(0,)", RunConfiguration::default()),
+        (
+            "DELTA(0,)",
+            RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
+        ),
     ] {
         assert!(matches!(
             run(formula, &config, EvaluationBudgets::default()),
@@ -138,9 +141,9 @@ fn errors_and_invalid_arity_preserve_semantic_order() {
 #[test]
 fn pinned_defaults_keep_text_results_arity_and_permissive_digits() {
     use CellValue::{Error, Number, Text};
-    let pinned = RunConfiguration::default();
+    let pinned = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
     for (formula, expected) in [
-        (r#"CODE("A")"#, Number(65.)),
+        (r#"CODE("A")"#, Text("65".into())),
         ("IMREAL(A2)", Text("-2".into())),
         ("IMAGINARY(A2)", Text("3".into())),
         ("DELTA(0)", Error(CellError::Value)),

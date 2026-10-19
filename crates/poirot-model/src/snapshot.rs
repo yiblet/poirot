@@ -6,7 +6,7 @@ use std::borrow::Cow;
 /// Source snapshot wire revision, checked by the public artifact envelope before decoding.
 /// Bump whenever the serialized source layout changes; provide an explicit migration or
 /// reject older revisions. Prepared engine compatibility is versioned separately.
-pub const SCHEMA_VERSION: u16 = 2;
+pub const SCHEMA_VERSION: u16 = 3;
 
 /// Borrowed-or-owned Serde transport for source state, separate from runtime workbook types.
 #[derive(Serialize, Deserialize)]
@@ -14,6 +14,7 @@ pub struct Snapshot<'a> {
     sheets: Vec<Sheet<'a>>,
     date_system: DateSystem,
     names: Cow<'a, [NamedRange]>,
+    file_metadata: Option<FileMetadata>,
 }
 /// Coordinate and serialized cell payload within a sheet snapshot.
 type SnapshotCell<'a> = (
@@ -50,8 +51,8 @@ pub enum Value<'a> {
     Error(CellError),
 }
 impl<'a> Snapshot<'a> {
-    /// Compare complete source and saved-cache identity, including exact numeric bits.
-    /// Used when attaching detached runtime state to a caller-selected baseline handle.
+    /// Compare calculation source and saved-cache identity, including exact numeric bits.
+    /// File metadata is excluded because import diagnostics do not affect evaluation.
     pub fn matches(&self, workbook: &Workbook) -> bool {
         let other = Snapshot::capture(workbook);
         self.date_system == other.date_system
@@ -122,6 +123,7 @@ impl<'a> Snapshot<'a> {
                 .collect(),
             date_system: workbook.date_system,
             names: Cow::Borrowed(&workbook.named_ranges),
+            file_metadata: workbook.file_metadata.clone(),
         }
     }
     /// Copy borrowed payloads only when an independently owned snapshot is needed.
@@ -165,6 +167,7 @@ impl<'a> Snapshot<'a> {
                 .collect(),
             date_system: self.date_system,
             names: Cow::Owned(self.names.into_owned()),
+            file_metadata: self.file_metadata,
         }
     }
     /// Validate and construct an owned workbook from serialized source records.
@@ -174,6 +177,7 @@ impl<'a> Snapshot<'a> {
         }
         let mut workbook = Workbook::new();
         workbook.date_system = self.date_system;
+        workbook.file_metadata = self.file_metadata;
         for s in self.sheets {
             if s.cells.len() > 10_000_000
                 || s.rows.len() > MAX_ROWS as usize

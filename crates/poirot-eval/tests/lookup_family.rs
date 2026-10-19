@@ -1,7 +1,5 @@
 //! Formula-level coverage of source-sensitive deferred lookup execution.
-use poirot_eval::{
-    EvaluationBudgets, EvaluationInputs, EvaluationOutcome, bound::FormulaPlan, run_plan,
-};
+use poirot_eval::{EvaluationBudgets, EvaluationInputs, EvaluationOutcome, bound::FormulaPlan};
 use poirot_model::{CellAddress, CellError, CellValue, Workbook};
 fn workbook() -> Workbook {
     let mut workbook = Workbook::new();
@@ -59,7 +57,7 @@ fn reference_identity_and_deferred_operands_follow_pinned_source() {
         let plan =
             FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap()).unwrap();
         assert_eq!(
-            match poirot_eval::run_plan(
+            match pinned_plan(
                 &workbook,
                 0,
                 at,
@@ -84,7 +82,7 @@ fn unsupported_and_budget_failures_survive_iferror() {
     )
     .unwrap();
     assert_eq!(
-        match poirot_eval::run_plan(
+        match pinned_plan(
             &workbook,
             0,
             at,
@@ -106,7 +104,7 @@ fn unsupported_and_budget_failures_survive_iferror() {
             FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap()).unwrap();
         assert!(
             matches!(
-                run_plan(
+                pinned_plan(
                     &workbook,
                     0,
                     at,
@@ -125,7 +123,7 @@ fn unsupported_and_budget_failures_survive_iferror() {
     )
     .unwrap();
     assert!(matches!(
-        run_plan(
+        pinned_plan(
             &workbook,
             0,
             at,
@@ -138,4 +136,25 @@ fn unsupported_and_budget_failures_survive_iferror() {
         ),
         EvaluationOutcome::Aborted { .. }
     ));
+}
+
+/// Execute source-observed reference controls with the pinned contract.
+fn pinned_plan(
+    workbook: &Workbook,
+    sheet: usize,
+    address: CellAddress,
+    plan: &FormulaPlan,
+    inputs: EvaluationInputs,
+    budgets: EvaluationBudgets,
+) -> EvaluationOutcome<CellValue> {
+    poirot_eval::run_plan_with_configuration(
+        workbook,
+        sheet,
+        address,
+        plan,
+        &poirot_eval::RunConfiguration::from(inputs)
+            .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi)
+            .with_array_result_policy(poirot_eval::ArrayResultPolicy::ScalarIntersection),
+        budgets,
+    )
 }

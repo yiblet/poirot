@@ -73,7 +73,7 @@ fn visibility_flags_are_independent_and_filtered_errors_never_evaluate() {
             0,
             target("Z1").address,
             "SUBTOTAL(9,A1:A3)",
-            &RunConfiguration::default(),
+            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
             Default::default()
         ),
         EvaluationOutcome::Aborted {

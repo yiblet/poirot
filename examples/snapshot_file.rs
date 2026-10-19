@@ -1,5 +1,5 @@
 //! Persist a prepared workbook, restore it, calculate every modeled cell, and write XLSX.
-use poirot::{CellValue, Evaluation, EvaluationContext, Spreadsheet, artifact, io};
+use poirot::{CellValue, Evaluation, EvaluationContext, Workbook, artifact};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args_os().skip(1);
@@ -13,8 +13,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Err("usage: snapshot_file MODEL.poirot OUTPUT.xlsx".into());
     }
 
-    let mut book = Spreadsheet::new();
-    let sheet = book.workbook_mut().add_sheet("Inputs")?;
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("Inputs")?;
     sheet.set_value("A1".parse()?, 21.)?;
     sheet.set_formula("B1".parse()?, "A1*2", CellValue::Blank)?;
     let limits = artifact::SnapshotLimits::default();
@@ -27,46 +27,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         builtin: poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation,
         ..Default::default()
     };
-    let mut prepared = Evaluation::with_workbook(book.workbook())
+    let mut prepared = Evaluation::with_workbook(&book)
         .with_policy(policy.clone())
         .build(context.clone())?;
     prepared.compile_all();
-    let bytes = artifact::encode_workspace(prepared.snapshot(), book.import_warnings(), limits)?;
-    // Application file-publication policy is explicit; this example writes new paths.
-    std::fs::write(&snapshot_path, bytes)?;
+    prepared
+        .save_snapshot()
+        .limits(limits)
+        .write_file(&snapshot_path)?;
     drop(prepared);
 
-    let restored = artifact::read_file(
-        &snapshot_path,
-        limits,
-        artifact::PreparedPolicy::ReuseCompatible,
-    )?;
-    eprintln!("prepared state: {:?}", restored.prepared_status);
-    let mut workbook = restored.workbook;
-    let changes = {
-        let mut evaluation = match restored.workspace {
-            Some(state) => state.into_evaluation(&workbook, context)?,
-            None => Evaluation::with_workbook(&workbook)
-                .with_policy(policy)
-                .build(context)?,
-        };
-        // Full modeled-workbook scope refreshes all formula caches before saving.
-        evaluation.all()?;
-        evaluation.into_changes()
-    };
-    workbook.apply(changes)?;
-    let output = Spreadsheet::from_import(io::ImportReport {
-        workbook,
-        warnings: restored.import_warnings,
-    });
-    for warning in output.import_warnings() {
-        eprintln!("{warning}");
+    let artifact::RestoredEvaluation {
+        mut evaluation,
+        prepared_status,
+    } = Workbook::load_snapshot()
+        .limits(limits)
+        .open(&snapshot_path)?
+        .into_evaluation(context, policy)?;
+    eprintln!("prepared state: {prepared_status:?}");
+    // Refresh saved formula results explicitly before exporting the source.
+    evaluation.all()?;
+    let mut output = Workbook::from_model(evaluation.workbook().clone());
+    output.apply(evaluation.into_changes())?;
+    if let Some(metadata) = &output.file_metadata {
+        for warning in &metadata.import_warnings {
+            eprintln!("{warning}");
+        }
     }
-    output.save_xlsx().build()?.write_file(&output_path)?;
-    let reopened = Spreadsheet::open(&output_path)?;
+    output.save_xlsx().write_file(&output_path)?;
+    let reopened = Workbook::open(&output_path)?;
     let address = "B1".parse()?;
     let saved = reopened
-        .workbook()
         .sheet(0)
         .and_then(|sheet| sheet.get(address))
         .ok_or("saved formula cell is missing")?;

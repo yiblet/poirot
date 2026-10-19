@@ -84,7 +84,7 @@ fn text_admits_contextual_numeric_text_before_applying_the_requested_format() {
         value(
             &book,
             r#"TEXT("15:43:09","H:MM:ss AM/PM")"#,
-            &RunConfiguration::default()
+            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
         ),
         "15:43:09".into()
     );
@@ -94,7 +94,10 @@ fn text_admits_contextual_numeric_text_before_applying_the_requested_format() {
 fn rejected_text_and_other_value_classes_keep_their_existing_text_contract() {
     let mut book = Workbook::new();
     book.add_sheet("S").unwrap();
-    for config in [excel(), RunConfiguration::default()] {
+    for config in [
+        excel(),
+        RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
+    ] {
         for input in ["word", "1..25", "", "  ", "25:61:00", "NaN", "TRUE"] {
             for stored in [
                 CellValue::Text(input.into()),
@@ -146,7 +149,13 @@ fn contextual_text_admission_tracks_locale_calendar_profiles_edits_and_snapshots
             .set_formula(target(address).address, formula, CellValue::Blank)
             .unwrap();
     }
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book)
+        .with_policy(OverlayPolicy {
+            builtin: BuiltinSemanticsPolicy::PinnedPoi,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
     let mut context = EvaluationContext::default();
     assert_eq!(
         overlay
@@ -216,7 +225,12 @@ fn contextual_text_admission_tracks_locale_calendar_profiles_edits_and_snapshots
             .unwrap(),
         "12:00:00 AM".into()
     );
-    overlay.set_policy(OverlayPolicy::default()).unwrap();
+    overlay
+        .set_policy(OverlayPolicy {
+            builtin: BuiltinSemanticsPolicy::PinnedPoi,
+            ..Default::default()
+        })
+        .unwrap();
     assert_eq!(
         overlay
             .evaluation(&context)

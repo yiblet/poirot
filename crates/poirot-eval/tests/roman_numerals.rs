@@ -99,7 +99,7 @@ fn roman_defaults_and_arabic_parsing_follow_explicit_domains() {
             "{formula}"
         );
     }
-    let pinned = RunConfiguration::default();
+    let pinned = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
     assert_eq!(
         value(&book, "ROMAN(999)", &pinned),
         CellValue::Error(CellError::Value)

@@ -5,6 +5,7 @@ fn evaluate(formula: &str, budgets: EvaluationBudgets) -> EvalResult<CellValue> 
     workbook.add_sheet("Sheet1").unwrap();
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
     session.budget = BudgetMeter::new(budgets).unwrap();
+    session.builtin_policy = BuiltinSemanticsPolicy::PinnedPoi;
     session.text_policy = TextSemanticsPolicy {
         source: TextSourceVersion::Poi7321209OpenJdk21Unicode15,
     };

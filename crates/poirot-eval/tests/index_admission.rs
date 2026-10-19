@@ -115,7 +115,11 @@ fn isref_classifies_selected_representation_under_the_requested_contract() {
             "{formula}"
         );
         assert_eq!(
-            value(&w, &formula, &RunConfiguration::default()),
+            value(
+                &w,
+                &formula,
+                &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
+            ),
             CellValue::Boolean(true),
             "pinned {formula}"
         );
@@ -201,7 +205,7 @@ fn selected_index_results_refresh_after_source_edits_and_policy_switches() {
             .unwrap();
     }
     let mut overlay = Overlay::with_workbook(&w)
-        .with_policy(OverlayPolicy {
+        .with_policy(poirot_eval::overlay::OverlayPolicy {
             builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         })
@@ -235,7 +239,12 @@ fn selected_index_results_refresh_after_source_edits_and_policy_switches() {
             .unwrap(),
         CellValue::Number(13.)
     );
-    overlay.set_policy(OverlayPolicy::default()).unwrap();
+    overlay
+        .set_policy(OverlayPolicy {
+            builtin: poirot_eval::BuiltinSemanticsPolicy::PinnedPoi,
+            ..Default::default()
+        })
+        .unwrap();
     assert_eq!(
         overlay
             .evaluation(&context)

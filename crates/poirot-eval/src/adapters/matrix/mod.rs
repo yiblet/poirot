@@ -139,7 +139,13 @@ pub(crate) fn execute(
     } else {
         args.len()
     };
-    if function == helper::MatrixFunction::Sumproduct {
+    if matches!(
+        function,
+        helper::MatrixFunction::Sumproduct
+            | helper::MatrixFunction::Trend
+            | helper::MatrixFunction::Mdeterm
+            | helper::MatrixFunction::Minverse
+    ) {
         session.read(DependencyRead::BuiltinPolicy);
     }
     let strict_numeric_matrices =

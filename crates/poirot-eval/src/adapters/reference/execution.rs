@@ -9,6 +9,7 @@ impl Session<'_> {
         name: ReferenceFunction,
         args: ArgumentsRef<'_>,
     ) -> EvalResult<Value> {
+        self.read(DependencyRead::BuiltinPolicy);
         if let Some(function) = name.helper() {
             if function.policy().volatile {
                 self.read(DependencyRead::Volatile(FunctionId::Reference(name)));
@@ -92,6 +93,7 @@ impl Session<'_> {
                         .into()
                     }
                     Value::Scalar(Error(e)) | Value::SelectedScalar(Error(e), _) => err(e),
+                    Value::Scalar(Blank) | Value::SelectedScalar(Blank, _) => err(VALUE_ERROR),
                     Value::Scalar(_) | Value::SelectedScalar(_, _)
                         if self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
                             && matches!(

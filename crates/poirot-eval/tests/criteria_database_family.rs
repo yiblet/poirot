@@ -161,12 +161,13 @@ fn missing_metadata_formula_criteria_and_budgets_escape_iferror() {
     ] {
         assert!(
             matches!(
-                run_plan(
+                poirot_eval::run_plan_with_configuration(
                     &w,
                     0,
                     CellAddress { row: 0, col: 10 },
                     &plan(formula),
-                    EvaluationInputs::default(),
+                    &poirot_eval::RunConfiguration::default()
+                        .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi),
                     EvaluationBudgets::default()
                 ),
                 EvaluationOutcome::Aborted { .. }
@@ -180,12 +181,13 @@ fn missing_metadata_formula_criteria_and_budgets_escape_iferror() {
     ] {
         assert!(
             matches!(
-                run_plan(
+                poirot_eval::run_plan_with_configuration(
                     &w,
                     0,
                     CellAddress { row: 0, col: 10 },
                     &plan(formula),
-                    EvaluationInputs::default(),
+                    &poirot_eval::RunConfiguration::default()
+                        .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi),
                     EvaluationBudgets {
                         materialized_values: 2,
                         ..EvaluationBudgets::default()

@@ -192,9 +192,13 @@ mod tests {
             );
             assert!(
                 report
-                    .warnings
+                    .workbook
+                    .file_metadata
+                    .as_ref()
+                    .unwrap()
+                    .import_warnings
                     .iter()
-                    .any(|w| w.contains("XLS tab colors are not retained"))
+                    .any(|w| w.detail.contains("XLS tab colors are not retained"))
             );
         }
     }
@@ -262,9 +266,13 @@ mod tests {
         assert_eq!(report.workbook.sheet(1).unwrap().name(), "σA");
         assert!(
             report
-                .warnings
+                .workbook
+                .file_metadata
+                .as_ref()
+                .unwrap()
+                .import_warnings
                 .iter()
-                .any(|warning| warning.contains("unsupported identifier comparison"))
+                .any(|warning| warning.detail.contains("unsupported identifier comparison"))
         );
         for (i, name) in report.workbook.named_ranges.iter().enumerate() {
             assert_eq!(name.name, "名称");

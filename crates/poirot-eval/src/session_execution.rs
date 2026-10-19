@@ -55,9 +55,7 @@ impl<'a> Session<'a> {
             pending_spills: Default::default(),
             blank_reads: Default::default(),
             spill_read_ranges: Default::default(),
-            text_policy: poirot_text::TextSemanticsPolicy {
-                source: poirot_text::SourceVersion::Poi7321209,
-            },
+            text_policy: poirot_text::TextSemanticsPolicy::default(),
             cache: Default::default(),
             memo_limits: None,
             memo_usage: run::MemoRetentionUsage::default(),
@@ -141,6 +139,8 @@ impl<'a> Session<'a> {
         if self.workbook.sheet(target.sheet).is_none() || target.address.validate().is_err() {
             return Ok(Error(Ref));
         }
+        let demand = self.root_demand();
+        let previous_demand = std::mem::replace(&mut self.expression_demand, demand);
         let previous = self.consumer.replace(target);
         self.budget.push_cell(target);
         self.run_usage.formula_executions += 1;
@@ -152,6 +152,7 @@ impl<'a> Session<'a> {
         })();
         self.budget.pop_cell();
         self.consumer = previous;
+        self.expression_demand = previous_demand;
         result
     }
     /// Execute a supplied bytecode plan after checking its extension identity and target.
@@ -169,6 +170,8 @@ impl<'a> Session<'a> {
         if self.workbook.sheet(target.sheet).is_none() || target.address.validate().is_err() {
             return Ok(Error(Ref));
         }
+        let demand = self.root_demand();
+        let previous_demand = std::mem::replace(&mut self.expression_demand, demand);
         let previous = self.consumer.replace(target);
         self.budget.push_cell(target);
         self.run_usage.formula_executions += 1;
@@ -177,6 +180,7 @@ impl<'a> Session<'a> {
             .and_then(|v| self.result_scalar(target.sheet, target.address, v));
         self.budget.pop_cell();
         self.consumer = previous;
+        self.expression_demand = previous_demand;
         result
     }
     /// Read or evaluate a cell, recording dependencies, spill effects, and completion provenance.
@@ -186,10 +190,8 @@ impl<'a> Session<'a> {
         let mut completion_candidate = false;
         // A dependency formula has its own worksheet consumer. Its caller's collection
         // demand must never change the dependency's value or memoized result.
-        let previous_demand = std::mem::replace(
-            &mut self.expression_demand,
-            expression_execution::ExpressionDemand::Scalar,
-        );
+        let demand = self.root_demand();
+        let previous_demand = std::mem::replace(&mut self.expression_demand, demand);
         let mut result =
             self.cell_value(sheet, address, &mut provenance, &mut completion_candidate);
         self.expression_demand = previous_demand;
@@ -258,7 +260,9 @@ impl<'a> Session<'a> {
         if address.validate().is_err() || self.workbook.sheet(sheet).is_none() {
             return Ok(Error(Ref));
         }
-        if self.array_result_policy == ArrayResultPolicy::DynamicSpill && self.cell_reader.is_some()
+        if self.array_result_policy == ArrayResultPolicy::DynamicSpill
+            && self.cell_reader.is_some()
+            && self.source_can_spill(sheet, address)
         {
             return Err(self.spill_unsupported(
                 sheet,
@@ -363,7 +367,11 @@ impl<'a> Session<'a> {
         let track_visiting = self.array_result_policy == ArrayResultPolicy::DynamicSpill
             || cell.is_some_and(|cell| cell.formula.is_some());
         if track_visiting && !self.visiting.insert((sheet, address)) {
-            if self.array_result_policy == ArrayResultPolicy::DynamicSpill {
+            if self.array_result_policy == ArrayResultPolicy::DynamicSpill
+                && self
+                    .source_spill_shape(sheet, address)
+                    .is_some_and(|(rows, columns)| rows > 1 || columns > 1)
+            {
                 return Err(self.spill_unsupported(
                     sheet,
                     address,

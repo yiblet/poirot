@@ -200,12 +200,14 @@ fn condition_dependency_changes_selected_members_after_snapshot_restore() {
 }
 #[test]
 fn pinned_if_retains_scalar_condition_selection() {
-    let result = run_formula(
+    let result = run_formula_with_configuration(
         &book(),
         0,
         target("Z100").address,
         "SUM(IF({TRUE,FALSE,TRUE},2,{30,5,70}))",
-        EvaluationInputs::default(),
+        &RunConfiguration::default()
+            .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
+            .with_array_result_policy(ArrayResultPolicy::ScalarIntersection),
         EvaluationBudgets::default(),
     );
     assert_eq!(value(result), CellValue::Number(2.));

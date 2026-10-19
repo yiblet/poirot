@@ -113,11 +113,9 @@ fn invalid_sections_fail_at_compilation_with_precise_diagnostics() {
     assert_eq!(strict.section, Some(1));
     let mut malformed = parsed.clone();
     malformed.sections[1].tokens = vec![Token::Digit('x')];
-    for policy in [FormatCompilePolicy::default()] {
-        let error = compile_program(&malformed, policy).unwrap_err();
-        assert_eq!(error.section, Some(1));
-        assert_eq!(error.token, Some(0));
-    }
+    let error = compile_program(&malformed, FormatCompilePolicy::default()).unwrap_err();
+    assert_eq!(error.section, Some(1));
+    assert_eq!(error.token, Some(0));
     assert!(format_value(&CellValue::Blank, &malformed, FormatOptions::default()).is_err());
 }
 #[test]
@@ -256,17 +254,15 @@ fn compilation_is_snapshot_owned_and_bounded_for_public_programs() {
                 color: None,
             }],
         };
-        for policy in [FormatCompilePolicy::default()] {
-            let result = std::panic::catch_unwind(|| {
-                if let Ok(plan) = compile_program(&format, policy) {
-                    let _ = render_value(
-                        &CellValue::Number(1.25),
-                        &plan,
-                        FormatRenderContext::default(),
-                    );
-                }
-            });
-            assert!(result.is_ok(), "{format:?}");
-        }
+        let result = std::panic::catch_unwind(|| {
+            if let Ok(plan) = compile_program(&format, FormatCompilePolicy::default()) {
+                let _ = render_value(
+                    &CellValue::Number(1.25),
+                    &plan,
+                    FormatRenderContext::default(),
+                );
+            }
+        });
+        assert!(result.is_ok(), "{format:?}");
     }
 }

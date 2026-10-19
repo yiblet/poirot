@@ -20,13 +20,13 @@ pub mod translation_edit;
 
 /// Primary mutable overlay and bounded evaluation workflow.
 pub use eval::overlay::{
-    CompilationUsage, Evaluation, EvaluationBuilder, EvaluationContext, Overlay, OverlayBuilder,
-    OverlayError, OverlayEvaluation, OverlayPolicy,
+    CompilationUsage, EvaluationBuilder, EvaluationContext, OverlayBuilder, OverlayError,
+    OverlayEvaluation, OverlayPolicy,
 };
 /// Source workbook and owned changes that can be applied atomically.
-pub use model::{Workbook, WorkbookChange};
+pub use model::WorkbookChange;
 /// File-backed source facade and borrowed checked export plans.
-pub use public::{SavePlan, Spreadsheet, WorkbookError, XlsSaveBuilder, XlsxSaveBuilder};
+pub use public::{LoadBuilder, SavePlan, Workbook, WorkbookError, XlsSaveBuilder, XlsxSaveBuilder};
 
 /// Serde view retaining overlay source, compiled programs, and incremental results.
 pub use eval::overlay::snapshot::Snapshot as OverlaySnapshot;
@@ -36,3 +36,8 @@ pub use eval::overlay::snapshot::WorkspaceState;
 pub use eval::{CellEvaluation, EvaluationFailure, EvaluationTarget};
 /// Serde view of canonical workbook source and saved cache metadata.
 pub use model::snapshot::Snapshot as WorkbookSnapshot;
+
+/// Incremental scenarios borrowing a public workbook by default.
+pub type Overlay<'a, W = &'a Workbook> = eval::overlay::Overlay<'a, W>;
+/// Direct evaluations borrowing a public workbook by default.
+pub type Evaluation<'a, W = &'a Workbook> = eval::overlay::Evaluation<'a, W>;

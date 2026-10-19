@@ -157,7 +157,21 @@ fn ordinary_unicode_and_cached_string_fixtures_keep_default_imports_and_warnings
         let explicit =
             read_xls_bytes_with_budget(&bytes, ReadOptions::default(), ResourceBudget::default())
                 .unwrap();
-        assert_eq!(default.warnings, explicit.warnings, "{path}");
+        assert_eq!(
+            default
+                .workbook
+                .file_metadata
+                .as_ref()
+                .unwrap()
+                .import_warnings,
+            explicit
+                .workbook
+                .file_metadata
+                .as_ref()
+                .unwrap()
+                .import_warnings,
+            "{path}"
+        );
         assert_eq!(
             default.workbook.sheets().len(),
             explicit.workbook.sheets().len(),
@@ -173,13 +187,21 @@ fn ordinary_unicode_and_cached_string_fixtures_keep_default_imports_and_warnings
         }
         assert!(
             default
-                .warnings
+                .workbook
+                .file_metadata
+                .as_ref()
+                .unwrap()
+                .import_warnings
                 .iter()
-                .any(|w| w.contains("XLS raw number formats"))
+                .any(|w| w.detail.contains("XLS raw number formats"))
                 && default
-                    .warnings
+                    .workbook
+                    .file_metadata
+                    .as_ref()
+                    .unwrap()
+                    .import_warnings
                     .iter()
-                    .any(|w| w.contains("unsupported BIFF token families")),
+                    .any(|w| w.detail.contains("unsupported BIFF token families")),
             "{path}"
         );
     }

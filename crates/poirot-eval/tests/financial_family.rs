@@ -10,7 +10,7 @@ fn workbook() -> Workbook {
     workbook
 }
 fn number(workbook: &Workbook, formula: &str, expected: f64) {
-    let value = match poirot_eval::run_formula(
+    let value = match pinned_formula(
         workbook,
         0,
         AT,
@@ -58,7 +58,7 @@ fn zero_rate_annuities_and_source_financial_edges() {
         ("IPMT(0.1,-2147483648,10,100)", CellError::Num),
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
+            match pinned_formula(
                 &workbook,
                 0,
                 AT,
@@ -92,7 +92,7 @@ fn collections_preserve_origins_and_skip_non_numeric_periods() {
     number(&workbook, "NPV(0,{TRUE,\"2\",3})", 3.);
     number(&workbook, "PPMT(0.1,1,2,100,1/0)", -47.61904761904758);
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &workbook,
             0,
             AT,
@@ -145,7 +145,7 @@ fn resource_and_capability_faults_survive_iferror() {
     }
     // OperandResolver's fpPattern excludes Java hexadecimal floating strings.
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &workbook,
             0,
             AT,
@@ -159,7 +159,7 @@ fn resource_and_capability_faults_survive_iferror() {
         CellValue::Error(CellError::Value)
     );
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &workbook,
             0,
             AT,
@@ -173,7 +173,7 @@ fn resource_and_capability_faults_survive_iferror() {
         CellValue::Number(99.)
     );
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &workbook,
             0,
             AT,
@@ -202,7 +202,7 @@ fn source_string_conversion_and_payment_error_order() {
         "NPV(0,\"16d\")",
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
+            match pinned_formula(
                 &workbook,
                 0,
                 AT,
@@ -223,7 +223,7 @@ fn source_string_conversion_and_payment_error_order() {
         "IPMT(0.1,1E30,12,1/0)",
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
+            match pinned_formula(
                 &workbook,
                 0,
                 AT,
@@ -280,7 +280,7 @@ fn irr_bound_admits_long_flow_and_preserves_fallback_and_no_root() {
     // This root forces the source's safeguarded fallback after Newton overshoot.
     number(&workbook, "IRR({-100,1})", -0.99);
     assert_eq!(
-        match poirot_eval::run_formula(
+        match pinned_formula(
             &workbook,
             0,
             AT,
@@ -293,4 +293,25 @@ fn irr_bound_admits_long_flow_and_preserves_fallback_and_no_root() {
         },
         CellValue::Error(CellError::Num)
     );
+}
+
+/// Execute the pinned source controls independently of the public modern defaults.
+fn pinned_formula(
+    workbook: &Workbook,
+    sheet: usize,
+    address: CellAddress,
+    formula: &str,
+    inputs: EvaluationInputs,
+    budgets: EvaluationBudgets,
+) -> EvaluationOutcome<CellValue> {
+    poirot_eval::run_formula_with_configuration(
+        workbook,
+        sheet,
+        address,
+        formula,
+        &poirot_eval::RunConfiguration::from(inputs)
+            .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi)
+            .with_array_result_policy(poirot_eval::ArrayResultPolicy::ScalarIntersection),
+        budgets,
+    )
 }

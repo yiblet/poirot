@@ -17,13 +17,19 @@ impl<'a> Session<'a> {
                 poirot_coercionv2::coerce_worksheet_formula_result(member);
             }
         }
-        let mut result = self.result_scalar(sheet, address, value)?;
+        let mut result = if self.array_result_policy == ArrayResultPolicy::DynamicSpill
+            && let Value::Array(rows) = value
+        {
+            self.stage_spill(sheet, address, rows)?
+        } else {
+            self.result_scalar(sheet, address, value)?
+        };
         // TODO(coercion-non-argument): [LOW] Completed worksheet formulas expose numeric zero for a remaining blank; reads and intermediate selections preserve identity.
         poirot_coercionv2::coerce_worksheet_formula_result(&mut result);
         Ok(result)
     }
 
-    /// Publish a final dynamic array or project a supported final result to a scalar.
+    /// Project an ad hoc expression result without publishing worksheet spills.
     pub(super) fn result_scalar(
         &mut self,
         sheet: usize,
@@ -38,11 +44,6 @@ impl<'a> Session<'a> {
                 source: Some(EvaluationTarget { sheet, address }),
                 detail: "pinned MissingArgEval final result throws a source exception".into(),
             });
-        }
-        if self.array_result_policy == ArrayResultPolicy::DynamicSpill
-            && let Value::Array(rows) = value
-        {
-            return self.stage_spill(sheet, address, rows);
         }
         self.scalar(address, value)
     }

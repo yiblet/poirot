@@ -6,6 +6,7 @@ use crate::{
 };
 use calamine::{Reader, Xls, Xlsx};
 use poirot_model::{Cell, CellAddress, CellValue, DateSystem, Workbook};
+use poirot_model::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
 use std::{fs, io::Cursor, path::Path};
 
 fn read_bytes(path: &Path, options: ReadOptions) -> Result<Vec<u8>, IoError> {
@@ -121,7 +122,11 @@ pub fn read_xlsx_bytes_with_policy(
     ooxml::apply_metadata(&package, &plan, &mut workbook, &mut warnings)?;
     ooxml::apply_spills(&package, &plan, &mut workbook)?;
     identifier_warnings(&workbook, &mut warnings);
-    Ok(ImportReport { workbook, warnings })
+    workbook.file_metadata = Some(FileMetadata {
+        format: FileFormat::Xlsx,
+        import_warnings: warnings,
+    });
+    Ok(ImportReport { workbook })
 }
 
 /// Decode XLS bytes using default limits and retain warnings.
@@ -186,7 +191,10 @@ pub fn read_xls_bytes_with_budget(
                 .into());
             }
             if let Err(error) = poirot_model::identifiers::checked_matches(existing.name(), &name) {
-                identity_warnings.push(error.to_string());
+                identity_warnings.push(ImportDiagnostic {
+                    kind: ImportDiagnosticKind::IdentifierIdentity,
+                    detail: error.to_string(),
+                });
             }
         }
         let range = reader
@@ -223,10 +231,21 @@ pub fn read_xls_bytes_with_budget(
     }
     let mut warnings = fidelity_warnings();
     warnings.extend(identity_warnings);
-    warnings.extend(overlay.warnings.iter().cloned());
-    warnings.push(
-        "XLS raw number formats and unsupported BIFF token families remain backend-limited".into(),
+    warnings.extend(
+        overlay
+            .warnings
+            .iter()
+            .cloned()
+            .map(|detail| ImportDiagnostic {
+                kind: ImportDiagnosticKind::RepresentationLoss,
+                detail,
+            }),
     );
+    warnings.push(ImportDiagnostic {
+        kind: ImportDiagnosticKind::RepresentationLoss,
+        detail: "XLS raw number formats and unsupported BIFF token families remain backend-limited"
+            .into(),
+    });
     for (name, formula) in reader.defined_names() {
         // Keep backend-supported names without revalidating Excel's name grammar.
         workbook.named_ranges.push(poirot_model::NamedRange {
@@ -254,9 +273,16 @@ pub fn read_xls_bytes_with_budget(
             if let Err(error) =
                 poirot_model::identifiers::checked_matches(&existing.name, &name.name)
             {
-                warnings.push(error.to_string());
+                warnings.push(ImportDiagnostic {
+                    kind: ImportDiagnosticKind::IdentifierIdentity,
+                    detail: error.to_string(),
+                });
             }
         }
     }
-    Ok(ImportReport { workbook, warnings })
+    workbook.file_metadata = Some(FileMetadata {
+        format: FileFormat::Xls,
+        import_warnings: warnings,
+    });
+    Ok(ImportReport { workbook })
 }

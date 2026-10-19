@@ -78,6 +78,7 @@ pub(crate) fn execute(
     function: helper::MathFunction,
     arguments: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
+    session.read(DependencyRead::BuiltinPolicy);
     // Arity failure cannot consume argument evaluation, allocation, or randomness.
     if !function.accepts(arguments.len()) {
         return Ok(err(VALUE_ERROR));

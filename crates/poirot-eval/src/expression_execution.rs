@@ -218,7 +218,15 @@ impl<'a> Session<'a> {
 
     fn expands_operator_references(&self) -> bool {
         self.expression_demand == ExpressionDemand::Array
-            || self.array_result_policy == ArrayResultPolicy::DynamicSpill
+    }
+
+    /// Select the worksheet expression demand independently of nested scalar consumers.
+    pub(super) fn root_demand(&self) -> ExpressionDemand {
+        if self.array_result_policy == ArrayResultPolicy::DynamicSpill {
+            ExpressionDemand::Array
+        } else {
+            ExpressionDemand::Scalar
+        }
     }
 
     /// Apply a unary operation to an already evaluated value channel.
@@ -240,7 +248,13 @@ impl<'a> Session<'a> {
             return Ok(value.into());
         }
 
-        if *op == UnaryOp::Plus && value.text_ref().is_some() {
+        if *op == UnaryOp::Plus {
+            self.read(DependencyRead::BuiltinPolicy);
+        }
+        if *op == UnaryOp::Plus
+            && (self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
+                || value.text_ref().is_some())
+        {
             return Ok(value.into());
         }
         Ok(

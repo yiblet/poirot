@@ -179,8 +179,18 @@ impl Host<usize> for TextHost<'_, '_> {
         self.coercev2_text_scalar(scalar, true)
     }
     fn coercev2_text_integer(&self, scalar: &ScalarOperand) -> Result<i32, TextFailure> {
+        let excel = self
+            .host
+            .try_borrow()
+            .map_err(|_| Failure::Operational(EvaluationFailure::StalePlan))?
+            .builtin_semantics_policy()
+            == BuiltinSemanticsPolicy::ExcelDocumentation;
         if scalar.missing {
-            return Err(self.source_fault("POI integer coercion rejects MissingArgEval"));
+            return if excel {
+                Ok(0)
+            } else {
+                Err(self.source_fault("POI integer coercion rejects MissingArgEval"))
+            };
         }
         let number = match &scalar.value {
             Text(text) => self
@@ -196,8 +206,17 @@ impl Host<usize> for TextHost<'_, '_> {
                 .coercev2_scalar_number(value, NumericPolicy::PinnedPoi)
                 .map_err(failure)?,
         };
-        poirot_coercionv2::compatibility::coercev2_integer(number, true)
-            .map_err(Failure::Spreadsheet)
+        if excel {
+            poirot_coercionv2::compatibility::coercev2_text_integer_number(
+                number,
+                poirot_coercionv2::compatibility::TextIntegerPolicy::Checked,
+            )
+            .map_err(Failure::Spreadsheet)?;
+            Ok(number.floor() as i32)
+        } else {
+            poirot_coercionv2::compatibility::coercev2_integer(number, true)
+                .map_err(Failure::Spreadsheet)
+        }
     }
 
     fn coercev2_arabic_integer(&self, scalar: &ScalarOperand) -> Result<i32, TextFailure> {
@@ -316,6 +335,7 @@ mod semantics_port_tests {
     use poirot_parsing::formula::parse_formula;
     fn eval(workbook: &Workbook, at: &str, formula: &str) -> EvalResult<CellValue> {
         let mut session = Session::with_context(workbook, EvaluationInputs::default());
+        session.builtin_policy = BuiltinSemanticsPolicy::PinnedPoi;
         session.text_policy = TextSemanticsPolicy {
             source: TextSourceVersion::Poi7321209,
         };
