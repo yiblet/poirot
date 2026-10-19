@@ -97,13 +97,6 @@
           "expected": {
             "type": "number",
             "value": 5.0
-          },
-          "known_gap": {
-            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
           }
         }
       ]
@@ -196,13 +189,6 @@
           "expected": {
             "type": "number",
             "value": 4.0
-          },
-          "known_gap": {
-            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
           }
         }
       ]
@@ -295,13 +281,6 @@
           "expected": {
             "type": "number",
             "value": 4.0
-          },
-          "known_gap": {
-            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
           }
         }
       ]
@@ -394,13 +373,6 @@
           "expected": {
             "type": "number",
             "value": 4.0
-          },
-          "known_gap": {
-            "reason": "The reconstructed saved Excel fixture and independent Calc agree on the correct typed result; current Poirot differs at this source cell. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "error",
-              "value": "#N/A"
-            }
           }
         }
       ]

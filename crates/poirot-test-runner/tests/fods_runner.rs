@@ -669,3 +669,183 @@ fn selected_name_parser_failures_and_shared_source_cycles_are_visible() {
             .contains("predicate=Error(Ref)")
     );
 }
+
+#[test]
+fn omitted_linked_caches_do_not_block_local_checks_or_supply_external_values() {
+    let scratch = Scratch::new();
+    corpus(&scratch.0);
+    let metadata = scratch.0.join("manifest.json");
+    let mut manifest: CorpusManifest =
+        serde_json::from_slice(&std::fs::read(&metadata).unwrap()).unwrap();
+    let cache = r#"<t:table t:name="'file:///unavailable.ods'#Sheet1"><t:table-source xmlns:l="http://www.w3.org/1999/xlink" l:href="file:///unavailable.ods" t:mode="copy-results-only"/><t:table-row><t:table-cell o:value-type="float" o:value="3"/></t:table-row></t:table>"#;
+    for (formula, unsupported) in [
+        ("3", false),
+        ("IF(TRUE;3;[.A3])", false),
+        ("IFERROR([.A3];3)", true),
+        ("ERROR.TYPE([.A3])", true),
+    ] {
+        let local = source("Sheet1", formula, 3.).replace("</t:table>", r#"<t:table-row><t:table-cell t:formula="of:=['file:///unavailable.ods'#$Sheet1.A1]"/></t:table-row></t:table>"#);
+        for before in [true, false] {
+            let xml = if before {
+                local.replacen("<t:table ", &format!("{cache}<t:table "), 1)
+            } else {
+                local.replace("</o:document>", &format!("{cache}</o:document>"))
+            };
+            let parsed = extract_bytes(xml.as_bytes(), "sc/qa/unit/data/functions/b.fods").unwrap();
+            assert_eq!(parsed.sheets.len(), 1);
+            manifest
+                .fixtures
+                .iter_mut()
+                .find(|entry| entry.fixture == "b.fods")
+                .unwrap()
+                .sha256 = parsed.sha256;
+            std::fs::write(scratch.0.join("fixtures/b.fods"), xml).unwrap();
+            json(&metadata, &manifest);
+            let mut report =
+                execute::execute(&plan::build(&options(&scratch.0, 1, Some("b.fods"))).unwrap())
+                    .unwrap();
+            let result = report.cases.remove(0);
+            if unsupported {
+                assert_eq!(
+                    result.failure.unwrap().gap_type,
+                    poirot_test_runner::fods::gaps::GapKind::UnsupportedFormulaSyntax,
+                    "{formula}"
+                );
+            } else {
+                assert_eq!(
+                    result.status,
+                    CaseStatus::Improvement,
+                    "{formula}: {result:?}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn consumed_linked_table_names_remain_unsupported_even_when_ref_errors_are_caught() {
+    let scratch = Scratch::new();
+    corpus(&scratch.0);
+    let metadata = scratch.0.join("manifest.json");
+    let mut manifest: CorpusManifest =
+        serde_json::from_slice(&std::fs::read(&metadata).unwrap()).unwrap();
+    for (formula, unsupported) in [
+        ("3", false),
+        ("IF(TRUE;3;[Linked.A1])", false),
+        ("IFERROR([Linked.A1];3)", true),
+        ("IFERROR([linked.A1];3)", true),
+    ] {
+        let cache = r#"<t:table t:name="Linked"><t:table-source xmlns:l="http://www.w3.org/1999/xlink" l:href="file:///unavailable.ods" t:mode="copy-results-only"/><t:table-row><t:table-cell o:value-type="float" o:value="3"/></t:table-row></t:table>"#;
+        let xml = source("Sheet1", formula, 3.)
+            .replace("</o:document>", &format!("{cache}</o:document>"));
+        let parsed = extract_bytes(xml.as_bytes(), "sc/qa/unit/data/functions/b.fods").unwrap();
+        manifest
+            .fixtures
+            .iter_mut()
+            .find(|entry| entry.fixture == "b.fods")
+            .unwrap()
+            .sha256 = parsed.sha256;
+        std::fs::write(scratch.0.join("fixtures/b.fods"), xml).unwrap();
+        json(&metadata, &manifest);
+        let mut report =
+            execute::execute(&plan::build(&options(&scratch.0, 1, Some("b.fods"))).unwrap())
+                .unwrap();
+        let result = report.cases.remove(0);
+        if unsupported {
+            let reason = result.failure.unwrap();
+            assert_eq!(
+                reason.gap_type,
+                poirot_test_runner::fods::gaps::GapKind::UnsupportedWorkbookContext,
+                "{formula}"
+            );
+            assert!(reason.message.contains("external linked table"));
+        } else {
+            assert_eq!(result.status, CaseStatus::Improvement, "{result:?}");
+        }
+    }
+}
+
+#[test]
+fn ordinary_calc_formulas_use_scalar_intersection_without_enabling_cse() {
+    let scratch = Scratch::new();
+    corpus(&scratch.0);
+    let metadata = scratch.0.join("manifest.json");
+    let mut manifest: CorpusManifest =
+        serde_json::from_slice(&std::fs::read(&metadata).unwrap()).unwrap();
+    // LibreOffice's published implicit-intersection example: [7,95,5]+100
+    // entered as an ordinary formula on row2 returns195, not a spill headed107.
+    let xml = source("Sheet1", "[.D1:.D3]+100", 195.);
+    let end = "</t:table-row>";
+    let first = xml.find(end).unwrap();
+    let mut xml = format!(
+        "{}<t:table-cell o:value-type=\"float\" o:value=\"7\"/>{}",
+        &xml[..first],
+        &xml[first..]
+    );
+    let second = xml.find("</t:table-row></t:table>").unwrap();
+    xml.insert_str(
+        second,
+        r#"<t:table-cell o:value-type="float" o:value="95"/>"#,
+    );
+    xml = xml.replace("</t:table>", r#"<t:table-row><t:table-cell t:number-columns-repeated="3"/><t:table-cell o:value-type="float" o:value="5"/></t:table-row></t:table>"#);
+    let parsed = extract_bytes(xml.as_bytes(), "sc/qa/unit/data/functions/b.fods").unwrap();
+    manifest
+        .fixtures
+        .iter_mut()
+        .find(|entry| entry.fixture == "b.fods")
+        .unwrap()
+        .sha256 = parsed.sha256;
+    std::fs::write(scratch.0.join("fixtures/b.fods"), xml).unwrap();
+    json(&metadata, &manifest);
+    let report =
+        execute::execute(&plan::build(&options(&scratch.0, 1, Some("b.fods"))).unwrap()).unwrap();
+    assert_eq!(
+        report.cases[0].status,
+        CaseStatus::Improvement,
+        "{:?}",
+        report.cases[0]
+    );
+}
+
+#[test]
+fn selected_cse_continuations_are_not_blank_inputs_but_geometry_remains_usable() {
+    let scratch = Scratch::new();
+    corpus(&scratch.0);
+    let metadata = scratch.0.join("manifest.json");
+    let mut manifest: CorpusManifest =
+        serde_json::from_slice(&std::fs::read(&metadata).unwrap()).unwrap();
+    for (formula, expected, unsupported) in [
+        ("[.D4]", 0., true),
+        ("IFERROR([.D4];0)", 0., true),
+        ("IF(TRUE;0;[.D4])", 0., false),
+        ("COLUMN([.D4])", 4., false),
+    ] {
+        let xml = source("Sheet1", formula, expected).replace("</t:table>", r#"<t:table-row><t:table-cell t:number-columns-repeated="3"/><t:table-cell t:formula="of:={7|8}" t:number-matrix-rows-spanned="2" t:number-matrix-columns-spanned="1" o:value-type="float" o:value="999"/></t:table-row><t:table-row><t:table-cell t:number-columns-repeated="3"/><t:table-cell o:value-type="float" o:value="888"/></t:table-row></t:table>"#);
+        let parsed = extract_bytes(xml.as_bytes(), "sc/qa/unit/data/functions/b.fods").unwrap();
+        manifest
+            .fixtures
+            .iter_mut()
+            .find(|entry| entry.fixture == "b.fods")
+            .unwrap()
+            .sha256 = parsed.sha256;
+        std::fs::write(scratch.0.join("fixtures/b.fods"), xml).unwrap();
+        json(&metadata, &manifest);
+        let mut report =
+            execute::execute(&plan::build(&options(&scratch.0, 1, Some("b.fods"))).unwrap())
+                .unwrap();
+        let result = report.cases.remove(0);
+        if unsupported {
+            assert_eq!(
+                result.failure.unwrap().gap_type,
+                poirot_test_runner::fods::gaps::GapKind::UnsupportedArrayContext,
+                "{formula}"
+            );
+        } else {
+            assert_eq!(
+                result.status,
+                CaseStatus::Improvement,
+                "{formula}: {result:?}"
+            );
+        }
+    }
+}

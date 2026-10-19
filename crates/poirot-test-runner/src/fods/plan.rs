@@ -7,7 +7,7 @@ use crate::fods::{
 };
 use poirot_model::{CellAddress, CellValue, Workbook};
 use std::{
-    collections::{BTreeMap, HashMap},
+    collections::{BTreeMap, BTreeSet, HashMap},
     num::NonZeroUsize,
     path::PathBuf,
 };
@@ -51,6 +51,8 @@ pub struct FixturePlan {
     pub calculation_settings: Vec<BTreeMap<String, String>>,
     /// Inspectable source constructs not represented by the canonical workbook.
     pub omissions: Vec<Omission>,
+    /// Native CSE cells whose stored values cannot stand in for matrix execution.
+    pub matrix_cells: BTreeSet<(usize, CellAddress)>,
 }
 
 /// Prepare a canonical workbook or retain why its source context is unsupported.
@@ -196,6 +198,26 @@ pub(crate) fn prepare_fixture(
             missing_functions,
         });
     }
+    let matrix_cells = data
+        .sheets
+        .iter()
+        .enumerate()
+        .flat_map(|(sheet, source)| {
+            source
+                .cells
+                .iter()
+                .filter(|cell| cell.matrix.is_some())
+                .map(move |cell| {
+                    (
+                        sheet,
+                        CellAddress {
+                            row: cell.row,
+                            col: cell.col,
+                        },
+                    )
+                })
+        })
+        .collect();
     Ok(FixturePlan {
         entry,
         workbook: book,
@@ -203,6 +225,7 @@ pub(crate) fn prepare_fixture(
         cases,
         calculation_settings: data.calculation_settings,
         omissions: data.omissions,
+        matrix_cells,
     })
 }
 

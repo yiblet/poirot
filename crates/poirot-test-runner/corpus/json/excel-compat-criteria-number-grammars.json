@@ -620,13 +620,6 @@
           "expected": {
             "type": "number",
             "value": 2
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted parenthesized negative criterion number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 3.0
-            }
           }
         }
       ]
@@ -1243,13 +1236,6 @@
           "expected": {
             "type": "number",
             "value": 2
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted parenthesized negative criterion number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 3.0
-            }
           }
         }
       ]
@@ -1866,13 +1852,6 @@
           "expected": {
             "type": "number",
             "value": 50
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted parenthesized negative criterion number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 60.0
-            }
           }
         }
       ]
@@ -2489,13 +2468,6 @@
           "expected": {
             "type": "number",
             "value": 50
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted parenthesized negative criterion number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 60.0
-            }
           }
         }
       ]
@@ -3112,13 +3084,6 @@
           "expected": {
             "type": "number",
             "value": 25.0
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted parenthesized negative criterion number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 20.0
-            }
           }
         }
       ]
@@ -3735,13 +3700,6 @@
           "expected": {
             "type": "number",
             "value": 25.0
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted parenthesized negative criterion number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 20.0
-            }
           }
         }
       ]
@@ -4358,13 +4316,6 @@
           "expected": {
             "type": "number",
             "value": 20
-          },
-          "known_gap": {
-            "reason": "The criterion comparison does not use the independently accepted parenthesized negative criterion number grammar. Expected remains independently authored; actual recognizes only this exact observed mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 10.0
-            }
           }
         }
       ]

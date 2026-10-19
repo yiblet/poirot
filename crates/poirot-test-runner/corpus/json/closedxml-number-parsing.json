@@ -268,13 +268,6 @@
           "expected": {
             "type": "error",
             "value": "#VALUE!"
-          },
-          "known_gap": {
-            "reason": "NUMBERVALUE accepts this separator or numeric-range combination instead of returning the source and Calc error. The pinned ClosedXML assertion and independent LibreOffice reproduction both support expected; actual recognizes only the current Poirot mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 1.23456789e+308
-            }
           }
         }
       ]
@@ -482,13 +475,6 @@
           "expected": {
             "type": "error",
             "value": "#VALUE!"
-          },
-          "known_gap": {
-            "reason": "NUMBERVALUE accepts this separator or numeric-range combination instead of returning the source and Calc error. The pinned ClosedXML assertion and independent LibreOffice reproduction both support expected; actual recognizes only the current Poirot mismatch.",
-            "actual": {
-              "type": "number",
-              "value": 1.23456789e-310
-            }
           }
         }
       ]

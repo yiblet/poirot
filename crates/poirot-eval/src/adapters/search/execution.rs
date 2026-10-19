@@ -160,7 +160,13 @@ impl Session<'_> {
                 }
             })?;
         }
+        // Wildcard comparison is a predicate, not a total order suitable for bisection.
+        let pattern_match = is_match
+            && key
+                .text_ref()
+                .is_some_and(|text| text.units().any(|unit| matches!(unit, 0x2a | 0x3f)));
         let excel_match = is_match
+            && !pattern_match
             && mode != SearchMode::Exact
             && self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation;
         if is_match && mode != SearchMode::Exact {

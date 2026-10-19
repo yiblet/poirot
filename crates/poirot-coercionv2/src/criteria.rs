@@ -42,6 +42,25 @@ pub fn coercev2_criteria_excel_operand(value: Cell) -> Cell {
     }
 }
 
+/// Admit parenthesized negative numeric criteria without changing literal text grammars.
+/// Saved Excel sumifs.xls criteria and independent Calc sibling checks establish
+/// the accounting form; the classic plain-number parser remains unchanged.
+pub fn coercev2_criteria_accounting_threshold(value: Cell) -> Cell {
+    if let Cell::Text(text) = &value {
+        let text = text.trim_matches(|c: char| c <= '\u{20}');
+        if let Some(inner) = text.strip_prefix('(').and_then(|s| s.strip_suffix(')')) {
+            let inner = inner.trim_matches(|c: char| c <= '\u{20}');
+            if !inner.starts_with(['+', '-'])
+                && let Some(number) = crate::compatibility::coercev2_criteria_number_text(inner)
+                && number >= 0.
+            {
+                return Cell::Number(-number);
+            }
+        }
+    }
+    value
+}
+
 /// Resolve an ordered criterion's remaining text threshold with the consumer's contextual
 /// number parser. Non-numeric text stays literal; operational failures escape.
 /// The consumer must select an ordered comparison (<, <=, >, >=); equality and

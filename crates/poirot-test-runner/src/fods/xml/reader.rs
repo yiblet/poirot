@@ -1,7 +1,7 @@
 //! Namespace-aware XML input reader. Cached formula results are discarded.
 use super::{
     SOURCE_COMMIT,
-    model::{CellInput, FodsWorkbook, InputValue, MatrixSpan, NamedDefinition, Sheet},
+    model::{CellInput, FodsWorkbook, InputValue, MatrixSpan, NamedDefinition, Omission, Sheet},
 };
 use crate::fods::{cases, formula::translate};
 use regex::{Captures, Regex};
@@ -11,6 +11,7 @@ use std::{collections::BTreeMap, path::Path, sync::OnceLock};
 
 const OFFICE: &str = "urn:oasis:names:tc:opendocument:xmlns:office:1.0";
 const TABLE: &str = "urn:oasis:names:tc:opendocument:xmlns:table:1.0";
+const XLINK: &str = "http://www.w3.org/1999/xlink";
 const TEXT: &str = "urn:oasis:names:tc:opendocument:xmlns:text:1.0";
 const MAX_ROWS: usize = 1_048_576;
 const MAX_COLS: usize = 16_384;
@@ -297,6 +298,13 @@ fn read_sheet(table: Node<'_, '_>) -> Result<Sheet, String> {
         cells: cells.into_values().collect(),
     })
 }
+/// Identify linked table caches rather than local worksheet source.
+fn linked_table_source<'a, 'input>(table: Node<'a, 'input>) -> Option<Node<'a, 'input>> {
+    table.children().find(|node| {
+        tag(*node, TABLE, "table-source")
+            && attr(*node, XLINK, "href").is_some_and(|href| !href.is_empty())
+    })
+}
 /// Extract original inputs and checks into typed records without cached formula values.
 pub fn extract_bytes(bytes: &[u8], source: &str) -> Result<FodsWorkbook, String> {
     if bytes.len() > MAX_SOURCE {
@@ -306,7 +314,24 @@ pub fn extract_bytes(bytes: &[u8], source: &str) -> Result<FodsWorkbook, String>
     let document = Document::parse(text).map_err(|e| format!("invalid FODS XML: {e}"))?;
     let mut sheets = Vec::new();
     let mut total_cells = 0usize;
+    let mut omissions = Vec::new();
     for table in document.descendants().filter(|n| tag(*n, TABLE, "table")) {
+        // ODF 1.1 section 8.3.2 defines table:table-source as linked table data:
+        // https://docs.oasis-open.org/office/v1.1/OS/OpenDocument-v1.1-html/OpenDocument-v1.1.html
+        // Its stored results are external caches, not authored local inputs.
+        if let Some(link) = linked_table_source(table) {
+            omissions.push(Omission {
+                kind: super::model::OmissionKind::ExternalLinkedTable,
+                source: Some(source.into()),
+                sheet: attr(table, TABLE, "name").map(str::to_owned),
+                cell: None,
+                reason: format!(
+                    "external linked table cache omitted: {}",
+                    attr(link, XLINK, "href").unwrap_or("")
+                ),
+            });
+            continue;
+        }
         let sheet = read_sheet(table)?;
         total_cells = total_cells
             .checked_add(sheet.cells.len())
@@ -314,10 +339,16 @@ pub fn extract_bytes(bytes: &[u8], source: &str) -> Result<FodsWorkbook, String>
             .ok_or("FODS workbook materialization exceeds bounded size")?;
         sheets.push(sheet);
     }
-    let (cases, omissions) = cases::extract(&sheets, source)?;
+    let (cases, case_omissions) = cases::extract(&sheets, source)?;
+    omissions.extend(case_omissions);
     let mut names = Vec::new();
     for kind in ["named-range", "named-expression"] {
         for node in document.descendants().filter(|n| tag(*n, TABLE, kind)) {
+            if node.ancestors().any(|ancestor| {
+                tag(ancestor, TABLE, "table") && linked_table_source(ancestor).is_some()
+            }) {
+                continue;
+            }
             let formula = if let Some(raw) =
                 attr(node, TABLE, "cell-range-address").filter(|s| !s.is_empty())
             {

@@ -139,7 +139,7 @@ pub fn coercev2_number_value_excel(
     if grouping == Some(decimal) {
         return Err(value_error());
     }
-    if text.is_empty() {
+    if text.bytes().all(|byte| byte == b' ') {
         return Ok(0.);
     }
     let mut normalized = String::new();
@@ -199,6 +199,12 @@ pub fn coercev2_number_value_excel(
     for _ in 0..percent_count {
         number /= 100.;
     }
+    // NUMBERVALUE admits the converted decimal after percentage scaling.
+    // Text conversion uses the worksheet input domain, not formula-result binary64 bounds.
+    // https://learn.microsoft.com/en-us/office/client-developer/excel/excel-worksheet-and-expression-evaluation
+    if number.abs() > 9.99999999999999e307 || (number != 0. && number.abs() < f64::MIN_POSITIVE) {
+        return Err(value_error());
+    }
     Ok(number)
 }
 
@@ -206,14 +212,22 @@ pub fn coercev2_number_value_excel(
 mod tests {
     use super::*;
     #[test]
-    fn documented_numbervalue_preserves_tiny_percent_results_and_locale_tokens() {
+    fn documented_numbervalue_enforces_converted_input_range_and_locale_tokens() {
         let locale = poirot_parsing::number::NumberLocaleV2::EN_US;
         let parse = |s| coercev2_number_value_excel(s, &locale, None, None);
-        assert_eq!(parse("1.23456789e308"), Ok(1.23456789e308));
-        assert_eq!(parse("1.23456789e-310"), Ok(1.23456789e-310));
+        assert_eq!(
+            parse("1.23456789e308"),
+            Err(ParseFailure::Spreadsheet(Error::Value))
+        );
+        assert_eq!(
+            parse("1.23456789e-310"),
+            Err(ParseFailure::Spreadsheet(Error::Value))
+        );
         let many_percent = format!("50{}", "%".repeat(160));
-        let scaled = parse(&many_percent).unwrap();
-        assert!(scaled > 0. && scaled < 1e-318);
+        assert_eq!(
+            parse(&many_percent),
+            Err(ParseFailure::Spreadsheet(Error::Value))
+        );
         assert_eq!(
             parse("1e-324"),
             Err(ParseFailure::Spreadsheet(Error::Value))

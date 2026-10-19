@@ -16,6 +16,13 @@ This product includes software developed at The Apache Software Foundation
 https://github.com/apache/commons-math/tree/MATH_3_6_1
 Apache-2.0; see LICENSES/Apache-2.0.txt and source-file notices.
 
+ClosedXML
+DATE normalization and regression scenarios adapt ClosedXML revision
+09f2f21a60e821ce7fb18ca3576b272e5dd6d921.
+Copyright (c) 2016 ClosedXML.
+https://github.com/ClosedXML/ClosedXML
+MIT; see LICENSES/ClosedXML-MIT.txt and nearby source references.
+
 Unicode data
 Generated case-mapping assets retain their Unicode copyright and permission
 notice in crates/poirot-functions-text/src/UNICODE-LICENSE.txt.

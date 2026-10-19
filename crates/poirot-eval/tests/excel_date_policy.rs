@@ -82,7 +82,6 @@ fn date_serial_overflow_and_errors_preserve_pinned_contract() {
     for formula in [
         "DATE(-1,1,1)",
         "DATE(10000,1,1)",
-        "DATE(10000,0,1)",
         "DATE(9999,12,32)",
         "DATE(1900,1,-1)",
     ] {

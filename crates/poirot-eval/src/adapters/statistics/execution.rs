@@ -345,30 +345,20 @@ impl Session<'_> {
                 | StatisticsFunction::Var
                 | StatisticsFunction::VarP,
             ) => {
-                let population = matches!(
-                    name,
-                    AggregateFunction::Statistics(StatisticsFunction::VarP)
-                        | AggregateFunction::Statistics(StatisticsFunction::StdevP)
-                );
-                if len < if population { 1 } else { 2 } {
-                    return Ok(err(Div0));
-                } // Welford avoids cancellation for large offsets.
-                let (mut mean, mut m2) = (0., 0.);
-                for (i, x) in nums.iter().enumerate() {
-                    let d = x - mean;
-                    mean += d / (i + 1) as f64;
-                    m2 += d * (x - mean)
-                }
-                let v = m2 / (len - usize::from(!population)) as f64;
-                if matches!(
-                    name,
-                    AggregateFunction::Statistics(
-                        StatisticsFunction::Stdev | StatisticsFunction::StdevP
-                    )
-                ) {
-                    v.sqrt()
-                } else {
-                    v
+                use poirot_functions_statistics::{
+                    Aggregate as A, SamplePolicy, aggregate_with_policy,
+                };
+                let operation = match name {
+                    AggregateFunction::Statistics(StatisticsFunction::Stdev) => A::StdevSample,
+                    AggregateFunction::Statistics(StatisticsFunction::StdevP) => A::StdevPopulation,
+                    AggregateFunction::Statistics(StatisticsFunction::Var) => A::VarianceSample,
+                    _ => A::VariancePopulation,
+                };
+                // Operand admission and execution budgets remain owned by this adapter;
+                // numeric reduction is shared with the independent statistics kernels.
+                match aggregate_with_policy(operation, &nums, SamplePolicy::ExcelDocumentation) {
+                    Ok(value) => value,
+                    Err(error) => return Ok(err(error)),
                 }
             }
             AggregateFunction::And

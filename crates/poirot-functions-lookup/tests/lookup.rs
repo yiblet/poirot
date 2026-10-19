@@ -532,3 +532,94 @@ fn malformed_array_rejected_without_index_panic() {
         Err(Error::Value.into())
     );
 }
+
+#[test]
+fn optional_search_modes_default_only_for_absent_or_missing_operands() {
+    let missing = Value::Scalar(Scalar::Missing);
+    let blank = Value::Scalar(Scalar::Blank);
+    let values = array(3, 1, &[2., 1., 2.]);
+    // Documented XLOOKUP/XMATCH defaults are exact match0, forward search1.
+    for (mode, search, expected) in [
+        (missing.clone(), missing.clone(), Ok(n(1.))),
+        (missing.clone(), n(-1.), Ok(n(3.))),
+        (blank.clone(), missing.clone(), Ok(n(1.))),
+        (n(0.), missing.clone(), Ok(n(1.))),
+        (n(0.), n(0.), Err(Error::Value.into())),
+        (missing.clone(), blank, Err(Error::Value.into())),
+        (error(Error::Div0), n(1.), Err(Error::Div0.into())),
+        (missing, error(Error::Na), Err(Error::Na.into())),
+    ] {
+        assert_eq!(
+            evaluate(
+                Function::Search(Search::XMatch),
+                &[n(2.), values.clone(), mode, search],
+                C,
+                &mut book()
+            ),
+            expected
+        );
+    }
+}
+
+#[test]
+fn xlookup_retains_fallback_presence_and_defaults_missing_modes() {
+    let missing = Value::Scalar(Scalar::Missing);
+    let blank = Value::Scalar(Scalar::Blank);
+    let values = array(3, 1, &[2., 1., 2.]);
+    let result = area(4, 7, 9, 2, 2);
+    for (direction, expected) in [
+        (missing.clone(), area(4, 7, 7, 2, 2)),
+        (n(-1.), area(4, 9, 9, 2, 2)),
+    ] {
+        assert_eq!(
+            evaluate(
+                Function::Search(Search::XLookup),
+                &[
+                    n(2.),
+                    values.clone(),
+                    result.clone(),
+                    missing.clone(),
+                    missing.clone(),
+                    direction
+                ],
+                C,
+                &mut book()
+            ),
+            Ok(expected)
+        );
+    }
+    for (fallback, expected) in [
+        (missing.clone(), Err(Error::Na.into())),
+        (blank.clone(), Ok(blank)),
+        (n(0.), Ok(n(0.))),
+        (s(""), Ok(s(""))),
+        (s("absent"), Ok(s("absent"))),
+        (error(Error::Div0), Err(Error::Div0.into())),
+    ] {
+        assert_eq!(
+            evaluate(
+                Function::Search(Search::XLookup),
+                &[
+                    n(9.),
+                    values.clone(),
+                    result.clone(),
+                    fallback,
+                    missing.clone(),
+                    missing.clone()
+                ],
+                C,
+                &mut book()
+            ),
+            expected
+        );
+    }
+    assert_eq!(
+        evaluate(
+            Function::Search(Search::XLookup),
+            &[n(9.), values, result],
+            C,
+            &mut book()
+        ),
+        Err(Error::Na.into())
+    );
+}

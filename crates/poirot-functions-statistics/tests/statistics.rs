@@ -383,3 +383,95 @@ fn explicit_sample_requirements_distinguish_population_and_sample() {
         Err(CellError::Div0)
     );
 }
+
+#[test]
+fn variance_is_invariant_under_exact_large_translations() {
+    // Deviations of [0,1,2,3] from 1.5 have squared sum 5.
+    // 2^40 and these integer offsets are exactly representable in binary64.
+    for offset in [0.0, 1_099_511_627_776.0, -1_099_511_627_776.0] {
+        let values = [offset, offset + 1., offset + 2., offset + 3.];
+        for (operation, expected) in [
+            (Aggregate::DevSq, 5.),
+            (Aggregate::VariancePopulation, 1.25),
+            (Aggregate::VarianceSample, 5. / 3.),
+            (Aggregate::StdevPopulation, 1.25_f64.sqrt()),
+            (Aggregate::StdevSample, (5_f64 / 3.).sqrt()),
+        ] {
+            near(
+                aggregate_with_policy(operation, &values, SamplePolicy::ExcelDocumentation),
+                expected,
+                2e-15,
+            );
+        }
+        // [0,0,1] has exact squared-deviation sum2/3; its fractional
+        // mean exposes unshifted running-mean rounding at the same offset.
+        let values = [offset, offset, offset + 1.];
+        for (operation, expected) in [
+            (Aggregate::DevSq, 2. / 3.),
+            (Aggregate::VariancePopulation, 2. / 9.),
+            (Aggregate::VarianceSample, 1. / 3.),
+            (Aggregate::StdevPopulation, (2_f64 / 9.).sqrt()),
+            (Aggregate::StdevSample, (1_f64 / 3.).sqrt()),
+        ] {
+            near(
+                aggregate_with_policy(operation, &values, SamplePolicy::ExcelDocumentation),
+                expected,
+                2e-15,
+            );
+        }
+    }
+}
+
+#[test]
+fn variance_scaling_preserves_finite_standard_deviations_without_overflowing_means() {
+    use Aggregate::*;
+    use SamplePolicy::ExcelDocumentation as Excel;
+    for operation in [
+        VarianceSample,
+        VariancePopulation,
+        StdevSample,
+        StdevPopulation,
+        DevSq,
+    ] {
+        assert_eq!(
+            aggregate_with_policy(operation, &[f64::MAX, f64::MAX], Excel),
+            Ok(0.)
+        );
+        assert_eq!(
+            aggregate_with_policy(operation, &[f64::NAN, 1.], Excel),
+            Err(CellError::Num)
+        );
+    }
+    assert_eq!(
+        aggregate_with_policy(StdevPopulation, &[f64::MAX, -f64::MAX], Excel),
+        Ok(f64::MAX)
+    );
+    assert_eq!(
+        aggregate_with_policy(VariancePopulation, &[f64::MAX, -f64::MAX], Excel),
+        Err(CellError::Num)
+    );
+    assert_eq!(
+        aggregate_with_policy(StdevSample, &[f64::MAX, -f64::MAX], Excel),
+        Err(CellError::Num)
+    );
+    assert_eq!(
+        aggregate_with_policy(StdevPopulation, &[f64::MAX], Excel),
+        Ok(0.)
+    );
+    assert_eq!(
+        aggregate_with_policy(StdevSample, &[f64::MAX], Excel),
+        Err(CellError::Div0)
+    );
+    // Two observations [0,2e154] have population variance1e308, which is finite
+    // even though squaring the unnormalized difference would overflow.
+    near(
+        aggregate_with_policy(VariancePopulation, &[0., 2e154], Excel),
+        1e308,
+        2e292,
+    );
+    near(
+        aggregate_with_policy(StdevPopulation, &[0., 2e-200], Excel),
+        1e-200,
+        0.,
+    );
+}

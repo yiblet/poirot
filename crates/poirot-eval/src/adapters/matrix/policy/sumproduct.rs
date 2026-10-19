@@ -11,8 +11,8 @@ pub(super) fn evaluate<P: EvaluationPort>(
     args: &[P::Argument],
 ) -> Result<f64, Failure<P::Operational>> {
     let first = describe(p, args.first().ok_or(CellError::Value)?)?;
-    // Documented text/blank admission applies to each conformable argument,
-    // irrespective of direct, reference, or array origin and singleton size.
+    // Modern traversal uses conformable arrays, including singleton references;
+    // direct blank expressions retain their separate argument admission.
     let uniform = p.uniform_sumproduct_arrays();
     let scalar =
         !uniform && (first.origin != Origin::Array || (first.rows == 1 && first.cols == 1));
@@ -78,8 +78,15 @@ pub(super) fn evaluate<P: EvaluationPort>(
     for r in 0..first.rows {
         for c in 0..first.cols {
             let mut product = 1.0;
-            for a in args {
-                product *= coercev2_sumproduct_term(read(p, a, r, c)?, false)?;
+            for (a, shape) in args.iter().zip(&shapes) {
+                let member = read(p, a, r, c)?;
+                // A direct blank expression is not a blank referenced array member.
+                // Pinned ClosedXML MathTrigTests.SumProduct and isolated Calc probes
+                // corroborate this existing origin distinction, including reversed operands.
+                if uniform && shape.origin == Origin::Direct && matches!(member, Cell::Blank) {
+                    return value();
+                }
+                product *= coercev2_sumproduct_term(member, false)?;
             }
             result += product;
         }

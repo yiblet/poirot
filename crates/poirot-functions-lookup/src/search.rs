@@ -1,11 +1,15 @@
 use crate::operands::{
-    charge, checked_product, coercev2_lookup_integer, num, preflight_value, scalar, Arguments,
+    charge, checked_product, coercev2_lookup_integer, missing, num, preflight_value, scalar,
+    Arguments,
 };
 use crate::table::Table;
 use crate::{
     approximate_index, xmatch_index, Array, Context, Error, Failure, MatchMode, ReferenceKind,
     Scalar, Search, SearchMode, Unsupported, Value, Work, Workbook,
 };
+// XLOOKUP and XMATCH default omitted modes to exact matching and forward search.
+// https://support.microsoft.com/en-us/excel/functions/xlookup-function
+// https://support.microsoft.com/en-gb/excel/functions/xmatch-function?nochrome=true
 fn modes(
     args: &Arguments<'_>,
     match_index: usize,
@@ -18,6 +22,7 @@ fn modes(
         None
     } {
         None => 0,
+        Some(v) if missing(&v) => 0,
         Some(v) => coercev2_lookup_integer(scalar(&v, c, w)?, true, w)?,
     };
     let mode = match mode {
@@ -33,6 +38,7 @@ fn modes(
         None
     } {
         None => 1,
+        Some(v) if missing(&v) => 1,
         Some(v) => coercev2_lookup_integer(scalar(&v, c, w)?, true, w)?,
     };
     let search = match search {
@@ -102,10 +108,17 @@ pub(super) fn search(
                 return Err(Error::Value.into());
             }
             // This fallback is resolved before search even when a match exists.
+            // Missing optional arguments use the same defaults as absent slots:
+            // https://support.microsoft.com/en-us/excel/functions/xlookup-function
             let fallback = if f == Search::XLookup && args.len() > 3 {
-                scalar(&args.get(3, c, w)?, c, w)?
+                let value = args.get(3, c, w)?;
+                if missing(&value) {
+                    None
+                } else {
+                    Some(scalar(&value, c, w)?)
+                }
             } else {
-                Scalar::Blank
+                None
             };
             let (mode, direction) = modes(args, if f == Search::XLookup { 4 } else { 2 }, c, w)?;
             let key = scalar(&args.get(0, c, w)?, c, w)?;
@@ -120,11 +133,9 @@ pub(super) fn search(
             let table = Table::new(&lookup_argument)?;
             let column = table.cols == 1;
             let vector = table.vector(column, 0, w)?;
-            let index = match xmatch_index(&key, &vector, mode, direction, w) {
-                Ok(index) => index,
-                Err(Failure::Spreadsheet(Error::Na))
-                    if f == Search::XLookup && fallback != Scalar::Blank =>
-                {
+            let index = match (xmatch_index(&key, &vector, mode, direction, w), fallback) {
+                (Ok(index), _) => index,
+                (Err(Failure::Spreadsheet(Error::Na)), Some(fallback)) if f == Search::XLookup => {
                     let return_argument = args.get(2, c, w)?;
                     if let Value::SignedReference(r) = &return_argument {
                         if r.kind == ReferenceKind::Area && r.width() > 1 {
@@ -154,7 +165,7 @@ pub(super) fn search(
                     }
                     return Ok(Value::Scalar(fallback));
                 }
-                Err(e) => return Err(e),
+                (Err(e), _) => return Err(e),
             };
             if f == Search::XMatch {
                 return Ok(num(index as f64 + 1.0));

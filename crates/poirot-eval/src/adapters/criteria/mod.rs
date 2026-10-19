@@ -142,7 +142,13 @@ fn evaluate(host: &mut CallHost<'_, '_>, function: Function) -> FunctionResult<V
                 projected
             };
             let mut predicate = Criterion::parse(&admitted);
-            // Equality and inequality retain literal text matching. Contextual
+            if host.excel_builtins() {
+                predicate.value =
+                    poirot_coercionv2::criteria::coercev2_criteria_accounting_threshold(
+                        predicate.value,
+                    );
+            }
+            // Equality and inequality otherwise retain literal text matching. Contextual
             // interpretation here is limited to ordered numeric thresholds.
             if host.excel_builtins()
                 && matches!(

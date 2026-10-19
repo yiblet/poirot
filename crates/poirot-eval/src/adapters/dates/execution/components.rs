@@ -5,24 +5,41 @@ use super::calendar::{
 use crate::{CellError, CellError::Num, DateFunction, VALUE_ERROR};
 use poirot_model::DateSystem;
 
-/// Construct documented Excel DATE semantics with month and day overflow.
-pub(super) fn excel_date(x: i64, y: i64, z: i64, system: DateSystem) -> Result<f64, CellError> {
-    if !(0..=9999).contains(&x) {
+/// Normalize DATE components before validating the resulting workbook serial.
+/// Boundary rules and tests adapted from ClosedXML (MIT), revision
+/// 09f2f21a60e821ce7fb18ca3576b272e5dd6d921:
+/// <https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML/Excel/CalcEngine/Functions/DateAndTime.cs>
+pub(super) fn excel_date(x: f64, y: f64, z: f64, system: DateSystem) -> Result<f64, CellError> {
+    if !x.is_finite() || !y.is_finite() || !z.is_finite() {
         return Err(Num);
     }
-    let year = if x < 1900 { x + 1900 } else { x };
-    let total = year * 12 + y - 1;
+    let month = y.floor();
+    if !(-32767. ..32767.).contains(&month) {
+        return Err(Num);
+    }
+    let year = x.floor();
+    let year = if year < 1900. { year + 1900. } else { year }.min(10000.);
+    let year_adjustment = ((month - 1.) / 12.).floor();
+    let year = year + year_adjustment;
+    if !(1. ..=9999.).contains(&year) {
+        return Err(Num);
+    }
+    let day = z.floor();
+    let day = if day < -32768. {
+        32767.
+    } else {
+        day.min(32767.)
+    };
     let first = Date {
-        y: total.div_euclid(12),
-        m: total.rem_euclid(12) + 1,
+        y: year as i64,
+        m: (month - year_adjustment * 12.) as i64,
         d: 1,
     };
-    // Normalize the month first, then add days in serial space so that the
-    // fictitious 1900-02-29 participates in both forward and backward overflow.
-    valid(
-        (super::calendar::serial_day(first, system) + z - 1) as f64,
-        system,
-    )
+    let serial = super::calendar::serial_day(first, system)
+        .checked_add(day as i64)
+        .and_then(|serial| serial.checked_sub(1))
+        .ok_or(Num)?;
+    valid(serial as f64, system)
 }
 
 /// Compute the ISO week number from a Gregorian date.

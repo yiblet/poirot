@@ -203,6 +203,7 @@ fn refresh_staged(
             }));
         if data.cases.is_empty() {
             manifest.omissions.push(Omission {
+                kind: crate::fods::xml::model::OmissionKind::UnsupportedConstruct,
                 source: Some(source),
                 sheet: None,
                 cell: None,

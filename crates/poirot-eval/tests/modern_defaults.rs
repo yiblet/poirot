@@ -105,9 +105,9 @@ fn text_and_unary_regressions_work_in_prepared_bound_and_overlay_paths() {
         (r#"ISTEXT(+"1")"#, CellValue::Boolean(true)),
         ("ISREF(+A1)", CellValue::Boolean(false)),
         (r#"CODE("A")"#, CellValue::Number(65.)),
-        // Microsoft DATE explicitly rejects a year >= 10000, even with negative months.
-        // https://support.microsoft.com/en-gb/excel/functions/date-function
-        ("DATE(10000,-32000,1)", CellValue::Error(CellError::Num)),
+        // ClosedXML's pinned Excel edge observations and independent Calc agree:
+        // normalize clamped components before validating the resulting date.
+        ("DATE(10000,-32000,1)", CellValue::Number(1984455.)),
     ];
     let mut book = book();
     for (i, (formula, _)) in cases.iter().enumerate() {

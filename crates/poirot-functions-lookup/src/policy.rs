@@ -13,7 +13,7 @@ use crate::{evaluate_arguments, Context, Error, Failure, Value, Workbook};
 pub enum Search {
     /// LOOKUP vector or array form.
     Lookup,
-    /// XLOOKUP with explicit match and search modes.
+    /// XLOOKUP with optional match and search modes.
     XLookup,
     /// XMATCH returning a position.
     XMatch,

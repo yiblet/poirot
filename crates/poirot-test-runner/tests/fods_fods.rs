@@ -197,3 +197,22 @@ fn runtime_loader_rejects_manifest_case_count_drift() {
     entry.cases += 1;
     assert!(load_fixture(&root, &entry).is_err());
 }
+
+#[test]
+fn linked_caches_are_omitted_without_changing_local_coordinates_or_case_ids() {
+    let local = r#"<t:table t:name="Local"><t:table-row><t:table-cell o:value-type="string"><x:p>Function</x:p></t:table-cell><t:table-cell o:value-type="string"><x:p>Expected</x:p></t:table-cell><t:table-cell o:value-type="string"><x:p>Correct</x:p></t:table-cell></t:table-row><t:table-row><t:table-cell t:formula="of:=3"/><t:table-cell o:value-type="float" o:value="3"/><t:table-cell t:formula="of:=[.A2]=[.B2]"/></t:table-row></t:table>"#;
+    let cache = r#"<t:table t:name="'file:///unavailable.ods'#Sheet1"><t:table-source xmlns:l="http://www.w3.org/1999/xlink" l:href="file:///unavailable.ods" t:mode="copy-results-only"/><t:table-row t:number-rows-repeated="999999999"><t:table-cell o:value-type="float" o:value="999"/></t:table-row></t:table>"#;
+    let expected = parse(local);
+    for body in [format!("{cache}{local}"), format!("{local}{cache}")] {
+        let actual = parse(&body);
+        assert_eq!(actual.sheets, expected.sheets);
+        assert_eq!(actual.cases, expected.cases);
+        assert_eq!(actual.cases[0].sheet, 0);
+        assert_eq!(actual.omissions.len(), expected.omissions.len() + 1);
+        assert!(actual.omissions.iter().any(|omission| {
+            omission
+                .reason
+                .contains("external linked table cache omitted")
+        }));
+    }
+}

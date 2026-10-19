@@ -346,6 +346,14 @@ impl Session<'_> {
                 self.coercev2_time_text(&t)?
             }));
         }
+        if excel && name == DateFunction::Date {
+            let year = self.coercev2_scalar_number(&a)?;
+            let month = self.argument(s, at, args, 1)?;
+            let month = self.coercev2_scalar_number(&month)?;
+            let day = self.argument(s, at, args, 2)?;
+            let day = self.coercev2_scalar_number(&day)?;
+            return Ok(Number(components::excel_date(year, month, day, system)?));
+        }
         if name == DateFunction::Date || name == DateFunction::Time {
             let x = coercev2_date_integer(if name == DateFunction::Time {
                 self.coercev2_scalar_number(&a)?.floor()
@@ -366,12 +374,7 @@ impl Session<'_> {
             } else {
                 self.coercev2_scalar_number(&c)?
             })?;
-            return Ok(Number(if excel && name == DateFunction::Date {
-                components::excel_date(x, y, z, system)?
-            } else {
-                // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
-                coerce_numeric_outcome(name, x, y, z, system)?
-            }));
+            return Ok(Number(coerce_numeric_outcome(name, x, y, z, system)?));
         }
         let edate_offset = if name == DateFunction::EDate && !excel {
             use poirot_coercionv2::compatibility::DateSerialPolicy::PinnedNumberOrBlank;

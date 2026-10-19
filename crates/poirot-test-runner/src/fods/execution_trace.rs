@@ -19,6 +19,8 @@ pub(crate) struct Trace {
     functions: Vec<String>,
     missing_name: Option<String>,
     syntax: Option<String>,
+    external_sheet: Option<String>,
+    matrix_cell: Option<poirot_eval::EvaluationTarget>,
     omitted_functions: bool,
 }
 
@@ -34,7 +36,22 @@ impl Trace {
 
     /// Build a case diagnostic from observed execution evidence for the named phase.
     pub(crate) fn failure(&self, phase: &str) -> Option<CaseFailure> {
-        let (kind, gap_type, message) = if let Some(syntax) = &self.syntax {
+        let (kind, gap_type, message) = if let Some(sheet) = &self.external_sheet {
+            (
+                FailureKind::WorkbookContext,
+                GapKind::UnsupportedWorkbookContext,
+                format!("{phase}: selected external linked table {sheet}"),
+            )
+        } else if let Some(target) = self.matrix_cell {
+            (
+                FailureKind::MatrixContext,
+                GapKind::UnsupportedArrayContext,
+                format!(
+                    "{phase}: selected unsupported Calc CSE cell at sheet {} row {} column {}",
+                    target.sheet, target.address.row, target.address.col
+                ),
+            )
+        } else if let Some(syntax) = &self.syntax {
             (
                 FailureKind::SourceSyntax,
                 GapKind::UnsupportedFormulaSyntax,
@@ -82,6 +99,8 @@ pub(crate) struct Reads<'a> {
     pub entry: &'a FixtureEntry,
     /// Canonical fixture workbook used for source-name resolution.
     pub book: &'a poirot_model::Workbook,
+    /// Omitted source tables whose values must never become local inputs.
+    pub omissions: &'a [crate::fods::xml::model::Omission],
 }
 impl DependencyReadSink for Reads<'_> {
     fn read(&mut self, event: ReadEvent) {
@@ -90,6 +109,21 @@ impl DependencyReadSink for Reads<'_> {
             return;
         };
         match event.read {
+            DependencyRead::Sheet {
+                name,
+                selected: None,
+                ..
+            } => {
+                if self.omissions.iter().any(|omission| {
+                    omission.kind == crate::fods::xml::model::OmissionKind::ExternalLinkedTable
+                        && omission.sheet.as_deref().is_some_and(|sheet| {
+                            poirot_model::identifiers::compare(sheet, &name)
+                                == poirot_model::identifiers::IdentifierComparison::Equal
+                        })
+                }) {
+                    trace.external_sheet.get_or_insert_with(|| detail(&name));
+                }
+            }
             DependencyRead::OpaqueProvider(name) => {
                 if intentional_unknown_provider(
                     self.entry,
@@ -137,6 +171,8 @@ impl DependencyReadSink for Reads<'_> {
 
 /// Cell-completion observer retaining fixture execution diagnostics.
 pub(crate) struct Cells<'a> {
+    /// Source CSE anchors and continuations requiring unavailable matrix context.
+    pub matrix_cells: &'a std::collections::BTreeSet<(usize, poirot_model::CellAddress)>,
     /// Shared trace receiving cell completion/failure evidence.
     pub trace: &'a RefCell<Trace>,
     /// Prepared source index used to identify completed formulas.
@@ -144,6 +180,16 @@ pub(crate) struct Cells<'a> {
 }
 impl CellObserver for Cells<'_> {
     fn completed(&mut self, completion: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+        if self
+            .matrix_cells
+            .contains(&(completion.target.sheet, completion.target.address))
+        {
+            self.trace
+                .try_borrow_mut()
+                .map_err(|_| EvaluationFailure::StalePlan)?
+                .matrix_cell
+                .get_or_insert(completion.target);
+        }
         // A geometry/metadata read is not a cell completion. Only actual source
         // evaluation can turn a parser failure into a synthetic spreadsheet error.
         if completion.result.is_ok()

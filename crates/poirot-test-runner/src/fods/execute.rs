@@ -44,18 +44,25 @@ fn aborted(abort: poirot_eval::EvaluationFailure) -> CaseFailure {
     reason
 }
 
+// Native non-CSE Calc formulas use implicit intersection, not dynamic worksheet spills.
+// https://help.libreoffice.org/latest/en-US/text/scalc/01/04060107.html
+fn native_configuration() -> poirot_eval::RunConfiguration {
+    poirot_eval::RunConfiguration::default()
+        .with_array_result_policy(poirot_eval::ArrayResultPolicy::ScalarIntersection)
+}
+
 fn evaluate(
     book: &Workbook,
     sheet: usize,
     at: CellAddress,
     formula: &str,
 ) -> Result<CellValue, CaseFailure> {
-    match poirot_eval::run_formula(
+    match poirot_eval::run_formula_with_configuration(
         book,
         sheet,
         at,
         formula,
-        poirot_eval::EvaluationInputs::default(),
+        &native_configuration(),
         poirot_eval::EvaluationBudgets::default(),
     ) {
         poirot_eval::EvaluationOutcome::Complete { value, .. } => Ok(value),
@@ -75,6 +82,8 @@ fn check(
     prepared: &poirot_eval::CompiledWorkbook,
     entry: &crate::fods::corpus::FixtureEntry,
     plan: &PlannedCase,
+    omissions: &[crate::fods::xml::model::Omission],
+    matrix_cells: &std::collections::BTreeSet<(usize, CellAddress)>,
     observed: &mut Option<CheckObservation>,
 ) -> Result<(), CaseFailure> {
     if let Some(reason) = &plan.syntax_failure {
@@ -89,14 +98,16 @@ fn check(
         plan: prepared,
         entry,
         book,
+        omissions,
     };
     let mut cells = crate::fods::execution_trace::Cells {
+        matrix_cells,
         trace: &trace,
         plan: prepared,
     };
     let view =
         poirot_eval::WorkbookView::new(book, prepared, prepared.policy()).map_err(aborted)?;
-    let configuration = poirot_eval::RunConfiguration::default();
+    let configuration = native_configuration();
     let mut run = poirot_eval::EvaluationRun::new_with_configuration(
         view,
         &configuration,
@@ -236,6 +247,8 @@ pub(crate) fn fixture_observations(
                         })?,
                         &plan.entry,
                         case,
+                        &plan.omissions,
+                        &plan.matrix_cells,
                         &mut observed,
                     ),
                     WorkbookPreparation::Unsupported(reason) => Err(reason.clone()),

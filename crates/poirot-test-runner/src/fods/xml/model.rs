@@ -165,9 +165,23 @@ pub struct FormulaCase {
     pub matrix: Option<MatrixSpan>,
 }
 
+/// Reason a native source construct is excluded from the executable local model.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OmissionKind {
+    /// Extraction encountered a construct outside its supported case model.
+    #[default]
+    UnsupportedConstruct,
+    /// A linked external table contains cached values rather than local inputs.
+    ExternalLinkedTable,
+}
+
 /// Inspectable source construct omitted from supported fixture extraction.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Omission {
+    /// Typed source boundary retained for selected-dependency diagnostics.
+    #[serde(default)]
+    pub kind: OmissionKind,
     /// Pinned fixture source path.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,

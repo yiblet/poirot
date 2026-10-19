@@ -15,6 +15,7 @@ pub(crate) fn address(row: u32, col: u32) -> String {
 }
 fn omission(sheet: &Sheet, at: Option<(u32, u32)>, reason: &str) -> Omission {
     Omission {
+        kind: crate::fods::xml::model::OmissionKind::UnsupportedConstruct,
         source: None,
         sheet: Some(sheet.name.clone()),
         cell: at.map(|(r, c)| address(r, c)),
