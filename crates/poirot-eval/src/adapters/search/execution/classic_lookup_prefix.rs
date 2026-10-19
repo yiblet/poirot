@@ -21,6 +21,7 @@ pub(super) struct Axis {
 }
 /// Sheet, orientation (vertical first), and fixed column or row.
 type Partition = (usize, bool, u32);
+/// Inclusive physical endpoints within a lookup partition.
 type Interval = (u32, u32);
 impl Axis {
     fn location(self) -> (Partition, Interval) {
@@ -217,7 +218,6 @@ pub(super) fn select(
     key: &CellValue,
     mode: SearchMode,
     is_match: bool,
-    source: TextSourceVersion,
 ) -> Option<FunctionResult<Option<usize>>> {
     if !session.lookup_prefixes.enabled
         || mode != SearchMode::Exact
@@ -300,7 +300,6 @@ pub(super) fn select(
             key,
             mode,
             is_match,
-            source,
             forward: None,
         };
         let mut next = reader.next(prefix.next, vector.len)?;
@@ -346,14 +345,8 @@ pub(super) fn select(
                 }
             }
             prefix.next = index + 1;
-            if lookup_compare(
-                key,
-                &value,
-                mode,
-                is_match,
-                source,
-                &mut reader.session.budget,
-            )? == Some(Ordering::Equal)
+            if lookup_compare(key, &value, mode, is_match, &mut reader.session.budget)?
+                == Some(Ordering::Equal)
             {
                 return Ok(Some(index));
             }

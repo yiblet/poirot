@@ -2,10 +2,16 @@
 name = "poirot-format"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+description = "Spreadsheet number formats and display rendering"
+include = ["/src/**", "/README.md", "/LICENSE", "/NOTICE", "/LICENSES/**"]
 
 [dependencies]
 nom.workspace = true
-poirot-model = { path = "../poirot-model" }
+poirot-model = { version = "0.1.0", path = "../poirot-model" }
 
 [lints]
 workspace = true

@@ -622,6 +622,7 @@ version = "0.1.0"
 dependencies = [
  "poirot-coercionv2",
  "poirot-parsing",
+ "poirot-text",
 ]
 
 [[package]]
@@ -633,6 +634,7 @@ dependencies = [
  "poirot-functions-criteria",
  "poirot-numeric",
  "poirot-parsing",
+ "poirot-text",
 ]
 
 [[package]]
@@ -672,6 +674,7 @@ name = "poirot-functions-lookup"
 version = "0.1.0"
 dependencies = [
  "poirot-coercionv2",
+ "poirot-text",
 ]
 
 [[package]]

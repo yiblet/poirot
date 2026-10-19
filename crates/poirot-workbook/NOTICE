@@ -1,0 +1,60 @@
+Poirot's first-party contributions are licensed under the MIT license in
+LICENSE. Third-party material retains its own license; the MIT grant does
+not replace its terms or notices.
+
+Apache POI
+Copyright 2003-2026 The Apache Software Foundation.
+Poirot includes Rust translations and adaptations of Apache POI code.
+Source bindings identify revision 732120980140d5ed64b482c470e0b625cdb1ab15.
+https://github.com/apache/poi
+Apache-2.0; see LICENSES/Apache-2.0.txt and Apache-POI-NOTICE.txt.
+The poi-* workbook fixtures are byte-identical copies from that revision’s
+test-data/spreadsheet/ directory (the filename drops the poi- prefix).
+
+Apache Commons Math
+The statistical kernels include adaptations from Apache Commons Math 3.6.1.
+Copyright 2001-2016 The Apache Software Foundation.
+This product includes software developed at The Apache Software Foundation
+(http://www.apache.org/).
+This product includes software developed for Orekit by
+CS Systèmes d’Information (http://www.c-s.fr/).
+Copyright 2010-2012 CS Systèmes d’Information.
+https://github.com/apache/commons-math/tree/MATH_3_6_1
+Apache-2.0; see LICENSES/Apache-2.0.txt, Commons-Math-NOTICE.txt, and
+source-file notices.
+
+ClosedXML
+DATE normalization and regression scenarios adapt ClosedXML revision
+09f2f21a60e821ce7fb18ca3576b272e5dd6d921.
+Copyright (c) 2016 ClosedXML.
+https://github.com/ClosedXML/ClosedXML
+MIT; see LICENSES/ClosedXML-MIT.txt and nearby source references.
+
+Unicode data
+Generated Unicode15 case-mapping and casing-context assets retain their
+Unicode copyright and permission
+notice in crates/poirot-functions-text/src/UNICODE-LICENSE.txt.
+Inputs: https://www.unicode.org/Public/15.0.0/ucd/
+UnicodeData.txt, SpecialCasing.txt, and DerivedCoreProperties.txt.
+Contextual final sigma follows Unicode section 3.13. The former OpenJDK-derived
+word-boundary subset and case-insensitive comparator have been removed.
+
+casefold
+Unicode simple folding adapts only casefold 0.1.0's safe char lookup/helpers
+and generated Unicode 16 tables, with checked indexing and decoding.
+Copyright (c) 2023 GitHub Inc. MIT; see LICENSES/casefold-MIT.txt.
+https://github.com/github/rust-gems/tree/b8c6e27652f7f198a3a0f2183179948cd69be0c1/crates/casefold
+The table comes from that revision's build.rs and data/CaseFolding.txt
+(SHA256 6f1f9c588eb4a5c718d9e8f93b782685e5c7fec872cf05e8e6878053599e09bb).
+Unicode 16 data terms are retained in LICENSES/Unicode-3.0.txt.
+No casefold dependency or unsafe bulk string implementation is included.
+
+LibreOffice test data
+The FODS corpus is separate test material, not MIT-licensed library code.
+Its manifest records source paths, hashes, and LibreOffice revision
+cd35bc0879ed5e4b8138b724033ea5937751a84d. Its MPL-2.0 license is retained at
+crates/poirot-test-runner/corpus/fods/COPYING.MPL.
+Redistribute these fixtures under MPL-2.0, preserving their notices and source
+metadata. This does not change the MIT license of Poirot's first-party code.
+
+Per-file notices and dependency license terms continue to apply.

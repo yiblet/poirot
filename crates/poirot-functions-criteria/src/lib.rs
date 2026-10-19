@@ -105,7 +105,7 @@ impl Criterion {
                         },
                     ));
                 }
-                test_comparison(op, b.to_lowercase().cmp(&a.to_lowercase()))
+                test_comparison(op, poirot_text::fold::compare(b, a))
             }
             _ => op == Comparison::Ne,
         })
@@ -150,7 +150,7 @@ fn tokens(pattern: &str) -> Vec<Token> {
 pub fn has_wildcards(pattern: &str) -> bool {
     pattern.contains(['*', '?']) || pattern.contains("~~")
 }
-/// Full, ASCII-case-insensitive POI wildcard match. Iterative star backtracking, no recursion.
+/// Full, Unicode-simple-folded wildcard match. Iterative star backtracking, no recursion.
 pub fn wildcard_match(pattern: &str, text: &str) -> bool {
     wildcard_match_metered(pattern, text, &mut || Ok::<_, std::convert::Infallible>(()))
         .unwrap_or_else(|never| match never {})
@@ -171,7 +171,7 @@ pub fn wildcard_match_metered<E>(
             // SAFETY: The loop guards bound i and j; retry starts at j and never exceeds j before advancing both together.
             && match p[i] {
                 // SAFETY: The loop guards bound i and j; retry starts at j and never exceeds j before advancing both together.
-                Token::Literal(c) => c.eq_ignore_ascii_case(&t[j]),
+                Token::Literal(c) => poirot_text::fold::simple_fold(c) == poirot_text::fold::simple_fold(t[j]),
                 // SAFETY: The loop guards bound i and j; retry starts at j and never exceeds j before advancing both together.
                 Token::One => !matches!(t[j], '\n' | '\r' | '\u{85}' | '\u{2028}' | '\u{2029}'),
                 Token::Many => false,

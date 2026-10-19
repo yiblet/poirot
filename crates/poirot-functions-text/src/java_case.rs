@@ -1,15 +1,15 @@
-//! Explicit ROOT mappings for OpenJDK 21.0.8 / Unicode 15.0, policy revision 1.
-//! No Rust Unicode casing or category tables participate in this policy.
-//! Contextual sigma follows Unicode 15 section 3.13 using official properties.
-#[path = "history_case_properties.rs"]
+//! Unicode15 ROOT case mappings with Unicode contextual final sigma.
+//! Mapping assets retain the Java-pinned Unicode input version, while sigma
+//! follows Unicode15 SpecialCasing/section 3.13 rather than Java word boundaries.
+#[path = "case_properties.rs"]
 mod case_properties;
 #[path = "java_case_data.rs"]
 mod data;
 
 /// Version of the pinned full-case mapping contract and assets.
-pub const POLICY_VERSION: &str = "openjdk21.0.8-unicode15-root-v1";
+pub const POLICY_VERSION: &str = "unicode15-root-final-sigma-v2";
 
-/// Requested Java ROOT full-case mapping direction.
+/// Requested Unicode15 full-case mapping direction.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Direction {
     /// Apply lowercase mapping.
@@ -22,13 +22,6 @@ pub enum Direction {
 pub enum Unsupported {
     /// Pinned mapping asset failed integrity or layout validation.
     InvalidMappingAsset,
-    /// Java uses ROOT BreakIterator for sigma; this input needs additional rules.
-    SigmaWordBoundary {
-        /// Code point whose contextual sigma mapping requires unsupported boundary handling.
-        code_point: u32,
-        /// UTF-16 position of the unsupported contextual mapping.
-        utf16_offset: usize,
-    },
 }
 
 /// Maximum output length in UTF-16 units (all Unicode 15 expansions <= 3 units
@@ -137,6 +130,7 @@ fn push_code_point(output: &mut Vec<u16>, cp: u32) {
     }
 }
 
+/// Test a generated Unicode property without depending on Rust's Unicode version.
 fn has_property(cp: u32, ranges: &[(u32, u32)]) -> bool {
     let index = ranges.partition_point(|&(start, _)| start <= cp);
     index

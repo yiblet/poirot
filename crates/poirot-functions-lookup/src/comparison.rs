@@ -1,6 +1,6 @@
 use crate::operands::charge;
 use crate::wildcard::wildcard_matches;
-use crate::{Failure, OperationalFailure, Scalar, Unsupported, Work, Workbook};
+use crate::{Failure, OperationalFailure, Scalar, Work, Workbook};
 use std::cmp::Ordering;
 /// Compare scalar lookup keys under the selected type and text ordering rules.
 pub(super) fn compare(
@@ -11,16 +11,6 @@ pub(super) fn compare(
     w: &mut impl Workbook,
 ) -> Result<Option<Ordering>, Failure> {
     charge(w, Work::SearchSteps, 1)?;
-    if let Scalar::Text(text) = key {
-        if !text.is_ascii() {
-            return Err(Failure::Unsupported(Unsupported::UnicodeSearch));
-        }
-    }
-    if let Scalar::Text(text) = item {
-        if !text.is_ascii() {
-            return Err(Failure::Unsupported(Unsupported::UnicodeSearch));
-        }
-    }
     compare_inner(key, item, tolerant, wildcard, w)
 }
 fn compare_inner(
@@ -49,7 +39,7 @@ fn compare_inner(
                             .checked_add(b.len())
                             .ok_or(Failure::Operational(OperationalFailure::ResourceOverflow))?,
                     )?;
-                    Some(a.to_ascii_lowercase().cmp(&b.to_ascii_lowercase()))
+                    Some(poirot_text::fold::compare(a, b))
                 }
             }
         }
@@ -72,7 +62,7 @@ fn compare_inner(
                         .checked_add(b.len())
                         .ok_or(Failure::Operational(OperationalFailure::ResourceOverflow))?,
                 )?;
-                Some(a.to_ascii_lowercase().cmp(&b.to_ascii_lowercase()))
+                Some(poirot_text::fold::compare(&a, b))
             }
         }
         _ => None,

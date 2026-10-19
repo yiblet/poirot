@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTUP_TOOLCHAIN: 1.99.0
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install supported Rust baseline
+        run: rustup toolchain install 1.99.0 --profile minimal --component rustfmt --component clippy
+      - name: Test workspace
+        run: cargo test --workspace --locked
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      - name: Lint all targets and features
+        run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+      - name: Build API documentation
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc --workspace --no-deps --all-features --locked
+      - name: Check architecture and authored specifications
+        run: |
+          python3 tools/test_function_architecture.py
+          python3 tools/test_coercion_architecture.py
+          python3 crates/poirot-test-excel-specs/tools/maintain.py --check
+      - name: Verify publishable packages
+        run: cargo package --workspace --exclude poirot-test-runner --exclude poirot-test-excel-specs --locked
+      - name: Check archive contents
+        run: python3 tools/check_package_contents.py
+      - name: Run JSON compatibility gate
+        run: cargo run --locked -p poirot-test-runner -- run --source json --format json > target/json-results.jsonl
+      - name: Collect FODS diagnostics
+        continue-on-error: true
+        run: cargo run --locked -p poirot-test-runner -- run --source fods --format json > target/fods-results.jsonl
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: compatibility-results
+          path: target/*-results.jsonl
+          retention-days: 14
+
+  platforms:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install supported Rust baseline
+        run: rustup toolchain install 1.99.0 --profile minimal
+      - name: Exercise workbook files and evaluation
+        run: cargo test -p poirot --locked --test cohesive_io --test public_workflows --test dynamic_spills

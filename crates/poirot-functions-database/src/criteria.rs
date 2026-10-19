@@ -97,13 +97,15 @@ fn string_condition<E: From<DatabaseError>>(
         if operand.is_empty() {
             return Ok(value.text_ref().is_some());
         }
-        let actual = coercev2_database_text(value)?.to_lowercase();
-        let expected = operand.to_lowercase();
-        // Shared wildcard implementation is installed by the criteria family.
-        return if poirot_functions_criteria::has_wildcards(&expected) {
-            poirot_functions_criteria::wildcard_match_metered(&expected, &actual, visit)
+        let actual = coercev2_database_text(value)?;
+        return if poirot_functions_criteria::has_wildcards(operand) {
+            poirot_functions_criteria::wildcard_match_metered(operand, &actual, visit)
         } else {
-            Ok(actual.starts_with(&expected))
+            let mut actual = actual.chars().map(poirot_text::fold::simple_fold);
+            Ok(operand
+                .chars()
+                .map(poirot_text::fold::simple_fold)
+                .all(|character| actual.next() == Some(character)))
         };
     }
     if operator == Eq && operand.is_empty() {

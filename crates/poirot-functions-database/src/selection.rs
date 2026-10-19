@@ -53,31 +53,7 @@ pub(super) fn header_column(
 }
 /// Compare header spellings with the family's supported case mapping.
 pub fn equal_ignore_case(a: &str, b: &str) -> bool {
-    let mut left = a.chars();
-    let mut right = b.chars();
-    loop {
-        match (left.next(), right.next()) {
-            (None, None) => return true,
-            (Some(a), Some(b)) => {
-                let simple_fold = |character: char| {
-                    let mut upper = character.to_uppercase();
-                    let first = upper.next().unwrap_or(character);
-                    let simple_upper = if upper.next().is_some() {
-                        character
-                    } else {
-                        first
-                    };
-                    simple_upper.to_lowercase().next().unwrap_or(simple_upper)
-                };
-                let a = simple_fold(a);
-                let b = simple_fold(b);
-                if a != b {
-                    return false;
-                }
-            }
-            _ => return false,
-        }
-    }
+    poirot_text::fold::compare(a, b).is_eq()
 }
 
 /// Validate a field selector and resolve its database column.

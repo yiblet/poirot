@@ -9,3 +9,6 @@ policies or boundaries return errors rather than guessing compatibility.
 
 Spreadsheet text functions live in
 [poirot-functions-text](../poirot-functions-text/README.md).
+
+`fold` provides Unicode 16 simple case-insensitive comparison. It does not expand
+characters or normalize text, and its UTF-16 adapter preserves unpaired surrogates.

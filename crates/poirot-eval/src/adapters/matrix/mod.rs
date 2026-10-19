@@ -243,7 +243,6 @@ mod lossless_port_tests {
         for formula in [
             "IFERROR(PV(A1,1,1),7)",
             "IFERROR(NORMDIST(A1,0,1,TRUE),7)",
-            "IFERROR(MATCH(A1,A1:A1,0),7)",
             "IFERROR(MDETERM(A1:A1),7)",
         ] {
             let literal = CellValue::TextUtf16(poirot_model::ExcelText::from_units(vec![0xd83d]));

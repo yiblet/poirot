@@ -3,14 +3,19 @@ name = "poirot-coercionv2"
 version.workspace = true
 edition.workspace = true
 description = "Typed, consumer-requested spreadsheet value conversions"
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+include = ["/src/**", "/README.md", "/LICENSE", "/NOTICE", "/LICENSES/**"]
 
 [dependencies]
-poirot-parsing = { path = "../poirot-parsing" }
+poirot-parsing = { version = "0.1.0", path = "../poirot-parsing" }
 nom.workspace = true
 regex.workspace = true
 serde = { workspace = true, features = ["derive"] }
-poirot-functions-core = { path = "../poirot-functions-core" }
-poirot-numeric = { path = "../poirot-numeric" }
+poirot-functions-core = { version = "0.1.0", path = "../poirot-functions-core" }
+poirot-numeric = { version = "0.1.0", path = "../poirot-numeric" }
 
 [lints]
 workspace = true

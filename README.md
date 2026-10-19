@@ -13,9 +13,13 @@ workbook changes and calculate results without running Excel.
 Evaluation defaults target modern Excel: documented builtin behavior, surrogate-pair
 text indexing (Compatibility Version 2), and dynamic array spills. Explicit source
 and scalar-intersection policies remain available for compatibility comparisons.
+Case-insensitive value comparisons use Unicode 16 simple folding; full casing
+for `UPPER` and `LOWER` uses Unicode 15.
 
-Poirot is under active development. Excel compatibility is incomplete, and the API
-may change. Review import warnings and test your workbooks to check what survives
+Poirot is intended for Rust backends that embed and validate controlled workbook
+models. It is under active development: Excel compatibility is incomplete, and the
+API may change. Legacy array formulas and some function argument shapes remain
+unsupported. Review import warnings and test your workbooks to check what survives
 loading and saving.
 
 ## Quick start
@@ -75,7 +79,7 @@ cargo doc -p poirot --no-deps --open
 
 Contributions are welcome! See [Contributing](CONTRIBUTING.md) to get started.
 
-The workspace uses Rust 2024. Run tests, formatting checks, and lints from the
+The supported Rust baseline is 1.99. Run tests, formatting checks, and lints from the
 repository root:
 
 ```sh
@@ -88,7 +92,8 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 
 - [Apache POI](https://poi.apache.org/) shaped Poirot from the start: our first few
   commits translated portions of its code directly into Rust. Our name is a nod
-  to the project, too.
+  to the project, too. Statistical kernels also adapt
+  [Apache Commons Math](https://commons.apache.org/proper/commons-math/).
 - [LibreOffice](https://www.libreoffice.org/) provided a foundation for checking
   correctness. Its unit tests helped us understand expected spreadsheet behavior
   and validate our implementation.

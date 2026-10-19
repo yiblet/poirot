@@ -2,13 +2,20 @@
 name = "poirot-functions-database"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+description = "Workbook-independent spreadsheet database aggregation"
+include = ["/src/**", "/README.md", "/LICENSE", "/NOTICE", "/LICENSES/**"]
 
 [dependencies]
-poirot-parsing = { path = "../poirot-parsing" }
-poirot-coercionv2 = { path = "../poirot-coercionv2" }
-poirot-functions-core = { path = "../poirot-functions-core" }
-poirot-functions-criteria = { path = "../poirot-functions-criteria" }
-poirot-numeric = { path = "../poirot-numeric" }
+poirot-text = { version = "0.1.0", path = "../poirot-text" }
+poirot-parsing = { version = "0.1.0", path = "../poirot-parsing" }
+poirot-coercionv2 = { version = "0.1.0", path = "../poirot-coercionv2" }
+poirot-functions-core = { version = "0.1.0", path = "../poirot-functions-core" }
+poirot-functions-criteria = { version = "0.1.0", path = "../poirot-functions-criteria" }
+poirot-numeric = { version = "0.1.0", path = "../poirot-numeric" }
 
 [lints]
 workspace = true

@@ -35,8 +35,7 @@ fn wildcard_kernel(pattern: &str, text: &str) -> bool {
         Literal(char),
     }
     let mut tokens = Vec::new();
-    let lowercase = pattern.to_lowercase();
-    let mut chars = lowercase.chars();
+    let mut chars = pattern.chars().map(poirot_text::fold::simple_fold);
     while let Some(ch) = chars.next() {
         tokens.push(match ch {
             '*' => Token::Star,
@@ -45,7 +44,7 @@ fn wildcard_kernel(pattern: &str, text: &str) -> bool {
             c => Token::Literal(c),
         });
     }
-    let letters: Vec<char> = text.to_lowercase().chars().collect();
+    let letters: Vec<char> = text.chars().map(poirot_text::fold::simple_fold).collect();
     let mut previous = vec![false; letters.len() + 1];
     // SAFETY: The state buffers are allocated with letters.len() + 1 entries, so zero and letters.len() are valid indices.
     previous[0] = true;

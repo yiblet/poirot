@@ -1,8 +1,6 @@
 //! Pure text and numeric-text algorithms; hosts own argument evaluation.
-/// Pinned Java full-case mapping with explicit unsupported-context diagnostics.
+/// Unicode15 full-case mapping with contextual final sigma.
 pub mod java_case;
-/// Pinned Java case-insensitive comparison and its work bounds.
-pub mod java_compare;
 /// NUMBERVALUE parsing with spreadsheet/source failure separation.
 pub mod numeric;
 /// Allocation-free UTF-16 selection and output-reservation plans.

@@ -353,7 +353,7 @@ fn lookup_resolves_result_table_before_copying_or_searching_lookup_vector() {
     assert_eq!(w.reads, 0);
 }
 #[test]
-fn unicode_search_and_unknown_scalar_array_shape_are_explicit() {
+fn unicode_search_and_unknown_scalar_array_shape_remain_typed() {
     let mut w = guard();
     assert_eq!(
         xmatch_index(
@@ -363,7 +363,7 @@ fn unicode_search_and_unknown_scalar_array_shape_are_explicit() {
             SearchMode::Forward,
             &mut w
         ),
-        Err(Failure::Unsupported(Unsupported::UnicodeSearch))
+        Err(Error::Na.into())
     );
     assert_eq!(
         evaluate(

@@ -2,13 +2,19 @@
 name = "poirot-functions-statistics"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+description = "Workbook-independent spreadsheet statistics and distributions"
+include = ["/src/**", "/README.md", "/LICENSE", "/NOTICE", "/LICENSES/**"]
 
 [dependencies]
-poirot-coercionv2 = { path = "../poirot-coercionv2" }
-poirot-functions-core = { path = "../poirot-functions-core" }
+poirot-coercionv2 = { version = "0.1.0", path = "../poirot-coercionv2" }
+poirot-functions-core = { version = "0.1.0", path = "../poirot-functions-core" }
 statrs.workspace = true
 bigdecimal.workspace = true
-poirot-numeric = { path = "../poirot-numeric" }
+poirot-numeric = { version = "0.1.0", path = "../poirot-numeric" }
 
 [lints]
 workspace = true

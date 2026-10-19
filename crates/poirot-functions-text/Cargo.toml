@@ -1,12 +1,17 @@
 [package]
 name = "poirot-functions-text"
-version = "0.1.0"
+version.workspace = true
 edition = "2024"
 description = "Typed POI text evaluation plans and source-compatible algorithms"
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+include = ["/src/**", "/README.md", "/LICENSE", "/NOTICE", "/LICENSES/**"]
 
 [dependencies]
-poirot-coercionv2 = { path = "../poirot-coercionv2" }
-poirot-numeric = { path = "../poirot-numeric" }
+poirot-coercionv2 = { version = "0.1.0", path = "../poirot-coercionv2" }
+poirot-numeric = { version = "0.1.0", path = "../poirot-numeric" }
 unicode-general-category = "1.1.0"
 
 [lints]

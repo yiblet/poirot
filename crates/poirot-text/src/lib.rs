@@ -1,12 +1,15 @@
 //! Formula text units are independent of rendering width and allocation budgets.
 //! This crate preserves original UTF-8; it never normalizes or repairs text.
 
+/// Unicode simple folding for case-insensitive values, independent of text indexing.
+pub mod fold;
+
 /// Sources are explicit. No authentic modern Excel observations are available.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum SourceVersion {
     /// Text counting and indexing from the pinned POI revision.
     Poi7321209,
-    /// Explicit OpenJDK21.0.8 Unicode15 ROOT tables; no runtime equivalence claim.
+    /// Pinned Unicode15 tables and Unicode final sigma; no Java runtime parity claim.
     Poi7321209OpenJdk21Unicode15,
     /// Microsoft documented surrogate-pair counting; not observed Excel parity.
     ExcelCompatibilityV2Documented,

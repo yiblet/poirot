@@ -1,13 +1,17 @@
 [package]
 name = "poirot-test-excel-specs"
-version = "0.1.0"
+version.workspace = true
 edition = "2024"
 publish = false
 autotests = false
 description = "Source-backed Excel workbook behavior specifications and E2E tests"
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
 
 [dev-dependencies]
-poirot-test-runner = { path = "../poirot-test-runner" }
+poirot-test-runner = { version = "0.1.0", path = "../poirot-test-runner" }
 
 [[test]]
 name = "workbook_e2e"

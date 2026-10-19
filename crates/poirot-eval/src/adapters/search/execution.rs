@@ -145,21 +145,6 @@ impl Session<'_> {
         let vector = table
             .vector(axis, 0)
             .map_err(|_| EvaluationFailure::StalePlan)?;
-        self.read(DependencyRead::TextPolicy);
-        let source = self.text_policy.source;
-        if source == TextSourceVersion::Poi7321209OpenJdk21Unicode15 && key.text_ref().is_some() {
-            self.budget.charge(
-                WorkKind::Comparison,
-                poirot_functions_text::java_compare::admission_work_bound(),
-            )?;
-            poirot_functions_text::java_compare::admit().map_err(|_| {
-                EvaluationFailure::UnsupportedCapability {
-                    capability: CapabilityId::FunctionAdapter,
-                    source: None,
-                    detail: "invalid pinned Java simple mapping asset".into(),
-                }
-            })?;
-        }
         // Wildcard comparison is a predicate, not a total order suitable for bisection.
         let pattern_match = is_match
             && key
@@ -187,7 +172,6 @@ impl Session<'_> {
                     key: &key,
                     mode,
                     is_match,
-                    source,
                     forward: None,
                 },
             )
@@ -198,25 +182,22 @@ impl Session<'_> {
                 }
             })
         } else {
-            prefix::select(self, &table, vector, &key, mode, is_match, source).unwrap_or_else(
-                || {
-                    select_with_reader(
-                        vector.len,
+            prefix::select(self, &table, vector, &key, mode, is_match).unwrap_or_else(|| {
+                select_with_reader(
+                    vector.len,
+                    mode,
+                    !is_match,
+                    &mut sparse::LookupReader {
+                        session: self,
+                        table: &table,
+                        vector,
+                        key: &key,
                         mode,
-                        !is_match,
-                        &mut sparse::LookupReader {
-                            session: self,
-                            table: &table,
-                            vector,
-                            key: &key,
-                            mode,
-                            is_match,
-                            source,
-                            forward: None,
-                        },
-                    )
-                },
-            )
+                        is_match,
+                        forward: None,
+                    },
+                )
+            })
         };
         let index = match found {
             Ok(Some(i)) => i,
@@ -293,9 +274,6 @@ mod historical_selection;
 #[cfg(test)]
 #[path = "execution/classic_lookup_incremental_tests.rs"]
 mod incremental_tests;
-#[cfg(test)]
-#[path = "execution/classic_lookup_java_tests.rs"]
-mod java_tests;
 #[cfg(test)]
 #[path = "execution/classic_lookup_sparse_tests.rs"]
 mod sparse_tests;
@@ -385,14 +363,7 @@ mod tests {
         {
             let mut budget = BudgetMeter::new(EvaluationBudgets::default()).unwrap();
             select_index(candidates.len(), mode, false, |i| {
-                lookup_compare(
-                    key,
-                    &candidates[i],
-                    mode,
-                    true,
-                    TextSourceVersion::Poi7321209,
-                    &mut budget,
-                )
+                lookup_compare(key, &candidates[i], mode, true, &mut budget)
             })
             .map(|i| i.map(|index| SearchSelection { index }))
         }

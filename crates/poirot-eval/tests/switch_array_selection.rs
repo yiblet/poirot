@@ -158,14 +158,15 @@ fn scalar_comparison_and_error_policies_apply_to_array_members() {
             "{formula}"
         );
     }
-    assert!(matches!(
-        result(
+    // Simple folding leaves é distinct from a; both array members are admitted.
+    assert_eq!(
+        value(result(
             &book,
             r#"IFERROR(SUM(SWITCH({"é","a"},"a",2,9)),99)"#,
-            ArrayResultPolicy::ScalarIntersection
-        ),
-        EvaluationOutcome::Aborted { .. }
-    ));
+            ArrayResultPolicy::ScalarIntersection,
+        )),
+        CellValue::Number(11.)
+    );
 }
 #[test]
 fn later_cases_and_unselected_reference_members_are_not_read() {

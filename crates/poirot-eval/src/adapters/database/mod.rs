@@ -122,7 +122,7 @@ fn row_matches(
                     && poirot_functions_criteria::has_wildcards(operand)
                 {
                     let input = coercev2_database_header_text(host, &value)?;
-                    host.admit_wildcard(&operand.to_lowercase(), &input.to_lowercase())?;
+                    host.admit_wildcard(operand, &input)?;
                 }
             }
             let mut visited = 0;

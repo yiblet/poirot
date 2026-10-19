@@ -2,40 +2,44 @@
 name = "poirot-eval"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+description = "Formula evaluation, prepared programs and incremental workbook overlays"
+include = ["/src/**", "/README.md", "/LICENSE", "/NOTICE", "/LICENSES/**"]
 
 [dependencies]
-poirot-functions-dates = { path = "../poirot-functions-dates" }
-poirot-coercionv2 = { path = "../poirot-coercionv2" }
-poirot-model = { path = "../poirot-model" }
-poirot-parsing = { path = "../poirot-parsing" }
+poirot-functions-dates = { version = "0.1.0", path = "../poirot-functions-dates" }
+poirot-coercionv2 = { version = "0.1.0", path = "../poirot-coercionv2" }
+poirot-model = { version = "0.1.0", path = "../poirot-model" }
+poirot-parsing = { version = "0.1.0", path = "../poirot-parsing" }
 foldhash = "0.1.5"
-poirot-format = { path = "../poirot-format" }
+poirot-format = { version = "0.1.0", path = "../poirot-format" }
 nom.workspace = true
-poirot-numeric = { path = "../poirot-numeric" }
-poirot-functions-logical = { path = "../poirot-functions-logical" }
-poirot-functions-criteria = { path = "../poirot-functions-criteria" }
-poirot-functions-database = { path = "../poirot-functions-database" }
-poirot-functions-text = { path = "../poirot-functions-text" }
-poirot-functions-math = { path = "../poirot-functions-math" }
-poirot-functions-engineering = { path = "../poirot-functions-engineering" }
-poirot-functions-financial = { path = "../poirot-functions-financial" }
-poirot-functions-statistics = { path = "../poirot-functions-statistics" }
-poirot-functions-matrix = { path = "../poirot-functions-matrix" }
-poirot-functions-lookup = { path = "../poirot-functions-lookup" }
-poirot-text = { path = "../poirot-text" }
+poirot-numeric = { version = "0.1.0", path = "../poirot-numeric" }
+poirot-functions-logical = { version = "0.1.0", path = "../poirot-functions-logical" }
+poirot-functions-criteria = { version = "0.1.0", path = "../poirot-functions-criteria" }
+poirot-functions-database = { version = "0.1.0", path = "../poirot-functions-database" }
+poirot-functions-text = { version = "0.1.0", path = "../poirot-functions-text" }
+poirot-functions-math = { version = "0.1.0", path = "../poirot-functions-math" }
+poirot-functions-engineering = { version = "0.1.0", path = "../poirot-functions-engineering" }
+poirot-functions-financial = { version = "0.1.0", path = "../poirot-functions-financial" }
+poirot-functions-statistics = { version = "0.1.0", path = "../poirot-functions-statistics" }
+poirot-functions-matrix = { version = "0.1.0", path = "../poirot-functions-matrix" }
+poirot-functions-lookup = { version = "0.1.0", path = "../poirot-functions-lookup" }
+poirot-text = { version = "0.1.0", path = "../poirot-text" }
 
 rand_chacha = "0.9.0"
 rand_core = "0.9.5"
 
-
-
 postcard.workspace = true
 serde.workspace = true
 serde_bytes = "0.11.19"
-poirot-functions-core = { path = "../poirot-functions-core" }
+poirot-functions-core = { version = "0.1.0", path = "../poirot-functions-core" }
 
 [dev-dependencies]
-poirot-io = { path = "../poirot-io" }
+poirot-io = { version = "0.1.0", path = "../poirot-io" }
 allocation-counter.workspace = true
 
 [lints]

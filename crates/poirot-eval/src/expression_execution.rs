@@ -311,26 +311,7 @@ impl<'a> Session<'a> {
         if *op == BinaryOp::Concat {
             return function_value(self.text_concat_operator(left, right));
         }
-        if matches!(
-            op,
-            BinaryOp::Equal
-                | BinaryOp::NotEqual
-                | BinaryOp::Less
-                | BinaryOp::LessEqual
-                | BinaryOp::Greater
-                | BinaryOp::GreaterEqual
-        ) {
-            for value in [&left, &right] {
-                if let Text(text) = value {
-                    self.budget.text(
-                        text.chars()
-                            .flat_map(char::to_lowercase)
-                            .map(char::len_utf8)
-                            .sum(),
-                    )?;
-                }
-            }
-        }
+
         self.budget.charge(WorkKind::ScalarOperator, 1)?;
         function_value(self.binary(*op, left, right))
     }

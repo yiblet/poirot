@@ -79,8 +79,7 @@ impl CallHost<'_, '_> {
         right: &CellValue,
         policy: NumericPolicy,
     ) -> FunctionResult<bool> {
-        let source = self.target();
-        self.session.equal_scalars(left, right, policy, source)
+        self.session.equal_scalars(left, right, policy)
     }
 }
 
@@ -91,42 +90,13 @@ impl Session<'_> {
         left: &CellValue,
         right: &CellValue,
         policy: NumericPolicy,
-        source: EvaluationTarget,
     ) -> FunctionResult<bool> {
         if policy == NumericPolicy::PinnedPoi {
-            for value in [left, right] {
-                if let Error(error) = value {
-                    return Err((*error).into());
-                }
-            }
             // TODO(coercion-non-argument): [LOW] Equality collapses numeric/blank pairs; reusing those values outside comparison would alter type-sensitive behavior.
             let numeric = coercev2_equality_numeric_pair(left, right);
             if let Some((left, right)) = numeric {
                 self.budget.charge(WorkKind::HelperOperation, 1)?;
                 return Ok(poirot_numeric::compare(left, right)?.is_eq());
-            }
-            if [left, right].iter().any(|value| {
-                value
-                    .text_ref()
-                    .is_some_and(|text| text.units().any(|unit| unit > 127))
-            }) {
-                return Err(EvaluationFailure::UnsupportedCapability {
-                    capability: CapabilityId::FunctionAdapter,
-                    source: Some(source),
-                    detail: "pinned Unicode equality needs the Java-compatible comparison policy"
-                        .into(),
-                }
-                .into());
-            }
-        }
-        for value in [left, right] {
-            if let Text(text) = value {
-                self.budget.text(
-                    text.chars()
-                        .flat_map(char::to_lowercase)
-                        .map(char::len_utf8)
-                        .sum(),
-                )?;
             }
         }
         self.budget.charge(WorkKind::HelperOperation, 1)?;

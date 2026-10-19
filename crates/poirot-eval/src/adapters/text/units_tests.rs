@@ -85,14 +85,15 @@ fn budget_failures_are_operational_and_cannot_be_caught() {
         evaluate("IFERROR(REPT(\"\",100000),\"caught\")", budgets),
         Err(EvaluationFailure::Budget(_))
     ));
-    // Sigma contexts outside the pinned ROOT word grammar remain operational.
-    assert!(matches!(
+    // Unicode final sigma now supports punctuation and supplementary contexts.
+    assert_eq!(
         evaluate(
             "IFERROR(LOWER(\"Σ😀\"),\"caught\")",
             EvaluationBudgets::default()
-        ),
-        Err(EvaluationFailure::UnsupportedCapability { .. })
-    ));
+        )
+        .unwrap(),
+        CellValue::Text("σ😀".into())
+    );
 }
 
 fn evaluate_source(

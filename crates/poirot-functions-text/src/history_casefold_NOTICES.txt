@@ -1,6 +1,0 @@
-casefold 0.1.0
-Copyright (c) 2023 GitHub Inc.
-MIT; see history_MIT.txt.
-https://github.com/github/rust-gems/tree/b8c6e27652f7f198a3a0f2183179948cd69be0c1/crates/casefold
-Safe character lookup/helpers and Unicode 16 tables adapted with checked access.
-Unicode 16 terms: history_Unicode-3.0.txt.

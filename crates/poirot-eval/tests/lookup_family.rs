@@ -97,7 +97,6 @@ fn unsupported_and_budget_failures_survive_iferror() {
     );
     for formula in [
         r#"IFERROR(INDIRECT("[missing.xlsx]Sheet1!A1"),99)"#,
-        r#"IFERROR(XMATCH("é",{"é"}),99)"#,
         "IFERROR(LOOKUP(1,{1,2;3,4},{1,2}),99)",
     ] {
         let plan =

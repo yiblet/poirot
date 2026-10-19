@@ -153,18 +153,6 @@ fn rank(v: &CellValue) -> u8 {
         Error(_) => 0,
     }
 }
-fn lower(text: &str, budget: &mut BudgetMeter) -> FunctionResult<String> {
-    let bytes = text
-        .chars()
-        .flat_map(char::to_lowercase)
-        .map(char::len_utf8)
-        .try_fold(0usize, |sum, bytes| sum.checked_add(bytes))
-        .ok_or_else(|| unsupported("scalar lowercase output size overflow"))?;
-    budget.text(bytes)?;
-    budget.allocation(text.chars().count())?;
-    budget.charge(WorkKind::TextByte, bytes as u64)?;
-    Ok(text.to_lowercase())
-}
 /// Compare scalar values under the shared spreadsheet comparison contract.
 pub(super) fn compare(
     a: &CellValue,
@@ -187,24 +175,14 @@ pub(super) fn compare(
     let a = coercev2_comparison_blank(a, b, &zero, &empty, &false_value);
     let b = coercev2_comparison_blank(b, a, &zero, &empty, &false_value);
     if let (Some(a), Some(b)) = (a.text_ref(), b.text_ref()) {
+        budget.check_text(a.storage_bytes())?;
+        budget.check_text(b.storage_bytes())?;
         let units = a
             .storage_bytes()
             .checked_add(b.storage_bytes())
             .ok_or_else(|| unsupported("comparison work size overflow"))?;
         budget.charge(WorkKind::Comparison, units as u64)?;
-        if a == b {
-            return Ok(Ordering::Equal);
-        }
-        if a.units().chain(b.units()).all(|u| u <= 127) {
-            // No projection/allocation for source-backed ASCII comparison.
-            return Ok(a
-                .units()
-                .map(|u| (u as u8).to_ascii_lowercase())
-                .cmp(b.units().map(|u| (u as u8).to_ascii_lowercase())));
-        }
-        let a = checked_text_view(a, budget)?;
-        let b = checked_text_view(b, budget)?;
-        return Ok(lower(&a, budget)?.cmp(&lower(&b, budget)?));
+        return Ok(poirot_text::fold::compare_utf16(a.units(), b.units()));
     }
     Ok(match (a, b) {
         (Number(a), Number(b)) => a.partial_cmp(b).unwrap_or(Ordering::Equal),

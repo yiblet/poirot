@@ -197,7 +197,6 @@ impl Session<'_> {
                     &expression,
                     &case,
                     NumericPolicy::PinnedPoi,
-                    EvaluationTarget { sheet, address: at },
                 ))?
                 .unwrap_or(false)
                 {

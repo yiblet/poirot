@@ -2,10 +2,17 @@
 name = "poirot-functions-criteria"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+description = "Workbook-independent conditional aggregation and wildcard matching"
+include = ["/src/**", "/README.md", "/LICENSE", "/NOTICE", "/LICENSES/**"]
 
 [dependencies]
-poirot-parsing = { path = "../poirot-parsing" }
-poirot-coercionv2 = { path = "../poirot-coercionv2" }
+poirot-text = { version = "0.1.0", path = "../poirot-text" }
+poirot-parsing = { version = "0.1.0", path = "../poirot-parsing" }
+poirot-coercionv2 = { version = "0.1.0", path = "../poirot-coercionv2" }
 
 [lints]
 workspace = true

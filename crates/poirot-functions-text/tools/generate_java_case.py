@@ -1,10 +1,18 @@
-"""Generate ROI's immutable Unicode15 mapping asset; no runtime oracle execution.
+"""Generate the immutable Unicode15 mapping asset; no runtime oracle execution.
 Usage: python3 generate_java_case.py UnicodeData.txt SpecialCasing.txt output.bin
-Use the pinned OpenJDK 21.0.8 Unicode 15 inputs; retain the Unicode notice.
+Unicode15 input data: https://www.unicode.org/Public/15.0.0/ucd/
+UnicodeData.txt and SpecialCasing.txt; retain the Unicode notice.
 """
+import hashlib
 from pathlib import Path
 import struct
 import sys
+for path, expected in [
+    (sys.argv[1], '806e9aed65037197f1ec85e12be6e8cd870fc5608b4de0fffd990f689f376a73'),
+    (sys.argv[2], '78b29c64b5840d25c11a9f31b665ee551b8a499eca6c70d770fcad7dd710f494'),
+]:
+    if hashlib.sha256(Path(path).read_bytes()).hexdigest() != expected:
+        raise SystemExit('Unicode15 input digest mismatch')
 rows = {}
 for line in Path(sys.argv[1]).read_text().splitlines():
     fields = line.split(';')

@@ -3,6 +3,11 @@ name = "poirot-functions-core"
 version.workspace = true
 edition.workspace = true
 description = "Workbook-independent scalar values and lazy function inputs"
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+include = ["/src/**", "/README.md", "/LICENSE", "/NOTICE", "/LICENSES/**"]
 
 [dependencies]
 smallvec.workspace = true

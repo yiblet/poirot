@@ -66,8 +66,6 @@ pub(super) struct LookupReader<'a, 'w> {
     pub(super) mode: SearchMode,
     /// Whether MATCH-specific coercion and error rules apply.
     pub(super) is_match: bool,
-    /// Selected text comparison source semantics.
-    pub(super) source: TextSourceVersion,
     // Exact selection advances monotonically. Retain its borrowed membership
     // cursor, not values, so the next candidate need not reopen the same range.
     /// Borrowed cursor reused while exact matching advances monotonically.
@@ -183,7 +181,6 @@ impl CandidateReader for LookupReader<'_, '_> {
             &value,
             self.mode,
             self.is_match,
-            self.source,
             &mut self.session.budget,
         )
     }

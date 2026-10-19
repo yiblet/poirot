@@ -10,32 +10,32 @@ pub(super) fn wildcard(pattern: &str, value: &str, budget: &mut BudgetMeter) -> 
 fn wildcard_impl(pattern: &str, value: &str, budget: &mut BudgetMeter) -> EvalResult<bool> {
     budget.text(pattern.len())?;
     budget.text(value.len())?;
-    budget.check_allocation(pattern.chars().flat_map(char::to_lowercase).count())?;
+    budget.check_allocation(pattern.chars().map(poirot_text::fold::simple_fold).count())?;
     budget.check_allocation(
         value
             .chars()
-            .flat_map(char::to_lowercase)
+            .map(poirot_text::fold::simple_fold)
             .count()
             .saturating_add(1),
     )?;
     budget.text(
         pattern
             .chars()
-            .flat_map(char::to_lowercase)
+            .map(poirot_text::fold::simple_fold)
             .map(char::len_utf8)
             .sum(),
     )?;
     budget.text(
         value
             .chars()
-            .flat_map(char::to_lowercase)
+            .map(poirot_text::fold::simple_fold)
             .map(char::len_utf8)
             .sum(),
     )?;
     let mut tokens = Vec::new();
     let mut p = pattern
-        .to_lowercase()
         .chars()
+        .map(poirot_text::fold::simple_fold)
         .collect::<Vec<_>>()
         .into_iter();
     while let Some(c) = p.next() {
@@ -45,7 +45,7 @@ fn wildcard_impl(pattern: &str, value: &str, budget: &mut BudgetMeter) -> EvalRe
             tokens.push((c, c == '*' || c == '?'))
         }
     }
-    let value: Vec<_> = value.to_lowercase().chars().collect();
+    let value: Vec<_> = value.chars().map(poirot_text::fold::simple_fold).collect();
     budget.wildcard((tokens.len() as u64).saturating_mul(value.len() as u64 + 1))?;
     budget.allocation(value.len() + 1)?;
     let mut dp = vec![false; value.len() + 1];

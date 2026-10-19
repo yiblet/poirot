@@ -2,17 +2,23 @@
 name = "poirot-io"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+description = "XLSX workbook import and export"
+include = ["/tests/fixtures/poi-*.xls", "/src/**", "/README.md", "/LICENSE", "/NOTICE", "/LICENSES/**"]
 
 [dependencies]
 cfb.workspace = true
-poirot-model = { path = "../poirot-model" }
+poirot-model = { version = "0.1.0", path = "../poirot-model" }
 calamine.workspace = true
 rust_xlsxwriter.workspace = true
 quick-xml.workspace = true
 zip.workspace = true
 
 [dev-dependencies]
-poirot-parsing = { path = "../poirot-parsing" }
+poirot-parsing = { version = "0.1.0", path = "../poirot-parsing" }
 
 [lints]
 workspace = true

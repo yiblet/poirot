@@ -5,12 +5,16 @@ edition.workspace = true
 publish = false
 default-run = "poirot-test-runner"
 description = "Grouped FODS and JSON compatibility tests with reviewed baselines"
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
 
 [dependencies]
-poirot = { path = "../.." }
-poirot-model = { path = "../poirot-model" }
-poirot-parsing = { path = "../poirot-parsing" }
-poirot-eval = { path = "../poirot-eval" }
+poirot = { version = "0.1.0", path = "../.." }
+poirot-model = { version = "0.1.0", path = "../poirot-model" }
+poirot-parsing = { version = "0.1.0", path = "../poirot-parsing" }
+poirot-eval = { version = "0.1.0", path = "../poirot-eval" }
 rayon.workspace = true
 roxmltree.workspace = true
 regex.workspace = true

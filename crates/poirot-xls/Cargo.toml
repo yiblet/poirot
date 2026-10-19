@@ -2,16 +2,22 @@
 name = "poirot-xls"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+description = "Binary XLS workbook import and export"
+include = ["/tests/fixtures/poi-*.xls", "/src/**", "/README.md", "/LICENSE", "/NOTICE", "/LICENSES/**"]
 
 [dependencies]
 cfb.workspace = true
-poirot-model = { path = "../poirot-model" }
-poirot-parsing = { path = "../poirot-parsing" }
+poirot-model = { version = "0.1.0", path = "../poirot-model" }
+poirot-parsing = { version = "0.1.0", path = "../poirot-parsing" }
 
 [dev-dependencies]
 calamine.workspace = true
-poirot-eval = { path = "../poirot-eval" }
-poirot-io = { path = "../poirot-io" }
+poirot-eval = { version = "0.1.0", path = "../poirot-eval" }
+poirot-io = { version = "0.1.0", path = "../poirot-io" }
 
 [lints]
 workspace = true

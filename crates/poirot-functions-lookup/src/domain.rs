@@ -41,8 +41,6 @@ pub enum Unsupported {
     OffsetMissingOperands,
     /// Scalar selection from this array has no supported coordinate contract.
     ScalarArrayIntersection,
-    /// Required Unicode search behavior is outside the supported mapping.
-    UnicodeSearch,
     /// Sheet-name control characters cannot be rendered with supported ADDRESS fidelity.
     AddressSheetNameControlCharacter,
 }
