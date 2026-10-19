@@ -411,7 +411,11 @@ impl helper::Workbook for Port<'_, '_> {
             } else {
                 r1c1(text, context)?
             };
-            self.session.run_usage.dynamic_parse_attempts += 1;
+            self.session.run_usage.dynamic_parse_attempts = self
+                .session
+                .run_usage
+                .dynamic_parse_attempts
+                .saturating_add(1);
             let syntax = if text.contains(':') {
                 match poirot_parsing::formula::parse_formula_with_policy(&text, parse_policy)
                     .map(poirot_parsing::formula::ParsedFormula::into_expression)

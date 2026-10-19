@@ -116,17 +116,51 @@ impl<'a> Session<'a> {
         {
             return Err(EvaluationFailure::StalePlan);
         }
-        self.run_usage.compiled_lookups += 1;
+        self.run_usage.compiled_lookups = self.run_usage.compiled_lookups.saturating_add(1);
         match prepared {
             PreparedFormula::Ready(formula) => self.bytecode_expr(sheet, at, formula.bytecode()),
             PreparedFormula::CompilationFailure { error, .. } => {
-                Err(EvaluationFailure::UnsupportedCapability {
-                    capability: CapabilityId::FormulaCompilation,
-                    source: Some(EvaluationTarget { sheet, address: at }),
-                    detail: error.to_string(),
-                })
+                let source = Some(EvaluationTarget { sheet, address: at });
+                let capability = CapabilityId::FormulaCompilation;
+                let detail = error.to_string();
+                Err(
+                    if matches!(error, crate::bytecode::CompileError::ResourceLimit) {
+                        EvaluationFailure::ResourceLimit {
+                            capability,
+                            source,
+                            detail,
+                        }
+                    } else {
+                        EvaluationFailure::UnsupportedCapability {
+                            capability,
+                            source,
+                            detail,
+                        }
+                    },
+                )
             }
-            PreparedFormula::ParseFailure { .. } => Ok(err(VALUE_ERROR)),
+            PreparedFormula::ParseFailure { error, .. } => {
+                let source = Some(EvaluationTarget { sheet, address: at });
+                let capability = CapabilityId::FormulaParsing;
+                let detail = error.to_string();
+                match error.kind {
+                    poirot_parsing::formula::ParseErrorKind::Syntax => Ok(err(VALUE_ERROR)),
+                    poirot_parsing::formula::ParseErrorKind::ResourceLimit => {
+                        Err(EvaluationFailure::ResourceLimit {
+                            capability,
+                            source,
+                            detail,
+                        })
+                    }
+                    poirot_parsing::formula::ParseErrorKind::InvalidPolicy => {
+                        Err(EvaluationFailure::UnsupportedCapability {
+                            capability,
+                            source,
+                            detail,
+                        })
+                    }
+                }
+            }
             PreparedFormula::RegistryMismatch { .. } => Err(EvaluationFailure::StalePlan),
         }
     }
@@ -143,7 +177,7 @@ impl<'a> Session<'a> {
         let previous_demand = std::mem::replace(&mut self.expression_demand, demand);
         let previous = self.consumer.replace(target);
         self.budget.push_cell(target);
-        self.run_usage.formula_executions += 1;
+        self.run_usage.formula_executions = self.run_usage.formula_executions.saturating_add(1);
         let result = (|| {
             self.budget.text(prepared.source().len())?;
             let value = self.prepared_expression(target.sheet, target.address, prepared)?;
@@ -174,7 +208,7 @@ impl<'a> Session<'a> {
         let previous_demand = std::mem::replace(&mut self.expression_demand, demand);
         let previous = self.consumer.replace(target);
         self.budget.push_cell(target);
-        self.run_usage.formula_executions += 1;
+        self.run_usage.formula_executions = self.run_usage.formula_executions.saturating_add(1);
         let result = self
             .bytecode_expr(target.sheet, target.address, formula.bytecode())
             .and_then(|v| self.result_scalar(target.sheet, target.address, v));
@@ -307,7 +341,7 @@ impl<'a> Session<'a> {
         }
         if let Some(value) = self.cache.get(&(sheet, address)) {
             *provenance = CellProvenance::SessionMemo;
-            self.run_usage.session_memo_hits += 1;
+            self.run_usage.session_memo_hits = self.run_usage.session_memo_hits.saturating_add(1);
             self.budget.usage.cache_hits += 1;
             // Copying a memoized dependency belongs to that target's own frame,
             // not to the caller: previous bulk workload cannot alter its cell allowance.
@@ -328,7 +362,8 @@ impl<'a> Session<'a> {
                 .inspect_err(|_| *provenance = CellProvenance::ExternalCache)?
         {
             *provenance = CellProvenance::ExternalCache;
-            self.run_usage.external_cache_hits += 1;
+            self.run_usage.external_cache_hits =
+                self.run_usage.external_cache_hits.saturating_add(1);
             self.budget.usage.cache_hits += 1;
             self.budget.push_cell(EvaluationTarget { sheet, address });
             let result = (|| {
@@ -349,7 +384,8 @@ impl<'a> Session<'a> {
         });
         if let Some(value) = cached {
             *provenance = CellProvenance::ExternalCache;
-            self.run_usage.external_cache_hits += 1;
+            self.run_usage.external_cache_hits =
+                self.run_usage.external_cache_hits.saturating_add(1);
             self.budget.usage.cache_hits += 1;
             self.budget.push_cell(EvaluationTarget { sheet, address });
             let result = (|| {
@@ -405,7 +441,8 @@ impl<'a> Session<'a> {
                     }
                     Some(formula) => {
                         self.budget.text(formula.len())?;
-                        self.run_usage.formula_executions += 1;
+                        self.run_usage.formula_executions =
+                            self.run_usage.formula_executions.saturating_add(1);
                         let compiled;
                         let prepared = match self
                             .plan

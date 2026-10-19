@@ -81,7 +81,7 @@ fn explicit_lowering_failure_is_an_operational_abort_when_reached() {
     };
     assert!(matches!(
         run.evaluate_formula(at("A1"), &failure),
-        Err(EvaluationFailure::UnsupportedCapability {
+        Err(EvaluationFailure::ResourceLimit {
             capability: poirot_eval::budget::CapabilityId::FormulaCompilation,
             ..
         })

@@ -73,13 +73,13 @@ impl Host<usize> for TextHost<'_, '_> {
     fn check_text(&mut self, bytes: usize) -> Result<(), EvaluationFailure> {
         self.host
             .get_mut()
-            .check_text(bytes)
+            .check_text_capacity(bytes)
             .map_err(operational_only)
     }
     fn check_collection(&mut self, count: usize) -> Result<(), EvaluationFailure> {
         self.host
             .get_mut()
-            .check_values(count)
+            .check_values_capacity(count)
             .map_err(operational_only)
     }
     fn charge_work(&mut self, units: usize) -> Result<(), EvaluationFailure> {
@@ -134,7 +134,7 @@ impl Host<usize> for TextHost<'_, '_> {
         Some(match &scalar.value {
             Text(text) => text.len(),
             CellValue::TextUtf16(text) => text.len().checked_mul(3)?,
-            Number(_) => 512,
+            Number(n) => poirot_numeric::number_text::render(*n).len(),
             Boolean(_) => 5,
             _ => 0,
         })
@@ -149,6 +149,9 @@ impl Host<usize> for TextHost<'_, '_> {
         }
         let description = self.host.get_mut().describe(*index).map_err(failure)?;
         if !description.is_area {
+            if selection == AreaSelection::StoredCells {
+                self.host.get_mut().check_values(1).map_err(failure)?;
+            }
             return Ok(vec![self.single(index)?]);
         }
         let start_row = if selection == AreaSelection::LastRow {
@@ -156,19 +159,53 @@ impl Host<usize> for TextHost<'_, '_> {
         } else {
             0
         };
+        let positions = if selection == AreaSelection::StoredCells {
+            self.host
+                .get_mut()
+                .stored_positions(*index)
+                .map_err(failure)?
+        } else {
+            None
+        };
+        let dense_len = if positions.is_some() {
+            0
+        } else {
+            description
+                .rows
+                .saturating_sub(start_row)
+                .checked_mul(description.columns)
+                .ok_or(Failure::Unsupported(policy::Unsupported::SizeOverflow))?
+        };
+        if description.columns == 0 {
+            return Err(Failure::Spreadsheet(VALUE_ERROR));
+        }
+        let positions = positions
+            .into_iter()
+            .flatten()
+            .chain((0..dense_len).map(|offset| {
+                (
+                    start_row + offset / description.columns,
+                    offset % description.columns,
+                )
+            }));
         let mut values = Vec::new();
-        for row in start_row..description.rows {
-            for column in 0..description.columns {
-                let scalar = self
-                    .host
-                    .get_mut()
-                    .read_cell(*index, row, column)
-                    .map_err(failure)?;
-                if let Error(error) = scalar.value {
-                    return Err(Failure::Spreadsheet(error));
-                }
-                values.push(scalar);
+        for (row, column) in positions {
+            self.host
+                .get_mut()
+                .check_values_capacity(values.len().saturating_add(1))
+                .map_err(failure)?;
+            let scalar = self
+                .host
+                .get_mut()
+                .read_cell(*index, row, column)
+                .map_err(failure)?;
+            if let Error(error) = scalar.value {
+                return Err(Failure::Spreadsheet(error));
             }
+            if selection == AreaSelection::StoredCells {
+                self.host.get_mut().charge_work(1).map_err(failure)?;
+            }
+            values.push(scalar);
         }
         Ok(values)
     }

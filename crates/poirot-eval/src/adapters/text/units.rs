@@ -41,9 +41,7 @@ fn rendered(h: &mut TextHost<'_, '_>, s: &ScalarOperand) -> Result<Vec<u16>, Tex
         reserve(h, r)?;
         return Ok(text.units().collect());
     }
-    // Numeric renderer owns UTF8 buffer; reserve it before the renderer runs.
-    h.check_text(512).map_err(Failure::Operational)?;
-    h.charge_work(512).map_err(Failure::Operational)?;
+    // Numeric conversion admits its bounded scalar operation and actual output.
     let utf8 = h.coercev2_text_scalar(s, false)?;
     let len = utf8.encode_utf16().count();
     let r = plan(h, units::Reservation::units(len, len))?;
@@ -111,38 +109,49 @@ pub(crate) fn execute(
                     .as_ref()
                     .filter(|d| d.is_area)
                     .map_or((1, 1), |d| (d.rows, d.columns));
-                let additional = rows
-                    .checked_mul(columns)
-                    .ok_or_else(|| unsupported(&h, units::PlanFailure::SizeOverflow))?;
-                h.check_collection(additional)
-                    .map_err(Failure::Operational)?;
-                for row in 0..rows {
-                    for column in 0..columns {
-                        h.charge_work(1).map_err(Failure::Operational)?;
-                        let scalar = if description.as_ref().is_some_and(|d| d.is_area) {
-                            h.host
-                                .get_mut()
-                                .read_cell(index, row, column)
-                                .map_err(failure)?
-                        } else {
-                            h.single(&index)?
-                        };
-                        let text = rendered(&mut h, &scalar)?;
-                        total = total
-                            .checked_add(text.len())
-                            .ok_or_else(|| unsupported(&h, units::PlanFailure::SizeOverflow))?;
-                        let r = plan(&h, units::Reservation::units(total, text.len()))?;
+                let positions = if description.as_ref().is_some_and(|d| d.is_area) {
+                    h.host.get_mut().stored_positions(index).map_err(failure)?
+                } else {
+                    None
+                };
+                let dense_len = if positions.is_some() {
+                    0
+                } else {
+                    rows.checked_mul(columns)
+                        .ok_or_else(|| unsupported(&h, units::PlanFailure::SizeOverflow))?
+                };
+                if columns == 0 {
+                    return Err(Failure::Spreadsheet(VALUE_ERROR));
+                }
+                let positions = positions
+                    .into_iter()
+                    .flatten()
+                    .chain((0..dense_len).map(|offset| (offset / columns, offset % columns)));
+                for (row, column) in positions {
+                    h.charge_work(1).map_err(Failure::Operational)?;
+                    let scalar = if description.as_ref().is_some_and(|d| d.is_area) {
                         h.host
                             .get_mut()
-                            .check_text_capacity(r.text_bytes)
-                            .map_err(failure)?;
-                        h.host
-                            .get_mut()
-                            .check_values_capacity(r.elements)
-                            .map_err(failure)?;
-                        h.charge_work(r.work).map_err(Failure::Operational)?;
-                        output.extend_from_slice(&text);
-                    }
+                            .read_cell(index, row, column)
+                            .map_err(failure)?
+                    } else {
+                        h.single(&index)?
+                    };
+                    let text = rendered(&mut h, &scalar)?;
+                    total = total
+                        .checked_add(text.len())
+                        .ok_or_else(|| unsupported(&h, units::PlanFailure::SizeOverflow))?;
+                    let r = plan(&h, units::Reservation::units(total, text.len()))?;
+                    h.host
+                        .get_mut()
+                        .check_text_capacity(r.text_bytes)
+                        .map_err(failure)?;
+                    h.host
+                        .get_mut()
+                        .check_values_capacity(r.elements)
+                        .map_err(failure)?;
+                    h.charge_work(r.work).map_err(Failure::Operational)?;
+                    output.extend_from_slice(&text);
                 }
             }
             return Ok(value(output));

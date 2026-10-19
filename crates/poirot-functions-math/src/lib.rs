@@ -195,14 +195,15 @@ pub fn combin(n: f64, k: f64) -> MathResult {
 /// The recurrence divides at every step; intermediate numerator overflow cannot
 /// reject a finite result. At most 1023 iterations are needed: when both counts
 /// are at least 1024, C(a+b,a) >= 2^1024 exceeds finite binary64.
-fn binomial_from_counts(
+fn binomial_from_counts<E: From<CellError>>(
     left: bigdecimal::num_bigint::BigUint,
     right: bigdecimal::num_bigint::BigUint,
-) -> MathResult {
+    visit: &mut impl FnMut() -> Result<(), E>,
+) -> Result<f64, E> {
     use bigdecimal::num_bigint::BigUint;
     // Bound input limbs here so the intermediate-size proof is local.
     if left.bits() > 1024 || right.bits() > 1024 {
-        return Err(CellError::Num);
+        return Err(CellError::Num.into());
     }
     let (small, large) = if left <= right {
         (left, right)
@@ -210,19 +211,20 @@ fn binomial_from_counts(
         (right, left)
     };
     if small >= BigUint::from(1024u32) {
-        return Err(CellError::Num);
+        return Err(CellError::Num.into());
     }
     let small = small.to_u32().ok_or(CellError::Num)?;
     let mut result = BigUint::from(1u32);
     for i in 1..=small {
+        visit()?;
         result *= &large + i;
         // SAFETY: i comes from 1..=small, so the integer divisor is nonzero.
         result /= i;
         if result.bits() > 1024 {
-            return Err(CellError::Num);
+            return Err(CellError::Num.into());
         }
     }
-    finite(result.to_f64().ok_or(CellError::Num)?)
+    finite(result.to_f64().ok_or(CellError::Num)?).map_err(Into::into)
 }
 
 /// Documented COMBINA domain: raw nonnegative operands truncated to n >= k.
@@ -230,6 +232,15 @@ fn binomial_from_counts(
 /// using C(n+k-1,k), retaining exact integer counts before the transformation.
 /// Unlike the pinned POI COMBIN entry point, this uses bounded exact arithmetic.
 pub fn combina(n: f64, k: f64) -> MathResult {
+    combina_metered(n, k, &mut || Ok(()))
+}
+/// Count replacement combinations, admitting each exact-integer recurrence step.
+/// Finite binary64 bounds scratch; no spreadsheet collection is constructed.
+pub fn combina_metered<E: From<CellError>>(
+    n: f64,
+    k: f64,
+    visit: &mut impl FnMut() -> Result<(), E>,
+) -> Result<f64, E> {
     use bigdecimal::{FromPrimitive, num_bigint::BigUint};
     let (n, k) = poirot_coercionv2::combinations::coercev2_combina_counts(n, k)?;
     if n == 0.0 {
@@ -241,11 +252,11 @@ pub fn combina(n: f64, k: f64) -> MathResult {
     let k = BigUint::from_f64(k).ok_or(CellError::Num)?;
     let one = BigUint::from(1u32);
     if n < one {
-        return Err(CellError::Num);
+        return Err(CellError::Num.into());
     }
     // SAFETY: the local comparison proves n >= one, so unsigned subtraction cannot underflow.
     let left = n - one;
-    binomial_from_counts(left, k)
+    binomial_from_counts(left, k, visit)
 }
 /// Return the integer portion of a division.
 pub fn quotient(n: f64, d: f64) -> MathResult {
@@ -575,8 +586,14 @@ mod replacement_combination_tests {
     #[test]
     fn exact_primitive_obeys_pascal_symmetry_and_small_enumeration() {
         use bigdecimal::num_bigint::BigUint;
-        let coefficient =
-            |n: u32, k: u32| binomial_from_counts(BigUint::from(k), BigUint::from(n - k)).unwrap();
+        let coefficient = |n: u32, k: u32| {
+            binomial_from_counts::<CellError>(
+                BigUint::from(k),
+                BigUint::from(n - k),
+                &mut || Ok(()),
+            )
+            .unwrap()
+        };
         // Exhaustive subset enumeration supplies counts independently of the recurrence.
         for n in 1..=12u32 {
             for k in 0..=n {

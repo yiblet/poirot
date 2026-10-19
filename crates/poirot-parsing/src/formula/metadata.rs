@@ -4,7 +4,7 @@ use crate::formula::Expr;
 /// Operational limits may tighten the canonical grammar's existing safety bounds.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct FormulaParsePolicy {
-    /// Maximum AST nodes admitted for one formula.
+    /// Maximum expression-entry admissions while parsing one formula.
     pub max_expressions: usize,
     /// Maximum expression nesting accepted by the parser.
     pub max_depth: usize,

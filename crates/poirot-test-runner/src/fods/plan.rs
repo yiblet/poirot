@@ -31,7 +31,7 @@ pub struct PlannedCase {
     /// Recorded expectation used to classify run changes.
     pub baseline: BaselineStatus,
     /// Preparation failure retained without inventing a formula result.
-    pub syntax_failure: Option<CaseFailure>,
+    pub preparation_failure: Option<CaseFailure>,
     /// Unsupported function spellings retained for diagnostics.
     pub missing_functions: Vec<String>,
 }
@@ -185,16 +185,32 @@ pub(crate) fn prepare_fixture(
             .as_ref()
             .map(crate::fods::gaps::missing_root_function)
             .unwrap_or_default();
-        let syntax_failure = parsed.err().map(|error| CaseFailure {
-            kind: FailureKind::SourceSyntax,
-            gap_type: crate::fods::gaps::GapKind::UnsupportedFormulaSyntax,
-            missing_functions: Vec::new(),
-            message: format!("unsupported source formula syntax: {error:?}"),
+        let preparation_failure = parsed.err().map(|error| {
+            let (kind, gap_type) = match error.kind {
+                poirot_parsing::formula::ParseErrorKind::Syntax => (
+                    FailureKind::SourceSyntax,
+                    crate::fods::gaps::GapKind::UnsupportedFormulaSyntax,
+                ),
+                poirot_parsing::formula::ParseErrorKind::ResourceLimit => (
+                    FailureKind::EvaluationAbort,
+                    crate::fods::gaps::GapKind::ResourceLimit,
+                ),
+                poirot_parsing::formula::ParseErrorKind::InvalidPolicy => (
+                    FailureKind::EvaluationAbort,
+                    crate::fods::gaps::GapKind::UnsupportedCapability,
+                ),
+            };
+            CaseFailure {
+                kind,
+                gap_type,
+                missing_functions: Vec::new(),
+                message: format!("source formula preparation failed: {error:?}"),
+            }
         });
         cases.push(PlannedCase {
             source,
             baseline: bound.classification,
-            syntax_failure,
+            preparation_failure,
             missing_functions,
         });
     }

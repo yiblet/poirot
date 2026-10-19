@@ -113,6 +113,7 @@ impl TranslationPlan {
 }
 fn failure(message: &str) -> ParseError {
     ParseError {
+        kind: super::ParseErrorKind::Syntax,
         position: 0,
         message: message.into(),
     }

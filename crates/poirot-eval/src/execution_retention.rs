@@ -101,7 +101,7 @@ impl BoundedExecutionTrace {
         self.partial = true;
         self.rejected = true;
         EvaluationFailure::ResourceLimit {
-            capability: CapabilityId::FunctionAdapter,
+            capability: CapabilityId::ExecutionObservation,
             source: None,
             detail: "execution evidence retention capacity exhausted".into(),
         }

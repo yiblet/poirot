@@ -288,20 +288,11 @@ impl Session<'_> {
         coercev2_text_integer_number(number, policy).map_err(Into::into)
     }
 
-    // Reserve before coercion clones or number rendering allocate.
+    // Unicode projections admit variable buffers; bounded numeric formatting
+    // checks its actual output through the same scalar-text path.
     fn coercev2_text_render(&mut self, value: &CellValue) -> FunctionResult<String> {
-        let bound = match value {
-            Text(value) => value.len(),
-            Number(_) => poirot_numeric::number_text::ALLOCATION_BOUND,
-            Boolean(_) => 5,
-            _ => 0,
-        };
-        self.budget.text(bound)?;
-        if let Number(value) = value {
+        if matches!(value, Number(_)) {
             self.read(DependencyRead::TextPolicy);
-            return Ok(poirot_coercionv2::compatibility::coercev2_render_number(
-                *value,
-            ));
         }
         coercev2_formula_text(value, &mut self.budget)
     }

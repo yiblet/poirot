@@ -849,3 +849,47 @@ fn selected_cse_continuations_are_not_blank_inputs_but_geometry_remains_usable()
         }
     }
 }
+
+#[test]
+fn preparation_limits_are_resources_and_unused_limited_sources_stay_lazy() {
+    let scratch = Scratch::new();
+    corpus(&scratch.0);
+    let metadata = scratch.0.join("manifest.json");
+    let mut manifest: CorpusManifest =
+        serde_json::from_slice(&std::fs::read(&metadata).unwrap()).unwrap();
+    let large = format!("SUM({})", vec!["1"; 1100].join(";"));
+    for (formula, limited) in [
+        (large.clone(), true),
+        ("IFERROR([.A3];3)".into(), true),
+        ("IF(TRUE;3;[.A3])".into(), false),
+    ] {
+        let xml = source("Sheet1", &formula, 3.).replace(
+            "</t:table>",
+            &format!(
+                "<t:table-row><t:table-cell t:formula=\"of:={large}\"/></t:table-row></t:table>"
+            ),
+        );
+        let parsed = extract_bytes(xml.as_bytes(), "sc/qa/unit/data/functions/b.fods").unwrap();
+        manifest
+            .fixtures
+            .iter_mut()
+            .find(|entry| entry.fixture == "b.fods")
+            .unwrap()
+            .sha256 = parsed.sha256;
+        std::fs::write(scratch.0.join("fixtures/b.fods"), xml).unwrap();
+        json(&metadata, &manifest);
+        let result =
+            execute::execute(&plan::build(&options(&scratch.0, 1, Some("b.fods"))).unwrap())
+                .unwrap()
+                .cases
+                .remove(0);
+        if limited {
+            assert_eq!(
+                result.failure.unwrap().gap_type,
+                poirot_test_runner::fods::gaps::GapKind::ResourceLimit
+            );
+        } else {
+            assert_eq!(result.status, CaseStatus::Improvement);
+        }
+    }
+}

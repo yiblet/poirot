@@ -63,9 +63,14 @@ impl CallHost<'_, '_> {
         value: f64,
         _policy: NumericPolicy,
     ) -> FunctionResult<String> {
-        poirot_coercionv2::compatibility::coercev2_render_finite_number(value, || {
-            self.check_text(poirot_numeric::number_text::ALLOCATION_BOUND)
-        })
+        // Binary64 rendering has fixed precision and bounded scratch. Capacity
+        // limits concern the produced buffer, not the formatter's static bound.
+        let rendered =
+            poirot_coercionv2::compatibility::coercev2_render_finite_number(value, || {
+                self.charge_work(1)
+            })?;
+        self.check_text(rendered.len())?;
+        Ok(rendered)
     }
     /// Compare scalars using pinned equality and preserve operational failures.
     pub(crate) fn equal(

@@ -232,15 +232,22 @@ impl Cache {
     ) -> Result<(), EvaluationFailure> {
         let mut cells = self.len();
         let mut bytes = self.retained_bytes;
+        let mut overflow = false;
         for (key, entry) in &staged {
             if let Some(old) = self.get(*key) {
-                bytes -= old.retained_bytes();
+                let remaining = bytes.checked_sub(old.retained_bytes());
+                overflow |= remaining.is_none();
+                bytes = remaining.unwrap_or(usize::MAX);
             } else {
-                cells += 1;
+                let next = cells.checked_add(1);
+                overflow |= next.is_none();
+                cells = next.unwrap_or(usize::MAX);
             }
-            bytes = bytes.saturating_add(entry.retained_bytes());
+            let next = bytes.checked_add(entry.retained_bytes());
+            overflow |= next.is_none();
+            bytes = next.unwrap_or(usize::MAX);
         }
-        if cells > retention.cells || bytes > retention.bytes {
+        if overflow || cells > retention.cells || bytes > retention.bytes {
             return Err(EvaluationFailure::MemoRetentionLimit {
                 limits: retention,
                 consumed: crate::run::MemoRetentionUsage {
@@ -301,8 +308,13 @@ impl Cache {
     /// Replace a result and register its point edges and always-dirty status.
     pub fn insert(&mut self, key: Key, entry: Cached) -> Result<(), poirot_model::ModelError> {
         key.1.validate()?;
+        let retained_bytes = self
+            .retained_bytes
+            .checked_sub(self.get(key).map_or(0, Cached::retained_bytes))
+            .and_then(|bytes| bytes.checked_add(entry.retained_bytes()))
+            .ok_or_else(|| poirot_model::ModelError("cache retention size overflow".into()))?;
         self.remove(key);
-        self.retained_bytes += entry.retained_bytes();
+        self.retained_bytes = retained_bytes;
         if entry.dependencies.opaque || entry.dependencies.volatile {
             self.always_dirty.insert(key);
         }
@@ -479,5 +491,37 @@ impl Cached {
                 (self.dependencies.ranges.len() + self.dependencies.point_runs.len())
                     .saturating_mul(64),
             )
+    }
+}
+
+#[cfg(test)]
+mod retention_overflow_tests {
+    use super::*;
+    fn entry() -> Cached {
+        Cached {
+            value: Arc::new(CellValue::Number(1.)),
+            dependencies: Box::default(),
+        }
+    }
+    #[test]
+    fn unlimited_policy_still_refuses_intrinsic_cache_size_overflow_atomically() {
+        // Exercise the counter boundary without allocating machine-sized storage.
+        let mut cache = Cache {
+            retained_bytes: usize::MAX,
+            ..Default::default()
+        };
+        let key = (0, CellAddress { row: 0, col: 0 });
+        assert!(matches!(
+            cache.commit(
+                vec![(key, entry())],
+                crate::run::MemoRetentionLimits::default(),
+                None,
+                []
+            ),
+            Err(EvaluationFailure::MemoRetentionLimit { .. })
+        ));
+        assert!(cache.insert(key, entry()).is_err());
+        assert_eq!(cache.retained_bytes, usize::MAX);
+        assert_eq!(cache.len(), 0);
     }
 }

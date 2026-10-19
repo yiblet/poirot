@@ -5,14 +5,15 @@
 use poirot_coercionv2::compatibility::coercev2_java_number_text;
 use poirot_functions_core::{CellError, CellValue};
 mod aggregation;
+/// Finalization for records already selected by a host.
+pub use aggregation::aggregate_selected;
 mod criteria;
-mod estimate;
 /// Numeric comparison and text conversion used by database criteria.
 pub mod number;
 mod selection;
 
 /// Database criteria and field-selection helpers shared with host adapters.
-pub use criteria::condition_matches;
+pub use criteria::{condition_matches, condition_matches_metered};
 /// Database criteria and field-selection helpers shared with host adapters.
 pub use selection::{
     coercev2_database_criteria_header_index, coercev2_database_field_index,
@@ -50,9 +51,6 @@ pub enum DatabaseFunction {
 impl DatabaseFunction {
     fn empty_field(self) -> bool {
         matches!(self, Self::Count | Self::CountA)
-    }
-    fn variance(self) -> bool {
-        matches!(self, Self::Stdev | Self::StdevP | Self::Var | Self::VarP)
     }
 }
 
@@ -96,17 +94,6 @@ impl<'a> Grid<'a> {
             .unwrap_or(&CellValue::Error(CellError::Value))
     }
 }
-/// Conservative database traversal and numeric/text work before executing a plan.
-/// The adapter must reserve these costs without eagerly evaluating unselected criteria.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct WorkEstimate {
-    /// Conservative cell-inspection work reserved before execution.
-    pub cell_visits: u64,
-    /// Conservative character comparison and numeric normalization operations.
-    pub work_units: u64,
-    /// Estimated temporary storage needed by the database operation.
-    pub scratch_bytes: u64,
-}
 /// Separate spreadsheet failures from unsupported criteria/projection behavior.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DatabaseError {
@@ -123,9 +110,8 @@ impl From<CellError> for DatabaseError {
     }
 }
 
-/// Planning borrows areas without copying cells. Budget the estimate before
-/// executing; criteria evaluation deliberately stays lazy to retain POI's
-/// row/column short circuit and errors that occur only on visited criteria.
+/// Borrowed database selection retaining row/column short circuit and errors
+/// that occur only in visited criteria. Host adapters meter their own reads.
 #[derive(Debug, Clone, Copy)]
 pub struct DatabasePlan<'a> {
     function: DatabaseFunction,
@@ -148,10 +134,6 @@ impl<'a> DatabasePlan<'a> {
             criteria,
             field: selected,
         })
-    }
-    /// Return the work and scratch reservation required before execution.
-    pub fn work_estimate(&self) -> WorkEstimate {
-        estimate::work_estimate(self)
     }
     /// Apply the prepared criteria and aggregate selected records.
     pub fn execute(&self) -> Result<CellValue, DatabaseError> {

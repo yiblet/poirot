@@ -15,7 +15,9 @@ mod tokens;
 mod translation;
 
 /// Workbook-independent syntax, reference coordinates, and parse diagnostics.
-pub use ast::{BinaryOp, CellReference, Expr, ParseError, SheetSpanReference, UnaryOp};
+pub use ast::{
+    BinaryOp, CellReference, Expr, ParseError, ParseErrorKind, SheetSpanReference, UnaryOp,
+};
 /// Parsed source with explicit limits and spans for diagnostics and rewriting.
 pub use metadata::{FormulaParsePolicy, FormulaSpan, FunctionInvocation, ParsedFormula};
 /// Full formula parsing with default or explicitly bounded grammar policy.

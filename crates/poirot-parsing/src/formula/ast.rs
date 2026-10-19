@@ -149,10 +149,22 @@ pub enum BinaryOp {
     /// Select the overlap of two reference areas.
     Intersection,
 }
+/// Why formula preparation rejected source text.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum ParseErrorKind {
+    /// Source text is outside the supported formula grammar.
+    Syntax,
+    /// A configured structural bound rejected otherwise parseable source.
+    ResourceLimit,
+    /// Parser settings do not tighten the canonical bounds.
+    InvalidPolicy,
+}
 /// Formula syntax or parser-limit failure at a UTF-8 byte offset in the input.
 /// This is a parsing diagnostic, not a spreadsheet cell error value.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ParseError {
+    /// Whether rejection concerns syntax, resource capacity, or configuration.
+    pub kind: ParseErrorKind,
     /// UTF-8 byte offset where parsing failed.
     pub position: usize,
     /// Diagnostic explaining the rejected syntax or parser limit.

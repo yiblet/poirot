@@ -23,6 +23,7 @@ pub fn parse_formula_with_policy(
         || policy.max_columns > defaults.max_columns
     {
         return Err(ParseError {
+            kind: super::ParseErrorKind::InvalidPolicy,
             position: 0,
             message: "parse policy must tighten canonical bounds".into(),
         });
@@ -73,6 +74,7 @@ pub fn parse_formula_with_policy(
             };
             if exceeds {
                 return Err(ParseError {
+                    kind: super::ParseErrorKind::ResourceLimit,
                     position: 0,
                     message: "reference exceeds configured grid policy".into(),
                 });
@@ -108,6 +110,14 @@ struct Parser<'a> {
 impl Parser<'_> {
     fn fail<T>(&self, message: &str) -> Result<T, ParseError> {
         Err(ParseError {
+            kind: super::ParseErrorKind::Syntax,
+            position: self.pos,
+            message: message.into(),
+        })
+    }
+    fn limit<T>(&self, message: &str) -> Result<T, ParseError> {
+        Err(ParseError {
+            kind: super::ParseErrorKind::ResourceLimit,
             position: self.pos,
             message: message.into(),
         })
@@ -117,6 +127,7 @@ impl Parser<'_> {
     }
     fn tail(&self) -> Result<&str, ParseError> {
         self.input.get(self.pos..).ok_or_else(|| ParseError {
+            kind: super::ParseErrorKind::Syntax,
             position: self.pos,
             message: "invalid UTF-8 parser cursor".into(),
         })
@@ -160,7 +171,7 @@ impl Parser<'_> {
     fn admit_expression(&mut self) -> Result<(), ParseError> {
         // This is a resource bound, independent of Excel's language restrictions.
         if self.expressions >= self.policy.max_expressions {
-            return self.fail("expression complexity limit exceeded");
+            return self.limit("expression complexity limit exceeded");
         }
         self.expressions += 1;
         Ok(())
@@ -176,7 +187,7 @@ impl Parser<'_> {
     ) -> Result<Expr, ParseError> {
         self.admit_expression()?;
         if self.depth >= self.policy.max_depth {
-            return self.fail("expression nesting limit exceeded");
+            return self.limit("expression nesting limit exceeded");
         }
         let start = self.pos + self.tail()?.len() - self.tail()?.trim_start().len();
         self.depth += 1;
@@ -278,6 +289,7 @@ impl Parser<'_> {
                 self.expression_context(precedence + 1, union, op == BinaryOp::Range)?;
             if op == BinaryOp::Range {
                 (left, right) = range_pair(left, right).map_err(|message| ParseError {
+                    kind: super::ParseErrorKind::Syntax,
                     position: self.pos,
                     message,
                 })?;
@@ -328,6 +340,7 @@ impl Parser<'_> {
             };
             let (start, end) =
                 super::references::sheet_span_bounds(start, end).map_err(|message| ParseError {
+                    kind: super::ParseErrorKind::Syntax,
                     position: self.pos,
                     message,
                 })?;
@@ -359,6 +372,7 @@ impl Parser<'_> {
                     .input
                     .get(start..)
                     .ok_or_else(|| ParseError {
+                        kind: super::ParseErrorKind::Syntax,
                         position: start,
                         message: "invalid error literal cursor".into(),
                     })?
@@ -380,6 +394,7 @@ impl Parser<'_> {
         if self.peek().is_some_and(|c| c.is_ascii_digit() || c == '.') {
             let (rest, number) = number_token(self.input.get(start..).ok_or_else(|| {
                 ParseError {
+                    kind: super::ParseErrorKind::Syntax,
                     position: start,
                     message: "invalid UTF-8 parser cursor".into(),
                 }
@@ -390,6 +405,7 @@ impl Parser<'_> {
                     nom::Err::Incomplete(_) => start,
                 };
                 ParseError {
+                    kind: super::ParseErrorKind::Syntax,
                     position: offset,
                     message: "invalid number".into(),
                 }
@@ -405,10 +421,12 @@ impl Parser<'_> {
     fn reference(&mut self, sheet: Option<String>) -> Result<Expr, ParseError> {
         let start = self.pos;
         let (rest, text) = identifier(self.input.get(start..).ok_or_else(|| ParseError {
+            kind: super::ParseErrorKind::Syntax,
             position: start,
             message: "invalid UTF-8 parser cursor".into(),
         })?)
         .map_err(|_| ParseError {
+            kind: super::ParseErrorKind::Syntax,
             position: start,
             message: "expected expression".into(),
         })?;
@@ -489,6 +507,7 @@ impl Parser<'_> {
         }
         if text.contains('$') {
             return partial_reference(&text, sheet).ok_or(ParseError {
+                kind: super::ParseErrorKind::Syntax,
                 position: start,
                 message: "invalid absolute reference".into(),
             });
@@ -498,6 +517,7 @@ impl Parser<'_> {
             // Only range grammar turns it into a whole-column endpoint.
             if text.bytes().all(|c| c.is_ascii_digit()) {
                 return partial_reference(&text, Some(sheet)).ok_or(ParseError {
+                    kind: super::ParseErrorKind::Syntax,
                     position: start,
                     message: "invalid sheet reference".into(),
                 });
@@ -513,10 +533,12 @@ impl Parser<'_> {
     fn span_endpoint(&mut self) -> Result<Expr, ParseError> {
         let start = self.pos;
         let (rest, text) = identifier(self.input.get(start..).ok_or_else(|| ParseError {
+            kind: super::ParseErrorKind::Syntax,
             position: start,
             message: "invalid UTF-8 parser cursor".into(),
         })?)
         .map_err(|_| ParseError {
+            kind: super::ParseErrorKind::Syntax,
             position: start,
             message: "expected bounded sheet-span cell".into(),
         })?;
@@ -525,6 +547,7 @@ impl Parser<'_> {
             return Ok(Expr::Cell(cell));
         }
         partial_reference(text, None).ok_or(ParseError {
+            kind: super::ParseErrorKind::Syntax,
             position: start,
             message: "sheet spans require bounded cell references".into(),
         })

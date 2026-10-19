@@ -69,7 +69,7 @@ pub(super) fn execute<P: EvaluationPort>(
                     "Commons Math Poisson mean-zero constructor exception",
                 ));
             }
-            work(p, 512)?;
+            work(p, 1)?;
             return kernel(
                 p.pinned_numeric_outcomes(),
                 domain::poisson_metered(x, mean, c, &mut |n| p.charge_work(n)),
@@ -87,7 +87,7 @@ pub(super) fn execute<P: EvaluationPort>(
                 args.get(3).ok_or(CellError::Value)?,
                 true,
             )?;
-            work(p, 512)?;
+            work(p, 1)?;
             if p.pinned_numeric_outcomes() {
                 return kernel(
                     true,
@@ -109,7 +109,7 @@ pub(super) fn execute<P: EvaluationPort>(
             if s <= 0.0 {
                 return Err(CellError::Num.into());
             }
-            work(p, 512)?;
+            work(p, 1)?;
             if p.pinned_numeric_outcomes() {
                 domain::normal_inverse_source(x, m, s)
             } else {
@@ -121,7 +121,7 @@ pub(super) fn execute<P: EvaluationPort>(
             if x <= 0.0 || x >= 1.0 {
                 return Err(CellError::Num.into());
             }
-            work(p, 512)?;
+            work(p, 1)?;
             if p.pinned_numeric_outcomes() {
                 domain::normal_inverse_source(x, 0.0, 1.0)
             } else {
@@ -133,7 +133,7 @@ pub(super) fn execute<P: EvaluationPort>(
             if x < 0.0 {
                 return Err(CellError::Num.into());
             }
-            work(p, 512)?;
+            work(p, 1)?;
             if p.pinned_numeric_outcomes() {
                 return kernel(
                     true,
@@ -162,7 +162,7 @@ pub(super) fn execute<P: EvaluationPort>(
             if (degrees as i32) < 1 {
                 return Err(CellError::Num.into());
             }
-            work(p, 512)?;
+            work(p, 1)?;
             if f == TDistLegacy {
                 let tails =
                     coercev2_statistics_text_number(p, args.get(2).ok_or(CellError::Value)?)?;
@@ -201,7 +201,7 @@ pub(super) fn excel_standard_normal<P: EvaluationPort>(
         p,
         args.get(1).ok_or(CellError::Value)?,
     )?;
-    work(p, 512)?;
+    work(p, 1)?;
     kernel(
         false,
         domain::normal_dist_metered(x, 0.0, 1.0, cumulative, &mut |n| p.charge_work(n)),

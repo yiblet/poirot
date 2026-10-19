@@ -190,23 +190,19 @@ fn inverse_string_grammar_and_constructor_order_are_consumed_per_alias() {
 }
 
 #[test]
-fn selected_numeric_comparer_admits_bound_before_biguint_kernel() {
+fn bounded_numeric_comparison_does_not_materialize_spreadsheet_values() {
     let w = book();
     let c = pinned();
-    let budgets = EvaluationBudgets {
-        materialized_values: 255,
-        ..EvaluationBudgets::default()
-    };
-    for f in ["1=1", "1-1"] {
-        assert!(matches!(
-            run_formula_with_configuration(&w, 0, at(25), f, &c, budgets),
-            EvaluationOutcome::Aborted {
-                failure: EvaluationFailure::Budget(BudgetFailure {
-                    kind: BudgetKind::Materialization,
-                    ..
-                }),
-                ..
-            }
-        ));
+    for f in ["1=1", "1-1", "1.000000000000001=1", "1E100=2E100"] {
+        let budgets = EvaluationBudgets {
+            materialized_values: 1,
+            ..EvaluationBudgets::default()
+        };
+        let outcome = run_formula_with_configuration(&w, 0, at(25), f, &c, budgets);
+        assert!(
+            matches!(outcome, EvaluationOutcome::Complete { .. }),
+            "{outcome:?}"
+        );
+        assert_eq!(outcome.usage().comparisons, 1);
     }
 }

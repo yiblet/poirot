@@ -86,7 +86,7 @@ fn check(
     matrix_cells: &std::collections::BTreeSet<(usize, CellAddress)>,
     observed: &mut Option<CheckObservation>,
 ) -> Result<(), CaseFailure> {
-    if let Some(reason) = &plan.syntax_failure {
+    if let Some(reason) = &plan.preparation_failure {
         return Err(reason.clone());
     }
     let case = &plan.source;

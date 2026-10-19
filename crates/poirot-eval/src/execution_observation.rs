@@ -142,7 +142,7 @@ impl Session<'_> {
     ) -> EvalResult<(Operation, Option<(Operation, u64)>)> {
         let next = self.observation_state.next.checked_add(1).ok_or_else(|| {
             EvaluationFailure::ResourceLimit {
-                capability: crate::CapabilityId::FunctionAdapter,
+                capability: crate::CapabilityId::ExecutionObservation,
                 source: Some(target),
                 detail: "execution operation identity exhausted".into(),
             }

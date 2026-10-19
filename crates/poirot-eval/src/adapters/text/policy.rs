@@ -73,6 +73,8 @@ pub enum Value {
 pub enum AreaSelection {
     /// Traverse every row in source order.
     AllRows,
+    /// Traverse stored cells, omitting implicit blanks that contribute no text.
+    StoredCells,
     /// Traverse only the last row, as required for delimiter areas.
     LastRow,
 }
@@ -267,7 +269,7 @@ pub fn evaluate_with_policy<E, H: Host<E>>(
                 return Err(fail(h.error(Error::Value)));
             }
             h.check_text(16).map_err(Failure::Operational)?;
-            h.charge_work(512).map_err(Failure::Operational)?;
+            h.charge_work(1).map_err(Failure::Operational)?;
             Ok(Value::Text(roman(number as u16, form as u8)))
         }
         Function::NumberValue => {
@@ -374,7 +376,15 @@ pub fn evaluate_with_policy<E, H: Host<E>>(
             let mut text_bytes = 0usize;
             // SAFETY: Each argument branch checks its count locally; scalars is filled once per argument, separator checks index < scalars.len(), and delimiter indexing is guarded by nonempty and uses modulo its length.
             for arg in &a[2..] {
-                for v in checked_values(h, arg, AreaSelection::AllRows)? {
+                for v in checked_values(
+                    h,
+                    arg,
+                    if ignore {
+                        AreaSelection::StoredCells
+                    } else {
+                        AreaSelection::AllRows
+                    },
+                )? {
                     let text = checked_string(h, &v, false)?;
                     if !ignore || !text.is_empty() {
                         text_bytes = text_bytes
@@ -448,6 +458,10 @@ fn checked_values<E, H: Host<E>>(
     e: &E,
     s: AreaSelection,
 ) -> TextResult<Vec<H::Scalar>, H::Error, H::Operational> {
+    if s == AreaSelection::StoredCells {
+        // Sparse hosts admit actual members while enumerating them.
+        return h.values(e, s);
+    }
     let count = h
         .values_bound(e, s)
         .ok_or(Failure::Unsupported(Unsupported::UnknownOutputGrowth))?;

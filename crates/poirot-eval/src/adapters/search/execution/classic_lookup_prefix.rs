@@ -284,11 +284,13 @@ pub(super) fn select(
     let result = (|| {
         session.budget.charge(WorkKind::Comparison, 1)?;
         if let Some(&found) = prefix.first.get(&needle) {
-            session.run_usage.lookup_prefix_hits += 1;
+            session.run_usage.lookup_prefix_hits =
+                session.run_usage.lookup_prefix_hits.saturating_add(1);
             return Ok(Some(found));
         }
         if prefix.exhausted {
-            session.run_usage.lookup_prefix_hits += 1;
+            session.run_usage.lookup_prefix_hits =
+                session.run_usage.lookup_prefix_hits.saturating_add(1);
             return Ok(None);
         }
         let mut reader = sparse::LookupReader {
@@ -303,7 +305,11 @@ pub(super) fn select(
         };
         let mut next = reader.next(prefix.next, vector.len)?;
         while let Some(index) = next {
-            reader.session.run_usage.lookup_prefix_scans += 1;
+            reader.session.run_usage.lookup_prefix_scans = reader
+                .session
+                .run_usage
+                .lookup_prefix_scans
+                .saturating_add(1);
             let value = reader.session.lookup_read(table, vector, index)?;
             if reader.session.lookup_prefixes.reserved < cap {
                 reader.session.budget.allocation(1)?;

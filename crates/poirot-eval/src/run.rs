@@ -53,6 +53,7 @@ pub use consumption::{ContextRead, DependencyRead, DependencyReadSink, ReadEvent
 
 /// Execution counters for one run, distinguishing formula execution, prepared lookups,
 /// session memo hits, and validated cross-run cache hits.
+/// Counters saturate at `u64::MAX`.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct RunUsage {
     /// Runtime parsing of computed reference text; excluded from pure preparation counters.
@@ -102,6 +103,8 @@ impl<'a> WorkbookView<'a> {
 /// Logical bounds on owned Session memo retention, independent of calculation budgets.
 /// Each accepted entry costs 128 fixed units plus its owned text storage bytes.
 /// These are deterministic retention units, not an allocator-exact heap measure.
+/// Defaults are unlimited; `usize::MAX` disables the respective policy limit.
+/// Intrinsic size overflow remains an error.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MemoRetentionLimits {
     /// Maximum retained memo entries.
@@ -112,8 +115,8 @@ pub struct MemoRetentionLimits {
 impl Default for MemoRetentionLimits {
     fn default() -> Self {
         Self {
-            cells: 100_000,
-            bytes: 64 * 1024 * 1024,
+            cells: usize::MAX,
+            bytes: usize::MAX,
         }
     }
 }

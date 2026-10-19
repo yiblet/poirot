@@ -26,7 +26,7 @@ fn run(book: &Workbook, formula: &str, work: u64) -> EvaluationOutcome<CellValue
 fn poisson_iterations_abort_through_actual_handler_and_iferror() {
     let mut book = Workbook::new();
     book.add_sheet("Sheet1").unwrap();
-    // Establish enough budget for acquisition and the existing fixed512 charge.
+    // Establish enough budget for acquisition and the bounded scalar setup.
     // The large near-mean P series takes many more iterations than this control.
     let control = run(&book, "IFERROR(POISSON(0,1,TRUE),42)", 1_000_000);
     assert!(matches!(

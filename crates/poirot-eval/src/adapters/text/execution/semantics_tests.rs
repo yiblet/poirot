@@ -1,9 +1,20 @@
 use super::*;
 use poirot_parsing::formula::parse_formula;
 fn evaluate(source: TextSourceVersion, formula: &str) -> EvalResult<CellValue> {
+    evaluate_with_budgets(source, formula, EvaluationBudgets::default())
+}
+fn evaluate_with_budgets(
+    source: TextSourceVersion,
+    formula: &str,
+    budgets: EvaluationBudgets,
+) -> EvalResult<CellValue> {
     let mut workbook = Workbook::new();
     workbook.add_sheet("Sheet1").unwrap();
-    let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+    let mut session = Session::new(
+        &workbook,
+        EvaluationInputs::default(),
+        BudgetMeter::new(budgets)?,
+    );
     session.text_policy = TextSemanticsPolicy { source };
     session.builtin_policy = if matches!(
         source,
@@ -145,7 +156,14 @@ fn text_integer_admission_precedes_empty_text_and_index_clamping() {
         "REPT(\"\",2147483647)",
     ] {
         assert!(matches!(
-            evaluate(source, formula),
+            evaluate_with_budgets(
+                source,
+                formula,
+                EvaluationBudgets {
+                    run_work: 1_000_000,
+                    ..Default::default()
+                }
+            ),
             Err(EvaluationFailure::Budget(_))
         ));
     }

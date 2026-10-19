@@ -52,7 +52,8 @@ pub(super) fn admit_work(
 ) -> Result<ChargeRequest, BudgetFailure> {
     // Every category has the same admission rule; its counter is committed by the meter.
     let amount = request.amount;
-    if amount > limits.run_work.saturating_sub(snapshot.run_consumed) {
+    if limits.run_work != u64::MAX && amount > limits.run_work.saturating_sub(snapshot.run_consumed)
+    {
         return Err(BudgetFailure {
             kind: BudgetKind::RunWork,
             limit: limits.run_work,
@@ -62,6 +63,7 @@ pub(super) fn admit_work(
         });
     }
     if let Some(consumed) = snapshot.cell_consumed
+        && limits.cell_work != u64::MAX
         && amount > limits.cell_work.saturating_sub(consumed)
     {
         return Err(BudgetFailure {

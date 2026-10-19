@@ -247,10 +247,9 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
         };
         let n = number(0)?;
         let k = number(1)?;
-        // Kernel work and integers are bounded independently of operand size.
-        work(p, 1024)?;
-        p.check_collection(512).map_err(Failure::Operational)?;
-        return domain::combina(n, k).map_err(Failure::Spreadsheet);
+        // Scalar setup has fixed scratch; the independent kernel meters its recurrence.
+        work(p, 1)?;
+        return domain::combina_metered(n, k, &mut || work(p, 1));
     }
     let x = read(p, 0)?;
     // Variadic families validate each operand in source order before moving on.

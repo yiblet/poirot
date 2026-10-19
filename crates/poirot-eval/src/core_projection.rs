@@ -132,19 +132,18 @@ pub(super) fn coercev2_formula_text(
         // buffers transfer ownership without making another copy.
         return Ok(text.into_owned());
     }
-    let bytes = match v {
-        Number(_) => 512,
-        Boolean(_) => 5,
-        _ => 0,
-    };
-    budget.text(bytes)?;
-    budget.charge(WorkKind::TextByte, bytes as u64)?;
-    poirot_coercionv2::compatibility::coercev2_text_with(v.into(), |request| match request {
-        poirot_coercionv2::compatibility::DeferredText::Number(n) => {
-            Ok(poirot_coercionv2::compatibility::coercev2_number_to_text(n))
-        }
-        _ => Err(VALUE_ERROR.into()),
-    })
+    // Scalar formatting is bounded by binary64 precision; admit the actual
+    // output rather than charging the maximum internal formatter workspace.
+    budget.charge(WorkKind::HelperOperation, 1)?;
+    let rendered =
+        poirot_coercionv2::compatibility::coercev2_text_with(v.into(), |request| match request {
+            poirot_coercionv2::compatibility::DeferredText::Number(n) => {
+                Ok(poirot_coercionv2::compatibility::coercev2_number_to_text(n))
+            }
+            _ => Err(FunctionFailure::from(VALUE_ERROR)),
+        })?;
+    budget.text(rendered.len())?;
+    Ok(rendered)
 }
 fn rank(v: &CellValue) -> u8 {
     match v {

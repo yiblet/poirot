@@ -98,7 +98,7 @@ impl Session<'_> {
         self.pending_spills
             .insert((sheet, restored.0), ArrayView::unknown(restored.1));
         self.admit_cell(sheet, restored.0, &value)?;
-        self.run_usage.external_cache_hits += 1;
+        self.run_usage.external_cache_hits = self.run_usage.external_cache_hits.saturating_add(1);
         Ok(())
     }
     /// Stage a producer's spill after checking blockers and ownership.

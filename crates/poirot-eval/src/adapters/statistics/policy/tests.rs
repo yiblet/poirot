@@ -31,10 +31,7 @@ fn inverse_parameter_errors_precede_later_reads_and_work() {
             Err(Failure::Spreadsheet(CellError::Num))
         );
         assert!(p.work < 128);
-        assert_eq!(
-            evaluate(&mut p, f, &[n(0.5), n(0.0), n(1.0)]),
-            Err(Failure::Operational("work"))
-        );
+        assert_eq!(evaluate(&mut p, f, &[n(0.5), n(0.0), n(1.0)]), Ok(0.0));
     }
     for f in [
         StatisticsFunction::NormSInv,
@@ -49,10 +46,7 @@ fn inverse_parameter_errors_precede_later_reads_and_work() {
             Err(Failure::Spreadsheet(CellError::Num))
         );
         assert!(p.work < 128);
-        assert_eq!(
-            evaluate(&mut p, f, &[n(0.5)]),
-            Err(Failure::Operational("work"))
-        );
+        assert_eq!(evaluate(&mut p, f, &[n(0.5)]), Ok(0.0));
     }
 }
 #[derive(Clone)]
@@ -400,7 +394,7 @@ fn standard_normal_distribution_uses_pinned_poi_negative_domain() {
             Err(Failure::Spreadsheet(CellError::Num))
         );
         // Adapter entry1 + scalar acquisition1 + parsing the two bytes "-1".
-        // No fixed512 setup or kernel work is reached for the negative domain.
+        // No scalar setup or kernel work is reached for the negative domain.
         assert_eq!(p.work, 4);
         assert_eq!(p.reads, 1);
         assert!(p.cell_reads.is_empty());

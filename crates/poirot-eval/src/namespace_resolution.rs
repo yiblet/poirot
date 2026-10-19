@@ -89,7 +89,8 @@ impl<'a> Session<'a> {
                 .ok_or(EvaluationFailure::StalePlan)?
                 .formula;
             self.budget.text(formula.len())?;
-            self.run_usage.named_formula_executions += 1;
+            self.run_usage.named_formula_executions =
+                self.run_usage.named_formula_executions.saturating_add(1);
             let prepared = match self.plan.and_then(|plan| plan.defined_name(index)) {
                 Some(prepared) => std::sync::Arc::clone(prepared),
                 None => self.prepare_source(formula),

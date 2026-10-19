@@ -210,12 +210,21 @@ fn operational_budgets_remain_visible_through_iferror() {
             "{formula}"
         );
     }
+    let control = run("IFERROR(NORM.S.DIST(0,TRUE),7)", true, Default::default());
+    assert!(matches!(
+        &control,
+        EvaluationOutcome::Complete {
+            value: CellValue::Number(0.5),
+            ..
+        }
+    ));
+    let work = control.usage().work_units + 2;
     assert!(matches!(
         run(
             "IFERROR(NORM.S.DIST(1,TRUE),7)",
             true,
             EvaluationBudgets {
-                run_work: 128,
+                run_work: work,
                 ..Default::default()
             }
         ),

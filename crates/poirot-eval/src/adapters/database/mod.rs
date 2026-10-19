@@ -2,9 +2,9 @@
 use crate::host::{CallHost, MissingPolicy};
 use crate::*;
 use poirot_functions_database::{
-    DatabaseError, DatabaseFunction, DatabasePlan, FinalizationPolicy, Grid,
+    DatabaseError, DatabaseFunction, FinalizationPolicy, aggregate_selected,
     coercev2_database_criteria_header_index, coercev2_database_field_index,
-    coercev2_database_number, coercev2_database_text, condition_matches, equal_ignore_case,
+    coercev2_database_number, coercev2_database_text, condition_matches_metered, equal_ignore_case,
 };
 
 /// Execute database aggregation through bounded criteria-table and record reads.
@@ -20,6 +20,16 @@ pub(crate) fn execute(
     }
     let mut host = CallHost::new(session, sheet, address, arguments);
     function_value(evaluate(&mut host, function))
+}
+/// Preserve host aborts separately from database spreadsheet/domain failures.
+enum DatabaseMatchFailure {
+    Domain(DatabaseError),
+    Host(FunctionFailure),
+}
+impl From<DatabaseError> for DatabaseMatchFailure {
+    fn from(error: DatabaseError) -> Self {
+        Self::Domain(error)
+    }
 }
 fn database_failure(host: &CallHost<'_, '_>, error: DatabaseError) -> FunctionFailure {
     match error {
@@ -60,10 +70,11 @@ fn header(
     Ok(None)
 }
 fn scratch(host: &mut CallHost<'_, '_>, value: &CellValue) -> FunctionResult<()> {
-    let bytes = value.text_storage_bytes().max(32);
-    host.check_text(bytes.saturating_mul(3))?;
-    host.check_values(bytes.saturating_mul(64).saturating_add(4096))?;
-    host.charge_work((bytes as u64).saturating_mul(bytes as u64).max(4096))
+    let bytes = value.text_storage_bytes();
+    host.check_text_capacity(bytes.saturating_mul(3))?;
+    // Scalar numeric normalization has statically bounded scratch; only input
+    // text grows with the workbook. Charge the text actually inspected.
+    host.charge_work((bytes as u64).saturating_add(1))
 }
 fn row_matches(
     host: &mut CallHost<'_, '_>,
@@ -104,9 +115,27 @@ fn row_matches(
             };
             let value = host.read_cell(0, row, selected)?.value;
             scratch(host, &value)?;
-            if !condition_matches(&value, &condition)
-                .map_err(|error| database_failure(host, error))?
-            {
+            if let Some(pattern) = condition.text_ref() {
+                let pattern = host.project_text(pattern)?;
+                let (operator, operand) = poirot_parsing::criteria::parse_comparison(&pattern);
+                if operator == poirot_parsing::criteria::Comparison::None
+                    && poirot_functions_criteria::has_wildcards(operand)
+                {
+                    let input = coercev2_database_header_text(host, &value)?;
+                    host.admit_wildcard(&operand.to_lowercase(), &input.to_lowercase())?;
+                }
+            }
+            let mut visited = 0;
+            let selected =
+                condition_matches_metered::<DatabaseMatchFailure>(&value, &condition, &mut || {
+                    host.wildcard_step(&mut visited)
+                        .map_err(DatabaseMatchFailure::Host)
+                })
+                .map_err(|error| match error {
+                    DatabaseMatchFailure::Domain(error) => database_failure(host, error),
+                    DatabaseMatchFailure::Host(error) => error,
+                })?;
+            if !selected {
                 matched = false;
                 break;
             }
@@ -160,7 +189,7 @@ fn evaluate(host: &mut CallHost<'_, '_>, function: DatabaseFunction) -> Function
     // Collect only values already selected by lazily evaluated criteria. Unvisited
     // columns and rejected rows never execute their worksheet formula subtrees.
     host.check_values(database.rows)?;
-    let mut values = vec![Text("N".into())];
+    let mut values = Vec::new();
     let mut unique = false;
     for row in 1..database.rows {
         let matched = match row_matches(
@@ -189,18 +218,22 @@ fn evaluate(host: &mut CallHost<'_, '_>, function: DatabaseFunction) -> Function
         }
         values.push(value);
     }
-    let conditions = [Text("N".into()), Blank];
-    let database = Grid::new(values.len(), 1, &values)?;
-    let criteria = Grid::new(2, 1, &conditions)?;
-    let plan = DatabasePlan::new(function, database, &Number(1.), criteria)
-        .map_err(|error| database_failure(host, error))?;
-    let estimate = plan.work_estimate();
-    host.check_values(usize::try_from(estimate.scratch_bytes).map_err(|_| Num)?)?;
-    host.charge_work(estimate.cell_visits.saturating_add(estimate.work_units))?;
+    // Finalization visits each selected value once, or twice for variance.
+    let passes = if matches!(
+        function,
+        DatabaseFunction::Stdev
+            | DatabaseFunction::StdevP
+            | DatabaseFunction::Var
+            | DatabaseFunction::VarP
+    ) {
+        2
+    } else {
+        1
+    };
+    host.charge_work((values.len() as u64).saturating_mul(passes))?;
     let policy = match host.builtin_semantics_policy() {
         BuiltinSemanticsPolicy::PinnedPoi => FinalizationPolicy::PinnedPoi,
         BuiltinSemanticsPolicy::ExcelDocumentation => FinalizationPolicy::ExcelDocumentation,
     };
-    plan.execute_with_policy(policy)
-        .map_err(|error| database_failure(host, error))
+    aggregate_selected(function, &values, policy).map_err(|error| database_failure(host, error))
 }

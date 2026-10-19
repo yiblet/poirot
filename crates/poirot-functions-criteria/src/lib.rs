@@ -62,8 +62,17 @@ impl Criterion {
     }
     /// Test a projected cell against the compiled criterion.
     pub fn matches(&self, cell: &Cell) -> bool {
+        self.matches_metered(cell, &mut || Ok::<_, std::convert::Infallible>(()))
+            .unwrap_or_else(|never| match never {})
+    }
+    /// Test a criterion, admitting each wildcard matching state through the host.
+    pub fn matches_metered<E>(
+        &self,
+        cell: &Cell,
+        visit: &mut impl FnMut() -> Result<(), E>,
+    ) -> Result<bool, E> {
         let op = self.comparison;
-        match (&self.value, cell) {
+        Ok(match (&self.value, cell) {
             (Cell::Blank, _) => false,
             (Cell::Number(a), Cell::Number(b)) => test_comparison(op, b.total_cmp(a)),
             (Cell::Number(a), Cell::Text(b)) => match op {
@@ -82,24 +91,24 @@ impl Criterion {
             },
             (Cell::Text(a), Cell::Text(b)) => {
                 if a.is_empty() && b.is_empty() {
-                    return matches!(op, Comparison::None | Comparison::Ne);
+                    return Ok(matches!(op, Comparison::None | Comparison::Ne));
                 }
                 if matches!(op, Comparison::None | Comparison::Eq | Comparison::Ne)
                     && has_wildcards(a)
                 {
-                    return test_comparison(
+                    return Ok(test_comparison(
                         op,
-                        if wildcard_match(a, b) {
+                        if wildcard_match_metered(a, b, visit)? {
                             Ordering::Equal
                         } else {
                             Ordering::Less
                         },
-                    );
+                    ));
                 }
                 test_comparison(op, b.to_lowercase().cmp(&a.to_lowercase()))
             }
             _ => op == Comparison::Ne,
-        }
+        })
     }
 }
 fn error_code(e: Error) -> u8 {
@@ -143,10 +152,21 @@ pub fn has_wildcards(pattern: &str) -> bool {
 }
 /// Full, ASCII-case-insensitive POI wildcard match. Iterative star backtracking, no recursion.
 pub fn wildcard_match(pattern: &str, text: &str) -> bool {
+    wildcard_match_metered(pattern, text, &mut || Ok::<_, std::convert::Infallible>(()))
+        .unwrap_or_else(|never| match never {})
+}
+/// Match wildcards, admitting each state before executing its comparison or retry.
+/// Hosts must separately admit token and character storage for the input lengths.
+pub fn wildcard_match_metered<E>(
+    pattern: &str,
+    text: &str,
+    visit: &mut impl FnMut() -> Result<(), E>,
+) -> Result<bool, E> {
     let p = tokens(pattern);
     let t: Vec<char> = text.chars().collect();
     let (mut i, mut j, mut star, mut retry) = (0, 0, None, 0);
     while j < t.len() {
+        visit()?;
         if i < p.len()
             // SAFETY: The loop guards bound i and j; retry starts at j and never exceeds j before advancing both together.
             && match p[i] {
@@ -167,20 +187,21 @@ pub fn wildcard_match(pattern: &str, text: &str) -> bool {
         } else if let Some(s) = star {
             // SAFETY: The loop guards bound i and j; retry starts at j and never exceeds j before advancing both together.
             if matches!(t[retry], '\n' | '\r' | '\u{85}' | '\u{2028}' | '\u{2029}') {
-                return false;
+                return Ok(false);
             }
             retry += 1;
             j = retry;
             i = s + 1;
         } else {
-            return false;
+            return Ok(false);
         }
     }
     // SAFETY: The loop guards bound i and j; retry starts at j and never exceeds j before advancing both together.
     while i < p.len() && matches!(p[i], Token::Many) {
+        visit()?;
         i += 1;
     }
-    i == p.len()
+    Ok(i == p.len())
 }
 
 /// Aggregation applied to rows selected by compiled criteria.

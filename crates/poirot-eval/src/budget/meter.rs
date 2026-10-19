@@ -58,9 +58,9 @@ impl BudgetMeter {
             ChargeRequest { kind, amount },
         )
         .map_err(EvaluationFailure::Budget)?;
-        self.usage.work_units += amount;
+        self.usage.work_units = self.usage.work_units.saturating_add(amount);
         if let Some((_, consumed)) = self.frames.last_mut() {
-            *consumed += amount;
+            *consumed = consumed.saturating_add(amount);
         }
         let counter = match kind {
             WorkKind::Expression => &mut self.usage.expressions,
@@ -76,18 +76,25 @@ impl BudgetMeter {
             WorkKind::CalendarStep => &mut self.usage.calendar_steps,
             WorkKind::ReferencePair => &mut self.usage.reference_pairs,
         };
-        *counter += amount;
+        *counter = counter.saturating_add(amount);
         Ok(())
     }
     #[cfg(test)]
     /// Return the smaller remaining run or active-cell work allowance.
     pub fn remaining_work(&self) -> u64 {
-        self.limits
-            .run_work
-            .saturating_sub(self.usage.work_units)
-            .min(self.frames.last().map_or(u64::MAX, |(_, consumed)| {
+        let run = if self.limits.run_work == u64::MAX {
+            u64::MAX
+        } else {
+            self.limits.run_work.saturating_sub(self.usage.work_units)
+        };
+        let cell = self.frames.last().map_or(u64::MAX, |(_, consumed)| {
+            if self.limits.cell_work == u64::MAX {
+                u64::MAX
+            } else {
                 self.limits.cell_work.saturating_sub(*consumed)
-            }))
+            }
+        });
+        run.min(cell)
     }
     /// Admit one nesting level and record peak depth.
     pub fn enter_depth(&mut self) -> EvalResult<()> {
@@ -150,6 +157,21 @@ impl BudgetMeter {
     pub fn wildcard(&mut self, states: u64) -> EvalResult<()> {
         self.admit_reservation(Reservation::WildcardStates(states))?;
         self.charge(WorkKind::WildcardState, states)
+    }
+    /// Admit one visited wildcard state against a caller-owned per-match counter.
+    pub fn wildcard_step(&mut self, visited: &mut u64) -> EvalResult<()> {
+        let next = visited.saturating_add(1);
+        if next > self.limits.wildcard_states {
+            return Err(self.failure(
+                BudgetKind::WildcardStates,
+                self.limits.wildcard_states,
+                *visited,
+                1,
+            ));
+        }
+        self.charge(WorkKind::WildcardState, 1)?;
+        *visited = next;
+        Ok(())
     }
     /// Finish accounting with usage attached to success or operational failure.
     pub fn outcome<T>(self, result: EvalResult<T>) -> EvaluationOutcome<T> {

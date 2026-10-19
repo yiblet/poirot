@@ -10,17 +10,12 @@ impl Session<'_> {
                 .ok_or_else(|| text_unsupported(poirot_text::Unsupported::SizeOverflow))?;
             self.budget.text(bytes)?;
             self.budget.allocation(units)?;
-            self.budget.charge(WorkKind::TextByte, bytes as u64)?;
             return Ok(text.units().collect());
         }
-        // NumberToTextConverter has a bounded ASCII representation.
-        self.budget.text(512)?;
-        self.budget.allocation(512)?;
-        self.budget.charge(WorkKind::TextByte, 512)?;
-        let rendered = match value {
-            Number(value) => poirot_coercionv2::compatibility::coercev2_number_to_text(*value),
-            _ => coercev2_formula_text(value, &mut self.budget)?,
-        };
+        let rendered = coercev2_formula_text(value, &mut self.budget)?;
+        let units = rendered.encode_utf16().count();
+        self.budget.check_text(units.saturating_mul(2))?;
+        self.budget.allocation(units)?;
         Ok(rendered.encode_utf16().collect())
     }
     /// Apply text operators directly to UTF-16 units under the selected source contract.
@@ -40,7 +35,6 @@ impl Session<'_> {
             .ok_or_else(|| text_unsupported(poirot_text::Unsupported::SizeOverflow))?;
         self.budget.text(bytes)?;
         self.budget.allocation(units)?;
-        self.budget.charge(WorkKind::TextByte, bytes as u64)?;
         let mut output = Vec::with_capacity(units);
         output.extend_from_slice(&left);
         output.extend_from_slice(&right);

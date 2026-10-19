@@ -1,16 +1,12 @@
 //! Selected ExcelArithmetic.approxAdd/approxSub and bounded NumberComparer port.
 use super::*;
 use std::cmp::Ordering;
-// Finite binary64 decimal power is bounded by 324. Reserve two decimal
-// normalization branches, their <900-bit powers/reciprocal scratch and output
-// limbs before the existing BigUint kernel. These are conservative logical
-// work/retention units, not estimates of machine instructions or wall time.
-const COMPARISON_WORK: u64 = 1024;
-const COMPARISON_SLOTS: usize = 256;
+// Finite binary64 bounds the kernel's decimal powers (at most 324) and
+// BigUint scratch (under 900 bits). This is one bounded scalar comparison,
+// not a materialized spreadsheet collection or 1024 performed operations.
 /// Compare numbers using the metered pinned decimal-precision kernel.
 pub(super) fn compare(a: f64, b: f64, budget: &mut BudgetMeter) -> FunctionResult<Ordering> {
-    budget.allocation(COMPARISON_SLOTS)?;
-    budget.charge(WorkKind::Comparison, COMPARISON_WORK)?;
+    budget.charge(WorkKind::Comparison, 1)?;
     poirot_numeric::compare(a, b).map_err(Into::into)
 }
 fn comparable_for_cancellation(a: f64, b: f64) -> bool {

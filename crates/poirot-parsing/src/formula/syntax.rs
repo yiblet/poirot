@@ -94,6 +94,7 @@ impl FormulaPrinter {
         write_expr(expression, &mut output, 0, &mut 0)?;
         if parse_formula(&output)? != *expression {
             return Err(ParseError {
+                kind: super::ParseErrorKind::Syntax,
                 position: 0,
                 message: "AST cannot be preserved by canonical syntax".into(),
             });
@@ -103,6 +104,7 @@ impl FormulaPrinter {
 }
 fn failure(message: &str) -> ParseError {
     ParseError {
+        kind: super::ParseErrorKind::Syntax,
         position: 0,
         message: message.into(),
     }
@@ -152,7 +154,11 @@ fn write_expr(
 ) -> Result<(), ParseError> {
     *nodes += 1;
     if depth >= 128 || *nodes > 1024 {
-        return Err(failure("printer complexity limit exceeded"));
+        return Err(ParseError {
+            kind: ParseErrorKind::ResourceLimit,
+            position: 0,
+            message: "printer complexity limit exceeded".into(),
+        });
     }
     match expr {
         Expr::Number(n) => {

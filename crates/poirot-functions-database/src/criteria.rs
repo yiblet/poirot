@@ -59,6 +59,14 @@ impl<'a> CriteriaPlan<'a> {
 
 /// Compare one database value with a criterion using database coercion rules.
 pub fn condition_matches(value: &CellValue, condition: &CellValue) -> Result<bool, DatabaseError> {
+    condition_matches_metered(value, condition, &mut || Ok(()))
+}
+/// Compare a selected record, admitting each wildcard state through the host.
+pub fn condition_matches_metered<E: From<DatabaseError>>(
+    value: &CellValue,
+    condition: &CellValue,
+    visit: &mut impl FnMut() -> Result<(), E>,
+) -> Result<bool, E> {
     match condition {
         CellValue::Number(_) | CellValue::Boolean(_) => {
             let number = if let Some(number) = coercev2_database_number(value) {
@@ -72,11 +80,17 @@ pub fn condition_matches(value: &CellValue, condition: &CellValue) -> Result<boo
         }
         CellValue::Error(e) => Ok(matches!(value,CellValue::Error(v) if v == e)),
         CellValue::Blank => Ok(true),
-        CellValue::Text(condition) => string_condition(value, condition),
-        CellValue::TextUtf16(_) => string_condition(value, &coercev2_database_text(condition)?),
+        CellValue::Text(condition) => string_condition(value, condition, visit),
+        CellValue::TextUtf16(_) => {
+            string_condition(value, &coercev2_database_text(condition)?, visit)
+        }
     }
 }
-fn string_condition(value: &CellValue, condition: &str) -> Result<bool, DatabaseError> {
+fn string_condition<E: From<DatabaseError>>(
+    value: &CellValue,
+    condition: &str,
+    visit: &mut impl FnMut() -> Result<(), E>,
+) -> Result<bool, E> {
     use poirot_parsing::criteria::Comparison::*;
     let (operator, operand) = poirot_parsing::criteria::parse_comparison(condition);
     if operator == None {
@@ -86,7 +100,11 @@ fn string_condition(value: &CellValue, condition: &str) -> Result<bool, Database
         let actual = coercev2_database_text(value)?.to_lowercase();
         let expected = operand.to_lowercase();
         // Shared wildcard implementation is installed by the criteria family.
-        return Ok(wildcard_or_prefix(&expected, &actual));
+        return if poirot_functions_criteria::has_wildcards(&expected) {
+            poirot_functions_criteria::wildcard_match_metered(&expected, &actual, visit)
+        } else {
+            Ok(actual.starts_with(&expected))
+        };
     }
     if operator == Eq && operand.is_empty() {
         return Ok(matches!(value, CellValue::Blank));
@@ -96,8 +114,8 @@ fn string_condition(value: &CellValue, condition: &str) -> Result<bool, Database
         let Some(actual) = coercev2_database_number(value) else {
             return Ok(false);
         };
-        let expected = parsed.ok_or(CellError::Value)?;
-        let comparison = number::compare(actual, expected)?;
+        let expected = parsed.ok_or(DatabaseError::Cell(CellError::Value))?;
+        let comparison = number::compare(actual, expected).map_err(DatabaseError::from)?;
         return Ok(match operator {
             Lt => comparison.is_lt(),
             Le => !comparison.is_gt(),
@@ -110,11 +128,4 @@ fn string_condition(value: &CellValue, condition: &str) -> Result<bool, Database
     }
     let equal = equal_ignore_case(&coercev2_database_text(value)?, operand);
     Ok(if operator == Ne { !equal } else { equal })
-}
-fn wildcard_or_prefix(pattern: &str, value: &str) -> bool {
-    if poirot_functions_criteria::has_wildcards(pattern) {
-        poirot_functions_criteria::wildcard_match(pattern, value)
-    } else {
-        value.starts_with(pattern)
-    }
 }

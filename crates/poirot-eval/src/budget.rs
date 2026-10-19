@@ -1,15 +1,19 @@
 //! Operational limits and accounting, separate from spreadsheet error values.
 use poirot_model::CellAddress;
 
-/// Limits count explicit engine operations, not elapsed time or machine instructions.
+/// Opt-in runtime limits; defaults are unlimited except structural depth 128.
+/// Machine maxima (`u64::MAX`/`usize::MAX`) disable their respective limits.
+/// Usage saturates at the counter maximum. Units are operations, not elapsed time.
 /// `cell_work` is direct work in a formula frame; dependency formulas have own frames.
 /// Materialization limits logical elements in each collection, not total heap bytes.
-/// Text limits each input/copy/output buffer's byte storage: UTF-8 bytes or two
-/// bytes per UTF-16 unit. Work charges include processing reservations before allocation. These are deterministic cost units, not instruction
-/// counts. Wildcard states bound each matching operation; depth has a hard ceiling of 128.
-/// Work and depth measure execution actually performed, so cache reuse can avoid
-/// failures in those categories. Collection and text limits also apply when a
-/// retained result is admitted; a cache hit does not waive result-size limits.
+/// Text limits variable input/output buffer bytes: UTF-8 bytes or two bytes per
+/// UTF-16 unit. Fixed, bounded scalar-kernel scratch is not a collection or a
+/// peak-heap limit. Work counts semantic operations and visited data; some
+/// kernels admit a conservative bound before entering an unmetered operation.
+/// Wildcard states bound one match; execution depth has a hard ceiling of 128.
+/// Cache reuse can avoid execution work and depth, but retained results still
+/// pass collection and text admission. Memo and optional trace retention have
+/// independent limits; parsing, formatting, and file codecs own structural caps.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct EvaluationBudgets {
     /// Maximum work charged across the whole evaluation.
@@ -28,12 +32,12 @@ pub struct EvaluationBudgets {
 impl Default for EvaluationBudgets {
     fn default() -> Self {
         Self {
-            run_work: 10_000_000,
-            cell_work: 1_000_000,
+            run_work: u64::MAX,
+            cell_work: u64::MAX,
             depth: 128,
-            materialized_values: 100_000,
-            wildcard_states: 100_000,
-            text_bytes: 1_048_576,
+            materialized_values: usize::MAX,
+            wildcard_states: u64::MAX,
+            text_bytes: usize::MAX,
         }
     }
 }
@@ -109,6 +113,10 @@ pub struct BudgetFailure {
 /// Stable identity for an explicitly unsupported execution capability.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum CapabilityId {
+    /// Formula syntax preparation and configured structural bounds.
+    FormulaParsing,
+    /// Optional observation or retained execution evidence.
+    ExecutionObservation,
     /// Structural bytecode compilation before execution.
     FormulaCompilation,
     /// Identifier comparison outside the supported contract.
@@ -155,7 +163,7 @@ pub enum EvaluationFailure {
     StalePlan,
     /// A metered engine operation exceeded its configured limit.
     Budget(BudgetFailure),
-    /// An installed renderer refused its own resource policy or overflowed.
+    /// A component refused its own resource policy, structural bound, or overflow.
     /// Distinct from unsupported fidelity and metered BudgetFailure amounts.
     ResourceLimit {
         /// Capability whose internal resource limit was exceeded.

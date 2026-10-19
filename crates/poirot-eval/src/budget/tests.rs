@@ -632,3 +632,59 @@ fn formatter_reservations_and_unsupported_capabilities_are_operational() {
         Ok(Value::Scalar(CellValue::Error(CellError::Num)))
     ));
 }
+
+#[test]
+fn unlimited_work_saturates_accounting_without_exhausting_the_sentinel() {
+    let mut meter = BudgetMeter::new(EvaluationBudgets::default()).unwrap();
+    meter.push_cell(EvaluationTarget {
+        sheet: 0,
+        address: AT,
+    });
+    meter.charge(WorkKind::Comparison, 10_000_001).unwrap();
+    meter.charge(WorkKind::Comparison, u64::MAX).unwrap();
+    meter.charge(WorkKind::Comparison, 1).unwrap();
+    assert_eq!(meter.usage.work_units, u64::MAX);
+    assert_eq!(meter.usage.comparisons, u64::MAX);
+    assert_eq!(meter.remaining_work(), u64::MAX);
+    meter.check_allocation(100_001).unwrap();
+    meter.check_text(1_048_577).unwrap();
+    let mut states = u64::MAX;
+    meter.wildcard_step(&mut states).unwrap();
+    assert_eq!(states, u64::MAX);
+    assert_eq!(meter.usage.work_units, u64::MAX);
+}
+
+#[test]
+fn finite_work_admission_stays_transactional_beside_unlimited_counters() {
+    let mut meter = BudgetMeter::new(EvaluationBudgets {
+        cell_work: 1,
+        ..Default::default()
+    })
+    .unwrap();
+    meter.charge(WorkKind::Comparison, u64::MAX).unwrap();
+    meter.push_cell(EvaluationTarget {
+        sheet: 0,
+        address: AT,
+    });
+    meter.charge(WorkKind::Comparison, 1).unwrap();
+    let before = meter.usage.clone();
+    assert!(matches!(
+        meter.charge(WorkKind::Comparison, 1),
+        Err(EvaluationFailure::Budget(BudgetFailure {
+            kind: BudgetKind::CellWork,
+            consumed: 1,
+            requested: 1,
+            ..
+        }))
+    ));
+    assert_eq!(meter.usage, before);
+    let mut finite = BudgetMeter::new(EvaluationBudgets {
+        run_work: u64::MAX - 1,
+        ..Default::default()
+    })
+    .unwrap();
+    finite.charge(WorkKind::Comparison, u64::MAX - 1).unwrap();
+    assert!(
+        matches!(finite.charge(WorkKind::Comparison, 1), Err(EvaluationFailure::Budget(BudgetFailure { kind: BudgetKind::RunWork, consumed, requested: 1, .. })) if consumed == u64::MAX - 1)
+    );
+}

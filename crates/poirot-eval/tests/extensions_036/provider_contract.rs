@@ -1,6 +1,7 @@
 use super::support::{contract, identity, run, value, workbook};
 use poirot_eval::{
-    CapabilityId, EvaluationFailure, EvaluationOutcome, extensions::*, registry::Arity,
+    CapabilityId, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
+    extensions::*, registry::Arity,
 };
 use poirot_model::{CellAddress, CellError, CellValue};
 
@@ -151,18 +152,43 @@ fn reference_and_array_reads_are_budgeted_and_missing_is_preserved() {
                 maximum: 0,
             }),
             |host: &mut dyn ExtensionHost| {
-                host.charge_work(1_000_001)?;
+                host.charge_work(10_000_001)?;
                 Ok(ExtensionOutput::Scalar(CellValue::Number(1.)))
             },
         )
         .unwrap();
-    assert!(matches!(
-        run(&workbook, &registry, "COSTLY()").outcome,
-        EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
-            ..
-        }
-    ));
+    let unlimited = run(&workbook, &registry, "COSTLY()");
+    assert!(unlimited.outcome.usage().work_units > 10_000_000);
+    assert_eq!(value(unlimited), CellValue::Number(1.));
+    for budgets in [
+        EvaluationBudgets {
+            run_work: 10_000_000,
+            ..Default::default()
+        },
+        EvaluationBudgets {
+            cell_work: 1_000_000,
+            ..Default::default()
+        },
+    ] {
+        assert!(matches!(
+            run_formula_with_extensions(
+                &workbook,
+                0,
+                CellAddress { row: 0, col: 0 },
+                "COSTLY()",
+                ExtensionExecution {
+                    registry: &registry,
+                    context: EvaluationInputs::default(),
+                    budgets,
+                }
+            )
+            .outcome,
+            EvaluationOutcome::Aborted {
+                failure: EvaluationFailure::Budget(_),
+                ..
+            }
+        ));
+    }
 }
 
 #[test]

@@ -1,0 +1,139 @@
+//! Public preparation limits remain operational failures only when reached.
+use poirot::eval::{
+    self, CapabilityId, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
+    EvaluationTarget,
+};
+use poirot::parsing::formula::{self, FormulaParsePolicy, ParseErrorKind};
+use poirot::{CellValue, EvaluationContext, Overlay, Workbook};
+fn target(address: &str) -> EvaluationTarget {
+    EvaluationTarget {
+        sheet: 0,
+        address: address.parse().unwrap(),
+    }
+}
+#[test]
+fn parser_classifies_limits_separately_from_syntax_and_invalid_configuration() {
+    assert_eq!(
+        formula::parse_formula("SUM(").unwrap_err().kind,
+        ParseErrorKind::Syntax
+    );
+    assert!(
+        formula::parse_formula_with_policy(
+            "1+2",
+            FormulaParsePolicy {
+                max_expressions: 2,
+                ..Default::default()
+            }
+        )
+        .is_ok()
+    );
+    for (source, policy) in [
+        (
+            "1+2+3",
+            FormulaParsePolicy {
+                max_expressions: 2,
+                ..Default::default()
+            },
+        ),
+        (
+            "((1))",
+            FormulaParsePolicy {
+                max_depth: 2,
+                ..Default::default()
+            },
+        ),
+        (
+            "A2",
+            FormulaParsePolicy {
+                max_rows: 1,
+                ..Default::default()
+            },
+        ),
+    ] {
+        assert_eq!(
+            formula::parse_formula_with_policy(source, policy)
+                .unwrap_err()
+                .kind,
+            ParseErrorKind::ResourceLimit
+        );
+    }
+    assert_eq!(
+        formula::parse_formula_with_policy(
+            "1",
+            FormulaParsePolicy {
+                max_depth: 0,
+                ..Default::default()
+            }
+        )
+        .unwrap_err()
+        .kind,
+        ParseErrorKind::InvalidPolicy
+    );
+}
+#[test]
+fn reached_preparation_refusals_abort_iferror_but_lazy_sources_remain_unused() {
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("Data").unwrap();
+    let large = format!("SUM({})", vec!["1"; 1100].join(","));
+    sheet
+        .set_formula(target("A1").address, large.clone(), CellValue::Blank)
+        .unwrap();
+    sheet
+        .set_formula(target("B1").address, "IFERROR(A1,42)", CellValue::Blank)
+        .unwrap();
+    sheet
+        .set_formula(target("C1").address, "IF(TRUE,7,A1)", CellValue::Blank)
+        .unwrap();
+    sheet
+        .set_formula(target("D1").address, "SUM(", CellValue::Blank)
+        .unwrap();
+    sheet
+        .set_formula(target("E1").address, "IFERROR(D1,42)", CellValue::Blank)
+        .unwrap();
+    let context = EvaluationContext::default();
+    let mut direct = poirot::Evaluation::with_workbook(book.model())
+        .build(context.clone())
+        .unwrap();
+    assert_eq!(direct.cell(target("C1")).unwrap(), CellValue::Number(7.));
+    assert_eq!(direct.cell(target("E1")).unwrap(), CellValue::Number(42.));
+    assert!(matches!(
+        direct.cell(target("B1")),
+        Err(EvaluationFailure::ResourceLimit {
+            capability: CapabilityId::FormulaParsing,
+            ..
+        })
+    ));
+    let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
+    assert_eq!(
+        overlay
+            .evaluation(&context)
+            .unwrap()
+            .cell(target("C1"))
+            .unwrap(),
+        CellValue::Number(7.)
+    );
+    assert!(matches!(
+        overlay.evaluation(&context).unwrap().cell(target("B1")),
+        Err(EvaluationFailure::ResourceLimit {
+            capability: CapabilityId::FormulaParsing,
+            ..
+        })
+    ));
+    assert!(matches!(
+        eval::run_formula(
+            book.model(),
+            0,
+            target("A1").address,
+            &large,
+            EvaluationInputs::default(),
+            EvaluationBudgets::default()
+        ),
+        EvaluationOutcome::Aborted {
+            failure: EvaluationFailure::ResourceLimit {
+                capability: CapabilityId::FormulaParsing,
+                ..
+            },
+            ..
+        }
+    ));
+}

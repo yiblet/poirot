@@ -82,6 +82,25 @@ impl poirot_functions_core::Input for ScalarInput<'_, '_, '_> {
 }
 
 impl<'call, 'workbook> CallHost<'call, 'workbook> {
+    /// Admit wildcard token/character storage; matching steps are charged separately.
+    pub(crate) fn admit_wildcard(&mut self, pattern: &str, input: &str) -> FunctionResult<()> {
+        if poirot_functions_criteria::has_wildcards(pattern) {
+            self.check_values_capacity(
+                pattern
+                    .chars()
+                    .count()
+                    .saturating_add(input.chars().count()),
+            )?;
+        }
+        Ok(())
+    }
+    /// Charge one visited matching state against this match's local limit.
+    pub(crate) fn wildcard_step(&mut self, visited: &mut u64) -> FunctionResult<()> {
+        self.session
+            .budget
+            .wildcard_step(visited)
+            .map_err(Into::into)
+    }
     /// Record an argument consumer's dependence on numeric locale defaults.
     pub(crate) fn read_number_locale(&mut self) {
         self.session.read(DependencyRead::NumberLocale);

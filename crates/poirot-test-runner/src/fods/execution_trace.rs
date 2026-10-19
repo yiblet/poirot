@@ -157,7 +157,7 @@ impl DependencyReadSink for Reads<'_> {
             } => {
                 if matches!(
                     self.plan.defined_name(index).map(|p| p.as_ref()),
-                    Some(PreparedFormula::ParseFailure { .. })
+                    Some(PreparedFormula::ParseFailure { error, .. }) if error.kind == poirot_parsing::formula::ParseErrorKind::Syntax
                 ) {
                     trace
                         .syntax
@@ -195,7 +195,7 @@ impl CellObserver for Cells<'_> {
         if completion.result.is_ok()
             && matches!(
                 self.plan.formula(completion.target).map(|p| p.as_ref()),
-                Some(PreparedFormula::ParseFailure { .. })
+                Some(PreparedFormula::ParseFailure { error, .. }) if error.kind == poirot_parsing::formula::ParseErrorKind::Syntax
             )
         {
             self.trace

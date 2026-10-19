@@ -151,6 +151,7 @@ pub(super) fn cell_reference(
             })
         })
         .map_err(|()| ParseError {
+            kind: super::ParseErrorKind::Syntax,
             position: 0,
             message: "cell reference exceeds Excel grid".into(),
         })

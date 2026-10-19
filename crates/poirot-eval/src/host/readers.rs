@@ -50,6 +50,40 @@ impl CallHost<'_, '_> {
             _ => None,
         })
     }
+    /// Enumerate stored reference positions, recording membership for future edits.
+    /// Arrays and scalars return `None` and retain their existing dense traversal.
+    pub(crate) fn stored_positions(
+        &mut self,
+        index: usize,
+    ) -> FunctionResult<Option<Vec<(usize, usize)>>> {
+        self.prepare(index)?;
+        let (area, row, column) = match &self.memo.get(&index).ok_or(VALUE_ERROR)?.value {
+            Value::Refs(areas) | Value::SheetSpan(areas) if areas.len() == 1 => {
+                let area = *areas.first().ok_or(VALUE_ERROR)?;
+                (Some(area), i64::from(area.r0), i64::from(area.c0))
+            }
+            Value::SignedRefs(areas) if areas.len() == 1 => {
+                let area = *areas.first().ok_or(VALUE_ERROR)?;
+                (area.physical(), i64::from(area.r0), i64::from(area.c0))
+            }
+            _ => return Ok(None),
+        };
+        let Some(area) = area else {
+            return Ok(Some(Vec::new()));
+        };
+        let addresses = self.session.sparse_addresses(area)?;
+        self.check_values_capacity(addresses.len())?;
+        let positions = addresses
+            .into_iter()
+            .map(|at| {
+                Ok((
+                    usize::try_from(i64::from(at.row) - row).map_err(|_| Ref)?,
+                    usize::try_from(i64::from(at.col) - column).map_err(|_| Ref)?,
+                ))
+            })
+            .collect::<FunctionResult<Vec<_>>>()?;
+        Ok(Some(positions))
+    }
     /// Read one logical member at zero-based offsets, preserving origin and omission.
     pub(crate) fn read_cell(
         &mut self,

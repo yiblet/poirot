@@ -186,7 +186,7 @@ fn actual_selected_density_projection_obeys_text_budget_and_gamma_meter() {
     let density = run(&book(), "NORM.DIST(1,0,1,FALSE)");
     assert!(
         ordinary.usage().helper_operations > density.usage().helper_operations,
-        "same numeric/coercion inputs and fixedwork512; cumulative charges actual Gamma iterations"
+        "same numeric/coercion inputs and bounded scalar setup; cumulative charges actual Gamma iterations"
     );
     assert!(matches!(ordinary, EvaluationOutcome::Complete { .. }));
     assert!(matches!(density, EvaluationOutcome::Complete { .. }));

@@ -38,13 +38,8 @@ pub(super) fn preflight(host: &mut CallHost<'_, '_>, values: &[&CellValue]) -> F
         .iter()
         .map(|v| v.text_storage_bytes())
         .fold(0usize, usize::saturating_add);
-    host.check_text(bytes.saturating_mul(3))?;
-    host.check_values(bytes.saturating_mul(32).saturating_add(values.len()))?;
-    host.charge_work(
-        (bytes as u64)
-            .saturating_mul(bytes as u64)
-            .saturating_add(1),
-    )?;
+    host.check_text_capacity(bytes.saturating_mul(3))?;
+    host.charge_work((bytes as u64).saturating_add(1))?;
     if values
         .iter()
         .any(|v| matches!(v, Error(GettingData | Spill | Calc)))
@@ -203,65 +198,98 @@ fn aggregate(
     use Function::*;
     let (rows, columns) = ranges.first().ok_or(VALUE_ERROR)?.1;
     let (mut sum, mut count, mut extremum) = (0., 0usize, None::<f64>);
-    for r in 0..rows {
-        for c in 0..columns {
-            let mut matched = true;
-            for ((index, _), criterion) in ranges.iter().zip(criteria) {
-                if function != AverageIf && matches!(criterion.value, Cell::Blank) {
-                    matched = false;
-                    break;
-                }
-                let v = host.read_cell(*index, r, c)?.value;
-                let cv = match &criterion.value {
-                    Cell::Text(s) => Text(s.clone()),
-                    _ => Blank,
-                };
-                preflight(host, &[&v, &cv])?;
-                if !criterion.matches(&cell(host, &v)?) {
-                    matched = false;
-                    break;
-                }
+    // Only the first predicate may prove implicit blanks irrelevant: selecting
+    // a later range would bypass earlier errors and dependencies. AverageIf
+    // reads even rejected targets, so it must retain dense traversal.
+    let positions = if function != AverageIf
+        && criteria
+            .first()
+            .is_some_and(|criterion| !criterion.matches(&Cell::Blank))
+    {
+        host.stored_positions(ranges.first().ok_or(VALUE_ERROR)?.0)?
+    } else {
+        None
+    };
+    let dense_len = if positions.is_some() {
+        0
+    } else {
+        rows.checked_mul(columns).ok_or(Num)?
+    };
+    if columns == 0 {
+        return Err(VALUE_ERROR.into());
+    }
+    let selected = positions
+        .into_iter()
+        .flatten()
+        .chain((0..dense_len).map(|index| (index / columns, index % columns)));
+    for (r, c) in selected {
+        let mut matched = true;
+        for ((index, _), criterion) in ranges.iter().zip(criteria) {
+            if function != AverageIf && matches!(criterion.value, Cell::Blank) {
+                matched = false;
+                break;
             }
-            // AverageIf reads the target even for nonmatches; other functions stay lazy.
-            let value = if function == AverageIf {
-                Some(
-                    host.read_relative_cell(target.ok_or(VALUE_ERROR)?, r, c)?
-                        .value,
-                )
-            } else {
-                None
+            let v = host.read_cell(*index, r, c)?.value;
+            let cv = match &criterion.value {
+                Cell::Text(s) => Text(s.clone()),
+                _ => Blank,
             };
-            if !matched {
-                continue;
-            }
-            if matches!(function, CountIf | CountIfs) {
-                count += 1;
-                continue;
-            }
-            let v = match value {
-                Some(v) => v,
-                None => {
-                    host.read_relative_cell(target.ok_or(VALUE_ERROR)?, r, c)?
-                        .value
+            preflight(host, &[&v, &cv])?;
+            if let (Cell::Text(pattern), Some(input)) = (&criterion.value, v.text_ref()) {
+                let input = host.project_text(input)?;
+                if matches!(
+                    criterion.comparison,
+                    Comparison::None | Comparison::Eq | Comparison::Ne
+                ) {
+                    host.admit_wildcard(pattern, &input)?;
                 }
-            };
-            // Pinned POI AverageIf admits only numeric targets; Excel forwards selected errors.
-            if let Error(e) = v
-                && (function != AverageIf || host.excel_builtins())
-            {
-                return Ok(Error(e));
             }
-            if let Number(n) = v {
-                sum += n;
-                count += 1;
+            let projected = cell(host, &v)?;
+            let mut visited = 0;
+            if !criterion.matches_metered(&projected, &mut || host.wildcard_step(&mut visited))? {
+                matched = false;
+                break;
             }
-            let numeric = if let Number(n) = v { n } else { 0. };
-            extremum = Some(match extremum {
-                None => numeric,
-                Some(old) if function == MinIfs => old.min(numeric),
-                Some(old) => old.max(numeric),
-            });
         }
+        // AverageIf reads the target even for nonmatches; other functions stay lazy.
+        let value = if function == AverageIf {
+            Some(
+                host.read_relative_cell(target.ok_or(VALUE_ERROR)?, r, c)?
+                    .value,
+            )
+        } else {
+            None
+        };
+        if !matched {
+            continue;
+        }
+        if matches!(function, CountIf | CountIfs) {
+            count += 1;
+            continue;
+        }
+        let v = match value {
+            Some(v) => v,
+            None => {
+                host.read_relative_cell(target.ok_or(VALUE_ERROR)?, r, c)?
+                    .value
+            }
+        };
+        // Pinned POI AverageIf admits only numeric targets; Excel forwards selected errors.
+        if let Error(e) = v
+            && (function != AverageIf || host.excel_builtins())
+        {
+            return Ok(Error(e));
+        }
+        if let Number(n) = v {
+            sum += n;
+            count += 1;
+        }
+        let numeric = if let Number(n) = v { n } else { 0. };
+        extremum = Some(match extremum {
+            None => numeric,
+            Some(old) if function == MinIfs => old.min(numeric),
+            Some(old) => old.max(numeric),
+        });
     }
     Ok(match function {
         CountIf | CountIfs => Number(count as f64),
