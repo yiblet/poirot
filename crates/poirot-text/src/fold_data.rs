@@ -1,7 +1,7 @@
 //! Generated casefold0.1.0 Unicode16 tables; MIT and Unicode data terms.
 //! <https://github.com/github/rust-gems/tree/b8c6e27652f7f198a3a0f2183179948cd69be0c1/crates/casefold>
 //! Reproduce with that revision's build.rs and data/CaseFolding.txt, then rustfmt.
-//! Notices: LICENSES/casefold-MIT.txt and LICENSES/Unicode-3.0.txt.
+//! Notices: root LICENSES/ACKNOWLEDGEMENTS.
 
 pub(crate) static PAGE_BITMAP: [u64; 31] = [
     0x00000000003fe3fe,

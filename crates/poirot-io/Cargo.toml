@@ -7,7 +7,7 @@ license.workspace = true
 repository.workspace = true
 readme = "README.md"
 description = "XLSX workbook import and export"
-include = ["/tests/fixtures/poi-*.xls", "/src/**", "/README.md", "/LICENSE", "/NOTICE", "/LICENSES/**"]
+include = ["/tests/fixtures/poi-*.xls", "/src/**", "/README.md"]
 
 [dependencies]
 cfb.workspace = true

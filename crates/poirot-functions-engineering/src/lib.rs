@@ -1,3 +1,5 @@
+//! Rust adaptations of Apache POI (Apache-2.0); class bindings are described below.
+//! <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/formula/functions>
 //! Pure engineering algorithms and retained pinned POI helper APIs.
 //! Argument parsing and result spelling belong to poirot-coercionv2; references,
 //! resource admission and operational errors belong to the evaluator adapter.

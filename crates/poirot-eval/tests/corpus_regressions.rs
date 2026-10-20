@@ -15,7 +15,7 @@ fn book() -> Workbook {
 #[test]
 fn shared_corpus_boundaries_agree_across_public_execution_paths() {
     // DATE/NUMBERVALUE and direct-blank SUMPRODUCT examples adapt ClosedXML tests:
-    // revision 09f2f21a60e821ce7fb18ca3576b272e5dd6d921, MIT (LICENSES/ClosedXML-MIT.txt).
+    // revision 09f2f21a60e821ce7fb18ca3576b272e5dd6d921, MIT (root LICENSES/ACKNOWLEDGEMENTS).
     // https://github.com/ClosedXML/ClosedXML/tree/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine
     // Criteria siblings derive from the independently authored saved-Excel/Calc corpus.
     // Referenced-blank SUMPRODUCT probes were independently recalculated with Calc 26.2.6.3.

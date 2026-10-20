@@ -7,7 +7,7 @@ license.workspace = true
 repository.workspace = true
 readme = "README.md"
 description = "Workbook-independent engineering and radix functions"
-include = ["/src/**", "/README.md", "/LICENSE", "/NOTICE", "/LICENSES/**"]
+include = ["/src/**", "/README.md"]
 
 [dependencies]
 libm.workspace = true

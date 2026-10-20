@@ -20,6 +20,9 @@ pub fn month_days(y: i64, m: i64) -> i64 {
         _ => 31,
     }
 }
+// Gregorian conversion adapts Howard Hinnant's days_from_civil/civil_from_days.
+// MIT reference: HowardHinnant/date 5bdb7e6f31fac909c090a46dbd9fea27b6e609a4,
+// include/date/date.h; see root LICENSES/ACKNOWLEDGEMENTS.
 // Gregorian epoch algorithms, using 400-year eras (days relative to 1970-01-01).
 /// Convert a civil date to days relative to 1970-01-01.
 pub fn epoch(d: Date) -> i64 {

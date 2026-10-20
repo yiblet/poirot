@@ -7,7 +7,9 @@
 //! backend formula-reconstruction text/stack growth, number-format/name decoding,
 //! or the sparse model's final allocation. Input byte limits remain separate.
 //! Unknown BIFF records and inaccurate SST counts within budgets remain accepted.
-//! Source: pinned POI DimensionsRecord/SSTRecord and calamine 0.36.1 cfb.rs/xls.rs.
+//! Source contracts: POI DimensionsRecord/SSTRecord and calamine0.36.1 CFB/XLS.
+//! <https://github.com/tafia/calamine/tree/0a24c2a9f1e38c0932c1299e633270dc730db505/src>
+//! Calamine credit is in root LICENSES/ACKNOWLEDGEMENTS; terms in LICENSES/MIT.txt.
 use std::{collections::BTreeSet, fmt};
 
 mod cfb;

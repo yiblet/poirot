@@ -139,6 +139,9 @@ fn cell_value(node: Node<'_, '_>) -> Result<InputValue, String> {
             year -= i64::from(month <= 2);
             let era = year.div_euclid(400);
             let yo = year - era * 400;
+            // Gregorian conversion adapts Howard Hinnant's days_from_civil/civil_from_days.
+            // MIT reference: HowardHinnant/date 5bdb7e6f31fac909c090a46dbd9fea27b6e609a4,
+            // include/date/date.h; see root LICENSES/ACKNOWLEDGEMENTS.
             let days = era * 146097 + yo * 365 + yo / 4 - yo / 100
                 + (153 * (month + if month > 2 { -3 } else { 9 }) + 2) / 5
                 + day

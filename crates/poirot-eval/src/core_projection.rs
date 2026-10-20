@@ -429,6 +429,9 @@ impl Session<'_> {
                 "numeric date default year requires a supported frozen clock",
             ));
         }
+        // Gregorian conversion adapts Howard Hinnant's days_from_civil/civil_from_days.
+        // MIT reference: HowardHinnant/date 5bdb7e6f31fac909c090a46dbd9fea27b6e609a4,
+        // include/date/date.h; see root LICENSES/ACKNOWLEDGEMENTS.
         let z = days as i64 + 719468;
         let era = z.div_euclid(146097);
         let day_of_era = z - era * 146097;

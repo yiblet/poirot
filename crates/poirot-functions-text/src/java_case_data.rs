@@ -1,5 +1,5 @@
 //! Typed lookup into an immutable generated Unicode15 asset, format revision 1.
-//! Copyright © 1991-2022 Unicode, Inc. See UNICODE-LICENSE.txt alongside the asset.
+//! Copyright © 1991-2022 Unicode, Inc. See root LICENSES/ACKNOWLEDGEMENTS.
 const DATA: &[u8] = include_bytes!("java_case_unicode15.bin");
 const HEADER: usize = 12;
 const RECORD: usize = 30;

@@ -7,7 +7,7 @@ license.workspace = true
 repository.workspace = true
 readme = "README.md"
 description = "Workbook-independent conditional aggregation and wildcard matching"
-include = ["/src/**", "/README.md", "/LICENSE", "/NOTICE", "/LICENSES/**"]
+include = ["/src/**", "/README.md"]
 
 [dependencies]
 poirot-text = { version = "0.1.0", path = "../poirot-text" }

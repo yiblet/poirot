@@ -1,3 +1,5 @@
+//! Rust adaptation of Commons Math3.6.1 LUDecomposition (Apache-2.0).
+//! <https://github.com/apache/commons-math/blob/MATH_3_6_1/src/main/java/org/apache/commons/math3/linear/LUDecomposition.java>
 use super::{Budget, Error, Matrix, Result, finite, num, value};
 
 /// Swap rows and columns after admitting output size and work.

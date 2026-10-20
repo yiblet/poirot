@@ -525,7 +525,7 @@ mod tests {
     fn real_poi_biff_fixture_has_matching_structural_contract() {
         // Reuse the independently sourced, hash-documented repository fixture;
         // tests must not require a separate Apache POI checkout. The byte-identical
-        // poirot-io fixture is copied locally for package tests; see NOTICE.
+        // poirot-io fixture is copied locally for package tests; see root LICENSES/ACKNOWLEDGEMENTS.
         let original = include_bytes!("../tests/fixtures/poi-SimpleMultiCell.xls");
         let mut c = cfb::CompoundFile::open(Cursor::new(original)).unwrap();
         let mut original = Vec::new();

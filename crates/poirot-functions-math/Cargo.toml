@@ -7,7 +7,7 @@ license.workspace = true
 repository.workspace = true
 readme = "README.md"
 description = "Workbook-independent spreadsheet mathematics and numeric aggregation"
-include = ["/src/**", "/README.md", "/LICENSE", "/NOTICE", "/LICENSES/**"]
+include = ["/src/**", "/README.md"]
 
 [dependencies]
 poirot-coercionv2 = { version = "0.1.0", path = "../poirot-coercionv2" }

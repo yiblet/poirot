@@ -364,6 +364,9 @@ fn render_plan(
     Ok(out)
 }
 // Gregorian calendar conversion from days relative to 1970-01-01.
+// Gregorian conversion adapts Howard Hinnant's days_from_civil/civil_from_days.
+// MIT reference: HowardHinnant/date 5bdb7e6f31fac909c090a46dbd9fea27b6e609a4,
+// include/date/date.h; see root LICENSES/ACKNOWLEDGEMENTS.
 fn civil(days: i64) -> (i64, u32, u32) {
     let z = days + 719468;
     let era = z.div_euclid(146097);

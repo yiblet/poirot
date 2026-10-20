@@ -79,7 +79,7 @@ cargo doc -p poirot --no-deps --open
 
 Contributions are welcome! See [Contributing](CONTRIBUTING.md) to get started.
 
-The supported Rust baseline is 1.99. Run tests, formatting checks, and lints from the
+The supported Rust baseline is 1.90. Run tests, formatting checks, and lints from the
 repository root:
 
 ```sh
@@ -101,5 +101,5 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
   [IronCalc](https://github.com/ironcalc/IronCalc) offered additional inspiration
   for our approach to building a spreadsheet library.
 
-First-party code is [MIT licensed](LICENSE). See [NOTICE](NOTICE) for third-party
-licenses and attribution.
+See [LICENSES/ACKNOWLEDGEMENTS](LICENSES/ACKNOWLEDGEMENTS) for project credits
+and [LICENSES/MIT.txt](LICENSES/MIT.txt) for Poirot’s license.

@@ -7,7 +7,7 @@ license.workspace = true
 repository.workspace = true
 readme = "README.md"
 description = "Spreadsheet number formats and display rendering"
-include = ["/src/**", "/README.md", "/LICENSE", "/NOTICE", "/LICENSES/**"]
+include = ["/src/**", "/README.md"]
 
 [dependencies]
 nom.workspace = true

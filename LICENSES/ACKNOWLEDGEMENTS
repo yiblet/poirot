@@ -1,0 +1,103 @@
+Poirot — MIT (MIT.txt).
+
+Poirot includes material from these projects:
+
+Apache POI — Apache-2.0 (Apache-2.0.txt); Rust translations, algorithms, fixtures and tests.
+https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15
+Cached-workbook scenarios: dc577a8cbcdec22ae5547615502d63b2051f35a6.
+
+Apache Commons Math — Apache-2.0 (Apache-2.0.txt); statistical functions and matrix LU kernels.
+https://github.com/apache/commons-math/tree/MATH_3_6_1
+
+ClosedXML — MIT (MIT.txt); DATE normalization and regression scenarios.
+https://github.com/ClosedXML/ClosedXML/tree/09f2f21a60e821ce7fb18ca3576b272e5dd6d921
+
+Howard Hinnant date — MIT (MIT.txt); Gregorian calendar conversions.
+https://github.com/HowardHinnant/date/blob/5bdb7e6f31fac909c090a46dbd9fea27b6e609a4/include/date/date.h
+Published formulas are also public domain: https://howardhinnant.github.io/date_algorithms.html
+
+calamine — MIT (MIT.txt); BIFF/CFB allocation contracts.
+https://github.com/tafia/calamine/tree/0a24c2a9f1e38c0932c1299e633270dc730db505
+
+casefold — MIT (MIT.txt); adapted character lookup and Unicode 16 folding tables.
+https://github.com/github/rust-gems/tree/b8c6e27652f7f198a3a0f2183179948cd69be0c1/crates/casefold
+
+Unicode — Unicode 15 casing data (Unicode-DFS-2016.txt) and Unicode 16
+folding data (Unicode-3.0.txt).
+https://www.unicode.org/Public/15.0.0/ucd/
+https://www.unicode.org/Public/16.0.0/ucd/CaseFolding.txt
+
+LibreOffice — separate MPL-2.0 FODS test corpus; its COPYING.MPL and source
+manifest remain with the data. Revision: cd35bc0879ed5e4b8138b724033ea5937751a84d.
+
+MIT copyright notices (with the permission text in MIT.txt)
+
+Copyright (c) 2026 Poirot contributors
+
+ClosedXML
+Copyright (c) 2016 ClosedXML
+
+Howard Hinnant date
+Copyright (c) 2015, 2016, 2017 Howard Hinnant
+Copyright (c) 2016 Adrian Colomitchi
+Copyright (c) 2017 Florian Dang
+Copyright (c) 2017 Paul Thompson
+Copyright (c) 2018, 2019 Tomasz Kamiński
+Copyright (c) 2019 Jiangang Zhuang
+
+calamine
+Copyright (c) 2016 Johann Tuffe
+
+casefold
+Copyright (c) 2023 GitHub Inc.
+
+Apache POI notice
+
+Apache POI
+Copyright 2003-2026 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (https://www.apache.org/).
+
+This product contains parts that were originally based on software from BEA.
+Copyright (c) 2000-2003, BEA Systems, <http://www.bea.com/> (dead link),
+which was acquired by Oracle Corporation in 2008.
+<http://www.oracle.com/us/corporate/Acquisitions/bea/index.html>
+<https://en.wikipedia.org/wiki/BEA_Systems>
+Note: The ASF Secretary has on hand a Software Grant Agreement (SGA) from
+BEA Systems, Inc. dated 9 Sep 2003 for XMLBeans signed by their EVP/CFO.
+
+This product contains W3C XML Schema documents. Copyright 2001-2003 (c)
+World Wide Web Consortium (Massachusetts Institute of Technology, European
+Research Consortium for Informatics and Mathematics, Keio University)
+
+This product contains the chunks_parse_cmds.tbl file from the vsdump program.
+Copyright (C) 2006-2007 Valek Filippov (frob@df.ru)
+
+This product contains parts of the eID Applet project
+<http://eid-applet.googlecode.com> and <https://github.com/e-Contract/eid-applet>.
+Copyright (c) 2009-2018
+FedICT (federal ICT department of Belgium), e-Contract.be BVBA (https://www.e-contract.be),
+Bart Hanssens from FedICT
+
+ExceptionUtils is derived from `scala.util.control.NonFatal` in scala-library
+which was released under the Apache 2.0 license.
+
+Copyright (c) 2002-2023 EPFL
+Copyright (c) 2011-2023 Lightbend, Inc.
+
+Scala includes software developed at
+LAMP/EPFL (https://lamp.epfl.ch/) and
+Lightbend, Inc. (https://www.lightbend.com/).
+
+Apache Commons Math notice
+
+Apache Commons Math
+Copyright 2001-2016 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+This product includes software developed for Orekit by
+CS Systèmes d'Information (http://www.c-s.fr/)
+Copyright 2010-2012 CS Systèmes d'Information

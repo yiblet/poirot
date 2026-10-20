@@ -56,6 +56,8 @@ pub enum Outcome {
 fn leap(y: i32) -> bool {
     y % 4 == 0 && (y % 100 != 0 || y % 400 == 0)
 }
+// Gregorian day conversion follows Howard Hinnant; see dates/calendar.rs
+// and root LICENSES/ACKNOWLEDGEMENTS for the pinned MIT source and file-specific copyright.
 fn days(y: i32, m: i32, d: i32) -> i64 {
     let y = i64::from(y) - i64::from(m <= 2);
     let era = y.div_euclid(400);

@@ -1,4 +1,4 @@
-"""Check generated Cargo archives contain runtime sources and complete legal files."""
+"""Check Cargo archive contents against the root-only legal source layout."""
 import json
 from pathlib import Path
 import subprocess
@@ -13,12 +13,8 @@ def main():
         '--format-version', '1',
     ]))
     root = Path(metadata['workspace_root'])
-    legal = ['LICENSE', 'NOTICE', *[
-        path.relative_to(root).as_posix()
-        for path in sorted((root / 'LICENSES').iterdir()) if path.is_file()
-    ]]
     common = {'Cargo.toml', 'Cargo.toml.orig', 'Cargo.lock', '.cargo_vcs_info.json',
-              'README.md', 'CONTRIBUTING.md', 'LICENSE', 'NOTICE'}
+              'README.md', 'CONTRIBUTING.md'}
     checked = 0
     for package in metadata['packages']:
         if package['publish'] == []:
@@ -32,15 +28,22 @@ def main():
                 ('src/', 'examples/', 'tests/fixtures/', 'LICENSES/'))}
             if unexpected:
                 raise ValueError(f'{prefix}: unexpected package files: {sorted(unexpected)}')
-            for name in ['README.md', *legal]:
-                if name not in files:
-                    raise ValueError(f'{prefix}: missing {name}')
-            for name in legal:
+            if 'README.md' not in files:
+                raise ValueError(f'{prefix}: missing README.md')
+            legal = [path.relative_to(root).as_posix()
+                     for path in sorted((root / 'LICENSES').iterdir()) if path.is_file()]
+            if Path(package['manifest_path']).parent == root:
+                missing = set(legal) - files
+                if missing:
+                    raise ValueError(f'{prefix}: missing {sorted(missing)}')
+            for name in files:
+                if not name.startswith('LICENSES/'):
+                    continue
                 source = contents.extractfile(f'{prefix}/{name}')
-                if source is None or source.read() != (root / name).read_bytes():
+                if name not in legal or source is None or source.read() != (root / name).read_bytes():
                     raise ValueError(f'{prefix}: {name} differs from workspace copy')
         checked += 1
-    print(f'Checked {checked} package archives; contents and legal files match.')
+    print(f'Checked {checked} package archives; root license files match.')
 
 
 if __name__ == '__main__':
