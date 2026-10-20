@@ -184,11 +184,11 @@ fn localization_context_and_recalculation() {
     c.as_of_time = UNIX_EPOCH + Duration::from_secs(1_609_502_400);
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "NOW()", Number(777.))
+        .set_formula_with_cached_value("A1".parse().unwrap(), "NOW()", Number(777.))
         .unwrap();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("A2".parse().unwrap(), "NOW()", Number(777.))
+        .set_formula_with_cached_value("A2".parse().unwrap(), "NOW()", Number(777.))
         .unwrap();
     match crate::run_recalculation(&mut w, c, Default::default()) {
         crate::EvaluationOutcome::Complete { .. } => (),

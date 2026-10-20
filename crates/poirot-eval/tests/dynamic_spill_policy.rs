@@ -110,7 +110,6 @@ fn child_discovery_records_anchor_and_selected_source_dependencies() {
         .set_formula(
             target("D1").address,
             "IF(TRUE,TRANSPOSE(A1:A2),TRANSPOSE(B1:B2))",
-            CellValue::Blank,
         )
         .unwrap();
     w.sheet_mut(0)
@@ -164,7 +163,7 @@ fn mutable_recalculation_publishes_dynamic_children_with_source_ownership() {
     let mut w = workbook();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula(target("F1").address, "{1,2}", CellValue::Number(99.))
+        .set_formula_with_cached_value(target("F1").address, "{1,2}", CellValue::Number(99.))
         .unwrap();
     assert!(matches!(
         run_recalculation_with_configuration(&mut w, &config(), Default::default()),
@@ -204,7 +203,7 @@ fn scalar_external_cache_refuses_dynamic_spills_before_reader_invocation() {
     let mut w = workbook();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula(target("D1").address, "{1,2}", CellValue::Blank)
+        .set_formula(target("D1").address, "{1,2}")
         .unwrap();
     let policy = EvaluationPolicy::default();
     let plan = FormulaCompiler::new().compile_workbook(&w, &policy);
@@ -232,7 +231,7 @@ fn scalar_external_cache_refuses_dynamic_spills_before_reader_invocation() {
     w.define_name("Pair", "{1,2}", None).unwrap();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula(target("D1").address, "Pair", CellValue::Blank)
+        .set_formula(target("D1").address, "Pair")
         .unwrap();
     let plan = FormulaCompiler::new().compile_workbook(&w, &policy);
     for first in ["D1", "E1"] {

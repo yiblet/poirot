@@ -116,11 +116,11 @@ fn scalar_comparison_and_error_policies_apply_to_array_members() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(target("D1").address, "1/0", CellValue::Blank)
+        .set_formula(target("D1").address, "1/0")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(target("E1").address, "NA()", CellValue::Blank)
+        .set_formula(target("E1").address, "NA()")
         .unwrap();
     for (formula, expected) in [
         // Current typed comparison intentionally differs from Calc's broader SWITCH admission.
@@ -180,7 +180,7 @@ fn later_cases_and_unselected_reference_members_are_not_read() {
     ] {
         book.sheet_mut(0)
             .unwrap()
-            .set_formula(target(cell).address, formula, CellValue::Blank)
+            .set_formula(target(cell).address, formula)
             .unwrap();
     }
     for arrays in [
@@ -282,7 +282,7 @@ fn policy_and_expression_edits_invalidate_results_after_snapshot_restore() {
     ] {
         book.sheet_mut(0)
             .unwrap()
-            .set_formula(target(cell).address, formula, CellValue::Blank)
+            .set_formula(target(cell).address, formula)
             .unwrap();
     }
     let mut overlay = Overlay::with_workbook(&book)
@@ -358,7 +358,7 @@ fn expression_case_and_result_dimensions_bound_child_first_spills() {
         let mut book = book();
         book.sheet_mut(0)
             .unwrap()
-            .set_formula(target("E5").address, formula, CellValue::Blank)
+            .set_formula(target("E5").address, formula)
             .unwrap();
         let mut overlay = Overlay::with_workbook(&book)
             .with_policy(OverlayPolicy {

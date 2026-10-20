@@ -65,7 +65,7 @@ fn final_missing_bulk_abort_publishes_no_partial_cache_or_style_changes() {
         let address = address.parse().unwrap();
         let sheet = workbook.sheet_mut(0).unwrap();
         sheet
-            .set_formula(address, formula, CellValue::Number(cache))
+            .set_formula_with_cached_value(address, formula, CellValue::Number(cache))
             .unwrap();
         sheet.get_mut(address).unwrap().style.number_format = Some("0.00".into());
     }

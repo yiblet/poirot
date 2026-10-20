@@ -1,7 +1,7 @@
-//! Typed iteration failures, separate from spreadsheet numeric-domain errors.
+//! Keep convergence failures separate from spreadsheet errors and host work limits.
 use poirot_functions_core::CellError;
 
-/// Pinned source convergence failures retained separately from spreadsheet and host errors.
+/// Why an iterative statistical calculation failed to converge.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SourceConvergenceFailure {
     /// The source algorithm exhausted its allowed iterations.
@@ -12,7 +12,7 @@ pub enum SourceConvergenceFailure {
     NanContinuedFraction,
 }
 
-/// Preserve spreadsheet, operational, and pinned-source failures across kernel boundaries.
+/// A statistical calculation failure that retains its cause for the caller.
 #[derive(Clone, Debug, PartialEq)]
 pub enum KernelFailure<O> {
     /// Catchable spreadsheet error.
@@ -23,19 +23,20 @@ pub enum KernelFailure<O> {
     SourceConvergence(SourceConvergenceFailure),
 }
 
-/// Metered statistical result preserving spreadsheet, host, and source-convergence failures.
+/// A statistical result or its spreadsheet, host, or convergence failure.
 pub type KernelResult<O> = Result<f64, KernelFailure<O>>;
 
-/// Reserve one iteration through the host-supplied work callback.
+/// Charge one iteration to the caller's work counter.
 pub(crate) fn step<O, M: FnMut(u64) -> Result<(), O>>(
     meter: &mut M,
 ) -> Result<(), KernelFailure<O>> {
     meter(1).map_err(KernelFailure::Operational)
 }
 
-/// Compatibility policy for pure, explicitly unmetered domain entry points.
-/// These have no evaluator port; source convergence exceptions map to NUM here.
-/// Actual evaluator adapters use the metered entry points and preserve failures.
+/// Convert an unmetered kernel result to a spreadsheet result.
+///
+/// Convergence failures become `#NUM!` here. Evaluator adapters use metered entry
+/// points instead, so they can keep convergence and host failures distinct.
 pub(crate) fn unmetered(result: KernelResult<std::convert::Infallible>) -> crate::Result {
     match result {
         Ok(value) => Ok(value),

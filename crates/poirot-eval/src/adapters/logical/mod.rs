@@ -179,7 +179,7 @@ mod tests {
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_formula(at, "1/0", Number(99.))
+            .set_formula_with_cached_value(at, "1/0", Number(99.))
             .unwrap();
         for (formula, expected) in [
             ("ISREF(A1)", Boolean(true)),

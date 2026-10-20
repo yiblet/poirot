@@ -13,9 +13,9 @@
 //! let mut workbook = Workbook::new();
 //! let sheet = workbook.add_sheet("Sheet1")?;
 //! sheet.set_value("A1".parse()?, 3.0)?;
-//! sheet.set_formula("B1".parse()?, "A1*2", CellValue::Blank)?;
-//! sheet.set_formula("C1".parse()?, "B1+1", CellValue::Blank)?;
-//! sheet.set_formula("D1".parse()?, "B1+2", CellValue::Blank)?;
+//! sheet.set_formula("B1".parse()?, "A1*2")?;
+//! sheet.set_formula("C1".parse()?, "B1+1")?;
+//! sheet.set_formula("D1".parse()?, "B1+2")?;
 //! let policy = EvaluationPolicy::default();
 //! let plan = FormulaCompiler::new().compile_workbook(&workbook, &policy);
 //! let view = WorkbookView::new(&workbook, &plan, &policy)?;
@@ -44,11 +44,11 @@ mod consumption;
 /// Immutable workbook ownership for independent what-if runs.
 pub mod shared_workbook;
 
-/// Cell result reuse and completion observation ports.
+// Cell result reuse and completion observation ports.
 pub use completion::{
     CachedCellReader, CellCompletion, CellObserver, CellProvenance, same_result_identity,
 };
-/// Actual consumed-read events used to construct dependency certificates.
+// Actual consumed-read events used to construct dependency certificates.
 pub use consumption::{ContextRead, DependencyRead, DependencyReadSink, ReadEvent};
 
 /// Execution counters for one run, distinguishing formula execution, prepared lookups,
@@ -168,7 +168,7 @@ pub enum EvaluationProbe<'a> {
         formula: &'a bound::FormulaPlan,
     },
 }
-/// Observation of builtin handlers actually entered during execution.
+// Observation of builtin handlers actually entered during execution.
 pub use crate::consumed_calls::{BuiltinInvocationObserver, ConsumedBuiltinInvocation};
 
 /// Shared-session probes reuse only this run's memo. Construct another run to read

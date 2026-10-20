@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
-description = "Workbook-independent conditional aggregation and wildcard matching"
+description = "Spreadsheet criteria matching and conditional aggregation"
 include = ["/src/**", "/README.md"]
 
 [dependencies]

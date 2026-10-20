@@ -87,7 +87,6 @@ fn shared_corpus_boundaries_agree_across_public_execution_paths() {
                     col: 5,
                 },
                 *formula,
-                CellValue::Blank,
             )
             .unwrap();
     }

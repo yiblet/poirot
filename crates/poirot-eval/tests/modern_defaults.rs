@@ -119,7 +119,6 @@ fn text_and_unary_regressions_work_in_prepared_bound_and_overlay_paths() {
                     col: 2,
                 },
                 *formula,
-                CellValue::Blank,
             )
             .unwrap();
     }
@@ -199,11 +198,11 @@ fn logical_units_preserve_unpaired_surrogates_and_policy_changes_invalidate_snap
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(target("B1").address, "LEFT(A1,2)", CellValue::Blank)
+        .set_formula(target("B1").address, "LEFT(A1,2)")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(target("B2").address, "LEN(A1)", CellValue::Blank)
+        .set_formula(target("B2").address, "LEN(A1)")
         .unwrap();
     let context = EvaluationContext::default();
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
@@ -257,7 +256,7 @@ fn default_recalculation_atomically_publishes_and_replaces_spill_children() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(target("A1").address, "{1,2;3,4}", CellValue::Blank)
+        .set_formula(target("A1").address, "{1,2;3,4}")
         .unwrap();
     assert!(matches!(
         run_recalculation(&mut book, Default::default(), Default::default()),
@@ -296,7 +295,7 @@ fn default_recalculation_atomically_publishes_and_replaces_spill_children() {
     );
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(target("A1").address, "{9}", CellValue::Blank)
+        .set_formula(target("A1").address, "{9}")
         .unwrap();
     assert!(matches!(
         run_recalculation_with_receipts(

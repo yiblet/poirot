@@ -26,8 +26,7 @@ fn book() -> Workbook {
     ] {
         s.set_value(target(at).address, value).unwrap();
     }
-    s.set_formula(target("D2").address, "\"\"", CellValue::Blank)
-        .unwrap();
+    s.set_formula(target("D2").address, "\"\"").unwrap();
     w
 }
 fn excel() -> RunConfiguration {
@@ -118,11 +117,7 @@ fn policy_switches_invalidate_retained_criteria_results() {
     let mut w = book();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula(
-            target("Z1").address,
-            formula("SUMIFS", "D1"),
-            CellValue::Blank,
-        )
+        .set_formula(target("Z1").address, formula("SUMIFS", "D1"))
         .unwrap();
     let mut overlay = Overlay::with_workbook(&w)
         .with_policy(poirot_eval::overlay::OverlayPolicy {
@@ -322,18 +317,10 @@ fn contextual_criteria_invalidate_retained_locale_and_date_order_reads() {
     sheet.set_value(target("A1").address, 10.).unwrap();
     sheet.set_value(target("A2").address, 43840.).unwrap();
     sheet
-        .set_formula(
-            target("B1").address,
-            r#"COUNTIF(A1,">1,234")"#,
-            CellValue::Blank,
-        )
+        .set_formula(target("B1").address, r#"COUNTIF(A1,">1,234")"#)
         .unwrap();
     sheet
-        .set_formula(
-            target("B2").address,
-            r#"COUNTIF(A2,">1/2/2020")"#,
-            CellValue::Blank,
-        )
+        .set_formula(target("B2").address, r#"COUNTIF(A2,">1/2/2020")"#)
         .unwrap();
     let mut overlay = Overlay::with_workbook(&w)
         .with_policy(OverlayPolicy {
@@ -464,11 +451,7 @@ fn averageif_preserves_target_read_order_and_operational_failures() {
     // This unsupported operation must abort even though the first target row is rejected.
     w.sheet_mut(0)
         .unwrap()
-        .set_formula(
-            target("B1").address,
-            "COUNTIF(A1:A4,D1:D2)",
-            CellValue::Blank,
-        )
+        .set_formula(target("B1").address, "COUNTIF(A1:A4,D1:D2)")
         .unwrap();
     for config in [
         excel(),

@@ -46,13 +46,13 @@ impl CellEncoding {
     }
 }
 
-fn style_map(bytes: &[u8], key: &[u8]) -> Result<BTreeMap<CellAddress, String>, IoError> {
+fn style_map(bytes: &[u8], key: &str) -> Result<BTreeMap<CellAddress, String>, IoError> {
     let mut result = BTreeMap::new();
     let mut reader = events(bytes);
     loop {
         match reader.read_event().map_err(xml)? {
-            Event::Start(e) if e.local_name().as_ref() == b"c" => {
-                if let (Some(r), Some(s)) = (attr(&reader, &e, b"r")?, attr(&reader, &e, key)?) {
+            Event::Start(e) if e.local_name().as_ref() == "c" => {
+                if let (Some(r), Some(s)) = (attr(&e, "r")?, attr(&e, key)?) {
                     result.insert(r.parse()?, s);
                 }
             }
@@ -137,14 +137,14 @@ impl SheetPatch<'_> {
     /// Rewrite worksheet XML using canonical cell types and saved results.
     pub(super) fn execute<W: Write>(&self, output: W) -> Result<W, IoError> {
         let Self { bytes, sheet } = *self;
-        let styles = style_map(bytes, b"s")?;
-        let metadata = style_map(bytes, b"cm")?;
+        let styles = style_map(bytes, "s")?;
+        let metadata = style_map(bytes, "cm")?;
         let mut reader = events(bytes);
         let mut writer = Writer::new(output);
         loop {
             let event = reader.read_event().map_err(xml)?;
             match event {
-                Event::Start(e) if e.local_name().as_ref() == b"sheetData" => {
+                Event::Start(e) if e.local_name().as_ref() == "sheetData" => {
                     write_event(&mut writer, Event::Start(e.clone().into_owned()))?;
                     reader.read_to_end(e.name()).map_err(xml)?;
                     write_cells(&mut writer, sheet, &styles, &metadata)?;

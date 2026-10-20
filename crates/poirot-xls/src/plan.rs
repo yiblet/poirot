@@ -69,6 +69,8 @@ impl BiffFormulaPlan {
         26 + self.tokens.len()
     }
 }
+/// A validated workbook export ready to encode as XLS.
+///
 /// Immutable borrowing prevents mutation of the workbook while a plan is usable.
 pub struct XlsExportPlan<'a> {
     /// Immutable source workbook validated by the export plan.

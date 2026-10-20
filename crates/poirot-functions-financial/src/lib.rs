@@ -1,8 +1,23 @@
-//! Rust adaptations of Apache POI (Apache-2.0); class bindings are described below.
-//! <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/formula/functions>
-//! Pure financial calculations. Scalar/reference coercion belongs to the evaluator adapter.
-//! Algorithms are based on pinned POI FinanceLib, Finance, Irr, Mirr and Rate;
-//! formatting follows ExcelArithmetic's 15 significant decimal digits.
+//! Financial calculations for spreadsheet functions.
+//!
+//! Includes loan payments, present and future values, cash-flow returns, and
+//! financial text formatting. Call operations such as [`pv`], [`fv`], [`pmt`], [`npv`],
+//! and [`irr`] with numeric inputs; no workbook is required.
+//!
+//! For periodic calculations, rates are fractions per payment period: use
+//! `0.06 / 12.0` for a nominal annual rate of 6% with monthly payments. Period counts
+//! use the same unit. Cash paid and cash received have opposite signs.
+//! Where an operation takes `beginning`, `true` means payment at the start of each
+//! period and `false` means payment at the end.
+//!
+//! [`fixed`] and [`dollar`] format financial text. They are separate from cell display
+//! formatting in [poirot-format](https://docs.rs/poirot-format).
+
+// Rust adaptations of Apache POI (Apache-2.0); class bindings are described below.
+// <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/formula/functions>
+// Pure financial calculations. Scalar/reference coercion belongs to the evaluator adapter.
+// Algorithms are based on pinned POI FinanceLib, Finance, Irr, Mirr and Rate;
+// formatting follows ExcelArithmetic's 15 significant decimal digits.
 
 /// Spreadsheet failures produced by financial kernels after adapter coercion.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -31,7 +46,10 @@ fn finite(xs: &[f64]) -> Result<()> {
     }
 }
 
-/// Compute future value for constant-rate periodic payments.
+/// Calculate future value for constant periodic payments.
+///
+/// `r` is the rate per period and `n` is the number of periods. Cash paid and received have opposite signs.
+/// `beginning` selects payments at the start instead of the end of each period.
 pub fn fv(r: f64, n: f64, payment: f64, present: f64, beginning: bool) -> Result<f64> {
     finite(&[r, n, payment, present])?;
     checked(if r == 0.0 {
@@ -41,7 +59,10 @@ pub fn fv(r: f64, n: f64, payment: f64, present: f64, beginning: bool) -> Result
         (1.0 - power) * if beginning { 1.0 + r } else { 1.0 } * payment / r - present * power
     })
 }
-/// Compute present value for constant-rate periodic payments.
+/// Calculate present value for constant periodic payments.
+///
+/// `r` is the rate per period and `n` is the number of periods. Cash paid and received have opposite signs.
+/// `beginning` selects payments at the start instead of the end of each period.
 pub fn pv(r: f64, n: f64, payment: f64, future: f64, beginning: bool) -> Result<f64> {
     finite(&[r, n, payment, future])?;
     checked(if r == 0.0 {
@@ -51,7 +72,10 @@ pub fn pv(r: f64, n: f64, payment: f64, future: f64, beginning: bool) -> Result<
         ((1.0 - power) / r * if beginning { 1.0 + r } else { 1.0 } * payment - future) / power
     })
 }
-/// Compute a constant periodic payment for an annuity.
+/// Calculate the constant payment for an annuity.
+///
+/// `r` is the rate per period and `n` is the number of periods. Cash paid and received have opposite signs.
+/// `beginning` selects payments at the start instead of the end of each period.
 pub fn pmt(r: f64, n: f64, present: f64, future: f64, beginning: bool) -> Result<f64> {
     finite(&[r, n, present, future])?;
     checked(if r == 0.0 {
@@ -61,7 +85,10 @@ pub fn pmt(r: f64, n: f64, present: f64, future: f64, beginning: bool) -> Result
         (future + present * power) * r / (if beginning { 1.0 + r } else { 1.0 } * (1.0 - power))
     })
 }
-/// Compute the number of payment periods at a constant rate.
+/// Calculate the number of payment periods for an annuity.
+///
+/// `r` is the rate per period. Cash paid and received have opposite signs.
+/// `beginning` selects payments at the start instead of the end of each period.
 pub fn nper(r: f64, payment: f64, present: f64, future: f64, beginning: bool) -> Result<f64> {
     finite(&[r, payment, present, future])?;
     checked(if r == 0.0 {
@@ -76,8 +103,9 @@ pub fn nper(r: f64, payment: f64, present: f64, future: f64, beginning: bool) ->
         (first.ln() - second.ln()) / (1.0 + r).ln()
     })
 }
-/// POI IPMT/PPMT use integer periods and the four-argument Finance algorithm.
-/// This preserves its zero-rate #NUM behavior, rather than silently substituting PMT.
+/// Calculate the interest portion of a payment using integer payment periods.
+///
+/// Follows the Apache POI Finance algorithm, including a numeric error at zero rate.
 pub fn ipmt(rate: f64, period: i32, periods: i32, present: f64) -> Result<f64> {
     finite(&[rate, present])?;
     let payment = finance_payment(rate, periods, present);
@@ -91,7 +119,9 @@ fn finance_payment(rate: f64, periods: i32, present: f64) -> f64 {
     // before multiplication by a small rate, even if a regrouped result fits.
     -rate * (present * a + 0.0) / ((1.0 + rate * 0.0) * (a - 1.0))
 }
-/// Compute the principal component using the pinned payment kernel.
+/// Calculate the principal portion of a payment using integer payment periods.
+///
+/// Uses the same Apache POI payment calculation and zero-rate error as [`ipmt`].
 pub fn ppmt(rate: f64, period: i32, periods: i32, present: f64) -> Result<f64> {
     checked(finance_payment(rate, periods, present) - ipmt(rate, period, periods, present)?)
 }
@@ -359,7 +389,10 @@ pub fn irr(flows: &[f64], guess: f64) -> Result<f64> {
     }
     Err(FinancialError::Num)
 }
-/// POI's pinned RATE Newton quotient, including its precise expression grouping.
+/// Solve for the interest rate per payment period using the supplied initial guess.
+///
+/// `payment_type` is 0 for payments at the end of each period and 1 for payments
+/// at the start. Returns a numeric error when the iteration does not converge.
 pub fn rate(
     periods: f64,
     payment: f64,
@@ -369,6 +402,7 @@ pub fn rate(
     guess: f64,
 ) -> Result<f64> {
     finite(&[periods, payment, present, future, payment_type, guess])?;
+    // Preserve the pinned POI RATE Newton quotient and its expression grouping.
     let mut r = guess;
     for _ in 0..100 {
         let a = (1.0 + r).powf(periods);

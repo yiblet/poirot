@@ -1,8 +1,17 @@
-//! Rust adaptations of Apache POI (Apache-2.0); class bindings are described below.
-//! <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/formula/functions>
-//! Pure numeric algorithms. The evaluator owns coercion, references and arity.
-//! Source: pinned POI NumericFunction, MathX, ExcelArithmetic, Gcd, Lcm,
-//! FactDouble, Quotient, CeilingMath/Precise, FloorMath/Precise and atp/MRound.
+//! Numeric calculations for spreadsheet functions.
+//!
+//! Includes rounding, factorials, combinations, ceiling and floor variants, and
+//! transcendental functions. Call operations such as [`round`], [`fact`], and
+//! [`ceiling_math`] with numeric values.
+//!
+//! The caller converts arguments, resolves references, and selects the operation.
+//! The [`transcendental`] module provides shared floating-point calculations.
+
+// Rust adaptations of Apache POI (Apache-2.0); class bindings are described below.
+// <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/formula/functions>
+// Pure numeric algorithms. The evaluator owns coercion, references and arity.
+// Source: pinned POI NumericFunction, MathX, ExcelArithmetic, Gcd, Lcm,
+// FactDouble, Quotient, CeilingMath/Precise, FloorMath/Precise and atp/MRound.
 /// Source-compatible transcendental kernels shared by the math entry points.
 pub mod transcendental;
 use bigdecimal::{BigDecimal, RoundingMode, ToPrimitive};

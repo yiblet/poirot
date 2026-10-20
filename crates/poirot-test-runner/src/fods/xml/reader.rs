@@ -6,7 +6,6 @@ use super::{
 use crate::fods::{cases, formula::translate};
 use regex::{Captures, Regex};
 use roxmltree::{Document, Node};
-use sha2::{Digest, Sha256};
 use std::{collections::BTreeMap, path::Path, sync::OnceLock};
 
 const OFFICE: &str = "urn:oasis:names:tc:opendocument:xmlns:office:1.0";
@@ -383,7 +382,7 @@ pub fn extract_bytes(bytes: &[u8], source: &str) -> Result<FodsWorkbook, String>
     Ok(FodsWorkbook {
         source: source.into(),
         source_commit: SOURCE_COMMIT.into(),
-        sha256: format!("{:x}", Sha256::digest(bytes)),
+        sha256: crate::model::digest(bytes),
         sheets,
         names,
         calculation_settings,

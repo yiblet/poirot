@@ -76,19 +76,17 @@ fn reached_preparation_refusals_abort_iferror_but_lazy_sources_remain_unused() {
     let sheet = book.add_sheet("Data").unwrap();
     let large = format!("SUM({})", vec!["1"; 1100].join(","));
     sheet
-        .set_formula(target("A1").address, large.clone(), CellValue::Blank)
+        .set_formula(target("A1").address, large.clone())
         .unwrap();
     sheet
-        .set_formula(target("B1").address, "IFERROR(A1,42)", CellValue::Blank)
+        .set_formula(target("B1").address, "IFERROR(A1,42)")
         .unwrap();
     sheet
-        .set_formula(target("C1").address, "IF(TRUE,7,A1)", CellValue::Blank)
+        .set_formula(target("C1").address, "IF(TRUE,7,A1)")
         .unwrap();
+    sheet.set_formula(target("D1").address, "SUM(").unwrap();
     sheet
-        .set_formula(target("D1").address, "SUM(", CellValue::Blank)
-        .unwrap();
-    sheet
-        .set_formula(target("E1").address, "IFERROR(D1,42)", CellValue::Blank)
+        .set_formula(target("E1").address, "IFERROR(D1,42)")
         .unwrap();
     let context = EvaluationContext::default();
     let mut direct = poirot::Evaluation::with_workbook(book.model())

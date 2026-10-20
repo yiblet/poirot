@@ -1,7 +1,7 @@
 //! Owned workbook mutations. Cache writes preserve formulas; literal writes replace them.
 use crate::*;
 
-/// Owned source and saved-cache mutations consumed atomically by Workbook::apply.
+/// One workbook mutation in a batch passed to [`Workbook::apply`].
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum WorkbookChange {
     /// Replace a source cell with a literal, clearing its formula.
@@ -23,7 +23,9 @@ pub enum WorkbookChange {
         /// Formula source to normalize and store.
         formula: String,
     },
-    /// Saved file data, not validated evaluator provenance. Reject a different source.
+    /// Update a formula's stored result only if its formula still matches.
+    ///
+    /// This checks formula text, not whether the supplied result is correct.
     SetCachedValue {
         /// Zero-based index of the worksheet to change.
         sheet: usize,
@@ -86,7 +88,9 @@ pub enum WorkbookChange {
         /// Worksheet or defined-name spelling validated by the selected mutation.
         name: String,
     },
-    /// Metadata rename only; use formula-aware edits when references must be rewritten.
+    /// Rename a sheet without changing references in formulas.
+    ///
+    /// Use a [`RenameSheetPlan`] when references must follow the new name.
     RenameSheet {
         /// Zero-based index of the worksheet to change.
         sheet: usize,
@@ -139,12 +143,11 @@ pub enum WorkbookChange {
     },
 }
 impl Workbook {
-    /// Atomically replace sparse authored cells without cloning the workbook.
+    /// Replace or remove cells as one batch without cloning the workbook.
     ///
     /// `None` removes a cell. Repeated coordinates use the last replacement.
     /// All addresses, sheets and formulas are validated before any mutation.
-    /// Only changed payloads are staged; saved spill children conflicting with
-    /// replacements are cleared in the same way as ordinary worksheet edits.
+    /// Conflicting spill results are cleared as they are for individual cell edits.
     pub fn replace_cells(
         &mut self,
         cells: impl IntoIterator<Item = (usize, CellAddress, Option<Cell>)>,
@@ -227,9 +230,7 @@ impl Workbook {
                 sheet,
                 address,
                 formula,
-            } => self
-                .change_sheet(sheet)?
-                .set_formula(address, formula, CellValue::Blank)?,
+            } => self.change_sheet(sheet)?.set_formula(address, formula)?,
             SetCachedValue {
                 sheet,
                 address,
@@ -396,7 +397,8 @@ mod tests {
     fn sparse_replacements_restore_spill_metadata_before_publishing_all_sources() {
         let mut w = Workbook::new();
         let s = w.add_sheet("S").unwrap();
-        s.set_formula(at("A1"), "{1,2,3}", 1.0.into()).unwrap();
+        s.set_formula_with_cached_value(at("A1"), "{1,2,3}", 1.0.into())
+            .unwrap();
         let style = CellStyle {
             number_format: Some("0.00".into()),
         };
@@ -434,7 +436,7 @@ mod tests {
         let mut w = Workbook::new();
         w.add_sheet("S")
             .unwrap()
-            .set_formula(at("A1"), "1+1", CellValue::Number(2.))
+            .set_formula_with_cached_value(at("A1"), "1+1", CellValue::Number(2.))
             .unwrap();
         let before = w.clone();
         assert!(
@@ -485,7 +487,7 @@ mod tests {
     fn spill_cache_preserves_source_metadata_and_snapshot_restoration() {
         let mut w = Workbook::new();
         let s = w.add_sheet("S").unwrap();
-        s.set_formula(at("A1"), "{1,2}", CellValue::Blank).unwrap();
+        s.set_formula(at("A1"), "{1,2}").unwrap();
         s.set(
             at("B1"),
             Cell {
@@ -521,7 +523,9 @@ fn rejected_source_replacement_preserves_saved_spill_ownership() {
     let sheet = book.add_sheet("S").unwrap();
     let anchor = "A1".parse().unwrap();
     let child = "B1".parse().unwrap();
-    sheet.set_formula(anchor, "{1,2}", 1.0.into()).unwrap();
+    sheet
+        .set_formula_with_cached_value(anchor, "{1,2}", 1.0.into())
+        .unwrap();
     sheet
         .set_spill_cached_value(child, anchor, "{1,2}", 2.0.into())
         .unwrap();

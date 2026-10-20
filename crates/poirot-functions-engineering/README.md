@@ -1,9 +1,10 @@
 # poirot-functions-engineering
 
-Engineering function algorithms, including binary/octal/hexadecimal conversion,
-complex-number helpers, and Bessel calculations.
+Engineering calculations for spreadsheet functions.
 
-Entry points include `hex2dec`, `dec2bin`, `complex`, and `besselj`. Use these
-kernels with supplied values; workbook reference resolution and function dispatch
-belong to the host. Shared argument grammars live in
-[poirot-coercionv2](../poirot-coercionv2/README.md).
+Includes binary, octal, and hexadecimal conversion, complex-number helpers, and
+Bessel calculations. Call operations such as `hex2dec`, `dec2bin`, `complex`,
+and `besselj` with supplied values.
+
+The caller resolves workbook references and evaluates arguments. Shared argument
+parsing lives in [poirot-coercionv2](https://docs.rs/poirot-coercionv2).

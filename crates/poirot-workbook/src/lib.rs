@@ -1,40 +1,68 @@
-//! Workbook editing, evaluation contexts and explicit save planning for poirot.
+//! Read an Excel workbook, change its inputs, calculate its outputs, and save it.
+//!
+//! [`Workbook::open`] reads XLS or XLSX files. You can also create a workbook in memory:
+//!
+//! ```rust
+//! use poirot_workbook::Workbook;
+//! use poirot_workbook::model::CellValue;
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let mut book = Workbook::new();
+//!     let sheet = book.add_sheet("Quote")?;
+//!     sheet.set_value("A1".parse()?, 12.)?;
+//!     sheet.set_value("B1".parse()?, 25.)?;
+//!     sheet.set_formula("C1".parse()?, "A1*B1")?;
+//!     book.recalculate()?;
+//!
+//!     let total = book.cell("Quote", "C1".parse()?).ok_or("missing total")?;
+//!     assert_eq!(total.value, CellValue::Number(300.));
+//!     let bytes = book.save_xlsx().to_buffer()?;
+//!     Ok(())
+//! }
+//! ```
+//!
+//! Reading a cell returns its stored value. After changing inputs, call `recalculate`
+//! to update dependent cells. Saving writes the current values without calculating.
+//! If calculation fails, it writes none of its results; earlier input edits remain.
+//!
+//! Use `from_bytes` to load a buffer. Both `save_xlsx` and `save_xls` let you choose
+//! between returning bytes and writing a file. Import warnings are kept in
+//! `file_metadata`.
+//!
+//! For temporary inputs, use [`Evaluation`] to query results without editing the
+//! workbook. For repeated scenarios, [`Overlay`] tracks dependencies to reuse
+//! unaffected results. Native snapshots save Poirot state for later restoration;
+//! they are separate from Excel files.
+//!
+//! Most applications should depend on [poirot](https://docs.rs/poirot), which
+//! re-exports these types alongside cell values and addresses.
 
-/// Formula compilation and bounded overlay execution APIs.
 pub use poirot_eval as eval;
-/// Checked file import and XLSX export adapters.
 pub use poirot_io as io;
-/// Canonical sparse workbook source and typed values.
 pub use poirot_model as model;
-/// Formula scanning/full parsing and shared spreadsheet text grammars.
 pub use poirot_parsing as parsing;
-/// Checked BIFF/XLS export planning and serialization.
 pub use poirot_xls as xls;
 
 /// Formula-aware structural edit planning and atomic application.
 pub mod edit;
-/// Editable workbooks, incremental calculation and borrowed save plans.
-pub mod public;
+// File handling and recalculation implementation; its types are re-exported below.
+mod public;
 /// Source-checked translation of references within existing formulas.
 pub mod translation_edit;
 
-/// Primary mutable overlay and bounded evaluation workflow.
 pub use eval::overlay::{
     CompilationUsage, EvaluationBuilder, EvaluationContext, OverlayBuilder, OverlayError,
     OverlayEvaluation, OverlayPolicy,
 };
-/// Source workbook and owned changes that can be applied atomically.
 pub use model::WorkbookChange;
-/// File-backed source facade and borrowed checked export plans.
-pub use public::{LoadBuilder, SavePlan, Workbook, WorkbookError, XlsSaveBuilder, XlsxSaveBuilder};
+pub use public::{
+    CalculationError, LoadBuilder, SavePlan, Workbook, WorkbookError, XlsSaveBuilder,
+    XlsxSaveBuilder,
+};
 
-/// Serde view retaining overlay source, compiled programs, and incremental results.
 pub use eval::overlay::snapshot::Snapshot as OverlaySnapshot;
-/// Detached source, compiled formulas, and optional incremental results awaiting attachment.
 pub use eval::overlay::snapshot::WorkspaceState;
-/// Public output coordinates, values, and operational evaluation failures.
 pub use eval::{CellEvaluation, EvaluationFailure, EvaluationTarget};
-/// Serde view of canonical workbook source and saved cache metadata.
 pub use model::snapshot::Snapshot as WorkbookSnapshot;
 
 /// Incremental scenarios borrowing a public workbook by default.

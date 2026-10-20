@@ -7,7 +7,7 @@ fn formatting_is_consumed_only_when_selected_and_is_not_captured_by_plans() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(A1, "DOLLAR(1)", CellValue::Blank)
+        .set_formula(A1, "DOLLAR(1)")
         .unwrap();
     let policy = EvaluationPolicy::default();
     let mut compiler = FormulaCompiler::new();
@@ -112,7 +112,7 @@ fn provider_identity_rebinds_unknown_names_and_only_selected_calls_are_consumed(
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(B1, "IF(FALSE,CUSTOM(9),7)", CellValue::Blank)
+        .set_formula(B1, "IF(FALSE,CUSTOM(9),7)")
         .unwrap();
     let mut compiler = FormulaCompiler::new();
     let plain = compiler.compile_workbook(&workbook, &EvaluationPolicy::default());
@@ -224,7 +224,7 @@ fn random_consumption_tracks_actual_draws_and_session_memo() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(B1, "RAND()", CellValue::Blank)
+        .set_formula(B1, "RAND()")
         .unwrap();
     let policy = EvaluationPolicy::default();
     let mut compiler = FormulaCompiler::new();
@@ -296,12 +296,12 @@ fn dollar_and_rand_have_independent_dependency_categories_and_consumption() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(A1, "DOLLAR(1)", CellValue::Blank)
+        .set_formula(A1, "DOLLAR(1)")
         .unwrap();
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(B1, "RAND()", CellValue::Blank)
+        .set_formula(B1, "RAND()")
         .unwrap();
     let configuration = crate::RunConfiguration::new(
         context(),

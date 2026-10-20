@@ -1,9 +1,11 @@
 # poirot-functions-statistics
 
-Statistical kernels for aggregates, distributions, ranks, percentiles, paired
-samples, forecasting, and regression.
+Statistical calculations for spreadsheet functions.
 
-Start with `aggregate`, `order_statistic`, `percentile`, or `regression`, and
-choose the relevant sample or compatibility policy. Iterative kernels report
-convergence failures explicitly. The evaluator handles workbook traversal,
-argument collection, and execution budgets.
+Includes aggregates, distributions, ranks, percentiles, paired samples,
+forecasting, and regression. Entry points include `aggregate`, `percentile`,
+and `regression`.
+
+The caller collects numeric inputs and selects the relevant sample policy.
+Iterative calculations report convergence failures separately from spreadsheet
+errors. Workbook traversal and argument evaluation belong to the caller.

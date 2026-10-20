@@ -1,4 +1,4 @@
-use poirot_io::{read_xlsx_bytes, write_xlsx_to_buffer};
+use poirot_io::{read_workbook_bytes, write_xlsx_to_buffer};
 use poirot_model::{Cell, CellAddress, CellError, CellStyle, CellValue, Workbook};
 use std::io::{Cursor, Read};
 fn at(s: &str) -> CellAddress {
@@ -9,7 +9,7 @@ fn dynamic_metadata_typed_children_and_blank_source_style_roundtrip() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
     sheet
-        .set_formula(at("A1"), "{1,2,3}", CellValue::Number(1.))
+        .set_formula_with_cached_value(at("A1"), "{1,2,3}", CellValue::Number(1.))
         .unwrap();
     sheet
         .set(
@@ -43,7 +43,7 @@ fn dynamic_metadata_typed_children_and_blank_source_style_roundtrip() {
         .read_to_string(&mut metadata)
         .unwrap();
     assert!(metadata.contains("dynamicArrayProperties"));
-    let reopened = read_xlsx_bytes(&bytes).unwrap().workbook;
+    let reopened = read_workbook_bytes(&bytes).unwrap();
     let sheet = reopened.sheet(0).unwrap();
     assert_eq!(sheet.spill_owner(at("B1")), Some(at("A1")));
     assert_eq!(sheet.get(at("C1")).unwrap().value, CellValue::Number(3.));
@@ -60,11 +60,9 @@ fn modern_error_values_and_formula_caches_survive_backend_adaptation() {
         .set_value(at("A1"), CellValue::Error(CellError::Spill))
         .unwrap();
     sheet
-        .set_formula(at("B1"), "1+2", CellValue::Error(CellError::Calc))
+        .set_formula_with_cached_value(at("B1"), "1+2", CellValue::Error(CellError::Calc))
         .unwrap();
-    let reopened = read_xlsx_bytes(&write_xlsx_to_buffer(&book).unwrap())
-        .unwrap()
-        .workbook;
+    let reopened = read_workbook_bytes(&write_xlsx_to_buffer(&book).unwrap()).unwrap();
     assert_eq!(
         reopened.sheet(0).unwrap().get(at("A1")).unwrap().value,
         CellValue::Error(CellError::Spill)
@@ -79,7 +77,7 @@ fn export_refuses_authored_holes_and_overlapping_or_nested_spill_owners() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
     sheet
-        .set_formula(at("A1"), "{1,2,3,4}", CellValue::Number(1.))
+        .set_formula_with_cached_value(at("A1"), "{1,2,3,4}", CellValue::Number(1.))
         .unwrap();
     sheet.set_value(at("C1"), 99.).unwrap();
     sheet
@@ -106,7 +104,7 @@ fn export_refuses_authored_holes_and_overlapping_or_nested_spill_owners() {
     assert!(write_xlsx_to_buffer(&book).is_ok());
     let sheet = book.sheet_mut(0).unwrap();
     sheet
-        .set_formula(at("C1"), "{9;10}", CellValue::Number(9.))
+        .set_formula_with_cached_value(at("C1"), "{9;10}", CellValue::Number(9.))
         .unwrap();
     sheet
         .set_spill_cached_value(at("C2"), at("C1"), "{9;10}", CellValue::Number(10.))

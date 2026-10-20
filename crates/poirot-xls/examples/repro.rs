@@ -16,12 +16,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "unicode-formula" => w
                 .sheet_mut(0)
                 .ok_or("Data worksheet is missing")?
-                .set_formula("A1".parse()?, "\"😀\"", CellValue::Text("😀".into()))?,
+                .set_formula_with_cached_value(
+                    "A1".parse()?,
+                    "\"😀\"",
+                    CellValue::Text("😀".into()),
+                )?,
             "unicode-name" => {
                 w.define_name("名称", "1", None)?;
                 w.sheet_mut(0)
                     .ok_or("Data worksheet is missing")?
-                    .set_formula("A1".parse()?, "名称", CellValue::Number(1.))?
+                    .set_formula_with_cached_value("A1".parse()?, "名称", CellValue::Number(1.))?
             }
             "long-cached-string-continuation" => {
                 // SAFETY: The literal has seven UTF-8 bytes; 6000 copies require only 42000 bytes.
@@ -31,7 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .set_value("A1".parse()?, text.clone())?;
                 w.sheet_mut(0)
                     .ok_or("Data worksheet is missing")?
-                    .set_formula("B1".parse()?, "A1", CellValue::Text(text))?
+                    .set_formula_with_cached_value("B1".parse()?, "A1", CellValue::Text(text))?
             }
             _ => {
                 w.sheet_mut(0)
@@ -39,7 +43,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .set_value("A1".parse()?, 2.)?;
                 w.sheet_mut(0)
                     .ok_or("Data worksheet is missing")?
-                    .set_formula("B1".parse()?, "SUM(A1:A1)", CellValue::Number(2.))?
+                    .set_formula_with_cached_value(
+                        "B1".parse()?,
+                        "SUM(A1:A1)",
+                        CellValue::Number(2.),
+                    )?
             }
         }
         poirot_xls::write_xls(&w, directory.join(format!("{kind}.xls")))?;

@@ -285,7 +285,7 @@ mod invocation;
 
 /// Revisioned registration table owning executable providers.
 pub use catalog::ExtensionRegistry;
-/// Extension-aware execution entry points and invocation reports.
+// Extension-aware execution entry points and invocation reports.
 pub use execution::{
     ExtensionEvaluation, ExtensionExecution, ExtensionInvocation, ExtensionTrace,
     run_cell_with_extensions, run_formula_with_extensions, run_plan_with_extensions,

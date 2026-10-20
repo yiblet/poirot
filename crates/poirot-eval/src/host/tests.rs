@@ -14,7 +14,7 @@ fn demand_memoization_preserves_references_without_reading_cells() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(AT, "1/0", Number(99.))
+        .set_formula_with_cached_value(AT, "1/0", Number(99.))
         .unwrap();
     let arguments = [expression("A1"), expression("UNKNOWN_FUNCTION()")];
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());

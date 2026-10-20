@@ -17,9 +17,7 @@ fn book() -> Workbook {
         sheet.set_value(target(cell).address, value).unwrap();
     }
     for cell in ["A2", "B1", "B3"] {
-        sheet
-            .set_formula(target(cell).address, cell, CellValue::Blank)
-            .unwrap();
+        sheet.set_formula(target(cell).address, cell).unwrap();
     }
     book
 }
@@ -99,11 +97,7 @@ fn selected_references_skip_unneeded_members_and_operational_errors_are_not_caug
         let mut book = book();
         book.sheet_mut(0)
             .unwrap()
-            .set_formula(
-                target("D2").address,
-                "COUNTIF(A1:A3,E1:E2)",
-                CellValue::Blank,
-            )
+            .set_formula(target("D2").address, "COUNTIF(A1:A3,E1:E2)")
             .unwrap();
         assert_eq!(
             value(evaluate(
@@ -148,11 +142,7 @@ fn condition_dependency_changes_selected_members_after_snapshot_restore() {
         sheet.set_value(target(cell).address, value).unwrap();
     }
     sheet
-        .set_formula(
-            target("E1").address,
-            "SUMPRODUCT(IF(C1:C3,A1:A3,10))",
-            CellValue::Blank,
-        )
+        .set_formula(target("E1").address, "SUMPRODUCT(IF(C1:C3,A1:A3,10))")
         .unwrap();
     for arrays in [
         ArrayResultPolicy::ScalarIntersection,
@@ -221,7 +211,6 @@ fn policy_changes_invalidate_cached_if_results_in_both_directions() {
         .set_formula(
             target("E1").address,
             "SUM(IF({TRUE,FALSE,TRUE},2,{30,5,70}))",
-            CellValue::Blank,
         )
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
@@ -290,7 +279,7 @@ fn condition_dimensions_bound_dynamic_spills_before_anchor_reads() {
         let mut book = book();
         book.sheet_mut(0)
             .unwrap()
-            .set_formula(target("E1").address, formula, CellValue::Blank)
+            .set_formula(target("E1").address, formula)
             .unwrap();
         let mut overlay = Overlay::with_workbook(&book)
             .with_policy(OverlayPolicy {

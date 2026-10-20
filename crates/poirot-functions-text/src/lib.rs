@@ -1,4 +1,12 @@
-//! Pure text and numeric-text algorithms; hosts own argument evaluation.
+//! Text calculations for spreadsheet functions.
+//!
+//! Includes title casing with [`proper`], Roman numerals with [`roman`], numeric-text
+//! operations, and substring planning. The caller evaluates arguments and controls
+//! allocation limits.
+//!
+//! [`java_case`] implements Unicode casing. Case-insensitive comparison uses
+//! [poirot-text](https://docs.rs/poirot-text), which also defines text counting and
+//! slicing rules.
 /// Unicode15 full-case mapping with contextual final sigma.
 pub mod java_case;
 /// NUMBERVALUE parsing with spreadsheet/source failure separation.

@@ -484,8 +484,8 @@ mod literal_cycle_tests {
         let sheet = workbook.add_sheet("S").unwrap();
         let a = "A1".parse().unwrap();
         let b = "B1".parse().unwrap();
-        sheet.set_formula(a, "B1", Blank).unwrap();
-        sheet.set_formula(b, "A1", Blank).unwrap();
+        sheet.set_formula(a, "B1").unwrap();
+        sheet.set_formula(b, "A1").unwrap();
         let mut session = Session::with_context(&workbook, EvaluationInputs::default());
         assert_eq!(session.cell(0, a).unwrap(), Error(Ref));
         assert!(session.visiting.is_empty());
@@ -510,7 +510,7 @@ mod literal_cycle_tests {
         let sheet = workbook.add_sheet("S").unwrap();
         let a = "A1".parse().unwrap();
         let b = "B1".parse().unwrap();
-        sheet.set_formula(a, "IF(B1=0,{1,2},{3,4})", Blank).unwrap();
+        sheet.set_formula(a, "IF(B1=0,{1,2},{3,4})").unwrap();
         let mut session = Session::with_context(&workbook, EvaluationInputs::default());
         session.array_result_policy = ArrayResultPolicy::DynamicSpill;
         assert!(
@@ -522,7 +522,7 @@ mod literal_cycle_tests {
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_formula(a, "{1,2}", Blank)
+            .set_formula(a, "{1,2}")
             .unwrap();
         let mut session = Session::with_context(&workbook, EvaluationInputs::default());
         session.array_result_policy = ArrayResultPolicy::DynamicSpill;

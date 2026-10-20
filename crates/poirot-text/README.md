@@ -1,14 +1,12 @@
 # poirot-text
 
-Text counting and slicing rules used by formula evaluation. Supports explicit
-policies for UTF-8 bytes, UTF-16 code units, Unicode scalars, and surrogate pairs.
+Count, slice, and compare text for spreadsheet functions.
 
-Use `TextSemanticsPolicy` to select behavior, then the length, slicing, and
-concatenation helpers to apply it. Text is not normalized. Unsupported source
-policies or boundaries return errors rather than guessing compatibility.
+Use `TextSemanticsPolicy` to select text-counting rules, or pass `Units` directly
+to helpers such as `length` and `slice`. Supported units include UTF-8 bytes,
+UTF-16 code units, and Unicode scalar values. Text is not normalized.
 
-Spreadsheet text functions live in
-[poirot-functions-text](../poirot-functions-text/README.md).
-
-`fold` provides Unicode 16 simple case-insensitive comparison. It does not expand
-characters or normalize text, and its UTF-16 adapter preserves unpaired surrogates.
+`fold` provides Unicode 16 simple case-insensitive comparison without character
+expansion. Its UTF-16 adapter preserves unpaired surrogates. Spreadsheet text
+function implementations live in
+[poirot-functions-text](https://docs.rs/poirot-functions-text).

@@ -1,4 +1,4 @@
-use poirot_io::{read_xlsx_bytes, write_xlsx_to_buffer};
+use poirot_io::{read_workbook_bytes, write_xlsx_to_buffer};
 use poirot_model::{CellAddress, CellValue, Workbook};
 #[test]
 fn xlsx_retains_qualified_formula_and_scoped_name_identity() {
@@ -11,10 +11,10 @@ fn xlsx_retains_qualified_formula_and_scoped_name_identity() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(at, "'O''Brien'!Rate", CellValue::Number(-999.))
+        .set_formula_with_cached_value(at, "'O''Brien'!Rate", CellValue::Number(-999.))
         .unwrap();
     let bytes = write_xlsx_to_buffer(&workbook).unwrap();
-    let imported = read_xlsx_bytes(&bytes).unwrap().workbook;
+    let imported = read_workbook_bytes(&bytes).unwrap();
     assert_eq!(imported.named_ranges, workbook.named_ranges);
     assert_eq!(
         imported

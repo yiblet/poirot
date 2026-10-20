@@ -1,8 +1,9 @@
 # poirot-test-excel-specs
 
-Source-backed workbook behavior specifications and their end-to-end test entry
-point. Cases cover editing, evaluation, and file workflows, with expected results
-supported by recorded evidence.
+Workbook behavior specifications and end-to-end tests.
+
+Expected results are supported by recorded sources. Cases cover workbook
+editing, calculation, and file operations.
 
 Run from the repository root:
 
@@ -11,6 +12,5 @@ cargo test -p poirot-test-excel-specs --test workbook_e2e
 python3 crates/poirot-test-excel-specs/tools/maintain.py --check
 ```
 
-The maintenance check verifies package-local generation and coverage data. When
-adding cases, record the evidence for expected results rather than deriving them
-from Poirot. This is a development test package and is not published.
+When adding cases, record evidence for the expected results rather than deriving
+them from Poirot. This is a development package and is not published.

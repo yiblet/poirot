@@ -28,7 +28,7 @@ struct Source {
 /// let mut workbook = Workbook::new();
 /// let sheet = workbook.add_sheet("Inputs")?;
 /// sheet.set_value("A1".parse()?, 2.0)?;
-/// sheet.set_formula("B1".parse()?, "A1*2", CellValue::Blank)?;
+/// sheet.set_formula("B1".parse()?, "A1*2")?;
 /// let plan = FormulaCompiler::new().compile_workbook(&workbook, &EvaluationPolicy::default());
 /// let shared = SharedWorkbook::new(workbook, Arc::new(plan))?;
 /// let (_, inputs) = shared.prepare_inputs(|_source| {

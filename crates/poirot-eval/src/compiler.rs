@@ -1,4 +1,4 @@
-//! Formula compilation and program interning, separate from evaluated-result caching.
+//! Parse and bind formulas, reusing compiled programs independently of their results.
 #[cfg(test)]
 use crate::bound;
 use crate::{EvaluationTarget, registry};
@@ -12,8 +12,10 @@ use std::{
     sync::Arc,
 };
 
-/// Actual extension contracts include bound IDs, signatures, capabilities,
-/// volatility and the ordered external-name namespace. Builtins are immutable.
+/// The function definitions against which formulas are compiled.
+///
+/// Extension identity includes IDs, signatures, capabilities, volatility, and name
+/// order so incompatible registries cannot reuse compiled programs.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct RegistryIdentity {
     /// Version of the immutable builtin binding contract.
@@ -38,7 +40,8 @@ impl RegistryIdentity {
         }
     }
 }
-/// Preparation-time parser limits and function-registry identity.
+/// Parser limits and function definitions used to compile formulas.
+///
 /// A workbook plan must be recompiled when this policy changes. Execution-time
 /// clock, text, formatting, and builtin choices belong to [`crate::RunConfiguration`].
 #[derive(Clone, Debug, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
@@ -71,7 +74,10 @@ pub struct CompilerUsage {
     /// Exact source-and-policy cache hits.
     pub reused_formulas: u64,
 }
-/// Conservative guards only. These are never reported as consumed runtime reads.
+/// A reference present in formula syntax, whether or not execution reads it.
+///
+/// Used to guard compiled plans, not to record runtime dependencies. A reference
+/// in an unselected branch can appear here without being read during calculation.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum PotentialReference {
     /// Syntactically present cell reference, possibly in an unselected branch.
@@ -767,9 +773,7 @@ mod pool_tests {
         let mut workbook = Workbook::new();
         let sheet = workbook.add_sheet("S").unwrap();
         let at: CellAddress = "A1".parse().unwrap();
-        sheet
-            .set_formula(at, "IF(FALSE,1/0,2+3)", poirot_model::CellValue::Blank)
-            .unwrap();
+        sheet.set_formula(at, "IF(FALSE,1/0,2+3)").unwrap();
         let mut compiler = FormulaCompiler::new();
         let plan = compiler.compile_workbook(&workbook, &EvaluationPolicy::default());
         let prepared = plan

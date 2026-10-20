@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
-description = "Workbook-independent spreadsheet statistics and distributions"
+description = "Statistical calculations for spreadsheet functions"
 include = ["/src/**", "/README.md"]
 
 [dependencies]

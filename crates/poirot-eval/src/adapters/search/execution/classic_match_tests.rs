@@ -94,9 +94,7 @@ fn approximate_match_preserves_blank_positions_lazy_failures_and_policy_dependen
         .unwrap();
     sheet.set_value("A4".parse().unwrap(), Error(Ref)).unwrap();
     sheet.set_value("A5".parse().unwrap(), 5.).unwrap();
-    sheet
-        .set_formula("A6".parse().unwrap(), "RAND()", Blank)
-        .unwrap();
+    sheet.set_formula("A6".parse().unwrap(), "RAND()").unwrap();
     sheet.set_value("B1".parse().unwrap(), 5.).unwrap();
     sheet.set_value("C1".parse().unwrap(), -1.).unwrap();
     for policy in [
@@ -204,7 +202,7 @@ fn ascending_match_bisection_reads_only_consumed_candidates_in_original_order() 
     }
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("A7".parse().unwrap(), "RAND()", Blank)
+        .set_formula("A7".parse().unwrap(), "RAND()")
         .unwrap();
     let mut reads = Reads::default();
     let mut session = Session::with_context(&w, EvaluationInputs::default());

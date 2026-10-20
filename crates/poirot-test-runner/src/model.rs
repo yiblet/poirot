@@ -115,7 +115,29 @@ impl CaseResult {
     }
 }
 
+/// Compute the lowercase SHA-256 fingerprint used for corpus identity.
 pub fn digest(bytes: &[u8]) -> String {
     use sha2::{Digest, Sha256};
-    format!("{:x}", Sha256::digest(bytes))
+    Sha256::digest(bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::digest;
+
+    #[test]
+    fn digest_preserves_lowercase_hex_and_leading_zeroes() {
+        // Expected fingerprints independently verified with Python's hashlib.sha256.
+        assert_eq!(
+            digest(b""),
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        );
+        assert_eq!(
+            digest(b"abc"),
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
+    }
 }

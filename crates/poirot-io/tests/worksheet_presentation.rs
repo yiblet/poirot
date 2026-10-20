@@ -1,4 +1,4 @@
-use poirot_io::{read_xlsx_bytes, write_xlsx_to_buffer};
+use poirot_io::{read_workbook_bytes, write_xlsx_to_buffer};
 use poirot_model::{SheetPresentation, SheetVisibility, Workbook};
 use std::io::{Cursor, Read, Write};
 fn parts(bytes: &[u8]) -> Vec<(String, Vec<u8>)> {
@@ -6,7 +6,7 @@ fn parts(bytes: &[u8]) -> Vec<(String, Vec<u8>)> {
     (0..zip.len())
         .map(|i| {
             let mut f = zip.by_index(i).unwrap();
-            let name = f.name().to_owned();
+            let name = f.name().unwrap().into_owned();
             let mut b = Vec::new();
             f.read_to_end(&mut b).unwrap();
             (name, b)
@@ -69,10 +69,9 @@ fn independent_xml_and_reload_preserve_first_hidden_very_hidden_and_rgb() {
     )
     .unwrap();
     assert!(xml.contains("<tabColor rgb=\"FF1234AB\">"), "{xml}");
-    let report = read_xlsx_bytes(&bytes).unwrap();
+    let report = read_workbook_bytes(&bytes).unwrap();
     assert_eq!(
         report
-            .workbook
             .sheets()
             .iter()
             .map(|s| s.presentation())
@@ -93,9 +92,8 @@ fn independent_xml_and_reload_preserve_first_hidden_very_hidden_and_rgb() {
         }
     });
     assert_eq!(
-        read_xlsx_bytes(&lower)
+        read_workbook_bytes(&lower)
             .unwrap()
-            .workbook
             .sheet(0)
             .unwrap()
             .presentation()
@@ -122,15 +120,14 @@ fn independent_xml_and_reload_preserve_first_hidden_very_hidden_and_rgb() {
                 b
             }
         });
-        let report = read_xlsx_bytes(&changed).unwrap();
+        let report = read_workbook_bytes(&changed).unwrap();
         assert_eq!(
-            report.workbook.sheet(0).unwrap().presentation().tab_color,
+            report.sheet(0).unwrap().presentation().tab_color,
             None,
             "{attributes}"
         );
         assert!(
             report
-                .workbook
                 .file_metadata
                 .as_ref()
                 .unwrap()
@@ -154,13 +151,12 @@ fn independent_xml_and_reload_preserve_first_hidden_very_hidden_and_rgb() {
             b
         }
     });
-    let report = read_xlsx_bytes(&changed).unwrap();
+    let report = read_workbook_bytes(&changed).unwrap();
     assert!(
         report
-            .workbook
             .sheets()
             .iter()
             .all(|s| s.presentation().visibility != SheetVisibility::Visible)
     );
-    assert!(write_xlsx_to_buffer(&report.workbook).is_err());
+    assert!(write_xlsx_to_buffer(&report).is_err());
 }

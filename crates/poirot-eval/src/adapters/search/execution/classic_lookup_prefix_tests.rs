@@ -36,7 +36,7 @@ fn repeated_exact_queries_share_keys_but_keep_first_duplicate_and_range_bounds()
     }
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("A4".parse().unwrap(), "UNSUPPORTED()", Blank)
+        .set_formula("A4".parse().unwrap(), "UNSUPPORTED()")
         .unwrap();
     let mut run = session(&w);
     assert_eq!(evaluate(&mut run, "VLOOKUP(2,A1:B4,2,FALSE)"), Number(20.));
@@ -113,7 +113,7 @@ fn errored_prefixes_and_reentrant_lookup_providers_do_not_poison_later_selection
     let mut w = book();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "IFERROR(MATCH(7,A1:A2,0),0)", Blank)
+        .set_formula("A1".parse().unwrap(), "IFERROR(MATCH(7,A1:A2,0),0)")
         .unwrap();
     w.sheet_mut(0)
         .unwrap()

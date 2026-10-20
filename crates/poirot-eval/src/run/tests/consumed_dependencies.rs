@@ -8,12 +8,12 @@ fn shared_probes_report_dependency_edges_even_when_memoized() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(B1, "A1+1", CellValue::Blank)
+        .set_formula(B1, "A1+1")
         .unwrap();
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(C1, "A1+2", CellValue::Blank)
+        .set_formula(C1, "A1+2")
         .unwrap();
     let policy = EvaluationPolicy::default();
     let plan = FormulaCompiler::new().compile_workbook(&workbook, &policy);
@@ -120,7 +120,7 @@ fn names_are_reused_and_namespace_selection_is_read_at_execution() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(B1, "Rate", CellValue::Blank)
+        .set_formula(B1, "Rate")
         .unwrap();
     let mut compiler = FormulaCompiler::new();
     let policy = EvaluationPolicy::default();
@@ -158,7 +158,7 @@ fn sparse_membership_covers_future_insertions_and_actual_cells() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(B1, "SUM(A:A)", CellValue::Blank)
+        .set_formula(B1, "SUM(A:A)")
         .unwrap();
     let policy = EvaluationPolicy::default();
     let plan = FormulaCompiler::new().compile_workbook(&workbook, &policy);
@@ -214,12 +214,12 @@ fn selected_unknown_records_opaque_consumption_and_abort_keeps_values_unpublishe
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(A1, "1", CellValue::Number(99.))
+        .set_formula_with_cached_value(A1, "1", CellValue::Number(99.))
         .unwrap();
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(B1, "2+3", CellValue::Number(88.))
+        .set_formula_with_cached_value(B1, "2+3", CellValue::Number(88.))
         .unwrap();
     let before = workbook.clone();
     let policy = EvaluationPolicy::default();
@@ -291,7 +291,7 @@ fn indirect_parses_current_operands_at_runtime_and_honors_parse_policy() {
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_formula(at, "INDIRECT(A1)", CellValue::Blank)
+            .set_formula(at, "INDIRECT(A1)")
             .unwrap();
     }
     let policy = EvaluationPolicy::default();

@@ -32,7 +32,7 @@ fn workbook() -> Workbook {
     let sheet = book.add_sheet("Inputs").unwrap();
     sheet.set_value("A1".parse().unwrap(), 21.).unwrap();
     sheet
-        .set_formula("B1".parse().unwrap(), "A1*2", CellValue::Number(-1.))
+        .set_formula_with_cached_value("B1".parse().unwrap(), "A1*2", CellValue::Number(-1.))
         .unwrap();
     book
 }
@@ -304,4 +304,58 @@ fn owned_facade_flush_and_shared_model_handles_remain_explicit() {
         shared.sheet(0).unwrap().get(output.address).unwrap().value,
         CellValue::Number(-1.)
     );
+}
+
+#[test]
+fn load_options_replace_all_fields_and_later_setters_override_their_field() {
+    let bytes = workbook().save_xls().to_buffer().unwrap();
+    let small = io::ResourceBudget {
+        max_records: 0,
+        ..Default::default()
+    };
+    let options = io::ReadOptions {
+        xls_budget: small,
+        ..Default::default()
+    };
+    assert!(
+        Workbook::load()
+            .xls_budget(small)
+            .options(io::ReadOptions::default())
+            .from_bytes(&bytes)
+            .is_ok()
+    );
+    assert!(
+        Workbook::load()
+            .options(options)
+            .xls_budget(io::ResourceBudget::default())
+            .from_bytes(&bytes)
+            .is_ok()
+    );
+    assert!(matches!(
+        Workbook::load()
+            .options(io::ReadOptions::default())
+            .xls_budget(small)
+            .from_bytes(&bytes),
+        Err(poirot::WorkbookError::ImportOrXlsx(
+            io::IoError::BiffPreflight(io::PreflightError::Resource { .. })
+        ))
+    ));
+}
+
+#[test]
+fn loading_a_missing_file_preserves_the_filesystem_error_and_source() {
+    let directory = TestDirectory::new();
+    let path = directory.0.join("missing.xlsx");
+    assert!(matches!(
+        io::read_workbook(&path),
+        Err(io::IoError::File(error)) if error.kind() == std::io::ErrorKind::NotFound
+    ));
+    let error = Workbook::open(path).unwrap_err();
+    assert!(matches!(&error, poirot::WorkbookError::File(source)
+        if source.kind() == std::io::ErrorKind::NotFound));
+    let source = std::error::Error::source(&error)
+        .unwrap()
+        .downcast_ref::<std::io::Error>()
+        .unwrap();
+    assert_eq!(source.kind(), std::io::ErrorKind::NotFound);
 }

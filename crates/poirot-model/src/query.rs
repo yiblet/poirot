@@ -313,9 +313,7 @@ mod tests {
         for row in [0, 2, 9] {
             sheet.set_value(address(row, 3), 1.).unwrap();
         }
-        sheet
-            .set_formula(address(5, 3), "RAND()", CellValue::Blank)
-            .unwrap();
+        sheet.set_formula(address(5, 3), "RAND()").unwrap();
         sheet.set_value(address(8, 4), 2.).unwrap();
         let bounds = area(address(0, 3), address(9, 3));
         let selected: Vec<_> = WorkbookView::new(&book)
@@ -374,7 +372,7 @@ mod tests {
         let sheet = book.add_sheet("Data").unwrap();
         sheet.set(address(3, 0), Cell::default()).unwrap();
         sheet
-            .set_formula(address(crate::MAX_ROWS - 1, 0), "1", CellValue::Blank)
+            .set_formula(address(crate::MAX_ROWS - 1, 0), "1")
             .unwrap();
         sheet.set_value(address(3, 900), "unrelated").unwrap();
         let view = WorkbookView::new(&book);

@@ -61,10 +61,8 @@ struct Snapshot {
 fn fixture() -> Workbook {
     let mut workbook = workbook();
     let sheet = workbook.sheet_mut(0).unwrap();
-    sheet.set_formula(A1, "RAND()", CellValue::Blank).unwrap();
-    sheet
-        .set_formula(B1, "IF(TRUE,ABS(-2)+A1+A1,0)", CellValue::Blank)
-        .unwrap();
+    sheet.set_formula(A1, "RAND()").unwrap();
+    sheet.set_formula(B1, "IF(TRUE,ABS(-2)+A1+A1,0)").unwrap();
     workbook
 }
 fn calculate(workbook: &Workbook, budgets: crate::EvaluationBudgets, observed: bool) -> Snapshot {

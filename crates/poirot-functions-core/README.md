@@ -1,10 +1,10 @@
 # poirot-functions-core
 
-Workbook-independent values and input contracts shared by the function crates.
+Cell values and deferred arguments for spreadsheet functions.
 
-Provides `CellValue`, `CellError`, exact Excel text storage, and scalar inputs
-that retain their origin. The `Input` trait lets algorithms request deferred
-arguments without depending on a workbook or evaluator.
+`CellValue` represents a scalar value, including spreadsheet errors and Excel
+text. `Origin` distinguishes literal arguments from values read through references.
 
-Use these types when adding reusable function algorithms or implementing a host
-for them. Workbook structures live in [poirot-model](../poirot-model/README.md).
+Implement `Input` to let a function evaluate an argument only when it needs it.
+These types let function algorithms run without a workbook or formula evaluator.
+Workbook storage lives in [poirot-model](https://docs.rs/poirot-model).

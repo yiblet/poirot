@@ -5,7 +5,7 @@ fn saved_typed_formula_evidence_and_import_losses_remain_discoverable() {
     let mut book = Workbook::new();
     let sheet = book.model_mut().add_sheet("Data").unwrap();
     sheet
-        .set_formula("A1".parse().unwrap(), "1=1", CellValue::Boolean(true))
+        .set_formula_with_cached_value("A1".parse().unwrap(), "1=1", CellValue::Boolean(true))
         .unwrap();
     for bytes in [
         book.save_xlsx().to_buffer().unwrap(),
@@ -86,7 +86,7 @@ fn formula_book(formulas: &[(&str, &str)]) -> Workbook {
     let sheet = book.model_mut().add_sheet("Data").unwrap();
     for (address, formula) in formulas {
         sheet
-            .set_formula(
+            .set_formula_with_cached_value(
                 address.parse().unwrap(),
                 *formula,
                 CellValue::Number(-999.0),
@@ -222,9 +222,7 @@ fn empty_rows_and_defined_names_flow_through_overlay_evaluation() {
     let sheet = book.model_mut().add_sheet("Data").unwrap();
     sheet.create_row(5).unwrap();
     sheet.set_value("A1".parse().unwrap(), 4.).unwrap();
-    sheet
-        .set_formula("B1".parse().unwrap(), "Rate*A1", CellValue::Blank)
-        .unwrap();
+    sheet.set_formula("B1".parse().unwrap(), "Rate*A1").unwrap();
     book.model_mut().define_name("Rate", "2", None).unwrap();
     let mut overlay = poirot::Overlay::with_workbook(book.model())
         .build()
@@ -255,7 +253,7 @@ fn unsupported_signature_and_xls_formula_keep_typed_error_chains() {
     book.model_mut()
         .sheet_mut(0)
         .unwrap()
-        .set_formula(
+        .set_formula_with_cached_value(
             "A1".parse().unwrap(),
             "SUM(Sheet1:Sheet3!A1)",
             CellValue::Number(-999.0),

@@ -30,15 +30,16 @@ fn plan_is_pure_borrowed_and_wrapper_content_matches_except_creation_clock() {
     for i in 0..left.len() {
         use std::io::Read;
         let mut part = left.by_index(i).unwrap();
+        let name = part.name().unwrap().into_owned();
         let mut expected = Vec::new();
         let mut actual = Vec::new();
         right
-            .by_name(part.name())
+            .by_name(&name)
             .unwrap()
             .read_to_end(&mut expected)
             .unwrap();
         part.read_to_end(&mut actual).unwrap();
-        if part.name() == "docProps/core.xml" {
+        if name == "docProps/core.xml" {
             // Separate backend DocProperties use utc_now; only the two validated
             // creation-clock text values may differ, not core XML metadata.
             assert_eq!(
@@ -46,7 +47,7 @@ fn plan_is_pure_borrowed_and_wrapper_content_matches_except_creation_clock() {
                 export_clock::core_without_creation_clock(&expected).unwrap()
             );
         } else {
-            assert_eq!(actual, expected, "{}", part.name());
+            assert_eq!(actual, expected, "{}", name);
         }
     }
     assert_eq!(format!("{workbook:?}"), before);
@@ -68,7 +69,7 @@ fn typed_cache_patch_is_counted_before_allocation_and_output() {
     workbook
         .add_sheet("Data")
         .unwrap()
-        .set_formula(
+        .set_formula_with_cached_value(
             "A1".parse().unwrap(),
             "1",
             CellValue::Text("&".repeat(4000)),
@@ -113,7 +114,7 @@ fn adequate_writer_budget_crosses_former_hidden_entry_threshold() {
     let sheet = workbook.add_sheet("Large").unwrap();
     for row in 0..1200 {
         sheet
-            .set_formula(
+            .set_formula_with_cached_value(
                 poirot_model::CellAddress::new(row, 0).unwrap(),
                 "1",
                 CellValue::Text("x".repeat(30_000)),
@@ -169,7 +170,7 @@ fn repeated_literals_are_backend_shared_strings_but_final_inline_text() {
             let address = poirot_model::CellAddress::new(row, 0).unwrap();
             if formula {
                 sheet
-                    .set_formula(address, "1", CellValue::Text(text.clone()))
+                    .set_formula_with_cached_value(address, "1", CellValue::Text(text.clone()))
                     .unwrap();
             } else {
                 sheet

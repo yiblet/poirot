@@ -53,11 +53,11 @@ pub(crate) fn apply_metadata(
     let mut states = events(part(package, &plan.workbook_part)?);
     loop {
         match states.read_event().map_err(xml)? {
-            Event::Start(e) | Event::Empty(e) if e.local_name().as_ref() == b"sheet" => {
-                let Some(name) = attr(&states, &e, b"name")? else {
+            Event::Start(e) | Event::Empty(e) if e.local_name().as_ref() == "sheet" => {
+                let Some(name) = attr(&e, "name")? else {
                     continue;
                 };
-                let visibility = match attr(&states, &e, b"state")?.as_deref() {
+                let visibility = match attr(&e, "state")?.as_deref() {
                     None | Some("visible") => poirot_model::SheetVisibility::Visible,
                     Some("hidden") => poirot_model::SheetVisibility::Hidden,
                     Some("veryHidden") => poirot_model::SheetVisibility::VeryHidden,
@@ -78,15 +78,15 @@ pub(crate) fn apply_metadata(
         let mut in_properties = false;
         loop {
             match reader.read_event().map_err(xml)? {
-                Event::Start(e) if e.local_name().as_ref() == b"sheetPr" => in_properties = true,
-                Event::End(e) if e.local_name().as_ref() == b"sheetPr" => in_properties = false,
+                Event::Start(e) if e.local_name().as_ref() == "sheetPr" => in_properties = true,
+                Event::End(e) if e.local_name().as_ref() == "sheetPr" => in_properties = false,
                 Event::Start(e) | Event::Empty(e)
-                    if in_properties && e.local_name().as_ref() == b"tabColor" =>
+                    if in_properties && e.local_name().as_ref() == "tabColor" =>
                 {
-                    let rgb = attr(&reader, &e, b"rgb")?;
-                    let other = [b"theme".as_slice(), b"indexed", b"auto", b"tint"]
+                    let rgb = attr(&e, "rgb")?;
+                    let other = ["theme", "indexed", "auto", "tint"]
                         .into_iter()
-                        .map(|key| attr(&reader, &e, key))
+                        .map(|key| attr(&e, key))
                         .collect::<Result<Vec<_>, _>>()?
                         .iter()
                         .any(Option::is_some);
@@ -115,10 +115,10 @@ pub(crate) fn apply_metadata(
     let mut reader = events(part(package, &plan.workbook_part)?);
     loop {
         match reader.read_event().map_err(xml)? {
-            Event::Start(e) if e.local_name().as_ref() == b"definedName" => {
-                let name = attr(&reader, &e, b"name")?
+            Event::Start(e) if e.local_name().as_ref() == "definedName" => {
+                let name = attr(&e, "name")?
                     .ok_or_else(|| IoError::Read("defined name without name".into()))?;
-                let scope = attr(&reader, &e, b"localSheetId")?
+                let scope = attr(&e, "localSheetId")?
                     .map(|n| n.parse::<usize>().map_err(xml))
                     .transpose()?;
                 let formula = text(&mut reader, e.name())?;
@@ -172,18 +172,15 @@ pub(crate) fn apply_metadata(
     let mut reader = events(styles);
     loop {
         match reader.read_event().map_err(xml)? {
-            Event::Start(e) if e.local_name().as_ref() == b"numFmt" => {
-                if let (Some(id), Some(code)) = (
-                    attr(&reader, &e, b"numFmtId")?,
-                    attr(&reader, &e, b"formatCode")?,
-                ) {
+            Event::Start(e) if e.local_name().as_ref() == "numFmt" => {
+                if let (Some(id), Some(code)) = (attr(&e, "numFmtId")?, attr(&e, "formatCode")?) {
                     formats.insert(id.parse::<u32>().map_err(xml)?, code);
                 }
             }
-            Event::Start(e) if e.local_name().as_ref() == b"cellXfs" => in_cell_xfs = true,
-            Event::End(e) if e.local_name().as_ref() == b"cellXfs" => in_cell_xfs = false,
-            Event::Start(e) if in_cell_xfs && e.local_name().as_ref() == b"xf" => xf.push(
-                attr(&reader, &e, b"numFmtId")?
+            Event::Start(e) if e.local_name().as_ref() == "cellXfs" => in_cell_xfs = true,
+            Event::End(e) if e.local_name().as_ref() == "cellXfs" => in_cell_xfs = false,
+            Event::Start(e) if in_cell_xfs && e.local_name().as_ref() == "xf" => xf.push(
+                attr(&e, "numFmtId")?
                     .unwrap_or_else(|| "0".into())
                     .parse::<u32>()
                     .map_err(xml)?,
@@ -207,12 +204,12 @@ pub(crate) fn apply_metadata(
         let mut reader = events(part(package, path)?);
         loop {
             match reader.read_event().map_err(xml)? {
-                Event::Start(e) if e.local_name().as_ref() == b"c" => {
-                    let Some(reference) = attr(&reader, &e, b"r")? else {
+                Event::Start(e) if e.local_name().as_ref() == "c" => {
+                    let Some(reference) = attr(&e, "r")? else {
                         continue;
                     };
                     let address: CellAddress = reference.parse()?;
-                    let style = attr(&reader, &e, b"s")?
+                    let style = attr(&e, "s")?
                         .unwrap_or_else(|| "0".into())
                         .parse::<usize>()
                         .map_err(xml)?;
@@ -263,8 +260,8 @@ pub(crate) fn apply_rows(
         let mut next_row = 0u32;
         loop {
             match reader.read_event().map_err(xml)? {
-                Event::Start(e) if e.local_name().as_ref() == b"row" => {
-                    let index = match attr(&reader, &e, b"r")? {
+                Event::Start(e) if e.local_name().as_ref() == "row" => {
+                    let index = match attr(&e, "r")? {
                         Some(r) => r
                             .parse::<u32>()
                             .map_err(xml)?

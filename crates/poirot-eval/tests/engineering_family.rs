@@ -123,7 +123,7 @@ fn bessel_positive_order_and_formula_cell_errors() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(
+        .set_formula_with_cached_value(
             CellAddress { row: 0, col: 0 },
             "1/0",
             CellValue::Number(99.),

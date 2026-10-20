@@ -90,7 +90,7 @@ fn first_match_does_not_reserve_or_read_populated_unused_suffix() {
     for row in 1..100 {
         w.sheet_mut(0)
             .unwrap()
-            .set_formula(CellAddress { row, col: 0 }, "UNSUPPORTED()", Number(7.))
+            .set_formula_with_cached_value(CellAddress { row, col: 0 }, "UNSUPPORTED()", Number(7.))
             .unwrap();
     }
     let mut reads = Reads::default();
@@ -133,7 +133,7 @@ fn absent_gap_has_membership_guard_and_stored_blank_formula_is_evaluated() {
     let mut w = book();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("A10".parse().unwrap(), "IF(TRUE,C1,RAND())", Number(7.))
+        .set_formula_with_cached_value("A10".parse().unwrap(), "IF(TRUE,C1,RAND())", Number(7.))
         .unwrap();
     w.sheet_mut(0)
         .unwrap()
@@ -208,7 +208,7 @@ fn stored_formula_scalar_projection_remains_operational_and_lazy_branch_has_no_q
     let mut w = book();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("A10".parse().unwrap(), "LEFT(UNICHAR(128512),1)", Blank)
+        .set_formula("A10".parse().unwrap(), "LEFT(UNICHAR(128512),1)")
         .unwrap();
     // A UTF16 LEFT split returns one surrogate unit; scalar wildcard projection
     // refuses that text rather than treating it as a Unicode scalar.
@@ -334,11 +334,11 @@ fn stored_random_and_error_formulas_keep_actual_effects_despite_stale_caches() {
     let mut w = book();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("A10".parse().unwrap(), "RAND()", Number(9.))
+        .set_formula_with_cached_value("A10".parse().unwrap(), "RAND()", Number(9.))
         .unwrap();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("A20".parse().unwrap(), "1/0", Number(9.))
+        .set_formula_with_cached_value("A20".parse().unwrap(), "1/0", Number(9.))
         .unwrap();
     w.sheet_mut(0)
         .unwrap()

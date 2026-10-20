@@ -1,4 +1,12 @@
-//! Pure statistical algorithms. Reference traversal, budgets and dispatch belong to adapters.
+//! Statistical calculations for spreadsheet functions.
+//!
+//! Includes aggregates, distributions, ranks, percentiles, paired samples,
+//! forecasting, and regression. Entry points include [`aggregate`], [`percentile`],
+//! and [`regression`].
+//!
+//! The caller collects numeric inputs and selects the relevant sample policy.
+//! Iterative calculations report convergence failures separately from spreadsheet
+//! errors. Workbook traversal and argument evaluation belong to the caller.
 use poirot_functions_core::CellError;
 
 mod aggregate;
@@ -11,22 +19,22 @@ mod paired;
 mod percent_rank;
 mod poisson_mass;
 
-/// Statistical reduction over already collected numeric operands.
+// Statistical reduction over already collected numeric operands.
 pub use aggregate::{aggregate, aggregate_with_policy};
-/// Distribution probability/inverse kernels with optional host metering.
+// Distribution probability/inverse kernels with optional host metering.
 pub use distribution::{
     legacy_t_dist, normal_dist, normal_dist_metered, normal_dist_source_metered, normal_inverse,
     normal_inverse_source, poisson, poisson_metered, standardize, student_t,
 };
-/// Failure channels separating spreadsheet values, host aborts, and source convergence exceptions.
+// Failure channels separating spreadsheet values, host aborts, and source convergence exceptions.
 pub use iteration::{KernelFailure, KernelResult, SourceConvergenceFailure};
-/// Ordered sample selection, percentile interpolation, and ranking.
+// Ordered sample selection, percentile interpolation, and ranking.
 pub use order::{order_statistic, percentile, rank};
-/// Aligned-pair statistics and fitted-line prediction.
+// Aligned-pair statistics and fitted-line prediction.
 pub use paired::{forecast, paired, paired_with_policy, regression};
 /// Percentile rank with an explicit inclusive/exclusive endpoint contract.
 pub use percent_rank::percent_rank;
-/// Origin-sensitive admission of scalar and paired statistical inputs.
+// Origin-sensitive admission of scalar and paired statistical inputs.
 pub use poirot_coercionv2::statistics::{
     coercev2_statistics_collection, coercev2_statistics_pairs,
 };

@@ -131,7 +131,7 @@ fn envelope_membership_and_retained_dependents_refresh_after_edits() {
     for (address, formula) in [("P1", "SUM((A1,C3):B2)"), ("Q1", "P1+1")] {
         w.sheet_mut(0)
             .unwrap()
-            .set_formula(address.parse().unwrap(), formula, CellValue::Blank)
+            .set_formula(address.parse().unwrap(), formula)
             .unwrap();
     }
     let mut overlay = Overlay::with_workbook(&w).build().unwrap();

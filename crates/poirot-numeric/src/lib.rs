@@ -1,6 +1,15 @@
-//! Excel's 15 digit comparison, derived from POI NumberComparer,
-//! NormalisedDecimal and MutableFPNumber: Rust adaptations of Apache-2.0 sources.
-//! <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/util>
+//! Compare spreadsheet numbers and convert them to text.
+//!
+//! Use [`compare`] for the implemented Excel-style fifteen-digit comparison rules.
+//! [`number_text`] converts floating-point numbers to text, and [`radix`] provides
+//! positional-number helpers. Behavior is based on Apache POI.
+//!
+//! These operations are separate from cell display formatting, which lives in
+//! [poirot-format](https://docs.rs/poirot-format).
+
+// Excel's 15 digit comparison, derived from POI NumberComparer,
+// NormalisedDecimal and MutableFPNumber: Rust adaptations of Apache-2.0 sources.
+// <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/util>
 use num_bigint::BigUint;
 use poirot_functions_core::CellError;
 use std::cmp::Ordering;

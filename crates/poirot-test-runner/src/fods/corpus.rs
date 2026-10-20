@@ -7,7 +7,6 @@ use crate::fods::{
     },
 };
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
@@ -325,7 +324,7 @@ pub fn load_fixture(root: &Path, entry: &FixtureEntry) -> Result<FodsWorkbook, E
         path: path.clone(),
         source,
     })?;
-    if format!("{:x}", Sha256::digest(&bytes)) != entry.sha256 {
+    if crate::model::digest(&bytes) != entry.sha256 {
         return Err(Error::Integrity {
             fixture: entry.fixture.clone(),
             message: "SHA-256 differs from pinned manifest".into(),

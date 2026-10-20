@@ -104,11 +104,7 @@ fn database_policy_and_criteria_edits_invalidate_retained_results() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(
-            target("Z1").address,
-            "DAVERAGE(A1:A4,1,E1:E2)",
-            CellValue::Blank,
-        )
+        .set_formula(target("Z1").address, "DAVERAGE(A1:A4,1,E1:E2)")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(poirot_eval::overlay::OverlayPolicy {

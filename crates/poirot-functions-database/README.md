@@ -1,8 +1,10 @@
 # poirot-functions-database
 
-Database-style spreadsheet aggregation over tables with headers and criteria,
-including the algorithms behind the D-function family.
+Calculate spreadsheet database aggregates.
 
-Use `DatabaseFunction`, `Grid`, and `DatabasePlan` to select an operation and
-prepare it over supplied data and criteria. The crate handles row selection and
-aggregation; the caller supplies workbook data and controls execution resources.
+Use `DatabaseFunction` to select an operation and `DatabasePlan` to apply it to
+supplied data and criteria grids. These are the algorithms behind functions such
+as `DSUM` and `DCOUNT`, including header matching and row selection.
+
+The caller supplies cells and controls execution limits. No workbook or formula
+evaluator is required.

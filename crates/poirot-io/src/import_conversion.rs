@@ -1,9 +1,6 @@
 //! Bounded file ingress and ordered XLSX/BIFF backend import execution.
 use crate::decoded_cells::{fidelity_warnings, identifier_warnings, value};
-use crate::{
-    ImportReport, IoError, PreflightError, ReadOptions, ResourceBudget, biff_overlay,
-    biff_preflight, ooxml, opc,
-};
+use crate::{IoError, PreflightError, ReadOptions, biff_overlay, biff_preflight, ooxml, opc};
 use calamine::{Reader, Xls, Xlsx};
 use poirot_model::{Cell, CellAddress, CellValue, DateSystem, Workbook};
 use poirot_model::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
@@ -28,62 +25,48 @@ fn read_bytes(path: &Path, options: ReadOptions) -> Result<Vec<u8>, IoError> {
     Ok(contents)
 }
 
-/// Detect XLSX ZIP or XLS compound-file signatures, independent of extension.
-/// For inspectable fidelity warnings use [`read_workbook_with_report`].
+/// Read an XLS or XLSX file, retaining import warnings in its file metadata.
 pub fn read_workbook(path: impl AsRef<Path>) -> Result<Workbook, IoError> {
-    Ok(read_workbook_with_report(path)?.workbook)
-}
-/// Read by file signature and retain inspectable import fidelity warnings.
-pub fn read_workbook_with_report(path: impl AsRef<Path>) -> Result<ImportReport, IoError> {
     read_workbook_with_options(path, ReadOptions::default())
 }
-/// Read by file signature under explicit input resource settings.
+/// Read a file by signature using the supplied import policies and limits.
 pub fn read_workbook_with_options(
     path: impl AsRef<Path>,
     options: ReadOptions,
-) -> Result<ImportReport, IoError> {
-    let bytes = read_bytes(path.as_ref(), options)?;
+) -> Result<Workbook, IoError> {
+    read_workbook_bytes_with_options(&read_bytes(path.as_ref(), options)?, options)
+}
+/// Decode XLS or XLSX bytes, retaining import warnings in its file metadata.
+pub fn read_workbook_bytes(bytes: &[u8]) -> Result<Workbook, IoError> {
+    read_workbook_bytes_with_options(bytes, ReadOptions::default())
+}
+/// Decode bytes by signature using the supplied import policies and limits.
+pub fn read_workbook_bytes_with_options(
+    bytes: &[u8],
+    options: ReadOptions,
+) -> Result<Workbook, IoError> {
+    if bytes.len() as u64 > options.max_input_bytes {
+        return Err(IoError::Limit(
+            "input exceeds configured byte budget".into(),
+        ));
+    }
     if bytes.starts_with(b"PK\x03\x04") {
-        read_xlsx_bytes_with_options(&bytes, options)
+        read_xlsx(bytes, options)
     } else if bytes.starts_with(&[0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]) {
-        read_xls_bytes_with_options(&bytes, options)
+        read_xls(bytes, options)
     } else {
         Err(IoError::Unsupported(
             "input is neither an XLSX ZIP nor an XLS compound file".into(),
         ))
     }
 }
-/// Read an XLSX file using default limits and return its canonical workbook.
-pub fn read_xlsx(path: impl AsRef<Path>) -> Result<Workbook, IoError> {
-    Ok(read_xlsx_bytes(&read_bytes(path.as_ref(), ReadOptions::default())?)?.workbook)
-}
-/// Read an XLS file using default limits and return its canonical workbook.
-pub fn read_xls(path: impl AsRef<Path>) -> Result<Workbook, IoError> {
-    Ok(read_xls_bytes(&read_bytes(path.as_ref(), ReadOptions::default())?)?.workbook)
-}
 
-/// Decode XLSX bytes using default limits and retain warnings.
-pub fn read_xlsx_bytes(bytes: &[u8]) -> Result<ImportReport, IoError> {
-    read_xlsx_bytes_with_options(bytes, ReadOptions::default())
-}
-/// Decode XLSX bytes under explicit input resource settings.
-pub fn read_xlsx_bytes_with_options(
-    bytes: &[u8],
-    options: ReadOptions,
-) -> Result<ImportReport, IoError> {
-    read_xlsx_bytes_with_policy(bytes, options, opc::OpcImportPolicy::default())
-}
-/// Execute checked OPC planning and backend decoding with an explicit external-link policy.
-pub fn read_xlsx_bytes_with_policy(
-    bytes: &[u8],
-    options: ReadOptions,
-    policy: opc::OpcImportPolicy,
-) -> Result<ImportReport, IoError> {
+fn read_xlsx(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
     let package = ooxml::read_package_with_options(bytes, options)?;
     let plan = opc::PackageInventory {
         parts: package.clone(),
     }
-    .plan_with_policy(policy)?;
+    .plan_with_policy(options.xlsx_policy)?;
     let backend_bytes = ooxml::backend_package(&package, &plan)?;
     let mut reader =
         Xlsx::new(Cursor::new(backend_bytes)).map_err(|e| IoError::Read(e.to_string()))?;
@@ -126,35 +109,11 @@ pub fn read_xlsx_bytes_with_policy(
         format: FileFormat::Xlsx,
         import_warnings: warnings,
     });
-    Ok(ImportReport { workbook })
+    Ok(workbook)
 }
 
-/// Decode XLS bytes using default limits and retain warnings.
-pub fn read_xls_bytes(bytes: &[u8]) -> Result<ImportReport, IoError> {
-    read_xls_bytes_with_options(bytes, ReadOptions::default())
-}
-/// Decode XLS bytes under explicit input resource settings.
-pub fn read_xls_bytes_with_options(
-    bytes: &[u8],
-    options: ReadOptions,
-) -> Result<ImportReport, IoError> {
-    read_xls_bytes_with_budget(bytes, options, ResourceBudget::default())
-}
-/// Inspect CFB/BIFF resource claims before executing the dense backend adapter.
-/// A refusal reports an operational budget or representation failure, never a
-/// spreadsheet formula error or a claim that Excel rejects the source workbook.
-/// Internal preflight validates record counts, extents and payloads against
-/// [`crate::ResourceBudget`] before passing admitted input to the backend.
-pub fn read_xls_bytes_with_budget(
-    bytes: &[u8],
-    options: ReadOptions,
-    budget: ResourceBudget,
-) -> Result<ImportReport, IoError> {
-    if bytes.len() as u64 > options.max_input_bytes {
-        return Err(IoError::Limit(
-            "input exceeds configured byte budget".into(),
-        ));
-    }
+fn read_xls(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
+    let budget = options.xls_budget;
     let row_plan = biff_preflight::inspect_xls(bytes, budget)?;
     let overlay = biff_overlay::Overlay::read(bytes, budget)?;
     // Calamine still contains unchecked BIFF formula-token accesses. Keep their
@@ -218,7 +177,7 @@ pub fn read_xls_bytes_with_budget(
                 let cached = sheet
                     .get(address)
                     .map_or(CellValue::Blank, |c| c.value.clone());
-                sheet.set_formula(address, formula, cached)?;
+                sheet.set_formula_with_cached_value(address, formula, cached)?;
             }
         }
     }
@@ -284,5 +243,5 @@ pub fn read_xls_bytes_with_budget(
         format: FileFormat::Xls,
         import_warnings: warnings,
     });
-    Ok(ImportReport { workbook })
+    Ok(workbook)
 }

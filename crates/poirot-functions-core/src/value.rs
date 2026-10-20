@@ -5,7 +5,9 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-/// Borrowed text in either storage representation. All identity uses `units()`.
+/// Borrowed spreadsheet text stored as UTF-8 or exact UTF-16 units.
+///
+/// Text identity uses [`TextRef::units`].
 #[derive(Clone, Copy, Debug)]
 pub enum TextRef<'a> {
     /// Borrowed Rust text interpreted through UTF-16 unit iteration.
@@ -106,6 +108,7 @@ impl Hash for TextRef<'_> {
 }
 
 /// A typed spreadsheet value, independent of its display format.
+///
 /// Blank, empty text, numbers, booleans, and errors remain distinct. Text can retain
 /// unpaired UTF-16 surrogates; use [`CellValue::text_ref`] for lossless access.
 #[derive(Debug, Clone, Default)]

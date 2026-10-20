@@ -2,7 +2,7 @@
 name = "poirot-text"
 version.workspace = true
 edition = "2024"
-description = "Source-versioned formula text units and non-normalizing slicing"
+description = "Text counting, slicing, and case-insensitive comparison for spreadsheets"
 
 rust-version.workspace = true
 license.workspace = true

@@ -1,7 +1,15 @@
-//! Rust adaptations of Apache POI (Apache-2.0); class bindings are described below.
-//! <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/formula/functions>
-//! Conditional aggregation domain, based on pinned POI Countif, Sumif and Baseifs.
-//! Adapters resolve references, implicit intersection and array criteria before planning.
+//! Match spreadsheet criteria and calculate conditional aggregates.
+//!
+//! Use [`Criterion`] to parse conditions such as `">10"` or `"a*"`. Use [`CriteriaPlan`]
+//! for aggregates such as `COUNTIF` and `SUMIF`. Wildcard helpers implement
+//! spreadsheet pattern matching; [`subtotal`] handles hidden rows and nested subtotals.
+//!
+//! The caller supplies cells and resolves workbook references.
+
+// Rust adaptations of Apache POI (Apache-2.0); class bindings are described below.
+// <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/formula/functions>
+// Conditional aggregation domain, based on pinned POI Countif, Sumif and Baseifs.
+// Adapters resolve references, implicit intersection and array criteria before planning.
 use std::cmp::Ordering;
 /// Subtotal aggregation with hidden-row and nested-subtotal provenance.
 pub mod subtotal;

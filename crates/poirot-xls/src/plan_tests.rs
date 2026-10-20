@@ -5,7 +5,7 @@ fn add_in_raw_records_for_defined_name_and_cell_share_slots() {
     let mut w = Workbook::new();
     w.add_sheet("Data")
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "EDATE(3,4)", CellValue::Blank)
+        .set_formula("A1".parse().unwrap(), "EDATE(3,4)")
         .unwrap();
     w.define_name("Advance", "edate(1,2)", None).unwrap();
     let plan = XlsExportPlan::new(&w, XlsExportPolicy::default()).unwrap();
@@ -61,7 +61,11 @@ fn add_in_tokens_links_and_exact_stream_budget() {
         ("A4", "EDATE(3,4)"),
     ] {
         sheet
-            .set_formula(address.parse().unwrap(), formula, CellValue::Number(-999.))
+            .set_formula_with_cached_value(
+                address.parse().unwrap(),
+                formula,
+                CellValue::Number(-999.),
+            )
             .unwrap();
     }
     let plan = XlsExportPlan::new(&w, XlsExportPolicy::default()).unwrap();
@@ -134,7 +138,7 @@ fn unsupported_add_in_and_defined_function_shadow_fail() {
         let mut w = Workbook::new();
         w.add_sheet("Data")
             .unwrap()
-            .set_formula("A1".parse().unwrap(), formula, CellValue::Blank)
+            .set_formula("A1".parse().unwrap(), formula)
             .unwrap();
         assert!(
             XlsExportPlan::new(&w, XlsExportPolicy::default()).is_err(),
@@ -144,7 +148,7 @@ fn unsupported_add_in_and_defined_function_shadow_fail() {
     let mut w = Workbook::new();
     w.add_sheet("Data")
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "EDATE(1,2)", CellValue::Blank)
+        .set_formula("A1".parse().unwrap(), "EDATE(1,2)")
         .unwrap();
     w.define_name("EDATE", "1", Some(0)).unwrap();
     assert!(
@@ -169,7 +173,7 @@ fn planned_size_matches_records_and_continuations() {
             .unwrap();
     }
     sheet
-        .set_formula(
+        .set_formula_with_cached_value(
             "B1".parse().unwrap(),
             "1+2",
             CellValue::Text("😀".repeat(6000)),
@@ -193,7 +197,7 @@ fn limits_and_identity_checks_precede_formula_parsing() {
     let mut w = Workbook::new();
     w.add_sheet("Data")
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "invalid(", CellValue::Blank)
+        .set_formula("A1".parse().unwrap(), "invalid(")
         .unwrap();
     let policy = XlsExportPolicy {
         max_cells: 0,
@@ -237,12 +241,12 @@ fn stream_budget_preflights_strings_and_formula_caches_before_parsing() {
         let value = CellValue::Text("😀".repeat(1000));
         if cached {
             sheet
-                .set_formula("A1".parse().unwrap(), "invalid(", value)
+                .set_formula_with_cached_value("A1".parse().unwrap(), "invalid(", value)
                 .unwrap();
         } else {
             sheet.set_value("A1".parse().unwrap(), value).unwrap();
             sheet
-                .set_formula("A2".parse().unwrap(), "invalid(", CellValue::Blank)
+                .set_formula("A2".parse().unwrap(), "invalid(")
                 .unwrap();
         }
         let policy = XlsExportPolicy {
@@ -261,7 +265,7 @@ fn token_budget_stops_before_later_unsupported_subtree() {
     let mut w = Workbook::new();
     w.add_sheet("Data")
         .unwrap()
-        .set_formula(
+        .set_formula_with_cached_value(
             "A1".parse().unwrap(),
             "SUM(1,2,FREQUENCY(A1,A2))",
             CellValue::Number(-999.),
@@ -282,7 +286,7 @@ fn exact_stream_budget_and_formula_token_boundaries() {
     let mut w = Workbook::new();
     w.add_sheet("Data")
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "1+2", CellValue::Number(3.))
+        .set_formula_with_cached_value("A1".parse().unwrap(), "1+2", CellValue::Number(3.))
         .unwrap();
     let size = XlsExportPlan::new(&w, XlsExportPolicy::default())
         .unwrap()

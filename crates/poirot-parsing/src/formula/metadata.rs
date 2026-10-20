@@ -1,10 +1,12 @@
 //! Immutable parse limits and retained source metadata.
 use crate::formula::Expr;
 
-/// Operational limits may tighten the canonical grammar's existing safety bounds.
+/// Limits on formula size, nesting, and reference coordinates.
+///
+/// Each limit must be nonzero and no larger than its default value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct FormulaParsePolicy {
-    /// Maximum expression-entry admissions while parsing one formula.
+    /// Maximum number of expression-parsing steps for one formula.
     pub max_expressions: usize,
     /// Maximum expression nesting accepted by the parser.
     pub max_depth: usize,
@@ -32,8 +34,9 @@ pub struct FormulaSpan {
     /// Exclusive UTF-8 byte offset in the original source.
     pub end: usize,
 }
-/// One successfully parsed function node, attached by the function grammar itself.
-/// Byte spans refer to the exact retained source, not generic expression diagnostics.
+/// The source ranges of a parsed function name and its complete call.
+///
+/// Offsets are UTF-8 bytes in the original formula text.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FunctionInvocation {
     /// Source span of the function spelling.
@@ -43,7 +46,7 @@ pub struct FunctionInvocation {
     /// Number of argument slots, including omitted arguments.
     pub argument_count: usize,
 }
-/// Reusable syntax and exact source identity, independent of workbook resolution.
+/// A parsed formula with its original text and source spans.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParsedFormula {
     /// Original formula source used by spans and diagnostics.

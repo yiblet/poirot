@@ -6,11 +6,11 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
-description = "Workbook storage, cells and typed source metadata"
+description = "Workbook data, cells, formulas, and editing"
 include = ["/src/**", "/README.md"]
 
 [dependencies]
-foldhash = "0.1.5"
+foldhash = "0.2.0"
 
 serde.workspace = true
 poirot-functions-core = { version = "0.1.0", path = "../poirot-functions-core" }

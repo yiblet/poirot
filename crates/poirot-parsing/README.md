@@ -1,10 +1,20 @@
 # poirot-parsing
 
-Workbook-independent parsers for formula syntax and spreadsheet text.
+Parse spreadsheet formulas and text values.
 
-Use `formula::parse_formula` to build a formula AST. The formula module also
-supports scanning, printing, and reference translation. Other modules parse
-criteria, numbers, dates, and date/time inputs.
+Use `formula::parse_formula` to build an expression tree. References remain
+unresolved until the caller supplies a workbook context.
 
-This crate handles syntax; resolving workbook references and calculating results
-belong to the caller or [poirot-eval](../poirot-eval/README.md).
+```rust
+fn main() -> Result<(), poirot_parsing::formula::ParseError> {
+    use poirot_parsing::formula::{parse_formula, Expr};
+
+    let expression = parse_formula("=42")?;
+    assert!(matches!(expression, Expr::Number(n) if n == 42.0));
+    Ok(())
+}
+```
+
+The formula module also prints expressions and translates references for edits.
+Other modules parse criteria, numbers, dates, and date/time inputs. Formula
+calculation lives in [poirot-eval](https://docs.rs/poirot-eval).

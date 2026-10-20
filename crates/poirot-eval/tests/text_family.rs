@@ -85,7 +85,7 @@ fn text_source_coercion_and_lazy_error_order() {
 fn reference_delimiters_use_only_last_row() {
     let mut w = workbook();
     let s = w.sheet_mut(0).unwrap();
-    s.set_formula(
+    s.set_formula_with_cached_value(
         CellAddress { row: 0, col: 0 },
         "UNKNOWN_FUNCTION()",
         CellValue::Number(0.),
@@ -115,9 +115,9 @@ fn reference_delimiters_use_only_last_row() {
 fn row_major_collection_stops_at_the_first_spreadsheet_error() {
     let mut w = workbook();
     let s = w.sheet_mut(0).unwrap();
-    s.set_formula(CellAddress { row: 0, col: 0 }, "1/0", CellValue::Number(0.))
+    s.set_formula_with_cached_value(CellAddress { row: 0, col: 0 }, "1/0", CellValue::Number(0.))
         .unwrap();
-    s.set_formula(
+    s.set_formula_with_cached_value(
         CellAddress { row: 0, col: 1 },
         "UNKNOWN_FUNCTION()",
         CellValue::Number(0.),

@@ -54,7 +54,7 @@ fn explicit_selection_reads_vector_coordinate_and_rejects_ambiguous_or_outside_r
     }
     // Invalid formulas elsewhere in a vector must not be read by @.
     sheet
-        .set_formula(
+        .set_formula_with_cached_value(
             CellAddress { row: 2, col: 0 },
             "UNKNOWN_FUNCTION()",
             CellValue::Number(0.),

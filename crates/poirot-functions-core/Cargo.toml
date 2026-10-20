@@ -2,7 +2,7 @@
 name = "poirot-functions-core"
 version.workspace = true
 edition.workspace = true
-description = "Workbook-independent scalar values and lazy function inputs"
+description = "Cell values and deferred arguments for spreadsheet functions"
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true

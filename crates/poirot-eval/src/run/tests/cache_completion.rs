@@ -28,12 +28,12 @@ fn external_cache_port_preserves_consumed_edges_and_operational_failures() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(A1, "40+2", CellValue::Blank)
+        .set_formula(A1, "40+2")
         .unwrap();
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(B1, "A1+1", CellValue::Blank)
+        .set_formula(B1, "A1+1")
         .unwrap();
     let policy = EvaluationPolicy::default();
     let plan = FormulaCompiler::new().compile_workbook(&workbook, &policy);
@@ -106,17 +106,17 @@ fn completed_cell_observer_sees_recursive_results_and_all_provenances() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(A1, "40+2", CellValue::Blank)
+        .set_formula(A1, "40+2")
         .unwrap();
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(B1, "A1+1", CellValue::Blank)
+        .set_formula(B1, "A1+1")
         .unwrap();
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(C1, "A1+2", CellValue::Blank)
+        .set_formula(C1, "A1+2")
         .unwrap();
     let policy = EvaluationPolicy::default();
     let plan = FormulaCompiler::new().compile_workbook(&workbook, &policy);
@@ -194,17 +194,17 @@ fn bounded_observer_failure_aborts_and_prevents_transaction_commit() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(A1, "1", CellValue::Number(99.))
+        .set_formula_with_cached_value(A1, "1", CellValue::Number(99.))
         .unwrap();
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(B1, "A1+1", CellValue::Number(88.))
+        .set_formula_with_cached_value(B1, "A1+1", CellValue::Number(88.))
         .unwrap();
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(C1, "B1+1", CellValue::Number(77.))
+        .set_formula_with_cached_value(C1, "B1+1", CellValue::Number(77.))
         .unwrap();
     let before = workbook.clone();
     let policy = EvaluationPolicy::default();
@@ -305,12 +305,12 @@ fn lazy_cached_reads_keep_errors_operational_and_charge_text_to_dependency() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(A1, "1/0", CellValue::Blank)
+        .set_formula(A1, "1/0")
         .unwrap();
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(B1, "IF(FALSE,A1,C1)", CellValue::Blank)
+        .set_formula(B1, "IF(FALSE,A1,C1)")
         .unwrap();
     workbook.sheet_mut(0).unwrap().set_value(C1, 42.).unwrap();
     let policy = EvaluationPolicy::default();

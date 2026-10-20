@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
-description = "Binary XLS workbook import and export"
+description = "Legacy Excel XLS workbook export"
 include = ["/tests/fixtures/poi-*.xls", "/src/**", "/README.md"]
 
 [dependencies]

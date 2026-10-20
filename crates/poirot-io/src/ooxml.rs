@@ -42,6 +42,7 @@ pub(crate) fn patch_export(
             max_zip_entry_bytes: options.max_zip_entry_bytes,
             max_zip_total_bytes: options.max_zip_total_bytes,
             max_zip_entries: options.max_zip_entries,
+            ..ReadOptions::default()
         },
     )?;
     let plan = crate::opc::PackageInventory {

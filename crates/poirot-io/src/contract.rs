@@ -1,10 +1,9 @@
-//! Shared import/export contracts and operational budget defaults.
+//! File errors and options shared by workbook readers and writers.
 use crate::{PreflightError, opc};
-use poirot_model::{ModelError, Workbook};
+use poirot_model::ModelError;
 use std::fmt;
 
-/// Workbook import/export failure, including invalid input, resource limits, and fidelity refusal.
-/// A successful import retains fidelity diagnostics in workbook file metadata.
+/// An error reading or writing a workbook.
 #[derive(Debug)]
 pub enum IoError {
     /// Filesystem read/write failure.
@@ -13,13 +12,13 @@ pub enum IoError {
     Read(String),
     /// Backend workbook-encoding failure.
     Write(rust_xlsxwriter::XlsxError),
-    /// Decoded content violates canonical model constraints.
+    /// Decoded content cannot be represented by the workbook model.
     Model(ModelError),
     /// OOXML parsing or writing failure.
     Xml(String),
     /// Package identity, relationship, or namespace validation failure.
     Opc(opc::OpcError),
-    /// Pre-decode XLS structural or resource refusal.
+    /// XLS record validation or a resource check failed before decoding.
     BiffPreflight(PreflightError),
     /// Configured import/export resource limit exceeded.
     Limit(String),
@@ -78,21 +77,12 @@ impl From<rust_xlsxwriter::XlsxError> for IoError {
     }
 }
 
-/// Fidelity issues are exposed instead of pretending charts/macros/styles survive.
-#[derive(Debug)]
-pub struct ImportReport {
-    /// Canonical decoded workbook, including saved formula results.
-    pub workbook: Workbook,
-}
-
-/// Operational resource budgets, not a claim that Excel rejects larger files.
-/// Increase explicitly for trusted large workbooks. These limits bound input/ZIP
-/// expansion. XLS additionally uses [`crate::ResourceBudget`] before backend decoding.
-/// Those controls admit record counts, declared extents and decoded payloads;
-/// they are separate from a process-wide memory limit.
+/// File-size limits and format policies for reading a workbook.
+///
+/// ZIP limits apply only to XLSX. [`Self::xls_budget`] controls XLS decoding.
 #[derive(Debug, Clone, Copy)]
 pub struct ReadOptions {
-    /// Maximum input file bytes (default 32 MiB).
+    /// Maximum input bytes, from a file or buffer (default 32 MiB).
     pub max_input_bytes: u64,
     /// Maximum expanded bytes in one XLSX ZIP entry (default 32 MiB).
     pub max_zip_entry_bytes: u64,
@@ -100,6 +90,10 @@ pub struct ReadOptions {
     pub max_zip_total_bytes: u64,
     /// Maximum XLSX ZIP entry count (default 10,000).
     pub max_zip_entries: usize,
+    /// XLSX package relationship and external-link policy.
+    pub xlsx_policy: opc::OpcImportPolicy,
+    /// XLS structural and decoded-resource limits.
+    pub xls_budget: crate::ResourceBudget,
 }
 impl Default for ReadOptions {
     fn default() -> Self {
@@ -108,14 +102,16 @@ impl Default for ReadOptions {
             max_zip_entry_bytes: 32 * 1024 * 1024,
             max_zip_total_bytes: 128 * 1024 * 1024,
             max_zip_entries: 10_000,
+            xlsx_policy: opc::OpcImportPolicy::default(),
+            xls_budget: crate::ResourceBudget::default(),
         }
     }
 }
-/// Explicit XLSX writer policy. Defaults retain the former wrapper's 32 MiB
-/// entry and compressed-package, 128 MiB expanded-package and 10,000-entry limits.
-/// These are operational limits, independent of importer policy. The backend
-/// materializes the entire workbook and ZIP before exact package sizes are known;
-/// these limits are not a bound on resident memory.
+/// Size limits for writing XLSX files.
+///
+/// Package sizes are checked after the backend constructs the workbook and ZIP,
+/// so these limits do not bound peak memory use. [`Self::max_source_bytes`] can
+/// reject oversized source data before serializer cell structures are built.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct WriteOptions {
     /// Maximum final compressed XLSX package bytes (default 32 MiB).
@@ -126,7 +122,7 @@ pub struct WriteOptions {
     pub max_zip_total_bytes: u64,
     /// Maximum generated ZIP entry count (default 10,000).
     pub max_zip_entries: usize,
-    /// Bound source payload before constructing the serializer's cell structures.
+    /// Maximum source payload bytes before serialization (unlimited by default).
     pub max_source_bytes: u64,
 }
 impl Default for WriteOptions {

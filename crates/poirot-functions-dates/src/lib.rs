@@ -1,4 +1,11 @@
-//! Workbook-independent calendar interval algorithms.
+//! Calculate calendar intervals with spreadsheet DATEDIF rules.
+//!
+//! Call [`datedif`] with two date serials, a `DateIntervalUnit`, and the workbook's
+//! date system. It calculates complete years, months, days, and supported remainder
+//! units, including the implemented Excel calendar quirks.
+//!
+//! Date parsing and argument conversion live in
+//! [poirot-coercionv2](https://docs.rs/poirot-coercionv2).
 use poirot_coercionv2::dates::calendar::{Date, civil, epoch};
 use poirot_coercionv2::{date_time::CalendarEpoch, dates::interval::DateIntervalUnit};
 use poirot_functions_core::CellError;

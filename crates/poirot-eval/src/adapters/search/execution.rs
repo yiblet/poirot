@@ -301,10 +301,10 @@ mod tests {
             w.add_sheet("Sheet1").unwrap();
             let sheet = w.sheet_mut(0).unwrap();
             sheet
-                .set_formula("C1".parse().unwrap(), mode, Number(-999.))
+                .set_formula_with_cached_value("C1".parse().unwrap(), mode, Number(-999.))
                 .unwrap();
             sheet
-                .set_formula("A1".parse().unwrap(), "1+1", Number(-999.))
+                .set_formula_with_cached_value("A1".parse().unwrap(), "1+1", Number(-999.))
                 .unwrap();
             for (cell, value) in [("B1", 1.), ("B2", 2.), ("B3", 2.), ("B4", 3.)] {
                 sheet.set_value(cell.parse().unwrap(), value).unwrap();
@@ -419,7 +419,7 @@ mod tests {
         let sheet = w.sheet_mut(0).unwrap();
         sheet.set_value("A1".parse().unwrap(), 7.).unwrap();
         sheet
-            .set_formula("B1".parse().unwrap(), "6*7", Number(-99.))
+            .set_formula_with_cached_value("B1".parse().unwrap(), "6*7", Number(-99.))
             .unwrap();
         for (formula, expected) in [
             ("MATCH(7,A:A,0)", Number(1.)),
@@ -449,11 +449,11 @@ mod tests {
         let sheet = w.sheet_mut(0).unwrap();
         sheet.set_value("A1".parse().unwrap(), 7.).unwrap();
         sheet
-            .set_formula("B1".parse().unwrap(), "6*7", Number(-99.))
+            .set_formula_with_cached_value("B1".parse().unwrap(), "6*7", Number(-99.))
             .unwrap();
         for (cell, formula) in [("A2", "RAND()"), ("B2", "UNSUPPORTED()"), ("B3", "1/0")] {
             sheet
-                .set_formula(cell.parse().unwrap(), formula, Number(-99.))
+                .set_formula_with_cached_value(cell.parse().unwrap(), formula, Number(-99.))
                 .unwrap();
         }
         let mut reads = Reads::default();

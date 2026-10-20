@@ -305,7 +305,7 @@ fn depth_abort_is_not_a_cycle_and_frames_unwind_after_failure() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(AT, "A1", CellValue::Number(99.))
+        .set_formula_with_cached_value(AT, "A1", CellValue::Number(99.))
         .unwrap();
     assert_eq!(
         value(run_cell(
@@ -352,7 +352,7 @@ fn aborted_bulk_pass_never_publishes_partial_caches_or_metadata() {
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_formula(address, formula, CellValue::Number(cache))
+            .set_formula_with_cached_value(address, formula, CellValue::Number(cache))
             .unwrap();
         workbook
             .sheet_mut(0)
@@ -407,7 +407,7 @@ fn completed_bulk_values_and_direct_cell_allowances_ignore_prior_workload() {
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_formula(address.parse().unwrap(), formula, CellValue::Blank)
+            .set_formula(address.parse().unwrap(), formula)
             .unwrap();
     }
     let context = EvaluationInputs::default();

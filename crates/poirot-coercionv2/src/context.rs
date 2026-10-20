@@ -90,7 +90,7 @@ pub struct Usage {
     pub text_bytes: usize,
 }
 
-/// Explicit execution context, separate from immutable argument values.
+/// Conversion limits and accumulated work for a function call.
 /// Failed attempts retain their resource charges. No clock or locale is implicit.
 #[derive(Debug)]
 pub struct CoercionV2Context {

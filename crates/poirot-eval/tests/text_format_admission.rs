@@ -145,9 +145,7 @@ fn contextual_text_admission_tracks_locale_calendar_profiles_edits_and_snapshots
         ("B3", r#"TEXT(A3,"h:mm:ss AM/PM")"#),
         ("C1", r#"B1&"!""#),
     ] {
-        sheet
-            .set_formula(target(address).address, formula, CellValue::Blank)
-            .unwrap();
+        sheet.set_formula(target(address).address, formula).unwrap();
     }
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(OverlayPolicy {

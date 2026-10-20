@@ -156,7 +156,7 @@ mod tests {
             let address: poirot_model::CellAddress = address.parse().unwrap();
             w.sheet_mut(0)
                 .unwrap()
-                .set_formula(address, text, CellValue::Number(17.0))
+                .set_formula_with_cached_value(address, text, CellValue::Number(17.0))
                 .unwrap();
             requests.push(TranslationRequest {
                 source: FormulaSource::Cell { sheet: 0, address },

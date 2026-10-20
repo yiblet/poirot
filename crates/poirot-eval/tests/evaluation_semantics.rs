@@ -24,9 +24,7 @@ fn workbook(formulas: &[(&str, &str)]) -> Workbook {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
     for &(address, formula) in formulas {
-        sheet
-            .set_formula(at(address).address, formula, CellValue::Blank)
-            .unwrap();
+        sheet.set_formula(at(address).address, formula).unwrap();
     }
     book
 }

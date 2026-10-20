@@ -1,41 +1,29 @@
-//! Edit, evaluate, apply owned changes, and save without a separate calculator.
-use poirot::{CellValue, EvaluationContext, Overlay, Workbook, eval};
+//! Change A1 in the first sheet of a workbook, recalculate, and save an XLSX file.
+//! Run with INPUT.xlsx OUTPUT.xlsx; A1 should be an input in the chosen workbook.
+use poirot::Workbook;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut book = Workbook::new();
-    let sheet = book.add_sheet("Inputs")?;
-    sheet.set_value("A1".parse()?, 21.)?;
-    sheet.set_formula("B1".parse()?, "A1*2", CellValue::Blank)?;
-    let target = eval::EvaluationTarget {
-        sheet: 0,
-        address: "B1".parse()?,
-    };
-    let context = EvaluationContext::default();
-    let changes = {
-        let mut overlay = Overlay::with_workbook(&book).build()?;
-        overlay.set_value(
-            eval::EvaluationTarget {
-                sheet: 0,
-                address: "A1".parse()?,
-            },
-            24.,
-        )?;
-        let mut evaluation = overlay.evaluation(&context)?;
-        if evaluation.cell(target)? != CellValue::Number(48.) {
-            return Err("unexpected evaluation result".into());
-        }
-        drop(evaluation);
-        overlay.changes()
-    };
-    book.apply(changes)?;
-    for bytes in [book.save_xlsx().to_buffer()?, book.save_xls().to_buffer()?] {
-        let reopened = Workbook::from_bytes(&bytes)?;
-        let saved = reopened
-            .sheet(0)
-            .and_then(|sheet| sheet.get(target.address))
-            .ok_or("saved formula cell is missing")?;
-        if saved.value != CellValue::Number(48.) {
-            return Err("unexpected saved value".into());
+    let mut args = std::env::args_os().skip(1);
+    let input = args
+        .next()
+        .ok_or("usage: public_workbook INPUT.xlsx OUTPUT.xlsx")?;
+    let output = args
+        .next()
+        .ok_or("usage: public_workbook INPUT.xlsx OUTPUT.xlsx")?;
+    if args.next().is_some() {
+        return Err("usage: public_workbook INPUT.xlsx OUTPUT.xlsx".into());
+    }
+
+    let mut book = Workbook::open(input)?;
+    if let Some(metadata) = &book.file_metadata {
+        for warning in &metadata.import_warnings {
+            eprintln!("{warning}");
         }
     }
+
+    let sheet = book.sheet_mut(0).ok_or("the workbook has no sheets")?;
+    sheet.set_value("A1".parse()?, 24.)?;
+    book.recalculate()?;
+    book.save_xlsx().write_file(output)?;
     Ok(())
 }

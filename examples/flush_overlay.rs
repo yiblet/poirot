@@ -1,11 +1,11 @@
 //! Publish source edits while retaining dependency-aware calculation in a worker.
-use poirot::{CellValue, EvaluationContext, Overlay, Workbook};
+use poirot::{EvaluationContext, Overlay, Workbook};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut workbook = poirot::model::Workbook::new();
     workbook
         .add_sheet("S")?
-        .set_formula("B1".parse()?, "A1*2", CellValue::Blank)?;
+        .set_formula("B1".parse()?, "A1*2")?;
     let mut overlay = Overlay::with_workbook(workbook).build()?;
     let input = overlay.target("S!A1")?;
     let output = overlay.target("S!B1")?;

@@ -2,7 +2,7 @@
 name = "poirot-coercionv2"
 version.workspace = true
 edition.workspace = true
-description = "Typed, consumer-requested spreadsheet value conversions"
+description = "Spreadsheet value conversion for function arguments"
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true

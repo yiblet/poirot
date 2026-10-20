@@ -1,10 +1,11 @@
 # poirot-xls
 
-Write the shared workbook model to legacy BIFF8 `.xls` files.
+Write legacy Excel XLS workbooks.
 
-Use `XlsExportPlan` with `XlsExportPolicy` to check representation and resource
-limits before writing, or `write_xls` for the default workflow. Unsupported
-formulas and features can be refused during planning. Export preserves saved
-formula results without recalculating them.
+Use `write_xls` to save the shared workbook model as a BIFF8 compound file.
+Use `XlsExportPlan` with `XlsExportPolicy` to check unsupported features and
+resource limits before producing output.
 
-XLS import lives in [poirot-io](../poirot-io/README.md).
+Writing preserves saved formula results without recalculating them. XLS input
+lives in [poirot-io](https://docs.rs/poirot-io). Most applications should use
+[poirot](https://docs.rs/poirot) for the combined workbook workflow.

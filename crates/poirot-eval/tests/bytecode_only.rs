@@ -29,9 +29,7 @@ fn restored_programs_preserve_reference_channels_lazy_errors_and_omissions() {
         ("D5", "SUM(INDIRECT(\"A1:A2\"))", 5.),
     ];
     for (address, source, _) in cases {
-        sheet
-            .set_formula(at(address).address, source, CellValue::Blank)
-            .unwrap();
+        sheet.set_formula(at(address).address, source).unwrap();
     }
     book.define_name("Broken", "1+", None).unwrap();
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();

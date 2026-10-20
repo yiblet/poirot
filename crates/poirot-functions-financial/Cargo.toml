@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
-description = "Workbook-independent financial calculations and currency formatting"
+description = "Financial calculations for spreadsheet functions"
 include = ["/src/**", "/README.md"]
 
 [dependencies]

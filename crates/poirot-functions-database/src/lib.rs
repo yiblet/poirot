@@ -1,8 +1,17 @@
-//! Rust adaptations of Apache POI (Apache-2.0); class bindings are described below.
-//! <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/formula/functions>
-//! Typed database aggregation, following POI DStarRunner and its twelve algorithms.
-//! All grid cells have reference origin: blanks remain blanks, and numeric text
-//! is ignored by aggregators. Boolean cells are coercev2_database_number (POI NumericValueEval).
+//! Calculate spreadsheet database aggregates.
+//!
+//! Use [`DatabaseFunction`] to select an operation and [`DatabasePlan`] to apply it to
+//! supplied data and criteria grids. These are the algorithms behind functions such
+//! as `DSUM` and `DCOUNT`, including header matching and row selection.
+//!
+//! The caller supplies cells and controls execution limits. No workbook or formula
+//! evaluator is required.
+
+// Rust adaptations of Apache POI (Apache-2.0); class bindings are described below.
+// <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/formula/functions>
+// Typed database aggregation, following POI DStarRunner and its twelve algorithms.
+// All grid cells have reference origin: blanks remain blanks, and numeric text
+// is ignored by aggregators. Boolean cells are coercev2_database_number (POI NumericValueEval).
 #[cfg(test)]
 use poirot_coercionv2::compatibility::coercev2_java_number_text;
 use poirot_functions_core::{CellError, CellValue};
@@ -14,9 +23,9 @@ mod criteria;
 pub mod number;
 mod selection;
 
-/// Database criteria and field-selection helpers shared with host adapters.
+// Database criteria and field-selection helpers shared with host adapters.
 pub use criteria::{condition_matches, condition_matches_metered};
-/// Database criteria and field-selection helpers shared with host adapters.
+// Database criteria and field-selection helpers shared with host adapters.
 pub use selection::{
     coercev2_database_criteria_header_index, coercev2_database_field_index,
     coercev2_database_number, coercev2_database_text, equal_ignore_case,

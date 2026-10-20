@@ -100,11 +100,11 @@ fn lazy_branches_and_cycles() {
     }
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "A2", Number(9.))
+        .set_formula_with_cached_value("A1".parse().unwrap(), "A2", Number(9.))
         .unwrap();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("A2".parse().unwrap(), "A1", Number(9.))
+        .set_formula_with_cached_value("A2".parse().unwrap(), "A1", Number(9.))
         .unwrap();
     assert_eq!(
         match crate::run_cell(
@@ -131,7 +131,7 @@ fn mutations_and_recalculation() {
         .unwrap();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("B1".parse().unwrap(), "A1*3", Number(-1.))
+        .set_formula_with_cached_value("B1".parse().unwrap(), "A1*3", Number(-1.))
         .unwrap();
     assert_eq!(
         match crate::run_cell(
@@ -222,7 +222,7 @@ fn resource_and_function_contracts() {
     for i in 1..=140 {
         let a = format!("A{i}").parse().unwrap();
         let f = format!("A{}", i + 1);
-        w.sheet_mut(0).unwrap().set_formula(a, f, Blank).unwrap();
+        w.sheet_mut(0).unwrap().set_formula(a, f).unwrap();
     }
     assert!(matches!(
         crate::run_cell(
@@ -357,11 +357,7 @@ fn lookup_blanks_reach_consumers_before_formula_cell_publication() {
         sheet.set_value(address.parse().unwrap(), "").unwrap();
     }
     sheet
-        .set_formula(
-            "H1".parse().unwrap(),
-            "HLOOKUP(\"blank\",A1:C2,2,FALSE)",
-            Blank,
-        )
+        .set_formula("H1".parse().unwrap(), "HLOOKUP(\"blank\",A1:C2,2,FALSE)")
         .unwrap();
     for lookup in [
         "HLOOKUP(\"blank\",A1:C2,2,FALSE)",

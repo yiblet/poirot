@@ -1,4 +1,4 @@
-//! Pure validation and compilation of owned section layouts.
+//! Validate parsed format tokens and select a renderer for each section.
 use super::fingerprint::program_fingerprint;
 use super::{
     Format, FormatCompileError, FormatCompilePolicy, FormatError, FormatPlan, FormatSourcePolicy,
@@ -13,14 +13,14 @@ fn diagnostic(section: usize, token: Option<usize>, source: FormatError) -> Form
     }
 }
 
-/// Parse canonical format syntax and compile it once. No render context is consulted.
+/// Compile an Excel number-format string for repeated rendering.
 pub fn compile_format(
     input: &str,
     policy: FormatCompilePolicy,
 ) -> Result<FormatPlan, FormatCompileError> {
     compile_format_with_source(input, policy, FormatSourcePolicy::default())
 }
-/// Parse with an explicit supported formatter source.
+/// Compile a number-format string with an explicit compatibility policy.
 pub fn compile_format_with_source(
     input: &str,
     policy: FormatCompilePolicy,
@@ -28,14 +28,14 @@ pub fn compile_format_with_source(
 ) -> Result<FormatPlan, FormatCompileError> {
     compile_program_with_source(&parse_format(input)?, policy, source)
 }
-/// Compile an existing parsed token program, including publicly constructed values.
+/// Compile an already parsed number format, including caller-constructed tokens.
 pub fn compile_program(
     format: &Format,
     policy: FormatCompilePolicy,
 ) -> Result<FormatPlan, FormatCompileError> {
     compile_program_with_source(format, policy, FormatSourcePolicy::default())
 }
-/// Compile source identity into the immutable plan and its numeric layouts.
+/// Compile parsed number-format tokens with an explicit compatibility policy.
 pub fn compile_program_with_source(
     format: &Format,
     policy: FormatCompilePolicy,

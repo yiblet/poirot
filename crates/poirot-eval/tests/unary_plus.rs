@@ -21,9 +21,7 @@ fn workbook() -> Workbook {
             CellValue::TextUtf16(ExcelText::from_units(vec![0xd800, 0x61, 0xdc00])),
         )
         .unwrap();
-    sheet
-        .set_formula(target("B4").address, "+A2:A4", CellValue::Blank)
-        .unwrap();
+    sheet.set_formula(target("B4").address, "+A2:A4").unwrap();
     book
 }
 
@@ -152,7 +150,7 @@ fn unary_plus_reads_invalidate_after_typed_edits_and_snapshot_restore() {
         let mut book = workbook();
         book.sheet_mut(0)
             .unwrap()
-            .set_formula(target("C2").address, "ISTEXT(+A2)", CellValue::Blank)
+            .set_formula(target("C2").address, "ISTEXT(+A2)")
             .unwrap();
         let mut overlay = Overlay::with_workbook(&book)
             .with_policy(OverlayPolicy {

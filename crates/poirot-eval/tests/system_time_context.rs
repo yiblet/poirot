@@ -16,12 +16,8 @@ fn at(address: &str) -> EvaluationTarget {
 fn direct_overlay_and_restored_date_results_support_fractional_pre_epoch_time() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet
-        .set_formula(at("A1").address, "NOW()", CellValue::Blank)
-        .unwrap();
-    sheet
-        .set_formula(at("B1").address, "TODAY()", CellValue::Blank)
-        .unwrap();
+    sheet.set_formula(at("A1").address, "NOW()").unwrap();
+    sheet.set_formula(at("B1").address, "TODAY()").unwrap();
     let context = EvaluationContext {
         as_of_time: UNIX_EPOCH - Duration::from_millis(500),
         ..Default::default()
@@ -93,12 +89,8 @@ fn extension_and_retained_context_identity_preserve_single_nanosecond_changes() 
         .unwrap();
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet
-        .set_formula(at("A1").address, "NANOS()", CellValue::Blank)
-        .unwrap();
-    sheet
-        .set_formula(at("B1").address, "A1+10", CellValue::Blank)
-        .unwrap();
+    sheet.set_formula(at("A1").address, "NANOS()").unwrap();
+    sheet.set_formula(at("B1").address, "A1+10").unwrap();
     let first = EvaluationContext {
         as_of_time: UNIX_EPOCH + Duration::new(1_700_000_000, 1),
         ..Default::default()

@@ -1,4 +1,7 @@
-//! Sparse edits, owned bytecode cache, and per-evaluation execution over a baseline workbook.
+//! Temporary cell edits and reusable results over an unchanged workbook.
+//!
+//! `Source` combines the baseline with edits and compiled formulas. `Cache` stores
+//! results and the reads used to invalidate them when an input changes.
 use crate::{EvaluationFailure, EvaluationTarget, FormulaCompiler};
 use poirot_model::{
     Cell, CellAddress, CellStore, CellStyle, CellValue, ModelError, Workbook, WorkbookChange,
@@ -7,7 +10,7 @@ use std::{borrow::Borrow, cell::RefCell, collections::BTreeMap, sync::Arc};
 mod context;
 mod target;
 use context::ContextKey;
-/// Evaluation inputs and overlay computation policies.
+// Evaluation inputs and overlay computation policies.
 pub use context::{EvaluationContext, OverlayPolicy};
 /// Consumed-read tracking and persistent result invalidation.
 pub(crate) mod dependencies;
@@ -19,7 +22,7 @@ mod continuation;
 mod direct;
 mod output;
 mod source;
-/// Editable direct workspaces without retained dependency tracking.
+// Editable direct workspaces without retained dependency tracking.
 pub use direct::{Evaluation, EvaluationBuilder};
 use source::{Registry, Source, source_methods};
 /// Serializable views of workbook, edits, compiled formulas, and cached results.
@@ -81,12 +84,16 @@ impl From<EvaluationFailure> for OverlayError {
     }
 }
 
-/// Sparse edits and dependency-aware retained results over a stable workbook handle.
+/// Temporary workbook inputs with dependency tracking for repeated calculations.
+///
+/// Input edits invalidate affected results while retaining unrelated results.
+/// Input edits leave the baseline unchanged until explicitly applied or flushed.
+/// Select outputs through [`Overlay::evaluation`].
 pub struct Overlay<'a, W = &'a Workbook> {
     source: Source<'a, W>,
     cache: RefCell<Cache>,
 }
-/// Selects an immutable baseline handle, policies, and optional extension registry.
+/// Configures an overlay's workbook, formula policies, and custom functions.
 pub struct OverlayBuilder<'a, W> {
     workbook: W,
     policy: OverlayPolicy,
@@ -123,7 +130,7 @@ impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
         self.source.inputs = crate::run_overlay::RunInputs::empty();
         self.clear_cache();
     }
-    /// Discard evaluated values and invalidation indexes without recompiling formulas.
+    /// Clear calculated results and their dependencies, keeping edits and compiled formulas.
     pub fn clear_cache(&mut self) {
         self.cache = RefCell::new(Cache::default());
     }
@@ -139,7 +146,10 @@ impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
             .get((target.sheet, target.address))
             .map(|entry| Arc::clone(&entry.value))
     }
-    /// Start a fresh execution, invalidating volatile and context-stale retained results.
+    /// Start a calculation with the supplied context.
+    ///
+    /// Results affected by changed context settings or volatile functions are
+    /// invalidated before calculation begins.
     pub fn evaluation<'e>(
         &'e mut self,
         context: &'e EvaluationContext,
@@ -150,11 +160,11 @@ impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
     pub fn save_snapshot(&self) -> crate::artifact::SnapshotSaveBuilder<'_> {
         crate::artifact::SnapshotSaveBuilder::checkpoint(self.snapshot())
     }
-    /// Borrow a Serde view of the baseline, edits, bytecode, and retained results.
+    /// Borrow the workbook, edits, compiled formulas, and cached results for serialization.
     pub fn snapshot(&self) -> snapshot::Snapshot<'_> {
         snapshot::Snapshot::borrowed(&self.source, Some(&self.cache))
     }
-    /// Export owned source edits and validated cache/spill writes.
+    /// Collect input edits and calculated results as workbook changes.
     pub fn changes(&mut self) -> Vec<WorkbookChange> {
         let cache = self.cache.get_mut();
         let mut changes = cache
@@ -192,17 +202,16 @@ impl Overlay<'static, &'static Workbook> {
     }
 }
 impl<W: Borrow<Workbook> + std::borrow::BorrowMut<Workbook>> Overlay<'_, W> {
-    /// Commit authored edits into the baseline without discarding prepared work.
+    /// Apply input edits to the baseline, keeping compiled formulas and cached results.
     ///
-    /// Validation failure leaves both baseline and edits untouched. Successful
-    /// publication clears the authored diff, retaining compiled programs, cached
-    /// results, dependency indexes and context identity. Edits already invalidate
-    /// affected results when authored; flushing does not invalidate them again.
+    /// If validation fails, the baseline and edits are unchanged. On success, the
+    /// applied edits are removed from the overlay. Affected results were already
+    /// invalidated when the edits were made, so flushing does not invalidate them again.
     ///
-    /// This stages only edited cells, never a workbook clone. Evaluated values
-    /// remain in the overlay. Baseline saved results may therefore be stale;
-    /// evaluate required outputs and apply `changes()` to a detached workbook
-    /// before file export. A workspace `snapshot()` includes retained results.
+    /// Only edited cells are staged; calculated results stay in the overlay.
+    /// Before exporting a file, calculate the required outputs and apply
+    /// [`Self::changes`] to a separate workbook to include those results.
+    /// [`Self::snapshot`] includes them without changing the baseline.
     /// Edited spill anchors lose their saved children; edits to saved children
     /// replace that child's derived ownership with authored content. Other saved
     /// caches are left alone and never authorize evaluator reuse.

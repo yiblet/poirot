@@ -1,5 +1,10 @@
-//! Bounded, row-major matrix algorithms for spreadsheet formula adapters.
-//! Coercion belongs to the adapter; operational limits are never formula errors.
+//! Matrix and array calculations for spreadsheet functions.
+//!
+//! Use [`Matrix`] with [`transpose`], [`multiply`], [`determinant`], or [`inverse`]. Other
+//! operations include [`frequency`], [`sumproduct`], and [`trend`].
+//!
+//! The caller supplies arrays and a [`Budget`] for cell counts and estimated work.
+//! Exceeding a budget is reported separately from spreadsheet errors.
 mod collection;
 mod linear_algebra;
 mod regression;
@@ -27,8 +32,9 @@ fn reference<T>() -> Result<T> {
     Err(Error::Formula(CellError::Ref))
 }
 
-/// Maximum logical retained cells and algorithm work for a pure matrix operation.
-/// An overflowing estimate is refused rather than bypassing the limit.
+/// Limits on retained elements and estimated work for a matrix operation.
+///
+/// An overflowing size or work estimate is rejected.
 #[derive(Debug, Clone, Copy)]
 pub struct Budget {
     /// Maximum logical elements admitted for one matrix operation.
@@ -46,8 +52,10 @@ impl Budget {
     }
 }
 
-/// Nonempty rectangular row-major storage. [`Matrix::new`] validates dimensions;
-/// row and column indices are zero-based.
+/// A nonempty rectangular matrix stored in row-major order.
+///
+/// [`Matrix::new`] checks that the dimensions match the storage. Indices are
+/// zero-based.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Matrix<T> {
     rows: usize,
@@ -55,18 +63,21 @@ pub struct Matrix<T> {
     values: Vec<T>,
 }
 impl<T> Matrix<T> {
-    /// Validate nonempty rectangular storage before exposing matrix indexing.
+    /// Create a matrix from row-major values.
+    ///
+    /// Returns a value error if either dimension is zero or `rows * cols` does not
+    /// equal the number of values, including when that product overflows.
     pub fn new(rows: usize, cols: usize, values: Vec<T>) -> Result<Self> {
         if rows == 0 || cols == 0 || rows.checked_mul(cols) != Some(values.len()) {
             return value();
         }
         Ok(Self { rows, cols, values })
     }
-    /// Return the validated row count.
+    /// Return the number of rows.
     pub fn rows(&self) -> usize {
         self.rows
     }
-    /// Return the validated column count.
+    /// Return the number of columns.
     pub fn cols(&self) -> usize {
         self.cols
     }
@@ -99,12 +110,14 @@ fn finite(values: &[f64]) -> Result<()> {
         num()
     }
 }
-/// Swap rows and columns after admitting output size and work.
+/// Transpose a matrix after checking output size and work limits.
 pub fn transpose<T: Clone>(m: &Matrix<T>, budget: Budget) -> Result<Matrix<T>> {
     linear_algebra::transpose(m, budget)
 }
 
-/// Multiply conformable numeric matrices under the supplied budget.
+/// Multiply matrices whose inner dimensions match.
+///
+/// Returns a value error if `a.cols() != b.rows()`.
 pub fn multiply(a: &Matrix<f64>, b: &Matrix<f64>, budget: Budget) -> Result<Matrix<f64>> {
     linear_algebra::multiply(a, b, budget)
 }
@@ -119,6 +132,8 @@ pub fn inverse(m: &Matrix<f64>, budget: Budget) -> Result<Matrix<f64>> {
     linear_algebra::inverse(m, budget)
 }
 
+/// Count data values in the supplied bins.
+///
 /// POI uses Java binarySearch directly, including its behavior for duplicate or
 /// unsorted bins. Do not sort or deduplicate bins in the adapter.
 pub fn frequency(data: &[f64], bins: &[f64], budget: Budget) -> Result<Matrix<f64>> {

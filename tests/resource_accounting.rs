@@ -98,15 +98,11 @@ fn sparse_membership_invalidates_overlay_cache_after_insertions_and_deletions() 
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(target("C1").address, "CONCAT(A:A)", CellValue::Blank)
+        .set_formula(target("C1").address, "CONCAT(A:A)")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(
-            target("C2").address,
-            "MAXIFS(B:B,A:A,\"last\")",
-            CellValue::Blank,
-        )
+        .set_formula(target("C2").address, "MAXIFS(B:B,A:A,\"last\")")
         .unwrap();
     let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
     let context = EvaluationContext::default();
@@ -289,7 +285,7 @@ fn direct_work_is_cumulative_until_begin_and_overlay_borrows_start_fresh() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(target("C1").address, "CONCAT(A:A)", CellValue::Blank)
+        .set_formula(target("C1").address, "CONCAT(A:A)")
         .unwrap();
     let context = EvaluationContext {
         budgets: EvaluationBudgets {

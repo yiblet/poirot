@@ -311,7 +311,7 @@ fn read_events_match_with_observation_enabled_and_disabled() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(AT, "IF(TRUE,B1,C1)", CellValue::Blank)
+        .set_formula(AT, "IF(TRUE,B1,C1)")
         .unwrap();
     let policy = EvaluationPolicy::default();
     let plan = FormulaCompiler::new().compile_workbook(&workbook, &policy);

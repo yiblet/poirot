@@ -21,7 +21,7 @@ mod domain;
 
 /// Structural admission failures for manually supplied syntax.
 pub use admission::BindingError;
-/// Bound inspection expressions, family metadata, and bytecode-backed formula plans.
+// Bound inspection expressions, family metadata, and bytecode-backed formula plans.
 pub use domain::*;
 use poirot_parsing::formula::Expr as Syntax;
 

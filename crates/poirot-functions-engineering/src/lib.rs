@@ -1,8 +1,17 @@
-//! Rust adaptations of Apache POI (Apache-2.0); class bindings are described below.
-//! <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/formula/functions>
-//! Pure engineering algorithms and retained pinned POI helper APIs.
-//! Argument parsing and result spelling belong to poirot-coercionv2; references,
-//! resource admission and operational errors belong to the evaluator adapter.
+//! Engineering calculations for spreadsheet functions.
+//!
+//! Includes binary, octal, and hexadecimal conversion, complex-number helpers, and
+//! Bessel calculations. Call operations such as [`hex2dec`], [`dec2bin`], [`complex`],
+//! and [`besselj`] with supplied values.
+//!
+//! The caller resolves workbook references and evaluates arguments. Shared argument
+//! parsing lives in [poirot-coercionv2](https://docs.rs/poirot-coercionv2).
+
+// Rust adaptations of Apache POI (Apache-2.0); class bindings are described below.
+// <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/formula/functions>
+// Pure engineering algorithms and retained pinned POI helper APIs.
+// Argument parsing and result spelling belong to poirot-coercionv2; references,
+// resource admission and operational errors belong to the evaluator adapter.
 
 /// Spreadsheet value/domain failures from engineering conversions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

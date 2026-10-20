@@ -226,7 +226,7 @@ mod tests {
             .unwrap();
         w.sheet_mut(1)
             .unwrap()
-            .set_formula(
+            .set_formula_with_cached_value(
                 "A1".parse().unwrap(),
                 "Data!A1+LEN(\"Data!A1\")",
                 CellValue::Number(15.0),
@@ -241,11 +241,7 @@ mod tests {
         let mut w = workbook();
         w.sheet_mut(1)
             .unwrap()
-            .set_formula(
-                "B1".parse().unwrap(),
-                "Data!Local&\"Data!Local\"",
-                CellValue::Blank,
-            )
+            .set_formula("B1".parse().unwrap(), "Data!Local&\"Data!Local\"")
             .unwrap();
         let plan = EditPlanner::rename_sheet(&w, 0, "O'Brien", EditPolicy::default()).unwrap();
         w.apply_rename_sheet_plan(&plan).unwrap();
@@ -283,11 +279,11 @@ mod tests {
         let mut w = workbook();
         w.sheet_mut(1)
             .unwrap()
-            .set_formula("B1".parse().unwrap(), "Global+Data!A1", CellValue::Blank)
+            .set_formula("B1".parse().unwrap(), "Global+Data!A1")
             .unwrap();
         w.sheet_mut(0)
             .unwrap()
-            .set_formula("B1".parse().unwrap(), "Local+Global", CellValue::Blank)
+            .set_formula("B1".parse().unwrap(), "Local+Global")
             .unwrap();
         let before_cross = match poirot_eval::run_cell(
             &w,
@@ -396,11 +392,7 @@ mod tests {
         assert_eq!(w, before);
         w.sheet_mut(1)
             .unwrap()
-            .set_formula(
-                "B1".parse().unwrap(),
-                "[external.xlsx]Data!A1",
-                CellValue::Blank,
-            )
+            .set_formula("B1".parse().unwrap(), "[external.xlsx]Data!A1")
             .unwrap();
         let before = w.clone();
         assert!(EditPlanner::rename_sheet(&w, 0, "Input", EditPolicy::default()).is_err());
@@ -413,7 +405,7 @@ mod tests {
         let mut w = workbook();
         w.sheet_mut(1)
             .unwrap()
-            .set_formula("B1".parse().unwrap(), "sum( 1 , 2 )", CellValue::Blank)
+            .set_formula("B1".parse().unwrap(), "sum( 1 , 2 )")
             .unwrap();
         let plan = EditPlanner::rename_sheet(&w, 0, "Input", EditPolicy::default()).unwrap();
         w.sheet_mut(1)
@@ -445,14 +437,13 @@ mod tests {
 #[cfg(test)]
 mod identifier_edit_tests {
     use super::*;
-    use poirot_model::CellValue;
     #[test]
     fn rename_uses_same_mapping_and_fails_atomically_on_unsupported_mapping() {
         let mut workbook = Workbook::new();
         workbook
             .add_sheet("Ä")
             .unwrap()
-            .set_formula("A1".parse().unwrap(), "'ä'!B1", CellValue::Blank)
+            .set_formula("A1".parse().unwrap(), "'ä'!B1")
             .unwrap();
         let plan = EditPlanner::rename_sheet(&workbook, 0, "Input", EditPolicy::default()).unwrap();
         // The printer canonically quotes every sheet qualifier, even ASCII names.
@@ -465,7 +456,7 @@ mod identifier_edit_tests {
         unresolved
             .import_sheet("Σ")
             .unwrap()
-            .set_formula("A1".parse().unwrap(), "'σ'!B1", CellValue::Blank)
+            .set_formula("A1".parse().unwrap(), "'σ'!B1")
             .unwrap();
         let before = unresolved.clone();
         assert!(matches!(

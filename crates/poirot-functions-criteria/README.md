@@ -1,8 +1,9 @@
 # poirot-functions-criteria
 
-Criteria matching and conditional aggregation for functions such as `COUNTIF`
-and `SUMIF`, plus `SUBTOTAL` rules for hidden rows and nested subtotals.
+Match spreadsheet criteria and calculate conditional aggregates.
 
-Use `Criterion` to parse and test a criterion, or `CriteriaPlan` to prepare an
-aggregation over supplied ranges. Wildcard helpers support spreadsheet patterns.
-The caller resolves workbook references and supplies the input cells.
+Use `Criterion` to parse conditions such as `">10"` or `"a*"`. Use `CriteriaPlan`
+for aggregates such as `COUNTIF` and `SUMIF`. Wildcard helpers implement
+spreadsheet pattern matching; `subtotal` handles hidden rows and nested subtotals.
+
+The caller supplies cells and resolves workbook references.

@@ -71,7 +71,7 @@ pub mod text;
 /// Typed failures shared by builtin adapters.
 pub mod failure;
 mod interface;
-/// Common deferred arguments, values, host context, and adapter interface.
+// Common deferred arguments, values, host context, and adapter interface.
 pub use interface::{
     CallContext, FunctionAdapter, FunctionInput, FunctionParameters, FunctionValue,
 };
@@ -80,9 +80,9 @@ mod registry;
 pub use registry::AdapterRegistry;
 /// Compatibility name for the indexed parent produced by chaining adapters.
 pub type AdapterChain = AdapterRegistry;
-/// Deferred input protocol and small argument vector.
+// Deferred input protocol and small argument vector.
 pub use poirot_functions_core::{Input, ParamVec};
-/// Parsed builtin names and fallback spellings.
+// Parsed builtin names and fallback spellings.
 pub use poirot_parsing::formula::{CommonFunction, FunctionName};
 
 use crate::registry::{FUNCTION_DESCRIPTORS, FunctionDescriptor, FunctionId};

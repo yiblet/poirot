@@ -137,7 +137,7 @@ fn explicit_comparison_limits_remain_operational() {
     sheet.set_value("A1".parse().unwrap(), "ΣΣΣ").unwrap();
     sheet.set_value("B1".parse().unwrap(), "ςςς").unwrap();
     sheet
-        .set_formula("C1".parse().unwrap(), "IFERROR(A1=B1,7)", CellValue::Blank)
+        .set_formula("C1".parse().unwrap(), "IFERROR(A1=B1,7)")
         .unwrap();
     let context = EvaluationContext {
         budgets: poirot::eval::EvaluationBudgets {

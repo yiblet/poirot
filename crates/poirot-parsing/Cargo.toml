@@ -2,7 +2,7 @@
 name = "poirot-parsing"
 version.workspace = true
 edition.workspace = true
-description = "Workbook-independent formula scanning and spreadsheet text grammars"
+description = "Spreadsheet formula and text parsing"
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true

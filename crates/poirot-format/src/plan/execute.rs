@@ -1,14 +1,14 @@
-//! Typed execution and conservative preflight reservation share expansion assumptions.
+//! Select a format section and render a value within the compiled output limits.
 use super::{
     CellValue, FormatError, FormatPlan, FormatRenderContext, FormattedValue, RenderedText,
     SectionPlan, SectionProgram, Token, error, fidelity_error, render_text, resource_error,
 };
 
 impl FormatPlan {
-    /// Conservative UTF-8 preflight reservation before rendering allocates output.
-    /// Includes intermediate token expansion, text substitution, and Unicode fill.
-    /// This is an upper bound, not the eventual output length; callers can charge
-    /// it to a budget before calling `render_value` and release unused reservation.
+    /// Bound the UTF-8 bytes needed to render a value, including intermediate output.
+    ///
+    /// Callers can reserve this amount before rendering and release the unused
+    /// portion afterward. It is an upper bound, not the final text length.
     pub fn render_byte_bound(
         &self,
         value: &CellValue,
@@ -77,8 +77,9 @@ fn select(plan: &FormatPlan, n: f64) -> Result<(&SectionPlan, bool), FormatError
         i == 1,
     ))
 }
-/// Execute an immutable plan using precomputed decimal/scientific/fraction layouts.
-/// General, date, and text sections render from compiled layouts.
+/// Render a cell value with a compiled number format.
+///
+/// The original value is unchanged.
 pub fn render_value(
     value: &CellValue,
     plan: &FormatPlan,

@@ -274,12 +274,12 @@ fn nested_dependency_target_and_memo_hits_are_not_probe_target_or_new_calls() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(A1, "ABS(-2)", CellValue::Blank)
+        .set_formula(A1, "ABS(-2)")
         .unwrap();
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(B1, "A1+A1", CellValue::Blank)
+        .set_formula(B1, "A1+A1")
         .unwrap();
     let policy = crate::EvaluationPolicy::default();
     let mut compiler = crate::FormulaCompiler::new();
@@ -422,7 +422,7 @@ fn extension_execution_and_external_cache_values_do_not_fabricate_builtin_entrie
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(A1, "ABS(-2)", CellValue::Blank)
+        .set_formula(A1, "ABS(-2)")
         .unwrap();
     let mut registry = ExtensionRegistry::new();
     registry

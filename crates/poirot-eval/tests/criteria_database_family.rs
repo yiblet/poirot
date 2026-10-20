@@ -140,13 +140,13 @@ fn rejected_rows_and_later_criteria_ranges_stay_unread() {
     let mut w = workbook();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("B1".parse().unwrap(), "SUBTOTAL(109,A1)", 0.0.into())
+        .set_formula_with_cached_value("B1".parse().unwrap(), "SUBTOTAL(109,A1)", 0.0.into())
         .unwrap();
     check(&w, "SUMIF(A1:A3,2,B1:B3)", 50.0.into());
     check(&w, "COUNTIFS(A1:A3,99,B1:B3,1)", 0.0.into());
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("D3".parse().unwrap(), "SUBTOTAL(109,A1)", 0.0.into())
+        .set_formula_with_cached_value("D3".parse().unwrap(), "SUBTOTAL(109,A1)", 0.0.into())
         .unwrap();
     check(&w, "DSUM(D1:E4,\"N\",G1:G2)", 8.0.into());
     check(&w, "COUNTIF(B1:B3,C1)", 0.0.into());

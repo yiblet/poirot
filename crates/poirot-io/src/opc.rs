@@ -4,8 +4,8 @@ use poirot_model::{ImportDiagnostic, ImportDiagnosticKind};
 use quick_xml::{events::Event, name::ResolveResult, reader::NsReader};
 use std::collections::{BTreeMap, BTreeSet};
 const REL: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/";
-const PKG: &[u8] = b"http://schemas.openxmlformats.org/package/2006/relationships";
-const MAIN: &[u8] = b"http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+const PKG: &str = "http://schemas.openxmlformats.org/package/2006/relationships";
+const MAIN: &str = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
 /// Invalid or unsupported XLSX package structure, relationships, or part identity.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OpcError {
@@ -205,16 +205,13 @@ fn relationship_part(owner: &str) -> String {
         )
     }
 }
-fn attrs(
-    reader: &NsReader<&[u8]>,
-    e: &quick_xml::events::BytesStart<'_>,
-) -> Result<BTreeMap<String, String>, IoError> {
+fn attrs(e: &quick_xml::events::BytesStart<'_>) -> Result<BTreeMap<String, String>, IoError> {
     let mut result = BTreeMap::new();
     for a in e.attributes() {
         let a = a.map_err(xml)?;
-        let key = String::from_utf8_lossy(a.key.as_ref()).into_owned();
+        let key = a.key.as_ref().to_owned();
         let value = a
-            .decoded_and_normalized_value(quick_xml::XmlVersion::Implicit1_0, reader.decoder())
+            .normalized_value(quick_xml::XmlVersion::Implicit1_0)
             .map_err(xml)?
             .into_owned();
         result.insert(key, value);
@@ -240,12 +237,12 @@ impl PackageInventory {
         let mut result = BTreeMap::new();
         loop {
             match reader.read_event().map_err(xml)? {
-                Event::Start(e) if e.local_name().as_ref() == b"Relationship" => {
+                Event::Start(e) if e.local_name().as_ref() == "Relationship" => {
                     let (ns, _) = reader.resolver().resolve_element(e.name());
                     if !matches!(ns, ResolveResult::Bound(n) if n.as_ref() == PKG) {
                         return Err(fail(OpcError::InvalidNamespace(path.clone())));
                     }
-                    let a = attrs(&reader, &e)?;
+                    let a = attrs(&e)?;
                     let required = |key: &str| {
                         a.get(key)
                             .filter(|s| !s.is_empty())
@@ -345,12 +342,12 @@ impl PackageInventory {
         let mut targets = BTreeSet::new();
         loop {
             match reader.read_event().map_err(xml)? {
-                Event::Start(e) if e.local_name().as_ref() == b"sheet" => {
+                Event::Start(e) if e.local_name().as_ref() == "sheet" => {
                     let (ns, _) = reader.resolver().resolve_element(e.name());
                     if !matches!(ns, ResolveResult::Bound(n) if n.as_ref() == MAIN) {
                         return Err(fail(OpcError::InvalidNamespace(workbook_part.clone())));
                     }
-                    let a = attrs(&reader, &e)?;
+                    let a = attrs(&e)?;
                     let name = a
                         .get("name")
                         .filter(|s| !s.is_empty())
@@ -367,15 +364,12 @@ impl PackageInventory {
                     for attribute in e.attributes() {
                         let attribute = attribute.map_err(xml)?;
                         let (ns, local) = reader.resolver().resolve_attribute(attribute.key);
-                        if local.as_ref() == b"id"
-                            && matches!(ns, ResolveResult::Bound(n) if n.as_ref() == REL.trim_end_matches('/').as_bytes())
+                        if local.as_ref() == "id"
+                            && matches!(ns, ResolveResult::Bound(n) if n.as_ref() == REL.trim_end_matches('/'))
                         {
                             relationship_id = Some(
                                 attribute
-                                    .decoded_and_normalized_value(
-                                        quick_xml::XmlVersion::Implicit1_0,
-                                        reader.decoder(),
-                                    )
+                                    .normalized_value(quick_xml::XmlVersion::Implicit1_0)
                                     .map_err(xml)?
                                     .into_owned(),
                             );

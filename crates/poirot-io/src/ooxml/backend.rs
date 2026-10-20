@@ -42,11 +42,11 @@ pub(crate) fn backend_package(
         loop {
             let event = reader.read_event().map_err(xml)?;
             match event {
-                Event::Start(ref e) if e.local_name().as_ref() == b"c" => {
-                    error_cell = attr(&reader, e, b"t")?.as_deref() == Some("e");
+                Event::Start(ref e) if e.local_name().as_ref() == "c" => {
+                    error_cell = attr(e, "t")?.as_deref() == Some("e");
                     write_event(&mut writer, event.into_owned())?;
                 }
-                Event::Start(ref e) if error_cell && e.local_name().as_ref() == b"v" => {
+                Event::Start(ref e) if error_cell && e.local_name().as_ref() == "v" => {
                     let raw = text(&mut reader, e.name())?;
                     element(
                         &mut writer,

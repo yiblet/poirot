@@ -51,12 +51,12 @@ fn cell_dependencies_use_the_same_registry_and_record_their_source_cell() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(dependency, "CUSTOM(12)", CellValue::Number(-1.))
+        .set_formula_with_cached_value(dependency, "CUSTOM(12)", CellValue::Number(-1.))
         .unwrap();
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(
+        .set_formula_with_cached_value(
             CellAddress { row: 0, col: 0 },
             "B1+1",
             CellValue::Number(-2.),

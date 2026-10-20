@@ -12,21 +12,14 @@ pub(super) fn xml(e: impl std::fmt::Display) -> IoError {
     IoError::Xml(e.to_string())
 }
 /// Read and decode one optional attribute by its exact XML name.
-pub(super) fn attr(
-    reader: &Reader<&[u8]>,
-    e: &BytesStart<'_>,
-    name: &[u8],
-) -> Result<Option<String>, IoError> {
+pub(super) fn attr(e: &BytesStart<'_>, name: &str) -> Result<Option<String>, IoError> {
     for a in e.attributes().with_checks(false) {
         let a = a.map_err(xml)?;
         if a.key.as_ref() == name {
             return Ok(Some(
-                a.decoded_and_normalized_value(
-                    quick_xml::XmlVersion::Implicit1_0,
-                    reader.decoder(),
-                )
-                .map_err(xml)?
-                .into_owned(),
+                a.normalized_value(quick_xml::XmlVersion::Implicit1_0)
+                    .map_err(xml)?
+                    .into_owned(),
             ));
         }
     }
@@ -51,11 +44,9 @@ pub(super) fn text(
     name: quick_xml::name::QName<'_>,
 ) -> Result<String, IoError> {
     let raw = reader.read_text(name).map_err(xml)?;
-    Ok(
-        quick_xml::escape::unescape(&raw.xml10_content().map_err(xml)?)
-            .map_err(xml)?
-            .into_owned(),
-    )
+    Ok(quick_xml::escape::unescape(&raw.xml10_content())
+        .map_err(xml)?
+        .into_owned())
 }
 /// Write one XML event using the shared I/O diagnostic conversion.
 pub(super) fn write_event<W: Write>(

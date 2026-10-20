@@ -8,10 +8,10 @@ fn workbook() -> Workbook {
     let sheet = book.add_sheet("S").unwrap();
     sheet.set_value("A1".parse().unwrap(), 3.).unwrap();
     sheet
-        .set_formula("B1".parse().unwrap(), "A1*2", CellValue::Number(999.))
+        .set_formula_with_cached_value("B1".parse().unwrap(), "A1*2", CellValue::Number(999.))
         .unwrap();
     sheet
-        .set_formula("C1".parse().unwrap(), "A1*3", CellValue::Number(999.))
+        .set_formula_with_cached_value("C1".parse().unwrap(), "A1*3", CellValue::Number(999.))
         .unwrap();
     book
 }
@@ -255,7 +255,7 @@ fn provider_implementations_remain_external_and_identity_checked() {
     let mut book = workbook();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("B1".parse().unwrap(), "PROVIDER()", CellValue::Blank)
+        .set_formula("B1".parse().unwrap(), "PROVIDER()")
         .unwrap();
     let contract = ExtensionContract {
         arity: Arity {
@@ -345,7 +345,7 @@ fn restored_execution_keeps_operational_failure_separate_from_spreadsheet_error(
     let mut book = workbook();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("D1".parse().unwrap(), "SQRT(-1)", CellValue::Blank)
+        .set_formula("D1".parse().unwrap(), "SQRT(-1)")
         .unwrap();
     let bytes = encode_workbook(&book, SnapshotLimits::default()).unwrap();
     let restored = decode_default(&bytes).unwrap();

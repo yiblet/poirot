@@ -1,7 +1,7 @@
 use poirot_io::{
     IoError,
     opc::{OpcError, PackageInventory, resolve_target},
-    read_xlsx_bytes,
+    read_workbook_bytes,
 };
 use std::{
     collections::BTreeMap,
@@ -54,18 +54,17 @@ fn relocated_parts_alternate_prefix_and_skipped_scope_execute_correctly() {
     let plan = p.plan().unwrap();
     assert_eq!(plan.workbook_part, "documents/book.xml");
     assert_eq!(plan.sheets[1].part, "data/cells.xml");
-    let report = read_xlsx_bytes(&bytes(p)).unwrap();
-    assert_eq!(report.workbook.sheets().len(), 1);
-    let sheet = &report.workbook.sheets()[0];
+    let report = read_workbook_bytes(&bytes(p)).unwrap();
+    assert_eq!(report.sheets().len(), 1);
+    let sheet = &report.sheets()[0];
     assert_eq!(sheet.name(), "Values");
     let cell = sheet.get("A1".parse().unwrap()).unwrap();
     assert_eq!(cell.value, poirot_model::CellValue::Number(17.0));
     assert_eq!(cell.style.number_format.as_deref(), Some("0.000"));
-    assert_eq!(report.workbook.named_ranges.len(), 1);
-    assert_eq!(report.workbook.named_ranges[0].sheet_scope, Some(0));
+    assert_eq!(report.named_ranges.len(), 1);
+    assert_eq!(report.named_ranges[0].sheet_scope, Some(0));
     assert!(
         report
-            .workbook
             .file_metadata
             .as_ref()
             .unwrap()
@@ -146,7 +145,7 @@ fn invalid_local_scope_is_an_error_instead_of_a_global_or_neighbor_name() {
         .replace("localSheetId=\"1\"", "localSheetId=\"2\"")
         .into_bytes();
     assert!(matches!(
-        read_xlsx_bytes(&bytes(p)),
+        read_workbook_bytes(&bytes(p)),
         Err(IoError::Opc(OpcError::SheetMismatch(_)))
     ));
 }
@@ -191,10 +190,12 @@ fn external_link_policy_is_inspectable_and_executed_by_byte_adapter() {
         Err(IoError::Opc(OpcError::ExternalRelationship(_)))
     ));
     assert!(matches!(
-        poirot_io::read_xlsx_bytes_with_policy(
+        poirot_io::read_workbook_bytes_with_options(
             &bytes(p),
-            poirot_io::ReadOptions::default(),
-            policy
+            poirot_io::ReadOptions {
+                xlsx_policy: policy,
+                ..poirot_io::ReadOptions::default()
+            }
         ),
         Err(IoError::Opc(OpcError::ExternalRelationship(_)))
     ));
@@ -223,13 +224,11 @@ fn legal_percent_encoded_parts_use_raw_zip_names_through_backend() {
     let plan = p.plan().unwrap();
     assert_eq!(plan.workbook_part, "documents/book%20name.xml");
     assert_eq!(plan.sheets[1].part, "data/cells%23%E2%82%AC.xml");
-    let report = read_xlsx_bytes(&bytes(p)).unwrap();
-    let cell = report.workbook.sheets()[0]
-        .get("A1".parse().unwrap())
-        .unwrap();
+    let report = read_workbook_bytes(&bytes(p)).unwrap();
+    let cell = report.sheets()[0].get("A1".parse().unwrap()).unwrap();
     assert_eq!(cell.value, poirot_model::CellValue::Number(17.0));
     assert_eq!(cell.style.number_format.as_deref(), Some("0.000"));
-    assert_eq!(report.workbook.named_ranges[0].sheet_scope, Some(0));
+    assert_eq!(report.named_ranges[0].sheet_scope, Some(0));
 }
 
 #[test]

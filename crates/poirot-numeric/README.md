@@ -1,9 +1,10 @@
 # poirot-numeric
 
-Shared floating-point comparison and number-to-text primitives with behavior
-based on Apache POI.
+Compare spreadsheet numbers and convert them to text.
 
-Use `compare` for the supported Excel-style fifteen-digit comparison rules,
-`number_text` for POI-compatible numeric text conversion, and `radix` for
-positional-number helpers. These operations are separate from cell display
-formatting, which lives in [poirot-format](../poirot-format/README.md).
+Use `compare` for the implemented Excel-style fifteen-digit comparison rules.
+`number_text` converts floating-point numbers to text, and `radix` provides
+positional-number helpers. Behavior is based on Apache POI.
+
+These operations are separate from cell display formatting, which lives in
+[poirot-format](https://docs.rs/poirot-format).

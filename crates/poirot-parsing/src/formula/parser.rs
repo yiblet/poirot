@@ -1,4 +1,4 @@
-//! Stateful Pratt grammar and authenticated invocation collection.
+//! Pratt parser with nesting limits and source spans for function calls.
 use super::references::{array_constant, cell_reference, partial_reference, range_pair};
 use super::tokens::{identifier, number_token, quoted_token, sheet_span_prefix, whitespace};
 use crate::formula::{
@@ -7,7 +7,9 @@ use crate::formula::{
 };
 use nom::{Parser as NomParser, character::complete::char as token_char};
 
-/// Parse using explicit tightening limits, retaining reusable source diagnostics.
+/// Parse a formula with supplied limits, retaining its source and byte spans.
+///
+/// Limits may be reduced from their defaults, but not increased.
 pub fn parse_formula_with_policy(
     input: &str,
     policy: FormulaParsePolicy,

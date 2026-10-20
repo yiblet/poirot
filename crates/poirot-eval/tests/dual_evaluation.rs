@@ -21,9 +21,7 @@ fn workbook() -> Workbook {
         ("D1", "7*3"),
         ("E1", "SUM(A2:A8)"),
     ] {
-        sheet
-            .set_formula(at(cell).address, formula, CellValue::Blank)
-            .unwrap();
+        sheet.set_formula(at(cell).address, formula).unwrap();
     }
     workbook
 }
@@ -241,9 +239,7 @@ fn spills_intersections_dynamic_references_and_randomness_share_one_engine() {
         ("P2", "{10,20;30,40}"),
         ("Q1", "{50;60;70}"),
     ] {
-        sheet
-            .set_formula(at(cell).address, formula, CellValue::Blank)
-            .unwrap();
+        sheet.set_formula(at(cell).address, formula).unwrap();
     }
     let policy = OverlayPolicy {
         arrays: ArrayResultPolicy::DynamicSpill,
@@ -394,11 +390,7 @@ fn all_values_drop_saved_spill_only_cells_after_a_producer_shrinks() {
     let mut book = workbook();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(
-            at("G1").address,
-            "IF(A1>1,{1,2;3,4},{1,2})",
-            CellValue::Blank,
-        )
+        .set_formula(at("G1").address, "IF(A1>1,{1,2;3,4},{1,2})")
         .unwrap();
     let policy = OverlayPolicy {
         arrays: ArrayResultPolicy::DynamicSpill,
@@ -444,7 +436,7 @@ fn scalar_writeback_clears_saved_spill_children_on_both_paths() {
     let mut book = workbook();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(at("G1").address, "{1,2;3,4}", CellValue::Blank)
+        .set_formula(at("G1").address, "{1,2;3,4}")
         .unwrap();
     let context = context();
     let dynamic = OverlayPolicy {

@@ -162,11 +162,7 @@ fn profile_changes_invalidate_singleton_results_in_both_directions_after_snapsho
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(
-            target("F1").address,
-            "SUMPRODUCT(A1:A1,B1:B1)",
-            CellValue::Blank,
-        )
+        .set_formula(target("F1").address, "SUMPRODUCT(A1:A1,B1:B1)")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(poirot_eval::overlay::OverlayPolicy {

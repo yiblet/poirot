@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
-description = "Workbook-independent logical and conditional functions"
+description = "Scalar conversion and error codes for spreadsheet logical functions"
 include = ["/src/**", "/README.md"]
 
 [dependencies]

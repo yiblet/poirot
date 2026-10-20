@@ -186,7 +186,7 @@ fn signed_countblank_padding_classification_and_union_refusal() {
         .unwrap();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("B1".parse().unwrap(), "\"\"", Blank)
+        .set_formula("B1".parse().unwrap(), "\"\"")
         .unwrap();
     w.sheet_mut(0)
         .unwrap()
@@ -328,7 +328,7 @@ fn signed_sparse_cached_membership_insert_remove_and_unrelated_edit() {
     ] {
         w.sheet_mut(0)
             .unwrap()
-            .set_formula(address.parse().unwrap(), formula, Blank)
+            .set_formula(address.parse().unwrap(), formula)
             .unwrap();
     }
     let mut overlay = Overlay::with_workbook(&w)
@@ -523,7 +523,7 @@ fn signed_sum_union_throw_precedes_physical_area_reads() {
     let mut w = fixture();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "UNKNOWN_FUNCTION()", Blank)
+        .set_formula("A1".parse().unwrap(), "UNKNOWN_FUNCTION()")
         .unwrap();
     let mut reads = SignedReads::default();
     let mut session = Session::with_context(&w, EvaluationInputs::default());

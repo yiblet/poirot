@@ -33,7 +33,7 @@ fn canonical_context_preserves_run_settings_and_explicit_core_projection() {
     let mut book = Workbook::new();
     book.add_sheet("S")
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "DOLLAR(12.5)", CellValue::Blank)
+        .set_formula("A1".parse().unwrap(), "DOLLAR(12.5)")
         .unwrap();
     let target = EvaluationTarget {
         sheet: 0,

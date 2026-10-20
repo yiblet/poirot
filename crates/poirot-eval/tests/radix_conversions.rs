@@ -179,7 +179,7 @@ fn radix_arity_and_reference_selection_remain_lazy() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(CellAddress { row: 1, col: 0 }, "1/0", CellValue::Blank)
+        .set_formula(CellAddress { row: 1, col: 0 }, "1/0")
         .unwrap();
     assert_eq!(
         evaluate(&book, "BASE(A1:A2,16)"),

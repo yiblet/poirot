@@ -15,9 +15,7 @@ fn memo_limit_retains_partial_run_and_repeated_hits_cost_nothing() {
     sheet
         .set_value(target("A1").address, CellValue::Number(7.))
         .unwrap();
-    sheet
-        .set_formula(target("B1").address, "A1+1", CellValue::Blank)
-        .unwrap();
+    sheet.set_formula(target("B1").address, "A1+1").unwrap();
     let policy = EvaluationPolicy::default();
     let plan = FormulaCompiler::new().compile_workbook(&workbook, &policy);
     let mut run = EvaluationRun::new(

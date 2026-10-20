@@ -41,7 +41,10 @@ pub(crate) fn read_package_with_options(
         if file.is_dir() {
             continue;
         }
-        let name = file.name().to_owned();
+        let name = file
+            .name()
+            .map_err(|e| IoError::Read(e.to_string()))?
+            .into_owned();
         let mut contents = Vec::new();
         file.by_ref()
             .take(options.max_zip_entry_bytes.saturating_add(1))

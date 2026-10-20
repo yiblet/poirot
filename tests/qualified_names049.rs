@@ -32,7 +32,7 @@ fn xlsx_imported_qualified_names_recalculate_selected_scope_in_caller_context() 
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_formula(
+            .set_formula_with_cached_value(
                 CellAddress {
                     row: index as u32,
                     col: 2,
@@ -43,7 +43,7 @@ fn xlsx_imported_qualified_names_recalculate_selected_scope_in_caller_context() 
             .unwrap();
     }
     let bytes = io::write_xlsx_to_buffer(&workbook).unwrap();
-    let mut imported = io::read_xlsx_bytes(&bytes).unwrap().workbook;
+    let mut imported = io::read_workbook_bytes(&bytes).unwrap();
     assert_eq!(imported.named_ranges, workbook.named_ranges);
     match eval::run_recalculation(&mut imported, Default::default(), Default::default()) {
         eval::EvaluationOutcome::Complete { .. } => (),

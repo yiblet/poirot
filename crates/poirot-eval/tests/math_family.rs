@@ -55,7 +55,7 @@ fn scalar_reference_intersection_reads_only_selected_cell() {
     let mut workbook = workbook();
     let sheet = workbook.sheet_mut(0).unwrap();
     sheet
-        .set_formula(
+        .set_formula_with_cached_value(
             CellAddress { row: 0, col: 0 },
             "UNKNOWN_FUNCTION()",
             CellValue::Number(0.),
@@ -63,7 +63,7 @@ fn scalar_reference_intersection_reads_only_selected_cell() {
         .unwrap();
     sheet.set_value(CellAddress { row: 1, col: 0 }, 5.).unwrap();
     sheet
-        .set_formula(
+        .set_formula_with_cached_value(
             CellAddress { row: 2, col: 0 },
             "UNKNOWN_FUNCTION()",
             CellValue::Number(0.),

@@ -1,6 +1,6 @@
 //! Versioned calculation-owned streams; no platform hashes or ambient RNG.
 use rand_chacha::ChaCha8Rng;
-use rand_core::{RngCore, SeedableRng};
+use rand_core::{Rng, SeedableRng};
 
 /// Version of seed encoding and stream generation used for reproducible draws.
 pub const STREAM_VERSION: u32 = 1;

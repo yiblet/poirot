@@ -1,5 +1,5 @@
 //! Deferred text call policy owned by the evaluator adapter.
-/// Pure text helpers and their source-compatible value contracts.
+// Pure text helpers and their source-compatible value contracts.
 pub use poirot_functions_text::*;
 
 /// Compatibility rules for deferred text operations.

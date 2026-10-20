@@ -1,22 +1,30 @@
-//! Sparse workbook storage, typed cell values, and checked workbook edits.
+//! Store and edit workbook data.
+//!
+//! [`Workbook`] holds sparse worksheets, cell values, formulas, named formulas, and
+//! a date system. [`Worksheet`] provides cell access through zero-based [`CellAddress`]
+//! coordinates.
+//!
+//! A formula cell stores both its formula and a saved result. Changing workbook data
+//! does not calculate a new result. This crate has no file reader or formula evaluator;
+//! use [poirot](https://docs.rs/poirot) for those workflows.
 use std::{collections::BTreeMap, fmt, str::FromStr};
 
 mod numeric_fidelity;
-/// Numeric file-representation checks shared by import and export adapters.
+// Numeric file-representation checks shared by import and export adapters.
 pub use numeric_fidelity::*;
 mod numeric_bits;
 
-/// Exact binary64 identity and pinned source exceptions retained across evaluation boundaries.
+// Exact binary64 identity and pinned source exceptions retained across evaluation boundaries.
 pub use numeric_bits::{CommonsConvergence, IeeeNumberBits, IeeeNumberClass, KnownSourceException};
-/// Shared scalar, exact-text, and error values used by source cells and formula kernels.
+// Shared scalar, exact-text, and error values used by source cells and formula kernels.
 pub use poirot_functions_core::{
     CellError, CellValue, ExcelText, TextRef, TextUnits, TextUnitsError, ValueError as ModelError,
 };
 mod cell_pages;
-/// Generic sparse storage and ordered views used by workbook and overlay grids.
+// Generic sparse storage and ordered views used by workbook and overlay grids.
 pub use cell_pages::{CellRange, CellStore, ColumnCells, OccupiedRows, WorksheetCells};
 mod rows;
-/// Borrowed row access and explicit visibility metadata.
+// Borrowed row access and explicit visibility metadata.
 pub use rows::{Row, RowMut, RowVisibility};
 mod changes;
 /// Inspection of the source data copied when cloning a workbook.
@@ -28,7 +36,7 @@ pub use changes::WorkbookChange;
 pub mod identifiers;
 /// Bounded sparse query views that distinguish stored blanks from absent coordinates.
 pub mod query;
-/// Source-checked formula replacements used by structural workbook edits.
+// Source-checked formula replacements used by structural workbook edits.
 pub use edit::{EditOutcome, FormulaReplacement, FormulaSource, RenameSheetPlan};
 
 /// Exclusive worksheet row bound shared by addresses and adapters.
@@ -36,7 +44,10 @@ pub const MAX_ROWS: u32 = 1_048_576;
 /// Exclusive worksheet column bound shared by addresses and adapters.
 pub const MAX_COLUMNS: u32 = 16_384;
 
-/// Zero-based row and column. Constructors and worksheet mutations validate bounds.
+/// A cell position with zero-based row and column indices.
+///
+/// Parse A1 notation with `"B3".parse()`, or use [`Self::new`] with `(2, 1)`.
+/// Public fields also allow unchecked construction; [`Self::validate`] checks bounds.
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
 )]
@@ -53,7 +64,7 @@ impl CellAddress {
         a.validate()?;
         Ok(a)
     }
-    /// Check a directly constructed address before model access or mutation.
+    /// Check that the row and column fit within Excel worksheet limits.
     pub fn validate(self) -> Result<(), ModelError> {
         if self.row >= MAX_ROWS || self.col >= MAX_COLUMNS {
             Err(ModelError(
@@ -107,14 +118,17 @@ impl FromStr for CellAddress {
         Self::new(row.checked_sub(1).ok_or_else(invalid)?, col - 1)
     }
 }
-/// Supported cell presentation metadata. A number format changes display, not
-/// the stored value; absence selects the consumer's default format.
+/// Cell presentation metadata.
+///
+/// A number format changes display, not the stored value. Absence selects the
+/// consumer's default format.
 #[derive(Debug, Clone, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
 pub struct CellStyle {
     /// Optional Excel format spelling; affects display rather than stored value.
     pub number_format: Option<String>,
 }
 /// A stored value, optional formula, and display metadata.
+///
 /// For formula cells, `value` is the saved result and can be stale until recalculation.
 /// For literal cells, it is the input value.
 #[derive(Debug, Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
@@ -135,7 +149,10 @@ impl Cell {
             ..Self::default()
         }
     }
-    /// Normalize nonempty formula source and attach its supplied saved result.
+    /// Create a formula cell with a caller-supplied stored result.
+    ///
+    /// Trims whitespace and an optional leading `=`. An empty formula is rejected;
+    /// the stored result is not calculated or checked against the formula.
     pub fn with_formula(formula: impl Into<String>, cached: CellValue) -> Result<Self, ModelError> {
         Ok(Self {
             value: cached,
@@ -189,9 +206,11 @@ pub struct SheetPresentation {
     /// Explicit sRGB channels; no palette/theme approximation is performed.
     pub tab_color: Option<[u8; 3]>,
 }
-/// A named sparse grid of cells and explicitly present rows.
+/// A named worksheet with stored cells and explicit row records.
+///
 /// Missing coordinates allocate no cell; [`Worksheet::get`] returns `None` for them.
-/// Setting a value clears its formula; setting a formula requires a saved result.
+/// Setting a value clears its formula. Setting a formula starts with a blank saved
+/// result; use [`Worksheet::set_formula_with_cached_value`] to supply one explicitly.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Worksheet {
     name: String,
@@ -231,15 +250,22 @@ impl Worksheet {
     pub fn cells(&self) -> WorksheetCells<'_> {
         self.cells.cells()
     }
-    /// Read a stored cell; absent coordinates return `None` rather than allocating a blank.
+    /// Read a stored cell, or return `None` if the position has no cell.
+    ///
+    /// An explicitly stored blank returns `Some`, just like any other cell.
     pub fn get(&self, address: CellAddress) -> Option<&Cell> {
         self.cells.get(&address)
     }
-    /// Borrow a stored cell mutably; callers own any evaluator-cache invalidation.
+    /// Mutably borrow a stored cell.
+    ///
+    /// Direct edits bypass formula normalization and spill cleanup. Use
+    /// [`Self::set_value`] or [`Self::set_formula`] when replacing cell contents.
     pub fn get_mut(&mut self, address: CellAddress) -> Option<&mut Cell> {
         self.cells.get_mut(&address)
     }
-    /// Validate and replace a whole cell, clearing conflicting derived spill ownership.
+    /// Replace a cell, returning the previous cell if one was stored.
+    ///
+    /// Validates the address and formula, then clears any conflicting spill results.
     pub fn set(&mut self, address: CellAddress, cell: Cell) -> Result<Option<Cell>, ModelError> {
         address.validate()?;
         let mut cell = cell;
@@ -272,9 +298,18 @@ impl Worksheet {
         cell.formula = None;
         Ok(())
     }
-    /// Store normalized formula text and its supplied saved result without evaluating it.
-    /// A leading `=` is optional; use `CellValue::Blank` when no result is known.
+    /// Store a formula and clear its saved result, preserving the cell's style.
+    /// A leading `=` is optional. This does not evaluate the formula.
     pub fn set_formula(
+        &mut self,
+        address: CellAddress,
+        formula: impl Into<String>,
+    ) -> Result<(), ModelError> {
+        self.set_formula_with_cached_value(address, formula, CellValue::Blank)
+    }
+    /// Store a formula with an explicitly supplied saved result, preserving its style.
+    /// The saved result is not checked against the formula or used to skip evaluation.
+    pub fn set_formula_with_cached_value(
         &mut self,
         address: CellAddress,
         formula: impl Into<String>,
@@ -303,7 +338,8 @@ impl Worksheet {
         self.cells.remove(&address)
     }
 }
-/// Workbook epoch for interpreting numeric date serials.
+/// The calendar used to interpret numbers as spreadsheet dates.
+///
 /// The default 1900 system includes Excel's fictional leap-day slot; the 1904
 /// system uses a different origin. Dates remain numeric cell values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
@@ -315,6 +351,7 @@ pub enum DateSystem {
     Excel1904,
 }
 /// A named formula, optionally scoped to one sheet by its zero-based index.
+///
 /// Despite the name, its formula may return a scalar or expression as well as a range.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct NamedRange {
@@ -334,7 +371,7 @@ pub enum FileFormat {
     Xls,
 }
 
-/// Import fidelity information that does not participate in calculation identity.
+/// The original file format and warnings from importing a workbook.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct FileMetadata {
     /// Original spreadsheet representation.
@@ -355,10 +392,10 @@ pub enum ImportDiagnosticKind {
     /// A source representation was reduced or recovered through backend limitations.
     RepresentationLoss,
 }
-/// Inspectable import loss with a stable category and contextual explanation.
+/// A feature changed or omitted while importing a workbook.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ImportDiagnostic {
-    /// Programmatically selectable loss category.
+    /// Category for matching warnings in application code.
     pub kind: ImportDiagnosticKind,
     /// Source-specific details explaining the loss.
     pub detail: String,
@@ -370,6 +407,7 @@ impl std::fmt::Display for ImportDiagnostic {
 }
 
 /// Editable workbook data: ordered sheets, named formulas, and a date system.
+///
 /// This model stores formulas and saved results but does not evaluate them.
 /// Use `poirot_eval` for calculation and `poirot_io` for file import/export.
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -705,12 +743,12 @@ mod tests {
     fn formulas_preserve_cache_and_style() {
         let mut s = Worksheet::new("Sheet1").unwrap();
         let a = "A1".parse().unwrap();
-        s.set_formula(a, " = SUM(B1:B2) ", CellValue::Number(3.0))
+        s.set_formula_with_cached_value(a, " = SUM(B1:B2) ", CellValue::Number(3.0))
             .unwrap();
         let c = s.get(a).unwrap();
         assert_eq!(c.formula.as_deref(), Some("SUM(B1:B2)"));
         assert_eq!(c.value, CellValue::Number(3.0));
-        assert!(s.set_formula(a, "=", CellValue::Blank).is_err());
+        assert!(s.set_formula(a, "=").is_err());
         assert_eq!(s.get(a).unwrap().value, CellValue::Number(3.0));
         s.get_mut(a).unwrap().style.number_format = Some("0.00".into());
         s.set_value(a, true).unwrap();
@@ -761,7 +799,7 @@ mod tests {
     }
 }
 
-/// Explicit DTO for the trusted local disk cache.
+/// Serialization of workbook data and stored formula results.
 pub mod snapshot;
 #[cfg(test)]
 mod scalar_boundary_tests {
@@ -772,7 +810,7 @@ mod scalar_boundary_tests {
         let address = crate::CellAddress::new(0, 0).unwrap();
         let value = CellValue::from(ExcelText::from_units(vec![0xd83d]));
         sheet
-            .set_formula(address, "LEFT(\"😀\",1)", value.clone())
+            .set_formula_with_cached_value(address, "LEFT(\"😀\",1)", value.clone())
             .unwrap();
         assert_eq!(sheet.get(address).unwrap().value, value);
         assert_eq!(

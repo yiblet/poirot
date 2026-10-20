@@ -781,7 +781,6 @@ mod tests {
             .set_formula(
                 "A2".parse().unwrap(),
                 "10+IF(TRUE,SUM({1,2;3,4}),UNKNOWN())",
-                Blank,
             )
             .unwrap();
         let mut session = Session::with_context(&workbook, EvaluationInputs::default());
@@ -886,7 +885,6 @@ mod tests {
             .set_formula(
                 "A2".parse().unwrap(),
                 "10+IF(TRUE,SUM({1,2;3,4}),UNKNOWN())",
-                Blank,
             )
             .unwrap();
         let syntax =

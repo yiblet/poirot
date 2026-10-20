@@ -1,5 +1,13 @@
-//! Formula text units are independent of rendering width and allocation budgets.
-//! This crate preserves original UTF-8; it never normalizes or repairs text.
+//! Count, slice, and compare text for spreadsheet functions.
+//!
+//! Use [`TextSemanticsPolicy`] to select text-counting rules, or pass [`Units`] directly
+//! to helpers such as [`length`] and [`slice()`]. Supported units include UTF-8 bytes,
+//! UTF-16 code units, and Unicode scalar values. Text is not normalized.
+//!
+//! [`fold`] provides Unicode 16 simple case-insensitive comparison without character
+//! expansion. Its UTF-16 adapter preserves unpaired surrogates. Spreadsheet text
+//! function implementations live in
+//! [poirot-functions-text](https://docs.rs/poirot-functions-text).
 
 /// Unicode simple folding for case-insensitive values, independent of text indexing.
 pub mod fold;
@@ -43,7 +51,8 @@ pub enum Operation {
     /// CONCAT function.
     Concat,
 }
-/// These are operational failures, never spreadsheet #VALUE! errors.
+/// A text operation that cannot be represented under the selected rules.
+/// These failures are distinct from spreadsheet `#VALUE!` errors.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Unsupported {
     /// Requested Excel compatibility version lacks an admitted contract.

@@ -36,9 +36,7 @@ fn default_direct_overlay_and_low_level_runs_accept_text_beyond_the_old_cap() {
     sheet
         .set_value(target("A1").address, "a".repeat(LENGTH))
         .unwrap();
-    sheet
-        .set_formula(target("B1").address, "LEN(A1)", CellValue::Blank)
-        .unwrap();
+    sheet.set_formula(target("B1").address, "LEN(A1)").unwrap();
     let expected = CellValue::Number(LENGTH as f64);
     let mut direct = poirot::Evaluation::with_workbook(book.model())
         .build(Default::default())

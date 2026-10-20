@@ -1,4 +1,12 @@
-//! Checked BIFF8 workbook export to XLS files and byte buffers.
+//! Write legacy Excel XLS workbooks.
+//!
+//! Use [`write_xls`] to save the shared workbook model as a BIFF8 compound file.
+//! Use [`XlsExportPlan`] with [`XlsExportPolicy`] to check unsupported features and
+//! resource limits before producing output.
+//!
+//! Writing preserves saved formula results without recalculating them. XLS input
+//! lives in [poirot-io](https://docs.rs/poirot-io). Most applications should use
+//! [poirot](https://docs.rs/poirot) for the combined workbook workflow.
 use poirot_model::{CellValue, Workbook};
 use poirot_parsing::formula::parse_formula;
 use std::{
@@ -98,7 +106,7 @@ use representation::{cached, error_code, unicode};
 use workbook_encoding::encode_biff;
 mod addins;
 mod plan;
-/// Checked BIFF formula and workbook planning/serialization entry points.
+// Checked BIFF formula and workbook planning/serialization entry points.
 pub use plan::{
     BiffAddInReference, BiffFormulaPlan, XlsExportPlan, XlsExportPolicy, write_xls_to_buffer,
 };
@@ -165,7 +173,8 @@ mod tests {
             ("B6", "SUM($A$1:$A$1)", CellValue::Number(2.)),
             ("B7", "\"\"", CellValue::Text(String::new())),
         ] {
-            s.set_formula(a.parse().unwrap(), f, v).unwrap();
+            s.set_formula_with_cached_value(a.parse().unwrap(), f, v)
+                .unwrap();
         }
         let bytes = write_xls_to_buffer(&w).unwrap();
         assert!(bytes.starts_with(&[0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]));
@@ -207,7 +216,11 @@ mod tests {
             .unwrap();
         w.sheet_mut(0)
             .unwrap()
-            .set_formula("B1".parse().unwrap(), "A1", CellValue::Text(text.clone()))
+            .set_formula_with_cached_value(
+                "B1".parse().unwrap(),
+                "A1",
+                CellValue::Text(text.clone()),
+            )
             .unwrap();
         let bytes = write_xls_to_buffer(&w).unwrap();
         let biff = stream(bytes.clone());
@@ -261,7 +274,7 @@ mod tests {
         w.define_name("Rate", "2", Some(0)).unwrap();
         w.sheet_mut(0)
             .unwrap()
-            .set_formula(
+            .set_formula_with_cached_value(
                 "A1".parse().unwrap(),
                 "'Other Data'!$A$1+Rate",
                 CellValue::Number(7.),
@@ -318,7 +331,7 @@ mod tests {
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_formula(
+            .set_formula_with_cached_value(
                 "A1".parse().unwrap(),
                 "IFERROR(1/0,7)",
                 CellValue::Number(-999.),
@@ -343,15 +356,15 @@ mod tests {
         );
         // Calamine does not resolve add-in NameX identities. poirot reconstructs them
         // from the original SUPBOOK/EXTERNNAME/XTI records before backend import.
-        let imported = poirot_io::read_xls_bytes(&bytes).unwrap();
+        let imported = poirot_io::read_workbook_bytes(&bytes).unwrap();
         let address = "A1".parse().unwrap();
-        let cell = imported.workbook.sheet(0).unwrap().get(address).unwrap();
+        let cell = imported.sheet(0).unwrap().get(address).unwrap();
         assert_eq!(cell.value, CellValue::Number(-999.));
         let source = cell.formula.as_deref().unwrap();
         assert_eq!(source, "IFERROR(1/0,7)");
         assert_eq!(
             match poirot_eval::run_formula(
-                &imported.workbook,
+                &imported,
                 0,
                 address,
                 source,
@@ -376,7 +389,11 @@ mod tests {
         ] {
             w.sheet_mut(0)
                 .unwrap()
-                .set_formula("A1".parse().unwrap(), formula, CellValue::Number(9.))
+                .set_formula_with_cached_value(
+                    "A1".parse().unwrap(),
+                    formula,
+                    CellValue::Number(9.),
+                )
                 .unwrap();
             let e = write_xls_to_buffer(&w).unwrap_err().to_string();
             assert!(e.contains("Data!A1"), "{formula}: {e}");
@@ -412,7 +429,11 @@ mod tests {
         ] {
             w.sheet_mut(0)
                 .unwrap()
-                .set_formula("A1".parse().unwrap(), formula, CellValue::Number(-999.))
+                .set_formula_with_cached_value(
+                    "A1".parse().unwrap(),
+                    formula,
+                    CellValue::Number(-999.),
+                )
                 .unwrap();
             let mut reader = Xls::new(Cursor::new(write_xls_to_buffer(&w).unwrap())).unwrap();
             let f = reader.worksheet_formula("Data").unwrap();
@@ -440,7 +461,7 @@ mod tests {
         w.add_sheet("Other Data").unwrap();
         w.sheet_mut(0)
             .unwrap()
-            .set_formula(
+            .set_formula_with_cached_value(
                 "A1".parse().unwrap(),
                 "'Other Data'!$A1+A$2",
                 CellValue::Text("123".into()),
@@ -456,7 +477,7 @@ mod tests {
         );
         w.sheet_mut(0)
             .unwrap()
-            .set_formula(
+            .set_formula_with_cached_value(
                 "A1".parse().unwrap(),
                 "SUM($A$1:A2)",
                 CellValue::Boolean(true),
@@ -475,7 +496,11 @@ mod tests {
             let formula = format!("{name}($A$1,$A$2:$A$3,$B$1)");
             w.sheet_mut(0)
                 .unwrap()
-                .set_formula("C1".parse().unwrap(), &formula, CellValue::Number(-999.))
+                .set_formula_with_cached_value(
+                    "C1".parse().unwrap(),
+                    &formula,
+                    CellValue::Number(-999.),
+                )
                 .unwrap();
             let bytes = write_xls_to_buffer(&w).unwrap();
             let raw = stream(bytes.clone());

@@ -25,7 +25,7 @@ fn prepared_cell_execution_borrows_plan_formula_during_dependency_reads() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(B1, "A1+1", CellValue::Blank)
+        .set_formula(B1, "A1+1")
         .unwrap();
     let policy = EvaluationPolicy::default();
     let mut compiler = FormulaCompiler::new();
@@ -65,7 +65,7 @@ fn repeated_runs_reuse_preparation_but_read_current_values_and_signed_zero() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(B1, "A1", CellValue::Blank)
+        .set_formula(B1, "A1")
         .unwrap();
     let mut compiler = FormulaCompiler::new();
     let policy = EvaluationPolicy::default();
@@ -112,7 +112,7 @@ fn exact_topology_and_policy_checks_detect_direct_mutation() {
     original
         .sheet_mut(0)
         .unwrap()
-        .set_formula(A1, "Rate", CellValue::Blank)
+        .set_formula(A1, "Rate")
         .unwrap();
     original.define_name("Rate", "3", None).unwrap();
     let policy = EvaluationPolicy::default();
@@ -134,11 +134,7 @@ fn exact_topology_and_policy_checks_detect_direct_mutation() {
     changed.sheet_mut(0).unwrap().get_mut(A1).unwrap().formula = None;
     check(&changed);
     changed = original.clone();
-    changed
-        .sheet_mut(0)
-        .unwrap()
-        .set_formula(B1, "2", CellValue::Blank)
-        .unwrap();
+    changed.sheet_mut(0).unwrap().set_formula(B1, "2").unwrap();
     check(&changed);
     changed = original.clone();
     changed.named_ranges[0].formula = "4".into();
@@ -216,15 +212,11 @@ fn standalone_policy_mismatch_is_operational_and_parse_failure_keeps_text_budget
 fn source_deduplication_and_context_changes_do_not_reprepare() {
     let mut workbook = workbook();
     workbook.define_name("Constant", "3", None).unwrap();
+    workbook.sheet_mut(0).unwrap().set_formula(A1, "3").unwrap();
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(A1, "3", CellValue::Blank)
-        .unwrap();
-    workbook
-        .sheet_mut(0)
-        .unwrap()
-        .set_formula(B1, "NOW()", CellValue::Blank)
+        .set_formula(B1, "NOW()")
         .unwrap();
     let mut compiler = FormulaCompiler::new();
     let policy = EvaluationPolicy::default();

@@ -1,4 +1,11 @@
-//! Reference-preserving lookup kernels. Workbook services are explicit query ports.
+//! Look up spreadsheet values and select references.
+//!
+//! Use [`evaluate`] with a selected function and its arguments. Implement the
+//! [`Workbook`] trait to supply cell reads and workbook metadata. Results retain
+//! references when the spreadsheet function returns one.
+//!
+//! Lower-level helpers cover `MATCH`, `XMATCH`, approximate search, `INDEX`, and
+//! parsing dynamic references. The caller evaluates arguments and controls limits.
 mod classic_match;
 mod comparison;
 mod domain;
@@ -12,24 +19,24 @@ mod search;
 mod syntax;
 mod table;
 mod wildcard;
-/// Typed classic MATCH selection with fallible, lazy candidate access.
+// Typed classic MATCH selection with fallible, lazy candidate access.
 pub use classic_match::{
     classic_match_index, ClassicMatchMode, MatchCandidateReader, MatchSelectionFailure,
 };
-/// Workbook-independent values, reference geometry, failures, and work requests.
+// Workbook-independent values, reference geometry, failures, and work requests.
 pub use domain::{
     Array, BudgetRequest, Error, Failure, OperationalFailure, Reference, ReferenceKind, Scalar,
     SignedReference, Unsupported, Value, Work,
 };
-/// Approximate and XMATCH position selection over admitted search vectors.
+// Approximate and XMATCH position selection over admitted search vectors.
 pub use index::{approximate_index, xmatch_index};
 use operands::{num, Arguments};
-/// Typed call preparation, dependency contracts, and match/search semantics.
+// Typed call preparation, dependency contracts, and match/search semantics.
 pub use policy::{
     CallPlan, DependencyPolicy, Function, FunctionPolicy, MatchMode, ReferenceFunction, Search,
     SearchMode, SemanticsPolicy,
 };
-/// Host ports for consumed cell reads, workbook metadata, and computed references.
+// Host ports for consumed cell reads, workbook metadata, and computed references.
 pub use ports::{Context, DynamicReference, Workbook};
 /// Pure INDEX coordinate selection over admitted dimensions and ordinals.
 pub use reference::index_selection;
@@ -37,7 +44,8 @@ pub use reference::index_selection;
 pub use syntax::parse_dynamic_reference;
 /// Pinned POI source revision defining compatibility behavior.
 pub const POI_REVISION: &str = "732120980140d5ed64b482c470e0b625cdb1ab15";
-/// POI argument and evaluation order, including pass-through HYPERLINK and eager XLOOKUP fallback.
+/// Evaluate a lookup function with supplied arguments and workbook access.
+/// Preserves POI argument order, pass-through HYPERLINK, and eager XLOOKUP fallback.
 pub fn evaluate(
     function: Function,
     args: &[Value],

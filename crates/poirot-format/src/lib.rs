@@ -1,4 +1,25 @@
-//! poirot format.
+//! Render cell values with Excel number formats.
+//!
+//! Compile a format once with [`compile_format`], then use [`render_value`] for each
+//! value. Formats can contain numeric, date, time, and text sections. Rendering
+//! changes the displayed text, not the stored cell value.
+//!
+//! ```rust
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     use poirot_format::{compile_format, render_value, FormatCompilePolicy, FormatRenderContext};
+//!     use poirot_model::CellValue;
+//!
+//!     let format = compile_format("0.00", FormatCompilePolicy::default())?;
+//!     let displayed = render_value(
+//!         &CellValue::Number(12.5), &format, FormatRenderContext::default(),
+//!     )?;
+//!     assert_eq!(displayed.text, "12.50");
+//!     Ok(())
+//! }
+//! ```
+//!
+//! Unsupported formats return errors. Date rendering uses the supplied workbook
+//! calendar; locale and width are explicit rendering options.
 use nom::{
     IResult, Parser,
     branch::alt,
@@ -15,7 +36,7 @@ mod system;
 /// Pinned system date/time selectors resolved independently of host locale.
 pub use system::SystemDateTime;
 mod diagnostic;
-/// Structured syntax, fidelity, and resource diagnostics from format compilation/rendering.
+// Structured syntax, fidelity, and resource diagnostics from format compilation/rendering.
 pub use diagnostic::{FormatError, FormatErrorKind};
 use diagnostic::{error, fidelity_error, resource_error};
 /// One element of Excel number-format syntax, such as a digit placeholder or date field.
@@ -358,13 +379,13 @@ fn literal(t: &Token) -> String {
     }
 }
 mod date;
-/// Bounded calendar conversion and explicit handling of Excel's fictional leap day.
+// Bounded calendar conversion and explicit handling of Excel's fictional leap day.
 pub use date::{CalendarDate, CalendarPolicy, PhantomDayPolicy};
 mod number;
 mod plan;
-/// Reusable number layouts compiled before value-dependent rendering.
+// Reusable number layouts compiled before value-dependent rendering.
 pub use number::{NumberLayout, NumberPlan};
-/// Pure format compilation and bounded execution of immutable rendering programs.
+// Pure format compilation and bounded execution of immutable rendering programs.
 pub use plan::{
     FormatCompileError, FormatCompilePolicy, FormatLocale, FormatPlan, FormatRenderContext,
     FormatSourcePolicy, SectionKind, SectionPlan, compile_format, compile_format_with_source,

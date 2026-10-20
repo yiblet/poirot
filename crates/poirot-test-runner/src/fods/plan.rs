@@ -97,7 +97,7 @@ fn workbook(data: &FodsWorkbook) -> Result<Workbook, String> {
                 col: cell.col,
             };
             if let Some(formula) = &cell.formula {
-                dest.set_formula(address, formula, CellValue::Blank)
+                dest.set_formula(address, formula)
                     .map_err(|e| e.to_string())?;
             } else {
                 dest.set_value(address, value(&cell.value))

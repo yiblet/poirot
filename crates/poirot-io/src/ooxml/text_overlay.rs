@@ -9,14 +9,14 @@ use crate::{IoError, opc::OpcReadPlan};
 use poirot_model::{Cell, CellAddress, CellValue, ExcelText, Workbook};
 use quick_xml::{Reader, events::Event};
 
-fn rich(reader: &mut Reader<&[u8]>, end: &[u8]) -> Result<ExcelText, IoError> {
+fn rich(reader: &mut Reader<&[u8]>, end: &str) -> Result<ExcelText, IoError> {
     let mut units = Vec::new();
     loop {
         match reader.read_event().map_err(xml)? {
-            Event::Start(e) if e.local_name().as_ref() == b"rPh" => {
+            Event::Start(e) if e.local_name().as_ref() == "rPh" => {
                 reader.read_to_end(e.name()).map_err(xml)?;
             }
-            Event::Start(e) if e.local_name().as_ref() == b"t" => {
+            Event::Start(e) if e.local_name().as_ref() == "t" => {
                 units.extend_from_slice(decode(&text(reader, e.name())?).units());
             }
             Event::End(e) if e.local_name().as_ref() == end => break,
@@ -38,8 +38,8 @@ pub(crate) fn apply_text(
         let mut reader = events(part(package, path)?);
         loop {
             match reader.read_event().map_err(xml)? {
-                Event::Start(e) if e.local_name().as_ref() == b"si" => {
-                    shared.push(rich(&mut reader, b"si")?)
+                Event::Start(e) if e.local_name().as_ref() == "si" => {
+                    shared.push(rich(&mut reader, "si")?)
                 }
                 Event::Eof => break,
                 _ => {}
@@ -56,8 +56,8 @@ pub(crate) fn apply_text(
         let mut next_col = 0;
         loop {
             match reader.read_event().map_err(xml)? {
-                Event::Start(e) if e.local_name().as_ref() == b"row" => {
-                    row = match attr(&reader, &e, b"r")? {
+                Event::Start(e) if e.local_name().as_ref() == "row" => {
+                    row = match attr(&e, "r")? {
                         Some(r) => r
                             .parse::<u32>()
                             .map_err(xml)?
@@ -68,23 +68,23 @@ pub(crate) fn apply_text(
                     next_row = row + 1;
                     next_col = 0;
                 }
-                Event::Start(e) if e.local_name().as_ref() == b"c" => {
-                    let address = match attr(&reader, &e, b"r")? {
+                Event::Start(e) if e.local_name().as_ref() == "c" => {
+                    let address = match attr(&e, "r")? {
                         Some(r) => r.parse::<CellAddress>()?,
                         None => CellAddress::new(row, next_col)?,
                     };
                     next_col = address.col + 1;
-                    let kind = attr(&reader, &e, b"t")?;
+                    let kind = attr(&e, "t")?;
                     if !matches!(kind.as_deref(), Some("s" | "str" | "inlineStr")) {
                         continue;
                     }
                     let mut value = None;
                     loop {
                         match reader.read_event().map_err(xml)? {
-                            Event::Start(e) if e.local_name().as_ref() == b"is" => {
-                                value = Some(rich(&mut reader, b"is")?)
+                            Event::Start(e) if e.local_name().as_ref() == "is" => {
+                                value = Some(rich(&mut reader, "is")?)
                             }
-                            Event::Start(e) if e.local_name().as_ref() == b"v" => {
+                            Event::Start(e) if e.local_name().as_ref() == "v" => {
                                 let raw = text(&mut reader, e.name())?;
                                 value = Some(if kind.as_deref() == Some("s") {
                                     let index = raw.parse::<usize>().map_err(xml)?;
@@ -95,7 +95,7 @@ pub(crate) fn apply_text(
                                     decode(&raw)
                                 });
                             }
-                            Event::End(e) if e.local_name().as_ref() == b"c" => break,
+                            Event::End(e) if e.local_name().as_ref() == "c" => break,
                             Event::Eof => return Err(IoError::Xml("truncated text cell".into())),
                             _ => {}
                         }

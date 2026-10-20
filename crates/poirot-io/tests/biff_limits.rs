@@ -1,6 +1,6 @@
 use poirot_io::{
-    IoError, PreflightError, ReadOptions, ResourceBudget, read_xls_bytes,
-    read_xls_bytes_with_budget,
+    IoError, PreflightError, ReadOptions, ResourceBudget, read_workbook_bytes,
+    read_workbook_bytes_with_options,
 };
 use std::{
     path::PathBuf,
@@ -72,7 +72,13 @@ fn tiny_budget_refuses_invalid_cfb_before_backend_decode() {
         ..ResourceBudget::default()
     };
     assert!(matches!(
-        read_xls_bytes_with_budget(&b, ReadOptions::default(), budget),
+        read_workbook_bytes_with_options(
+            &b,
+            poirot_io::ReadOptions {
+                xls_budget: budget,
+                ..ReadOptions::default()
+            }
+        ),
         Err(IoError::BiffPreflight(PreflightError::Resource {
             resource: "CFB FAT capacity",
             requested: 1,
@@ -85,7 +91,7 @@ fn malformed_chain_is_typed_and_does_not_panic() {
     let mut b = compound(&[]);
     b[512 + 9 * 4..516 + 9 * 4].copy_from_slice(&2u32.to_le_bytes());
     assert!(matches!(
-        read_xls_bytes(&b),
+        read_workbook_bytes(&b),
         Err(IoError::BiffPreflight(PreflightError::Malformed(
             "cyclic sector chain"
         )))
@@ -108,7 +114,7 @@ fn huge_extent_is_refused_in_a_bounded_subprocess() {
         dimensions[10..12].copy_from_slice(&256u16.to_le_bytes());
         stream.extend(record(0x200, &dimensions));
         stream.extend(record(0xa, &[]));
-        let actual = read_xls_bytes(&compound(&stream));
+        let actual = read_workbook_bytes(&compound(&stream));
         eprintln!("huge extent typed outcome: {actual:?}");
         assert!(matches!(
             actual,
@@ -153,41 +159,26 @@ fn ordinary_unicode_and_cached_string_fixtures_keep_default_imports_and_warnings
         "crates/poirot-io/tests/fixtures/generated-xls/relative-area.xls",
     ] {
         let bytes = std::fs::read(root.join(path)).unwrap();
-        let default = read_xls_bytes(&bytes).unwrap();
-        let explicit =
-            read_xls_bytes_with_budget(&bytes, ReadOptions::default(), ResourceBudget::default())
-                .unwrap();
+        let default = read_workbook_bytes(&bytes).unwrap();
+        let explicit = read_workbook_bytes_with_options(
+            &bytes,
+            poirot_io::ReadOptions {
+                xls_budget: ResourceBudget::default(),
+                ..ReadOptions::default()
+            },
+        )
+        .unwrap();
         assert_eq!(
-            default
-                .workbook
-                .file_metadata
-                .as_ref()
-                .unwrap()
-                .import_warnings,
-            explicit
-                .workbook
-                .file_metadata
-                .as_ref()
-                .unwrap()
-                .import_warnings,
+            default.file_metadata.as_ref().unwrap().import_warnings,
+            explicit.file_metadata.as_ref().unwrap().import_warnings,
             "{path}"
         );
-        assert_eq!(
-            default.workbook.sheets().len(),
-            explicit.workbook.sheets().len(),
-            "{path}"
-        );
-        for (left, right) in default
-            .workbook
-            .sheets()
-            .iter()
-            .zip(explicit.workbook.sheets())
-        {
+        assert_eq!(default.sheets().len(), explicit.sheets().len(), "{path}");
+        for (left, right) in default.sheets().iter().zip(explicit.sheets()) {
             assert_eq!(left.cells(), right.cells(), "{path}");
         }
         assert!(
             default
-                .workbook
                 .file_metadata
                 .as_ref()
                 .unwrap()
@@ -195,7 +186,6 @@ fn ordinary_unicode_and_cached_string_fixtures_keep_default_imports_and_warnings
                 .iter()
                 .any(|w| w.detail.contains("XLS raw number formats"))
                 && default
-                    .workbook
                     .file_metadata
                     .as_ref()
                     .unwrap()

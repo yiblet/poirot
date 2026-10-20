@@ -1,8 +1,9 @@
 # poirot-functions-logical
 
-Small scalar helpers for logical functions: converting a value to a logical
-test and mapping spreadsheet errors to `ERROR.TYPE` codes.
+Scalar helpers for spreadsheet logical functions.
 
-Use `coercev2_logical_test` and `error_type` when implementing logical function
-adapters. Branch selection, short-circuit evaluation, and workbook reads remain
-with the host; this crate does not implement a standalone formula evaluator.
+Use `coercev2_logical_test` to convert a value into a logical condition and
+`error_type` to obtain an `ERROR.TYPE` code.
+
+The caller selects branches and evaluates arguments, including short-circuit
+behavior. This crate does not evaluate complete formulas.

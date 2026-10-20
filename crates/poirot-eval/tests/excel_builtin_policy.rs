@@ -173,7 +173,7 @@ fn bound_extensions_keep_precedence_over_profile_aliases() {
     };
     w.sheet_mut(0)
         .unwrap()
-        .set_formula(target.address, "QUARTILE.INC(A1:A4,99)", CellValue::Blank)
+        .set_formula(target.address, "QUARTILE.INC(A1:A4,99)")
         .unwrap();
     let policy = EvaluationPolicy::with_extensions(Default::default(), &registry);
     let plan = FormulaCompiler::new().compile_workbook_with_extensions(&w, &policy, &registry);

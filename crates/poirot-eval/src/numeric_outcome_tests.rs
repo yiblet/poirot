@@ -67,7 +67,7 @@ fn actual_consumers_distinguish_cell_errors_source_numbers_and_source_exceptions
     let mut w = book();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula(at(0), "NORMSINV(1E-300)", Blank)
+        .set_formula(at(0), "NORMSINV(1E-300)")
         .unwrap();
     for f in ["A1", "IFERROR(A1,42)", "IFERROR(NORMSINV(1E-300),42)"] {
         assert_eq!(bits(complete(run(&w, f))), f64::NEG_INFINITY.to_bits());
@@ -163,12 +163,9 @@ fn retained_overlay_reuses_source_infinity() {
     let mut w = book();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula(at(0), "NORMSINV(1E-300)", Blank)
+        .set_formula(at(0), "NORMSINV(1E-300)")
         .unwrap();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_formula(at(1), "2+3", Blank)
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_formula(at(1), "2+3").unwrap();
     let mut overlay = Overlay::with_workbook(&w)
         .with_policy(OverlayPolicy {
             ..Default::default()
@@ -202,10 +199,7 @@ fn retained_overlay_normalization_keeps_raw_source_dependency_identity() {
         .unwrap()
         .set_value(at(0), Number(f64::from_bits(1)))
         .unwrap();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_formula(at(1), "A1", Blank)
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_formula(at(1), "A1").unwrap();
     let mut overlay = Overlay::with_workbook(&w)
         .with_policy(OverlayPolicy {
             ..Default::default()

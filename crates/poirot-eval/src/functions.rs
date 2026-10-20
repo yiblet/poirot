@@ -383,9 +383,7 @@ mod sparse_tests {
         sheet
             .set("A4".parse().unwrap(), poirot_model::Cell::default())
             .unwrap();
-        sheet
-            .set_formula("A5".parse().unwrap(), "\"\"", Blank)
-            .unwrap();
+        sheet.set_formula("A5".parse().unwrap(), "\"\"").unwrap();
         for (formula, expected) in [
             ("SUM(A:A)", Number(3.0)),
             ("COUNTBLANK(A:A)", Number(f64::from(MAX_ROWS - 3))),

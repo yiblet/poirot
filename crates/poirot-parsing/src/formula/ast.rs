@@ -2,6 +2,7 @@
 use std::fmt;
 
 /// Formula syntax before workbook name resolution or evaluation.
+///
 /// Reference coordinates are zero-based. Names remain spellings, and an omitted
 /// argument (`Missing`) is distinct from an empty string or a blank worksheet cell.
 #[derive(Debug, Clone, PartialEq)]
@@ -40,9 +41,9 @@ pub enum Expr {
     },
     /// Unqualified defined name resolved by workbook and sheet scope.
     Name(String),
-    /// A workbook-local defined name looked up in an explicit worksheet scope.
+    /// A defined name looked up in an explicit worksheet scope.
     QualifiedName {
-        /// Optional explicit sheet name; otherwise use the current sheet.
+        /// Sheet in which to look up the name.
         sheet: String,
         /// Name spelling retained until binding or workbook resolution.
         name: String,
@@ -89,8 +90,9 @@ pub struct CellReference {
     /// Optional explicit sheet name; otherwise use the current sheet.
     pub sheet: Option<String>,
 }
-/// A bounded rectangle on every sheet between named endpoints in workbook order.
-/// Endpoints remain names until workbook resolution; no workbook/model dependency.
+/// A cell or rectangle on each sheet between two named sheets, inclusive.
+///
+/// The parser retains sheet names; the evaluator resolves their workbook order.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct SheetSpanReference {
     /// First sheet endpoint, resolved by workbook order.
@@ -156,7 +158,7 @@ pub enum ParseErrorKind {
     Syntax,
     /// A configured structural bound rejected otherwise parseable source.
     ResourceLimit,
-    /// Parser settings do not tighten the canonical bounds.
+    /// A parser limit is zero or exceeds its supported maximum.
     InvalidPolicy,
 }
 /// Formula syntax or parser-limit failure at a UTF-8 byte offset in the input.

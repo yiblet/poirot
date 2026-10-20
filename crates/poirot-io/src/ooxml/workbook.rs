@@ -44,12 +44,11 @@ impl WorkbookPatch<'_> {
         loop {
             let event = reader.read_event().map_err(xml)?;
             match &event {
-                Event::Start(e) if e.local_name().as_ref() == b"workbookPr" => {
-                    let mut start =
-                        BytesStart::new(String::from_utf8_lossy(e.name().as_ref()).into_owned());
+                Event::Start(e) if e.local_name().as_ref() == "workbookPr" => {
+                    let mut start = BytesStart::new(e.name().as_ref().to_owned());
                     for a in e.attributes() {
                         let a = a.map_err(xml)?;
-                        if a.key.as_ref() != b"date1904" {
+                        if a.key.as_ref() != "date1904" {
                             start.push_attribute(a);
                         }
                     }
@@ -64,11 +63,11 @@ impl WorkbookPatch<'_> {
                     write_event(&mut writer, Event::Start(start))?;
                     continue;
                 }
-                Event::Start(e) if e.local_name().as_ref() == b"calcPr" && !names => {
+                Event::Start(e) if e.local_name().as_ref() == "calcPr" && !names => {
                     write_names(&mut writer, workbook)?;
                     names = true;
                 }
-                Event::End(e) if e.local_name().as_ref() == b"workbook" && !names => {
+                Event::End(e) if e.local_name().as_ref() == "workbook" && !names => {
                     write_names(&mut writer, workbook)?;
                     names = true;
                 }

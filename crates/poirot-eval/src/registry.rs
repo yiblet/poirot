@@ -670,9 +670,9 @@ mod policy;
 
 /// Catalog used for Excel-compatible name resolution.
 pub(crate) use catalog::{EXCEL_DESCRIPTORS, resolve_excel_function};
-/// Advertised builtin catalog and spelling resolver.
+// Advertised builtin catalog and spelling resolver.
 pub use catalog::{FUNCTION_DESCRIPTORS, SUPPORTED_FUNCTIONS, resolve_function};
-/// Registration contracts for argument count, evaluation strategy, and dependencies.
+// Registration contracts for argument count, evaluation strategy, and dependencies.
 pub use policy::{Arity, DependencyPolicy, EvaluationStrategy};
 
 #[cfg(test)]

@@ -1,8 +1,8 @@
 //! Numeric serialization and import checks. Raw NaN fixtures test file
 //! representation; they do not assert that spreadsheet evaluation produces NaN.
 use poirot_io::{
-    IoError as Error, WriteOptions, plan_xlsx_export, read_xlsx_bytes as read, write_xlsx as write,
-    write_xlsx_to_buffer as buffer,
+    IoError as Error, WriteOptions, plan_xlsx_export, read_workbook_bytes as read,
+    write_xlsx as write, write_xlsx_to_buffer as buffer,
 };
 use poirot_model::{
     CellValue, FiniteNumericRepresentationPolicy, NumericFidelityReason, NumericFileFormat,
@@ -15,7 +15,8 @@ fn book(bits: u64, cache: bool) -> Workbook {
     let s = w.add_sheet("Data").unwrap();
     let value = CellValue::Number(f64::from_bits(bits));
     if cache {
-        s.set_formula("B2".parse().unwrap(), "1", value).unwrap();
+        s.set_formula_with_cached_value("B2".parse().unwrap(), "1", value)
+            .unwrap();
     } else {
         s.set_value("B2".parse().unwrap(), value).unwrap();
     }
@@ -104,7 +105,6 @@ fn finite_literal_and_cache_public_backend_roundtrip_preserves_bits() {
             for bytes in [plan.execute().unwrap(), buffer(&w).unwrap()] {
                 let decoded = read(&bytes).unwrap();
                 let CellValue::Number(number) = &decoded
-                    .workbook
                     .sheet(0)
                     .unwrap()
                     .get("B2".parse().unwrap())

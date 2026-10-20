@@ -1,7 +1,9 @@
 //! Parser-independent, atomic application of source edit plans.
 use crate::*;
 
-/// Stable within an unchanged source snapshot; no persistent sheet IDs are implied.
+/// The location of a formula in a cell or defined name.
+///
+/// Indices refer to the workbook used to create the edit plan, not persistent IDs.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum FormulaSource {
     /// Formula source stored at a worksheet coordinate.
@@ -17,11 +19,10 @@ pub enum FormulaSource {
         index: usize,
     },
 }
-/// One source-checked formula rewrite. `expected` must match the existing
-/// normalized formula before `replacement` can be applied.
+/// A formula replacement that checks the existing text before applying a change.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FormulaReplacement {
-    /// Cell or defined-name identity to update.
+    /// Location of the cell or defined-name formula to update.
     pub source: FormulaSource,
     /// Exact source required before applying the replacement.
     pub expected: String,
@@ -46,7 +47,7 @@ pub struct EditOutcome {
     pub previous_name: String,
     /// Validated worksheet spelling after the edit.
     pub new_name: String,
-    /// Number of cell/name formulas rewritten by this edit.
+    /// Locations of the cell and defined-name formulas rewritten by this edit.
     pub changed_sources: Vec<FormulaSource>,
 }
 impl RenameSheetPlan {
@@ -108,8 +109,8 @@ fn same_value(a: &CellValue, b: &CellValue) -> bool {
         _ => a == b,
     }
 }
-// Legacy mutable access precludes reliable revision counters. Compare actual source;
-// saved formula results and styles are derived/presentation data, not formula source.
+// Direct mutable access can bypass revision tracking, so compare the formula
+// inputs themselves. Stored formula results and styles do not affect a rename.
 fn same_source(a: &Workbook, b: &Workbook) -> bool {
     a.date_system == b.date_system
         && a.named_ranges == b.named_ranges
@@ -125,7 +126,10 @@ fn same_source(a: &Workbook, b: &Workbook) -> bool {
         })
 }
 impl Workbook {
-    /// Reject stale plans before any mutation. Preserve saved caches and styles.
+    /// Apply a sheet rename and its formula replacements.
+    ///
+    /// Rejects a stale plan before changing the workbook. Stored results and styles
+    /// are preserved.
     pub fn apply_rename_sheet_plan(
         &mut self,
         plan: &RenameSheetPlan,
@@ -141,8 +145,8 @@ impl Workbook {
             .ok_or_else(|| ModelError("sheet rename index out of bounds".into()))?
             .name
             .clone();
-        // All indices and replacement preconditions were validated during construction
-        // and the source snapshot matches, so application has no fallible steps.
+        // The source comparison above ensures that the indices and formula text
+        // checked when the plan was built still refer to the same content.
         self.sheets
             .get_mut(plan.sheet)
             .ok_or_else(|| ModelError("sheet rename index out of bounds".into()))?

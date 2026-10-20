@@ -90,7 +90,7 @@ fn literal_sst_cache_and_budget_are_unit_exact() {
         )
         .unwrap();
     sheet
-        .set_formula(
+        .set_formula_with_cached_value(
             "B1".parse().unwrap(),
             "A1",
             CellValue::TextUtf16(ExcelText::from_units(vec![0xdc00])),
@@ -153,7 +153,7 @@ fn continuation_sizes_are_admitted_for_literal_and_formula_cache() {
             .set_value("A1".parse().unwrap(), value.clone())
             .unwrap();
         sheet
-            .set_formula("B1".parse().unwrap(), "A1", value)
+            .set_formula_with_cached_value("B1".parse().unwrap(), "A1", value)
             .unwrap();
         let plan = XlsExportPlan::new(&workbook, XlsExportPolicy::default()).unwrap();
         let bytes = plan.encode_workbook_stream().unwrap();

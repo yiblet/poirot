@@ -1,8 +1,8 @@
-//! Checked export-size transitions and allocation-free XML measurement.
+//! Measure generated XML and check package sizes before replacing ZIP entries.
 use crate::IoError;
 use std::io::Write;
 
-/// Checked cumulative package-size accounting used before allocation.
+/// A writer that counts generated XML bytes without storing them.
 #[derive(Default)]
 pub(super) struct SizeCounter(#[doc = "Current admitted cumulative byte count."] pub(super) u64);
 impl Write for SizeCounter {
@@ -17,7 +17,7 @@ impl Write for SizeCounter {
         Ok(())
     }
 }
-/// Accumulate a resource claim without overflow or limit bypass.
+/// Replace an entry's contribution to the package total, checking both size limits.
 pub(super) fn next_total(
     size: u64,
     previous: u64,

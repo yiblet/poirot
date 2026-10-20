@@ -127,7 +127,7 @@ mod tests {
         let mut workbook = Workbook::new();
         let sheet = workbook.add_sheet("S").unwrap();
         sheet
-            .set_formula(
+            .set_formula_with_cached_value(
                 "A1".parse().unwrap(),
                 "long formula",
                 CellValue::Text("old text".into()),

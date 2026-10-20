@@ -1,20 +1,19 @@
-//! Loss-aware workbook loading and explicit, borrowed save planning.
+//! Workbook files, editing, and formula calculation.
 //!
-//! [`Workbook`] retains import warnings while exposing the model directly.
-//! Saving preserves typed saved formula values and never recalculates. Such values
-//! are file evidence, not verified evaluator cache provenance.
+//! Reading a formula cell returns its stored result. Call `recalculate` after
+//! changing inputs to update dependent cells. Saving does not calculate formulas.
 use crate::{io, model, xls};
 
 use std::{fmt, path::Path};
 
-/// Typed adapter failures retain their underlying error chain.
+/// A failure to load or save a workbook.
 #[derive(Debug)]
 pub enum WorkbookError {
     /// Import or XLSX export failure from the shared I/O layer.
     ImportOrXlsx(io::IoError),
     /// Checked BIFF export failure.
     Xls(xls::XlsError),
-    /// Filesystem failure while publishing completed output bytes.
+    /// Filesystem failure while reading or writing a workbook.
     File(std::io::Error),
 }
 impl fmt::Display for WorkbookError {
@@ -37,7 +36,10 @@ impl std::error::Error for WorkbookError {
 }
 impl From<io::IoError> for WorkbookError {
     fn from(error: io::IoError) -> Self {
-        Self::ImportOrXlsx(error)
+        match error {
+            io::IoError::File(error) => Self::File(error),
+            error => Self::ImportOrXlsx(error),
+        }
     }
 }
 impl From<xls::XlsError> for WorkbookError {
@@ -46,67 +48,146 @@ impl From<xls::XlsError> for WorkbookError {
     }
 }
 
-/// Workbook state with discoverable, retained import fidelity warnings.
+/// An error while recalculating a workbook.
+#[derive(Debug)]
+pub enum CalculationError {
+    /// Calculation settings or workbook preparation were rejected.
+    Preparation(crate::OverlayError),
+    /// Calculation stopped before all requested results were available.
+    Evaluation(crate::EvaluationFailure),
+    /// Calculated results could not be applied to the workbook.
+    Model(model::ModelError),
+}
+impl fmt::Display for CalculationError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Preparation(error) => error.fmt(f),
+            Self::Evaluation(error) => error.fmt(f),
+            Self::Model(error) => error.fmt(f),
+        }
+    }
+}
+impl std::error::Error for CalculationError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(match self {
+            Self::Preparation(error) => error,
+            Self::Evaluation(error) => error,
+            Self::Model(error) => error,
+        })
+    }
+}
+
+/// An editable workbook with file loading, calculation, and saving.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Workbook {
     model: model::Workbook,
 }
 impl Workbook {
-    /// Create an empty workbook with no import warnings.
+    /// Create an empty workbook.
     pub fn new() -> Self {
         Self::default()
     }
-    /// Open an XLS or XLSX file with the default bounded import policies.
-    /// File signatures select the format; diagnostics remain in model file metadata.
+    /// Open an XLS or XLSX file, detecting its format from the contents.
+    ///
+    /// Import warnings are kept in the workbook's file metadata.
     pub fn open(path: impl AsRef<Path>) -> Result<Self, WorkbookError> {
         Self::load().open(path)
     }
-    /// Import XLS or XLSX bytes with default bounded policies.
+    /// Read an XLS or XLSX workbook from memory.
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, WorkbookError> {
         Self::load().from_bytes(bytes)
     }
-    /// Wrap editable source without inventing file provenance.
+    /// Wrap existing workbook data without loading a file.
     pub fn from_model(model: model::Workbook) -> Self {
         Self { model }
     }
-    /// Borrow the engine's workbook source.
+    /// Borrow the workbook data.
     pub fn model(&self) -> &model::Workbook {
         &self.model
     }
-    /// Mutate engine source directly when advanced integration requires it.
+    /// Mutably borrow the workbook data.
     pub fn model_mut(&mut self) -> &mut model::Workbook {
         &mut self.model
     }
-    /// Transfer the canonical source into a lower-level engine API.
+    /// Take ownership of the workbook data.
     pub fn into_model(self) -> model::Workbook {
         self.model
     }
-    /// Configure bounded spreadsheet import with format-specific policies.
+    /// Configure XLS or XLSX loading.
     pub fn load() -> LoadBuilder {
         LoadBuilder::default()
     }
-    /// Keep imported source and its typed fidelity diagnostics together.
-    pub fn from_import(report: io::ImportReport) -> Self {
-        Self {
-            model: report.workbook,
-        }
+    /// Read a stored cell from a named sheet without calculating its formula.
+    ///
+    /// Returns `None` if the sheet or cell is absent. An explicitly stored blank
+    /// is a cell and returns `Some`. Sheet names use the same comparison as
+    /// [`model::Workbook::sheet_by_name`]; pass the name without formula quoting.
+    pub fn cell(&self, sheet: &str, address: model::CellAddress) -> Option<&model::Cell> {
+        self.model.sheet_by_name(sheet)?.get(address)
     }
-    /// Configure native persistence of source and retained file metadata.
+    /// Calculate the workbook and update its stored cell values.
+    ///
+    /// If calculation fails, none of the calculated values are written. Edits made
+    /// before this call remain. Spreadsheet errors such as `#DIV/0!` are stored as
+    /// cell values and do not make this method return an error.
+    pub fn recalculate(&mut self) -> Result<(), CalculationError> {
+        self.recalculate_with_context(crate::EvaluationContext::default())
+    }
+    /// Calculate the workbook with a supplied clock, random seed, locale, and limits.
+    ///
+    /// This has the same result and failure behavior as [`Self::recalculate`].
+    pub fn recalculate_with_context(
+        &mut self,
+        context: crate::EvaluationContext,
+    ) -> Result<(), CalculationError> {
+        let changes = {
+            let mut evaluation = crate::Evaluation::with_workbook(&self.model)
+                .build(context)
+                .map_err(CalculationError::Preparation)?;
+            evaluation.all().map_err(CalculationError::Evaluation)?;
+            evaluation.into_changes()
+        };
+        self.model.apply(changes).map_err(CalculationError::Model)
+    }
+    /// Rename a sheet and update references in cell formulas and defined names.
+    /// Unsupported formulas or invalid names leave the workbook unchanged.
+    pub fn rename_sheet(
+        &mut self,
+        sheet: usize,
+        name: impl Into<String>,
+    ) -> Result<model::EditOutcome, crate::edit::EditError> {
+        let plan = crate::edit::EditPlanner::rename_sheet(
+            &self.model,
+            sheet,
+            name,
+            crate::edit::EditPolicy::default(),
+        )?;
+        self.model
+            .apply_rename_sheet_plan(&plan)
+            .map_err(crate::edit::EditError::Model)
+    }
+    /// Configure a native Poirot snapshot of this workbook.
     pub fn save_snapshot(&self) -> crate::eval::artifact::SnapshotSaveBuilder<'_> {
         crate::eval::artifact::SnapshotSaveBuilder::workbook(&self.model)
     }
-    /// Configure bounded native source or checkpoint loading.
+    /// Configure loading a native workbook snapshot or calculation checkpoint.
     pub fn load_snapshot() -> crate::eval::artifact::SnapshotLoadBuilder {
         crate::eval::artifact::SnapshotLoadBuilder::default()
     }
-    /// Restore canonical source from a native buffer, discarding optional preparation.
+    /// Restore workbook data from a native snapshot in memory.
+    ///
+    /// Restores workbook data only. Use [`Self::load_snapshot`] to restore
+    /// optional calculation state as well.
     pub fn from_snapshot_bytes(bytes: &[u8]) -> Result<Self, crate::eval::artifact::SnapshotError> {
         let restored = Self::load_snapshot()
             .prepared_policy(crate::eval::artifact::PreparedPolicy::SourceOnly)
             .from_bytes(bytes)?;
         Ok(Self::from_model(restored.workbook))
     }
-    /// Restore canonical source from a native file, discarding optional preparation.
+    /// Restore workbook data from a native snapshot file.
+    ///
+    /// Restores workbook data only. Use [`Self::load_snapshot`] to restore
+    /// optional calculation state as well.
     pub fn open_snapshot(
         path: impl AsRef<Path>,
     ) -> Result<Self, crate::eval::artifact::SnapshotError> {
@@ -115,14 +196,14 @@ impl Workbook {
             .open(path)?;
         Ok(Self::from_model(restored.workbook))
     }
-    /// Configure an XLSX save with default options. Saving never recalculates.
+    /// Configure an XLSX save. Saving does not recalculate formulas.
     pub fn save_xlsx(&self) -> XlsxSaveBuilder<'_> {
         XlsxSaveBuilder {
             workbook: &self.model,
             options: io::WriteOptions::default(),
         }
     }
-    /// Configure a BIFF8 XLS save with the default export policy.
+    /// Configure an XLS save. Saving does not recalculate formulas.
     pub fn save_xls(&self) -> XlsSaveBuilder<'_> {
         XlsSaveBuilder {
             workbook: &self.model,
@@ -131,7 +212,7 @@ impl Workbook {
     }
 }
 
-/// Configure an XLSX save before validating or writing the borrowed workbook.
+/// Options for saving a workbook as XLSX.
 #[derive(Debug)]
 #[must_use = "Call build, to_buffer, or write_file to save the workbook"]
 pub struct XlsxSaveBuilder<'a> {
@@ -161,7 +242,7 @@ impl<'a> XlsxSaveBuilder<'a> {
     }
 }
 
-/// Configure a BIFF8 XLS save before validating or writing the borrowed workbook.
+/// Options for saving a workbook as XLS.
 #[derive(Debug)]
 #[must_use = "Call build, to_buffer, or write_file to save the workbook"]
 pub struct XlsSaveBuilder<'a> {
@@ -191,13 +272,14 @@ impl<'a> XlsSaveBuilder<'a> {
     }
 }
 
-/// A pure save plan retaining the source borrow and adapter-specific policies.
+/// A validated workbook ready to serialize as XLSX or XLS.
+///
 /// Planning performs no file writes and cannot mutate the workbook. Unsupported
 /// XLS formulas fail during XLS planning, rather than becoming cached literals.
 pub enum SavePlan<'a> {
-    /// Checked immutable XLSX export plan.
+    /// A workbook validated for XLSX output.
     Xlsx(io::ExportPlan<'a>),
-    /// Checked immutable XLS export plan.
+    /// A workbook validated for XLS output.
     Xls(xls::XlsExportPlan<'a>),
 }
 impl fmt::Debug for SavePlan<'_> {
@@ -209,15 +291,18 @@ impl fmt::Debug for SavePlan<'_> {
     }
 }
 impl SavePlan<'_> {
-    /// Serialize the planned source; no recalculation or cache trust promotion.
+    /// Serialize the validated workbook without recalculating formulas.
     pub fn to_buffer(&self) -> Result<Vec<u8>, WorkbookError> {
         match self {
             Self::Xlsx(plan) => Ok(plan.execute()?),
             Self::Xls(plan) => Ok(plan.to_buffer()?),
         }
     }
+    /// Write the serialized workbook to a file.
+    ///
     /// Serialization and resource checks finish before the destination is opened.
-    /// This is a direct write, not an atomic filesystem replacement.
+    /// A filesystem error can still leave a partial file; this is not an atomic
+    /// file replacement.
     pub fn write_file(&self, path: impl AsRef<Path>) -> Result<(), WorkbookError> {
         let bytes = self.to_buffer()?;
         std::fs::write(path, bytes).map_err(WorkbookError::File)
@@ -225,7 +310,7 @@ impl SavePlan<'_> {
 }
 
 impl std::ops::Deref for Workbook {
-    /// Canonical workbook source exposed for ordinary editing.
+    /// Workbook data available for direct editing.
     type Target = model::Workbook;
     fn deref(&self) -> &Self::Target {
         &self.model
@@ -252,53 +337,44 @@ impl From<model::Workbook> for Workbook {
     }
 }
 
-/// Configure spreadsheet loading while keeping XLS and XLSX controls distinct.
+/// Options for loading XLS or XLSX workbooks.
+///
+/// [`Self::options`] replaces all settings. Format-specific setters replace only
+/// their own settings, so the order of calls matters.
 #[derive(Debug, Default)]
 #[must_use]
 pub struct LoadBuilder {
     options: io::ReadOptions,
-    xlsx_policy: io::opc::OpcImportPolicy,
-    xls_budget: io::ResourceBudget,
 }
 impl LoadBuilder {
-    /// Set common input and ZIP resource bounds.
+    /// Replace all import options, including format-specific policies and limits.
     pub fn options(mut self, options: io::ReadOptions) -> Self {
         self.options = options;
         self
     }
-    /// Set OOXML package and external-link admission policies.
+    /// Set which XLSX package content and external links may be imported.
     pub fn xlsx_policy(mut self, policy: io::opc::OpcImportPolicy) -> Self {
-        self.xlsx_policy = policy;
+        self.options.xlsx_policy = policy;
         self
     }
-    /// Set BIFF structural and decoded-resource bounds.
+    /// Set resource limits for decoding XLS records.
     pub fn xls_budget(mut self, budget: io::ResourceBudget) -> Self {
-        self.xls_budget = budget;
+        self.options.xls_budget = budget;
         self
     }
-    /// Read a bounded file and select its spreadsheet format by signature.
+    /// Open an XLS or XLSX file and keep its import warnings in file metadata.
     pub fn open(self, path: impl AsRef<Path>) -> Result<Workbook, WorkbookError> {
-        use std::io::Read;
-        let file = std::fs::File::open(path).map_err(WorkbookError::File)?;
-        let mut bytes = Vec::new();
-        file.take(self.options.max_input_bytes.saturating_add(1))
-            .read_to_end(&mut bytes)
-            .map_err(WorkbookError::File)?;
-        self.from_bytes(&bytes)
+        Ok(Workbook::from_model(io::read_workbook_with_options(
+            path,
+            self.options,
+        )?))
     }
-    /// Decode a bounded buffer and retain import diagnostics in its workbook.
+    /// Read XLS or XLSX bytes and keep import warnings in file metadata.
     pub fn from_bytes(self, bytes: &[u8]) -> Result<Workbook, WorkbookError> {
-        if bytes.len() as u64 > self.options.max_input_bytes {
-            return Err(io::IoError::Limit("input file bytes".into()).into());
-        }
-        let report = if bytes.starts_with(b"PK\x03\x04") {
-            io::read_xlsx_bytes_with_policy(bytes, self.options, self.xlsx_policy)?
-        } else if bytes.starts_with(&[0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]) {
-            io::read_xls_bytes_with_budget(bytes, self.options, self.xls_budget)?
-        } else {
-            return Err(io::IoError::Unsupported("input is neither XLSX nor XLS".into()).into());
-        };
-        Ok(Workbook::from_import(report))
+        Ok(Workbook::from_model(io::read_workbook_bytes_with_options(
+            bytes,
+            self.options,
+        )?))
     }
 }
 

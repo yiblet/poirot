@@ -118,8 +118,8 @@ pub(crate) fn apply_spills(
         let mut next_col = 0u32;
         loop {
             match reader.read_event().map_err(xml)? {
-                Event::Start(e) if e.local_name().as_ref() == b"row" => {
-                    row = match attr(&reader, &e, b"r")? {
+                Event::Start(e) if e.local_name().as_ref() == "row" => {
+                    row = match attr(&e, "r")? {
                         Some(r) => r
                             .parse::<u32>()
                             .map_err(xml)?
@@ -132,9 +132,9 @@ pub(crate) fn apply_spills(
                         .ok_or_else(|| IoError::Read("row overflow".into()))?;
                     next_col = 0;
                 }
-                Event::Start(e) if e.local_name().as_ref() == b"c" => {
-                    error_cell = attr(&reader, &e, b"t")?.as_deref() == Some("e");
-                    let at = match attr(&reader, &e, b"r")? {
+                Event::Start(e) if e.local_name().as_ref() == "c" => {
+                    error_cell = attr(&e, "t")?.as_deref() == Some("e");
+                    let at = match attr(&e, "r")? {
                         Some(s) => s.parse::<CellAddress>()?,
                         None => CellAddress::new(row, next_col)?,
                     };
@@ -144,12 +144,12 @@ pub(crate) fn apply_spills(
                         .ok_or_else(|| IoError::Read("column overflow".into()))?;
                     address = Some(at);
                 }
-                Event::End(e) if e.local_name().as_ref() == b"c" => address = None,
+                Event::End(e) if e.local_name().as_ref() == "c" => address = None,
                 Event::Start(e)
-                    if e.local_name().as_ref() == b"f"
-                        && attr(&reader, &e, b"t")?.as_deref() == Some("array") =>
+                    if e.local_name().as_ref() == "f"
+                        && attr(&e, "t")?.as_deref() == Some("array") =>
                 {
-                    if let (Some(anchor), Some(range)) = (address, attr(&reader, &e, b"ref")?) {
+                    if let (Some(anchor), Some(range)) = (address, attr(&e, "ref")?) {
                         let (first, last) = range.split_once(':').unwrap_or((&range, &range));
                         let first = first.parse::<CellAddress>()?;
                         let last = last.parse::<CellAddress>()?;
@@ -159,7 +159,7 @@ pub(crate) fn apply_spills(
                         arrays.push((anchor, last));
                     }
                 }
-                Event::Start(e) if error_cell && e.local_name().as_ref() == b"v" => {
+                Event::Start(e) if error_cell && e.local_name().as_ref() == "v" => {
                     let raw = text(&mut reader, e.name())?;
                     if matches!(raw.as_str(), "#SPILL!" | "#CALC!") {
                         let value = raw.parse::<poirot_model::CellError>().map_err(xml)?;
@@ -254,7 +254,7 @@ mod tests {
         let mut book = Workbook::new();
         book.add_sheet("S")
             .unwrap()
-            .set_formula(at("A1"), "{1,2}", CellValue::Number(1.))
+            .set_formula_with_cached_value(at("A1"), "{1,2}", CellValue::Number(1.))
             .unwrap();
         book
     }
@@ -283,7 +283,7 @@ mod tests {
         let mut book = book();
         book.sheet_mut(0)
             .unwrap()
-            .set_formula(at("B2"), "{3,4}", CellValue::Number(3.))
+            .set_formula_with_cached_value(at("B2"), "{3,4}", CellValue::Number(3.))
             .unwrap();
         let before = book.clone();
         assert!(apply(r#"<worksheet><sheetData><row r="1"><c r="A1"><f t="array" ref="A1:B3">{1,2}</f></c></row><row r="2"><c r="B2"><f t="array" ref="B2:C4">{3,4}</f></c></row></sheetData></worksheet>"#,&mut book).is_err());
@@ -298,7 +298,7 @@ mod tests {
             let anchor = CellAddress::new(row * 2, 0).unwrap();
             let child = CellAddress::new(row * 2, 1).unwrap();
             sheet
-                .set_formula(anchor, "{1,2}", CellValue::Number(1.))
+                .set_formula_with_cached_value(anchor, "{1,2}", CellValue::Number(1.))
                 .unwrap();
             sheet.set_value(child, CellValue::Number(2.)).unwrap();
             xml.push_str(&format!(r#"<row r="{}"><c r="{anchor}"><f t="array" ref="{anchor}:{child}">{{1,2}}</f></c></row>"#,row*2+1));

@@ -1,9 +1,16 @@
-//! Editable direct execution: local memoization without retained dependency indexes.
+//! Temporary inputs and requested formula results over workbook data.
+//!
+//! Edits clear calculated results rather than maintaining a dependency graph.
+//! The continuation keeps work counters and failures until a new context begins.
 use super::continuation::Continuation;
 use super::*;
 
-/// One editable evaluation over an immutable baseline; every source edit clears results.
-/// Policies and bytecode persist; only an explicit new context resets work counters.
+/// Temporary inputs and calculated outputs over an unchanged baseline workbook.
+///
+/// Choose outputs with [`Self::cell`], [`Self::outputs`], or [`Self::all`]; formula
+/// dependencies are calculated as needed. Each input edit clears calculated results.
+/// Work usage accumulates across requests and edits. An operational failure remains
+/// active until [`Self::begin`] starts a new context and resets usage and results.
 pub struct Evaluation<'a, W = &'a Workbook> {
     source: Source<'a, W>,
     context: EvaluationContext,
@@ -12,7 +19,7 @@ pub struct Evaluation<'a, W = &'a Workbook> {
     spill_resets: std::collections::BTreeSet<Key>,
     failure: Option<EvaluationFailure>,
 }
-/// Builds direct evaluation from a baseline handle and source policies.
+/// Configures the workbook, formula policies, and extensions for an evaluation.
 pub struct EvaluationBuilder<'a, W> {
     source: OverlayBuilder<'a, W>,
 }
@@ -46,17 +53,25 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
     fn source_changed(&mut self, _target: EvaluationTarget) {
         self.clear_cache();
     }
-    /// Clear local values/spills after an edit; cumulative budgets and failures remain.
+    /// Discard calculated values and spill results.
+    ///
+    /// Input edits, work usage, and any previous failure remain. Use [`Self::begin`]
+    /// to reset usage and recover from a failed calculation.
     pub fn clear_cache(&mut self) {
         self.state.clear_results();
         self.completed.clear();
     }
-    /// Remove authored edits and local results while retaining compiled programs.
+    /// Remove temporary inputs and calculated results, retaining compiled formulas.
+    ///
+    /// This does not reset work usage or a previous failure; use [`Self::begin`]
+    /// for those.
     pub fn reset(&mut self) {
         self.source.inputs = crate::run_overlay::RunInputs::empty();
         self.clear_cache();
     }
-    /// Start a new evaluation identity, resetting results, work budgets, and any failure.
+    /// Start a new calculation context, clearing results, usage, and any failure.
+    ///
+    /// Temporary input edits and compiled formulas are retained.
     pub fn begin(&mut self, context: EvaluationContext) -> Result<(), OverlayError> {
         let meter = crate::budget::BudgetMeter::new(context.budgets)?;
         let state = Continuation::capture(self.source.session(&context, meter));
@@ -66,22 +81,24 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
         self.failure = None;
         Ok(())
     }
-    /// Borrow the fixed context for this evaluation identity.
+    /// Read the time, randomness, locale, and limits used by this evaluation.
     pub fn context(&self) -> &EvaluationContext {
         &self.context
     }
-    /// Evaluate a single output through the shared execution engine.
+    /// Calculate a cell and the dependencies needed for its value.
     pub fn cell(&mut self, target: EvaluationTarget) -> Result<CellValue, EvaluationFailure> {
         self.perform(|session| session.cell(target.sheet, target.address))
     }
-    /// Evaluate outputs atomically in caller order, preserving duplicates.
+    /// Calculate the requested cells in order, preserving duplicate requests.
+    ///
+    /// Returns an error rather than a partial result if any request fails.
     pub fn outputs(
         &mut self,
         targets: &[EvaluationTarget],
     ) -> Result<Vec<crate::CellEvaluation>, EvaluationFailure> {
         self.perform(|session| output::outputs(session, targets))
     }
-    /// Evaluate sparse effective source cells and discovered spill children.
+    /// Calculate occupied cells and any spill cells produced by their formulas.
     pub fn all(&mut self) -> Result<Vec<crate::CellEvaluation>, EvaluationFailure> {
         self.perform(output::all)
     }
@@ -104,7 +121,7 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
     pub fn cached_cells(&self) -> usize {
         self.completed.len()
     }
-    /// Inspect a successful local result without evaluation.
+    /// Read a previously calculated result without running the formula again.
     pub fn cached_value(&self, target: EvaluationTarget) -> Option<&CellValue> {
         let key = (target.sheet, target.address);
         if !self.completed.contains(&key) {
@@ -112,7 +129,7 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
         }
         self.state.values().get(&key)
     }
-    /// Work accumulated across output requests and edits in this evaluation identity.
+    /// Read work usage accumulated since construction or the last [`Self::begin`].
     pub fn usage(&self) -> &crate::RunUsage {
         self.state.usage()
     }
@@ -148,7 +165,7 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
     pub fn into_changes(self) -> Vec<WorkbookChange> {
         self.changes()
     }
-    /// Finish with accumulated usage and any operational failure.
+    /// Return work usage and any failure recorded during this evaluation.
     pub fn finish(self) -> crate::RunReport<()> {
         self.state.finish(self.failure)
     }
@@ -213,7 +230,7 @@ impl<'a, W: Borrow<Workbook>> EvaluationBuilder<'a, W> {
         self.source = self.source.with_shared_extensions(registry);
         self
     }
-    /// Validate policies and context and start a direct evaluation identity.
+    /// Validate the options and create an evaluation with the supplied context.
     pub fn build(self, context: EvaluationContext) -> Result<Evaluation<'a, W>, OverlayError> {
         Evaluation::from_source(
             Source::new(

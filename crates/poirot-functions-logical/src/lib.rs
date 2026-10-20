@@ -1,4 +1,10 @@
-//! Pure logical scalar algorithms. Evaluation and branch selection belong to the host.
+//! Scalar helpers for spreadsheet logical functions.
+//!
+//! Use [`coercev2_logical_test`] to convert a value into a logical condition and
+//! [`error_type`] to obtain an `ERROR.TYPE` code.
+//!
+//! The caller selects branches and evaluates arguments, including short-circuit
+//! behavior. This crate does not evaluate complete formulas.
 use poirot_functions_core::{CellError, CellValue};
 
 /// Coerce an admitted scalar into a logical condition under the kernel rules.

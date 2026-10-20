@@ -1,5 +1,5 @@
 use poirot_io::{
-    IoError, WriteOptions, plan_xlsx_export, read_xlsx_bytes, write_xlsx_to_buffer_with_options,
+    IoError, WriteOptions, plan_xlsx_export, read_workbook_bytes, write_xlsx_to_buffer_with_options,
 };
 use poirot_model::{Cell, CellAddress, CellValue, ExcelText, Workbook};
 use std::io::{Cursor, Read};
@@ -24,7 +24,7 @@ fn xlsx_roundtrip_retains_units_formula_caches_and_escape_collisions() {
             )
             .unwrap();
         sheet
-            .set_formula(CellAddress::new(1, index as u32).unwrap(), "1", value)
+            .set_formula_with_cached_value(CellAddress::new(1, index as u32).unwrap(), "1", value)
             .unwrap();
     }
     let bytes = write_xlsx_to_buffer_with_options(&workbook, WriteOptions::default()).unwrap();
@@ -38,11 +38,10 @@ fn xlsx_roundtrip_retains_units_formula_caches_and_escape_collisions() {
     assert!(xml.contains("_xD83D_"));
     assert!(xml.contains("_xDE00_"));
     assert!(xml.contains("_x005F_xD83D_"));
-    let report = read_xlsx_bytes(&bytes).unwrap();
+    let report = read_workbook_bytes(&bytes).unwrap();
     for row in 0..2 {
         for (index, units) in values.iter().enumerate() {
             let cell = report
-                .workbook
                 .sheet(0)
                 .unwrap()
                 .get(CellAddress::new(row, index as u32).unwrap())

@@ -110,14 +110,14 @@ fn unrelated_order_and_memoized_references_preserve_streams() {
     book.add_sheet("Sheet1").unwrap();
     let sheet = book.sheet_mut(0).unwrap();
     sheet
-        .set_formula(
+        .set_formula_with_cached_value(
             CellAddress { row: 0, col: 0 },
             "RAND()",
             CellValue::Number(0.0),
         )
         .unwrap();
     sheet
-        .set_formula(
+        .set_formula_with_cached_value(
             CellAddress { row: 0, col: 1 },
             "RAND()",
             CellValue::Number(0.0),
@@ -175,11 +175,7 @@ fn distinct_stream_bookkeeping_has_linear_metered_work() {
         let sheet = book.add_sheet("Sheet1").unwrap();
         for row in 0..cells {
             sheet
-                .set_formula(
-                    CellAddress { row, col: 0 },
-                    "RAND()+RAND()",
-                    CellValue::Blank,
-                )
+                .set_formula(CellAddress { row, col: 0 }, "RAND()+RAND()")
                 .unwrap();
         }
         poirot_eval::run_workbook(

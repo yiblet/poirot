@@ -1,8 +1,9 @@
 # poirot-functions-matrix
 
-Matrix and array calculations with explicit work limits.
+Matrix and array calculations for spreadsheet functions.
 
-Use `Matrix` and `Budget` with operations such as `transpose`, `multiply`,
-`determinant`, and `inverse`. Other entry points support `frequency`, `sumproduct`,
-and `trend`. The caller supplies input arrays and handles workbook references.
-Resource failures remain distinct from spreadsheet errors.
+Use `Matrix` with `transpose`, `multiply`, `determinant`, or `inverse`. Other
+operations include `frequency`, `sumproduct`, and `trend`.
+
+The caller supplies arrays and a `Budget` for cell counts and estimated work.
+Exceeding a budget is reported separately from spreadsheet errors.

@@ -81,9 +81,7 @@ fn scalar_arguments_and_dependency_cells_keep_their_own_demand() {
     // In scalar mode C2 intersects A1:A2 at row two; the collection must not turn
     // that cached scalar into the first member of an internal array.
     let sheet = workbook.sheet_mut(0).unwrap();
-    sheet
-        .set_formula(target("C2").address, "A1:A2*2", CellValue::Blank)
-        .unwrap();
+    sheet.set_formula(target("C2").address, "A1:A2*2").unwrap();
     let policy = EvaluationPolicy::default();
     let mut compiler = FormulaCompiler::new();
     let plan = compiler.compile_workbook(&workbook, &policy);
@@ -124,11 +122,7 @@ fn collection_reads_invalidate_interior_and_absent_members_in_both_publication_m
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_formula(
-                target("F2").address,
-                "SUMPRODUCT(A1:A3*B1:B3)",
-                CellValue::Blank,
-            )
+            .set_formula(target("F2").address, "SUMPRODUCT(A1:A3*B1:B3)")
             .unwrap();
         let mut overlay = Overlay::with_workbook(&workbook)
             .with_policy(OverlayPolicy {
@@ -236,14 +230,10 @@ fn worksheet_publication_remains_independent_of_internal_literal_array_execution
         let mut workbook = workbook();
         let sheet = workbook.sheet_mut(0).unwrap();
         sheet
-            .set_formula(
-                target("F2").address,
-                "SUMPRODUCT(A1:A2*B1:B2)",
-                CellValue::Blank,
-            )
+            .set_formula(target("F2").address, "SUMPRODUCT(A1:A2*B1:B2)")
             .unwrap();
         sheet
-            .set_formula(target("H2").address, "{1,2}+{10;20}", CellValue::Blank)
+            .set_formula(target("H2").address, "{1,2}+{10;20}")
             .unwrap();
         let policy = EvaluationPolicy::default();
         let plan = FormulaCompiler::new().compile_workbook(&workbook, &policy);
@@ -299,7 +289,7 @@ fn nested_scalar_parameter_keeps_pinned_intersection_without_reading_other_rows(
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(target("B1").address, "UNKNOWN_FUNCTION()", CellValue::Blank)
+        .set_formula(target("B1").address, "UNKNOWN_FUNCTION()")
         .unwrap();
     let policy = EvaluationPolicy::default();
     let mut compiler = FormulaCompiler::new();

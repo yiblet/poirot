@@ -1,19 +1,20 @@
 //! Operational limits and accounting, separate from spreadsheet error values.
 use poirot_model::CellAddress;
 
-/// Opt-in runtime limits; defaults are unlimited except structural depth 128.
-/// Machine maxima (`u64::MAX`/`usize::MAX`) disable their respective limits.
-/// Usage saturates at the counter maximum. Units are operations, not elapsed time.
-/// `cell_work` is direct work in a formula frame; dependency formulas have own frames.
-/// Materialization limits logical elements in each collection, not total heap bytes.
-/// Text limits variable input/output buffer bytes: UTF-8 bytes or two bytes per
-/// UTF-16 unit. Fixed, bounded scalar-kernel scratch is not a collection or a
-/// peak-heap limit. Work counts semantic operations and visited data; some
-/// kernels admit a conservative bound before entering an unmetered operation.
-/// Wildcard states bound one match; execution depth has a hard ceiling of 128.
-/// Cache reuse can avoid execution work and depth, but retained results still
-/// pass collection and text admission. Memo and optional trace retention have
-/// independent limits; parsing, formatting, and file codecs own structural caps.
+/// Limits on calculation work and per-operation storage.
+///
+/// Defaults are unlimited except for nesting depth, which is capped at 128.
+/// `u64::MAX` and `usize::MAX` disable the corresponding limits; usage counters
+/// saturate at those maxima. Work measures operations and visited data, not time.
+/// Some kernels charge an estimated upper bound before running unmetered code.
+///
+/// `cell_work` counts work in one formula, excluding its dependency formulas.
+/// Collection limits count elements in one collection, not total heap allocation.
+/// Text limits count bytes in one variable buffer: UTF-8 bytes or two bytes per
+/// UTF-16 unit. Fixed-size kernel scratch is outside these limits.
+///
+/// Reused results still pass collection and text checks. Memo storage, tracing,
+/// parsing, formatting, and file codecs have separate limits.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct EvaluationBudgets {
     /// Maximum work charged across the whole evaluation.
@@ -134,21 +135,22 @@ pub enum CapabilityId {
     /// User-defined provider execution.
     UserDefinedFunction,
 }
-/// An operational abort, distinct from a spreadsheet [`poirot_model::CellError`].
-/// Examples include exhausted budgets, stale plans, and unsupported capabilities.
-/// Formula error handlers such as IFERROR cannot catch these failures.
+/// A failure that stops calculation rather than producing a spreadsheet error value.
+///
+/// Includes exhausted limits, stale plans, and unsupported operations. Formula
+/// error handlers such as `IFERROR` cannot catch these failures.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum EvaluationFailure {
     /// Setter publication requires the independently selected pinned computation policy.
     IncompatibleMaterializationPolicy,
-    /// Source handler exception: operational carrier, never catchable by IFERROR.
+    /// An upstream algorithm exception that stops calculation.
     KnownSourceException {
         /// Cell executing the exceptional source behavior.
         source: Option<EvaluationTarget>,
         /// Pinned source exception identity.
         exception: poirot_model::KnownSourceException,
     },
-    /// Owned Session memo admission failed before cloning the rejected value.
+    /// A calculated value would exceed the session's cached-result storage limit.
     MemoRetentionLimit {
         /// Configured cell and byte retention limits.
         limits: crate::run::MemoRetentionLimits,
@@ -163,8 +165,9 @@ pub enum EvaluationFailure {
     StalePlan,
     /// A metered engine operation exceeded its configured limit.
     Budget(BudgetFailure),
-    /// A component refused its own resource policy, structural bound, or overflow.
-    /// Distinct from unsupported fidelity and metered BudgetFailure amounts.
+    /// A component exceeded a structural limit or overflowed a size estimate.
+    ///
+    /// Unlike [`Self::Budget`], this has no evaluator work charge to report.
     ResourceLimit {
         /// Capability whose internal resource limit was exceeded.
         capability: CapabilityId,
@@ -247,8 +250,9 @@ impl std::fmt::Display for EvaluationFailure {
     }
 }
 impl std::error::Error for EvaluationFailure {}
-/// Work and resource counters collected during a completed or aborted evaluation.
-/// Values measure explicit engine operations, not elapsed time or total heap allocation.
+/// Work counters from a completed or failed calculation.
+///
+/// These measure engine operations, not elapsed time or total heap allocation.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct EvaluationUsage {
     /// Cell-local random stream accesses observed during execution.

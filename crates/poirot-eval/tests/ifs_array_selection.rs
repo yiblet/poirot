@@ -129,9 +129,7 @@ fn only_unresolved_conditions_and_selected_reference_members_are_read() {
         ("I1", "2"),
         ("K1", "COUNTIF(A1:A3,B1:B2)"),
     ] {
-        sheet
-            .set_formula(target(cell).address, formula, CellValue::Blank)
-            .unwrap();
+        sheet.set_formula(target(cell).address, formula).unwrap();
     }
     for arrays in [
         ArrayResultPolicy::ScalarIntersection,
@@ -240,7 +238,6 @@ fn policy_and_condition_edits_invalidate_retained_results_after_restore() {
         .set_formula(
             target("E1").address,
             "SUM(IFS({TRUE,FALSE,TRUE},{3,100,7},TRUE,5))",
-            CellValue::Blank,
         )
         .unwrap();
     book.sheet_mut(0)
@@ -248,7 +245,6 @@ fn policy_and_condition_edits_invalidate_retained_results_after_restore() {
         .set_formula(
             target("E3").address,
             "SUMPRODUCT(IFS(C1:C3,A1:A3,TRUE,B1:B3))",
-            CellValue::Blank,
         )
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
@@ -323,7 +319,6 @@ fn condition_and_selected_result_dimensions_bound_child_first_spills() {
         .set_formula(
             target("E5").address,
             "IFS({TRUE;FALSE},{1,2,3},TRUE,{10,20,30})",
-            CellValue::Blank,
         )
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)

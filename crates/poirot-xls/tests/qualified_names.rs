@@ -9,7 +9,7 @@ fn qualified_names_fail_explicitly_instead_of_erasing_scope() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(
+        .set_formula_with_cached_value(
             CellAddress { row: 0, col: 0 },
             "Other!Rate",
             CellValue::Number(-999.),

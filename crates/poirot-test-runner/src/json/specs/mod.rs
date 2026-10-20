@@ -80,7 +80,7 @@ fn write_cells(workbook: &mut model::Workbook, cells: &[Cell]) -> Result<(), Str
             .ok_or("fixture worksheet is missing")?;
         match &cell.content {
             CellContent::Formula(formula) => worksheet
-                .set_formula(cell.target.address, formula, model::CellValue::Blank)
+                .set_formula(cell.target.address, formula)
                 .map_err(|e| e.to_string())?,
             CellContent::Literal(value) => worksheet
                 .set_value(cell.target.address, value.cell_value())

@@ -493,7 +493,6 @@ mod tests {
                     col: col as u32,
                 },
                 formula,
-                poirot_model::CellValue::Blank,
             )
             .unwrap();
         }
@@ -575,11 +574,7 @@ mod tests {
         let mut w = Workbook::new();
         w.add_sheet("S")
             .unwrap()
-            .set_formula(
-                CellAddress { row: 0, col: 0 },
-                "1+",
-                poirot_model::CellValue::Blank,
-            )
+            .set_formula(CellAddress { row: 0, col: 0 }, "1+")
             .unwrap();
         assert!(
             Plan::capture(

@@ -1,5 +1,5 @@
 use poirot_io::{
-    IoError, ReadOptions, read_workbook, read_xlsx_bytes, read_xlsx_bytes_with_options,
+    IoError, ReadOptions, read_workbook, read_workbook_bytes, read_workbook_bytes_with_options,
     write_xlsx_to_buffer,
 };
 use poirot_model::{Cell, CellError, CellValue, DateSystem, Workbook};
@@ -70,7 +70,7 @@ fn typed_caches_literals_names_dates_and_raw_format_roundtrip() {
     ];
     for (i, value) in values.iter().enumerate() {
         sheet
-            .set_formula(
+            .set_formula_with_cached_value(
                 poirot_model::CellAddress::new(i as u32, 0).unwrap(),
                 "IF(1<2,\"a&b\",\"c\")",
                 value.clone(),
@@ -106,8 +106,8 @@ fn typed_caches_literals_names_dates_and_raw_format_roundtrip() {
     let book_xml = xml(&bytes, "xl/workbook.xml");
     assert!(book_xml.contains("date1904=\"1\""));
     assert!(book_xml.contains("localSheetId=\"0\""));
-    let imported = read_xlsx_bytes(&bytes).unwrap();
-    let actual = imported.workbook;
+    let imported = read_workbook_bytes(&bytes).unwrap();
+    let actual = imported;
     assert_eq!(actual.date_system, DateSystem::Excel1904);
     assert_eq!(actual.sheets().len(), 2);
     assert!(actual.sheet(1).unwrap().cells().is_empty());
@@ -183,11 +183,11 @@ fn configured_small_budgets_and_bad_files_fail_explicitly() {
         },
     ] {
         assert!(matches!(
-            read_xlsx_bytes_with_options(&bytes, limits),
+            read_workbook_bytes_with_options(&bytes, limits),
             Err(IoError::Limit(_))
         ));
     }
-    assert!(read_xlsx_bytes(b"not a ZIP").is_err());
+    assert!(read_workbook_bytes(b"not a ZIP").is_err());
     assert!(write_xlsx_to_buffer(&Workbook::new()).is_err());
     w.sheet_mut(0)
         .unwrap()
@@ -223,7 +223,7 @@ fn identifier_spelling_scope_and_permissive_names_survive_raw_xml() {
         raw.contains("name=\"imported odd name\" localSheetId=\"1\""),
         "{raw}"
     );
-    let actual = read_xlsx_bytes(&bytes).unwrap().workbook;
+    let actual = read_workbook_bytes(&bytes).unwrap();
     assert_eq!(actual.sheets()[0].name(), "Ä Data");
     assert_eq!(actual.named_ranges, workbook.named_ranges);
     assert_eq!(actual.try_sheet_index_by_name("ä data"), Ok(Some(0)));
@@ -235,4 +235,56 @@ fn identifier_spelling_scope_and_permissive_names_survive_raw_xml() {
             .formula,
         "2"
     );
+}
+
+#[test]
+fn file_and_buffer_routes_retain_the_same_workbook_and_warnings() {
+    let directory = std::env::temp_dir().join(format!("poirot-read-routes-{}", std::process::id()));
+    std::fs::create_dir_all(&directory).unwrap();
+    for (extension, format) in [
+        ("xlsx", poirot_model::FileFormat::Xlsx),
+        ("xls", poirot_model::FileFormat::Xls),
+    ] {
+        let fixture = repository()
+            .join("crates/poirot-io/tests/fixtures")
+            .join(format!("poi-SimpleMultiCell.{extension}"));
+        let bytes = std::fs::read(fixture).unwrap();
+        let path = directory.join(format!("{extension}.unrelated-extension"));
+        std::fs::write(&path, &bytes).unwrap();
+        let expected = read_workbook_bytes(&bytes).unwrap();
+        let metadata = expected.file_metadata.as_ref().unwrap();
+        assert_eq!(metadata.format, format);
+        assert!(
+            metadata
+                .import_warnings
+                .iter()
+                .any(|warning| warning.kind == poirot_model::ImportDiagnosticKind::OmittedFeatures)
+        );
+        for actual in [
+            read_workbook(&path).unwrap(),
+            poirot_io::read_workbook_with_options(&path, ReadOptions::default()).unwrap(),
+            read_workbook_bytes_with_options(&bytes, ReadOptions::default()).unwrap(),
+        ] {
+            assert_eq!(actual, expected, "{extension}");
+        }
+        let options = ReadOptions {
+            max_input_bytes: 1,
+            ..ReadOptions::default()
+        };
+        assert!(matches!(
+            poirot_io::read_workbook_with_options(&path, options),
+            Err(IoError::Limit(_))
+        ));
+        assert!(matches!(
+            read_workbook_bytes_with_options(&bytes, options),
+            Err(IoError::Limit(_))
+        ));
+        std::fs::write(&path, b"unknown file signature").unwrap();
+        assert!(matches!(read_workbook(&path), Err(IoError::Unsupported(_))));
+        assert!(matches!(
+            read_workbook_bytes(b"unknown file signature"),
+            Err(IoError::Unsupported(_))
+        ));
+    }
+    std::fs::remove_dir_all(directory).unwrap();
 }

@@ -19,7 +19,7 @@ fn set_formula(b: &mut Workbook, row: u32, col: u32, f: &str) {
     b.model_mut()
         .sheet_mut(0)
         .unwrap()
-        .set_formula(at(row, col), f, CellValue::Blank)
+        .set_formula(at(row, col), f)
         .unwrap();
 }
 fn get(b: &Workbook, row: u32, col: u32) -> CellValue {

@@ -19,7 +19,7 @@ fn model(formulas: &[(&str, &str)]) -> model::Workbook {
     for &(at, source) in formulas {
         w.sheet_mut(0)
             .unwrap()
-            .set_formula(target(at).address, source, CellValue::Blank)
+            .set_formula(target(at).address, source)
             .unwrap();
     }
     w
@@ -543,7 +543,7 @@ fn overlap_discovery_recursion_obeys_the_configured_depth_limit() {
         };
         m.sheet_mut(0)
             .unwrap()
-            .set_formula(at, "{1,2;3,4}", CellValue::Blank)
+            .set_formula(at, "{1,2;3,4}")
             .unwrap();
     }
     let w = source(m).unwrap();
@@ -879,7 +879,7 @@ fn retained_operator_results_match_fresh_evaluation_through_interleaved_edits() 
                 oracle
                     .sheet_mut(0)
                     .unwrap()
-                    .set_formula(target("D1").address, formula, CellValue::Blank)
+                    .set_formula(target("D1").address, formula)
                     .unwrap();
             }
             _ => unreachable!(),

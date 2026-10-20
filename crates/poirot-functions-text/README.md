@@ -1,12 +1,11 @@
 # poirot-functions-text
 
-Text and numeric-text algorithms used by spreadsheet functions, including case
-conversion, substring planning, and Roman numeral formatting.
+Text calculations for spreadsheet functions.
 
-Use `proper` or `roman` for those operations. The `numeric` module handles
-numeric-text functions; `units` plans text ranges and reservations. `java_case`
-provides full Unicode casing. Case-insensitive comparison uses the shared
-`poirot-text::fold` helpers. Hosts evaluate
-arguments and enforce resource limits.
+Includes title casing with `proper`, Roman numerals with `roman`, numeric-text
+operations, and substring planning. The caller evaluates arguments and controls
+allocation limits.
 
-Text counting policies live in [poirot-text](../poirot-text/README.md).
+`java_case` implements Unicode casing. Case-insensitive comparison uses
+[poirot-text](https://docs.rs/poirot-text), which also defines text counting and
+slicing rules.

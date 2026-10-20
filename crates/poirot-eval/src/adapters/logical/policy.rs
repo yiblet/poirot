@@ -149,8 +149,8 @@ pub(super) fn switch_scalar<E>(
     }
 }
 
-/// POI coerceValueToBoolean(value, false): whitespace is not stripped from
-/// strings, numbers use nonzero truth, and blank is false.
+// POI coerceValueToBoolean(value, false): whitespace is not stripped from
+// strings, numbers use nonzero truth, and blank is false.
 pub use poirot_functions_logical::{coercev2_logical_test, error_type};
 
 /// Actual family adapter: validates shape, executes deferred callbacks, then

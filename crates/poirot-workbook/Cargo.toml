@@ -2,7 +2,7 @@
 name = "poirot-workbook"
 version.workspace = true
 edition.workspace = true
-description = "Workbook editing, evaluation contexts and explicit save planning for poirot"
+description = "Workbook files, editing, and formula calculation"
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true

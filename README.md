@@ -1,105 +1,81 @@
 # Poirot
 
-Read, edit, evaluate, and write Excel workbooks in Rust.
+Read, edit, calculate, and write Excel workbooks in Rust, without running Excel.
 
-Poirot brings file handling and formula evaluation together, so you can automate
-workbook changes and calculate results without running Excel.
+Poirot is for applications that use spreadsheets as calculation models: load a
+workbook, change its inputs, and calculate its outputs. It reads and writes XLSX
+and XLS files. You can also build a workbook from scratch.
 
-- Read and write `.xlsx` and `.xls` files.
-- Create sheets, edit cells, and evaluate formulas.
-- Explore different inputs in an overlay before applying changes to a workbook.
-- Save and restore evaluation state with snapshots.
-
-Evaluation defaults target modern Excel: documented builtin behavior, surrogate-pair
-text indexing (Compatibility Version 2), and dynamic array spills. Explicit source
-and scalar-intersection policies remain available for compatibility comparisons.
-Case-insensitive value comparisons use Unicode 16 simple folding; full casing
-for `UPPER` and `LOWER` uses Unicode 15.
-
-Poirot is intended for Rust backends that embed and validate controlled workbook
-models. It is under active development: Excel compatibility is incomplete, and the
-API may change. Legacy array formulas and some function argument shapes remain
-unsupported. Review import warnings and test your workbooks to check what survives
-loading and saving.
+Excel compatibility is incomplete, and the API is under development. Test the
+workbooks your application uses. Import warnings report features that were changed
+or omitted; saving a file does not guarantee that all of its original features
+survive.
 
 ## Quick start
 
-Add Poirot to your `Cargo.toml` using the `master` branch:
+Poirot requires Rust 1.90 or newer. Add the Git dependency to `Cargo.toml`:
 
 ```toml
 [dependencies]
 poirot = { git = "https://github.com/yiblet/poirot.git", branch = "master" }
 ```
 
-Create a workbook, calculate `B1` as `42`, and save it to `output.xlsx`:
+Suppose `quote.xlsx` has a sheet named `Quote`, with quantity in `A1`, unit
+price in `B1`, and the formula `A1*B1` in `C1`. Change the quantity, calculate the
+new total, and save a copy:
 
 ```rust
-use poirot::{CellValue, EvaluationContext, Overlay, Workbook};
+use poirot::Workbook;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut book = Workbook::new();
-    let sheet = book.add_sheet("Inputs")?;
-    sheet.set_value("A1".parse()?, 21.)?;
-    sheet.set_formula("B1".parse()?, "A1*2", CellValue::Blank)?;
+    let mut book = Workbook::open("quote.xlsx")?;
+    let sheet = book.sheet_by_name_mut("Quote").ok_or("missing Quote sheet")?;
+    sheet.set_value("A1".parse()?, 12.)?;
+    book.recalculate()?;
 
-    let context = EvaluationContext::default();
-    let changes = {
-        let mut overlay = Overlay::with_workbook(&book).build()?;
-        overlay.evaluation(&context)?.all()?;
-        overlay.changes()
-    };
-    book.apply(changes)?;
-
-    book.save_xlsx().write_file("output.xlsx")?;
+    let total = book.cell("Quote", "C1".parse()?).ok_or("missing total")?;
+    println!("Total: {:?}", total.value);
+    book.save_xlsx().write_file("quote-updated.xlsx")?;
     Ok(())
 }
 ```
 
-To load an existing workbook, use `Workbook::open("input.xlsx")?`, then review
-`book.file_metadata` for features changed or omitted during import. Saving
-preserves the current results. To update them, evaluate formulas and apply the
-changes before saving, as shown above.
+Saving does not calculate formulas. Call `recalculate()` after changing inputs
+when you need current results. Import warnings are available in
+`book.file_metadata`; review them before relying on an exported copy.
+Use `Workbook::new()` to build a workbook from scratch.
 
-## Examples and API
+## Examples
 
-- [Workbook workflow](examples/public_workbook.rs): edit cells, calculate results,
-  and save to XLSX or XLS.
-- [Direct evaluation](examples/direct_evaluation.rs): change inputs and query
-  formula results.
-- [Snapshots](examples/snapshot_file.rs): save evaluation state and resume later.
+- [Edit a file](examples/public_workbook.rs): load a workbook, change an input,
+  calculate, and save.
+- [Query a model](examples/direct_evaluation.rs): try different inputs without
+  changing the original workbook.
+- [Save calculation state](examples/snapshot_file.rs): save a checkpoint and
+  resume it later.
 
-From the repository root, run the workbook example or browse the API documentation:
-
-```sh
-cargo run --example public_workbook
-cargo doc -p poirot --no-deps --open
-```
-
-## Development
-
-Contributions are welcome! See [Contributing](CONTRIBUTING.md) to get started.
-
-The supported Rust baseline is 1.90. Run tests, formatting checks, and lints from the
-repository root:
+The file example changes `A1` in the first sheet. Use a workbook where that cell
+is an input:
 
 ```sh
-cargo test --workspace
-cargo fmt --all -- --check
-cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo run --example public_workbook -- input.xlsx output.xlsx
 ```
+
+Browse the API and task guide with `cargo doc -p poirot --no-deps --open`.
+See [Contributing](CONTRIBUTING.md) to work on Poirot.
 
 ## Acknowledgements
 
 - [Apache POI](https://poi.apache.org/) shaped Poirot from the start: our first few
-  commits translated portions of its code directly into Rust. Our name is a nod
-  to the project, too. Statistical kernels also adapt
+  commits translated portions of its code into Rust. Our name is a nod to the
+  project. Statistical kernels also adapt
   [Apache Commons Math](https://commons.apache.org/proper/commons-math/).
 - [LibreOffice](https://www.libreoffice.org/) provided a foundation for checking
   correctness. Its unit tests helped us understand expected spreadsheet behavior
   and validate our implementation.
-- [ClosedXML](https://github.com/ClosedXML/ClosedXML) and
-  [IronCalc](https://github.com/ironcalc/IronCalc) offered additional inspiration
-  for our approach to building a spreadsheet library.
+- We adapted date handling and regression tests from
+  [ClosedXML](https://github.com/ClosedXML/ClosedXML).
+  [IronCalc](https://github.com/ironcalc/IronCalc) provided design inspiration.
 
-See [LICENSES/ACKNOWLEDGEMENTS](LICENSES/ACKNOWLEDGEMENTS) for project credits
-and [LICENSES/MIT.txt](LICENSES/MIT.txt) for Poirot’s license.
+See [LICENSES/ACKNOWLEDGEMENTS](LICENSES/ACKNOWLEDGEMENTS) for credits and notices.
+Poirot's code is licensed under [MIT](LICENSES/MIT.txt).

@@ -16,7 +16,7 @@ fn unverified_biff_span_encoding_has_explicit_unsupported_disposition() {
         }
         book.sheet_mut(0)
             .unwrap()
-            .set_formula("C1".parse().unwrap(), formula, CellValue::Number(-999.))
+            .set_formula_with_cached_value("C1".parse().unwrap(), formula, CellValue::Number(-999.))
             .unwrap();
         assert!(unsupported(&write_xls_to_buffer(&book).unwrap_err()));
     }

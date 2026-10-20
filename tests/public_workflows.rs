@@ -12,7 +12,7 @@ fn overlay_edits_evaluate_and_apply_without_mutating_the_borrowed_source() {
     let sheet = model.add_sheet("Inputs").unwrap();
     sheet.set_value(at("A1").address, 21.).unwrap();
     sheet
-        .set_formula(at("B1").address, "A1*2", CellValue::Number(-1.))
+        .set_formula_with_cached_value(at("B1").address, "A1*2", CellValue::Number(-1.))
         .unwrap();
     let context = EvaluationContext::default();
     let changes = {
@@ -67,11 +67,9 @@ fn evaluated_formats_preserve_precision_text_and_overlay_edits_through_xlsx() {
     let sheet = model.add_sheet("Inputs").unwrap();
     let number = 1234.567890123456;
     sheet.set_value(at("A1").address, number).unwrap();
+    sheet.set_formula(at("B1").address, "A1").unwrap();
     sheet
-        .set_formula(at("B1").address, "A1", CellValue::Blank)
-        .unwrap();
-    sheet
-        .set_formula(at("C1").address, "TEXT(A1,\"$0.00\")", CellValue::Blank)
+        .set_formula(at("C1").address, "TEXT(A1,\"$0.00\")")
         .unwrap();
     let context = EvaluationContext::default();
     let changes = {
@@ -146,9 +144,7 @@ fn lookup_blank_consumers_survive_overlay_reset_materialization_and_xlsx() {
         ("B3", "MIN(B1,0.03)"),
         ("B4", "ISBLANK(HLOOKUP(\"KY\",A1:A2,2,FALSE))"),
     ] {
-        sheet
-            .set_formula(at(cell).address, formula, CellValue::Blank)
-            .unwrap();
+        sheet.set_formula(at(cell).address, formula).unwrap();
     }
     let context = EvaluationContext::default();
     let changes = {

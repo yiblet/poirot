@@ -11,7 +11,11 @@ fn dynamic_ranges_survive_xls_write_import_and_recalculation() {
         ("H4", "ROWS(IF(TRUE,A1,B1):C4)"),
     ] {
         sheet
-            .set_formula(address.parse().unwrap(), formula, CellValue::Number(-999.))
+            .set_formula_with_cached_value(
+                address.parse().unwrap(),
+                formula,
+                CellValue::Number(-999.),
+            )
             .unwrap();
     }
     workbook.define_name("Start", "A1", None).unwrap();
@@ -19,14 +23,14 @@ fn dynamic_ranges_survive_xls_write_import_and_recalculation() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(
+        .set_formula_with_cached_value(
             "H5".parse().unwrap(),
             "ROWS(Start:End)",
             CellValue::Number(-999.),
         )
         .unwrap();
     let bytes = poirot_xls::write_xls_to_buffer(&workbook).unwrap();
-    let mut imported = poirot_io::read_xls_bytes(&bytes).unwrap().workbook;
+    let mut imported = poirot_io::read_workbook_bytes(&bytes).unwrap();
     for address in ["H1", "H2", "H3", "H4", "H5"] {
         let cell = imported
             .sheet(0)

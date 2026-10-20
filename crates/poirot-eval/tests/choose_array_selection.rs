@@ -149,7 +149,7 @@ fn unselected_branches_and_reference_members_are_not_read() {
     ] {
         book.sheet_mut(0)
             .unwrap()
-            .set_formula(target(cell).address, formula, CellValue::Blank)
+            .set_formula(target(cell).address, formula)
             .unwrap();
     }
     for arrays in [
@@ -236,7 +236,7 @@ fn policy_and_index_edits_invalidate_restored_results() {
     ] {
         book.sheet_mut(0)
             .unwrap()
-            .set_formula(target(cell).address, formula, CellValue::Blank)
+            .set_formula(target(cell).address, formula)
             .unwrap();
     }
     let mut overlay = Overlay::with_workbook(&book)
@@ -312,11 +312,7 @@ fn index_and_branch_dimensions_bound_child_first_spills() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(
-            target("E5").address,
-            "CHOOSE({1;2},{1,2,3},{10,20,30})",
-            CellValue::Blank,
-        )
+        .set_formula(target("E5").address, "CHOOSE({1;2},{1,2,3},{10,20,30})")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(OverlayPolicy {

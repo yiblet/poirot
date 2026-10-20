@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
-description = "Spreadsheet number formats and display rendering"
+description = "Excel number formats and cell display text"
 include = ["/src/**", "/README.md"]
 
 [dependencies]

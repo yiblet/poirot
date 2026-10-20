@@ -75,7 +75,7 @@ fn tiny_string_density_is_raw_number_through_actual_aliases_and_consumers() {
     assert_eq!(value(run(&w, "NORM.DIST(0,0,A1,FALSE)")), Error(Num));
     w.sheet_mut(0)
         .unwrap()
-        .set_formula(at(0), "NORM.DIST(0,0,\"5e-324\",FALSE)", Blank)
+        .set_formula(at(0), "NORM.DIST(0,0,\"5e-324\",FALSE)")
         .unwrap();
     assert_eq!(bits(value(run(&w, "A1"))), f64::INFINITY.to_bits());
 }

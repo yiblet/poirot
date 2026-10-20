@@ -1,11 +1,29 @@
 # poirot-io
 
-Read XLS/XLSX workbooks into the shared model and write XLSX files.
+Read XLS and XLSX workbooks and write XLSX files.
 
-Use `read_workbook_with_report` to retain import warnings, or the byte-based
-readers for in-memory input. `plan_xlsx_export` validates a workbook before
-serialization. Read and write options control resource limits and supported
-features; inspect diagnostics when checking file fidelity.
+This crate converts workbook files to and from the shared data model. Imports
+retain saved formula results and record unsupported or altered content in workbook
+metadata. Writing preserves saved results; it does not calculate formulas.
 
-XLS export lives in [poirot-xls](../poirot-xls/README.md). For a combined workflow,
-use `Spreadsheet` from the [root library](../../README.md).
+```rust
+use poirot_io::{read_workbook_bytes, write_xlsx_to_buffer};
+use poirot_model::Workbook;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut book = Workbook::new();
+    book.add_sheet("Data")?.set_value("A1".parse()?, 42.)?;
+    let bytes = write_xlsx_to_buffer(&book)?;
+    let restored = read_workbook_bytes(&bytes)?;
+    assert_eq!(restored.sheets().len(), 1);
+    Ok(())
+}
+```
+
+`read_workbook` reads a file; `read_workbook_bytes` reads an in-memory buffer.
+Both detect XLS or XLSX from the contents and return the same workbook type.
+`ReadOptions` configures import policies and limits.
+
+Legacy XLS output lives in [poirot-xls](https://docs.rs/poirot-xls).
+Most applications should use [poirot](https://docs.rs/poirot), which provides the
+same file operations alongside editing and calculation.

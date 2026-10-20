@@ -10,12 +10,9 @@ pub(super) fn book() -> Workbook {
     let mut book = Workbook::new();
     let s = book.add_sheet("S").unwrap();
     s.set_value(at("A1").address, 2.).unwrap();
-    s.set_formula(at("B1").address, "A1*2", CellValue::Blank)
-        .unwrap();
-    s.set_formula(at("C1").address, "B1+1", CellValue::Blank)
-        .unwrap();
-    s.set_formula(at("D1").address, "7*3", CellValue::Blank)
-        .unwrap();
+    s.set_formula(at("B1").address, "A1*2").unwrap();
+    s.set_formula(at("C1").address, "B1+1").unwrap();
+    s.set_formula(at("D1").address, "7*3").unwrap();
     book
 }
 pub(super) fn value<W: Borrow<Workbook>>(
@@ -76,7 +73,7 @@ fn range_membership_tracks_new_cells_and_removals() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(at("E1").address, "SUM(A2:A10)", CellValue::Blank)
+        .set_formula(at("E1").address, "SUM(A2:A10)")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let context = EvaluationContext::default();
@@ -96,8 +93,7 @@ fn branch_reexecution_replaces_reverse_dependencies() {
     s.set_value(at("A2").address, true).unwrap();
     s.set_value(at("B2").address, 4.).unwrap();
     s.set_value(at("C2").address, 9.).unwrap();
-    s.set_formula(at("D2").address, "IF(A2,B2,C2)", CellValue::Blank)
-        .unwrap();
+    s.set_formula(at("D2").address, "IF(A2,B2,C2)").unwrap();
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let context = EvaluationContext::default();
     assert_eq!(value(&mut overlay, "D2", &context), CellValue::Number(4.));
@@ -128,10 +124,8 @@ fn formula_replacement_and_return_to_base_drop_redundant_writes() {
 fn volatile_cells_and_dependents_run_again_but_unrelated_cells_reuse() {
     let mut book = book();
     let s = book.sheet_mut(0).unwrap();
-    s.set_formula(at("E1").address, "RAND()", CellValue::Blank)
-        .unwrap();
-    s.set_formula(at("F1").address, "E1+1", CellValue::Blank)
-        .unwrap();
+    s.set_formula(at("E1").address, "RAND()").unwrap();
+    s.set_formula(at("F1").address, "E1+1").unwrap();
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let context = EvaluationContext::default();
     overlay
@@ -234,7 +228,7 @@ fn failed_output_batch_publishes_no_partial_result_cache() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(at("E1").address, "REPT(\"x\",100)", CellValue::Blank)
+        .set_formula(at("E1").address, "REPT(\"x\",100)")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let context = EvaluationContext {
@@ -256,7 +250,7 @@ fn malformed_formulas_can_be_snapshotted_without_eager_failure() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(at("E1").address, "1+", CellValue::Blank)
+        .set_formula(at("E1").address, "1+")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     overlay.compile_all();
@@ -334,8 +328,7 @@ fn intersection_reads_only_the_selected_overlap() {
     let s = book.sheet_mut(0).unwrap();
     s.set_value(at("A2").address, 2.).unwrap();
     s.set_value(at("A3").address, 3.).unwrap();
-    s.set_formula(at("E1").address, "SUM(A1:A3 A2:B2)", CellValue::Blank)
-        .unwrap();
+    s.set_formula(at("E1").address, "SUM(A1:A3 A2:B2)").unwrap();
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let context = EvaluationContext::default();
     assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(2.));
@@ -350,8 +343,7 @@ fn implicit_intersection_tracks_the_selected_cell_and_context_fields_are_selecti
     let mut book = book();
     let s = book.sheet_mut(0).unwrap();
     s.set_value(at("A2").address, 4.).unwrap();
-    s.set_formula(at("E2").address, "@A1:A3", CellValue::Blank)
-        .unwrap();
+    s.set_formula(at("E2").address, "@A1:A3").unwrap();
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let mut context = EvaluationContext::default();
     assert_eq!(value(&mut overlay, "E2", &context), CellValue::Number(4.));
@@ -452,7 +444,7 @@ fn publication_policy_reuses_raw_results_and_changes_only_saved_values() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(at("E1").address, "NORMSINV(1E-300)", CellValue::Blank)
+        .set_formula(at("E1").address, "NORMSINV(1E-300)")
         .unwrap();
     let policy = OverlayPolicy {
         ..Default::default()
@@ -530,16 +522,14 @@ fn reused_lookup_prefixes_record_dependencies_for_every_consumer() {
             .unwrap();
     }
     sheet
-        .set_formula(at("C1").address, "MATCH(100,A1:A200,0)", CellValue::Blank)
+        .set_formula(at("C1").address, "MATCH(100,A1:A200,0)")
         .unwrap();
     sheet
-        .set_formula(at("C2").address, "MATCH(50,A1:A200,0)", CellValue::Blank)
+        .set_formula(at("C2").address, "MATCH(50,A1:A200,0)")
         .unwrap();
+    sheet.set_formula(at("D2").address, "C2*2").unwrap();
     sheet
-        .set_formula(at("D2").address, "C2*2", CellValue::Blank)
-        .unwrap();
-    sheet
-        .set_formula(at("C3").address, "MATCH(300,A1:A200,0)", CellValue::Blank)
+        .set_formula(at("C3").address, "MATCH(300,A1:A200,0)")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(OverlayPolicy {
@@ -577,7 +567,7 @@ fn successful_writeback_survives_a_later_failed_call() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(at("E1").address, "REPT(\"x\",100)", CellValue::Blank)
+        .set_formula(at("E1").address, "REPT(\"x\",100)")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let context = EvaluationContext {
@@ -629,7 +619,7 @@ fn snapshots_exclude_runtime_providers_and_require_matching_registry() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(at("E1").address, "USER_VALUE()", CellValue::Blank)
+        .set_formula(at("E1").address, "USER_VALUE()")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
         .with_extensions(&registry)
@@ -663,9 +653,7 @@ fn active_dependency_trace_preserves_reads_before_and_after_nested_formulas() {
     let sheet = book.sheet_mut(0).unwrap();
     sheet.set_value(at("A2").address, 3.).unwrap();
     sheet.set_value(at("A3").address, 5.).unwrap();
-    sheet
-        .set_formula(at("C1").address, "A2+B1+A3", CellValue::Blank)
-        .unwrap();
+    sheet.set_formula(at("C1").address, "A2+B1+A3").unwrap();
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let context = EvaluationContext::default();
     {
@@ -694,11 +682,9 @@ fn volatile_root_index_tracks_branch_replacement_and_snapshot_restore() {
     let sheet = book.sheet_mut(0).unwrap();
     sheet.set_value(at("A2").address, false).unwrap();
     sheet
-        .set_formula(at("E1").address, "IF(A2,RAND(),7)", CellValue::Blank)
+        .set_formula(at("E1").address, "IF(A2,RAND(),7)")
         .unwrap();
-    sheet
-        .set_formula(at("F1").address, "E1+1", CellValue::Blank)
-        .unwrap();
+    sheet.set_formula(at("F1").address, "E1+1").unwrap();
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let context = EvaluationContext::default();
     assert_eq!(value(&mut overlay, "F1", &context), CellValue::Number(8.));
@@ -751,11 +737,7 @@ fn indexed_lookup_book() -> Workbook {
     }
     sheet.set_value(at("D1").address, 150.).unwrap();
     sheet
-        .set_formula(
-            at("E1").address,
-            "VLOOKUP(D1,A1:B200,2,FALSE)",
-            CellValue::Blank,
-        )
+        .set_formula(at("E1").address, "VLOOKUP(D1,A1:B200,2,FALSE)")
         .unwrap();
     book
 }
@@ -800,9 +782,7 @@ fn lookup_indices_expire_for_transitively_changed_formula_candidates() {
     let mut book = indexed_lookup_book();
     let sheet = book.sheet_mut(0).unwrap();
     sheet.set_value(at("G1").address, 50.).unwrap();
-    sheet
-        .set_formula(at("A50").address, "G1", CellValue::Blank)
-        .unwrap();
+    sheet.set_formula(at("A50").address, "G1").unwrap();
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(OverlayPolicy {
             arrays: crate::ArrayResultPolicy::ScalarIntersection,
@@ -829,9 +809,7 @@ fn lookup_indices_expire_for_sparse_gap_insertions_and_overlapping_ranges() {
         ("E1", "MATCH(D1,A1:A200,0)"),
         ("E2", "MATCH(D1,A20:A200,0)"),
     ] {
-        sheet
-            .set_formula(at(cell).address, formula, CellValue::Blank)
-            .unwrap();
+        sheet.set_formula(at(cell).address, formula).unwrap();
     }
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(OverlayPolicy {
@@ -896,7 +874,7 @@ fn failed_output_batch_does_not_publish_lookup_indices() {
     let mut book = indexed_lookup_book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(at("F1").address, "REPT(\"x\",100)", CellValue::Blank)
+        .set_formula(at("F1").address, "REPT(\"x\",100)")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(OverlayPolicy {
@@ -931,7 +909,7 @@ fn lookup_indices_expire_for_context_sensitive_formula_candidates() {
     let mut book = indexed_lookup_book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(at("A50").address, "IF(NOW()>0,100,50)", CellValue::Blank)
+        .set_formula(at("A50").address, "IF(NOW()>0,100,50)")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(OverlayPolicy {
@@ -963,11 +941,7 @@ fn horizontal_lookup_indices_preserve_untouched_suffixes_and_reset_on_snapshot()
     }
     sheet.set_value(at("D4").address, 50.).unwrap();
     sheet
-        .set_formula(
-            at("E4").address,
-            "HLOOKUP(D4,A1:CV2,2,FALSE)",
-            CellValue::Blank,
-        )
+        .set_formula(at("E4").address, "HLOOKUP(D4,A1:CV2,2,FALSE)")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(OverlayPolicy {
@@ -1024,24 +998,16 @@ fn lookup_index_invalidation_does_not_require_retained_formula_results() {
 fn numeric_locale_invalidates_only_cells_that_consumed_numeric_text() {
     let mut workbook = Workbook::new();
     let sheet = workbook.add_sheet("S").unwrap();
+    sheet.set_formula(at("A1").address, "\"1,234\"*1").unwrap();
     sheet
-        .set_formula(at("A1").address, "\"1,234\"*1", CellValue::Blank)
+        .set_formula(at("B1").address, "ABS(\"1,234\")")
         .unwrap();
     sheet
-        .set_formula(at("B1").address, "ABS(\"1,234\")", CellValue::Blank)
+        .set_formula(at("C1").address, "VALUE(\"1,234\")")
         .unwrap();
+    sheet.set_formula(at("D1").address, "1+2").unwrap();
     sheet
-        .set_formula(at("C1").address, "VALUE(\"1,234\")", CellValue::Blank)
-        .unwrap();
-    sheet
-        .set_formula(at("D1").address, "1+2", CellValue::Blank)
-        .unwrap();
-    sheet
-        .set_formula(
-            at("E1").address,
-            "IF(TRUE,7,VALUE(\"1,234\"))",
-            CellValue::Blank,
-        )
+        .set_formula(at("E1").address, "IF(TRUE,7,VALUE(\"1,234\"))")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&workbook).build().unwrap();
     let mut context = EvaluationContext::default();
@@ -1079,7 +1045,7 @@ fn numeric_locale_identity_and_consumption_survive_retained_snapshot() {
     workbook
         .add_sheet("S")
         .unwrap()
-        .set_formula(at("A1").address, "VALUE(\"1,234\")", CellValue::Blank)
+        .set_formula(at("A1").address, "VALUE(\"1,234\")")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&workbook).build().unwrap();
     let mut context = EvaluationContext::default();
@@ -1129,9 +1095,7 @@ fn numbervalue_locale_defaults_invalidate_only_consumers_after_snapshot_restore(
         ("B1", r#"NUMBERVALUE("1,234",".",",")"#),
         ("C1", "A1*2"),
     ] {
-        sheet
-            .set_formula(at(cell).address, formula, CellValue::Blank)
-            .unwrap();
+        sheet.set_formula(at(cell).address, formula).unwrap();
     }
     let mut overlay = Overlay::with_workbook(&workbook)
         .with_policy(OverlayPolicy {
@@ -1194,7 +1158,7 @@ fn approximate_match_policy_switch_and_snapshot_restore_recompute_typed_candidat
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_formula(at(cell).address, formula, CellValue::Blank)
+            .set_formula(at(cell).address, formula)
             .unwrap();
     }
     let context = EvaluationContext::default();
@@ -1229,14 +1193,10 @@ fn roman_policy_locale_and_arabic_reference_edits_invalidate_after_snapshot_rest
     let mut workbook = Workbook::new();
     let sheet = workbook.add_sheet("S").unwrap();
     sheet.set_value(at("A1").address, "X").unwrap();
+    sheet.set_formula(at("B1").address, "ARABIC(A1)").unwrap();
+    sheet.set_formula(at("C1").address, "ROMAN(999)").unwrap();
     sheet
-        .set_formula(at("B1").address, "ARABIC(A1)", CellValue::Blank)
-        .unwrap();
-    sheet
-        .set_formula(at("C1").address, "ROMAN(999)", CellValue::Blank)
-        .unwrap();
-    sheet
-        .set_formula(at("D1").address, r#"ROMAN("1,234",0)"#, CellValue::Blank)
+        .set_formula(at("D1").address, r#"ROMAN("1,234",0)"#)
         .unwrap();
     let mut overlay = Overlay::with_workbook(&workbook)
         .with_policy(OverlayPolicy {
@@ -1287,7 +1247,7 @@ fn search_start_policy_switch_invalidates_restored_values_for_both_text_routes()
             workbook
                 .sheet_mut(0)
                 .unwrap()
-                .set_formula(at(cell).address, formula, CellValue::Blank)
+                .set_formula(at(cell).address, formula)
                 .unwrap();
         }
         let context = EvaluationContext::default();
@@ -1327,16 +1287,14 @@ fn retained_scalar_named_producer_does_not_block_child_discovery_and_invalidates
     let mut workbook = Workbook::new();
     let sheet = workbook.add_sheet("S").unwrap();
     sheet.set_value(at("C1").address, false).unwrap();
-    sheet
-        .set_formula(at("A1").address, "Choice", CellValue::Blank)
-        .unwrap();
+    sheet.set_formula(at("A1").address, "Choice").unwrap();
     workbook
         .define_name("Choice", "IF(C1,{10,20},10)", None)
         .unwrap();
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(at("B2").address, "SUM(B1)", CellValue::Blank)
+        .set_formula(at("B2").address, "SUM(B1)")
         .unwrap();
     let mut overlay = Overlay::with_workbook(workbook)
         .with_policy(dynamic())
@@ -1374,12 +1332,8 @@ fn same_session_scalar_named_producer_tracks_future_footprint_dependency() {
     let mut workbook = Workbook::new();
     let sheet = workbook.add_sheet("S").unwrap();
     sheet.set_value(at("C1").address, false).unwrap();
-    sheet
-        .set_formula(at("A1").address, "Choice", CellValue::Blank)
-        .unwrap();
-    sheet
-        .set_formula(at("B2").address, "SUM(B1)", CellValue::Blank)
-        .unwrap();
+    sheet.set_formula(at("A1").address, "Choice").unwrap();
+    sheet.set_formula(at("B2").address, "SUM(B1)").unwrap();
     workbook
         .define_name("Choice", "IF(C1,{10,20},10)", None)
         .unwrap();

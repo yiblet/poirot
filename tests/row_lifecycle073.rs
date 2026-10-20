@@ -38,14 +38,13 @@ fn assert_rows(workbook: &Workbook, last: u32) {
 fn actual_xlsx_roundtrip_retains_empty_sparse_rows() {
     let workbook = source(MAX_ROWS - 1);
     let bytes = io::write_xlsx_to_buffer(&workbook).unwrap();
-    assert_rows(&io::read_xlsx_bytes(&bytes).unwrap().workbook, MAX_ROWS - 1);
+    assert_rows(&io::read_workbook_bytes(&bytes).unwrap(), MAX_ROWS - 1);
     let mut empty = Workbook::new();
     empty.add_sheet("Empty").unwrap().create_row(44).unwrap();
     let bytes = io::write_xlsx_to_buffer(&empty).unwrap();
     assert!(
-        io::read_xlsx_bytes(&bytes)
+        io::read_workbook_bytes(&bytes)
             .unwrap()
-            .workbook
             .sheet(0)
             .unwrap()
             .row(44)
@@ -61,9 +60,7 @@ fn actual_xls_roundtrip_and_exact_immutable_plan() {
         plan.encode_workbook_stream().unwrap().len()
     );
     assert_rows(
-        &io::read_xls_bytes(&plan.to_buffer().unwrap())
-            .unwrap()
-            .workbook,
+        &io::read_workbook_bytes(&plan.to_buffer().unwrap()).unwrap(),
         65535,
     );
     assert!(xls::XlsExportPlan::new(&source(65536), xls::XlsExportPolicy::default()).is_err());

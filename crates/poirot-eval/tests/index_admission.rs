@@ -201,7 +201,7 @@ fn selected_index_results_refresh_after_source_edits_and_policy_switches() {
     ] {
         w.sheet_mut(0)
             .unwrap()
-            .set_formula(address.parse().unwrap(), formula, CellValue::Blank)
+            .set_formula(address.parse().unwrap(), formula)
             .unwrap();
     }
     let mut overlay = Overlay::with_workbook(&w)
@@ -294,7 +294,7 @@ fn index_array_slices_keep_the_existing_spill_capability_boundary() {
     ] {
         w.sheet_mut(0)
             .unwrap()
-            .set_formula(target(address).address, formula, CellValue::Blank)
+            .set_formula(target(address).address, formula)
             .unwrap();
     }
     let policy = EvaluationPolicy::default();

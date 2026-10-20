@@ -173,7 +173,7 @@ fn indexed_reference_traversal_stops_before_later_operational_failure() {
     let mut book = workbook();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(
+        .set_formula_with_cached_value(
             CellAddress { row: 0, col: 0 },
             "1/0",
             CellValue::Number(99.),
@@ -181,7 +181,7 @@ fn indexed_reference_traversal_stops_before_later_operational_failure() {
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(
+        .set_formula_with_cached_value(
             CellAddress { row: 1, col: 0 },
             "NORMSDIST(0)",
             CellValue::Number(99.),

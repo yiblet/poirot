@@ -284,7 +284,7 @@ fn earlier_sheet_error_prevents_evaluating_later_operational_failure() {
         .unwrap();
     book.sheet_mut(2)
         .unwrap()
-        .set_formula(
+        .set_formula_with_cached_value(
             "A1".parse().unwrap(),
             "SUM(Sheet3:Sheet1!B1)",
             CellValue::Number(-999.),

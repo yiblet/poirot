@@ -14,12 +14,10 @@ fn at(row: u32, col: u32) -> CellAddress {
 fn workbook() -> Workbook {
     let mut w = Workbook::new();
     let s = w.add_sheet("Sheet1").unwrap();
-    s.set_formula(at(0, 0), "99", CellValue::Number(99.))
+    s.set_formula_with_cached_value(at(0, 0), "99", CellValue::Number(99.))
         .unwrap();
-    s.set_formula(at(0, 1), "SUM(A1:A4)", CellValue::Blank)
-        .unwrap();
-    s.set_formula(at(0, 2), "MATCH(7,A1:A4,0)", CellValue::Blank)
-        .unwrap();
+    s.set_formula(at(0, 1), "SUM(A1:A4)").unwrap();
+    s.set_formula(at(0, 2), "MATCH(7,A1:A4,0)").unwrap();
     s.set_value(at(2, 4), 23.).unwrap(); // occupied row outside requested columns
     w
 }
@@ -286,7 +284,7 @@ fn equal_cached_assignment_still_suppresses_formula_and_stale_baseline_is_refuse
     drop(run);
     w.sheet_mut(0)
         .unwrap()
-        .set_formula(at(0, 0), "100", CellValue::Number(99.))
+        .set_formula_with_cached_value(at(0, 0), "100", CellValue::Number(99.))
         .unwrap();
     assert!(matches!(
         SharedWorkbook::new(w, plan),

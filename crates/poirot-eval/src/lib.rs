@@ -1,4 +1,38 @@
-//! poirot eval.
+//! Compile and evaluate spreadsheet formulas.
+//!
+//! Use [`Evaluation`](overlay::Evaluation) when you need calculated outputs without changing the original
+//! workbook. For example, try several input values and compare the results:
+//!
+//! ```rust
+//! use poirot_eval::{overlay::Evaluation, EvaluationContext};
+//! use poirot_model::{CellValue, Workbook};
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let mut book = Workbook::new();
+//!     book.add_sheet("Inputs")?.set_formula("B1".parse()?, "A1*2")?;
+//!     let mut evaluation = Evaluation::with_workbook(&book)
+//!         .build(EvaluationContext::default())?;
+//!     let input = evaluation.target("Inputs!A1")?;
+//!     let output = evaluation.target("Inputs!B1")?;
+//!     for (input_value, expected) in [(21., 42.), (24., 48.)] {
+//!         evaluation.set_value(input, input_value)?;
+//!         assert_eq!(evaluation.cell(output)?, CellValue::Number(expected));
+//!     }
+//!     Ok(())
+//! }
+//! ```
+//!
+//! Creating an evaluation does not calculate anything. `cell` calculates one output
+//! and its dependencies; `outputs` accepts a list, and `all` calculates every occupied
+//! cell and any formula spill cells. Each input edit clears calculated results.
+//!
+//! For repeated scenarios, [`Overlay`](overlay::Overlay) tracks dependencies and keeps unaffected results
+//! between calculations. Its `evaluation` method starts a calculation with a supplied
+//! [`EvaluationContext`]. The context controls time, randomness, locale, and limits.
+//!
+//! Use the compiler, function registry, and custom-function interfaces when embedding
+//! the evaluator in your own engine. For ordinary workbook editing and file handling,
+//! start with [poirot](https://docs.rs/poirot).
 use CellError::*;
 use CellValue::{Blank, Boolean, Error, Number, Text};
 use poirot_model::{CellAddress, CellError, CellValue, MAX_COLUMNS, MAX_ROWS, Workbook};
@@ -15,7 +49,7 @@ use coordinate_hash::{CellMap, CellSet};
 pub mod materialization;
 /// Sparse input overrides and effective workbook reads.
 pub mod run_overlay;
-/// Formula cache publication policies and receipts.
+// Formula cache publication policies and receipts.
 pub use materialization::{
     CellSetterSourceBinding, FormulaCacheMaterializationIdentity,
     FormulaCacheMaterializationPolicy, FormulaCachePublicationReceipt, FormulaCacheWriteReceipt,
@@ -31,7 +65,7 @@ pub use numeric_outcome::NumericSourceBinding;
 pub use poirot_model::KnownSourceException;
 /// Execution policies and formatting identities.
 pub mod configuration;
-/// Run configuration, policy selections, and cache identity types.
+// Run configuration, policy selections, and cache identity types.
 pub use configuration::{
     ArrayResultPolicy, BuiltinSemanticsPolicy, ComputationFingerprint, ConfigurationFingerprint,
     CurrencyContext, FormattingConfiguration, RunConfiguration,
@@ -51,14 +85,14 @@ pub mod overlay;
 pub use overlay::EvaluationContext;
 /// Bounded execution sessions, read ports, and completion reports.
 pub mod run;
-/// Formula compilation, prepared programs, and registry identities.
+// Formula compilation, prepared programs, and registry identities.
 pub use compiler::{
     CompiledFormula, CompiledWorkbook, CompilerUsage, EvaluationPolicy, FormulaCompiler,
     PreparedFormula, RegistryIdentity, SourceFingerprint,
 };
-/// Text semantics and the pinned implementation identity.
+// Text semantics and the pinned implementation identity.
 pub use poirot_text::{SourceVersion as TextSourceVersion, TextSemanticsPolicy};
-/// Run entry points, observation ports, and result metadata.
+// Run entry points, observation ports, and result metadata.
 pub use run::{
     BuiltinInvocationObserver, CachedCellReader, CellCompletion, CellObserver, CellProvenance,
     ConsumedBuiltinInvocation, DependencyRead, DependencyReadSink, EvaluationProbe, EvaluationRun,
@@ -84,13 +118,13 @@ pub mod registry;
 #[cfg(test)]
 use bound::Expression as Expr;
 use registry::*;
-/// Registered builtin metadata and advertised function names.
+// Registered builtin metadata and advertised function names.
 pub use registry::{FUNCTION_DESCRIPTORS, SUPPORTED_FUNCTIONS};
 
 /// Work limits, usage counters, and operational evaluation failures.
 pub mod budget;
 mod context_dependencies;
-/// Public evaluation limits, outcomes, failures, and usage counters.
+// Public evaluation limits, outcomes, failures, and usage counters.
 pub use budget::{
     BudgetFailure, BudgetKind, CapabilityId, EvaluationBudgets, EvaluationFailure,
     EvaluationOutcome, EvaluationTarget, EvaluationUsage, WorkKind,
@@ -213,7 +247,8 @@ pub struct Localization {
     /// Ordering of numeric components in slash-date text.
     pub date_order: DateOrder,
 }
-/// Clock, seed, and localization captured for lower-level execution APIs.
+/// Clock, random seed, and locale settings for a calculation.
+///
 /// Workspace evaluation uses the complete [`EvaluationContext`] instead.
 /// RAND and RANDBETWEEN use reproducible seed-and-cell-specific streams.
 /// UTC is the default, rather than the host's local timezone.
@@ -364,7 +399,7 @@ pub fn run_plan_with_configuration(
         session.bound_at(EvaluationTarget { sheet, address }, plan)
     })
 }
-/// Read-only successful bulk results. This is not a public cache-application plan.
+/// A calculated cell value returned by bulk workbook evaluation.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CellEvaluation {
     /// Cell whose result was requested.
@@ -479,7 +514,7 @@ struct Session<'a> {
 mod criteria_adapter;
 mod functions;
 mod host;
-/// Lookup traversal axis, matching mode, and selection rules.
+// Lookup traversal axis, matching mode, and selection rules.
 pub use adapters::search::execution::{SearchAxis, SearchMode, SearchSelection};
 use adapters::statistics::execution::AggregateFunction;
 

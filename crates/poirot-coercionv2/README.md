@@ -1,12 +1,12 @@
 # poirot-coercionv2
 
-Shared rules for converting spreadsheet values into function arguments.
-Conversions account for input origin, missing arguments, parsing rules, and
-resource limits.
+Convert spreadsheet values into function arguments.
 
-Use `Input`, `CoercionV2Context`, and `coercev2_args` with typed requests such as
-`DecimalNumber` or `ExactText`. Family modules cover dates, statistics, lookups,
-criteria, and other specialized conversions.
+This crate is for function implementations. A conversion request selects the
+accepted value types and how to treat missing arguments, text, and cell references.
 
-Use this crate when implementing function adapters; ordinary workbook callers
-can use the [root library](../../README.md).
+Use `Input` to describe an argument and `coercev2_args` to convert it. Requests
+such as `DecimalNumber` and `ExactText` state what the function accepts. The caller
+supplies a `CoercionV2Context` to track conversion work and text allocation.
+
+Most workbook applications should use [poirot](https://docs.rs/poirot).

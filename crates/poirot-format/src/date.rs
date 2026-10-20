@@ -31,7 +31,7 @@ pub enum PhantomDayPolicy {
     GregorianMarch1,
 }
 /// Finite, nonnegative serials whose whole day is at most 9999-12-31.
-/// This is ROI's bounded calendar policy, not POI's unbounded validity predicate.
+/// This is Poirot's bounded calendar policy, not POI's unbounded validity predicate.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CalendarPolicy {
     /// Workbook epoch and serial-day convention.

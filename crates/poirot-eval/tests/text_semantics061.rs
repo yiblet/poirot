@@ -103,7 +103,7 @@ fn dependency_port_records_actual_text_policy_consumption() {
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_formula(target.address, formula, CellValue::Blank)
+            .set_formula(target.address, formula)
             .unwrap();
         let policy = EvaluationPolicy::default();
         let plan = FormulaCompiler::new().compile_workbook(&workbook, &policy);

@@ -155,7 +155,7 @@ fn flush_spills_shrink_blockers_snapshots_and_saved_cache_export() {
     let mut workbook = book();
     let sheet = workbook.sheet_mut(0).unwrap();
     sheet
-        .set_formula(at("G1").address, "IF(A1,{1,2;3,4},{9})", 1.0.into())
+        .set_formula_with_cached_value(at("G1").address, "IF(A1,{1,2;3,4},{9})", 1.0.into())
         .unwrap();
     sheet
         .set_spill_cached_value(

@@ -10,7 +10,7 @@ fn exported(formula: &str) -> (Vec<u8>, String) {
     book.add_sheet("Data").unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("D1".parse().unwrap(), formula, CellValue::Number(-999.))
+        .set_formula_with_cached_value("D1".parse().unwrap(), formula, CellValue::Number(-999.))
         .unwrap();
     let bytes = poirot_xls::write_xls_to_buffer(&book).unwrap();
     let mut file = cfb::CompoundFile::open(Cursor::new(bytes.clone())).unwrap();
@@ -43,7 +43,7 @@ fn exported(formula: &str) -> (Vec<u8>, String) {
         "{backend}"
     );
 
-    let imported = poirot_io::read_xls_bytes(&bytes).unwrap().workbook;
+    let imported = poirot_io::read_workbook_bytes(&bytes).unwrap();
     let cell = imported
         .sheet(0)
         .unwrap()

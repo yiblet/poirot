@@ -15,7 +15,7 @@ fn workbook() -> Workbook {
     for (at, n) in [("A1", 2.), ("A2", 3.), ("A3", 5.)] {
         s.set_value(target(at).address, n).unwrap();
     }
-    s.set_formula(target("B1").address, "SUBTOTAL(9,A1:A3)", CellValue::Blank)
+    s.set_formula(target("B1").address, "SUBTOTAL(9,A1:A3)")
         .unwrap();
     w
 }
@@ -55,8 +55,7 @@ fn visibility_flags_are_independent_and_filtered_errors_never_evaluate() {
         },
     )
     .unwrap();
-    s.set_formula(target("A3").address, "1/0", CellValue::Blank)
-        .unwrap();
+    s.set_formula(target("A3").address, "1/0").unwrap();
     assert_eq!(value(&w, "SUBTOTAL(9,A1:A3)"), CellValue::Number(5.));
     assert_eq!(value(&w, "SUBTOTAL(109,A1:A3)"), CellValue::Number(2.));
     w.sheet_mut(0)
@@ -95,19 +94,11 @@ fn nested_detection_is_syntax_based_and_exclusion_preserves_metadata_reads() {
     let mut w = workbook();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula(
-            target("A4").address,
-            "IF(TRUE,1/0,SUBTOTAL(9,A1:A3))",
-            CellValue::Blank,
-        )
+        .set_formula(target("A4").address, "IF(TRUE,1/0,SUBTOTAL(9,A1:A3))")
         .unwrap();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula(
-            target("A5").address,
-            "\"SUBTOTAL(9,A1:A3)\"",
-            CellValue::Blank,
-        )
+        .set_formula(target("A5").address, "\"SUBTOTAL(9,A1:A3)\"")
         .unwrap();
     let p = EvaluationPolicy::default();
     let mut compiler = FormulaCompiler::new();
@@ -216,7 +207,6 @@ fn reference_materialization_and_metadata_text_reads_remain_budgeted() {
         .set_formula(
             target("A4").address,
             format!("SUBTOTAL(9,A1)+{}1", " ".repeat(100)),
-            CellValue::Blank,
         )
         .unwrap();
     let budgets = EvaluationBudgets {
@@ -242,7 +232,7 @@ fn reference_materialization_and_metadata_text_reads_remain_budgeted() {
 fn shared_run_overlay_replaces_nested_formula_but_keeps_row_visibility() {
     let mut w = workbook();
     let s = w.sheet_mut(0).unwrap();
-    s.set_formula(target("A2").address, "SUBTOTAL(9,A3)", CellValue::Blank)
+    s.set_formula(target("A2").address, "SUBTOTAL(9,A3)")
         .unwrap();
     s.set_row_visibility(
         2,

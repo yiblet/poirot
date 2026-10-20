@@ -1,4 +1,7 @@
-//! Consumed-read graph. Point reverse edges and a rectangle index cover absent cells too.
+//! Track which inputs were read to produce each cached result.
+//!
+//! Missing cells and scanned ranges are dependencies too: inserting a value there
+//! must invalidate a formula that previously observed a blank or an empty range.
 use super::*;
 use crate::coordinate_hash::{CellMap, CellSet};
 use crate::{DependencyRead, ReadEvent};
@@ -29,7 +32,7 @@ pub(crate) struct Dependencies {
     pub number_locale: bool,
     /// Whether text semantics affected the result.
     pub text_policy: bool,
-    /// Legal committed ownership and extent; independent of dependency recording.
+    /// Whether the result owns a spill region or belongs to another cell's spill.
     pub spill: crate::spill_publication::SpillRole,
 }
 impl Dependencies {
@@ -75,7 +78,7 @@ impl Dependencies {
         self.cells.push((sheet, at));
     }
 }
-/// Collects dependency traces and completion markers for one evaluation batch.
+/// Reads and completed cells recorded during one calculation.
 #[derive(Default)]
 pub(crate) struct Reads {
     /// Traces suspended when execution switches to another consumer.
@@ -83,7 +86,7 @@ pub(crate) struct Reads {
     current: Option<(Key, Dependencies)>,
     /// Cells actually executed rather than restored from the persistent cache.
     pub evaluated: CellSet,
-    /// Cells eligible for publication after successful execution.
+    /// Cells whose results may be retained after successful execution.
     pub completed: CellSet,
 }
 impl Reads {

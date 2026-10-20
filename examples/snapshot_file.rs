@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Inputs")?;
     sheet.set_value("A1".parse()?, 21.)?;
-    sheet.set_formula("B1".parse()?, "A1*2", CellValue::Blank)?;
+    sheet.set_formula("B1".parse()?, "A1*2")?;
     let limits = artifact::SnapshotLimits::default();
     let context = EvaluationContext {
         as_of_time: std::time::UNIX_EPOCH,

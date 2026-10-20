@@ -18,8 +18,7 @@ fn book(formulas: &[&str]) -> Workbook {
     let mut w = Workbook::new();
     let s = w.add_sheet("S").unwrap();
     for (col, formula) in formulas.iter().enumerate() {
-        s.set_formula(target(col as u32).address, *formula, CellValue::Blank)
-            .unwrap();
+        s.set_formula(target(col as u32).address, *formula).unwrap();
     }
     w
 }

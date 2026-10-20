@@ -232,7 +232,7 @@ fn predicate_spills_preserve_both_axes_and_are_discovered_before_the_anchor() {
         let mut book = book();
         book.sheet_mut(0)
             .unwrap()
-            .set_formula(target("F5").address, formula, CellValue::Blank)
+            .set_formula(target("F5").address, formula)
             .unwrap();
         let mut overlay = Overlay::with_workbook(&book)
             .with_policy(OverlayPolicy {
@@ -271,7 +271,6 @@ fn reference_edits_and_builtin_policy_changes_invalidate_retained_predicate_resu
         .set_formula(
             target("F5").address,
             "SUMPRODUCT(--ISNUMBER(A1:D2),{1,2,4,8;16,32,64,128})",
-            CellValue::Blank,
         )
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
@@ -337,11 +336,7 @@ fn spreadsheet_errors_are_data_but_operational_failures_and_limits_escape_iferro
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(
-            target("D1").address,
-            "COUNTIF(A1:A2,B1:B2)",
-            CellValue::Blank,
-        )
+        .set_formula(target("D1").address, "COUNTIF(A1:A2,B1:B2)")
         .unwrap();
     for arrays in [
         ArrayResultPolicy::ScalarIntersection,
@@ -390,14 +385,10 @@ fn singleton_predicate_arrays_publish_a_boolean_cell_without_becoming_references
     let mut book = book();
     let sheet = book.sheet_mut(0).unwrap();
     sheet
-        .set_formula(target("F5").address, "ISLOGICAL({TRUE})", CellValue::Blank)
+        .set_formula(target("F5").address, "ISLOGICAL({TRUE})")
         .unwrap();
     sheet
-        .set_formula(
-            target("H5").address,
-            "ISREF(ISLOGICAL({TRUE}))",
-            CellValue::Blank,
-        )
+        .set_formula(target("H5").address, "ISREF(ISLOGICAL({TRUE}))")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(OverlayPolicy {
@@ -431,7 +422,7 @@ fn named_array_footprints_remain_unsupported_at_publication_and_child_discovery(
     book.define_name("Inputs", "A1:D2", None).unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(target("F5").address, "ISNUMBER(Inputs)", CellValue::Blank)
+        .set_formula(target("F5").address, "ISNUMBER(Inputs)")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(OverlayPolicy {

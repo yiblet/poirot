@@ -167,7 +167,7 @@ fn mixed_cross_sheet_results_publish_only_as_a_complete_explicit_batch() {
         .model_mut()
         .sheet_mut(1)
         .unwrap()
-        .set_formula(at(0, 0), "S!A1", CellValue::Blank)
+        .set_formula(at(0, 0), "S!A1")
         .unwrap();
     let mut overlay = Overlay::with_workbook(source.model())
         .with_policy(policy(M::PinnedPoiCellSetter))
