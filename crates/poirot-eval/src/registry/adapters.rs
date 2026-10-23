@@ -52,7 +52,7 @@ helper_map! {
         Ppmt, Rate, Npv, Irr, Mirr,
         Dollar, DollarDe, DollarFr, Fixed,
     ];
-    local: [Euroconvert];
+    local: [Euroconvert, Cumipmt, Cumprinc, Db, Ddb, Effect, Fvschedule, Ispmt, Nominal, Pduration, Rri, Sln, Syd, Vdb, Xirr, Xnpv, Accrint, Accrintm, Coupdaybs, Coupdays, Coupdaysnc, Coupncd, Coupnum, Couppcd, Disc, Duration, Intrate, Mduration, Price, Pricedisc, Pricemat, Received, Tbilleq, Tbillprice, Tbillyield, Yield, Yielddisc, Yieldmat, Amordegrc, Amorlinc, Oddfprice, Oddfyield, Oddlprice, Oddlyield];
 }
 
 helper_map! {

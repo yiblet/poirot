@@ -26,6 +26,10 @@ pub enum ResultRule {
     ElementwiseNumber,
     /// Lift business-day endpoints/weekend options while reducing the holiday set.
     BusinessDays,
+    /// Lift the first numeric parameter while consuming later collection operands.
+    FirstNumericArgument,
+    /// Lift an optional third numeric parameter while consuming earlier collections.
+    ThirdNumericArgument,
     /// Produce a square numeric identity matrix from one dimension.
     UnitMatrix,
     /// Return text with lifting driven by the input arguments.
@@ -72,6 +76,12 @@ impl ResultRule {
         };
         match self {
             Self::BusinessDays => Self::ElementwiseNumber.apply(args.get(..3).unwrap_or(args)),
+            Self::FirstNumericArgument => {
+                Self::ElementwiseNumber.apply(args.get(..1).unwrap_or(args))
+            }
+            Self::ThirdNumericArgument => {
+                Self::ElementwiseNumber.apply(args.get(2..3).unwrap_or(&[]))
+            }
             Self::Scalar => T::scalar(K::ANY),
             Self::Number => T::scalar(K::NUMBER.join(K::ERROR)),
             Self::Text => T::scalar(K::TEXT.join(K::ERROR)),
@@ -154,6 +164,8 @@ impl ResultRule {
         use poirot_model::ShapeBounds as S;
         match self {
             Self::BusinessDays => args.iter().take(3).copied().fold(S::SCALAR, S::join),
+            Self::FirstNumericArgument => args.first().copied().unwrap_or(S::SCALAR),
+            Self::ThirdNumericArgument => args.get(2).copied().unwrap_or(S::SCALAR),
             Self::Scalar | Self::Number | Self::Text => S::SCALAR,
             Self::Transpose => args.first().copied().unwrap_or(S::UNKNOWN).transpose(),
             Self::Sequence | Self::RandomArray => {

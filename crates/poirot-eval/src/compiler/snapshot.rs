@@ -7,7 +7,7 @@ use std::borrow::Cow;
 /// Snapshot validation result carrying a diagnostic for unsupported or inconsistent compiled data.
 type Result<T> = std::result::Result<T, String>;
 const MAX: usize = 1_000_000;
-const VERSION: u32 = 10;
+const VERSION: u32 = 13;
 /// Serde view preserving source-to-program sharing for a trusted compiled workbook plan.
 #[derive(Serialize, Deserialize)]
 pub struct Plan<'a> {
@@ -587,6 +587,28 @@ mod tests {
             .unwrap()
             .set_formula("AD1".parse().unwrap(), "ERFC.PRECISE({0;1})")
             .unwrap();
+        book.sheet_mut(0)
+            .unwrap()
+            .set_formula(
+                "AG1".parse().unwrap(),
+                "XIRR({-100;110},{1000;1365},{0.05;0.2})",
+            )
+            .unwrap();
+        book.sheet_mut(0)
+            .unwrap()
+            .set_formula("AJ1".parse().unwrap(), "FVSCHEDULE(100,{0.1;0.2})")
+            .unwrap();
+        book.sheet_mut(0)
+            .unwrap()
+            .set_formula("AM1".parse().unwrap(), "COUPDAYS({45000;45001},46000,2,1)")
+            .unwrap();
+        book.sheet_mut(0)
+            .unwrap()
+            .set_formula(
+                "AN1".parse().unwrap(),
+                "AMORLINC({1000;2000},45000,45090,100,0,0.2)",
+            )
+            .unwrap();
         let plan = FormulaCompiler::new().compile_workbook(&book, &EvaluationPolicy::default());
         let dto = Plan::capture(&plan).unwrap().into_owned();
         let restored = dto.restore().unwrap();
@@ -617,6 +639,17 @@ mod tests {
                 "A1".parse().unwrap(),
                 "GROUPBY({1;1},{2;8},HSTACK(SUM,AVERAGE),0,0)",
             )
+            .unwrap();
+        book.sheet_mut(0)
+            .unwrap()
+            .set_formula(
+                "AG1".parse().unwrap(),
+                "XIRR({-100;110},{1000;1365},{0.05;0.2})",
+            )
+            .unwrap();
+        book.sheet_mut(0)
+            .unwrap()
+            .set_formula("AJ1".parse().unwrap(), "FVSCHEDULE(100,{0.1;0.2})")
             .unwrap();
         let plan = FormulaCompiler::new().compile_workbook(&book, &EvaluationPolicy::default());
         let dto = Plan::capture(&plan).unwrap().into_owned();

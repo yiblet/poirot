@@ -146,6 +146,9 @@ mod tests {
 pub mod policy;
 
 mod euro;
+mod modern;
+mod odd;
+mod securities;
 /// Dispatch documented euro conversion separately from unchanged pinned helpers.
 pub(crate) fn execute_function(
     session: &mut Session<'_>,
@@ -157,11 +160,15 @@ pub(crate) fn execute_function(
     if function == FinancialFunction::Euroconvert {
         return euro::execute(session, sheet, address, args);
     }
-    execute(
-        session,
-        sheet,
-        address,
-        function.helper().ok_or(EvaluationFailure::StalePlan)?,
-        args,
-    )
+    if odd::handles(function) {
+        return odd::execute(session, sheet, address, function, args);
+    }
+    if securities::handles(function) {
+        return securities::execute(session, sheet, address, function, args);
+    }
+    if let Some(helper) = function.helper() {
+        execute(session, sheet, address, helper, args)
+    } else {
+        modern::execute(session, sheet, address, function, args)
+    }
 }

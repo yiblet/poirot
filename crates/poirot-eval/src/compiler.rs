@@ -26,7 +26,7 @@ pub struct RegistryIdentity {
 impl Default for RegistryIdentity {
     fn default() -> Self {
         Self {
-            builtin_contract_version: 10,
+            builtin_contract_version: 13,
             extensions: None,
         }
     }

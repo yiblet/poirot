@@ -386,6 +386,52 @@ common_functions! {
     Erfc = 350 => "ERFC";
     ErfcPrecise = 351 => "ERFC.PRECISE";
     Gestep = 352 => "GESTEP";
+    Cumipmt = 353 => "CUMIPMT";
+    Cumprinc = 354 => "CUMPRINC";
+    Db = 355 => "DB";
+    Ddb = 356 => "DDB";
+    Effect = 357 => "EFFECT";
+    Fvschedule = 358 => "FVSCHEDULE";
+    Ispmt = 359 => "ISPMT";
+    Nominal = 360 => "NOMINAL";
+    Pduration = 361 => "PDURATION";
+    Rri = 362 => "RRI";
+    Sln = 363 => "SLN";
+    Syd = 364 => "SYD";
+    Vdb = 365 => "VDB";
+    Xirr = 366 => "XIRR";
+    Xnpv = 367 => "XNPV";
+    Accrint = 368 => "ACCRINT";
+    Accrintm = 369 => "ACCRINTM";
+    Coupdaybs = 370 => "COUPDAYBS";
+    Coupdays = 371 => "COUPDAYS";
+    Coupdaysnc = 372 => "COUPDAYSNC";
+    Coupncd = 373 => "COUPNCD";
+    Coupnum = 374 => "COUPNUM";
+    Couppcd = 375 => "COUPPCD";
+    Disc = 376 => "DISC";
+    Duration = 377 => "DURATION";
+    Intrate = 378 => "INTRATE";
+    Mduration = 379 => "MDURATION";
+    Price = 380 => "PRICE";
+    Pricedisc = 381 => "PRICEDISC";
+    Pricemat = 382 => "PRICEMAT";
+    Received = 383 => "RECEIVED";
+    Tbilleq = 384 => "TBILLEQ";
+    Tbillprice = 385 => "TBILLPRICE";
+    Tbillyield = 386 => "TBILLYIELD";
+    Yield = 387 => "YIELD";
+    Yielddisc = 388 => "YIELDDISC";
+    Yieldmat = 389 => "YIELDMAT";
+    Amordegrc = 390 => "AMORDEGRC";
+    Amorlinc = 391 => "AMORLINC";
+    Oddfprice = 392 => "ODDFPRICE";
+    Oddfyield = 393 => "ODDFYIELD";
+    Oddlprice = 394 => "ODDLPRICE";
+    Oddlyield = 395 => "ODDLYIELD";
+
+
+
 
 
 

@@ -15,6 +15,18 @@
 
 /// Fixed-rate historical euro currency conversion.
 pub mod euro;
+/// Modern cash-flow and depreciation calculations.
+pub mod modern;
+#[cfg(test)]
+mod modern_tests;
+/// Irregular coupon and French depreciation calculations.
+pub mod odd;
+#[cfg(test)]
+mod odd_tests;
+/// Coupon calendars and security pricing equations.
+pub mod securities;
+#[cfg(test)]
+mod security_tests;
 
 // Rust adaptations of Apache POI (Apache-2.0); class bindings are described below.
 // <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/formula/functions>

@@ -5,12 +5,23 @@ use crate::*;
 /// Admitted argument geometry and its broadcast output rectangle.
 pub(super) struct Lift {
     shapes: poirot_functions_core::ParamVec<OperandDescription>,
+    start: usize,
     rows: usize,
     columns: usize,
 }
 impl Lift {
     /// Describe a bounded prefix of scalar arguments before reading its members.
     pub(super) fn new(host: &mut CallHost<'_, '_>, count: usize) -> FunctionResult<Self> {
+        Self::new_at(host, 0, count)
+    }
+    /// Describe a selected contiguous group, excluding collection operands.
+    /// Member indices are relative to `start`; zero count admits a scalar default.
+    /// Every host access checks the original `start + index` argument position.
+    pub(super) fn new_at(
+        host: &mut CallHost<'_, '_>,
+        start: usize,
+        count: usize,
+    ) -> FunctionResult<Self> {
         host.check_values(count)?;
         let mut shapes = poirot_functions_core::ParamVec::new();
         shapes
@@ -18,7 +29,7 @@ impl Lift {
             .map_err(|_| host.budget_exceeded())?;
         let (mut rows, mut columns) = (1, 1);
         for index in 0..count {
-            let shape = host.describe(index)?;
+            let shape = host.describe(start.checked_add(index).ok_or(VALUE_ERROR)?)?;
             if shape.sheets != 1 || shape.rows == 0 || shape.columns == 0 {
                 return Err(VALUE_ERROR.into());
             }
@@ -37,6 +48,7 @@ impl Lift {
         host.check_values(rows)?;
         Ok(Self {
             shapes,
+            start,
             rows,
             columns,
         })
@@ -58,7 +70,7 @@ impl Lift {
             return Err(NA.into());
         }
         host.read_cell(
-            index,
+            self.start.checked_add(index).ok_or(VALUE_ERROR)?,
             if shape.rows == 1 { 0 } else { row },
             if shape.columns == 1 { 0 } else { column },
         )

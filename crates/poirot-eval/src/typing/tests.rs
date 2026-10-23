@@ -278,3 +278,29 @@ fn documented_special_functions_have_numeric_broadcast_shape() {
         );
     }
 }
+
+#[test]
+fn financial_collections_do_not_expand_numeric_parameter_results() {
+    for (formula, rows, columns) in [
+        ("FVSCHEDULE(100,{0.1;0.2})", 1, 1),
+        ("FVSCHEDULE({100,200},{0.1;0.2})", 1, 2),
+        ("XNPV({0;0.1},{-100;110},{1000;1365})", 2, 1),
+        ("XIRR({-100;110},{1000;1365})", 1, 1),
+        ("XIRR({-100;110},{1000;1365},{0.05,0.2})", 1, 2),
+    ] {
+        let syntax = poirot_parsing::formula::parse_formula(formula).unwrap();
+        let compiled = crate::bytecode::compile(&syntax).unwrap();
+        let properties = compiled.typing.root().unwrap();
+        assert_eq!(
+            properties.shape.rows.map(std::num::NonZeroU32::get),
+            Some(rows),
+            "{formula}"
+        );
+        assert_eq!(
+            properties.shape.columns.map(std::num::NonZeroU32::get),
+            Some(columns),
+            "{formula}"
+        );
+        assert_eq!(properties.result.elements(), K::NUMBER.join(K::ERROR));
+    }
+}
