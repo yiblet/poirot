@@ -258,13 +258,21 @@ family_adapter!(
     function,
     context,
     parameters,
-    matrix::execute(
-        context.session,
-        context.target.sheet,
-        context.target.address,
-        function.helper(),
-        parameters.0
-    )
+    match function.helper() {
+        Some(helper) => matrix::execute(
+            context.session,
+            context.target.sheet,
+            context.target.address,
+            helper,
+            parameters.0
+        ),
+        None => matrix::sequence(
+            context.session,
+            context.target.sheet,
+            context.target.address,
+            parameters.0
+        ),
+    }
 );
 family_adapter!(
     CriteriaAdapter,

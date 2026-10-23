@@ -65,6 +65,7 @@ pub(super) fn serialize_xlsx(
                 .as_ref()
                 .map_or_else(Format::new, |f| Format::new().set_num_format(f));
             if let Some(formula) = &cell.formula {
+                let formula = crate::ooxml::formula::stored_formula(formula)?;
                 if let Some(last) = spills.get(address) {
                     out.write_dynamic_array_formula_with_format(
                         address.row,

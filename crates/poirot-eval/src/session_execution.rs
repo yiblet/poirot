@@ -4,24 +4,38 @@ use super::*;
 impl<'a> Session<'a> {
     /// Compile a reached source using the overlay's shared compiler when available.
     pub(super) fn prepare_source(&self, source: &str) -> std::sync::Arc<PreparedFormula> {
-        let default = self
-            .extensions
-            .map_or_else(EvaluationPolicy::default, |registry| {
-                EvaluationPolicy::with_extensions(
-                    poirot_parsing::formula::FormulaParsePolicy::default(),
-                    registry,
-                )
-            });
-        let policy = self.preparation_policy.unwrap_or(&default);
-        let mut local = FormulaCompiler::new();
-        let mut shared = self
-            .lazy_compiler
-            .and_then(|compiler| compiler.try_borrow_mut().ok());
-        let compiler = shared.as_deref_mut().unwrap_or(&mut local);
-        match self.extensions {
+        self.with_source_compiler(|compiler, policy| match self.extensions {
             Some(registry) => compiler.compile_formula_with_extensions(source, policy, registry),
             None => compiler.compile_formula(source, policy),
+        })
+    }
+    /// Borrow the shared source compiler and preparation policy, falling back locally.
+    pub(super) fn with_source_compiler<R>(
+        &self,
+        prepare: impl FnOnce(&mut FormulaCompiler, &EvaluationPolicy) -> R,
+    ) -> R {
+        let default;
+        let policy = match self.preparation_policy {
+            Some(policy) => policy,
+            None => {
+                default = self
+                    .extensions
+                    .map_or_else(EvaluationPolicy::default, |registry| {
+                        EvaluationPolicy::with_extensions(
+                            poirot_parsing::formula::FormulaParsePolicy::default(),
+                            registry,
+                        )
+                    });
+                &default
+            }
+        };
+        if let Some(mut compiler) = self
+            .lazy_compiler
+            .and_then(|compiler| compiler.try_borrow_mut().ok())
+        {
+            return prepare(&mut compiler, policy);
         }
+        prepare(&mut FormulaCompiler::new(), policy)
     }
 
     #[cfg(test)]
@@ -39,9 +53,20 @@ impl<'a> Session<'a> {
         context: EvaluationInputs,
         budget: BudgetMeter,
     ) -> Self {
+        Self::with_runtime(
+            workbook,
+            context,
+            runtime::Storage::Owned(Box::new(runtime::Runtime::new(budget))),
+        )
+    }
+    /// Attach workbook ports to owned or persistently borrowed execution storage.
+    pub(super) fn with_runtime(
+        workbook: &'a Workbook,
+        context: EvaluationInputs,
+        runtime: runtime::Storage<'a>,
+    ) -> Self {
         Self {
-            bytecode_stacks: Vec::new(),
-            lookup_prefixes: Default::default(),
+            runtime,
             workbook,
             inputs: None,
             context,
@@ -50,24 +75,12 @@ impl<'a> Session<'a> {
 
             builtin_policy: BuiltinSemanticsPolicy::default(),
             array_result_policy: ArrayResultPolicy::default(),
+            producer_policy: ProducerPolicy::default(),
             expression_demand: Default::default(),
-            spill_discovery: Default::default(),
-            spill_owners: Default::default(),
-            pending_spills: Default::default(),
-            blank_reads: Default::default(),
-            spill_read_ranges: Default::default(),
+            spill_candidates: None,
             text_policy: poirot_text::TextSemanticsPolicy::default(),
-            cache: Default::default(),
-            admitted: None,
             memo_limits: None,
-            memo_usage: run::MemoRetentionUsage::default(),
-            visiting: Default::default(),
-            names: HashSet::new(),
-            numeric_date_effects: Default::default(),
             extensions: None,
-            extension_trace: extensions::ExtensionTrace::default(),
-            random_streams: Default::default(),
-            budget,
             plan: None,
             lazy_compiler: None,
             preparation_policy: None,
@@ -78,24 +91,23 @@ impl<'a> Session<'a> {
             cell_observer: None,
             builtin_invocation_observer: None,
             execution_observer: None,
-            observation_state: execution_observation::ObservationState::default(),
-            consumer: None,
-            run_usage: RunUsage::default(),
         }
     }
     /// Construct dependency-only payloads only when a tracker or external sink needs them.
     pub(super) fn read_lazy(&mut self, read: impl FnOnce() -> DependencyRead) {
-        if self.overlay_reads.is_some() || self.dependency_sink.is_some() {
+        if self.overlay_reads.is_some() || self.dependency_sink.is_some() || self.settling_spills()
+        {
             self.read(read());
         }
     }
     /// Attribute a consumed read to the active cell and forward it to installed sinks.
     pub(super) fn read(&mut self, read: DependencyRead) {
+        self.record_spill_effect(&read);
         record_read(
             &mut self.overlay_reads,
             &mut self.dependency_sink,
             ReadEvent {
-                consumer: self.consumer,
+                consumer: self.runtime.consumer,
                 read,
             },
         );
@@ -114,7 +126,8 @@ impl<'a> Session<'a> {
         {
             return Err(EvaluationFailure::StalePlan);
         }
-        self.run_usage.compiled_lookups = self.run_usage.compiled_lookups.saturating_add(1);
+        self.runtime.run_usage.compiled_lookups =
+            self.runtime.run_usage.compiled_lookups.saturating_add(1);
         match prepared {
             PreparedFormula::Ready(formula) => self.bytecode_expr(sheet, at, formula.bytecode()),
             PreparedFormula::CompilationFailure { error, .. } => {
@@ -173,17 +186,18 @@ impl<'a> Session<'a> {
         }
         let demand = self.root_demand();
         let previous_demand = std::mem::replace(&mut self.expression_demand, demand);
-        let previous = self.consumer.replace(target);
-        self.budget.push_cell(target);
-        self.run_usage.formula_executions = self.run_usage.formula_executions.saturating_add(1);
+        let previous = self.runtime.consumer.replace(target);
+        self.runtime.budget.push_cell(target);
+        self.runtime.run_usage.formula_executions =
+            self.runtime.run_usage.formula_executions.saturating_add(1);
         let result = (|| {
-            self.budget.text(prepared.source().len())?;
+            self.runtime.budget.text(prepared.source().len())?;
             let value = self.prepared_expression(target.sheet, target.address, prepared)?;
             let value = self.result_scalar(target.sheet, target.address, value)?;
             Ok(value)
         })();
-        self.budget.pop_cell();
-        self.consumer = previous;
+        self.runtime.budget.pop_cell();
+        self.runtime.consumer = previous;
         self.expression_demand = previous_demand;
         result
     }
@@ -204,20 +218,21 @@ impl<'a> Session<'a> {
         }
         let demand = self.root_demand();
         let previous_demand = std::mem::replace(&mut self.expression_demand, demand);
-        let previous = self.consumer.replace(target);
-        self.budget.push_cell(target);
-        self.run_usage.formula_executions = self.run_usage.formula_executions.saturating_add(1);
+        let previous = self.runtime.consumer.replace(target);
+        self.runtime.budget.push_cell(target);
+        self.runtime.run_usage.formula_executions =
+            self.runtime.run_usage.formula_executions.saturating_add(1);
         let result = self
             .bytecode_expr(target.sheet, target.address, formula.bytecode())
             .and_then(|v| self.result_scalar(target.sheet, target.address, v));
-        self.budget.pop_cell();
-        self.consumer = previous;
+        self.runtime.budget.pop_cell();
+        self.runtime.consumer = previous;
         self.expression_demand = previous_demand;
         result
     }
     /// Read or evaluate a cell, recording dependencies, spill effects, and completion provenance.
     pub(super) fn cell(&mut self, sheet: usize, address: CellAddress) -> EvalResult<CellValue> {
-        let consumer = self.consumer;
+        let consumer = self.runtime.consumer;
         let mut provenance = CellProvenance::Evaluated;
         let mut completion_candidate = false;
         // A dependency formula has its own worksheet consumer. Its caller's collection
@@ -231,21 +246,33 @@ impl<'a> Session<'a> {
             && matches!(result, Ok(Blank))
             && let Some(consumer) = consumer
         {
+            // Every consumer observes absence, including consumers of a memoized
+            // blank. A dirty earlier producer can later grow into this coordinate.
+            self.read_lazy(|| DependencyRead::SparseMembership {
+                sheet,
+                first: CellAddress { row: 0, col: 0 },
+                last: address,
+            });
             let tracked = (|| {
+                if !self.settling_spills() {
+                    return Ok(());
+                }
                 // A dependency's blank can participate in an ancestor's future
                 // footprint as well as its immediate caller's footprint.
-                for owner in self
+                let runtime = &mut *self.runtime;
+                for owner in runtime
                     .visiting
                     .iter()
                     .copied()
                     .filter(|owner| *owner != (consumer.sheet, consumer.address))
                     .chain(std::iter::once((consumer.sheet, consumer.address)))
                 {
-                    let reads = self.blank_reads.entry(owner).or_default();
+                    let reads = runtime.blank_reads.entry(owner).or_default();
                     if !reads.contains(&(sheet, address)) {
-                        self.budget
+                        runtime
+                            .budget
                             .check_allocation(reads.len().saturating_add(1))?;
-                        self.budget.charge(WorkKind::Materialization, 1)?;
+                        runtime.budget.charge(WorkKind::Materialization, 1)?;
                         reads.insert((sheet, address));
                     }
                 }
@@ -260,16 +287,20 @@ impl<'a> Session<'a> {
             && (provenance == CellProvenance::ExternalCache
                 || completion_candidate
                 || (self.array_result_policy == ArrayResultPolicy::DynamicSpill
-                    && self.spill_owners.contains_key(&(sheet, address))))
+                    && self
+                        .runtime
+                        .preparation
+                        .roles
+                        .contains_key(&(sheet, address))))
             && let Some(reads) = &mut self.overlay_reads
         {
             reads.completed.insert((sheet, address));
             if provenance == CellProvenance::Evaluated {
-                reads.evaluated.insert((sheet, address));
+                reads.fresh_results.insert((sheet, address));
             }
         }
-        if let Some(observer) = &mut self.cell_observer {
-            let notification = observer.completed(CellCompletion {
+        {
+            let notification = self.complete_cell(CellCompletion {
                 consumer,
                 target: EvaluationTarget { sheet, address },
                 provenance,
@@ -292,52 +323,36 @@ impl<'a> Session<'a> {
         if address.validate().is_err() || self.workbook.sheet(sheet).is_none() {
             return Ok(Error(Ref));
         }
-        if self.array_result_policy == ArrayResultPolicy::DynamicSpill
-            && self.cell_reader.is_some()
-            && self.source_can_spill(sheet, address)
-        {
-            return Err(self.spill_unsupported(
-                sheet,
-                address,
-                "dynamic spill ownership is incompatible with an external scalar cell cache",
-            ));
-        }
-        self.budget
+        self.runtime
+            .budget
             .charge(WorkKind::CellRead, 1)
             .map_err(|mut failure| {
                 failure.set_target(EvaluationTarget { sheet, address });
                 failure
             })?;
         self.read_lazy(|| DependencyRead::Cell(EvaluationTarget { sheet, address }));
-        // Retain a local hit while cold discovery runs only on the disjoint miss path.
-        let cached = if let Some(value) = self.cache.get(&(sheet, address)) {
-            Some(value)
-        } else if self.array_result_policy == ArrayResultPolicy::DynamicSpill {
-            self.restore_cached_spill(sheet, address)?;
-            if !self.cache.contains_key(&(sheet, address)) {
-                let source = run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs)
-                    .cell(sheet, address);
-                if source.is_some_and(|cell| cell.formula.is_some()) {
-                    let previous = self.consumer.replace(EvaluationTarget { sheet, address });
-                    let arbitration = self.arbitrate_spill(sheet, address);
-                    self.consumer = previous;
-                    arbitration?;
-                } else if source.is_none_or(|cell| cell.value == Blank) {
-                    self.discover_spill(sheet, address)?;
-                }
-            }
-            self.cache.get(&(sheet, address))
-        } else {
-            None
-        };
+        self.resolve_spills_in(Area {
+            kind: AreaKind::Cell,
+            sheet,
+            r0: address.row,
+            r1: address.row,
+            c0: address.col,
+            c1: address.col,
+        })?;
+
         if (self.overlay_reads.is_some() || self.dependency_sink.is_some())
-            && let Some(owner) = self.spill_owners.get(&(sheet, address)).copied()
+            && let Some(owner) = self
+                .runtime
+                .preparation
+                .roles
+                .get(&(sheet, address))
+                .and_then(|role| role.owner(address))
         {
             record_read(
                 &mut self.overlay_reads,
                 &mut self.dependency_sink,
                 ReadEvent {
-                    consumer: self.consumer,
+                    consumer: self.runtime.consumer,
                     read: DependencyRead::Cell(EvaluationTarget {
                         sheet,
                         address: owner,
@@ -345,11 +360,17 @@ impl<'a> Session<'a> {
                 },
             );
         }
-        if let Some(value) = cached {
+        let runtime = &mut *self.runtime;
+        if let Some(value) = runtime.cache.get(&(sheet, address)) {
             *provenance = CellProvenance::SessionMemo;
-            self.run_usage.session_memo_hits = self.run_usage.session_memo_hits.saturating_add(1);
-            self.budget.usage.cache_hits = self.budget.usage.cache_hits.saturating_add(1);
-            return copy_cached_value(&mut self.budget, EvaluationTarget { sheet, address }, value);
+            runtime.run_usage.session_memo_hits =
+                runtime.run_usage.session_memo_hits.saturating_add(1);
+            runtime.budget.usage.cache_hits = runtime.budget.usage.cache_hits.saturating_add(1);
+            return copy_cached_value(
+                &mut runtime.budget,
+                EvaluationTarget { sheet, address },
+                value,
+            );
         }
         if self.inputs.is_none()
             && let Some(reader) = &mut self.cell_reader
@@ -358,11 +379,11 @@ impl<'a> Session<'a> {
                 .inspect_err(|_| *provenance = CellProvenance::ExternalCache)?
         {
             *provenance = CellProvenance::ExternalCache;
-            self.run_usage.external_cache_hits =
-                self.run_usage.external_cache_hits.saturating_add(1);
-            self.budget.usage.cache_hits += 1;
+            self.runtime.run_usage.external_cache_hits =
+                self.runtime.run_usage.external_cache_hits.saturating_add(1);
+            self.runtime.budget.usage.cache_hits += 1;
             return copy_cached_value(
-                &mut self.budget,
+                &mut self.runtime.budget,
                 EvaluationTarget { sheet, address },
                 value.as_ref(),
             );
@@ -376,11 +397,11 @@ impl<'a> Session<'a> {
         });
         if let Some(value) = cached {
             *provenance = CellProvenance::ExternalCache;
-            self.run_usage.external_cache_hits =
-                self.run_usage.external_cache_hits.saturating_add(1);
-            self.budget.usage.cache_hits += 1;
+            self.runtime.run_usage.external_cache_hits =
+                self.runtime.run_usage.external_cache_hits.saturating_add(1);
+            self.runtime.budget.usage.cache_hits += 1;
             return copy_cached_value(
-                &mut self.budget,
+                &mut self.runtime.budget,
                 EvaluationTarget { sheet, address },
                 value.as_ref(),
             );
@@ -392,11 +413,9 @@ impl<'a> Session<'a> {
         // also uses visiting for ownership and footprint tracking, so retain its path.
         let track_visiting = self.array_result_policy == ArrayResultPolicy::DynamicSpill
             || cell.is_some_and(|cell| cell.formula.is_some());
-        if track_visiting && !self.visiting.insert((sheet, address)) {
+        if track_visiting && !self.runtime.visiting.insert((sheet, address)) {
             if self.array_result_policy == ArrayResultPolicy::DynamicSpill
-                && self
-                    .source_spill_shape(sheet, address)
-                    .is_some_and(|(rows, columns)| rows > 1 || columns > 1)
+                && self.spill_candidate(sheet, address)
             {
                 return Err(self.spill_unsupported(
                     sheet,
@@ -406,22 +425,27 @@ impl<'a> Session<'a> {
             }
             return Ok(Error(Ref));
         }
-        if let Err(mut failure) = self.budget.enter_depth() {
+        if let Err(mut failure) = self.runtime.budget.enter_depth() {
             if track_visiting {
-                self.visiting.remove(&(sheet, address));
+                self.runtime.visiting.remove(&(sheet, address));
             }
             failure.set_target(EvaluationTarget { sheet, address });
             return Err(failure);
         }
-        self.budget.push_cell(EvaluationTarget { sheet, address });
-        let previous = self.consumer.replace(EvaluationTarget { sheet, address });
+        self.runtime
+            .budget
+            .push_cell(EvaluationTarget { sheet, address });
+        let previous = self
+            .runtime
+            .consumer
+            .replace(EvaluationTarget { sheet, address });
         let result = (|| {
             let value = match cell {
                 None => Ok(Blank),
                 Some(cell) => match &cell.formula {
                     None => {
                         if let Some(text) = cell.value.text_ref() {
-                            self.budget.text(text.storage_bytes())?;
+                            self.runtime.budget.text(text.storage_bytes())?;
                         }
                         Ok(match &cell.value {
                             // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
@@ -430,9 +454,9 @@ impl<'a> Session<'a> {
                         })
                     }
                     Some(formula) => {
-                        self.budget.text(formula.len())?;
-                        self.run_usage.formula_executions =
-                            self.run_usage.formula_executions.saturating_add(1);
+                        self.runtime.budget.text(formula.len())?;
+                        self.runtime.run_usage.formula_executions =
+                            self.runtime.run_usage.formula_executions.saturating_add(1);
                         let compiled;
                         let prepared = match self
                             .plan
@@ -452,14 +476,14 @@ impl<'a> Session<'a> {
             self.admit_cell(sheet, address, &value)?;
             Ok(value)
         })();
-        self.budget.pop_cell();
-        self.consumer = previous;
-        self.budget.leave_depth();
+        self.runtime.budget.pop_cell();
+        self.runtime.consumer = previous;
+        self.runtime.budget.leave_depth();
         if track_visiting {
-            self.visiting.remove(&(sheet, address));
+            self.runtime.visiting.remove(&(sheet, address));
         }
-        self.blank_reads.remove(&(sheet, address));
-        self.spill_read_ranges.remove(&(sheet, address));
+        self.runtime.blank_reads.remove(&(sheet, address));
+        self.runtime.spill_read_ranges.remove(&(sheet, address));
         result
     }
 }
@@ -512,7 +536,7 @@ mod literal_cycle_tests {
         sheet.set_formula(b, "A1").unwrap();
         let mut session = Session::with_context(&workbook, EvaluationInputs::default());
         assert_eq!(session.cell(0, a).unwrap(), Error(Ref));
-        assert!(session.visiting.is_empty());
+        assert!(session.runtime.visiting.is_empty());
         let inputs = run_overlay::RunInputs::new(
             &workbook,
             [(0, b, Number(7.))],
@@ -523,9 +547,9 @@ mod literal_cycle_tests {
         let mut session = Session::with_context(&workbook, EvaluationInputs::default());
         session.inputs = Some(&inputs);
         assert_eq!(session.cell(0, a).unwrap(), Number(7.));
-        assert_eq!(session.run_usage.formula_executions, 1);
-        assert_eq!(session.cache.get(&(0, b)), Some(&Number(7.)));
-        assert!(session.visiting.is_empty());
+        assert_eq!(session.runtime.run_usage.formula_executions, 1);
+        assert_eq!(session.runtime.cache.get(&(0, b)), Some(&Number(7.)));
+        assert!(session.runtime.visiting.is_empty());
     }
 
     #[test]
@@ -540,8 +564,8 @@ mod literal_cycle_tests {
         assert!(
             matches!(session.cell(0, a), Err(EvaluationFailure::UnsupportedCapability { detail, .. }) if detail == "array result reads its own unpublished footprint")
         );
-        assert!(!session.cache.contains_key(&(0, a)));
-        assert!(session.visiting.is_empty());
+        assert!(!session.runtime.cache.contains_key(&(0, a)));
+        assert!(session.runtime.visiting.is_empty());
 
         workbook
             .sheet_mut(0)
@@ -551,8 +575,16 @@ mod literal_cycle_tests {
         let mut session = Session::with_context(&workbook, EvaluationInputs::default());
         session.array_result_policy = ArrayResultPolicy::DynamicSpill;
         assert_eq!(session.cell(0, b).unwrap(), Number(2.));
-        assert_eq!(session.cache.get(&(0, a)), Some(&Number(1.)));
-        assert_eq!(session.spill_owners.get(&(0, b)), Some(&a));
-        assert!(session.visiting.is_empty());
+        assert_eq!(session.runtime.cache.get(&(0, a)), Some(&Number(1.)));
+        assert_eq!(
+            session
+                .runtime
+                .preparation
+                .roles
+                .get(&(0, b))
+                .and_then(|role| role.owner(b)),
+            Some(a)
+        );
+        assert!(session.runtime.visiting.is_empty());
     }
 }

@@ -104,23 +104,14 @@ impl Session<'_> {
         })
     }
 
+    /// Materialize an array operation while preserving singleton array identity.
     pub(super) fn rectangular_values(
         &mut self,
         at: CellAddress,
         shape: Shape,
         element: impl FnMut(&mut Self, usize, usize) -> EvalResult<CellValue>,
     ) -> EvalResult<Value> {
-        let mut rows = self.rectangular_array(at, shape, element)?;
-        if shape.rows == 1 && shape.columns == 1 {
-            Ok(Value::Scalar(
-                rows.values
-                    .pop()
-                    .and_then(|mut row| row.pop())
-                    .ok_or(EvaluationFailure::StalePlan)?,
-            ))
-        } else {
-            Ok(Value::Array(rows))
-        }
+        self.rectangular_array(at, shape, element).map(Value::Array)
     }
 
     /// Build an array without collapsing its singleton shape or reading unselected members.

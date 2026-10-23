@@ -13,9 +13,13 @@ use nom::{
 pub(super) fn whitespace(input: &str) -> IResult<&str, &str> {
     take_while(char::is_whitespace).parse(input)
 }
+/// Whether a character belongs to an unquoted formula identifier.
+pub(super) fn identifier_character(c: char) -> bool {
+    c.is_alphanumeric() || matches!(c, '_' | '.' | '$' | '\\')
+}
 /// Parse an unquoted formula identifier.
 pub(super) fn identifier(input: &str) -> IResult<&str, &str> {
-    take_while1(|c: char| c.is_alphanumeric() || matches!(c, '_' | '.' | '$' | '\\')).parse(input)
+    take_while1(identifier_character).parse(input)
 }
 /// Recognize a numeric literal, including an optional exponent.
 pub(super) fn number_token(input: &str) -> IResult<&str, f64> {

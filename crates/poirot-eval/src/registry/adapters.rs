@@ -63,11 +63,12 @@ helper_map! {
 }
 
 helper_map! {
-    total MatrixFunction => crate::adapters::matrix::policy::MatrixFunction;
+    partial MatrixFunction => crate::adapters::matrix::policy::MatrixFunction;
     helpers: [
         Mdeterm, Minverse, Mmult, Transpose, Frequency,
         Sumproduct, Trend,
     ];
+    local: [Sequence];
 }
 
 helper_map! {
@@ -169,6 +170,6 @@ helper_map! {
         Sheet, Single,
     ];
     local: [
-        Rows, Columns, Row, Column, Index,
+        Rows, Columns, Row, Column, Index, AnchorArray,
     ];
 }

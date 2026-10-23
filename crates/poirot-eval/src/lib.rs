@@ -37,7 +37,7 @@ use CellError::*;
 use CellValue::{Blank, Boolean, Error, Number, Text};
 use poirot_model::{CellAddress, CellError, CellValue, MAX_COLUMNS, MAX_ROWS, Workbook};
 use poirot_parsing::formula::{BinaryOp, UnaryOp};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::time::SystemTime;
 #[cfg(test)]
 use std::time::{Duration, UNIX_EPOCH};
@@ -68,7 +68,7 @@ pub mod configuration;
 // Run configuration, policy selections, and cache identity types.
 pub use configuration::{
     ArrayResultPolicy, BuiltinSemanticsPolicy, ComputationFingerprint, ConfigurationFingerprint,
-    CurrencyContext, FormattingConfiguration, RunConfiguration,
+    CurrencyContext, FormattingConfiguration, ProducerPolicy, RunConfiguration,
 };
 /// Explicit numeric input tokens for locale-parametric argument parsing.
 pub use poirot_parsing::number::NumberLocaleV2;
@@ -202,9 +202,9 @@ enum Value {
     Scalar(CellValue),
     /// Materialized selection retaining its original argument-admission provenance.
     SelectedScalar(CellValue, host::OperandOrigin),
-    Refs(Vec<Area>),
+    Refs(reference_areas::ReferenceAreas),
     /// One true ThreeDEval/RefEval, distinct from a RefListEval union.
-    SheetSpan(Vec<Area>),
+    SheetSpan(reference_areas::ReferenceAreas),
     Array(ArrayView),
 }
 impl From<CellValue> for Value {
@@ -324,6 +324,7 @@ fn execute_configuration<T>(
 
     session.builtin_policy = configuration.builtin_policy();
     session.array_result_policy = configuration.array_result_policy();
+    session.producer_policy = configuration.producer_policy();
     session.plan = Some(&plan);
     let mut run = EvaluationRun { session };
     let result = operation(&mut run.session);
@@ -476,11 +477,8 @@ pub fn run_recalculation_with_configuration(
 }
 /// Mutable execution state shared by nested formulas within one bounded run.
 struct Session<'a> {
-    bytecode_stacks: Vec<Vec<Value>>,
-    lookup_prefixes: adapters::search::execution::LookupPrefixes,
-    random_streams: CellMap<(random::Stream, usize)>,
+    runtime: runtime::Storage<'a>,
     extensions: Option<&'a extensions::ExtensionRegistry>,
-    extension_trace: extensions::ExtensionTrace,
     workbook: &'a Workbook,
     inputs: Option<&'a run_overlay::RunInputs>,
     context: EvaluationInputs,
@@ -490,21 +488,11 @@ struct Session<'a> {
 
     builtin_policy: BuiltinSemanticsPolicy,
     array_result_policy: ArrayResultPolicy,
+    producer_policy: ProducerPolicy,
     expression_demand: expression_execution::ExpressionDemand,
-    spill_discovery: std::collections::BTreeMap<usize, spill_publication::Discovery>,
-    spill_owners: CellMap<CellAddress>,
-    pending_spills: CellMap<ArrayView>,
-    spill_read_ranges: CellMap<Vec<Area>>,
-    blank_reads: CellMap<CellSet>,
-    cache: run::CellMemo,
+    spill_candidates: Option<&'a std::cell::RefCell<spill_publication::CandidateIndex>>,
     // Enabled by direct workspaces to publish only admissions from the current call.
-    admitted: Option<Vec<(usize, CellAddress)>>,
     memo_limits: Option<run::MemoRetentionLimits>,
-    memo_usage: run::MemoRetentionUsage,
-    visiting: CellSet,
-    names: HashSet<(usize, usize)>,
-    numeric_date_effects: CellMap<poirot_coercionv2::date_time::Effects>,
-    budget: BudgetMeter,
     plan: Option<&'a CompiledWorkbook>,
     lazy_compiler: Option<&'a std::cell::RefCell<FormulaCompiler>>,
     preparation_policy: Option<&'a EvaluationPolicy>,
@@ -515,10 +503,10 @@ struct Session<'a> {
     cell_observer: Option<&'a mut dyn CellObserver>,
     builtin_invocation_observer: Option<&'a mut dyn BuiltinInvocationObserver>,
     execution_observer: Option<&'a mut dyn execution_observation::ExecutionObserver>,
-    observation_state: execution_observation::ObservationState,
-    consumer: Option<EvaluationTarget>,
-    run_usage: RunUsage,
 }
+mod reference_areas;
+mod runtime;
+use reference_areas::ReferenceAreas;
 mod criteria_adapter;
 mod functions;
 mod host;

@@ -64,7 +64,7 @@ impl ScalarKinds {
 
 /// Union of scalar, rectangular-array, single-reference, multi-reference and missing alternatives.
 /// Each collection/reference component describes its possible element kinds. Empty
-/// components are absent alternatives, not empty arrays. Concrete dimensions stay runtime data.
+/// components are absent alternatives, not empty arrays. Concrete dimensions stay runtime data; ShapeBounds describes their static upper bounds.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct FormulaType {
     /// Possible direct scalar kinds.
@@ -212,5 +212,122 @@ mod tests {
         }
         assert!(!FormulaType::single_reference(ScalarKinds::ANY).may_spill());
         assert!(FormulaType::multi_reference(ScalarKinds::ANY).may_spill());
+    }
+}
+
+/// Independent upper bounds on successful rectangular result dimensions.
+/// `None` means that no finite bound has been proved for that axis. These
+/// bounds include scalar outcomes as 1 by 1, and never describe ownership.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ShapeBounds {
+    /// Maximum row count, when statically proved.
+    pub rows: Option<std::num::NonZeroU32>,
+    /// Maximum column count, when statically proved.
+    pub columns: Option<std::num::NonZeroU32>,
+}
+impl Default for ShapeBounds {
+    /// Unknown geometry is the conservative default for unavailable analysis.
+    fn default() -> Self {
+        Self::UNKNOWN
+    }
+}
+impl ShapeBounds {
+    /// No finite proof on either axis.
+    pub const UNKNOWN: Self = Self {
+        rows: None,
+        columns: None,
+    };
+    /// Scalar or single-coordinate geometry.
+    pub const SCALAR: Self = Self {
+        rows: std::num::NonZeroU32::new(1),
+        columns: std::num::NonZeroU32::new(1),
+    };
+    /// Construct bounds; zero counts cannot prove nonempty result geometry.
+    pub fn new(rows: u32, columns: u32) -> Self {
+        Self {
+            rows: std::num::NonZeroU32::new(rows),
+            columns: std::num::NonZeroU32::new(columns),
+        }
+    }
+    /// Least upper bound in the independent dimension ordering.
+    pub fn join(self, other: Self) -> Self {
+        let axis = |a: Option<std::num::NonZeroU32>, b: Option<std::num::NonZeroU32>| match (a, b) {
+            (Some(a), Some(b)) => Some(a.max(b)),
+            _ => None,
+        };
+        Self {
+            rows: axis(self.rows, other.rows),
+            columns: axis(self.columns, other.columns),
+        }
+    }
+    /// Whether this rectangle bound is included in the other bound.
+    pub fn is_subtype_of(self, other: Self) -> bool {
+        let axis = |a: Option<std::num::NonZeroU32>, b: Option<std::num::NonZeroU32>| match (a, b) {
+            (_, None) => true,
+            (Some(a), Some(b)) => a <= b,
+            _ => false,
+        };
+        axis(self.rows, other.rows) && axis(self.columns, other.columns)
+    }
+    /// Whether successful nonempty dimensions satisfy both independent proofs.
+    pub fn admits(self, rows: u32, columns: u32) -> bool {
+        rows > 0
+            && columns > 0
+            && self.rows.is_none_or(|n| rows <= n.get())
+            && self.columns.is_none_or(|n| columns <= n.get())
+    }
+    /// Exchange axes when a function transposes rectangular values.
+    pub fn transpose(self) -> Self {
+        Self {
+            rows: self.columns,
+            columns: self.rows,
+        }
+    }
+}
+
+#[cfg(test)]
+mod shape_tests {
+    use super::ShapeBounds as S;
+    #[test]
+    fn independent_dimension_joins_have_the_expected_order_and_lattice_laws() {
+        let bounds = [
+            S::SCALAR,
+            S::new(2, 3),
+            S::new(5, 1),
+            S::new(0, 4),
+            S::new(3, 0),
+            S::UNKNOWN,
+        ];
+        for a in bounds {
+            for b in bounds {
+                assert_eq!(a.join(b), b.join(a));
+                assert_eq!(a.join(a), a);
+                assert!(a.is_subtype_of(a.join(b)));
+                assert!(b.is_subtype_of(a.join(b)));
+                for c in bounds {
+                    assert_eq!(a.join(b).join(c), a.join(b.join(c)));
+                    if a.is_subtype_of(c) && b.is_subtype_of(c) {
+                        assert!(a.join(b).is_subtype_of(c));
+                    }
+                }
+            }
+        }
+        assert_eq!(S::new(2, 3).join(S::new(5, 1)), S::new(5, 3));
+        assert_eq!(S::new(0, 4).join(S::new(3, 2)), S::new(0, 4));
+        assert!(S::new(0, 4).admits(1_000_000, 4));
+        assert!(!S::new(0, 4).admits(1, 5));
+        assert!(!S::UNKNOWN.admits(0, 1));
+        assert!(!S::UNKNOWN.admits(1, 0));
+    }
+    #[test]
+    fn serialized_zero_dimension_proofs_are_rejected() {
+        let malformed = postcard::to_allocvec(&(Some(0u32), Some(1u32))).unwrap();
+        assert!(postcard::from_bytes::<S>(&malformed).is_err());
+        for shape in [S::SCALAR, S::UNKNOWN, S::new(3, 0)] {
+            assert_eq!(
+                postcard::from_bytes::<S>(&postcard::to_allocvec(&shape).unwrap()).unwrap(),
+                shape
+            );
+        }
     }
 }

@@ -17,8 +17,9 @@ rust_xlsxwriter.workspace = true
 quick-xml.workspace = true
 zip.workspace = true
 
-[dev-dependencies]
 poirot-parsing = { version = "0.1.0", path = "../poirot-parsing" }
+
+[dev-dependencies]
 
 [lints]
 workspace = true

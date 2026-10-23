@@ -242,6 +242,8 @@ pub enum ReferenceFunction {
     Column,
     /// INDEX handler.
     Index,
+    /// Stored spelling of the postfix spill-range reference operator.
+    AnchorArray,
 }
 /// Lookup and position matching handlers.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
@@ -515,6 +517,8 @@ pub enum EngineeringFunction {
 /// Matrix algebra and array aggregation handlers.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum MatrixFunction {
+    /// Modern Excel sequential rectangular array generation.
+    Sequence,
     /// MDETERM handler.
     Mdeterm,
     /// MINVERSE handler.

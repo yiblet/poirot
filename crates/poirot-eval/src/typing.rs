@@ -4,7 +4,7 @@ use crate::{
     bytecode::{Call, CallTarget, CompileError, Compiled, Opcode, Template},
     registry::DependencyPolicy,
 };
-use poirot_model::{FormulaType as T, ScalarKinds as K};
+use poirot_model::{FormulaType as T, ScalarKinds as K, ShapeBounds as S};
 use poirot_parsing::formula::{BinaryOp, Expr, UnaryOp};
 
 /// Possible external behavior, ordered Tracked <= Volatile <= Opaque.
@@ -57,6 +57,8 @@ impl FormulaEffects {
 pub struct ExpressionProperties {
     /// Possible runtime result forms and scalar element kinds.
     pub result: T,
+    /// Independent upper bounds on successful materialized dimensions.
+    pub shape: S,
     /// Conservative possible effects; actual traces govern retained-result validity.
     pub effects: FormulaEffects,
 }
@@ -94,7 +96,11 @@ impl FormulaTyping {
                 return false;
             }
         }
-        typed.next().is_none() && !self.expressions.is_empty()
+        typed.next().is_none()
+            && !self.expressions.is_empty()
+            && self.expressions.iter().all(|entry| {
+                entry.properties.result.may_spill() || entry.properties.shape == S::SCALAR
+            })
     }
 }
 /// Bounded traversal matching the compiler's syntax-preorder expression and call emission.
@@ -155,6 +161,7 @@ impl Inference<'_> {
             properties: ExpressionProperties::default(),
         });
         let mut effects = FormulaEffects::default();
+        let mut shape = S::SCALAR;
         let error = T::scalar(K::ERROR);
         let result = if depth >= crate::bytecode::DEPTH {
             // The bytecode compiler replaces this subtree with a deferred #NUM! atom.
@@ -175,10 +182,12 @@ impl Inference<'_> {
                     T::single_reference(K::ANY).join(error)
                 }
                 Expr::Column { .. } | Expr::Row { .. } | Expr::SheetSpan(_) => {
+                    shape = reference_shape(expr);
                     effects.possible_reads = DependencyPolicy::REFERENCE_READS;
                     T::multi_reference(K::ANY).join(error)
                 }
                 Expr::Name(_) | Expr::QualifiedName { .. } => {
+                    shape = S::UNKNOWN;
                     effects.possible_reads = DependencyPolicy::REFERENCE_READS;
                     // Names are resolved against workbook scope at execution. Their bodies
                     // may use any context or provider; no bound source is assumed here.
@@ -193,13 +202,20 @@ impl Inference<'_> {
                 Expr::Unary { op, operand } => {
                     let p = self.expression(operand, child_depth)?;
                     effects = p.effects;
-                    if *op == UnaryOp::ImplicitIntersection {
+                    if *op == UnaryOp::SpillRange {
+                        shape = S::UNKNOWN;
+                        effects.possible_reads = effects
+                            .possible_reads
+                            .union(DependencyPolicy::REFERENCE_READS);
+                        T::multi_reference(K::ANY).join(error)
+                    } else if *op == UnaryOp::ImplicitIntersection {
                         T::scalar(K::ANY)
                     } else {
                         effects.possible_reads = effects
                             .possible_reads
                             .union(DependencyPolicy::NUMERIC_COERCION)
                             .union(DependencyPolicy::DATE_SYSTEM);
+                        shape = p.shape;
                         numeric_lift(p.result, K::NUMBER.join(K::ERROR))
                     }
                 }
@@ -211,6 +227,7 @@ impl Inference<'_> {
                         op,
                         BinaryOp::Range | BinaryOp::Union | BinaryOp::Intersection
                     ) {
+                        shape = reference_shape(expr);
                         T::single_reference(K::ANY)
                             .join(T::multi_reference(K::ANY))
                             .join(error)
@@ -229,10 +246,15 @@ impl Inference<'_> {
                             | BinaryOp::GreaterEqual => K::BOOLEAN.join(K::ERROR),
                             _ => K::NUMBER.join(K::ERROR),
                         };
+                        shape = a.shape.join(b.shape);
                         numeric_lift(a.result.join(b.result), kinds)
                     }
                 }
                 Expr::Array(rows) => {
+                    shape = S::new(
+                        u32::try_from(rows.len()).unwrap_or(0),
+                        u32::try_from(rows.first().map_or(0, Vec::len)).unwrap_or(0),
+                    );
                     let mut elements = K::NONE;
                     for child in rows.iter().flatten() {
                         let p = self.expression(child, child_depth)?;
@@ -241,13 +263,24 @@ impl Inference<'_> {
                     }
                     T::array(elements.join(K::ERROR)).join(error)
                 }
-                Expr::Function { args, .. } => {
+                Expr::Function { name, args } => {
                     let target = &self
                         .calls
                         .next()
                         .ok_or(CompileError::InvalidReference)?
                         .target;
                     let mut types = poirot_functions_core::ParamVec::<T>::new();
+                    let mut shapes = poirot_functions_core::ParamVec::<S>::new();
+                    // Dimension proofs inspect only the first two literal arguments;
+                    // no extra collection is needed for constants in ordinary calls.
+                    let constants = [args.first(), args.get(1)].map(|argument| match argument {
+                        Some(Expr::Number(number)) => Some(*number),
+                        None | Some(Expr::Missing) => Some(1.0),
+                        _ => None,
+                    });
+                    shapes
+                        .try_reserve(args.len())
+                        .map_err(|_| CompileError::ResourceLimit)?;
                     types
                         .try_reserve(args.len())
                         .map_err(|_| CompileError::ResourceLimit)?;
@@ -255,6 +288,9 @@ impl Inference<'_> {
                         let p = self.expression(arg, child_depth)?;
                         effects = effects.join(p.effects);
                         types.push(p.result);
+                        // SAFETY: Each collection reserved args.len() slots above and
+                        // receives exactly one item per argument in this loop.
+                        shapes.push(p.shape);
                     }
                     match target {
                         CallTarget::Builtin(id) => {
@@ -273,9 +309,11 @@ impl Inference<'_> {
                             {
                                 effects.external = effects.external.max(ExternalBehavior::Volatile);
                             }
+                            shape = descriptor.result.shape(&shapes, &constants);
                             descriptor.result.apply(&types)
                         }
                         CallTarget::Extension(binding) => {
+                            shape = S::UNKNOWN;
                             use crate::extensions::ExtensionCacheability as C;
                             let contract = binding.registration.contract;
                             effects.external = effects.external.max(match contract.cacheability {
@@ -306,14 +344,40 @@ impl Inference<'_> {
                         }
                         CallTarget::Unresolved => {
                             effects.external = ExternalBehavior::Opaque;
-                            error
+                            // The selected runtime profile can resolve an otherwise
+                            // unbound call. Its possible result must be admitted before
+                            // producer classification, including reference-valued aliases.
+                            if let Some(handler) = crate::registry::resolve_excel_function(name) {
+                                let descriptor = handler.descriptor();
+                                effects.possible_reads =
+                                    effects.possible_reads.union(descriptor.dependencies);
+                                if descriptor
+                                    .dependencies
+                                    .contains(DependencyPolicy::NUMERIC_COERCION)
+                                {
+                                    effects.possible_reads =
+                                        effects.possible_reads.union(DependencyPolicy::DATE_SYSTEM);
+                                }
+                                shape = descriptor.result.shape(&shapes, &constants);
+                                descriptor.result.apply(&types).join(error)
+                            } else {
+                                error
+                            }
                         }
                     }
                 }
             }
         };
         effects.possible_reads = effects.possible_reads.union(DependencyPolicy::HOST_POLICY);
-        let properties = ExpressionProperties { result, effects };
+        // A scalar-only result cannot acquire geometry from its arguments.
+        if !result.may_spill() {
+            shape = S::SCALAR;
+        }
+        let properties = ExpressionProperties {
+            result,
+            shape,
+            effects,
+        };
         self.expressions
             .get_mut(slot)
             .ok_or(CompileError::InvalidReference)?
@@ -333,3 +397,37 @@ fn numeric_lift(input: T, kinds: K) -> T {
 
 #[cfg(test)]
 mod tests;
+
+/// Bound physical rectangular reference syntax without resolving names or computed endpoints.
+fn reference_shape(expr: &Expr) -> S {
+    match expr {
+        Expr::Cell(_) => S::SCALAR,
+        Expr::Column { .. } => S::new(poirot_model::MAX_ROWS, 1),
+        Expr::Row { .. } => S::new(1, poirot_model::MAX_COLUMNS),
+        Expr::SheetSpan(span) => {
+            let end = span.end.as_ref().unwrap_or(&span.start);
+            S::new(
+                span.start.row.abs_diff(end.row).saturating_add(1),
+                span.start.column.abs_diff(end.column).saturating_add(1),
+            )
+        }
+        Expr::Binary {
+            op: BinaryOp::Range,
+            left,
+            right,
+        } => match (left.as_ref(), right.as_ref()) {
+            (Expr::Cell(a), Expr::Cell(b)) => S::new(
+                a.row.abs_diff(b.row).saturating_add(1),
+                a.column.abs_diff(b.column).saturating_add(1),
+            ),
+            (Expr::Column { column: a, .. }, Expr::Column { column: b, .. }) => {
+                S::new(poirot_model::MAX_ROWS, a.abs_diff(*b).saturating_add(1))
+            }
+            (Expr::Row { row: a, .. }, Expr::Row { row: b, .. }) => {
+                S::new(a.abs_diff(*b).saturating_add(1), poirot_model::MAX_COLUMNS)
+            }
+            _ => S::UNKNOWN,
+        },
+        _ => S::UNKNOWN,
+    }
+}

@@ -417,7 +417,7 @@ fn singleton_predicate_arrays_publish_a_boolean_cell_without_becoming_references
 }
 
 #[test]
-fn named_array_footprints_remain_unsupported_at_publication_and_child_discovery() {
+fn named_array_footprints_publish_with_child_first_reads() {
     let mut book = book();
     book.define_name("Inputs", "A1:D2", None).unwrap();
     book.sheet_mut(0)
@@ -433,13 +433,14 @@ fn named_array_footprints_remain_unsupported_at_publication_and_child_discovery(
         .build()
         .unwrap();
     let context = EvaluationContext::default();
-    // Both discovery and publication retain the established static-bound contract.
     for cell in ["I6", "F5"] {
-        assert!(
-            matches!(
-                overlay.evaluation(&context).unwrap().cell(target(cell)),
-                Err(EvaluationFailure::UnsupportedCapability { .. })
-            ),
+        assert_eq!(
+            overlay
+                .evaluation(&context)
+                .unwrap()
+                .cell(target(cell))
+                .unwrap(),
+            CellValue::Boolean(true),
             "{cell}"
         );
     }

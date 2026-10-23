@@ -19,6 +19,13 @@ impl Registry<'_> {
     }
 }
 
+/// Whether an authored operation replaces content or preserves it while changing style.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum EditKind {
+    Content,
+    Style,
+}
+
 /// Baseline handle plus authored diff and compilation; contains no evaluated results.
 pub(super) struct Source<'a, W> {
     /// Immutable borrowed or shared baseline handle.
@@ -27,6 +34,8 @@ pub(super) struct Source<'a, W> {
     pub inputs: crate::run_overlay::RunInputs,
     /// Lazily interned programs independent of evaluated values.
     pub compiler: RefCell<FormulaCompiler>,
+    /// Typed producer classification shared across unchanged evaluations.
+    pub spill_candidates: RefCell<crate::spill_publication::CandidateIndex>,
     /// Parsing and calculation rules shared by both paths.
     pub policy: OverlayPolicy,
     /// Exact parser and provider binding identity.
@@ -49,6 +58,7 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
             workbook,
             inputs: crate::run_overlay::RunInputs::empty(),
             compiler: RefCell::new(FormulaCompiler::new()),
+            spill_candidates: Default::default(),
             preparation: crate::EvaluationPolicy {
                 parse: policy.parse,
                 registry,
@@ -91,6 +101,9 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         Ok(())
     }
     fn remove_override(&mut self, target: EvaluationTarget) {
+        self.inputs
+            .style_only
+            .remove(&(target.sheet, target.address));
         if let Some(cells) = self.inputs.sheets.get_mut(&target.sheet) {
             cells.remove(&target.address);
             if cells.cells().is_empty() {
@@ -99,20 +112,50 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         }
     }
     /// Replace source, dropping redundant overrides; report whether invalidation is needed.
-    pub fn write_cell(&mut self, target: EvaluationTarget, cell: Cell) -> Result<bool, ModelError> {
+    pub fn write_cell(
+        &mut self,
+        target: EvaluationTarget,
+        cell: Cell,
+        kind: EditKind,
+    ) -> Result<bool, ModelError> {
         self.validate_target(target)?;
+        let key = (target.sheet, target.address);
+        let prior_style_only = self.inputs.style_only.contains(&key);
+        let saved_ownership = self.workbook().sheet(target.sheet).is_some_and(|sheet| {
+            sheet.spill_owner(target.address).is_some()
+                || sheet.spill_extent(target.address).is_some()
+                || (sheet
+                    .source_cell(target.address)
+                    .is_some_and(|cell| cell.formula.is_some())
+                    && sheet
+                        .spill_children()
+                        .any(|(_, owner)| owner == target.address))
+        });
+        let new_content_intent = kind == EditKind::Content
+            && (prior_style_only
+                || (saved_ownership && self.inputs.cell(target.sheet, target.address).is_none()));
+        let style_only = kind == EditKind::Style
+            && (prior_style_only || self.inputs.cell(target.sheet, target.address).is_none())
+            && !self.inputs.deleted.contains(&key);
         if self
             .source_cell(target)
             .is_some_and(|old| same_cell(old, &cell))
+            && !new_content_intent
         {
             return Ok(false);
+        }
+        let old_formula = self
+            .source_cell(target)
+            .and_then(|old| old.formula.as_deref());
+        if old_formula != cell.formula.as_deref() {
+            self.spill_candidates.get_mut().remove(&target.sheet);
         }
         self.inputs.deleted.remove(&(target.sheet, target.address));
         let baseline = self
             .workbook()
             .sheet(target.sheet)
             .and_then(|s| s.source_cell(target.address));
-        if baseline.is_some_and(|old| same_cell(old, &cell)) {
+        if baseline.is_some_and(|old| same_cell(old, &cell)) && !(!style_only && saved_ownership) {
             self.remove_override(target);
         } else {
             self.inputs
@@ -120,6 +163,11 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
                 .entry(target.sheet)
                 .or_default()
                 .set(target.address, cell)?;
+            if style_only {
+                self.inputs.style_only.insert(key);
+            } else {
+                self.inputs.style_only.remove(&key);
+            }
         }
         Ok(true)
     }
@@ -128,6 +176,12 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         self.validate_target(target)?;
         if self.source_cell(target).is_none() {
             return Ok(false);
+        }
+        if self
+            .source_cell(target)
+            .is_some_and(|cell| cell.formula.is_some())
+        {
+            self.spill_candidates.get_mut().remove(&target.sheet);
         }
         self.remove_override(target);
         if self
@@ -197,6 +251,14 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
             .collect::<Vec<_>>();
         for (&sheet, cells) in &self.inputs.sheets {
             for (&address, cell) in cells.cells() {
+                if self.inputs.style_only.contains(&(sheet, address)) {
+                    changes.push(WorkbookChange::SetStyle {
+                        sheet,
+                        address,
+                        style: cell.style.clone(),
+                    });
+                    continue;
+                }
                 append_cell_changes(
                     &mut changes,
                     (sheet, address),
@@ -215,9 +277,21 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         context: &'e EvaluationContext,
         meter: crate::budget::BudgetMeter,
     ) -> crate::Session<'e> {
-        let mut session = crate::Session::new(self.workbook(), context.inputs(), meter);
+        self.session_with_runtime(
+            context,
+            crate::runtime::Storage::Owned(Box::new(crate::runtime::Runtime::new(meter))),
+        )
+    }
+    /// Reborrow persistent execution storage without moving its stacks or caches.
+    pub fn session_with_runtime<'e>(
+        &'e self,
+        context: &'e EvaluationContext,
+        runtime: crate::runtime::Storage<'e>,
+    ) -> crate::Session<'e> {
+        let mut session = crate::Session::with_runtime(self.workbook(), context.inputs(), runtime);
         session.inputs = Some(&self.inputs);
         session.lazy_compiler = Some(&self.compiler);
+        session.spill_candidates = Some(&self.spill_candidates);
         session.preparation_policy = Some(&self.preparation);
         session.extensions = self.extensions.as_ref().map(Registry::get);
         session.currency = context.formatting.currency();
@@ -226,6 +300,7 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
 
         session.builtin_policy = self.policy.builtin;
         session.array_result_policy = self.policy.arrays;
+        session.producer_policy = self.policy.producers;
         session.memo_limits = Some(context.retention);
         session.lookup_prefixes.enable();
         session
@@ -280,6 +355,7 @@ macro_rules! source_methods {
                     formula: None,
                     style,
                 },
+                source::EditKind::Content,
             )
         }
         /// Replace a formula and clear its saved value, preserving its style.
@@ -293,7 +369,7 @@ macro_rules! source_methods {
                 .source_cell(target)
                 .map(|c| c.style.clone())
                 .unwrap_or_default();
-            self.write_cell(target, cell)
+            self.write_cell(target, cell, source::EditKind::Content)
         }
         /// Replace authored style and invalidate potentially affected results.
         pub fn set_style(
@@ -303,9 +379,9 @@ macro_rules! source_methods {
         ) -> Result<(), ModelError> {
             let mut cell = self.source_cell(target).cloned().unwrap_or_default();
             cell.style = style;
-            self.write_cell(target, cell)
+            self.write_cell(target, cell, source::EditKind::Style)
         }
-        /// Change a formula's saved workbook value without trusting it as an evaluation result.
+        /// Change a formula's saved source value; the default Compute policy still recalculates it.
         pub fn set_cached_value(
             &mut self,
             target: EvaluationTarget,
@@ -319,7 +395,7 @@ macro_rules! source_methods {
                 return Err(ModelError("cache target has no formula".into()));
             }
             cell.value = value.into();
-            self.write_cell(target, cell)
+            self.write_cell(target, cell, source::EditKind::Content)
         }
         /// Remove effective authored content and invalidate results.
         pub fn remove_cell(&mut self, target: EvaluationTarget) -> Result<(), ModelError> {
@@ -333,6 +409,7 @@ macro_rules! source_methods {
             if self.source.policy != policy {
                 if self.source.policy.parse != policy.parse {
                     self.source.compiler = RefCell::new(FormulaCompiler::new());
+                    self.source.spill_candidates.get_mut().clear();
                 }
                 self.source.preparation.parse = policy.parse;
                 let previous = std::mem::replace(&mut self.source.policy, policy);
@@ -340,8 +417,13 @@ macro_rules! source_methods {
             }
             Ok(())
         }
-        fn write_cell(&mut self, target: EvaluationTarget, cell: Cell) -> Result<(), ModelError> {
-            if self.source.write_cell(target, cell)? {
+        fn write_cell(
+            &mut self,
+            target: EvaluationTarget,
+            cell: Cell,
+            kind: source::EditKind,
+        ) -> Result<(), ModelError> {
+            if self.source.write_cell(target, cell, kind)? {
                 self.source_changed(target);
             }
             Ok(())

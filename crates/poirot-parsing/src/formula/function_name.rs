@@ -298,6 +298,8 @@ common_functions! {
     Arabic = 262 => "ARABIC";
     Combina = 263 => "COMBINA";
     SeriesSum = 264 => "SERIESSUM";
+    AnchorArray = 265 => "ANCHORARRAY";
+    Sequence = 266 => "SEQUENCE";
 }
 
 /// Parsed function spelling, interned when it belongs to the common symbol table.

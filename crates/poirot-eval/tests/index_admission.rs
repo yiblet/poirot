@@ -285,7 +285,7 @@ fn index_resource_failures_escape_semantic_error_handlers() {
 }
 
 #[test]
-fn index_array_slices_keep_the_existing_spill_capability_boundary() {
+fn index_array_slices_publish_actual_dynamic_footprints() {
     let mut w = book();
     for (address, formula) in [
         ("F1", "INDEX({1,2;3,4},0,2)"),
@@ -306,9 +306,10 @@ fn index_array_slices_keep_the_existing_spill_capability_boundary() {
         EvaluationBudgets::default(),
     )
     .unwrap();
-    for address in ["F1", "H1"] {
-        assert!(
-            matches!(run.evaluate_cell(target(address)), Err(EvaluationFailure::UnsupportedCapability { detail, .. }) if detail.contains("static footprint bound")),
+    for (address, expected) in [("F1", 2.), ("F2", 4.), ("H1", 2.), ("I1", 4.)] {
+        assert_eq!(
+            run.evaluate_cell(target(address)).unwrap(),
+            CellValue::Number(expected),
             "{address}"
         );
     }
@@ -316,5 +317,11 @@ fn index_array_slices_keep_the_existing_spill_capability_boundary() {
         run.evaluate_cell(target("J1")).unwrap(),
         CellValue::Number(1.)
     );
-    assert_eq!(run.evaluate_cell(target("J2")).unwrap(), CellValue::Blank);
+    // Microsoft documents row zero as the entire selected column; dynamic root
+    // materialization now preserves the reference channel instead of scalarizing it.
+    // https://support.microsoft.com/en-us/excel/functions/index-function
+    assert_eq!(
+        run.evaluate_cell(target("J2")).unwrap(),
+        CellValue::Number(3.)
+    );
 }

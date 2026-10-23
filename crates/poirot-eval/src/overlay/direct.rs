@@ -36,7 +36,7 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
         context: EvaluationContext,
     ) -> Result<Self, OverlayError> {
         let meter = crate::budget::BudgetMeter::new(context.budgets)?;
-        let state = Continuation::capture(source.session(&context, meter));
+        let state = Continuation::new(meter);
         Ok(Self {
             source,
             context,
@@ -74,7 +74,7 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
     /// Temporary input edits and compiled formulas are retained.
     pub fn begin(&mut self, context: EvaluationContext) -> Result<(), OverlayError> {
         let meter = crate::budget::BudgetMeter::new(context.budgets)?;
-        let state = Continuation::capture(self.source.session(&context, meter));
+        let state = Continuation::new(meter);
         self.context = context;
         self.state = state;
         self.completed.clear();
@@ -198,7 +198,7 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
                 admitted.clear();
             }
         }
-        self.state = Continuation::capture(session);
+        drop(session);
         if let Err(failure) = &result {
             self.failure = Some(failure.clone());
         }

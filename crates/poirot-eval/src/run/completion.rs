@@ -25,7 +25,7 @@ pub enum CellProvenance {
     Evaluated,
     /// Reused from this run's memoized values.
     SessionMemo,
-    /// Reused from a validated cross-run cache.
+    /// Reused from a validated cross-run cache or caller-trusted source producer cache.
     ExternalCache,
 }
 /// A borrowed observation after each recursive cell call resolves, including
@@ -36,7 +36,9 @@ pub struct CellCompletion<'a> {
     pub consumer: Option<EvaluationTarget>,
     /// Cell whose call completed.
     pub target: EvaluationTarget,
-    /// Computed, session-memo, or external-cache origin.
+    /// Computed, session-memo, or external-cache origin on success.
+    /// On operational failure this identifies the attempted resolution route,
+    /// not proof that a formula body ran; RunUsage::formula_executions counts bodies.
     pub provenance: CellProvenance,
     /// Borrowed value or operational failure from the call.
     pub result: Result<&'a CellValue, &'a EvaluationFailure>,

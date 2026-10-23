@@ -1,4 +1,4 @@
-//! Bounded numeric/boolean exact-search prefixes, retained by incremental overlays.
+//! Bounded typed exact-search prefixes and text selections retained by incremental overlays.
 //! Observed runs keep ordinary reads; retained axes expire when scanned cells change.
 use super::*;
 use plan::{LookupTable, LookupVector};
@@ -80,10 +80,13 @@ impl Key {
 #[derive(Default)]
 struct Prefix {
     first: PrefixMap<Key, usize>,
+    // Original UTF-16 query identity preserves every ordinary comparison rule.
+    // Arbitrary text uses the standard randomized hasher, never PrefixMap.
+    text: HashMap<Vec<u16>, Option<usize>>,
+    // Retained entries plus owned units, so admission recount is constant per axis.
+    text_storage: usize,
     next: usize,
     exhausted: bool,
-    cells: Vec<CellAddress>,
-    published_cells: usize,
 }
 /// Bounded exact-search prefix cache with session-local recursion guards.
 #[derive(Default)]
@@ -93,21 +96,17 @@ pub(crate) struct Prefixes {
     axes: BTreeMap<Partition, BTreeMap<Interval, Prefix>>,
     active: AxisSet,
     reserved: usize,
-    // Presence is the overlay-owned in-index flag; each set covers overlapping axes.
-    members: crate::coordinate_hash::CellMap<AxisSet>,
-    #[cfg(test)]
-    membership_writes: usize,
 }
 impl Prefixes {
-    /// Invalidate indexed cells by their flag/reverse memberships, and absent
-    /// coordinates through sparse gap guards. No workbook cell is mutated.
+    /// Invalidate changed present cells and gaps through their consumed axis intervals.
+    /// Every indexed candidate lies inside its axis at an offset below `next`;
+    /// an exhausted axis covers its whole interval. These guards therefore cover
+    /// both stored candidates and absent gaps without per-cell reverse flags.
     pub(crate) fn invalidate(&mut self, changed: &crate::coordinate_hash::CellSet) {
         let mut affected = AxisSet::default();
         for &key in changed {
-            if let Some(axes) = self.members.get(&key) {
-                affected.extend(axes.iter().copied());
-            }
-            // Only these two physical partitions can contain an inserted gap.
+            // Every consumed candidate and sparse gap belongs to one of these
+            // two physical partitions; separate per-cell flags add no coverage.
             for (partition, position) in [
                 ((key.0, true, key.1.col), key.1.row),
                 ((key.0, false, key.1.row), key.1.col),
@@ -125,43 +124,41 @@ impl Prefixes {
             }
         }
         for axis in affected {
-            if let Some(prefix) = self.remove(axis) {
-                self.unregister(axis, &prefix);
-            }
+            self.remove(axis);
         }
         self.recount();
     }
-    /// Publish only newly scanned cell memberships alongside a successful batch.
-    pub(crate) fn publish(&mut self) {
-        for (&partition, ranges) in &mut self.axes {
-            for (&interval, prefix) in ranges {
-                let axis = Axis::from_location(partition, interval);
-                for &cell in prefix.cells.iter().skip(prefix.published_cells) {
-                    self.members
-                        .entry((axis.sheet, cell))
-                        .or_default()
-                        .insert(axis);
-                    #[cfg(test)]
+    /// Expire consumed search membership intersecting a newly finalized footprint.
+    /// Dependency-valid restored footprints do not call this admission boundary.
+    pub(crate) fn invalidate_footprint(
+        &mut self,
+        sheet: usize,
+        first: CellAddress,
+        last: CellAddress,
+    ) {
+        let mut affected = AxisSet::default();
+        for (vertical, fixed_first, fixed_last, start, end) in [
+            (true, first.col, last.col, first.row, last.row),
+            (false, first.row, last.row, first.col, last.col),
+        ] {
+            for (&partition, ranges) in self
+                .axes
+                .range((sheet, vertical, fixed_first)..=(sheet, vertical, fixed_last))
+            {
+                for (&interval, prefix) in ranges.range(..=(end, u32::MAX)) {
+                    if start <= interval.1
+                        && (prefix.exhausted
+                            || (start.saturating_sub(interval.0) as usize) < prefix.next)
                     {
-                        self.membership_writes += 1;
+                        affected.insert(Axis::from_location(partition, interval));
                     }
                 }
-                prefix.published_cells = prefix.cells.len();
             }
+        }
+        for axis in affected {
+            self.remove(axis);
         }
         self.recount();
-    }
-    /// Forget only memberships actually published before this axis was removed.
-    fn unregister(&mut self, axis: Axis, prefix: &Prefix) {
-        for &cell in prefix.cells.iter().take(prefix.published_cells) {
-            let key = (axis.sheet, cell);
-            if let Some(axes) = self.members.get_mut(&key) {
-                axes.remove(&axis);
-                if axes.is_empty() {
-                    self.members.remove(&key);
-                }
-            }
-        }
     }
     fn contains(&self, axis: Axis) -> bool {
         let (partition, interval) = axis.location();
@@ -186,19 +183,22 @@ impl Prefixes {
             .insert(interval, prefix);
     }
     fn recount(&mut self) {
-        self.reserved = self
-            .axes
-            .values()
-            .flat_map(|ranges| ranges.values())
-            .map(|prefix| 1 + prefix.first.len() + prefix.cells.len())
-            .sum();
+        self.reserved =
+            self.axes
+                .values()
+                .flat_map(|ranges| ranges.values())
+                .fold(0usize, |total, prefix| {
+                    total
+                        .saturating_add(1)
+                        .saturating_add(prefix.first.len())
+                        .saturating_add(prefix.text_storage)
+                });
     }
     /// Revalidate retained storage against this evaluation's collection limit.
     pub(crate) fn admit(&mut self, limit: usize) {
         self.recount();
         if self.reserved > MAX_ENTRIES.min(limit) {
             self.axes.clear();
-            self.members.clear();
             self.reserved = 0;
         }
         self.enable();
@@ -221,7 +221,6 @@ pub(super) fn select(
 ) -> Option<FunctionResult<Option<usize>>> {
     if !session.lookup_prefixes.enabled
         || mode != SearchMode::Exact
-        || session.array_result_policy == ArrayResultPolicy::DynamicSpill
         || session.dependency_sink.is_some()
         || session.cell_reader.is_some()
         || session.cell_observer.is_some()
@@ -231,7 +230,11 @@ pub(super) fn select(
     {
         return None;
     }
-    let needle = Key::search(key)?;
+    let needle = Key::search(key);
+    let text = key.text_ref();
+    if needle.is_none() && text.is_none() {
+        return None;
+    }
     let LookupTable::Reference(area) = table else {
         return None;
     };
@@ -262,12 +265,47 @@ pub(super) fn select(
         first,
         last,
     };
+    let search_area = Area {
+        sheet: axis.sheet,
+        r0: first.row,
+        r1: last.row,
+        c0: first.col,
+        c1: last.col,
+        ..*area
+    };
+    if let Err(failure) = session.resolve_spills_in(search_area) {
+        return Some(Err(failure.into()));
+    }
+    if session.array_result_policy == ArrayResultPolicy::DynamicSpill
+        && !session.ready_area(search_area)
+    {
+        return None;
+    }
+
     let cap = MAX_ENTRIES.min(session.budget.limits.materialized_values);
     if session.lookup_prefixes.active.contains(&axis)
         || (session.lookup_prefixes.reserved >= cap && !session.lookup_prefixes.contains(axis))
     {
         return None;
     }
+    // Bound query storage before cloning. One owned unit reserves two bytes;
+    // together with entry/cell counts this also bounds total retained text bytes.
+    let text = if let Some(text) = text {
+        let units = text.units().count();
+        if units > cap {
+            return None;
+        }
+        let mut query = Vec::new();
+        if query.try_reserve_exact(units).is_err() {
+            return None;
+        }
+        // SAFETY: units counts this immutable text iterator; the reservation
+        // above covers every code unit copied by extend.
+        query.extend(text.units());
+        Some(query)
+    } else {
+        None
+    };
     let existing = session.lookup_prefixes.remove(axis);
     let mut prefix = match existing {
         Some(prefix) => prefix,
@@ -283,15 +321,22 @@ pub(super) fn select(
     let mut retain = true;
     let result = (|| {
         session.budget.charge(WorkKind::Comparison, 1)?;
-        if let Some(&found) = prefix.first.get(&needle) {
+        if let Some(found) = text.as_ref().and_then(|query| prefix.text.get(query)) {
             session.run_usage.lookup_prefix_hits =
                 session.run_usage.lookup_prefix_hits.saturating_add(1);
-            return Ok(Some(found));
+            return Ok(*found);
         }
-        if prefix.exhausted {
-            session.run_usage.lookup_prefix_hits =
-                session.run_usage.lookup_prefix_hits.saturating_add(1);
-            return Ok(None);
+        if let Some(needle) = needle {
+            if let Some(&found) = prefix.first.get(&needle) {
+                session.run_usage.lookup_prefix_hits =
+                    session.run_usage.lookup_prefix_hits.saturating_add(1);
+                return Ok(Some(found));
+            }
+            if prefix.exhausted {
+                session.run_usage.lookup_prefix_hits =
+                    session.run_usage.lookup_prefix_hits.saturating_add(1);
+                return Ok(None);
+            }
         }
         let mut reader = sparse::LookupReader {
             session,
@@ -302,7 +347,7 @@ pub(super) fn select(
             is_match,
             forward: None,
         };
-        let mut next = reader.next(prefix.next, vector.len)?;
+        let mut next = reader.next(if text.is_some() { 0 } else { prefix.next }, vector.len)?;
         while let Some(index) = next {
             reader.session.run_usage.lookup_prefix_scans = reader
                 .session
@@ -310,23 +355,6 @@ pub(super) fn select(
                 .lookup_prefix_scans
                 .saturating_add(1);
             let value = reader.session.lookup_read(table, vector, index)?;
-            if reader.session.lookup_prefixes.reserved < cap {
-                reader.session.budget.allocation(1)?;
-                reader.session.lookup_prefixes.reserved += 1;
-                prefix.cells.push(match vector.axis {
-                    SearchAxis::Vertical => CellAddress {
-                        row: axis.first.row + index as u32,
-                        col: axis.first.col,
-                    },
-                    SearchAxis::Horizontal => CellAddress {
-                        row: axis.first.row,
-                        col: axis.first.col + index as u32,
-                    },
-                });
-            } else {
-                retain = false;
-            }
-
             // A recursive provider can temporarily yield #REF before completing.
             // Do not retain a prefix that skipped any spreadsheet error/nonfinite.
             if matches!(value, Error(_)) || matches!(value,Number(n) if !n.is_finite()) {
@@ -344,17 +372,31 @@ pub(super) fn select(
                     retain = false;
                 }
             }
-            prefix.next = index + 1;
+            let following = index.checked_add(1).ok_or(EvaluationFailure::StalePlan)?;
+            prefix.next = prefix.next.max(following);
             if lookup_compare(key, &value, mode, is_match, &mut reader.session.budget)?
                 == Some(Ordering::Equal)
             {
                 return Ok(Some(index));
             }
-            next = reader.next(prefix.next, vector.len)?;
+            next = reader.next(following, vector.len)?;
         }
         prefix.exhausted = true;
         Ok(None)
     })();
+    if retain && let (Some(query), Ok(selected)) = (text, &result) {
+        let requested = query.len().saturating_add(1);
+        if !prefix.text.contains_key(&query)
+            && requested <= cap.saturating_sub(session.lookup_prefixes.reserved)
+            && prefix.text.try_reserve(1).is_ok()
+        {
+            // SAFETY: requested is positive, and the local remaining-cap check
+            // proves reserved + requested <= cap <= usize::MAX.
+            session.lookup_prefixes.reserved += requested;
+            prefix.text_storage = prefix.text_storage.saturating_add(requested);
+            prefix.text.insert(query, *selected);
+        }
+    }
     // A reused prefix carries selection values from other consumers. Attribute
     // its consumed prefix to this consumer too, so any changed candidate dirties
     // every lookup that reused it. Session sources cannot change during execution.
@@ -373,15 +415,17 @@ pub(super) fn select(
         });
         session.read(DependencyRead::SparseMembership {
             sheet: axis.sheet,
-            first: axis.first,
+            first: if session.array_result_policy == ArrayResultPolicy::DynamicSpill {
+                CellAddress { row: 0, col: 0 }
+            } else {
+                axis.first
+            },
             last,
         });
     }
     session.lookup_prefixes.active.remove(&axis);
     if retain && result.is_ok() {
         session.lookup_prefixes.insert(axis, prefix);
-    } else {
-        session.lookup_prefixes.unregister(axis, &prefix);
     }
     // Dropped/failed prefixes keep their admission reservation. This bounds all
     // nested allocations conservatively without a second unbounded retention map.
@@ -389,48 +433,8 @@ pub(super) fn select(
 }
 
 #[cfg(test)]
-mod membership_tests {
+mod interval_tests {
     use super::*;
-
-    #[test]
-    fn membership_publication_skips_old_cells_and_only_adds_scanned_suffix() {
-        let mut prefixes = Prefixes::default();
-        let first = CellAddress { row: 0, col: 0 };
-        let suffix = CellAddress { row: 1, col: 0 };
-        let axis = Axis {
-            sheet: 0,
-            first,
-            last: CellAddress { row: 9, col: 0 },
-        };
-        prefixes.insert(
-            axis,
-            Prefix {
-                cells: vec![first],
-                next: 1,
-                ..Default::default()
-            },
-        );
-        prefixes.publish();
-        assert_eq!(prefixes.membership_writes, 1);
-        let old_capacity = prefixes.members.capacity();
-        prefixes.publish();
-        assert_eq!(
-            prefixes.membership_writes, 1,
-            "unchanged indexes must perform no flag writes"
-        );
-        assert_eq!(prefixes.members.capacity(), old_capacity);
-        let mut prefix = prefixes.remove(axis).unwrap();
-        prefix.cells.push(suffix);
-        prefix.next = 2;
-        prefixes.insert(axis, prefix);
-        prefixes.publish();
-        assert_eq!(prefixes.membership_writes, 2);
-        assert!(prefixes.members.get(&(0, suffix)).unwrap().contains(&axis));
-        let changed = [(0, suffix)].into_iter().collect();
-        prefixes.invalidate(&changed);
-        assert!(prefixes.members.is_empty());
-        assert!(!prefixes.contains(axis));
-    }
 
     fn lookup(run: &mut Session<'_>, formula: &str) -> EvalResult<CellValue> {
         let parsed = poirot_parsing::formula::parse_formula(formula).unwrap();
@@ -441,7 +445,7 @@ mod membership_tests {
     }
 
     #[test]
-    fn dropping_extended_error_nonfinite_or_capacity_prefix_clears_old_flags() {
+    fn error_nonfinite_and_capacity_failures_discard_extended_prefixes() {
         for suffix in [Error(NA), Number(f64::INFINITY), Number(2.)] {
             let mut book = Workbook::new();
             let sheet = book.add_sheet("S").unwrap();
@@ -454,10 +458,9 @@ mod membership_tests {
             run.array_result_policy = ArrayResultPolicy::ScalarIntersection;
             run.lookup_prefixes.enable();
             assert_eq!(lookup(&mut run, "MATCH(1,A1:A3,0)").unwrap(), Number(1.));
-            run.lookup_prefixes.publish();
-            assert_eq!(run.lookup_prefixes.members.len(), 1);
+            assert_eq!(run.lookup_prefixes.axes.len(), 1);
             if suffix == Number(2.) {
-                run.budget.limits.materialized_values = 4;
+                run.budget.limits.materialized_values = 3;
             }
             // POI numeric ingress retains infinity; comparison rejects it as NUM.
             let expected = if matches!(suffix, Number(n) if !n.is_finite()) {
@@ -466,15 +469,12 @@ mod membership_tests {
                 Number(3.)
             };
             assert_eq!(lookup(&mut run, "MATCH(3,A1:A3,0)").unwrap(), expected);
-            assert!(run.lookup_prefixes.members.is_empty(), "{suffix:?}");
             assert!(run.lookup_prefixes.axes.is_empty(), "{suffix:?}");
-            run.lookup_prefixes.publish();
-            assert!(run.lookup_prefixes.members.is_empty());
         }
     }
 
     #[test]
-    fn budget_failure_while_extending_a_published_prefix_clears_old_flags() {
+    fn budget_failure_discards_the_extended_prefix() {
         let mut book = Workbook::new();
         let sheet = book.add_sheet("S").unwrap();
         sheet.set_value("A1".parse().unwrap(), 1.).unwrap();
@@ -482,69 +482,57 @@ mod membership_tests {
         let mut run = Session::with_context(&book, EvaluationInputs::default());
         run.lookup_prefixes.enable();
         assert_eq!(lookup(&mut run, "MATCH(1,A1:A2,0)").unwrap(), Number(1.));
-        run.lookup_prefixes.publish();
         // The next uncached candidate exceeds the reduced memo admission limit.
         run.budget.limits.materialized_values = 1;
         assert!(lookup(&mut run, "MATCH(2,A1:A2,0)").is_err());
-        assert!(run.lookup_prefixes.members.is_empty());
         assert!(run.lookup_prefixes.axes.is_empty());
     }
 
     #[test]
-    fn indexed_cell_flag_tracks_all_overlaps_and_is_removed_with_their_indices() {
-        let mut prefixes = Prefixes::default();
-        let shared = CellAddress { row: 4, col: 0 };
+    fn interval_guards_cover_present_cells_gaps_and_overlapping_axes() {
         let vertical = Axis {
             sheet: 0,
-            first: CellAddress { row: 0, col: 0 },
-            last: CellAddress { row: 9, col: 0 },
+            first: CellAddress { row: 2, col: 4 },
+            last: CellAddress { row: 9, col: 4 },
         };
         let horizontal = Axis {
             sheet: 0,
-            first: shared,
+            first: CellAddress { row: 4, col: 2 },
             last: CellAddress { row: 4, col: 9 },
         };
-        let untouched = Axis {
-            sheet: 1,
-            ..vertical
-        };
-        for axis in [vertical, horizontal, untouched] {
-            let cell = if axis.sheet == 1 {
-                CellAddress { row: 4, col: 0 }
-            } else {
-                shared
-            };
-            prefixes.insert(
-                axis,
-                Prefix {
-                    cells: vec![cell],
-                    next: 5,
-                    ..Default::default()
-                },
-            );
+        for row in 0..12 {
+            for col in 0..12 {
+                for exhausted in [false, true] {
+                    let mut prefixes = Prefixes::default();
+                    for axis in [vertical, horizontal] {
+                        prefixes.insert(
+                            axis,
+                            Prefix {
+                                next: 4,
+                                exhausted,
+                                ..Default::default()
+                            },
+                        );
+                    }
+                    let changed = CellAddress { row, col };
+                    prefixes.invalidate(&[(0, changed)].into_iter().collect());
+                    for axis in [vertical, horizontal] {
+                        let in_range = row >= axis.first.row
+                            && row <= axis.last.row
+                            && col >= axis.first.col
+                            && col <= axis.last.col;
+                        let offset = if axis.first.col == axis.last.col {
+                            row.saturating_sub(axis.first.row)
+                        } else {
+                            col.saturating_sub(axis.first.col)
+                        };
+                        assert_eq!(
+                            prefixes.contains(axis),
+                            !(in_range && (exhausted || offset < 4))
+                        );
+                    }
+                }
+            }
         }
-        prefixes.publish();
-        assert_eq!(prefixes.members.get(&(0, shared)).unwrap().len(), 2);
-        // Discarding one published axis must preserve another axis's shared flag.
-        let prefix = prefixes.remove(vertical).unwrap();
-        prefixes.unregister(vertical, &prefix);
-        assert_eq!(prefixes.members.get(&(0, shared)).unwrap().len(), 1);
-        assert!(
-            prefixes
-                .members
-                .get(&(0, shared))
-                .unwrap()
-                .contains(&horizontal)
-        );
-        let changed = [(0, shared)].into_iter().collect();
-        prefixes.invalidate(&changed);
-        assert!(!prefixes.members.contains_key(&(0, shared)));
-        assert!(!prefixes.contains(vertical));
-        assert!(!prefixes.contains(horizontal));
-        assert!(prefixes.contains(untouched));
-        assert_eq!(prefixes.members.get(&(1, shared)).unwrap().len(), 1);
-        prefixes.admit(0);
-        assert!(prefixes.members.is_empty());
-        assert!(prefixes.axes.is_empty());
     }
 }

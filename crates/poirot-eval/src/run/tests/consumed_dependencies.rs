@@ -335,6 +335,7 @@ fn indirect_parses_current_operands_at_runtime_and_honors_parse_policy() {
     )
     .unwrap();
     let report = run.evaluate_probes(&[EvaluationProbe::Cell(target(B1))]);
+    // Only the producer whose possible rectangle covers this demand executes.
     assert_eq!(report.execution.dynamic_parse_attempts, 1);
     assert_eq!(
         value(report.outcome)[0].value,

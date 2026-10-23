@@ -263,5 +263,5 @@ fn borrowed_bytecode_arguments_force_once_and_skip_other_blocks() {
         context.scalar(repeated).unwrap()
     );
     assert_eq!(session.budget.usage.random_accesses[0].draws, 1);
-    assert!(session.bytecode_stacks.iter().all(Vec::is_empty));
+    assert!(session.runtime.vm.is_idle());
 }

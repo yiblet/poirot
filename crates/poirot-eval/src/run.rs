@@ -7,6 +7,12 @@
 //! immutable source and plan, use [`shared_workbook::SharedWorkbook`]; each run has
 //! its own inputs, budgets, and memo.
 //!
+//! Repeated SUMIF and conformable SUMPRODUCT calls may share one bounded scalar
+//! result within a run after each call prepares its own arguments. The first
+//! repetition admits reuse; subsequent identical resolved calls skip the ordered
+//! range scan. Edits and new evaluations discard this slot. External execution
+//! observers retain ordinary reads. Work counters measure kernels actually entered.
+//!
 //! ```
 //! use poirot_eval::{FormulaCompiler, EvaluationPolicy, WorkbookView, EvaluationRun, EvaluationTarget};
 //! use poirot_model::{Workbook, CellValue};
@@ -225,6 +231,7 @@ impl<'a> EvaluationRun<'a> {
 
         run.session.builtin_policy = configuration.builtin_policy();
         run.session.array_result_policy = configuration.array_result_policy();
+        run.session.producer_policy = configuration.producer_policy();
         Ok(run)
     }
     /// Start a configured run with its exact extension registry.
@@ -241,6 +248,7 @@ impl<'a> EvaluationRun<'a> {
 
         run.session.builtin_policy = configuration.builtin_policy();
         run.session.array_result_policy = configuration.array_result_policy();
+        run.session.producer_policy = configuration.producer_policy();
         Ok(run)
     }
     /// Set before evaluating. Retention exhaustion aborts before cloning the
@@ -293,7 +301,7 @@ impl<'a> EvaluationRun<'a> {
     }
     /// Borrow cumulative execution and reuse counters.
     pub fn usage(&self) -> &RunUsage {
-        &self.session.run_usage
+        &self.session.runtime.run_usage
     }
     /// Evaluate a stored cell using this run's shared dependency memo.
     pub fn evaluate_cell(
@@ -325,7 +333,7 @@ impl<'a> EvaluationRun<'a> {
         probes: &[EvaluationProbe<'_>],
     ) -> RunReport<Vec<CellEvaluation>> {
         let result = (|| {
-            self.session.budget.allocation(probes.len())?;
+            self.session.runtime.budget.allocation(probes.len())?;
             let mut values = Vec::with_capacity(probes.len());
             for probe in probes {
                 let (target, value) = match probe {
@@ -349,7 +357,7 @@ impl<'a> EvaluationRun<'a> {
         &mut self,
         targets: &[EvaluationTarget],
     ) -> Result<(), EvaluationFailure> {
-        self.session.budget.allocation(targets.len())?;
+        self.session.runtime.budget.allocation(targets.len())?;
         for target in targets {
             self.evaluate_cell(*target)?;
         }
@@ -376,6 +384,7 @@ impl<'a> EvaluationRun<'a> {
                 .map_err(|_| EvaluationFailure::StalePlan)?
                 .count();
             self.session
+                .runtime
                 .budget
                 .charge(crate::WorkKind::SparseScan, count as u64)?;
             for (address, cell) in effective
@@ -383,8 +392,12 @@ impl<'a> EvaluationRun<'a> {
                 .map_err(|_| EvaluationFailure::StalePlan)?
             {
                 if cell.formula.is_some() {
-                    self.session.budget.check_allocation(targets.len() + 1)?;
                     self.session
+                        .runtime
+                        .budget
+                        .check_allocation(targets.len() + 1)?;
+                    self.session
+                        .runtime
                         .budget
                         .charge(crate::WorkKind::Materialization, 1)?;
                     targets.push(EvaluationTarget {
@@ -394,7 +407,7 @@ impl<'a> EvaluationRun<'a> {
                 }
             }
         }
-        self.session.budget.allocation(targets.len())?;
+        self.session.runtime.budget.allocation(targets.len())?;
         for target in &targets {
             self.evaluate_cell(*target)?;
         }
@@ -405,8 +418,8 @@ impl<'a> EvaluationRun<'a> {
         mut self,
         result: Result<T, EvaluationFailure>,
     ) -> RetainedRun<T> {
-        let cells = std::mem::take(&mut self.session.cache);
-        let memo_usage = self.session.memo_usage;
+        let cells = std::mem::take(&mut self.session.runtime.cache);
+        let memo_usage = self.session.runtime.memo_usage;
         RetainedRun {
             memo_usage,
             report: self.finish(result),
@@ -414,10 +427,10 @@ impl<'a> EvaluationRun<'a> {
         }
     }
     /// Finish with the caller's result and accumulated accounting.
-    pub fn finish<T>(self, result: Result<T, EvaluationFailure>) -> RunReport<T> {
+    pub fn finish<T>(mut self, result: Result<T, EvaluationFailure>) -> RunReport<T> {
         RunReport {
-            execution: self.session.run_usage,
-            outcome: self.session.budget.outcome(result),
+            execution: std::mem::take(&mut self.session.runtime.run_usage),
+            outcome: self.session.runtime.budget.take().outcome(result),
         }
     }
 }

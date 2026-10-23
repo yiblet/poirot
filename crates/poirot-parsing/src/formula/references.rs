@@ -193,6 +193,10 @@ fn range_operand(expr: &Expr) -> bool {
     match expr {
         Expr::Cell(_) | Expr::Name(_) | Expr::QualifiedName { .. } | Expr::SheetSpan(_) => true,
         Expr::Error(error) => error == "#REF!",
+        Expr::Unary {
+            op: UnaryOp::SpillRange,
+            ..
+        } => true,
         Expr::Function { name, .. } => {
             crate::formula::reference_classes::return_class(name)
                 != Some(crate::formula::reference_classes::ReturnClass::Array)
@@ -206,6 +210,22 @@ fn range_operand(expr: &Expr) -> bool {
 }
 /// Propagate an endpoint's sheet qualifier across its range when omitted.
 pub(super) fn inherit_sheet(left: &Expr, right: &mut Expr) {
+    if let Expr::Unary {
+        op: UnaryOp::SpillRange,
+        operand,
+    } = left
+    {
+        inherit_sheet(operand, right);
+        return;
+    }
+    if let Expr::Unary {
+        op: UnaryOp::SpillRange,
+        operand,
+    } = right
+    {
+        inherit_sheet(left, operand);
+        return;
+    }
     let sheet = match left {
         Expr::Cell(c) => &c.sheet,
         Expr::Column { sheet, .. } | Expr::Row { sheet, .. } => sheet,

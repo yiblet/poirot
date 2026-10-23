@@ -5,7 +5,7 @@
 //! https://support.microsoft.com/en-us/excel/functions/count-function
 //! Array coordinates follow documented spilling into adjacent cells:
 //! https://support.microsoft.com/en-us/excel/dynamic-array-formulas-and-spilled-array-behavior
-//! Work counters and conservative unknown-producer failures are Poirot contracts.
+//! Work counters and complete per-sheet preparation are Poirot contracts.
 use poirot_eval::EvaluationTarget;
 use poirot_eval::overlay::{Evaluation, EvaluationContext, Overlay};
 use poirot_model::{CellValue, Workbook};
@@ -57,7 +57,7 @@ fn disjoint_ranges_do_not_reinspect_preceding_literals_or_scalar_formulas() {
 }
 
 #[test]
-fn alternating_discovery_rectangles_do_not_prepare_the_undemanded_corner() {
+fn disjoint_prefixes_leave_irrelevant_sources_uncompiled_until_demanded() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
     sheet
@@ -70,12 +70,19 @@ fn alternating_discovery_rectangles_do_not_prepare_the_undemanded_corner() {
     for address in ["A10000", "ZZ1", "B9000", "Z1"] {
         assert_eq!(direct.cell(at(address)).unwrap(), CellValue::Blank);
     }
+    // Each demand excludes both sources: the tall prefixes stop before M,
+    // while the wide prefixes stop before row 2. Their union excludes both.
     assert_eq!(direct.compiled_usage().parse_attempts, 0);
-    // This demand crosses the previously uninspected corner and must still find
-    // the bounded producer without attempting the unrelated unknown producer.
+    // Reaching each source later compiles it once, preserving its own result.
     assert_eq!(direct.cell(at("X3")).unwrap(), CellValue::Number(2.));
+    assert_eq!(direct.compiled_usage().parse_attempts, 1);
     assert_eq!(direct.cell(at("X2")).unwrap(), CellValue::Number(1.));
-    assert!(direct.cell(at("M5001")).is_err());
+    assert_eq!(direct.cell(at("M5001")).unwrap(), CellValue::Blank);
+    assert_eq!(direct.compiled_usage().parse_attempts, 2);
+    assert_eq!(
+        direct.cell(at("M5000")).unwrap(),
+        CellValue::Error(poirot_model::CellError::Name)
+    );
 
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let context = EvaluationContext::default();
@@ -84,7 +91,7 @@ fn alternating_discovery_rectangles_do_not_prepare_the_undemanded_corner() {
         assert_eq!(incremental.cell(at(address)).unwrap(), CellValue::Blank);
     }
     assert_eq!(incremental.cell(at("X3")).unwrap(), CellValue::Number(2.));
-    assert!(incremental.cell(at("M5001")).is_err());
+    assert_eq!(incremental.cell(at("M5001")).unwrap(), CellValue::Blank);
 }
 
 #[test]

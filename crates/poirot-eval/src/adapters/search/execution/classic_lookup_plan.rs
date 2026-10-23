@@ -9,7 +9,7 @@ pub(super) enum LookupTable {
     /// Logical area with signed, possibly off-grid coordinates.
     Signed(signed_reference::SignedArea),
     /// Singleton cells across a sheet span accepted by MATCH.
-    SheetCells(Vec<Area>),
+    SheetCells(ReferenceAreas),
     /// Materialized rectangular values.
     Array(ArrayView),
 }

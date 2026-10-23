@@ -37,6 +37,20 @@ pub enum WorkbookChange {
         #[serde(with = "snapshot::value_serde")]
         value: CellValue,
     },
+    /// Save an anchor result and its declared spill geometry under an exact source guard.
+    SetSpillAnchorCachedValue {
+        /// Worksheet containing the anchor.
+        sheet: usize,
+        /// Formula cell owning the saved footprint.
+        anchor: CellAddress,
+        /// Inclusive lower-right corner, including the anchor for one-cell arrays.
+        last: CellAddress,
+        /// Exact formula source required before publication.
+        expected_formula: String,
+        /// Saved anchor result.
+        #[serde(with = "snapshot::value_serde")]
+        value: CellValue,
+    },
     /// Remove derived children owned by a spill anchor.
     ClearSpillCache {
         /// Zero-based index of the worksheet to change.
@@ -67,7 +81,7 @@ pub enum WorkbookChange {
         /// Complete authored cell to store.
         cell: Cell,
     },
-    /// Update presentation metadata while preserving authored content.
+    /// Update presentation metadata while preserving authored content and saved spill ownership.
     SetStyle {
         /// Zero-based index of the worksheet to change.
         sheet: usize,
@@ -171,6 +185,18 @@ impl Workbook {
             // SAFETY: Each index was checked against self.sheets.len() above. No sheets
             // are added or removed between validation and this lookup.
             let sheet = &mut self.sheets[index];
+            sheet
+                .spill_extents
+                .retain(|anchor, _| !cells.contains_key(anchor));
+            let invalidated = sheet
+                .spill_cache
+                .iter()
+                .filter(|(at, _)| cells.contains_key(at))
+                .map(|(_, spill)| spill.owner)
+                .collect::<Vec<_>>();
+            for anchor in invalidated {
+                sheet.spill_extents.remove(&anchor);
+            }
             let children = sheet
                 .spill_cache
                 .iter()
@@ -247,6 +273,20 @@ impl Workbook {
                 }
                 cell.value = value;
             }
+            SetSpillAnchorCachedValue {
+                sheet,
+                anchor,
+                last,
+                expected_formula,
+                value,
+            } => {
+                let worksheet = self.change_sheet(sheet)?;
+                worksheet.set_spill_extent(anchor, last, &expected_formula)?;
+                let cell = worksheet
+                    .get_mut(anchor)
+                    .ok_or_else(|| ModelError("missing spill anchor".into()))?;
+                cell.value = value;
+            }
             ClearSpillCache { sheet, anchor } => {
                 anchor.validate()?;
                 self.change_sheet(sheet)?.clear_spill_cache(anchor);
@@ -275,11 +315,7 @@ impl Workbook {
                 address,
                 style,
             } => {
-                address.validate()?;
-                let sheet = self.change_sheet(sheet)?;
-                let mut cell = sheet.source_cell(address).cloned().unwrap_or_default();
-                cell.style = style;
-                sheet.set(address, cell)?;
+                self.change_sheet(sheet)?.set_style(address, style)?;
             }
             RemoveCell { sheet, address } => {
                 address.validate()?;
@@ -538,4 +574,111 @@ fn rejected_source_replacement_preserves_saved_spill_ownership() {
     assert_eq!(sheet.spill_owner(child), Some(anchor));
     assert_eq!(sheet.get(child).unwrap().value, CellValue::Number(2.));
     assert!(sheet.source_cell(child).is_none());
+}
+
+#[cfg(test)]
+mod spill_extent_tests {
+    use super::*;
+    fn at(s: &str) -> CellAddress {
+        s.parse().unwrap()
+    }
+    #[test]
+    fn saved_extent_tracks_singletons_completeness_source_guards_and_original_metadata() {
+        let mut book = Workbook::new();
+        let sheet = book.add_sheet("S").unwrap();
+        sheet
+            .set_formula_with_cached_value(at("A1"), "{7}", 7.0.into())
+            .unwrap();
+        sheet.set_spill_extent(at("A1"), at("A1"), "{7}").unwrap();
+        assert_eq!(sheet.complete_spill_extent(at("A1")), Some(at("A1")));
+        sheet.get_mut(at("A1")).unwrap().formula = Some("{8}".into());
+        assert_eq!(sheet.spill_extent(at("A1")), None);
+        assert_eq!(sheet.complete_spill_extent(at("A1")), None);
+        assert!(sheet.set_spill_extent(at("A1"), at("B2"), "{7}").is_err());
+        sheet.set_spill_extent(at("A1"), at("B2"), "{8}").unwrap();
+        assert_eq!(sheet.complete_spill_extent(at("A1")), None);
+        for child in ["B1", "A2", "B2"] {
+            sheet
+                .set_spill_cached_value(at(child), at("A1"), "{8}", 8.0.into())
+                .unwrap();
+        }
+        assert_eq!(sheet.complete_spill_extent(at("A1")), Some(at("B2")));
+        let bytes = postcard::to_allocvec(&snapshot::Snapshot::capture(&book)).unwrap();
+        let restored: snapshot::Snapshot<'static> = postcard::from_bytes(&bytes).unwrap();
+        let mut restored = restored.restore().unwrap();
+        assert_eq!(
+            restored.sheet(0).unwrap().complete_spill_extent(at("A1")),
+            Some(at("B2"))
+        );
+        restored.replace_cells([(0, at("B2"), None)]).unwrap();
+        assert_eq!(restored.sheet(0).unwrap().spill_extent(at("A1")), None);
+        restored.sheet_mut(0).unwrap().clear_spill_cache(at("A1"));
+        assert!(restored.sheet(0).unwrap().get(at("B1")).is_none());
+    }
+    #[test]
+    fn sparse_huge_incomplete_geometry_does_not_expand_or_appear_complete() {
+        let mut book = Workbook::new();
+        let sheet = book.add_sheet("S").unwrap();
+        sheet.set_formula(at("A1"), "{1,2}").unwrap();
+        sheet
+            .set_spill_extent(at("A1"), at("XFD1048576"), "{1,2}")
+            .unwrap();
+        sheet
+            .set_spill_cached_value(at("XFD1048576"), at("A1"), "{1,2}", 2.0.into())
+            .unwrap();
+        assert_eq!(sheet.spill_extent(at("A1")), Some(at("XFD1048576")));
+        assert_eq!(sheet.complete_spill_extent(at("A1")), None);
+        assert_eq!(sheet.cells().len(), 2);
+        assert!(
+            sheet
+                .set_spill_extent(
+                    at("A1"),
+                    CellAddress {
+                        row: MAX_ROWS,
+                        col: 0
+                    },
+                    "{1,2}"
+                )
+                .is_err()
+        );
+        assert!(
+            sheet
+                .set_spill_extent(at("A1"), at("A1"), "changed")
+                .is_err()
+        );
+    }
+    #[test]
+    fn guarded_anchor_change_is_transactional_and_child_edits_remove_geometry_authority() {
+        let mut book = Workbook::new();
+        book.add_sheet("S")
+            .unwrap()
+            .set_formula(at("A1"), "{1}")
+            .unwrap();
+        let before = book.clone();
+        assert!(
+            book.apply([WorkbookChange::SetSpillAnchorCachedValue {
+                sheet: 0,
+                anchor: at("A1"),
+                last: at("B2"),
+                expected_formula: "changed".into(),
+                value: 1.0.into()
+            }])
+            .is_err()
+        );
+        assert_eq!(book, before);
+        book.apply([WorkbookChange::SetSpillAnchorCachedValue {
+            sheet: 0,
+            anchor: at("A1"),
+            last: at("A1"),
+            expected_formula: "{1}".into(),
+            value: 1.0.into(),
+        }])
+        .unwrap();
+        assert_eq!(
+            book.sheet(0).unwrap().complete_spill_extent(at("A1")),
+            Some(at("A1"))
+        );
+        book.sheet_mut(0).unwrap().set_value(at("A1"), 7.).unwrap();
+        assert_eq!(book.sheet(0).unwrap().spill_extent(at("A1")), None);
+    }
 }

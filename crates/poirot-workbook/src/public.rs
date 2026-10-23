@@ -140,8 +140,19 @@ impl Workbook {
         &mut self,
         context: crate::EvaluationContext,
     ) -> Result<(), CalculationError> {
+        self.recalculate_with_policy(context, crate::OverlayPolicy::default())
+    }
+    /// Recalculate using explicit producer, array, and compatibility policies.
+    /// Caller-trusted producers consume saved results and reject incomplete saved arrays.
+    /// All cache writes are atomic; input edits remain if evaluation fails.
+    pub fn recalculate_with_policy(
+        &mut self,
+        context: crate::EvaluationContext,
+        policy: crate::OverlayPolicy,
+    ) -> Result<(), CalculationError> {
         let changes = {
             let mut evaluation = crate::Evaluation::with_workbook(&self.model)
+                .with_policy(policy)
                 .build(context)
                 .map_err(CalculationError::Preparation)?;
             evaluation.all().map_err(CalculationError::Evaluation)?;

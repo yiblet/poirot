@@ -194,9 +194,10 @@ fn matrix_and_text_limits_abort_before_growth_and_dense_reads() {
     };
     assert_eq!(value, CellValue::Blank);
     assert_eq!(usage.cell_reads, 2);
-    // Two endpoint descriptors, one combined range, two memo entries, and dynamic blank-read tracking.
+    // Two endpoint descriptors, one combined range, and two memo entries.
+    // Stable-area blanks need no preparation-only footprint tracking.
     // No six-cell dense table reservation is admitted; each reservation fits cap 2.
-    assert_eq!(usage.materialized_values, 6);
+    assert_eq!(usage.materialized_values, 5);
     let limited = EvaluationBudgets {
         text_bytes: 5,
         ..EvaluationBudgets::default()
@@ -506,8 +507,8 @@ fn intersection_checks_actual_output_cardinality_before_each_push() {
     };
     let result = session.references(
         poirot_parsing::formula::BinaryOp::Intersection,
-        Value::Refs(vec![area; 3]),
-        Value::Refs(vec![area; 3]),
+        Value::Refs(vec![area; 3].into()),
+        Value::Refs(vec![area; 3].into()),
     );
     assert_eq!(
         result
@@ -544,8 +545,8 @@ fn intersection_checks_actual_output_cardinality_before_each_push() {
         session
             .references(
                 poirot_parsing::formula::BinaryOp::Intersection,
-                Value::Refs(vec![left; 3]),
-                Value::Refs(vec![right; 3])
+                Value::Refs(vec![left; 3].into()),
+                Value::Refs(vec![right; 3].into())
             )
             .unwrap(),
         Value::Scalar(CellValue::Error(CellError::Null))

@@ -115,6 +115,8 @@ pub enum UnaryOp {
     Percent,
     /// Explicit `@` selection without numeric coercion.
     ImplicitIntersection,
+    /// Reference the accepted spill footprint of a single anchor (`#`).
+    SpillRange,
 }
 /// Arithmetic, comparison, text, or reference-combination operator in the syntax tree.
 /// Range (`:`), union (`,`), and intersection (space) operate on references.

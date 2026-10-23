@@ -56,13 +56,14 @@ impl<'a> OverlayEvaluation<'a> {
     /// Values reached in this instance, including dependency and spill cells.
     pub fn values(&self) -> impl Iterator<Item = (EvaluationTarget, &CellValue)> {
         self.session
+            .runtime
             .cache
             .iter()
             .map(|(&(sheet, address), value)| (EvaluationTarget { sheet, address }, value))
     }
     /// Return execution counters accumulated across this instance's output calls.
     pub fn usage(&self) -> &crate::RunUsage {
-        &self.session.run_usage
+        &self.session.runtime.run_usage
     }
     /// Export completed results and spill cleanup as owned workbook cache changes.
     pub fn result_changes(&self) -> Result<Vec<WorkbookChange>, EvaluationFailure> {
@@ -96,12 +97,14 @@ impl<'a> OverlayEvaluation<'a> {
         self.result_changes()
     }
     /// Finish execution and report accumulated work and any operational failure.
-    pub fn finish(self) -> crate::RunReport<()> {
+    pub fn finish(mut self) -> crate::RunReport<()> {
         crate::RunReport {
-            execution: self.session.run_usage,
+            execution: std::mem::take(&mut self.session.runtime.run_usage),
             outcome: self
                 .session
+                .runtime
                 .budget
+                .take()
                 .outcome(self.failure.map_or(Ok(()), Err)),
         }
     }
@@ -114,23 +117,21 @@ impl<'a> OverlayEvaluation<'a> {
         }
         // Move rather than clone the retained index. Only a successfully published
         // dependency batch may return it to the overlay; aborted work is discarded.
-        self.session.lookup_prefixes = std::mem::take(
+        self.session.runtime.lookup_prefixes = std::mem::take(
             &mut self
                 .cache
                 .try_borrow_mut()
                 .map_err(|_| EvaluationFailure::StalePlan)?
                 .lookup_prefixes,
         );
-        self.session
-            .lookup_prefixes
-            .admit(self.session.budget.limits.materialized_values);
+        let limit = self.session.runtime.budget.limits.materialized_values;
+        self.session.runtime.lookup_prefixes.admit(limit);
         let result = evaluate(&mut self.session).and_then(|value| {
             self.publish()?;
-            self.session.lookup_prefixes.publish();
             self.cache
                 .try_borrow_mut()
                 .map_err(|_| EvaluationFailure::StalePlan)?
-                .lookup_prefixes = std::mem::take(&mut self.session.lookup_prefixes);
+                .lookup_prefixes = std::mem::take(&mut self.session.runtime.lookup_prefixes);
             Ok(value)
         });
         if let Err(failure) = &result {
@@ -145,31 +146,32 @@ impl<'a> OverlayEvaluation<'a> {
             .as_mut()
             .ok_or(EvaluationFailure::StalePlan)?;
         reads.flush();
-        let mut evaluated = std::mem::take(&mut reads.evaluated);
+        let mut fresh_results = std::mem::take(&mut reads.fresh_results);
         let mut completed = std::mem::take(&mut reads.completed);
-        if self.session.array_result_policy == crate::ArrayResultPolicy::DynamicSpill {
-            // Hydrated footprints retain their original dependency trace. Only
-            // children of producers actually executed in this batch get new traces.
-            let children = self
+        let mut journal = std::mem::take(&mut self.session.runtime.preparation.journal);
+        for &key in &journal {
+            let owner = self
                 .session
-                .spill_owners
-                .iter()
-                .filter(|((sheet, _), owner)| evaluated.contains(&(*sheet, **owner)))
-                .map(|(key, _)| *key)
-                .collect::<Vec<_>>();
-            evaluated.extend(children);
-            completed.extend(self.session.spill_owners.keys().copied());
+                .runtime
+                .preparation
+                .roles
+                .get(&key)
+                .and_then(|role| role.owner(key.1));
+            if owner.is_some_and(|owner| fresh_results.contains(&(key.0, owner))) {
+                fresh_results.insert(key);
+            }
+            completed.insert(key);
         }
         let effective =
             crate::run_overlay::EffectiveWorkbook::new(self.session.workbook, self.session.inputs);
         let mut staged = Vec::new();
-        for key in evaluated {
-            let Some(value) = self.session.cache.get(&key) else {
+        for key in fresh_results.drain() {
+            let Some(value) = self.session.runtime.cache.get(&key) else {
                 continue;
             };
             let source = effective.cell(key.0, key.1);
             // Literal/absent reads need graph edges, but no retained copy of their values.
-            if !self.session.spill_owners.contains_key(&key)
+            if !self.session.runtime.preparation.roles.contains_key(&key)
                 && source.is_none_or(|cell| cell.formula.is_none())
                 && source.map_or(matches!(value, CellValue::Blank), |cell| {
                     crate::same_result_identity(&cell.value, value)
@@ -178,8 +180,14 @@ impl<'a> OverlayEvaluation<'a> {
                 continue;
             }
             let mut dependencies = Box::new(reads.traces.remove(&key).unwrap_or_default());
-            dependencies.spill =
-                crate::spill_publication::spill_role(&self.session.spill_owners, key);
+            dependencies.spill = self
+                .session
+                .runtime
+                .preparation
+                .roles
+                .get(&key)
+                .copied()
+                .unwrap_or_default();
             if let crate::spill_publication::SpillRole::Child { anchor } = dependencies.spill {
                 dependencies.cells.push((key.0, anchor));
             }
@@ -209,11 +217,15 @@ impl<'a> OverlayEvaluation<'a> {
                     .map(|(key, _)| *key),
             );
             resets.extend(
-                self.session
-                    .spill_owners
+                journal
                     .iter()
-                    .filter(|((_, at), owner)| at == *owner)
-                    .map(|(&(sheet, at), _)| (sheet, at)),
+                    .filter(|key| {
+                        matches!(
+                            self.session.runtime.preparation.roles.get(key),
+                            Some(crate::spill_publication::SpillRole::Anchor { .. })
+                        )
+                    })
+                    .copied(),
             );
         }
         completed.extend(staged.iter().map(|(key, _)| *key));
@@ -223,11 +235,18 @@ impl<'a> OverlayEvaluation<'a> {
             .commit(
                 staged,
                 self.retention,
-                self.session.consumer,
+                self.session.runtime.consumer,
                 resets.iter().copied(),
             )?;
-        self.completed.extend(completed);
+        self.completed.extend(completed.drain());
         self.spill_resets.extend(resets);
+        // Retain only empty publication buffers after a successful atomic commit.
+        // An error still discards the local batch and poisons this evaluation.
+        reads.fresh_results = fresh_results;
+        reads.completed = completed;
+        journal.clear();
+        self.session.runtime.preparation.journal = journal;
+
         Ok(())
     }
 }
@@ -251,6 +270,15 @@ pub(super) fn evaluated_change(
             value: policy.coerce_stored_value(value.clone()),
         });
     }
+    if let crate::spill_publication::SpillRole::Anchor { last } = spill {
+        return Some(WorkbookChange::SetSpillAnchorCachedValue {
+            sheet: key.0,
+            anchor: key.1,
+            last,
+            expected_formula: effective.cell(key.0, key.1)?.formula.as_ref()?.clone(),
+            value: policy.coerce_stored_value(value.clone()),
+        });
+    }
     result_change(effective.cell(key.0, key.1), key, value, policy)
 }
 
@@ -258,6 +286,62 @@ pub(super) fn evaluated_change(
 mod safety_tests {
     use super::*;
 
+    #[test]
+    fn separate_public_calls_preserve_complete_exports_while_reusing_empty_buffers() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_sheet("S").unwrap();
+        sheet
+            .set_formula("A1".parse().unwrap(), "SEQUENCE(2,2)")
+            .unwrap();
+        sheet
+            .set_formula("A4".parse().unwrap(), "SEQUENCE(2,2)")
+            .unwrap();
+        let mut overlay = Overlay::with_workbook(&workbook).build().unwrap();
+        let context = EvaluationContext::default();
+        let mut evaluation = overlay.evaluation(&context).unwrap();
+        let target = |address: &str| EvaluationTarget {
+            sheet: 0,
+            address: address.parse().unwrap(),
+        };
+        assert_eq!(evaluation.cell(target("B2")).unwrap(), CellValue::from(4.));
+        let first = evaluation.result_changes().unwrap();
+        let reads = evaluation.session.overlay_reads.as_ref().unwrap();
+        assert!(reads.fresh_results.is_empty());
+        assert!(reads.completed.is_empty());
+        assert!(reads.fresh_results.capacity() > 0);
+        assert!(reads.completed.capacity() > 0);
+        assert!(evaluation.session.runtime.preparation.journal.is_empty());
+        assert!(evaluation.session.runtime.preparation.journal.capacity() > 0);
+        assert_eq!(evaluation.cell(target("B5")).unwrap(), CellValue::from(4.));
+        let changes = evaluation.result_changes().unwrap();
+        assert!(first.iter().all(|change| changes.contains(change)));
+        let mut published = workbook.clone();
+        published.apply(changes).unwrap();
+        let sheet = published.sheet(0).unwrap();
+        for (anchor, first_row) in [("A1", 0), ("A4", 3)] {
+            assert_eq!(
+                sheet.spill_extent(anchor.parse().unwrap()),
+                Some(CellAddress {
+                    row: first_row + 1,
+                    col: 1
+                })
+            );
+            for row in 0..2 {
+                for col in 0..2 {
+                    assert_eq!(
+                        sheet
+                            .get(CellAddress {
+                                row: first_row + row,
+                                col
+                            })
+                            .unwrap()
+                            .value,
+                        CellValue::from(f64::from(row * 2 + col + 1))
+                    );
+                }
+            }
+        }
+    }
     #[test]
     fn conflicting_cache_borrow_returns_stale_plan() {
         let workbook = Workbook::new();

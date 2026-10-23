@@ -14,6 +14,8 @@ pub struct RunInputs {
     pub(crate) sheets: BTreeMap<usize, InputCells>,
     /// Baseline cells hidden by deletions.
     pub(crate) deleted: BTreeSet<(usize, CellAddress)>,
+    /// Overrides that change only style, preserving baseline content and saved ownership.
+    pub(crate) style_only: BTreeSet<(usize, CellAddress)>,
     /// Source identity token binding assignments to their shared workbook owner.
     pub(crate) source: std::sync::Arc<()>,
 }
@@ -23,6 +25,7 @@ impl RunInputs {
         Self {
             sheets: BTreeMap::new(),
             deleted: BTreeSet::new(),
+            style_only: BTreeSet::new(),
             source: std::sync::Arc::new(()),
         }
     }
@@ -36,6 +39,7 @@ impl RunInputs {
         let mut inputs = Self {
             sheets: BTreeMap::new(),
             deleted: BTreeSet::new(),
+            style_only: BTreeSet::new(),
             source,
         };
         let mut count = 0usize;
@@ -120,6 +124,17 @@ impl<'a> EffectiveWorkbook<'a> {
         let overlay = self
             .inputs
             .and_then(|inputs| inputs.sheets.get(&area.sheet));
+        // Full-width rectangles are contiguous in CellAddress order. Keep the
+        // existing merge cursors open across rows instead of locating each row
+        // and reopening its bounded source ranges.
+        let contiguous = area.first.col == 0 && area.last.col == poirot_model::MAX_COLUMNS - 1;
+        let mut base_row =
+            contiguous.then(|| OverlayCells::Base(baseline).range(area.first..=area.last));
+        let mut input_row = overlay
+            .filter(|_| contiguous)
+            .map(|cells| OverlayCells::Input(cells).range(area.first..=area.last));
+        let base_next = advance(&mut base_row, reverse);
+        let input_next = advance(&mut input_row, reverse);
         Ok(EffectiveStoredCells {
             baseline,
             baseline_sheet,
@@ -127,25 +142,36 @@ impl<'a> EffectiveWorkbook<'a> {
             deleted: self.inputs.map(|i| &i.deleted),
             area,
             reverse,
-            next_row: Some(if reverse {
+            next_row: (!contiguous).then_some(if reverse {
                 area.last.row
             } else {
                 area.first.row
             }),
-            base_row: None,
-            input_row: None,
-            base_next: None,
-            input_next: None,
+            base_row,
+            input_row,
+            base_next,
+            input_next,
             column: (!reverse && area.first.col == area.last.col)
                 .then(|| ColumnTraversal::new(baseline, overlay, area)),
-            counters: QueryCounters::default(),
+            counters: QueryCounters {
+                // Each contiguous source interval replaces the outer occupied-
+                // row lookup and per-row bounded reopen operations below.
+                row_seeks: if contiguous {
+                    // SAFETY: Boolean conversion is zero or one, so this sum is at most two.
+                    1 + u64::from(overlay.is_some())
+                } else {
+                    0
+                },
+                ..QueryCounters::default()
+            },
         })
     }
 }
 
 /// Borrowed effective cells with counters for the traversal actually performed.
 /// Column queries count source page seeks and visits, including merge prefetches;
-/// rectangular queries seek occupied rows and visit the effective union.
+/// Narrow rectangles seek occupied rows; full-width rectangles open contiguous
+/// source intervals. Both visit the effective union after deletion/source filtering.
 /// Both ranges borrow their source. No retained membership index or per-read allocation.
 pub struct EffectiveStoredCells<'a> {
     baseline: poirot_model::WorksheetCells<'a>,
@@ -534,5 +560,157 @@ mod page_column_tests {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod full_width_tests {
+    use super::*;
+
+    fn address(row: u32, col: u32) -> CellAddress {
+        CellAddress { row, col }
+    }
+
+    #[test]
+    fn full_width_intervals_preserve_bounded_effective_sources_in_both_directions() {
+        let mut book = Workbook::new();
+        let sheet = book.add_sheet("S").unwrap();
+        let last_col = poirot_model::MAX_COLUMNS - 1;
+        for (row, col, value) in [
+            (0, 0, 1.),
+            (1, 0, 2.),
+            (1, last_col, 3.),
+            (3, 1, 4.),
+            (5, last_col, 5.),
+            (7, 0, 6.),
+        ] {
+            sheet.set_value(address(row, col), value).unwrap();
+        }
+        // These expectations describe authored sources, not saved spill values.
+        sheet.set_formula(address(2, 0), "{7,8,9}").unwrap();
+        sheet.set_value(address(2, 1), CellValue::Blank).unwrap();
+        sheet
+            .set_spill_cached_value(address(2, 1), address(2, 0), "{7,8,9}", 8.0.into())
+            .unwrap();
+        sheet
+            .set_spill_cached_value(address(2, 2), address(2, 0), "{7,8,9}", 9.0.into())
+            .unwrap();
+        let mut input = RunInputs::new(
+            &book,
+            [
+                (0, address(1, 0), 20.0.into()),
+                (0, address(2, 2), 90.0.into()),
+                (0, address(2, 1), CellValue::Blank),
+                (0, address(4, 2), 40.0.into()),
+            ],
+            4,
+            std::sync::Arc::new(()),
+        )
+        .unwrap();
+        input.deleted.insert((0, address(3, 1)));
+        input.style_only.insert((0, address(2, 1)));
+        let expected = [
+            (address(0, 0), CellValue::Number(1.), None),
+            (address(1, 0), CellValue::Number(20.), None),
+            (address(1, last_col), CellValue::Number(3.), None),
+            (address(2, 0), CellValue::Blank, Some("{7,8,9}")),
+            (address(2, 1), CellValue::Blank, None),
+            (address(2, 2), CellValue::Number(90.), None),
+            (address(4, 2), CellValue::Number(40.), None),
+            (address(5, last_col), CellValue::Number(5.), None),
+            (address(7, 0), CellValue::Number(6.), None),
+        ];
+        let view = EffectiveWorkbook::new(&book, Some(&input));
+        for (first, last) in [(0, 7), (1, 5), (2, 2), (3, 3), (6, 6)] {
+            for reverse in [false, true] {
+                let area =
+                    RangeMembership::new(0, address(first, 0), address(last, last_col)).unwrap();
+                let mut cells = if reverse {
+                    view.stored_reverse(area)
+                } else {
+                    view.stored(area)
+                }
+                .unwrap();
+                let actual: Vec<_> = cells
+                    .by_ref()
+                    .map(|(at, cell)| (*at, cell.value.clone(), cell.formula.as_deref()))
+                    .collect();
+                let mut wanted: Vec<_> = expected
+                    .iter()
+                    .filter(|(at, _, _)| at.row >= first && at.row <= last)
+                    .cloned()
+                    .collect();
+                if reverse {
+                    wanted.reverse();
+                }
+                assert_eq!(actual, wanted);
+                assert_eq!(
+                    cells.counters(),
+                    QueryCounters {
+                        row_seeks: 2,
+                        cells_visited: wanted.len() as u64,
+                        ..QueryCounters::default()
+                    }
+                );
+                assert!(cells.next().is_none());
+            }
+        }
+    }
+
+    #[test]
+    fn contiguous_empty_queries_and_narrow_neighbors_keep_their_work_contracts() {
+        let mut book = Workbook::new();
+        book.add_sheet("S").unwrap();
+        let full =
+            RangeMembership::new(0, address(1, 0), address(3, poirot_model::MAX_COLUMNS - 1))
+                .unwrap();
+        for reverse in [false, true] {
+            let view = EffectiveWorkbook::new(&book, None);
+            let mut cells = if reverse {
+                view.stored_reverse(full)
+            } else {
+                view.stored(full)
+            }
+            .unwrap();
+            assert!(cells.next().is_none());
+            assert!(cells.next().is_none());
+            assert_eq!(
+                cells.counters(),
+                QueryCounters {
+                    row_seeks: 1,
+                    ..QueryCounters::default()
+                }
+            );
+        }
+        let missing = RangeMembership { sheet: 1, ..full };
+        assert!(EffectiveWorkbook::new(&book, None).stored(missing).is_err());
+        assert!(
+            EffectiveWorkbook::new(&book, None)
+                .stored_reverse(missing)
+                .is_err()
+        );
+        let sheet = book.sheet_mut(0).unwrap();
+        for row in [1, 2] {
+            for col in [0, 1, 2] {
+                sheet
+                    .set_value(address(row, col), f64::from(row * 10 + col))
+                    .unwrap();
+            }
+        }
+        let narrow = RangeMembership::new(0, address(1, 1), address(3, 2)).unwrap();
+        let mut cells = EffectiveWorkbook::new(&book, None).stored(narrow).unwrap();
+        assert_eq!(
+            cells.by_ref().map(|(at, _)| *at).collect::<Vec<_>>(),
+            vec![address(1, 1), address(1, 2), address(2, 1), address(2, 2)]
+        );
+        assert_eq!(
+            cells.counters(),
+            QueryCounters {
+                row_seeks: 3,
+                column_seeks: 2,
+                cells_visited: 4,
+                key_lookups: 0
+            }
+        );
     }
 }

@@ -527,9 +527,9 @@ mod tests {
                 // Operational refusals must escape IFERROR regardless of the
                 // sparse traversal algorithm's page/row counter granularity.
                 assert_eq!(usage.expressions, 7);
-                assert!(usage.cell_reads > 0);
+                // Cold sheet classification may exhaust the allowance before
+                // the first candidate comparison, and remains an operational failure.
                 assert!(usage.sparse_entries > 0);
-                assert!(usage.comparisons > 0);
                 assert_eq!(usage.text_bytes, 26);
             } else {
                 assert_eq!(usage.work_units, 35);

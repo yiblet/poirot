@@ -6,7 +6,7 @@ use std::borrow::Cow;
 /// Source snapshot wire revision, checked by the public artifact envelope before decoding.
 /// Bump whenever the serialized source layout changes; provide an explicit migration or
 /// reject older revisions. Prepared engine compatibility is versioned separately.
-pub const SCHEMA_VERSION: u16 = 3;
+pub const SCHEMA_VERSION: u16 = 4;
 
 /// Borrowed-or-owned Serde transport for source state, separate from runtime workbook types.
 #[derive(Serialize, Deserialize)]
@@ -33,6 +33,7 @@ struct Sheet<'a> {
     visibility: Vec<(u32, RowVisibility)>,
     cells: Vec<SnapshotCell<'a>>,
     spill_cache: Vec<(CellAddress, CellAddress, Option<Cow<'a, Cell>>)>,
+    spill_extents: Vec<(CellAddress, SavedSpillExtent)>,
 }
 /// Lossless snapshot value encoding numeric bits and exact UTF-16 units.
 #[derive(PartialEq, Eq, Serialize, Deserialize)]
@@ -64,6 +65,7 @@ impl<'a> Snapshot<'a> {
                     && a.rows == b.rows
                     && a.visibility == b.visibility
                     && a.cells == b.cells
+                    && a.spill_extents == b.spill_extents
                     && a.spill_cache.len() == b.spill_cache.len()
                     && a.spill_cache.iter().zip(&b.spill_cache).all(|(a, b)| {
                         a.0 == b.0
@@ -91,6 +93,11 @@ impl<'a> Snapshot<'a> {
                     presentation: s.presentation(),
                     rows: s.row_indices().collect(),
                     visibility: s.row_visibility_entries().collect(),
+                    spill_extents: s
+                        .spill_extents
+                        .iter()
+                        .map(|(at, extent)| (*at, extent.clone()))
+                        .collect(),
                     spill_cache: s
                         .spill_cache
                         .iter()
@@ -137,6 +144,7 @@ impl<'a> Snapshot<'a> {
                     presentation: s.presentation,
                     rows: s.rows,
                     visibility: s.visibility,
+                    spill_extents: s.spill_extents,
                     spill_cache: s
                         .spill_cache
                         .into_iter()
@@ -180,6 +188,8 @@ impl<'a> Snapshot<'a> {
         workbook.file_metadata = self.file_metadata;
         for s in self.sheets {
             if s.cells.len() > 10_000_000
+                || s.spill_extents.len() > 10_000_000
+                || s.spill_cache.len() > 10_000_000
                 || s.rows.len() > MAX_ROWS as usize
                 || s.visibility.len() > MAX_ROWS as usize
             {
@@ -218,10 +228,30 @@ impl<'a> Snapshot<'a> {
                     return Err(ModelError("snapshot duplicate cell".into()));
                 }
             }
+            let mut extent_anchors = std::collections::BTreeSet::new();
+            for (anchor, extent) in s.spill_extents {
+                anchor.validate()?;
+                extent.last.validate()?;
+                if extent.last.row < anchor.row || extent.last.col < anchor.col {
+                    return Err(ModelError("invalid snapshot spill extent geometry".into()));
+                }
+                if !extent_anchors.insert(anchor) {
+                    return Err(ModelError("duplicate snapshot spill extent".into()));
+                }
+                // A raw source edit may leave stale saved geometry. Preserve source and
+                // decline the stale extent rather than promoting it to live authority.
+                if sheet.get(anchor).and_then(|cell| cell.formula.as_deref())
+                    == Some(extent.formula.as_str())
+                {
+                    sheet.set_spill_extent(anchor, extent.last, &extent.formula)?;
+                }
+            }
             for (at, owner, source) in s.spill_cache {
                 at.validate()?;
                 owner.validate()?;
                 if at == owner
+                    || at.row < owner.row
+                    || at.col < owner.col
                     || sheet.get(owner).is_none_or(|c| c.formula.is_none())
                     || sheet.get(at).is_none_or(|c| c.formula.is_some())
                     || source
@@ -452,5 +482,53 @@ pub mod value_serde {
         deserializer: D,
     ) -> Result<CellValue, D::Error> {
         Ok(Value::<'static>::deserialize(deserializer)?.restore())
+    }
+}
+
+#[cfg(test)]
+mod spill_extent_validation_tests {
+    use super::*;
+    fn at(s: &str) -> CellAddress {
+        s.parse().unwrap()
+    }
+    #[test]
+    fn stale_source_identity_does_not_exempt_malformed_extent_coordinates() {
+        let mut book = Workbook::new();
+        book.add_sheet("S")
+            .unwrap()
+            .set_formula(at("A1"), "{1}")
+            .unwrap();
+        let mut snapshot = Snapshot::capture(&book).into_owned();
+        snapshot.sheets[0].spill_extents.push((
+            at("A1"),
+            SavedSpillExtent {
+                last: CellAddress {
+                    row: MAX_ROWS,
+                    col: 0,
+                },
+                formula: "stale".into(),
+            },
+        ));
+        assert!(snapshot.restore().is_err());
+        let mut snapshot = Snapshot::capture(&book).into_owned();
+        snapshot.sheets[0].spill_extents.push((
+            at("A1"),
+            SavedSpillExtent {
+                last: at("A1"),
+                formula: "stale".into(),
+            },
+        ));
+        let restored = snapshot.restore().unwrap();
+        assert_eq!(
+            restored
+                .sheet(0)
+                .unwrap()
+                .get(at("A1"))
+                .unwrap()
+                .formula
+                .as_deref(),
+            Some("{1}")
+        );
+        assert_eq!(restored.sheet(0).unwrap().spill_extent(at("A1")), None);
     }
 }

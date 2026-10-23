@@ -5,6 +5,20 @@ use crate::bytecode::{CallTarget, Compiled, Opcode, ReferenceKind};
 use crate::executable::ReferenceRef;
 use crate::execution_observation::{Operation, OperationKind, observed_value};
 
+/// Shared expression values and deferred operands retained by the execution owner.
+#[derive(Default)]
+pub(crate) struct Machine {
+    values: Vec<Value>,
+    pub(crate) operands: Vec<Option<host::HostOperand>>,
+}
+impl Machine {
+    /// Whether no expression or deferred argument values remain active.
+    #[cfg(test)]
+    pub(crate) fn is_idle(&self) -> bool {
+        self.values.is_empty() && self.operands.is_empty()
+    }
+}
+
 /// Active operation and prior observation context restored when a bytecode expression returns.
 type ObservationFrame = (Operation, Option<(Operation, u64)>);
 impl Session<'_> {
@@ -36,7 +50,7 @@ impl Session<'_> {
         program: &Compiled,
         start: usize,
     ) -> EvalResult<Value> {
-        let mut values = self.bytecode_stacks.pop().unwrap_or_default();
+        let base = self.runtime.vm.values.len();
         let observed = self.execution_observer.is_some();
         let mut frames: Vec<ObservationFrame> = Vec::new();
         let mut entered = 0usize;
@@ -75,36 +89,55 @@ impl Session<'_> {
                     Opcode::Leave => {
                         entered = entered.checked_sub(1).ok_or(EvaluationFailure::StalePlan)?;
                         let notification = if let Some((operation, previous)) = frames.pop() {
-                            self.observation_end(
+                            let value = self
+                                .runtime
+                                .vm
+                                .values
+                                .pop()
+                                .ok_or(EvaluationFailure::StalePlan)?;
+                            let notification = self.observation_end(
                                 operation,
                                 previous,
-                                Ok(observed_value(
-                                    values.last().ok_or(EvaluationFailure::StalePlan)?,
-                                )),
-                            )
+                                Ok(observed_value(&value)),
+                            );
+                            self.runtime.vm.values.push(value);
+                            notification
                         } else {
                             Ok(())
                         };
                         self.budget.leave_depth();
                         notification?;
                         if entered == 0 {
-                            return values.pop().ok_or(EvaluationFailure::StalePlan);
+                            if self.runtime.vm.values.len() != base.saturating_add(1) {
+                                return Err(EvaluationFailure::StalePlan);
+                            }
+                            return self
+                                .runtime
+                                .vm
+                                .values
+                                .pop()
+                                .ok_or(EvaluationFailure::StalePlan);
                         }
                     }
-                    Opcode::Number => values.push(
+                    Opcode::Number => {
                         // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
-                        numeric_outcome::coerce_numeric_literal(f64::from_bits(
+                        let value = numeric_outcome::coerce_numeric_literal(f64::from_bits(
                             u64::from(instruction.a) | u64::from(instruction.b) << 32,
                         ))?
-                        .into(),
-                    ),
+                        .into();
+                        self.runtime.vm.values.push(value);
+                    }
                     Opcode::Text => {
                         let text = program.text(instruction.a, instruction.b)?;
                         self.budget.text(text.len())?;
-                        values.push(Text(text.to_owned()).into());
+                        self.runtime.vm.values.push(Text(text.to_owned()).into());
                     }
-                    Opcode::Boolean => values.push(Boolean(instruction.a != 0).into()),
-                    Opcode::Error => values.push(
+                    Opcode::Boolean => self
+                        .runtime
+                        .vm
+                        .values
+                        .push(Boolean(instruction.a != 0).into()),
+                    Opcode::Error => self.runtime.vm.values.push(
                         Error(
                             program
                                 .text(instruction.a, instruction.b)?
@@ -114,19 +147,25 @@ impl Session<'_> {
                         .into(),
                     ),
                     // TODO(coercion-non-argument): [MEDIUM] VM omission-to-blank projection can diverge from deferred calls that preserve missing syntax.
-                    Opcode::Missing => values.push(coerce_legacy_missing_blank().into()),
-                    Opcode::Reference => values.push(self.bytecode_reference(
-                        sheet,
-                        at,
-                        program,
-                        instruction.a as usize,
-                    )?),
-                    Opcode::Name => values.push(self.defined_name(
-                        sheet,
-                        sheet,
-                        at,
-                        program.text(instruction.a, instruction.b)?,
-                    )?),
+                    Opcode::Missing => self
+                        .runtime
+                        .vm
+                        .values
+                        .push(coerce_legacy_missing_blank().into()),
+                    Opcode::Reference => {
+                        let value =
+                            self.bytecode_reference(sheet, at, program, instruction.a as usize)?;
+                        self.runtime.vm.values.push(value);
+                    }
+                    Opcode::Name => {
+                        let value = self.defined_name(
+                            sheet,
+                            sheet,
+                            at,
+                            program.text(instruction.a, instruction.b)?,
+                        )?;
+                        self.runtime.vm.values.push(value);
+                    }
                     Opcode::QualifiedName => {
                         let mut bytes = Reader(
                             program
@@ -145,46 +184,69 @@ impl Session<'_> {
                         let name_sheet = bytes.string()?;
                         let name = std::str::from_utf8(bytes.0)
                             .map_err(|_| EvaluationFailure::StalePlan)?;
-                        values.push(match self.sheet_named(sheet, Some(name_sheet))? {
+                        let value = match self.sheet_named(sheet, Some(name_sheet))? {
                             Some(scope) => self.defined_name(sheet, scope, at, name)?,
                             None => err(Ref),
-                        });
+                        };
+                        self.runtime.vm.values.push(value);
                     }
                     Opcode::Unary => {
-                        let value = values.pop().ok_or(EvaluationFailure::StalePlan)?;
-                        values.push(self.unary_value(
-                            sheet,
-                            at,
-                            decode_unary(instruction.a)?,
-                            value,
-                        )?);
+                        let value = self
+                            .runtime
+                            .vm
+                            .values
+                            .pop()
+                            .ok_or(EvaluationFailure::StalePlan)?;
+                        let value =
+                            self.unary_value(sheet, at, decode_unary(instruction.a)?, value)?;
+                        self.runtime.vm.values.push(value);
                     }
                     Opcode::Binary => {
-                        let right = values.pop().ok_or(EvaluationFailure::StalePlan)?;
-                        let left = values.pop().ok_or(EvaluationFailure::StalePlan)?;
-                        values.push(self.binary_values(
+                        let right = self
+                            .runtime
+                            .vm
+                            .values
+                            .pop()
+                            .ok_or(EvaluationFailure::StalePlan)?;
+                        let left = self
+                            .runtime
+                            .vm
+                            .values
+                            .pop()
+                            .ok_or(EvaluationFailure::StalePlan)?;
+                        let value = self.binary_values(
                             sheet,
                             at,
                             decode_binary(instruction.a)?,
                             left,
                             right,
-                        )?);
+                        )?;
+                        self.runtime.vm.values.push(value);
                     }
                     Opcode::ArrayAllocate => self.budget.allocation(instruction.a as usize)?,
                     Opcode::Scalarize => {
-                        let value = values.pop().ok_or(EvaluationFailure::StalePlan)?;
-                        values.push(self.scalar(at, value)?.into());
+                        let value = self
+                            .runtime
+                            .vm
+                            .values
+                            .pop()
+                            .ok_or(EvaluationFailure::StalePlan)?;
+                        let value = self.scalar(at, value)?.into();
+                        self.runtime.vm.values.push(value);
                     }
                     Opcode::Array => {
                         let count = (instruction.a as usize)
                             .checked_mul(instruction.b as usize)
                             .ok_or(EvaluationFailure::StalePlan)?;
-                        let offset = values
+                        let offset = self
+                            .runtime
+                            .vm
+                            .values
                             .len()
                             .checked_sub(count)
                             .ok_or(EvaluationFailure::StalePlan)?;
-                        // SAFETY: offset was obtained by checked subtraction from values.len(); the vector has not changed since that check.
-                        let mut elements = values.drain(offset..);
+                        // SAFETY: offset was obtained by checked subtraction from self.runtime.vm.values.len(); the vector has not changed since that check.
+                        let mut elements = self.runtime.vm.values.drain(offset..);
                         let mut rows = Vec::new();
                         for _ in 0..instruction.a {
                             let mut row = Vec::new();
@@ -197,10 +259,13 @@ impl Session<'_> {
                             rows.push(row);
                         }
                         drop(elements);
-                        values.push(Value::Array(ArrayView::anchored(
-                            rows,
-                            Some(CellAddress { row: 0, col: 0 }),
-                        )));
+                        self.runtime
+                            .vm
+                            .values
+                            .push(Value::Array(ArrayView::anchored(
+                                rows,
+                                Some(CellAddress { row: 0, col: 0 }),
+                            )));
                     }
                     Opcode::Invoke => {
                         let args = ArgumentsRef::Bytecode {
@@ -208,13 +273,9 @@ impl Session<'_> {
                             first: ip + 2,
                             count: instruction.b as usize,
                         };
-                        values.push(self.bytecode_call(
-                            sheet,
-                            at,
-                            program,
-                            instruction.a as usize,
-                            args,
-                        )?);
+                        let value =
+                            self.bytecode_call(sheet, at, program, instruction.a as usize, args)?;
+                        self.runtime.vm.values.push(value);
                         ip = instruction.c as usize;
                         continue;
                     }
@@ -239,10 +300,9 @@ impl Session<'_> {
                 entered -= 1;
             }
         }
-        // Every active invocation owns its buffer, including nested cells and lazy
-        // arguments. Only empty buffers return to this run's reuse pool.
-        values.clear();
-        self.bytecode_stacks.push(values);
+        // Nested cell and deferred-argument calls share this stack. Only the
+        // current frame's temporaries are discarded; caller values remain in place.
+        self.runtime.vm.values.truncate(base);
         result
     }
     fn bytecode_handler(&self, program: &Compiled, index: usize) -> Option<FunctionId> {
@@ -465,6 +525,7 @@ fn decode_unary(code: u32) -> EvalResult<UnaryOp> {
         1 => UnaryOp::Minus,
         2 => UnaryOp::Percent,
         3 => UnaryOp::ImplicitIntersection,
+        4 => UnaryOp::SpillRange,
         _ => return Err(EvaluationFailure::StalePlan),
     })
 }
@@ -648,7 +709,7 @@ mod tests {
             (
                 result,
                 session.budget.usage.clone(),
-                session.extension_trace,
+                std::mem::take(&mut session.runtime.extension_trace),
             )
         };
         let (vm_result, vm_usage, vm_extensions) = {
@@ -672,7 +733,7 @@ mod tests {
             (
                 result,
                 session.budget.usage.clone(),
-                session.extension_trace,
+                std::mem::take(&mut session.runtime.extension_trace),
             )
         };
         assert_eq!(tree_result, vm_result, "{syntax:?}");
@@ -784,42 +845,69 @@ mod tests {
             )
             .unwrap();
         let mut session = Session::with_context(&workbook, EvaluationInputs::default());
-        let program = compile("100+IF(TRUE,A2+SUM(One:Three!A1)+SUM({5,6}),UNKNOWN())");
+        let program =
+            compile("100+IF(TRUE,A2+SUM(One:Three!A1)+SUM({5,6})+SUMPRODUCT({2},{3}),UNKNOWN())");
         assert_eq!(
             snapshot(session.bytecode_expr(0, AT, &program).unwrap()),
-            "scalar Number(137.0)"
+            "scalar Number(143.0)"
         );
-        assert!(session.bytecode_stacks.iter().all(Vec::is_empty));
         let buffers = |session: &Session<'_>| {
-            let mut buffers = session
-                .bytecode_stacks
-                .iter()
-                .map(|values| (values.as_ptr() as usize, values.capacity()))
-                .collect::<Vec<_>>();
-            buffers.sort_unstable();
-            buffers
+            let vm = &session.runtime.vm;
+            assert!(vm.values.is_empty());
+            assert!(vm.operands.is_empty());
+            [
+                (vm.values.as_ptr() as usize, vm.values.capacity()),
+                (vm.operands.as_ptr() as usize, vm.operands.capacity()),
+            ]
         };
         let allocations = buffers(&session);
-        assert!(
-            allocations.len() > 1,
-            "nested invocations need distinct buffers"
-        );
         assert!(allocations.iter().all(|(_, capacity)| *capacity > 0));
         for _ in 0..3 {
             session.cache.clear();
             assert_eq!(
                 snapshot(session.bytecode_expr(0, AT, &program).unwrap()),
-                "scalar Number(137.0)"
+                "scalar Number(143.0)"
             );
-            assert!(session.bytecode_stacks.iter().all(Vec::is_empty));
             assert_eq!(buffers(&session), allocations);
         }
         let fresh = Session::with_context(&workbook, EvaluationInputs::default());
-        assert!(fresh.bytecode_stacks.is_empty());
+        assert_eq!(fresh.runtime.vm.values.capacity(), 0);
+        assert_eq!(fresh.runtime.vm.operands.capacity(), 0);
     }
 
     #[test]
-    fn bytecode_stack_pool_returns_empty_buffers_after_budget_failure() {
+    fn lazy_argument_frames_grow_only_through_forced_indices() {
+        let workbook = workbook();
+        let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+        // IFS selects the first true branch; the other branches must not draw RAND.
+        // https://support.microsoft.com/en-us/office/ifs-function-36329a26-37b2-467c-972b-4a39bd951d45
+        let suffix = ",FALSE,RAND()".repeat(63);
+        let source = format!("100+IFS(TRUE,SUMPRODUCT({{2}},{{3}}){suffix})");
+        assert_eq!(
+            snapshot(session.bytecode_expr(0, AT, &compile(&source)).unwrap()),
+            "scalar Number(106.0)"
+        );
+        assert!(session.runtime.vm.is_idle());
+        assert!(
+            session.runtime.vm.operands.capacity() <= 8,
+            "unselected arguments must not reserve slots"
+        );
+        assert!(session.budget.usage.random_accesses.is_empty());
+
+        // A late selection legitimately needs a wider frame. Nested calls still
+        // preserve caller values, and false result branches remain unevaluated.
+        let prefix = "FALSE,RAND(),".repeat(63);
+        let source = format!("100+IFS({prefix}TRUE,SUMPRODUCT({{2}},{{3}}))");
+        assert_eq!(
+            snapshot(session.bytecode_expr(0, AT, &compile(&source)).unwrap()),
+            "scalar Number(106.0)"
+        );
+        assert!(session.runtime.vm.is_idle());
+        assert!(session.budget.usage.random_accesses.is_empty());
+    }
+
+    #[test]
+    fn bytecode_stack_returns_to_frame_base_after_budget_failure() {
         let workbook = workbook();
         // Abort after partial operands, including nested lazy arguments and array construction.
         for source in [
@@ -845,17 +933,13 @@ mod tests {
                     BudgetMeter::new(limits).unwrap(),
                 );
                 failures += usize::from(session.bytecode_expr(0, AT, &program).is_err());
-                assert!(!session.bytecode_stacks.is_empty());
-                assert!(
-                    session.bytecode_stacks.iter().all(Vec::is_empty),
-                    "{source}, {limits:?}"
-                );
+                assert!(session.runtime.vm.is_idle(), "{source}, {limits:?}");
                 session.budget = BudgetMeter::new(EvaluationBudgets::default()).unwrap();
                 assert_eq!(
                     snapshot(session.bytecode_expr(0, AT, &compile("17")).unwrap()),
                     "scalar Number(17.0)"
                 );
-                assert!(session.bytecode_stacks.iter().all(Vec::is_empty));
+                assert!(session.runtime.vm.is_idle());
             }
             assert!(failures > 0);
         }
@@ -907,13 +991,13 @@ mod tests {
                     session.expr(0, AT, &tree)
                 }
                 .map(snapshot);
-                assert!(session.bytecode_stacks.iter().all(Vec::is_empty));
+                assert!(session.runtime.vm.is_idle());
                 let usage = session.budget.usage.clone();
                 assert_eq!(
                     snapshot(session.bytecode_expr(0, AT, &probe).unwrap()),
                     "scalar Number(17.0)"
                 );
-                assert!(session.bytecode_stacks.iter().all(Vec::is_empty));
+                assert!(session.runtime.vm.is_idle());
                 (result, usage)
             };
             (result, usage, observer.events)

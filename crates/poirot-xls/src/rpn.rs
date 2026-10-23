@@ -116,11 +116,11 @@ fn emit(
             long(out, index as u32 + 1)
         }
         Expr::Unary {
-            op: UnaryOp::ImplicitIntersection,
+            op: UnaryOp::ImplicitIntersection | UnaryOp::SpillRange,
             ..
         } => {
             return Err(XlsError::Unsupported(
-                "explicit @ implicit intersection has no supported BIFF8 encoding".into(),
+                "explicit @ or # reference operator has no supported BIFF8 encoding".into(),
             ));
         }
         Expr::Unary { op, operand } => {
@@ -129,8 +129,10 @@ fn emit(
                 out.push(0x15)
             }
             out.push(match op {
-                // SAFETY: The unary branch rejects ImplicitIntersection before selecting its emitted opcode.
-                UnaryOp::ImplicitIntersection => unreachable!("rejected above"),
+                // SAFETY: The earlier unary branch rejects both reference operators.
+                UnaryOp::ImplicitIntersection | UnaryOp::SpillRange => {
+                    unreachable!("rejected above")
+                }
                 UnaryOp::Plus => 0x12,
                 UnaryOp::Minus => 0x13,
                 UnaryOp::Percent => 0x14,

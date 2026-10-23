@@ -32,7 +32,7 @@ impl Session<'_> {
         at: CellAddress,
         args: ArgumentsRef<'_>,
     ) -> EvalResult<Result<Vec<CellValue>, CellError>> {
-        self.budget.allocation(args.len())?;
+        self.runtime.budget.allocation(args.len())?;
         let values = (0..args.len())
             .map(|index| self.argument(s, at, args, index))
             .collect::<EvalResult<Vec<_>>>()?;
@@ -50,12 +50,12 @@ impl Session<'_> {
         match value {
             Value::Array(rows) => Ok(Ok(rows.values)),
             Value::Missing => {
-                self.budget.allocation(1)?;
+                self.runtime.budget.allocation(1)?;
                 Ok(Ok(vec![vec![coerce_legacy_missing_blank()]]))
             }
             Value::Scalar(Error(error)) | Value::SelectedScalar(Error(error), _) => Ok(Err(error)),
             Value::Scalar(value) | Value::SelectedScalar(value, _) => {
-                self.budget.allocation(1)?;
+                self.runtime.budget.allocation(1)?;
                 Ok(Ok(vec![vec![value]]))
             }
             Value::SheetSpan(areas) if areas.len() != 1 => {
@@ -76,7 +76,7 @@ impl Session<'_> {
                     return Err(EvaluationFailure::UnsupportedCapability { capability: CapabilityId::FunctionAdapter, source: None,
                         detail: "dense consumer policy for zero/negative Java source dimensions is not verified".into() });
                 }
-                self.budget.allocation_u64(area.size())?;
+                self.runtime.budget.allocation_u64(area.size())?;
                 let mut rows = Vec::with_capacity(area.height() as usize);
                 for row in 0..area.height() {
                     let mut values = Vec::with_capacity(area.width() as usize);
@@ -95,7 +95,7 @@ impl Session<'_> {
                 }
                 // SAFETY: The preceding branch rejects areas.len() != 1 before selecting the first area.
                 let area = areas[0];
-                self.budget.allocation_u64(area.size())?;
+                self.runtime.budget.allocation_u64(area.size())?;
                 let mut rows = Vec::with_capacity((area.r1 - area.r0 + 1) as usize);
                 for row in area.r0..=area.r1 {
                     let mut values = Vec::with_capacity((area.c1 - area.c0 + 1) as usize);
@@ -115,20 +115,24 @@ impl Session<'_> {
     }
     /// Establish full-area discovery and dependency guards before any sparse read.
     pub(super) fn prepare_sparse_area(&mut self, area: Area) -> EvalResult<()> {
-        self.discover_spills_in(area, None)?;
+        self.prepare_spills_in(area)?;
+        let settling = self.settling_spills();
+        let runtime = &mut *self.runtime;
         if self.array_result_policy == ArrayResultPolicy::DynamicSpill
-            && let Some(consumer) = self.consumer
+            && settling
+            && let Some(consumer) = runtime.consumer
         {
-            for owner in self
+            for owner in runtime
                 .visiting
                 .iter()
                 .copied()
                 .chain(std::iter::once((consumer.sheet, consumer.address)))
             {
-                let ranges = self.spill_read_ranges.entry(owner).or_default();
-                self.budget
+                let ranges = runtime.spill_read_ranges.entry(owner).or_default();
+                runtime
+                    .budget
                     .check_allocation(ranges.len().saturating_add(1))?;
-                self.budget.charge(WorkKind::Materialization, 1)?;
+                runtime.budget.charge(WorkKind::Materialization, 1)?;
                 ranges.push(area);
             }
         }
@@ -151,6 +155,7 @@ impl Session<'_> {
         area: Area,
         prefix_members: usize,
     ) -> EvalResult<Vec<CellAddress>> {
+        let runtime = &mut *self.runtime;
         let membership = poirot_model::query::RangeMembership::new(
             area.sheet,
             CellAddress {
@@ -170,18 +175,18 @@ impl Session<'_> {
         let mut cells = view
             .stored(membership)
             .map_err(|_| EvaluationFailure::StalePlan)?;
-        while let Some(address) = sparse_next(&mut cells, &mut self.budget)? {
-            self.budget.check_allocation(
+        while let Some(address) = sparse_next(&mut cells, &mut runtime.budget)? {
+            runtime.budget.check_allocation(
                 prefix_members
                     .saturating_add(addresses.len())
                     .saturating_add(1),
             )?;
-            self.budget.charge(WorkKind::Materialization, 1)?;
+            runtime.budget.charge(WorkKind::Materialization, 1)?;
             addresses
                 .try_reserve(1)
                 .map_err(|_| EvaluationFailure::ResourceLimit {
                     capability: CapabilityId::FunctionAdapter,
-                    source: self.consumer,
+                    source: runtime.consumer,
                     detail: "sparse coordinate allocation failed".into(),
                 })?;
             // SAFETY: The successful reservation provides room for this one push.
@@ -190,18 +195,18 @@ impl Session<'_> {
         // Effective stored coordinates are already unique and row-major. Only
         // merging generated spill cells can disturb that order or add duplicates.
         if self.array_result_policy == ArrayResultPolicy::DynamicSpill
-            && !self.spill_owners.is_empty()
+            && !runtime.preparation.roles.is_empty()
         {
             let mut seen: HashSet<_> = addresses.iter().copied().collect();
-            for &(sheet, address) in self.spill_owners.keys() {
-                self.budget.charge(WorkKind::SparseScan, 1)?;
+            for &(sheet, address) in runtime.preparation.roles.keys() {
+                runtime.budget.charge(WorkKind::SparseScan, 1)?;
                 if sheet == area.sheet && area.contains(address) && !seen.contains(&address) {
-                    self.budget.check_allocation(
+                    runtime.budget.check_allocation(
                         prefix_members
                             .saturating_add(addresses.len())
                             .saturating_add(1),
                     )?;
-                    self.budget.charge(WorkKind::Materialization, 1)?;
+                    runtime.budget.charge(WorkKind::Materialization, 1)?;
                     seen.insert(address);
                     addresses.push(address);
                 }
@@ -284,7 +289,20 @@ mod sparse_tests {
                 .set_value(CellAddress { row, col: 500 }, 99.0)
                 .unwrap();
         }
-        let result = evaluate(&book, "SUM(A1:A3)");
+        // Isolate sparse traversal from the separately metered complete spill phase.
+        let result = run_formula_with_configuration(
+            &book,
+            0,
+            CellAddress { row: 20, col: 20 },
+            "SUM(A1:A3)",
+            &RunConfiguration::default()
+                .with_array_result_policy(ArrayResultPolicy::ScalarIntersection),
+            EvaluationBudgets {
+                run_work: 500,
+                cell_work: 500,
+                ..Default::default()
+            },
+        );
         assert!(matches!(
             result,
             EvaluationOutcome::Complete {
@@ -306,7 +324,7 @@ mod sparse_tests {
                 .unwrap()
                 .is_empty()
         );
-        assert_eq!(session.budget.usage.sparse_entries, 1);
+        assert_eq!(session.runtime.budget.usage.sparse_entries, 1);
         let mut limited = session_for_empty(&book);
         assert!(matches!(
             limited.sparse_addresses(area(0, 9, 0, 0)),

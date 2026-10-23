@@ -34,6 +34,21 @@ impl CloneFootprint {
             workbook.sheet(*sheet)?;
             final_values.insert((*sheet, *address), value);
         }
+        let mut invalidated_extents = std::collections::BTreeSet::new();
+        for &(sheet, address) in final_values.keys() {
+            let worksheet = workbook.sheet(sheet)?;
+            if worksheet.spill_extents.contains_key(&address) {
+                invalidated_extents.insert((sheet, address));
+            }
+            if let Some(child) = worksheet.spill_cache.get(&address) {
+                invalidated_extents.insert((sheet, child.owner));
+            }
+        }
+        for (sheet, anchor) in invalidated_extents {
+            if let Some(extent) = workbook.sheet(sheet)?.spill_extents.get(&anchor) {
+                result.text_bytes = result.text_bytes.checked_sub(extent.formula.len())?;
+            }
+        }
         let mut added_rows = std::collections::BTreeSet::new();
         for ((sheet, address), value) in final_values {
             let worksheet = workbook.sheet(sheet)?;
@@ -67,6 +82,9 @@ impl CloneFootprint {
             result.rows = result.rows.checked_add(sheet.rows.len())?;
             result.row_visibility = result.row_visibility.checked_add(sheet.visibility.len())?;
             result.text_bytes = result.text_bytes.checked_add(sheet.name.len())?;
+            for extent in sheet.spill_extents.values() {
+                result.text_bytes = result.text_bytes.checked_add(extent.formula.len())?;
+            }
             for cell in sheet.cells().values() {
                 result.text_bytes = result
                     .text_bytes
@@ -160,5 +178,23 @@ mod tests {
         }
         assert_eq!(expected, CloneFootprint::measure(&workbook).unwrap());
         assert_eq!(expected.rows, 3);
+    }
+}
+
+#[cfg(test)]
+mod spill_extent_accounting_tests {
+    use super::*;
+    #[test]
+    fn saved_extent_source_identity_is_counted_and_removed_with_an_anchor_edit() {
+        let mut book = Workbook::new();
+        let sheet = book.add_sheet("S").unwrap();
+        let at = "A1".parse().unwrap();
+        sheet.set_formula(at, "{7}").unwrap();
+        sheet.set_spill_extent(at, at, "{7}").unwrap();
+        assert_eq!(CloneFootprint::measure(&book).unwrap().text_bytes, 7);
+        let assignments = [(0, at, 9.0.into())];
+        let expected = CloneFootprint::measure_with_assignments(&book, &assignments).unwrap();
+        book.sheet_mut(0).unwrap().set_value(at, 9.).unwrap();
+        assert_eq!(expected, CloneFootprint::measure(&book).unwrap());
     }
 }

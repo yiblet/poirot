@@ -10,6 +10,10 @@ pub enum ResultRule {
     Number,
     /// Produce a materialized rectangular array, or an error.
     Array,
+    /// Produce sequential values with independently specified dimensions.
+    Sequence,
+    /// Exchange the rows and columns of the first operand.
+    Transpose,
     /// Inspect elements, preserving possible array lifting.
     ElementwiseBoolean,
     /// Select IF branches, with lifting driven by its condition and branches.
@@ -24,6 +28,8 @@ pub enum ResultRule {
     Choose,
     /// Produce a dynamically selected reference or spreadsheet error.
     Reference,
+    /// Accepted spill footprint as a potentially singleton area reference.
+    SpillRange,
     /// Select from a reference or materialized array.
     Index,
     /// A handler whose possible successful result requires every form.
@@ -51,7 +57,7 @@ impl ResultRule {
         match self {
             Self::Scalar => T::scalar(K::ANY),
             Self::Number => T::scalar(K::NUMBER.join(K::ERROR)),
-            Self::Array => T::array(K::ANY).join(error),
+            Self::Array | Self::Sequence | Self::Transpose => T::array(K::ANY).join(error),
             Self::ElementwiseBoolean => {
                 let scalar = T::scalar(K::BOOLEAN.join(K::ERROR));
                 if all.may_spill() {
@@ -72,6 +78,7 @@ impl ResultRule {
             }))
             .join(error),
             Self::Choose => lift(selected(&|i| i >= 1)).join(error),
+            Self::SpillRange => T::multi_reference(K::ANY).join(error),
             Self::Reference => T::single_reference(K::ANY)
                 .join(T::multi_reference(K::ANY))
                 .join(error),
@@ -90,6 +97,50 @@ impl ResultRule {
                 result
             }
             Self::Any => T::TOP,
+        }
+    }
+}
+
+impl ResultRule {
+    /// Transfer independent geometry proofs through the same catalog result contract.
+    /// Constant arguments are numeric literals only; other values remain unknown.
+    pub(crate) fn shape(
+        self,
+        args: &[poirot_model::ShapeBounds],
+        constants: &[Option<f64>],
+    ) -> poirot_model::ShapeBounds {
+        use poirot_model::ShapeBounds as S;
+        match self {
+            Self::Scalar | Self::Number => S::SCALAR,
+            Self::Transpose => args.first().copied().unwrap_or(S::UNKNOWN).transpose(),
+            Self::Sequence => {
+                let dimension = |index: usize| {
+                    constants
+                        .get(index)
+                        .copied()
+                        .unwrap_or(Some(1.0))
+                        .and_then(|n| {
+                            if n.is_finite() && n >= 1.0 && n < f64::from(u32::MAX) + 1.0 {
+                                std::num::NonZeroU32::new(n.trunc() as u32)
+                            } else {
+                                None
+                            }
+                        })
+                };
+                S {
+                    rows: dimension(0),
+                    columns: dimension(1),
+                }
+            }
+            Self::ElementwiseBoolean
+            | Self::If
+            | Self::Fallback
+            | Self::Ifs
+            | Self::Switch
+            | Self::Choose => args.iter().copied().fold(S::SCALAR, S::join),
+            Self::Array | Self::Reference | Self::SpillRange | Self::Index | Self::Any => {
+                S::UNKNOWN
+            }
         }
     }
 }

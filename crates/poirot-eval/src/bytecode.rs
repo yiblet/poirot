@@ -677,6 +677,7 @@ fn unary(op: UnaryOp) -> u32 {
         UnaryOp::Minus => 1,
         UnaryOp::Percent => 2,
         UnaryOp::ImplicitIntersection => 3,
+        UnaryOp::SpillRange => 4,
     }
 }
 fn binary(op: BinaryOp) -> u32 {

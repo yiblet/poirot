@@ -361,29 +361,36 @@ fn numeric_matrix_children_are_discoverable_before_the_anchor() {
     }
 }
 #[test]
-fn unbounded_producers_refuse_in_both_read_orders_and_lazy_bounded_branches_survive() {
-    for (formula, first) in [
-        ("TRANSPOSE(INDIRECT(\"A1:A2\"))", "D1"),
-        ("TRANSPOSE(INDIRECT(\"A1:A2\"))", "E1"),
-        ("INDEX(A1:B2,0,1)+1", "D1"),
-        ("INDEX(A1:B2,0,1)+1", "E1"),
-        ("-INDEX(A1:B2,0,1)", "D1"),
-        ("-INDEX(A1:B2,0,1)", "E1"),
-        ("A:A+1", "E1"),
+fn dynamically_sized_producers_publish_in_both_read_orders_and_preserve_lazy_branches() {
+    for (formula, child, expected) in [
+        ("TRANSPOSE(INDIRECT(\"A1:A2\"))", "E1", 0.0),
+        ("INDEX(A1:B2,0,1)+1", "D2", 1.0),
+        ("-INDEX(A1:B2,0,1)", "D2", 0.0),
     ] {
         let w = source(model(&[("D1", formula)])).unwrap();
-        let mut ctx = context(&w);
-        let report = ctx.run(&[target(first)]).unwrap();
-        assert!(matches!(
-            report.outcome,
-            eval::EvaluationOutcome::Aborted {
-                failure: eval::EvaluationFailure::UnsupportedCapability { .. },
-                ..
-            }
-        ));
-        assert!(ctx.get(target("D1")).is_none());
-        assert!(ctx.get(target("E1")).is_none());
+        for first in ["D1", child] {
+            let mut ctx = context(&w);
+            complete(&mut ctx, &[first, child]);
+            assert_eq!(value(&ctx, child), CellValue::Number(expected));
+        }
     }
+    // Dynamic dimensions still respect allocation budgets before publication.
+    let w = source(model(&[("D1", "A:A+1")])).unwrap();
+    let mut ctx = context(&w);
+    ctx.set_budgets(eval::EvaluationBudgets {
+        materialized_values: 64,
+        ..Default::default()
+    });
+    let report = ctx.run(&[target("D2")]).unwrap();
+    assert!(matches!(
+        report.outcome,
+        eval::EvaluationOutcome::Aborted {
+            failure: eval::EvaluationFailure::Budget(_),
+            ..
+        }
+    ));
+    assert!(ctx.get(target("D1")).is_none());
+    assert!(ctx.get(target("D2")).is_none());
     let w = source(model(&[(
         "D1",
         "IF(TRUE,{1,2},TRANSPOSE(INDIRECT(\"A1:A2\")))",
@@ -508,33 +515,29 @@ fn crossed_spills_are_identical_for_all_anchor_and_child_target_permutations() {
 }
 
 #[test]
-fn overlapping_producer_dependencies_refuse_in_both_anchor_orders() {
-    // The earlier producer consumes the later footprint while both own E2.
+fn priority_ownership_with_a_direct_self_footprint_refuses_a_supplier_first_answer() {
+    // E1 has priority. Once D2 loses, E1's operand includes its own E2 child;
+    // this remains an explicit circular-reference refusal, not supplier priority.
     let w = source(model(&[("E1", "TRANSPOSE(D2:F2)"), ("D2", "{1,2,3}")])).unwrap();
     for first in ["E1", "D2", "E2"] {
         let mut ctx = context(&w);
         let report = ctx.run(&[target(first)]).unwrap();
-        assert!(
-            matches!(
-                report.outcome,
-                eval::EvaluationOutcome::Aborted {
-                    failure: eval::EvaluationFailure::UnsupportedCapability { .. },
-                    ..
-                }
-            ),
-            "{first}: {:?}",
-            report.outcome
-        );
-        assert!(ctx.get(target("E1")).is_none());
-        assert!(ctx.get(target("D2")).is_none());
-        assert!(ctx.get(target("E2")).is_none());
+        assert!(matches!(
+            report.outcome,
+            eval::EvaluationOutcome::Aborted {
+                failure: eval::EvaluationFailure::UnsupportedCapability { .. },
+                ..
+            }
+        ));
+        assert!(ctx.results.is_empty());
     }
 }
 
 #[test]
-fn overlap_discovery_recursion_obeys_the_configured_depth_limit() {
+fn independent_overlap_preparation_does_not_consume_recursive_depth() {
     // Staircase rectangles intersect their predecessor, with no anchor inside
-    // another footprint. Priority discovery must reach the configured limit.
+    // another footprint. Iterative canonical preparation does not consume a
+    // recursive frame for each independent candidate.
     let mut m = model(&[]);
     for index in 0..20u32 {
         let at = model::CellAddress {
@@ -559,20 +562,11 @@ fn overlap_discovery_recursion_obeys_the_configured_depth_limit() {
         }])
         .unwrap();
     assert!(
-        matches!(
-            report.outcome,
-            eval::EvaluationOutcome::Aborted {
-                failure: eval::EvaluationFailure::Budget(eval::BudgetFailure {
-                    kind: eval::BudgetKind::Depth,
-                    ..
-                }),
-                ..
-            }
-        ),
+        matches!(report.outcome, eval::EvaluationOutcome::Complete { .. }),
         "{:?}",
         report.outcome
     );
-    assert!(ctx.results.is_empty());
+    assert!(report.outcome.usage().maximum_depth <= 5);
 }
 
 #[test]

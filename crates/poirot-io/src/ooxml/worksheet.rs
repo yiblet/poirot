@@ -99,6 +99,7 @@ fn write_cells<W: Write>(
             }
             write_event(writer, Event::Start(start))?;
             if let Some(formula) = &cell.formula {
+                let formula = super::formula::stored_formula(formula)?;
                 if let Some(last) = spills.get(address) {
                     let mut start = BytesStart::new("f");
                     start.push_attribute(("t", "array"));

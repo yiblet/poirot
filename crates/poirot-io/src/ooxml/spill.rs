@@ -9,12 +9,12 @@ use poirot_model::{Cell, CellAddress, CellStyle, CellValue, Workbook};
 use quick_xml::events::Event;
 use std::collections::BTreeMap;
 
-/// Source spill metadata is sparse; represent only the bounding rectangle of
-/// each anchor's retained children. The export validator rejects authored holes.
+/// Preserve declared source extents, falling back to sparse child bounds for legacy
+/// manually attached caches. The export validator rejects authored holes.
 pub(crate) fn bounds(
     sheet: &poirot_model::Worksheet,
 ) -> Result<BTreeMap<CellAddress, CellAddress>, IoError> {
-    let mut ranges = BTreeMap::new();
+    let mut ranges: BTreeMap<_, _> = sheet.spill_extents().collect();
     for (address, _) in sheet.cells() {
         if let Some(owner) = sheet.spill_owner(*address) {
             if owner.row > address.row
@@ -23,6 +23,14 @@ pub(crate) fn bounds(
             {
                 return Err(IoError::Unsupported(
                     "invalid spill cache anchor geometry".into(),
+                ));
+            }
+            if sheet
+                .spill_extent(owner)
+                .is_some_and(|last| address.row > last.row || address.col > last.col)
+            {
+                return Err(IoError::Unsupported(
+                    "spill child lies outside declared extent".into(),
                 ));
             }
             let last = ranges.entry(owner).or_insert(owner);
@@ -209,7 +217,7 @@ pub(crate) fn apply_spills(
                 replacements.push((sheet_index, *at, source));
                 children.push((*at, child.value.clone()));
             }
-            publication.push((anchor, formula, children));
+            publication.push((anchor, last, formula, children));
         }
         // Clear decoded scalar sources in one sparse batch before attaching any
         // ownership; per-child Worksheet::set/remove would repeatedly scan caches.
@@ -217,7 +225,8 @@ pub(crate) fn apply_spills(
         let sheet = workbook
             .sheet_mut(sheet_index)
             .ok_or_else(|| IoError::Read("missing array worksheet".into()))?;
-        for (anchor, formula, children) in publication {
+        for (anchor, last, formula, children) in publication {
+            sheet.set_spill_extent(anchor, last, &formula)?;
             for (at, value) in children {
                 sheet.set_spill_cached_value(at, anchor, &formula, value)?;
             }
@@ -313,5 +322,37 @@ mod tests {
                 Some(CellAddress::new(row * 2, 0).unwrap())
             );
         }
+    }
+    #[test]
+    fn array_declarations_retain_singleton_and_incomplete_extents_but_shared_refs_do_not() {
+        let mut singleton = book();
+        apply(r#"<worksheet><sheetData><row><c><f t="array" ref="A1">{1,2}</f></c></row></sheetData></worksheet>"#,&mut singleton).unwrap();
+        assert_eq!(
+            singleton.sheet(0).unwrap().complete_spill_extent(at("A1")),
+            Some(at("A1"))
+        );
+        let mut incomplete = book();
+        incomplete
+            .sheet_mut(0)
+            .unwrap()
+            .set_value(at("B2"), 4.)
+            .unwrap();
+        apply(r#"<worksheet><sheetData><row><c><f t="array" ref="A1:B2">{1,2;3,4}</f></c></row></sheetData></worksheet>"#,&mut incomplete).unwrap();
+        assert_eq!(
+            incomplete.sheet(0).unwrap().spill_extent(at("A1")),
+            Some(at("B2"))
+        );
+        assert_eq!(
+            incomplete.sheet(0).unwrap().complete_spill_extent(at("A1")),
+            None
+        );
+        assert_eq!(
+            bounds(incomplete.sheet(0).unwrap()).unwrap().get(&at("A1")),
+            Some(&at("B2"))
+        );
+        let mut shared = book();
+        apply(r#"<worksheet><sheetData><row><c><f t="shared" si="0" ref="A1:B2">1+2</f></c></row></sheetData></worksheet>"#,&mut shared).unwrap();
+        assert_eq!(shared.sheet(0).unwrap().spill_extent(at("A1")), None);
+        assert!(bounds(shared.sheet(0).unwrap()).unwrap().is_empty());
     }
 }

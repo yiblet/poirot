@@ -7,9 +7,11 @@ use std::borrow::Cow;
 /// Snapshot validation result carrying a diagnostic for unsupported or inconsistent compiled data.
 type Result<T> = std::result::Result<T, String>;
 const MAX: usize = 1_000_000;
+const VERSION: u32 = 4;
 /// Serde view preserving source-to-program sharing for a trusted compiled workbook plan.
 #[derive(Serialize, Deserialize)]
 pub struct Plan<'a> {
+    version: u32,
     identity: Cow<'a, SourceIdentity>,
     programs: Vec<Program<'a>>,
     sources: Vec<Source<'a>>,
@@ -41,7 +43,6 @@ struct Source<'a> {
     qualified_names: Cow<'a, [PotentialQualifiedName]>,
     opaque_functions: Cow<'a, [String]>,
     dynamic_references: bool,
-    spill: SpillMetadata,
 }
 impl<'a> Plan<'a> {
     /// Borrow a supported default-policy plan, rejecting extensions and preparation failures.
@@ -50,6 +51,7 @@ impl<'a> Plan<'a> {
             return Err("snapshot requires default policy/no extensions".into());
         }
         let mut output = Self {
+            version: VERSION,
             identity: Cow::Borrowed(&plan.identity),
             programs: Vec::new(),
             sources: Vec::new(),
@@ -122,7 +124,6 @@ impl<'a> Plan<'a> {
                 qualified_names: Cow::Borrowed(&potential.qualified_names),
                 opaque_functions: Cow::Borrowed(&potential.opaque_functions),
                 dynamic_references: potential.dynamic_references,
-                spill: formula.spill,
             });
             sources.insert(key, id);
             Ok(id)
@@ -140,6 +141,7 @@ impl<'a> Plan<'a> {
     /// Copy borrowed payloads only for an independently retained snapshot.
     pub fn into_owned(self) -> Plan<'static> {
         Plan {
+            version: self.version,
             identity: Cow::Owned(self.identity.into_owned()),
             programs: self
                 .programs
@@ -170,7 +172,6 @@ impl<'a> Plan<'a> {
                     qualified_names: Cow::Owned(s.qualified_names.into_owned()),
                     opaque_functions: Cow::Owned(s.opaque_functions.into_owned()),
                     dynamic_references: s.dynamic_references,
-                    spill: s.spill,
                 })
                 .collect(),
             formulas: self.formulas,
@@ -187,6 +188,9 @@ impl<'a> Plan<'a> {
     }
     /// Validate serialized programs and reconstruct a default-policy workbook plan.
     pub fn restore(self) -> Result<CompiledWorkbook> {
+        if self.version != VERSION {
+            return Err("unsupported compiled snapshot version".into());
+        }
         if self.programs.len() > MAX
             || self.sources.len() > MAX
             || self.formulas.len() > 10 * MAX
@@ -249,7 +253,7 @@ impl<'a> Plan<'a> {
                 Ok(Arc::new(PreparedFormula::Ready(Arc::new(
                     CompiledFormula {
                         source: Arc::from(s.source.into_owned()),
-                        spill: s.spill,
+
                         bytecode: Compiled {
                             executable,
                             references: s.references.into_owned(),
@@ -393,7 +397,7 @@ pub(super) fn validate_template(t: &Template, calls: usize) -> Result<()> {
                     return Err("snapshot backwards jump".into());
                 }
             }
-            Opcode::Unary if i.a > 3 => return Err("snapshot unary".into()),
+            Opcode::Unary if i.a > 4 => return Err("snapshot unary".into()),
             Opcode::Binary if i.a > 14 => return Err("snapshot binary".into()),
             _ => {}
         }
@@ -556,6 +560,12 @@ mod tests {
     fn snapshot_rejects_identity_and_bytecode_corruption() {
         let w = fixture();
         let plan = FormulaCompiler::new().compile_workbook(&w, &EvaluationPolicy::default());
+        let mut old = Plan::capture(&plan).unwrap();
+        old.version = VERSION - 1;
+        assert_eq!(
+            old.restore().unwrap_err(),
+            "unsupported compiled snapshot version"
+        );
         let mut dto = Plan::capture(&plan).unwrap();
         dto.sources[0].program = usize::MAX;
         assert!(dto.restore().is_err());
@@ -575,6 +585,19 @@ mod tests {
             c: u32::MAX,
         });
         assert!(dto.restore().is_err());
+    }
+    #[test]
+    fn snapshot_rejects_inconsistent_scalar_geometry() {
+        let workbook = fixture();
+        let plan = FormulaCompiler::new().compile_workbook(&workbook, &EvaluationPolicy::default());
+        let mut dto = Plan::capture(&plan).unwrap();
+        let mut entries = dto.programs[0].typing.expressions().to_vec();
+        entries.first_mut().unwrap().properties.shape = poirot_model::ShapeBounds::new(2, 1);
+        // FormulaTyping encodes one sequence field. Forge that field through the
+        // serialization boundary instead of adding an unchecked mutation API.
+        *dto.programs[0].typing.to_mut() =
+            postcard::from_bytes(&postcard::to_allocvec(&entries).unwrap()).unwrap();
+        assert_eq!(dto.restore().unwrap_err(), "snapshot typing boundaries");
     }
     #[test]
     fn snapshot_rejects_unsupported_preparation_and_policy() {

@@ -62,7 +62,7 @@ pub use public::{
 
 pub use eval::overlay::snapshot::Snapshot as OverlaySnapshot;
 pub use eval::overlay::snapshot::WorkspaceState;
-pub use eval::{CellEvaluation, EvaluationFailure, EvaluationTarget};
+pub use eval::{CellEvaluation, EvaluationFailure, EvaluationTarget, ProducerPolicy};
 pub use model::snapshot::Snapshot as WorkbookSnapshot;
 
 /// Incremental scenarios borrowing a public workbook by default.

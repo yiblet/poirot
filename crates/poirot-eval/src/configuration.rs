@@ -59,9 +59,30 @@ pub enum BuiltinSemanticsPolicy {
 pub enum ArrayResultPolicy {
     /// Reduce final arrays to a scalar using intersection behavior.
     ScalarIntersection,
-    /// Publish rectangular results with tracked spill ownership and blocker checks.
+    /// Prepare intersecting possible spill rectangles and their necessary competitors.
+    /// Publish arrays and area-reference roots atomically with ownership and blocker checks.
+    /// Accepted one-cell arrays retain a footprint for postfix spill references (`#`).
+    /// Actual overlaps always favor the top-left anchor (row, then column).
+    /// Dependency components settle privately; operational failures poison the evaluation.
     #[default]
     DynamicSpill,
+}
+
+/// Whether possible dynamic producers execute or consume caller-trusted saved results.
+#[derive(
+    Clone, Copy, Debug, Default, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize,
+)]
+pub enum ProducerPolicy {
+    /// Compute demanded spill producers and their necessary competitors.
+    #[default]
+    Compute,
+    /// Under DynamicSpill, consume saved source results without executing possible producers.
+    /// Ordinary scalar formulas still execute. Missing scalar caches are indistinguishable
+    /// from explicit Blank; both remain Blank. Complete declared arrays restore atomically;
+    /// incomplete, undeclared owned, or child-edited arrays fail without recalculation.
+    /// Replacing the anchor's content discards its baseline saved footprint.
+    /// Saved values can deliberately remain stale across source and context changes.
+    TrustSaved,
 }
 
 /// Immutable choices for one calculation: clock/seed, localization, formatting,
@@ -77,6 +98,7 @@ pub struct RunConfiguration {
 
     builtin_policy: BuiltinSemanticsPolicy,
     array_result_policy: ArrayResultPolicy,
+    producer_policy: ProducerPolicy,
     materialization_policy: crate::FormulaCacheMaterializationPolicy,
 }
 impl RunConfiguration {
@@ -90,6 +112,7 @@ impl RunConfiguration {
 
             builtin_policy: BuiltinSemanticsPolicy::default(),
             array_result_policy: ArrayResultPolicy::default(),
+            producer_policy: ProducerPolicy::default(),
             materialization_policy: crate::FormulaCacheMaterializationPolicy::PreserveComputed,
             text_policy: TextSemanticsPolicy::default(),
         }
@@ -148,6 +171,16 @@ impl RunConfiguration {
         self.array_result_policy
     }
 
+    /// Choose computed producers or caller-trusted saved source results.
+    pub fn with_producer_policy(mut self, policy: ProducerPolicy) -> Self {
+        self.producer_policy = policy;
+        self
+    }
+    /// Return the producer preparation policy.
+    pub fn producer_policy(&self) -> ProducerPolicy {
+        self.producer_policy
+    }
+
     /// Select conversion behavior for saved workbook formula caches.
     pub fn with_materialization_policy(
         mut self,
@@ -171,6 +204,7 @@ impl RunConfiguration {
 
             builtin_policy: self.builtin_policy,
             array_result_policy: self.array_result_policy,
+            producer_policy: self.producer_policy,
             numeric_source: crate::numeric_outcome::source_binding(),
             materialization: self.materialization_policy.identity(),
         }
@@ -204,6 +238,8 @@ pub struct ConfigurationFingerprint {
     pub builtin_policy: BuiltinSemanticsPolicy,
     /// Selected array publication behavior.
     pub array_result_policy: ArrayResultPolicy,
+    /// Producer computation or caller-trusted saved-source behavior.
+    pub producer_policy: ProducerPolicy,
     /// Pinned numeric source identity, when selected.
     pub numeric_source: crate::NumericSourceBinding,
     /// Saved-cache conversion identity.
@@ -211,7 +247,7 @@ pub struct ConfigurationFingerprint {
 }
 
 /// Core computation projection. Consumed formatting/text/context remain separately
-/// guarded by the existing cache masks; publication never changes raw computation.
+/// guarded by the existing cache masks; producer trust changes the result source.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ComputationFingerprint {
     /// Numeric result behavior affecting raw computation.
@@ -220,6 +256,8 @@ pub struct ComputationFingerprint {
     pub builtin_policy: BuiltinSemanticsPolicy,
     /// Array publication behavior affecting computed results.
     pub array_result_policy: ArrayResultPolicy,
+    /// Producer computation or caller-trusted saved-source behavior.
+    pub producer_policy: ProducerPolicy,
     /// Pinned numeric implementation identity, when selected.
     pub numeric_source: crate::NumericSourceBinding,
 }
@@ -229,6 +267,7 @@ impl ConfigurationFingerprint {
         ComputationFingerprint {
             builtin_policy: self.builtin_policy,
             array_result_policy: self.array_result_policy,
+            producer_policy: self.producer_policy,
             numeric_source: self.numeric_source,
         }
     }

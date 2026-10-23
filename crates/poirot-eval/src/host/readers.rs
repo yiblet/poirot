@@ -5,7 +5,7 @@ impl CallHost<'_, '_> {
     /// Inspect whether one resolved operand has area-like provenance.
     pub(crate) fn is_area(&mut self, index: usize) -> FunctionResult<bool> {
         self.prepare(index)?;
-        Ok(match &self.memo.get(&index).ok_or(VALUE_ERROR)?.value {
+        Ok(match &self.operand(index).ok_or(VALUE_ERROR)?.value {
             Value::Array(_) => true,
             // SAFETY: Short-circuit evaluation checks the vector length is exactly one before reading element zero.
             Value::SignedRefs(a) => a.len() == 1 && a[0].kind == AreaKind::Area,
@@ -19,7 +19,7 @@ impl CallHost<'_, '_> {
     pub(crate) fn describe(&mut self, index: usize) -> FunctionResult<OperandDescription> {
         let (rows, columns) = self.shape(index)?;
         let is_area = self.is_area(index)?;
-        let operand = &self.memo.get(&index).ok_or(VALUE_ERROR)?;
+        let operand = &self.operand(index).ok_or(VALUE_ERROR)?;
         Ok(OperandDescription {
             rows,
             columns,
@@ -36,7 +36,7 @@ impl CallHost<'_, '_> {
     /// Unknown computed-array coordinates remain unknown.
     pub(crate) fn operand_anchor(&mut self, index: usize) -> FunctionResult<Option<CellAddress>> {
         self.prepare(index)?;
-        Ok(match &self.memo.get(&index).ok_or(VALUE_ERROR)?.value {
+        Ok(match &self.operand(index).ok_or(VALUE_ERROR)?.value {
             Value::Array(view) => view.anchor,
             // SAFETY: The match guard checks areas.len() == 1 before reading any first-area fields.
             Value::Refs(areas) if areas.len() == 1 && areas[0].kind == AreaKind::Area => {
@@ -57,7 +57,7 @@ impl CallHost<'_, '_> {
         index: usize,
     ) -> FunctionResult<Option<Vec<(usize, usize)>>> {
         self.prepare(index)?;
-        let (area, row, column) = match &self.memo.get(&index).ok_or(VALUE_ERROR)?.value {
+        let (area, row, column) = match &self.operand(index).ok_or(VALUE_ERROR)?.value {
             Value::Refs(areas) | Value::SheetSpan(areas) if areas.len() == 1 => {
                 let area = *areas.first().ok_or(VALUE_ERROR)?;
                 (Some(area), i64::from(area.r0), i64::from(area.c0))
@@ -92,19 +92,29 @@ impl CallHost<'_, '_> {
         column: usize,
     ) -> FunctionResult<ScalarOperand> {
         self.prepare(index)?;
-        let operand = &self.memo.get(&index).ok_or(VALUE_ERROR)?;
+        let slot = self
+            .argument_base
+            .checked_add(index)
+            .ok_or(EvaluationFailure::StalePlan)?;
+        let runtime = &mut *self.session.runtime;
+        let operand = &runtime
+            .vm
+            .operands
+            .get(slot)
+            .and_then(Option::as_ref)
+            .ok_or(VALUE_ERROR)?;
         let (value, origin, missing) = match &operand.value {
             Value::Missing if row == 0 && column == 0 => {
                 (coerce_legacy_missing_blank(), OperandOrigin::Direct, true)
             }
             Value::Missing => return Err(Ref.into()),
             Value::SelectedScalar(value, origin) if row == 0 && column == 0 => (
-                Self::copy_cell(&mut self.session.budget, value)?,
+                Self::copy_cell(&mut runtime.budget, value)?,
                 *origin,
                 operand.missing,
             ),
             Value::Scalar(value) if row == 0 && column == 0 => (
-                Self::copy_cell(&mut self.session.budget, value)?,
+                Self::copy_cell(&mut runtime.budget, value)?,
                 OperandOrigin::Direct,
                 operand.missing,
             ),
@@ -112,7 +122,7 @@ impl CallHost<'_, '_> {
             Value::Array(rows) => {
                 let value = rows.get(row).and_then(|row| row.get(column)).ok_or(Ref)?;
                 (
-                    Self::copy_cell(&mut self.session.budget, value)?,
+                    Self::copy_cell(&mut runtime.budget, value)?,
                     OperandOrigin::ArrayElement,
                     operand
                         .array_missing
@@ -182,7 +192,7 @@ impl CallHost<'_, '_> {
         column: usize,
     ) -> FunctionResult<ScalarOperand> {
         self.prepare(index)?;
-        if let Value::SignedRefs(areas) = &self.memo.get(&index).ok_or(VALUE_ERROR)?.value {
+        if let Value::SignedRefs(areas) = &self.operand(index).ok_or(VALUE_ERROR)?.value {
             if areas.len() != 1 {
                 return Err(VALUE_ERROR.into());
             }
@@ -196,7 +206,7 @@ impl CallHost<'_, '_> {
                 missing: false,
             });
         }
-        if let Value::Refs(areas) = &self.memo.get(&index).ok_or(VALUE_ERROR)?.value {
+        if let Value::Refs(areas) = &self.operand(index).ok_or(VALUE_ERROR)?.value {
             if areas.len() != 1 {
                 return Err(VALUE_ERROR.into());
             }
@@ -215,7 +225,19 @@ impl CallHost<'_, '_> {
     /// Inspect flattened collection length without traversing its cells.
     pub(crate) fn collection_len(&mut self, index: usize) -> FunctionResult<usize> {
         self.prepare(index)?;
-        let count = match &self.memo.get(&index).ok_or(VALUE_ERROR)?.value {
+        let slot = self
+            .argument_base
+            .checked_add(index)
+            .ok_or(EvaluationFailure::StalePlan)?;
+        let runtime = &mut *self.session.runtime;
+        let count = match &runtime
+            .vm
+            .operands
+            .get(slot)
+            .and_then(Option::as_ref)
+            .ok_or(VALUE_ERROR)?
+            .value
+        {
             Value::Missing | Value::Scalar(_) | Value::SelectedScalar(_, _) => 1,
             Value::Array(rows) => rows
                 .iter()
@@ -224,7 +246,7 @@ impl CallHost<'_, '_> {
             Value::SignedRefs(areas) => {
                 let mut count = 0u64;
                 for area in areas {
-                    self.session.budget.charge(WorkKind::ReferencePair, 1)?;
+                    runtime.budget.charge(WorkKind::ReferencePair, 1)?;
                     count = count.checked_add(area.size()).ok_or(Num)?;
                 }
                 count
@@ -232,7 +254,7 @@ impl CallHost<'_, '_> {
             Value::Refs(areas) | Value::SheetSpan(areas) => {
                 let mut count = 0u64;
                 for area in areas {
-                    self.session.budget.charge(WorkKind::ReferencePair, 1)?;
+                    runtime.budget.charge(WorkKind::ReferencePair, 1)?;
                     count = count.checked_add(area.size()).ok_or(Num)?;
                 }
                 count
@@ -252,7 +274,19 @@ impl CallHost<'_, '_> {
         offset: usize,
     ) -> FunctionResult<ScalarOperand> {
         self.prepare(index)?;
-        match &self.memo.get(&index).ok_or(VALUE_ERROR)?.value {
+        let slot = self
+            .argument_base
+            .checked_add(index)
+            .ok_or(EvaluationFailure::StalePlan)?;
+        let runtime = &mut *self.session.runtime;
+        match &runtime
+            .vm
+            .operands
+            .get(slot)
+            .and_then(Option::as_ref)
+            .ok_or(VALUE_ERROR)?
+            .value
+        {
             Value::Missing | Value::Scalar(_) | Value::SelectedScalar(_, _) => {
                 self.read_cell(index, 0, offset)
             }
@@ -266,7 +300,7 @@ impl CallHost<'_, '_> {
             Value::SignedRefs(areas) => {
                 let mut remaining = offset as u64;
                 for area in areas {
-                    self.session.budget.charge(WorkKind::ReferencePair, 1)?;
+                    runtime.budget.charge(WorkKind::ReferencePair, 1)?;
                     if remaining < area.size() {
                         let plan = area
                             .read(remaining / area.width(), remaining % area.width())
@@ -284,15 +318,16 @@ impl CallHost<'_, '_> {
             Value::Refs(areas) | Value::SheetSpan(areas) => {
                 let mut remaining = offset as u64;
                 for area in areas {
-                    self.session.budget.charge(WorkKind::ReferencePair, 1)?;
+                    runtime.budget.charge(WorkKind::ReferencePair, 1)?;
                     if remaining < area.size() {
                         let width = u64::from(area.c1 - area.c0 + 1);
                         let address = CellAddress {
                             row: area.r0 + (remaining / width) as u32,
                             col: area.c0 + (remaining % width) as u32,
                         };
+                        let sheet = area.sheet;
                         return Ok(ScalarOperand {
-                            value: self.session.cell(area.sheet, address)?,
+                            value: self.session.cell(sheet, address)?,
                             origin: OperandOrigin::ReferencedCell,
                             missing: false,
                         });
@@ -306,7 +341,7 @@ impl CallHost<'_, '_> {
     /// Resolve rectangular dimensions without reading member values.
     pub(crate) fn shape(&mut self, index: usize) -> FunctionResult<(usize, usize)> {
         self.prepare(index)?;
-        match &self.memo.get(&index).ok_or(VALUE_ERROR)?.value {
+        match &self.operand(index).ok_or(VALUE_ERROR)?.value {
             Value::Missing | Value::Scalar(_) | Value::SelectedScalar(_, _) => Ok((1, 1)),
             Value::Array(rows) => {
                 let columns = rows.first().ok_or(VALUE_ERROR)?.len();
@@ -319,7 +354,7 @@ impl CallHost<'_, '_> {
                 if !areas.is_empty()
                     && (areas.len() == 1
                         || matches!(
-                            self.memo.get(&index).ok_or(VALUE_ERROR)?.value,
+                            self.operand(index).ok_or(VALUE_ERROR)?.value,
                             Value::SheetSpan(_)
                         )) =>
             {

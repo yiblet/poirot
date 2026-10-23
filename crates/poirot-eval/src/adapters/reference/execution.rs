@@ -25,6 +25,13 @@ impl Session<'_> {
             | ReferenceFunction::Offset
             | ReferenceFunction::Sheet
             | ReferenceFunction::Single => return Ok(err(VALUE_ERROR)),
+            ReferenceFunction::AnchorArray => {
+                if n != 1 {
+                    return Ok(err(VALUE_ERROR));
+                }
+                let value = self.expr(s, at, args.get(0).ok_or(EvaluationFailure::StalePlan)?)?;
+                self.spill_reference(value)?
+            }
             ReferenceFunction::Index => self.index(s, at, args)?,
             ReferenceFunction::Rows
             | ReferenceFunction::Columns
@@ -53,7 +60,9 @@ impl Session<'_> {
                             ReferenceFunction::Row => (a.r0 + 1).into(),
                             ReferenceFunction::Column => (a.c0 + 1).into(),
                             // SAFETY: The enclosing match selects only coordinate functions; each area access is guarded by areas.len() == 1.
-                            ReferenceFunction::Index => unreachable!("INDEX has its own adapter"),
+                            ReferenceFunction::Index | ReferenceFunction::AnchorArray => {
+                                unreachable!("reference selection has its own adapter")
+                            }
                             ReferenceFunction::Address
                             | ReferenceFunction::Areas
                             | ReferenceFunction::Hyperlink
@@ -230,7 +239,7 @@ impl Session<'_> {
                     Err(error) => return Ok(err(error)),
                 };
             self.budget.allocation(1)?;
-            return Ok(Value::Refs(vec![Area {
+            return Ok(Value::Refs(ReferenceAreas::One(Area {
                 kind: AreaKind::Area,
                 sheet: area.sheet,
                 r0: if row == 0 {
@@ -253,7 +262,7 @@ impl Session<'_> {
                 } else {
                     area.c0 + col as u32 - 1
                 },
-            }]));
+            })));
         }
         if self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
             && matches!(v, Value::Scalar(_) | Value::SelectedScalar(_, _))

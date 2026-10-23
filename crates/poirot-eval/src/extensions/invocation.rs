@@ -118,10 +118,15 @@ pub(crate) fn execute(
     let Some(function) = session.extensions.and_then(|r| r.implementation(binding)) else {
         return Err(EvaluationFailure::UnsupportedCapability { capability: crate::CapabilityId::UserDefinedFunction, source: Some(EvaluationTarget { sheet, address }), detail: "bound extension implementation is absent or changed; rebind against the current registry".into() });
     };
+    let requested = session
+        .runtime
+        .extension_trace
+        .invocations
+        .len()
+        .saturating_add(1);
+    session.runtime.budget.allocation(requested)?;
     session
-        .budget
-        .allocation(session.extension_trace.invocations.len().saturating_add(1))?;
-    session
+        .runtime
         .extension_trace
         .invocations
         .push(ExtensionInvocation {

@@ -21,7 +21,7 @@ impl<'a> Session<'a> {
         };
         let mut diagnostic = None;
         for (index, sheet) in self.workbook.sheets().iter().enumerate() {
-            self.budget.charge(WorkKind::NamespaceScan, 1)?;
+            self.runtime.budget.charge(WorkKind::NamespaceScan, 1)?;
             match poirot_model::identifiers::checked_matches(sheet.name(), name) {
                 Ok(false) => continue,
                 Err(error) => {
@@ -52,8 +52,8 @@ impl<'a> Session<'a> {
         at: CellAddress,
         name: &str,
     ) -> EvalResult<Value> {
-        self.budget.text(name.len())?;
-        self.budget.charge(
+        self.runtime.budget.text(name.len())?;
+        self.runtime.budget.charge(
             WorkKind::NamespaceScan,
             (self.workbook.named_ranges.len() as u64).saturating_mul(2),
         )?;
@@ -78,7 +78,7 @@ impl<'a> Session<'a> {
         // Different qualifiers can select one global NAME record. Cycle identity
         // follows that record and the caller context, rather than its spelling.
         let key = (caller, index);
-        if !self.names.insert(key) {
+        if !self.runtime.names.insert(key) {
             return Ok(err(Ref));
         }
         let result = (|| {
@@ -88,16 +88,19 @@ impl<'a> Session<'a> {
                 .get(index)
                 .ok_or(EvaluationFailure::StalePlan)?
                 .formula;
-            self.budget.text(formula.len())?;
-            self.run_usage.named_formula_executions =
-                self.run_usage.named_formula_executions.saturating_add(1);
+            self.runtime.budget.text(formula.len())?;
+            self.runtime.run_usage.named_formula_executions = self
+                .runtime
+                .run_usage
+                .named_formula_executions
+                .saturating_add(1);
             let prepared = match self.plan.and_then(|plan| plan.defined_name(index)) {
                 Some(prepared) => std::sync::Arc::clone(prepared),
                 None => self.prepare_source(formula),
             };
             self.prepared_expression(caller, at, &prepared)
         })();
-        self.names.remove(&key);
+        self.runtime.names.remove(&key);
         result
     }
 }

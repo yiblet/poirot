@@ -237,6 +237,9 @@ impl<'a> Session<'a> {
         operation: UnaryOp,
         value: Value,
     ) -> EvalResult<Value> {
+        if operation == UnaryOp::SpillRange {
+            return self.spill_reference(value);
+        }
         let op = &operation;
         if *op != UnaryOp::ImplicitIntersection && self.retains_array(&value) {
             return self.array_unary(s, at, operation, value);
@@ -261,8 +264,10 @@ impl<'a> Session<'a> {
             // TODO(coercion-non-argument): [LOW] Unary numeric coercion can erase blank or text identity if applied before the operator consumes it.
             match semantic(self.coercev2_operator_number(&value))? {
                 Ok(n) => match op {
-                    // SAFETY: ImplicitIntersection returns before either numeric unary match in this function.
-                    UnaryOp::ImplicitIntersection => unreachable!("selected above"),
+                    // SAFETY: Both reference/selection operators return before numeric coercion.
+                    UnaryOp::ImplicitIntersection | UnaryOp::SpillRange => {
+                        unreachable!("selected above")
+                    }
                     // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
                     UnaryOp::Plus => numeric_outcome::coerce_numeric_outcome(n),
                     UnaryOp::Minus => {
@@ -398,47 +403,47 @@ impl<'a> Session<'a> {
                         c1: start.column.max(end.column),
                     });
                 }
-                Ok(Value::SheetSpan(areas))
+                Ok(Value::SheetSpan(areas.into()))
             }
             ReferenceRef::Cell { row, column, sheet } => Ok(match self.sheet_named(s, sheet)? {
                 Some(sheet) => {
                     self.budget.allocation(1)?;
-                    Value::Refs(vec![Area {
+                    Value::Refs(ReferenceAreas::One(Area {
                         kind: AreaKind::Cell,
                         sheet,
                         r0: row,
                         r1: row,
                         c0: column,
                         c1: column,
-                    }])
+                    }))
                 }
                 None => err(Ref),
             }),
             ReferenceRef::Column { column, sheet } => Ok(match self.sheet_named(s, sheet)? {
                 Some(sheet) => {
                     self.budget.allocation(1)?;
-                    Value::Refs(vec![Area {
+                    Value::Refs(ReferenceAreas::One(Area {
                         kind: AreaKind::Area,
                         sheet,
                         r0: 0,
                         r1: MAX_ROWS - 1,
                         c0: column,
                         c1: column,
-                    }])
+                    }))
                 }
                 None => err(Ref),
             }),
             ReferenceRef::Row { row, sheet } => Ok(match self.sheet_named(s, sheet)? {
                 Some(sheet) => {
                     self.budget.allocation(1)?;
-                    Value::Refs(vec![Area {
+                    Value::Refs(ReferenceAreas::One(Area {
                         kind: AreaKind::Area,
                         sheet,
                         r0: row,
                         r1: row,
                         c0: 0,
                         c1: MAX_COLUMNS - 1,
-                    }])
+                    }))
                 }
                 None => err(Ref),
             }),

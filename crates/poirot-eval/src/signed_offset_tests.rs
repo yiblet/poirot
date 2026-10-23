@@ -628,7 +628,7 @@ fn range_envelopes_reject_empty_and_mixed_sheet_operands_in_both_channels() {
                         .collect(),
                 )
             } else {
-                Value::Refs(areas)
+                Value::Refs(areas.into())
             }
         };
         let mut session = Session::with_context(&w, EvaluationInputs::default());
@@ -682,7 +682,7 @@ fn additional_envelope_members_consume_work_without_reading_cells() {
                         .collect(),
                 )
             } else {
-                Value::Refs(areas)
+                Value::Refs(areas.into())
             }
         };
         for extra in [false, true] {

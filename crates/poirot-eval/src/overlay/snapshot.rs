@@ -2,12 +2,12 @@
 use super::*;
 use serde::{Deserialize, Serialize, ser::Error as _};
 use std::borrow::Cow;
-const VERSION: u32 = 49;
+const VERSION: u32 = 55;
 /// Compatibility revision for persisted engine preparation and retained results.
 /// Bump when wire layout or execution semantics invalidate prepared snapshots,
 /// including changes that leave Serde field layouts intact. This is separate from
 /// durable workbook-source versioning owned by the public file envelope.
-pub const COMPATIBILITY_REVISION: u64 = 50;
+pub const COMPATIBILITY_REVISION: u64 = 55;
 
 /// Serde view of a baseline workbook and its sparse overlay state.
 pub struct Snapshot<'a> {
@@ -54,14 +54,21 @@ impl WorkspaceState {
             .iter()
             .map(|&(sheet, address)| WorkbookChange::RemoveCell { sheet, address })
             .chain(self.inputs.sheets.iter().flat_map(|(&sheet, cells)| {
-                cells
-                    .cells()
-                    .into_iter()
-                    .map(move |(&address, cell)| WorkbookChange::SetCell {
-                        sheet,
-                        address,
-                        cell: cell.clone(),
-                    })
+                cells.cells().into_iter().map(move |(&address, cell)| {
+                    if self.inputs.style_only.contains(&(sheet, address)) {
+                        WorkbookChange::SetStyle {
+                            sheet,
+                            address,
+                            style: cell.style.clone(),
+                        }
+                    } else {
+                        WorkbookChange::SetCell {
+                            sheet,
+                            address,
+                            cell: cell.clone(),
+                        }
+                    }
+                })
             }));
         result.apply(changes)?;
         Ok(result)
@@ -112,6 +119,7 @@ impl WorkspaceState {
                 workbook,
                 inputs: self.inputs,
                 compiler: RefCell::new(self.compiler),
+                spill_candidates: Default::default(),
                 policy: self.policy,
                 preparation: self.preparation,
                 extensions,
@@ -163,6 +171,7 @@ struct Payload<'a> {
     compiler: crate::compiler::cache_snapshot::Cache<'a>,
     writes: Vec<(usize, CellAddress, Cow<'a, Cell>)>,
     deleted: Cow<'a, std::collections::BTreeSet<Key>>,
+    style_only: Cow<'a, std::collections::BTreeSet<Key>>,
     cached: Vec<CachedValue<'a>>,
     context: Option<Cow<'a, ContextKey>>,
     spill_resets: Cow<'a, std::collections::BTreeSet<Key>>,
@@ -202,6 +211,7 @@ impl<'a> Payload<'a> {
                 })
                 .collect(),
             deleted: Cow::Borrowed(&overlay.inputs.deleted),
+            style_only: Cow::Borrowed(&overlay.inputs.style_only),
             cached: cache
                 .sheets
                 .iter()
@@ -233,6 +243,7 @@ impl<'a> Payload<'a> {
                 .map(|(sheet, at, cell)| (sheet, at, Cow::Owned(cell.into_owned())))
                 .collect(),
             deleted: Cow::Owned(self.deleted.into_owned()),
+            style_only: Cow::Owned(self.style_only.into_owned()),
             cached: self
                 .cached
                 .into_iter()
@@ -310,6 +321,7 @@ impl<'a> Snapshot<'a> {
         }
         if payload.writes.len() > 10_000_000
             || payload.deleted.len() > 10_000_000
+            || payload.style_only.len() > 10_000_000
             || payload.cached.len() > 10_000_000
         {
             return Err(OverlayError::Snapshot("overlay count limit".into()));
@@ -326,6 +338,7 @@ impl<'a> Snapshot<'a> {
                 workbook,
                 inputs: crate::run_overlay::RunInputs::empty(),
                 compiler: RefCell::new(compiler),
+                spill_candidates: Default::default(),
                 policy,
                 preparation,
                 extensions: None,
@@ -355,6 +368,28 @@ impl<'a> Snapshot<'a> {
                 return Err(OverlayError::Snapshot("write and removal overlap".into()));
             }
         }
+        for &(sheet, address) in payload.style_only.as_ref() {
+            let cell = overlay.source.inputs.cell(sheet, address).ok_or_else(|| {
+                OverlayError::Snapshot("style-only marker lacks an override".into())
+            })?;
+            let baseline = overlay
+                .source
+                .workbook
+                .sheet(sheet)
+                .and_then(|s| s.source_cell(address));
+            if !match baseline {
+                Some(base) => {
+                    base.formula == cell.formula
+                        && crate::same_result_identity(&base.value, &cell.value)
+                }
+                None => cell.formula.is_none() && cell.value == CellValue::Blank,
+            } {
+                return Err(OverlayError::Snapshot(
+                    "style-only marker changes source content".into(),
+                ));
+            }
+        }
+        overlay.source.inputs.style_only = payload.style_only.into_owned();
         overlay.source.inputs.deleted = payload.deleted.into_owned();
         {
             let cache = overlay.cache.get_mut();
@@ -504,5 +539,54 @@ impl<'de, 'a> Deserialize<'de> for Snapshot<'a> {
         Ok(Self {
             state: State::Owned(Box::new(Payload::<'static>::deserialize(deserializer)?)),
         })
+    }
+}
+
+#[cfg(test)]
+mod style_marker_validation {
+    use super::*;
+
+    #[test]
+    fn malformed_style_only_markers_cannot_authorize_content_or_missing_writes() {
+        for malformed in 0..3 {
+            let mut book = Workbook::new();
+            book.add_sheet("S")
+                .unwrap()
+                .set_value(CellAddress { row: 0, col: 0 }, 1.0)
+                .unwrap();
+            let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+            let key = (0, CellAddress { row: 0, col: 0 });
+            overlay
+                .set_value(
+                    EvaluationTarget {
+                        sheet: key.0,
+                        address: key.1,
+                    },
+                    2.0,
+                )
+                .unwrap();
+            let mut snapshot = overlay.snapshot().into_owned().unwrap();
+            let State::Owned(payload) = &mut snapshot.state else {
+                panic!("owned payload")
+            };
+            match malformed {
+                0 => {
+                    payload.style_only.to_mut().insert(key);
+                }
+                1 => {
+                    payload
+                        .style_only
+                        .to_mut()
+                        .insert((0, CellAddress { row: 1, col: 0 }));
+                }
+                _ => {
+                    payload.writes.clear();
+                    payload.writes.push((0, key.1, Cow::Owned(Cell::new(1.0))));
+                    payload.style_only.to_mut().insert(key);
+                    payload.deleted.to_mut().insert(key);
+                }
+            }
+            assert!(snapshot.restore().is_err());
+        }
     }
 }

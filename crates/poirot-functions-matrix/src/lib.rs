@@ -533,3 +533,101 @@ mod tests {
         close(result.values[0], 14.);
     }
 }
+
+/// Generate row-major sequential numbers with admitted dimensions and resource limits.
+/// Defaults and numeric coercion belong to the caller. Microsoft documents the
+/// shape, ordering and optional arguments at
+/// <https://support.microsoft.com/en-us/excel/functions/sequence-function>.
+/// This implementation and its mathematical tests were independently written.
+pub fn sequence(
+    rows: usize,
+    columns: usize,
+    start: f64,
+    step: f64,
+    budget: Budget,
+) -> Result<Matrix<f64>> {
+    if rows == 0 || columns == 0 {
+        return value();
+    }
+    if !start.is_finite() || !step.is_finite() {
+        return num();
+    }
+    let count = rows.checked_mul(columns).ok_or(Error::BudgetExceeded)?;
+    budget.check(Some(count), Some(count))?;
+    let mut values = Vec::new();
+    values
+        .try_reserve_exact(count)
+        .map_err(|_| Error::BudgetExceeded)?;
+    for index in 0..count {
+        let number = start + step * index as f64;
+        if !number.is_finite() {
+            return num();
+        }
+        // SAFETY: The reservation covers count pushes and this loop performs exactly count.
+        values.push(number);
+    }
+    Matrix::new(rows, columns, values)
+}
+
+#[cfg(test)]
+mod sequence_tests {
+    use super::*;
+    #[test]
+    fn row_major_generation_matches_independent_linear_coordinates() {
+        let budget = Budget {
+            max_cells: 100,
+            max_work: 100,
+        };
+        for rows in 1..=7 {
+            for columns in 1..=5 {
+                let matrix = sequence(rows, columns, 5., -2., budget).unwrap();
+                assert_eq!((matrix.rows(), matrix.cols()), (rows, columns));
+                for row in 0..rows {
+                    for column in 0..columns {
+                        assert_eq!(
+                            matrix.values()[row * columns + column],
+                            5. - 2. * (row * columns + column) as f64
+                        );
+                    }
+                }
+            }
+        }
+    }
+    #[test]
+    fn sequence_rejects_invalid_counts_work_limits_and_nonfinite_numbers() {
+        let budget = Budget {
+            max_cells: 4,
+            max_work: 4,
+        };
+        assert_eq!(
+            sequence(0, 1, 1., 1., budget),
+            Err(Error::Formula(CellError::Value))
+        );
+        assert_eq!(
+            sequence(usize::MAX, 2, 1., 1., budget),
+            Err(Error::BudgetExceeded)
+        );
+        assert_eq!(sequence(3, 2, 1., 1., budget), Err(Error::BudgetExceeded));
+        assert_eq!(
+            sequence(
+                2,
+                2,
+                1.,
+                1.,
+                Budget {
+                    max_cells: 4,
+                    max_work: 3
+                }
+            ),
+            Err(Error::BudgetExceeded)
+        );
+        assert_eq!(
+            sequence(1, 1, f64::INFINITY, 1., budget),
+            Err(Error::Formula(CellError::Num))
+        );
+        assert_eq!(
+            sequence(2, 1, 1E308, 1E308, budget),
+            Err(Error::Formula(CellError::Num))
+        );
+    }
+}

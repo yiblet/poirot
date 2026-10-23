@@ -9,6 +9,24 @@ impl<'a> Session<'a> {
         address: CellAddress,
         mut value: Value,
     ) -> EvalResult<CellValue> {
+        let area_reference = match &value {
+            Value::Refs(areas) | Value::SheetSpan(areas) => {
+                matches!(areas.as_slice(), [area] if area.kind == AreaKind::Area)
+            }
+            Value::SignedRefs(areas) => {
+                matches!(areas.as_slice(), [area] if area.kind == AreaKind::Area && area.positive_shape().is_some())
+            }
+            _ => false,
+        };
+        if self.array_result_policy == ArrayResultPolicy::DynamicSpill && area_reference {
+            let shape = crate::array_operator::Shape::inspect(&value)
+                .ok_or(EvaluationFailure::StalePlan)?;
+            value = Value::Array(self.rectangular_array(
+                address,
+                shape,
+                |session, row, column| session.rectangular_element(&value, shape, row, column),
+            )?);
+        }
         if self.array_result_policy == ArrayResultPolicy::DynamicSpill
             && let Value::Array(rows) = &mut value
         {
@@ -68,7 +86,7 @@ impl<'a> Session<'a> {
                     self.cell(first.sheet, at)
                 } else {
                     self.budget.allocation(1)?;
-                    self.scalar(at, Value::Refs(vec![*first]))
+                    self.scalar(at, Value::Refs(ReferenceAreas::One(*first)))
                 }
             }
             Value::SignedRefs(areas) => {
@@ -169,14 +187,14 @@ impl<'a> Session<'a> {
                     envelope.c1 = envelope.c1.max(area.c1);
                 }
                 self.budget.allocation(1)?;
-                Ok(Value::Refs(vec![Area {
+                Ok(Value::Refs(ReferenceAreas::One(Area {
                     kind: AreaKind::Area,
                     sheet: envelope.sheet,
                     r0: envelope.r0.min(right_first.r0),
                     r1: envelope.r1.max(right_first.r1),
                     c0: envelope.c0.min(right_first.c0),
                     c1: envelope.c1.max(right_first.c1),
-                }]))
+                })))
             }
             BinaryOp::Intersection => {
                 let mut output = Vec::new();
@@ -204,7 +222,7 @@ impl<'a> Session<'a> {
                 Ok(if output.is_empty() {
                     err(Null)
                 } else {
-                    Value::Refs(output)
+                    Value::Refs(output.into())
                 })
             }
             _ => Ok(err(Ref)),

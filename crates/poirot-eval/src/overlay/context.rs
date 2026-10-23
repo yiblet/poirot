@@ -94,6 +94,8 @@ pub struct OverlayPolicy {
     pub builtin: crate::BuiltinSemanticsPolicy,
     /// Rules for returning and publishing array results.
     pub arrays: crate::ArrayResultPolicy,
+    /// Compute possible producers or trust saved source results.
+    pub producers: crate::ProducerPolicy,
     /// Text comparison and coercion behavior.
     pub text: crate::TextSemanticsPolicy,
     /// Conversion rules when exporting evaluated values into workbook caches.
@@ -106,6 +108,7 @@ impl Default for OverlayPolicy {
             parse: Default::default(),
             builtin: configuration.builtin_policy(),
             arrays: configuration.array_result_policy(),
+            producers: configuration.producer_policy(),
             text: configuration.text_policy(),
             materialization: configuration.materialization_policy(),
         }

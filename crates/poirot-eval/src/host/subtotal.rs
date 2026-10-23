@@ -15,12 +15,24 @@ impl CallHost<'_, '_> {
         exclude_hidden: bool,
     ) -> FunctionResult<Option<ScalarOperand>> {
         self.prepare(index)?;
-        let coordinate = match &self.memo.get(&index).ok_or(VALUE_ERROR)?.value {
+        let slot = self
+            .argument_base
+            .checked_add(index)
+            .ok_or(EvaluationFailure::StalePlan)?;
+        let runtime = &mut *self.session.runtime;
+        let coordinate = match &runtime
+            .vm
+            .operands
+            .get(slot)
+            .and_then(Option::as_ref)
+            .ok_or(VALUE_ERROR)?
+            .value
+        {
             Value::Refs(areas) | Value::SheetSpan(areas) => {
                 let mut remaining = offset as u64;
                 let mut selected = None;
                 for area in areas {
-                    self.session.budget.charge(WorkKind::ReferencePair, 1)?;
+                    runtime.budget.charge(WorkKind::ReferencePair, 1)?;
                     if remaining < area.size() {
                         let width = u64::from(area.c1 - area.c0 + 1);
                         selected = Some((
@@ -40,7 +52,7 @@ impl CallHost<'_, '_> {
                 let mut remaining = offset as u64;
                 let mut selected = None;
                 for area in areas {
-                    self.session.budget.charge(WorkKind::ReferencePair, 1)?;
+                    runtime.budget.charge(WorkKind::ReferencePair, 1)?;
                     if remaining < area.size() {
                         selected = match area
                             .read(remaining / area.width(), remaining % area.width())

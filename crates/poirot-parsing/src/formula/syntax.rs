@@ -62,7 +62,9 @@ pub fn needs_parentheses(expr: &Expr, context: GroupingContext) -> bool {
                 op.precedence() < parent.precedence()
                     || (right && op.precedence() == parent.precedence())
             }
-            Expr::Unary { .. } => 8 < parent.precedence(),
+            Expr::Unary { op, .. } => {
+                (if *op == UnaryOp::SpillRange { 10 } else { 8 }) < parent.precedence()
+            }
             _ => false,
         },
         GroupingContext::FunctionArgument => matches!(
@@ -73,8 +75,9 @@ pub fn needs_parentheses(expr: &Expr, context: GroupingContext) -> bool {
             }
         ),
         GroupingContext::UnaryOperand(unary) => {
-            matches!(expr, Expr::Binary {op,..} if op.precedence()<8)
-                || (unary == UnaryOp::Percent
+            let strength = if unary == UnaryOp::SpillRange { 10 } else { 8 };
+            matches!(expr, Expr::Binary {op,..} if op.precedence()<strength)
+                || (matches!(unary, UnaryOp::Percent | UnaryOp::SpillRange)
                     && matches!(
                         expr,
                         Expr::Unary {
@@ -239,13 +242,13 @@ fn write_expr(
             out.push_str(&(row.checked_add(1).ok_or_else(|| failure("row overflow"))?).to_string());
         }
         Expr::Unary { op, operand } => {
-            if *op != UnaryOp::Percent {
+            if !matches!(op, UnaryOp::Percent | UnaryOp::SpillRange) {
                 out.push(match op {
                     UnaryOp::Plus => '+',
                     UnaryOp::Minus => '-',
                     UnaryOp::ImplicitIntersection => '@',
-                    // SAFETY: The enclosing condition excludes UnaryOp::Percent before entering this match.
-                    UnaryOp::Percent => unreachable!(),
+                    // SAFETY: The enclosing condition excludes both postfix operators.
+                    UnaryOp::Percent | UnaryOp::SpillRange => unreachable!(),
                 });
             }
             grouped(
@@ -255,8 +258,10 @@ fn write_expr(
                 depth + 1,
                 nodes,
             )?;
-            if *op == UnaryOp::Percent {
-                out.push('%');
+            match op {
+                UnaryOp::Percent => out.push('%'),
+                UnaryOp::SpillRange => out.push('#'),
+                _ => {}
             }
         }
         Expr::Binary { op, left, right } => {

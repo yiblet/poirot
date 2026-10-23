@@ -84,3 +84,6 @@ pub(crate) fn patch_export(
     package.insert(plan.workbook_part, updated);
     package::write_export(package, options)
 }
+
+// Stored spellings for modern reference syntax.
+pub(crate) mod formula;

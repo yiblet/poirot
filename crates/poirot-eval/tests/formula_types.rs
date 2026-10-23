@@ -227,3 +227,40 @@ fn prepared_root_properties_follow_exact_source_and_survive_snapshot_restore() {
     };
     assert!(formula.properties().unwrap().result.may_spill());
 }
+
+#[test]
+fn spill_reference_and_runtime_profile_fallback_use_reference_result_contracts() {
+    let expected = T::multi_reference(K::ANY).join(T::scalar(K::ERROR));
+    assert_eq!(properties("A1#").result, expected);
+    assert_eq!(properties("ANCHORARRAY(A1)").result, expected);
+    assert_eq!(properties("_xlfn.ANCHORARRAY(A1)").result, expected);
+    assert!(!properties("SUM(A1#)").result.may_spill());
+    assert!(
+        properties("A1#")
+            .effects
+            .possible_reads
+            .contains(D::REFERENCE_READS)
+    );
+    // These calls remain unresolved at policy-independent binding. The runtime
+    // Excel profile can select a catalog handler, so typing must include its
+    // result as well as the unresolved-name error for other profiles.
+    for descriptor in registry::descriptors_for_policy(BuiltinSemanticsPolicy::ExcelDocumentation) {
+        if registry::resolve_function(&descriptor.name.into()).is_some() {
+            continue;
+        }
+        let arguments = vec!["A1"; descriptor.arity.minimum];
+        let source = format!("{}({})", descriptor.name, arguments.join(","));
+        let input = T::single_reference(K::ANY).join(T::scalar(K::ERROR));
+        let result = descriptor
+            .result
+            .apply(&vec![input; descriptor.arity.minimum]);
+        let actual = properties(&source);
+        assert!(result.is_subtype_of(actual.result), "{source}");
+        assert!(
+            actual
+                .effects
+                .possible_reads
+                .contains(descriptor.dependencies)
+        );
+    }
+}

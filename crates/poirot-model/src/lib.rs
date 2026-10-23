@@ -11,7 +11,7 @@ use std::{collections::BTreeMap, fmt, str::FromStr};
 
 mod formula_types;
 // Possible formula-result vocabulary, independent of parsing and execution.
-pub use formula_types::{FormulaType, ScalarKinds};
+pub use formula_types::{FormulaType, ScalarKinds, ShapeBounds};
 mod numeric_fidelity;
 // Numeric file-representation checks shared by import and export adapters.
 pub use numeric_fidelity::*;
@@ -222,6 +222,7 @@ pub struct Worksheet {
     rows: std::collections::BTreeSet<u32>,
     visibility: BTreeMap<u32, RowVisibility>,
     spill_cache: BTreeMap<CellAddress, SpillCell>,
+    spill_extents: BTreeMap<CellAddress, SavedSpillExtent>,
 }
 impl Worksheet {
     /// Create an empty sparse sheet after validating its name.
@@ -235,6 +236,7 @@ impl Worksheet {
             rows: std::collections::BTreeSet::new(),
             visibility: BTreeMap::new(),
             spill_cache: BTreeMap::new(),
+            spill_extents: BTreeMap::new(),
         })
     }
     /// Borrow the validated worksheet name.
@@ -276,9 +278,31 @@ impl Worksheet {
             cell.formula = Some(normalize_formula(f)?);
         }
         self.clear_spill_cache(address);
-        self.spill_cache.remove(&address);
+        if let Some(child) = self.spill_cache.remove(&address) {
+            self.spill_extents.remove(&child.owner);
+        }
         self.rows.insert(address.row);
         Ok(self.cells.insert(address, cell))
+    }
+    /// Change display style while preserving authored content and saved spill ownership.
+    pub fn set_style(&mut self, address: CellAddress, style: CellStyle) -> Result<(), ModelError> {
+        address.validate()?;
+        if let Some(child) = self.spill_cache.get_mut(&address) {
+            child.source.get_or_insert_with(Cell::default).style = style.clone();
+        }
+        if let Some(cell) = self.cells.get_mut(&address) {
+            cell.style = style;
+        } else {
+            self.cells.insert(
+                address,
+                Cell {
+                    style,
+                    ..Default::default()
+                },
+            );
+        }
+        self.rows.insert(address.row);
+        Ok(())
     }
     /// Store a literal value and clear any formula at this address, retaining its style.
     pub fn set_value(
@@ -288,7 +312,9 @@ impl Worksheet {
     ) -> Result<(), ModelError> {
         address.validate()?;
         self.clear_spill_cache(address);
-        self.spill_cache.remove(&address);
+        if let Some(child) = self.spill_cache.remove(&address) {
+            self.spill_extents.remove(&child.owner);
+        }
         self.rows.insert(address.row);
         if self.get(address).is_none() {
             self.cells.insert(address, Cell::default());
@@ -321,7 +347,9 @@ impl Worksheet {
         address.validate()?;
         let formula = normalize_formula(formula.into())?;
         self.clear_spill_cache(address);
-        self.spill_cache.remove(&address);
+        if let Some(child) = self.spill_cache.remove(&address) {
+            self.spill_extents.remove(&child.owner);
+        }
         self.rows.insert(address.row);
         if self.get(address).is_none() {
             self.cells.insert(address, Cell::default());
@@ -337,7 +365,9 @@ impl Worksheet {
     /// Remove a stored cell and its derived spill cache, returning the previous cell.
     pub fn remove(&mut self, address: CellAddress) -> Option<Cell> {
         self.clear_spill_cache(address);
-        self.spill_cache.remove(&address);
+        if let Some(child) = self.spill_cache.remove(&address) {
+            self.spill_extents.remove(&child.owner);
+        }
         self.cells.remove(&address)
     }
 }
@@ -479,6 +509,7 @@ impl Workbook {
             rows: std::collections::BTreeSet::new(),
             visibility: BTreeMap::new(),
             spill_cache: BTreeMap::new(),
+            spill_extents: BTreeMap::new(),
         });
         // SAFETY: This function just pushed a worksheet and has not removed any element before last_mut().
         Ok(self.sheets.last_mut().expect("inserted sheet"))
@@ -871,6 +902,13 @@ impl CellRead<Cell> for Worksheet {
     }
 }
 
+/// Declared saved geometry bound to the exact formula source, independent of cache completeness.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub(crate) struct SavedSpillExtent {
+    last: CellAddress,
+    formula: String,
+}
+
 /// Derived child data retains the prior source cell so clearing a footprint never
 /// deletes author-authored blank/style metadata or promotes cached data to input.
 #[derive(Debug, Clone, PartialEq)]
@@ -881,11 +919,82 @@ pub(crate) struct SpillCell {
     pub source: Option<Cell>,
 }
 impl Worksheet {
+    /// Iterate valid saved anchor extents, including incomplete or one-cell footprints.
+    pub fn spill_extents(&self) -> impl Iterator<Item = (CellAddress, CellAddress)> + '_ {
+        self.spill_extents.iter().filter_map(|(anchor, extent)| {
+            (self.get(*anchor).and_then(|cell| cell.formula.as_deref())
+                == Some(extent.formula.as_str()))
+            .then_some((*anchor, extent.last))
+        })
+    }
+    /// Read declared saved geometry only while its exact anchor formula still matches.
+    pub fn spill_extent(&self, anchor: CellAddress) -> Option<CellAddress> {
+        let extent = self.spill_extents.get(&anchor)?;
+        (self.get(anchor)?.formula.as_deref()? == extent.formula).then_some(extent.last)
+    }
+    /// Save declared geometry without asserting that every cached child is present.
+    pub fn set_spill_extent(
+        &mut self,
+        anchor: CellAddress,
+        last: CellAddress,
+        expected_formula: &str,
+    ) -> Result<(), ModelError> {
+        anchor.validate()?;
+        last.validate()?;
+        if last.row < anchor.row
+            || last.col < anchor.col
+            || self.get(anchor).and_then(|cell| cell.formula.as_deref()) != Some(expected_formula)
+        {
+            return Err(ModelError(
+                "spill extent anchor source or geometry changed".into(),
+            ));
+        }
+        self.spill_extents.insert(
+            anchor,
+            SavedSpillExtent {
+                last,
+                formula: expected_formula.into(),
+            },
+        );
+        Ok(())
+    }
+    /// Verify saved children cover a declared rectangle exactly, without expanding sparse holes.
+    pub fn complete_spill_extent(&self, anchor: CellAddress) -> Option<CellAddress> {
+        if self.spill_cache.contains_key(&anchor) {
+            return None;
+        }
+        let last = self.spill_extent(anchor)?;
+        let count = u64::from(last.row.checked_sub(anchor.row)?.checked_add(1)?)
+            .checked_mul(u64::from(last.col.checked_sub(anchor.col)?.checked_add(1)?))?;
+        let mut children = 0u64;
+        for (at, spill) in &self.spill_cache {
+            if spill.owner != anchor {
+                continue;
+            }
+            if *at == anchor
+                || at.row < anchor.row
+                || at.row > last.row
+                || at.col < anchor.col
+                || at.col > last.col
+                || self.get(*at).is_none_or(|cell| cell.formula.is_some())
+            {
+                return None;
+            }
+            children = children.checked_add(1)?;
+        }
+        (children.checked_add(1)? == count).then_some(last)
+    }
     /// Borrow authored content, excluding a derived child's saved spill value.
     pub fn source_cell(&self, address: CellAddress) -> Option<&Cell> {
         self.spill_cache
             .get(&address)
             .map_or_else(|| self.get(address), |spill| spill.source.as_ref())
+    }
+    /// Iterate derived cached children and their source anchors without visiting authored cells.
+    pub fn spill_children(&self) -> impl Iterator<Item = (CellAddress, CellAddress)> + '_ {
+        self.spill_cache
+            .iter()
+            .map(|(address, spill)| (*address, spill.owner))
     }
     /// Return the anchor owning a derived cached child.
     pub fn spill_owner(&self, address: CellAddress) -> Option<CellAddress> {
@@ -893,6 +1002,7 @@ impl Worksheet {
     }
     /// Remove one anchor's derived values and restore original authored cells.
     pub fn clear_spill_cache(&mut self, owner: CellAddress) {
+        self.spill_extents.remove(&owner);
         let children = self
             .spill_cache
             .iter()
@@ -924,6 +1034,8 @@ impl Worksheet {
         address.validate()?;
         owner.validate()?;
         if address == owner
+            || address.row < owner.row
+            || address.col < owner.col
             || self.get(owner).and_then(|c| c.formula.as_deref()) != Some(expected_formula)
         {
             return Err(ModelError(

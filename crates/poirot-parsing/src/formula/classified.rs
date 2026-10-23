@@ -7,11 +7,11 @@
 //! against its configured grid bounds before a hit bypasses full parsing.
 //! All literal bytes (including whitespace, function spelling and strings) survive.
 //! Full-cell tokens are replaced by a Cell placeholder; sheet qualifiers remain literal.
-//! Whole-axis ranges, arrays and error literals currently request normal
-//! parser fallback. An iterator may yield tokens before reporting unsupported input;
+//! Whole-axis pairs retain their exact source bytes and cannot be rebound.
+//! Arrays and error literals currently request normal parser fallback. An iterator may yield tokens before reporting unsupported input;
 //! consume to completion before publishing a hash or collected bindings.
 use crate::formula::references::cell_coordinates;
-use crate::formula::tokens::{identifier, number_token, whitespace};
+use crate::formula::tokens::{identifier, identifier_character, number_token, whitespace};
 use std::hash::{Hash, Hasher};
 
 /// Coordinate representation shared with the full reference parser.
@@ -38,6 +38,12 @@ pub enum Unsupported {
 pub enum TokenKind {
     /// Source bytes that remain unchanged during coordinate rebinding.
     Literal,
+    /// Validated finite numeric literal; its source bytes remain significant for execution.
+    Number,
+    /// Validated escaped text literal; its source bytes remain significant for execution.
+    Text,
+    /// Complete whole-axis pair whose exact spelling is retained, never rebound.
+    FixedReference,
     /// Cell coordinates that may vary between shared templates.
     Cell(CellCoordinates),
 }
@@ -87,6 +93,33 @@ impl<'a> Tokens<'a> {
                 Ok(None)
             };
         };
+        // Prefix, primitive-axis and ordinary-token handling share this borrowed
+        // lexical scan rather than recognizing each identifier three times.
+        let word = identifier_character(first)
+            .then(|| identifier(tail).ok())
+            .flatten();
+        let after_word = word.and_then(|(rest, _)| whitespace(rest).ok().map(|(rest, _)| rest));
+        if let Some(length) = after_word
+            .filter(|rest| rest.starts_with(':'))
+            .and_then(|_| fixed_axis_range(tail))
+        {
+            self.position = self
+                .position
+                .checked_add(length)
+                .ok_or(Unsupported::Syntax)?;
+            self.last_cell = false;
+            self.range_cell = false;
+            self.qualified_cell = false;
+            return Ok(Some(Token {
+                raw: self
+                    .source
+                    .get(start..self.position)
+                    .ok_or(Unsupported::Syntax)?,
+                start,
+                end: self.position,
+                kind: TokenKind::FixedReference,
+            }));
+        }
         // Qualifier spelling remains literal. Only bounded cell endpoints qualify
         // for this fast path; names, external workbooks and 3D spans fall back.
         let prefix = if first == '\'' {
@@ -107,9 +140,7 @@ impl<'a> Tokens<'a> {
             }
             (bytes.get(end) == Some(&b'!')).then_some(end + 1)
         } else {
-            identifier(tail)
-                .ok()
-                .and_then(|(rest, text)| rest.starts_with('!').then_some(text.len() + 1))
+            word.and_then(|(rest, text)| rest.starts_with('!').then_some(text.len() + 1))
         };
         if let Some(length) = prefix {
             if self.qualified_cell
@@ -122,7 +153,9 @@ impl<'a> Tokens<'a> {
             }
             let (_, text) = identifier(tail.get(length..).ok_or(Unsupported::Syntax)?)
                 .map_err(|_| Unsupported::QualifiedReference)?;
-            if !matches!(cell_coordinates(text), Ok(Some(_))) {
+            if !matches!(cell_coordinates(text), Ok(Some(_)))
+                && fixed_axis_range(tail.get(length..).ok_or(Unsupported::Syntax)?).is_none()
+            {
                 return Err(Unsupported::QualifiedReference);
             }
             self.position += length;
@@ -157,7 +190,7 @@ impl<'a> Tokens<'a> {
                 }
                 end += 1;
             }
-            (end, TokenKind::Literal, false)
+            (end, TokenKind::Text, false)
         } else if matches!(first, '\'' | '!') {
             return Err(Unsupported::QualifiedReference);
         } else if matches!(first, '{' | '}' | '#') {
@@ -167,29 +200,11 @@ impl<'a> Tokens<'a> {
             if !value.is_finite() {
                 return Err(Unsupported::Syntax);
             }
-            (tail.len() - rest.len(), TokenKind::Literal, false)
+            (tail.len() - rest.len(), TokenKind::Number, false)
         } else if first.is_alphanumeric() || matches!(first, '$' | '_' | '\\') {
-            let (rest, text) = identifier(tail).map_err(|_| Unsupported::Syntax)?;
-            let (lookahead, _) = whitespace(rest).map_err(|_| Unsupported::Syntax)?;
-            let call = lookahead.starts_with('(');
-            let decoded = cell_coordinates(text);
-            // Share parser::reference's cell-vs-function priority. Even A1(A2)
-            // starts as a cell; LOG10(A2) is a known function, LOG10 alone a cell.
-            let kind = if call
-                && (crate::formula::reference_classes::return_class_insensitive(text).is_some()
-                    || !matches!(decoded, Ok(Some(_))))
-            {
-                if text.contains('$') {
-                    return Err(Unsupported::Reference);
-                }
-                TokenKind::Literal
-            } else {
-                match decoded {
-                    Ok(Some(c)) => TokenKind::Cell(c),
-                    Ok(None) if !text.contains('$') => TokenKind::Literal,
-                    _ => return Err(Unsupported::Reference),
-                }
-            };
+            let (_, text) = word.ok_or(Unsupported::Syntax)?;
+            let lookahead = after_word.ok_or(Unsupported::Syntax)?;
+            let kind = word_kind(text, lookahead.starts_with('('))?;
             (text.len(), kind, false)
         } else if first == ':' {
             if !self.last_cell || self.range_cell {
@@ -233,6 +248,59 @@ impl<'a> Tokens<'a> {
         }))
     }
 }
+/// Decode one leading unqualified cell token, retaining the unvalidated remaining source.
+/// The canonical function/cell priority and worksheet coordinate decoder are shared
+/// with `Tokens`; callers must validate the complete surrounding formula separately.
+pub fn cell_prefix(source: &str) -> Option<(&str, CellCoordinates)> {
+    let (rest, text) = identifier(source).ok()?;
+    if rest.starts_with('!') {
+        return None;
+    }
+    let (lookahead, _) = whitespace(rest).ok()?;
+    match word_kind(text, lookahead.starts_with('(')).ok()? {
+        TokenKind::Cell(cell) => Some((rest, cell)),
+        _ => None,
+    }
+}
+/// Preserve the parser's function-versus-cell priority in every classification entry point.
+fn word_kind(text: &str, call: bool) -> Result<TokenKind, Unsupported> {
+    let decoded = cell_coordinates(text);
+    // A1(A2) starts as a cell; LOG10(A2) is a known function, while LOG10 alone is a cell.
+    if call
+        && (!matches!(decoded, Ok(Some(_)))
+            || crate::formula::reference_classes::return_class_insensitive(text).is_some())
+    {
+        if text.contains('$') {
+            return Err(Unsupported::Reference);
+        }
+        Ok(TokenKind::Literal)
+    } else {
+        match decoded {
+            Ok(Some(cell)) => Ok(TokenKind::Cell(cell)),
+            Ok(None) if !text.contains('$') => Ok(TokenKind::Literal),
+            _ => Err(Unsupported::Reference),
+        }
+    }
+}
+/// Recognize only complete primitive axis pairs using the parser's own decoder.
+fn fixed_axis_range(source: &str) -> Option<usize> {
+    let (rest, first) = identifier(source).ok()?;
+    let (rest, _) = whitespace(rest).ok()?;
+    let rest = rest.strip_prefix(':')?;
+    let (rest, _) = whitespace(rest).ok()?;
+    let (rest, last) = identifier(rest).ok()?;
+    use crate::formula::Expr;
+    let a = super::references::partial_reference(first, None)?;
+    let b = super::references::partial_reference(last, None)?;
+    if matches!(
+        (a, b),
+        (Expr::Column { .. }, Expr::Column { .. }) | (Expr::Row { .. }, Expr::Row { .. })
+    ) {
+        source.len().checked_sub(rest.len())
+    } else {
+        None
+    }
+}
 impl<'a> Iterator for Tokens<'a> {
     /// Classified source token or an explicit full-parser fallback reason.
     type Item = Result<Token<'a>, Unsupported>;
@@ -258,7 +326,10 @@ pub fn normalized_hash(source: &str) -> Result<u64, Unsupported> {
     for token in Tokens::new(source) {
         let token = token?;
         match token.kind {
-            TokenKind::Literal => {
+            TokenKind::Literal
+            | TokenKind::Number
+            | TokenKind::Text
+            | TokenKind::FixedReference => {
                 0u8.hash(&mut hasher);
                 token.raw.hash(&mut hasher);
             }
@@ -281,7 +352,10 @@ pub fn normalized_equal(left: &str, right: &str) -> Result<bool, Unsupported> {
             (Some(a), Some(b)) => {
                 equal &= match (a.kind, b.kind) {
                     (TokenKind::Cell(_), TokenKind::Cell(_)) => true,
-                    (TokenKind::Literal, TokenKind::Literal) => a.raw == b.raw,
+                    (TokenKind::Literal, TokenKind::Literal)
+                    | (TokenKind::Number, TokenKind::Number)
+                    | (TokenKind::Text, TokenKind::Text)
+                    | (TokenKind::FixedReference, TokenKind::FixedReference) => a.raw == b.raw,
                     _ => false,
                 }
             }
@@ -404,6 +478,111 @@ mod tests {
         assert_eq!(normalized_equal("SUM(A1)", "SUM(B2)garbage"), Ok(false));
     }
     #[test]
+    fn leading_cell_decoder_agrees_with_canonical_tokens() {
+        for source in [
+            "A1",
+            "$B$2+C3",
+            "A$1:$C3",
+            "A1 (A2)",
+            "A1(A2)",
+            "LOG10",
+            "log10 + 1",
+            "XFD1048576",
+            "$$A$$01",
+            "A1#",
+            "A1[unsupported]",
+        ] {
+            let token = Tokens::new(source).next().unwrap().unwrap();
+            let TokenKind::Cell(expected) = token.kind else {
+                panic!("expected cell: {source}");
+            };
+            let (rest, actual) = cell_prefix(source).unwrap();
+            assert_eq!(actual, expected, "{source}");
+            assert_eq!(source.len() - rest.len(), token.end);
+        }
+        for source in [
+            "",
+            " A1",
+            "1",
+            "1:2",
+            "A:A",
+            "'O''Brien'!A1",
+            "Sheet1!A1",
+            "A1!B2",
+            "123!A1",
+            "LOG10(A1)",
+            "log10 (A1)",
+            "XFE1",
+            "A1048577",
+            "A0",
+            "A1_name",
+            "A1\\suffix",
+            "Å1",
+            "A1.5",
+            "\"A1\"",
+        ] {
+            assert!(cell_prefix(source).is_none(), "{source}");
+            assert!(
+                !matches!(Tokens::new(source).next(), Some(Ok(token)) if matches!(token.kind, TokenKind::Cell(_))),
+                "{source}"
+            );
+        }
+        let (_, cell) = cell_prefix("$B$3").unwrap();
+        assert_eq!(
+            (
+                cell.row,
+                cell.column,
+                cell.row_absolute,
+                cell.column_absolute
+            ),
+            (2, 1, true, true)
+        );
+        let (_, cell) = cell_prefix("XFD1048576").unwrap();
+        assert_eq!((cell.row, cell.column), (1048575, 16383));
+    }
+    #[test]
+    fn fixed_axis_pairs_and_literal_kinds_preserve_execution_identity() {
+        for source in [
+            "A:B",
+            "$A:$B",
+            "1:2",
+            "$1:$2",
+            "SUM('O''Brien'!$A : $C)",
+            "SUM(S!$1 : $4)",
+        ] {
+            assert!(parse_formula(source).is_ok(), "{source}");
+            let tokens: Vec<_> = Tokens::new(source).collect::<Result<_, _>>().unwrap();
+            assert!(tokens.iter().any(|t| t.kind == TokenKind::FixedReference));
+            assert_eq!(tokens.iter().map(|t| t.raw).collect::<String>(), source);
+            assert_eq!(normalized_equal(source, source), Ok(true));
+        }
+        for (left, right) in [
+            ("SUM(A:B)", "SUM(C:D)"),
+            ("SUM(1:2)", "SUM(3:4)"),
+            ("SUM(A1,1)", "SUM(A2,2)"),
+            ("SUM(A1,\"a\")", "SUM(A2,\"b\")"),
+        ] {
+            assert_eq!(normalized_equal(left, right), Ok(false));
+        }
+        let tokens = Tokens::new("SUM(123!A1,1.2e3,\"a\"\"b\")")
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+        assert!(
+            tokens
+                .iter()
+                .any(|t| t.raw == "123!" && t.kind == TokenKind::Literal)
+        );
+        assert!(
+            tokens
+                .iter()
+                .any(|t| t.raw == "1.2e3" && t.kind == TokenKind::Number)
+        );
+        assert!(tokens.iter().any(|t| t.kind == TokenKind::Text));
+        for source in ["A:1", "1:A", "'S'!A:A1", "A:XFE", "0:2", "1:1048577"] {
+            assert!(normalized_hash(source).is_err(), "{source}");
+        }
+    }
+    #[test]
     fn classified_unsupported_requests_parser_fallback() {
         for source in [
             "'Sheet1:Sheet3'!A1",
@@ -413,10 +592,6 @@ mod tests {
             "'unterminated!A1",
             "Sheet1!A1:",
             "Sheet1:Sheet3!A1",
-            "A:B",
-            "$A:$B",
-            "1:2",
-            "$1:$2",
             "A1:OFFSET(B2,0,0)",
             "A1:Z",
             "{1,2}",

@@ -74,9 +74,9 @@ pub(crate) fn run<T>(
     session.extensions = Some(execution.registry);
     session.plan = Some(&plan);
     let result = operation(&mut session);
-    let trace = session.extension_trace;
+    let trace = std::mem::take(&mut session.runtime.extension_trace);
     ExtensionEvaluation {
-        outcome: session.budget.outcome(result),
+        outcome: session.runtime.budget.take().outcome(result),
         registry_identity: identity,
         trace,
     }

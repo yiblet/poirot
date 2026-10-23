@@ -79,9 +79,21 @@ fn coordinate_scans_include_terminal_seeks_without_duplicate_traversal() {
         // Rectangles use the same occupied-row algorithm as model queries.
         // The empty A column instead opens its column index and loads one 32x4
         // page occupied by B; bounded local slots contain no selected payloads.
+        // Discovery inspects the union of the root's origin prefix and the
+        // referenced range's prefix, excluding C7 beside the A:B range.
+        let discovered = book
+            .sheet(0)
+            .unwrap()
+            .cells()
+            .iter()
+            .filter(|(address, _)| {
+                (address.row == 0 && address.col <= at("Z1").address.col)
+                    || (address.row <= membership.last.row && address.col <= membership.last.col)
+            })
+            .count() as u64;
         assert_eq!(
             usage.sparse_entries,
-            column_work.unwrap_or(visits),
+            column_work.unwrap_or(visits) + discovered,
             "{range}"
         );
     }
@@ -131,11 +143,11 @@ fn collection_limit_rejects_before_admitting_coordinate_or_executing_cell_bodies
         }
     );
     // Two coordinates were admitted; the third was visited but never materialized.
-    // Five earlier admissions are two endpoint descriptors, the combined area,
-    // and two dynamic-spill membership guards. No cell body has run yet.
-    assert_eq!(usage.materialized_values, 5 + 2);
+    // Three earlier admissions are two endpoint descriptors and the combined
+    // area. Stable areas need no phase-only self-footprint guards.
+    assert_eq!(usage.materialized_values, 3 + 2);
     // One column-index seek + one page seek + three stored payload visits.
-    assert_eq!(usage.sparse_entries, 5);
+    assert_eq!(usage.sparse_entries, 9);
     assert_eq!(usage.cell_reads, 1);
     assert_eq!(usage.completed_cells, 0);
     assert_eq!(observed, vec![at("Z1")]);
@@ -145,17 +157,17 @@ fn collection_limit_rejects_before_admitting_coordinate_or_executing_cell_bodies
 fn finite_work_admits_prefetched_page_visits_before_referenced_cell_bodies() {
     let book = formula_sources();
     // Before collection: one root read + ten formula bytes + four expressions
-    // + three discovery candidates + five materializations = 23 work units.
+    // + three discovery candidates + three materializations = 21 work units.
     // First step loads one page and seeks the column index, then prefetches
     // two stored cells (4 units). The second step prefetches the third (1 unit).
     // Each returned coordinate then needs one materialization; no extra tree
     // seek occurs on terminal exhaustion of this already loaded page.
     for (limit, sparse, admitted, requested) in [
-        (25, 2, 0, 2),
-        (27, 4, 0, 1),
-        (28, 4, 1, 1),
-        (29, 5, 1, 1),
-        (30, 5, 2, 1),
+        (24, 2, 0, 2),
+        (26, 4, 0, 1),
+        (27, 4, 1, 1),
+        (28, 5, 1, 1),
+        (29, 5, 2, 1),
     ] {
         let (report, observed) = calculate(
             &book,
@@ -176,19 +188,33 @@ fn finite_work_admits_prefetched_page_visits_before_referenced_cell_bodies() {
                 target: Some(at("Z1"))
             }
         );
-        assert_eq!(usage.work_units, 23 + sparse + admitted);
-        assert_eq!(usage.sparse_entries, sparse);
-        assert_eq!(usage.materialized_values, 5 + admitted);
+        assert_eq!(usage.work_units, 22 + sparse + admitted);
+        assert_eq!(usage.sparse_entries, 4 + sparse);
+        assert_eq!(usage.materialized_values, 3 + admitted);
         assert_eq!(usage.cell_reads, 1);
         assert_eq!(usage.completed_cells, 0);
         assert_eq!(observed, vec![at("Z1")]);
     }
-    // The root read precedes the formula's frame, so its direct-work allowance
-    // of 29 reaches the same third-coordinate rejection as a run allowance of 30.
+    // The former smaller allowance still refuses before referenced bodies run.
     let (report, observed) = calculate(
         &book,
         EvaluationBudgets {
-            cell_work: 29,
+            cell_work: 24,
+            ..Default::default()
+        },
+    );
+    assert_eq!(report.execution.formula_executions, 1);
+    let (failure, _) = aborted(report);
+    assert_eq!(failure.kind, BudgetKind::CellWork);
+    assert_eq!((failure.limit, failure.consumed), (24, 24));
+    assert_eq!(observed, vec![at("Z1")]);
+    // A2 and A3 are now discovered inside the root formula's frame when its
+    // range is demanded. Two additional direct-work units therefore give the
+    // same final-coordinate rejection as the earlier whole-sheet discovery.
+    let (report, observed) = calculate(
+        &book,
+        EvaluationBudgets {
+            cell_work: 26,
             ..Default::default()
         },
     );
@@ -197,15 +223,15 @@ fn finite_work_admits_prefetched_page_visits_before_referenced_cell_bodies() {
         failure,
         BudgetFailure {
             kind: BudgetKind::CellWork,
-            limit: 29,
-            consumed: 29,
+            limit: 26,
+            consumed: 26,
             requested: 1,
             target: Some(at("Z1"))
         }
     );
-    assert_eq!(usage.work_units, 30);
-    assert_eq!(usage.sparse_entries, 5);
-    assert_eq!(usage.materialized_values, 7);
+    assert_eq!(usage.work_units, 29);
+    assert_eq!(usage.sparse_entries, 9);
+    assert_eq!(usage.materialized_values, 5);
     assert_eq!(observed, vec![at("Z1")]);
 }
 
@@ -220,7 +246,7 @@ fn completed_collection_preserves_error_order_and_nested_failure_attribution() {
             ..
         }
     ));
-    assert_eq!(report.outcome.usage().sparse_entries, 5);
+    assert_eq!(report.outcome.usage().sparse_entries, 9);
     assert_eq!(observed, vec![at("A1"), at("A2"), at("A3"), at("Z1")]);
     let (report, observed) = calculate(
         &book,
@@ -240,7 +266,7 @@ fn completed_collection_preserves_error_order_and_nested_failure_attribution() {
             target: Some(at("A1"))
         }
     );
-    assert_eq!(usage.sparse_entries, 5);
+    assert_eq!(usage.sparse_entries, 9);
     assert_eq!(usage.maximum_depth, 4);
     assert_eq!(observed, vec![at("A1"), at("Z1")]);
 }

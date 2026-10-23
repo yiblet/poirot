@@ -56,13 +56,15 @@ impl ArgumentDemand {
     }
 }
 
-/// The memo stores only requested arguments. Preparation never evaluates a subtree.
+/// Deferred arguments use indexed slots on the persistent VM operand stack.
 pub(crate) struct CallHost<'call, 'workbook> {
     session: &'call mut Session<'workbook>,
     sheet: usize,
     address: CellAddress,
     arguments: ArgumentsRef<'call>,
-    memo: HashMap<usize, HostOperand>,
+    argument_base: usize,
+    argument_slots: usize,
+    prepared_arguments: usize,
     argument_demand: ArgumentDemand,
 }
 /// One deferred operand. The host memoizes argument evaluation across projections.
@@ -97,6 +99,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
     /// Charge one visited matching state against this match's local limit.
     pub(crate) fn wildcard_step(&mut self, visited: &mut u64) -> FunctionResult<()> {
         self.session
+            .runtime
             .budget
             .wildcard_step(visited)
             .map_err(Into::into)
@@ -126,12 +129,15 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         address: CellAddress,
         arguments: impl Into<ArgumentsRef<'call>>,
     ) -> Self {
+        let argument_base = session.runtime.vm.operands.len();
         Self {
             session,
             sheet,
             address,
             arguments: arguments.into(),
-            memo: HashMap::new(),
+            argument_base,
+            argument_slots: 0,
+            prepared_arguments: 0,
             argument_demand: ArgumentDemand::Scalar,
         }
     }
@@ -152,7 +158,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         self.prepare(index)?;
         Ok(self
             .session
-            .retains_array(&self.memo.get(&index).ok_or(VALUE_ERROR)?.value))
+            .retains_array(&self.operand(index).ok_or(VALUE_ERROR)?.value))
     }
     /// Matrix consumers request array expression execution before any operand inspection.
     pub(crate) fn new_array(
@@ -214,14 +220,17 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         self.check_values(1)?;
         if !self
             .session
+            .runtime
             .random_streams
             .contains_key(&(self.sheet, self.address))
         {
             self.session
+                .runtime
                 .budget
-                .check_allocation(self.session.random_streams.len().saturating_add(1))?;
-            self.session.budget.check_allocation(
+                .check_allocation(self.session.runtime.random_streams.len().saturating_add(1))?;
+            self.session.runtime.budget.check_allocation(
                 self.session
+                    .runtime
                     .budget
                     .usage
                     .random_accesses
@@ -231,6 +240,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             // Bounds describe both entire collections; work charges only the two
             // new records. Previous slots are neither copied nor rematerialized.
             self.session
+                .runtime
                 .budget
                 .charge(crate::WorkKind::Materialization, 2)?;
         }
@@ -238,9 +248,9 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         let seed = self.session.context.randomness_seed;
         // Each stream owns a stable trace slot: distinct cells never rescan
         // earlier stream records. Both collections were bounded before insertion.
-        let accesses = &mut self.session.budget.usage.random_accesses;
-        let (stream, usage_slot) = self
-            .session
+        let runtime = &mut *self.session.runtime;
+        let accesses = &mut runtime.budget.usage.random_accesses;
+        let (stream, usage_slot) = runtime
             .random_streams
             .entry((self.sheet, self.address))
             .or_insert_with(|| {
@@ -334,40 +344,73 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
     }
     /// Admit collection capacity and charge materialization work.
     pub(crate) fn check_values(&mut self, elements: usize) -> FunctionResult<()> {
-        Ok(self.session.budget.allocation(elements)?)
+        Ok(self.session.runtime.budget.allocation(elements)?)
     }
     /// Admit text storage and charge processing work before copying.
     pub(crate) fn check_text(&mut self, bytes: usize) -> FunctionResult<()> {
-        Ok(self.session.budget.text(bytes)?)
+        Ok(self.session.runtime.budget.text(bytes)?)
     }
     /// Check growing text capacity when copied bytes are charged separately.
     pub(crate) fn check_text_capacity(&self, bytes: usize) -> FunctionResult<()> {
-        Ok(self.session.budget.check_text(bytes)?)
+        Ok(self.session.runtime.budget.check_text(bytes)?)
     }
     /// Check output capacity when materialization work is charged separately.
     pub(crate) fn check_values_capacity(&self, elements: usize) -> FunctionResult<()> {
-        Ok(self.session.budget.check_allocation(elements)?)
+        Ok(self.session.runtime.budget.check_allocation(elements)?)
     }
 
     /// Charge helper work against active run and formula limits.
     pub(crate) fn charge_work(&mut self, units: u64) -> FunctionResult<()> {
         Ok(self
             .session
+            .runtime
             .budget
             .charge(WorkKind::HelperOperation, units)?)
     }
     #[cfg(test)]
     fn remaining_work(&self) -> u64 {
-        self.session.budget.remaining_work()
+        self.session.runtime.budget.remaining_work()
     }
 
+    /// Borrow a previously forced argument from this call's VM stack frame.
+    fn operand(&self, index: usize) -> Option<&HostOperand> {
+        if index >= self.argument_slots {
+            return None;
+        }
+        self.session
+            .runtime
+            .vm
+            .operands
+            .get(self.argument_base.checked_add(index)?)?
+            .as_ref()
+    }
     fn prepare(&mut self, index: usize) -> FunctionResult<()> {
-        if self.memo.contains_key(&index) {
+        if self.operand(index).is_some() {
             return Ok(());
         }
         let expression = self.arguments.get(index).ok_or(VALUE_ERROR)?;
+        let count = index.checked_add(1).ok_or(EvaluationFailure::StalePlan)?;
+        if count > self.argument_slots {
+            let end = self
+                .argument_base
+                .checked_add(count)
+                .ok_or(EvaluationFailure::StalePlan)?;
+            let stack = &mut self.session.runtime.vm.operands;
+            stack
+                .try_reserve(count - self.argument_slots)
+                .map_err(|_| EvaluationFailure::ResourceLimit {
+                    capability: CapabilityId::FunctionAdapter,
+                    source: Some(EvaluationTarget {
+                        sheet: self.sheet,
+                        address: self.address,
+                    }),
+                    detail: "VM argument stack allocation failed".into(),
+                })?;
+            stack.resize_with(end, || None);
+            self.argument_slots = count;
+        }
         let missing = expression.is_missing();
-        let array_missing = expression.array_missing(&mut self.session.budget)?;
+        let array_missing = expression.array_missing(&mut self.session.runtime.budget)?;
         let value = self.session.expr_with_demand(
             self.sheet,
             self.address,
@@ -376,17 +419,29 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         )?;
         let missing = missing || matches!(value, Value::Missing);
         self.session
+            .runtime
             .budget
-            .check_allocation(self.memo.len().saturating_add(1))?;
-        self.session.budget.charge(WorkKind::Materialization, 1)?;
-        self.memo.insert(
-            index,
-            HostOperand {
-                value,
-                missing,
-                array_missing,
-            },
-        );
+            .check_allocation(self.prepared_arguments.saturating_add(1))?;
+        self.session
+            .runtime
+            .budget
+            .charge(WorkKind::Materialization, 1)?;
+        let slot = self
+            .argument_base
+            .checked_add(index)
+            .ok_or(EvaluationFailure::StalePlan)?;
+        *self
+            .session
+            .runtime
+            .vm
+            .operands
+            .get_mut(slot)
+            .ok_or(EvaluationFailure::StalePlan)? = Some(HostOperand {
+            value,
+            missing,
+            array_missing,
+        });
+        self.prepared_arguments += 1;
         Ok(())
     }
     fn copy_cell(budget: &mut BudgetMeter, value: &CellValue) -> EvalResult<CellValue> {
@@ -434,17 +489,27 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
     /// Resolve one deferred argument and inspect its channel without scalarizing it.
     pub(crate) fn kind(&mut self, index: usize) -> FunctionResult<OperandKind> {
         self.prepare(index)?;
-        Ok(self.memo.get(&index).ok_or(VALUE_ERROR)?.kind())
+        Ok(self.operand(index).ok_or(VALUE_ERROR)?.kind())
     }
     /// Return a budgeted copy of one resolved operand with omission metadata intact.
     pub(crate) fn argument(&mut self, index: usize) -> FunctionResult<HostOperand> {
         self.prepare(index)?;
-        let operand = &self.memo.get(&index).ok_or(VALUE_ERROR)?;
-        self.session
+        let slot = self
+            .argument_base
+            .checked_add(index)
+            .ok_or(EvaluationFailure::StalePlan)?;
+        let runtime = &mut *self.session.runtime;
+        let operand = &runtime
+            .vm
+            .operands
+            .get(slot)
+            .and_then(Option::as_ref)
+            .ok_or(VALUE_ERROR)?;
+        runtime
             .budget
             .allocation(operand.array_missing.iter().map(Vec::len).sum())?;
         Ok(HostOperand {
-            value: Self::copy_value(&mut self.session.budget, &operand.value)?,
+            value: Self::copy_value(&mut runtime.budget, &operand.value)?,
             missing: operand.missing,
             array_missing: operand.array_missing.clone(),
         })
@@ -456,12 +521,31 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         policy: MissingPolicy,
     ) -> FunctionResult<ScalarOperand> {
         self.prepare(index)?;
-        let operand = &self.memo.get(&index).ok_or(VALUE_ERROR)?;
+        let slot = self
+            .argument_base
+            .checked_add(index)
+            .ok_or(EvaluationFailure::StalePlan)?;
+        let runtime = &mut *self.session.runtime;
+        let operand = &runtime
+            .vm
+            .operands
+            .get(slot)
+            .and_then(Option::as_ref)
+            .ok_or(VALUE_ERROR)?;
         let selection = ScalarSelectionPolicy::PoiOperandResolver;
         let (row, column) = match &operand.value {
-            Value::Array(view) => selection
-                .array_position(view, self.address)
-                .map_err(|detail| self.unsupported(CapabilityId::FunctionAdapter, detail))??,
+            Value::Array(view) => {
+                selection
+                    .array_position(view, self.address)
+                    .map_err(|detail| EvaluationFailure::UnsupportedCapability {
+                        capability: CapabilityId::FunctionAdapter,
+                        source: Some(EvaluationTarget {
+                            sheet: self.sheet,
+                            address: self.address,
+                        }),
+                        detail: detail.into(),
+                    })??
+            }
             _ => (0, 0),
         };
         let missing = operand.missing
@@ -485,16 +569,15 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         let (value, origin) = match &operand.value {
             Value::Missing => (Value::Missing, OperandOrigin::Direct),
             Value::Scalar(value) => (
-                Self::copy_cell(&mut self.session.budget, value)?.into(),
+                Self::copy_cell(&mut runtime.budget, value)?.into(),
                 OperandOrigin::Direct,
             ),
-            Value::SelectedScalar(value, origin) => (
-                Self::copy_cell(&mut self.session.budget, value)?.into(),
-                *origin,
-            ),
+            Value::SelectedScalar(value, origin) => {
+                (Self::copy_cell(&mut runtime.budget, value)?.into(), *origin)
+            }
             Value::Array(rows) => (
                 Self::copy_cell(
-                    &mut self.session.budget,
+                    &mut runtime.budget,
                     rows.get(row)
                         .and_then(|r| r.get(column))
                         .ok_or(VALUE_ERROR)?,
@@ -511,7 +594,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
                 }
                 // SAFETY: The branch rejects any area count other than one before reading element zero.
                 let area = areas[0];
-                self.session.budget.charge(WorkKind::ReferencePair, 1)?;
+                runtime.budget.charge(WorkKind::ReferencePair, 1)?;
                 let plan = area.implicit(self.address).ok_or(VALUE_ERROR)?;
                 (
                     self.session.signed_read(plan)?.into(),
@@ -527,7 +610,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
                 }
                 // SAFETY: The branch rejects any area count other than one before reading element zero.
                 let area = areas[0];
-                self.session.budget.charge(WorkKind::ReferencePair, 1)?;
+                runtime.budget.charge(WorkKind::ReferencePair, 1)?;
                 let plan = resolution::CellReadPlan::implicit(area, self.address)?;
                 (
                     self.session.cell(plan.sheet, plan.address)?.into(),
@@ -602,4 +685,14 @@ fn coercev2_missing_scalar(policy: MissingPolicy) -> FunctionResult<CellValue> {
         MissingPolicy::Reject => MissingScalarPolicy::Reject,
     };
     poirot_coercionv2::compatibility::coercev2_missing_scalar(policy).map_err(Into::into)
+}
+
+impl Drop for CallHost<'_, '_> {
+    fn drop(&mut self) {
+        self.session
+            .runtime
+            .vm
+            .operands
+            .truncate(self.argument_base);
+    }
 }

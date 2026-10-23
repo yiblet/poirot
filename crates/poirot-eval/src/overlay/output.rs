@@ -29,7 +29,7 @@ pub(super) fn all(
     // Only generated spill children extend the sparse source view. Ordinary
     // dependency memo entries can be implicit blanks and vary with cache warmth.
     for (&key, value) in &session.cache {
-        if session.spill_owners.contains_key(&key) {
+        if session.preparation.roles.contains_key(&key) {
             values.entry(key).or_insert_with(|| value.clone());
         }
     }

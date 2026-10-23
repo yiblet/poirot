@@ -88,6 +88,7 @@ impl LookupReader<'_, '_> {
         };
         let first_index = first;
         let area = vector.interval(first, end);
+        self.session.resolve_spills_in(area)?;
         let first = CellAddress {
             row: area.r0,
             col: area.c0,
@@ -100,49 +101,62 @@ impl LookupReader<'_, '_> {
             .map_err(|_| EvaluationFailure::StalePlan)?;
         let view =
             crate::run_overlay::EffectiveWorkbook::new(self.session.workbook, self.session.inputs);
-        let (address, counters) = if self.mode == SearchMode::Exact && !reverse {
-            if self
-                .forward
-                .as_ref()
-                .is_none_or(|cursor| first_index < cursor.first || end != cursor.end)
-            {
-                self.forward = Some(ForwardCursor {
-                    first: first_index,
-                    end,
-                    cells: view
-                        .stored(membership)
-                        .map_err(|_| EvaluationFailure::StalePlan)?,
-                    charged: poirot_model::query::QueryCounters::default(),
-                });
-            }
-            // SAFETY: The branch assigns forward = Some when absent and never clears it before borrowing the cursor.
-            let cursor = self.forward.as_mut().expect("prepared exact cursor");
-            cursor.first = first_index;
-            let address = cursor.cells.find_map(|(address, _)| {
-                (vector.index(*address) >= first_index).then_some(*address)
-            });
-            let total = cursor.cells.counters();
-            let counters = poirot_model::query::QueryCounters {
-                row_seeks: total.row_seeks - cursor.charged.row_seeks,
-                column_seeks: total.column_seeks - cursor.charged.column_seeks,
-                cells_visited: total.cells_visited - cursor.charged.cells_visited,
-                key_lookups: total.key_lookups - cursor.charged.key_lookups,
-            };
-            cursor.charged = total;
-            (address, counters)
-        } else if reverse {
-            let mut cells = view
-                .stored_reverse(membership)
-                .map_err(|_| EvaluationFailure::StalePlan)?;
-            let address = cells.next().map(|(address, _)| *address);
-            (address, cells.counters())
+        let generated = self
+            .session
+            .preparation
+            .roles
+            .keys()
+            .filter(|(sheet, at)| *sheet == area.sheet && area.contains(*at))
+            .map(|(_, at)| *at);
+        let generated = if reverse {
+            generated.max()
         } else {
-            let mut cells = view
-                .stored(membership)
-                .map_err(|_| EvaluationFailure::StalePlan)?;
-            let address = cells.next().map(|(address, _)| *address);
-            (address, cells.counters())
+            generated.min()
         };
+        let (address, counters) =
+            if self.mode == SearchMode::Exact && !reverse && generated.is_none() {
+                if self
+                    .forward
+                    .as_ref()
+                    .is_none_or(|cursor| first_index < cursor.first || end != cursor.end)
+                {
+                    self.forward = Some(ForwardCursor {
+                        first: first_index,
+                        end,
+                        cells: view
+                            .stored(membership)
+                            .map_err(|_| EvaluationFailure::StalePlan)?,
+                        charged: poirot_model::query::QueryCounters::default(),
+                    });
+                }
+                // SAFETY: The branch assigns forward = Some when absent and never clears it before borrowing the cursor.
+                let cursor = self.forward.as_mut().expect("prepared exact cursor");
+                cursor.first = first_index;
+                let address = cursor.cells.find_map(|(address, _)| {
+                    (vector.index(*address) >= first_index).then_some(*address)
+                });
+                let total = cursor.cells.counters();
+                let counters = poirot_model::query::QueryCounters {
+                    row_seeks: total.row_seeks - cursor.charged.row_seeks,
+                    column_seeks: total.column_seeks - cursor.charged.column_seeks,
+                    cells_visited: total.cells_visited - cursor.charged.cells_visited,
+                    key_lookups: total.key_lookups - cursor.charged.key_lookups,
+                };
+                cursor.charged = total;
+                (address, counters)
+            } else if reverse {
+                let mut cells = view
+                    .stored_reverse(membership)
+                    .map_err(|_| EvaluationFailure::StalePlan)?;
+                let address = cells.next().map(|(address, _)| *address);
+                (address, cells.counters())
+            } else {
+                let mut cells = view
+                    .stored(membership)
+                    .map_err(|_| EvaluationFailure::StalePlan)?;
+                let address = cells.next().map(|(address, _)| *address);
+                (address, cells.counters())
+            };
         for amount in [
             counters.row_seeks,
             counters.column_seeks,
@@ -150,6 +164,14 @@ impl LookupReader<'_, '_> {
         ] {
             self.session.budget.charge(WorkKind::SparseScan, amount)?;
         }
+        let address = match (address, generated) {
+            (Some(authored), Some(generated)) => Some(if reverse {
+                authored.max(generated)
+            } else {
+                authored.min(generated)
+            }),
+            (authored, generated) => authored.or(generated),
+        };
         // Record only the interval whose absence affected selection. The unconsumed
         // suffix/prefix remains outside the guard, just like its formula providers.
         let (guard_first, guard_last) = if reverse {
@@ -160,7 +182,11 @@ impl LookupReader<'_, '_> {
         if address.is_none() || guard_first != guard_last {
             self.session.read(DependencyRead::SparseMembership {
                 sheet: area.sheet,
-                first: guard_first,
+                first: if self.session.array_result_policy == ArrayResultPolicy::DynamicSpill {
+                    CellAddress { row: 0, col: 0 }
+                } else {
+                    guard_first
+                },
                 last: guard_last,
             });
         }

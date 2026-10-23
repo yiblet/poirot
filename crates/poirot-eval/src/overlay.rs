@@ -114,6 +114,7 @@ impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
         if previous.parse != policy.parse
             || previous.builtin != policy.builtin
             || previous.arrays != policy.arrays
+            || previous.producers != policy.producers
         {
             self.clear_cache();
         } else if previous.text != policy.text {
@@ -230,15 +231,31 @@ impl<W: Borrow<Workbook> + std::borrow::BorrowMut<Workbook>> Overlay<'_, W> {
             .iter()
             .map(|&(sheet, address)| (sheet, address, None))
             .collect::<Vec<_>>();
+        let mut styles = Vec::new();
         for (&sheet, overrides) in &self.source.inputs.sheets {
-            cells.extend(
-                overrides
-                    .cells()
-                    .iter()
-                    .map(|(&address, cell)| (sheet, address, Some(cell.clone()))),
-            );
+            for (&address, cell) in overrides.cells() {
+                if self.source.inputs.style_only.contains(&(sheet, address)) {
+                    address.validate()?;
+                    if self.source.workbook.borrow().sheet(sheet).is_none() {
+                        return Err(ModelError("worksheet index out of bounds".into()));
+                    }
+                    styles.push((sheet, address, cell.style.clone()));
+                } else {
+                    cells.push((sheet, address, Some(cell.clone())));
+                }
+            }
         }
         self.source.workbook.borrow_mut().replace_cells(cells)?;
+        // Every style target was validated above. Cell replacement cannot change
+        // worksheet membership, and set_style performs no other fallible work.
+        for (sheet, address, style) in styles {
+            self.source
+                .workbook
+                .borrow_mut()
+                .sheet_mut(sheet)
+                .ok_or_else(|| ModelError("worksheet index out of bounds".into()))?
+                .set_style(address, style)?;
+        }
         self.source.inputs = crate::run_overlay::RunInputs::empty();
         Ok(count)
     }

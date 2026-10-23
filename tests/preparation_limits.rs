@@ -1,4 +1,4 @@
-//! Public preparation limits remain operational failures only when reached.
+//! Scalar-policy preparation limits remain operational failures only when reached.
 use poirot::eval::{
     self, CapabilityId, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
     EvaluationTarget,
@@ -71,7 +71,7 @@ fn parser_classifies_limits_separately_from_syntax_and_invalid_configuration() {
     );
 }
 #[test]
-fn reached_preparation_refusals_abort_iferror_but_lazy_sources_remain_unused() {
+fn scalar_policy_preparation_refusals_abort_iferror_but_lazy_sources_remain_unused() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Data").unwrap();
     let large = format!("SUM({})", vec!["1"; 1100].join(","));
@@ -89,7 +89,14 @@ fn reached_preparation_refusals_abort_iferror_but_lazy_sources_remain_unused() {
         .set_formula(target("E1").address, "IFERROR(D1,42)")
         .unwrap();
     let context = EvaluationContext::default();
+    // Scalar intersection preserves demand-driven preparation. Dynamic spilling
+    // must eagerly resolve formulas whose resource failure leaves their type unknown.
+    let policy = poirot::OverlayPolicy {
+        arrays: eval::ArrayResultPolicy::ScalarIntersection,
+        ..Default::default()
+    };
     let mut direct = poirot::Evaluation::with_workbook(book.model())
+        .with_policy(policy.clone())
         .build(context.clone())
         .unwrap();
     assert_eq!(direct.cell(target("C1")).unwrap(), CellValue::Number(7.));
@@ -101,7 +108,10 @@ fn reached_preparation_refusals_abort_iferror_but_lazy_sources_remain_unused() {
             ..
         })
     ));
-    let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(book.model())
+        .with_policy(policy)
+        .build()
+        .unwrap();
     assert_eq!(
         overlay
             .evaluation(&context)

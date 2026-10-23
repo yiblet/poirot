@@ -43,11 +43,15 @@ fn lazy_compilation_and_shared_session_outputs() {
     drop(evaluation);
     assert_eq!(overlay.edited_cells(), 0);
     assert_eq!(overlay.cached_cells(), 2);
+    // Only B1 and C1 lie in the demanded source prefix; D1 remains untouched.
     assert_eq!(overlay.compiled_usage().parse_attempts, 2);
     let mut next = overlay.evaluation(&context).unwrap();
     assert_eq!(next.cell(at("C1")).unwrap(), CellValue::Number(5.));
     assert_eq!(next.usage().formula_executions, 0);
     assert_eq!(next.usage().external_cache_hits, 1);
+    assert_eq!(next.cell(at("D1")).unwrap(), CellValue::Number(21.));
+    drop(next);
+    assert_eq!(overlay.compiled_usage().parse_attempts, 3);
 }
 #[test]
 fn writes_invalidate_recursive_dependents_and_preserve_unrelated_results() {
@@ -1079,11 +1083,11 @@ fn numeric_locale_identity_and_consumption_survive_retained_snapshot() {
 fn raw_snapshot_restore_rejects_previous_execution_semantics_versions() {
     let workbook = book();
     let overlay = Overlay::with_workbook(&workbook).build().unwrap();
-    for previous in 8..49 {
+    for previous in 8..55 {
         let mut bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
         // Payload's first field is its small postcard varint version.
         let version = bytes.first_mut().unwrap();
-        assert_eq!(*version, 49);
+        assert_eq!(*version, 55);
         *version = previous;
         let snapshot = postcard::from_bytes(&bytes).unwrap();
         assert!(
@@ -1323,15 +1327,8 @@ fn retained_scalar_named_producer_does_not_block_child_discovery_and_invalidates
     overlay.set_value(at("C1"), true).unwrap();
     assert!(overlay.cached_value(at("A1")).is_none());
     assert!(overlay.cached_value(at("B2")).is_none());
-    // This producer can now occupy B1. The existing conservative unsupported
-    // result must remain rather than treating a stale scalar memo as proof.
-    assert!(
-        overlay
-            .evaluation(&context)
-            .unwrap()
-            .cell(at("B1"))
-            .is_err()
-    );
+    // The invalidated scalar producer is recomputed with its actual new footprint.
+    assert_eq!(value(&mut overlay, "B1", &context), CellValue::Number(20.));
 }
 #[test]
 fn same_session_scalar_named_producer_tracks_future_footprint_dependency() {
@@ -1357,11 +1354,5 @@ fn same_session_scalar_named_producer_tracks_future_footprint_dependency() {
     assert!(overlay.cached_value(at("B2")).is_some());
     overlay.set_value(at("C1"), true).unwrap();
     assert!(overlay.cached_value(at("B2")).is_none());
-    assert!(
-        overlay
-            .evaluation(&context)
-            .unwrap()
-            .cell(at("B1"))
-            .is_err()
-    );
+    assert_eq!(value(&mut overlay, "B1", &context), CellValue::Number(20.));
 }

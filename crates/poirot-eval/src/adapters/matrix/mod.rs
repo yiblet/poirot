@@ -158,7 +158,8 @@ pub(crate) fn execute(
         .check_values(args.len())
         .map_err(operational_only)?;
     let indices: poirot_functions_core::ParamVec<usize> = (0..args.len()).collect();
-    match helper::evaluate(&mut port, function, &indices) {
+    let result = helper::evaluate(&mut port, function, &indices);
+    match result {
         Ok(helper::Output::Number(n)) => Ok(Number(n).into()),
         Ok(helper::Output::Array(matrix)) => {
             // MatrixFunction.OneArrayArg preserves its area's coordinates;
@@ -293,3 +294,81 @@ mod lossless_port_tests {
 
 /// Matrix operation contracts, collection rules, and resource admission plans.
 pub mod policy;
+
+/// Coerce modern SEQUENCE arguments and admit its independently generated numeric array.
+pub(crate) fn sequence(
+    session: &mut Session<'_>,
+    sheet: usize,
+    address: CellAddress,
+    args: ArgumentsRef<'_>,
+) -> EvalResult<Value> {
+    if !(1..=4).contains(&args.len()) {
+        return Ok(err(VALUE_ERROR));
+    }
+    let count = args.len();
+    let mut host = CallHost::new(session, sheet, address, args);
+    let mut arguments = [1.0; 4];
+    let mut supplied = false;
+    for (index, slot) in arguments.iter_mut().enumerate().take(count) {
+        let operand = match host.scalar_data(index, crate::host::MissingPolicy::Blank) {
+            Ok(operand) => operand,
+            Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
+            Err(FunctionFailure::Operational(error)) => return Err(error),
+        };
+        if operand.missing {
+            continue;
+        }
+        supplied = true;
+        *slot = match host.coercev2_scalar_number(&operand.value, NumericPolicy::PinnedPoi) {
+            Ok(value) => value,
+            Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
+            Err(FunctionFailure::Operational(error)) => return Err(error),
+        };
+    }
+    // If rows is omitted, Microsoft's contract requires another supplied argument.
+    if !supplied {
+        return Ok(err(VALUE_ERROR));
+    }
+    let [rows, columns, start, step] = arguments;
+    // Excel's documented grid is also the maximum admissible footprint here.
+    // Fractional positive dimensions follow the existing integer coercion convention.
+    if !rows.is_finite()
+        || !columns.is_finite()
+        || rows < 1.0
+        || columns < 1.0
+        || rows > f64::from(poirot_model::MAX_ROWS)
+        || columns > f64::from(poirot_model::MAX_COLUMNS)
+    {
+        return Ok(err(VALUE_ERROR));
+    }
+    let rows = rows.trunc() as usize;
+    let columns = columns.trunc() as usize;
+    let Some(cells) = rows.checked_mul(columns) else {
+        return Err(host.budget_exceeded());
+    };
+    host.check_values(cells).map_err(operational_only)?;
+    host.check_values(rows).map_err(operational_only)?;
+    host.charge_work(cells as u64).map_err(operational_only)?;
+    match poirot_functions_matrix::sequence(
+        rows,
+        columns,
+        start,
+        step,
+        poirot_functions_matrix::Budget {
+            max_cells: cells,
+            max_work: cells,
+        },
+    ) {
+        Ok(matrix) => {
+            // SAFETY: columns is positive after the finite dimension checks above.
+            let values = matrix
+                .values()
+                .chunks(columns)
+                .map(|row| row.iter().copied().map(Number).collect())
+                .collect();
+            Ok(Value::Array(ArrayView::anchored(values, Some(address))))
+        }
+        Err(poirot_functions_matrix::Error::Formula(error)) => Ok(err(error)),
+        Err(_) => Err(host.budget_exceeded()),
+    }
+}

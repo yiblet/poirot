@@ -185,12 +185,16 @@ pub(crate) fn formula_updates(
     let mut targets = Vec::new();
     for (sheet, worksheet) in workbook.sheets().iter().enumerate() {
         session
+            .runtime
             .budget
             .charge(crate::WorkKind::SparseScan, worksheet.cells().len() as u64)?;
         for (address, cell) in worksheet.cells() {
             if cell.formula.is_some() {
-                session.budget.check_allocation(targets.len() + 1)?;
-                session.budget.charge(crate::WorkKind::Materialization, 1)?;
+                session.runtime.budget.check_allocation(targets.len() + 1)?;
+                session
+                    .runtime
+                    .budget
+                    .charge(crate::WorkKind::Materialization, 1)?;
                 targets.push(crate::EvaluationTarget {
                     sheet,
                     address: *address,
@@ -198,7 +202,7 @@ pub(crate) fn formula_updates(
             }
         }
     }
-    session.budget.allocation(targets.len())?;
+    session.runtime.budget.allocation(targets.len())?;
     let mut results = Vec::with_capacity(targets.len());
     for target in targets {
         let value = session.cell(target.sheet, target.address)?;
@@ -243,7 +247,7 @@ pub(crate) fn recalculate(
             configuration.materialization_policy(),
         )?;
         if capture_receipts {
-            session.budget.allocation(updates.len())?;
+            session.runtime.budget.allocation(updates.len())?;
         }
         let writes = updates
             .iter()
@@ -296,9 +300,9 @@ fn publication_changes(
     let count = updates
         .len()
         .checked_mul(2)
-        .and_then(|n| n.checked_add(session.spill_owners.len()))
+        .and_then(|n| n.checked_add(session.runtime.preparation.roles.len()))
         .ok_or(crate::EvaluationFailure::StalePlan)?;
-    session.budget.allocation(count)?;
+    session.runtime.budget.allocation(count)?;
     let mut changes = Vec::with_capacity(count);
     for update in updates {
         changes.push(WorkbookChange::ClearSpillCache {
@@ -312,19 +316,40 @@ fn publication_changes(
             .and_then(|sheet| sheet.source_cell(update.target.address))
             .and_then(|cell| cell.formula.as_deref())
             .ok_or(crate::EvaluationFailure::StalePlan)?;
-        session.budget.text(formula.len())?;
-        changes.push(WorkbookChange::SetCachedValue {
-            sheet: update.target.sheet,
-            address: update.target.address,
-            expected_formula: formula.into(),
-            value: policy.coerce_stored_value(update.value.clone()),
-        });
+        session.runtime.budget.text(formula.len())?;
+        let value = policy.coerce_stored_value(update.value.clone());
+        if let Some(last) = session
+            .runtime
+            .preparation
+            .roles
+            .get(&(update.target.sheet, update.target.address))
+            .and_then(|role| role.last())
+        {
+            changes.push(WorkbookChange::SetSpillAnchorCachedValue {
+                sheet: update.target.sheet,
+                anchor: update.target.address,
+                last,
+                expected_formula: formula.into(),
+                value,
+            });
+        } else {
+            changes.push(WorkbookChange::SetCachedValue {
+                sheet: update.target.sheet,
+                address: update.target.address,
+                expected_formula: formula.into(),
+                value,
+            });
+        }
     }
     let mut children: Vec<_> = session
-        .spill_owners
+        .runtime
+        .preparation
+        .roles
         .iter()
-        .filter(|((_, address), anchor)| address != *anchor)
-        .map(|(key, anchor)| (*key, *anchor))
+        .filter_map(|(key, role)| match role {
+            crate::spill_publication::SpillRole::Child { anchor } => Some((*key, *anchor)),
+            _ => None,
+        })
         .collect();
     children.sort_unstable();
     for ((sheet, address), anchor) in children {
@@ -333,11 +358,12 @@ fn publication_changes(
             .and_then(|sheet| sheet.source_cell(anchor))
             .and_then(|cell| cell.formula.as_deref())
             .ok_or(crate::EvaluationFailure::StalePlan)?;
-        let value = session
+        let runtime = &mut *session.runtime;
+        let value = runtime
             .cache
             .get(&(sheet, address))
             .ok_or(crate::EvaluationFailure::StalePlan)?;
-        session
+        runtime
             .budget
             .text(formula.len().saturating_add(value.text_storage_bytes()))?;
         changes.push(WorkbookChange::SetSpillCachedValue {

@@ -235,6 +235,14 @@ impl Parser<'_> {
         loop {
             let operator_start = self.pos;
             let whitespace = self.space();
+            if self.peek() == Some('#') && min <= 10 {
+                self.bump();
+                left = Expr::Unary {
+                    op: UnaryOp::SpillRange,
+                    operand: Box::new(left),
+                };
+                continue;
+            }
             if self.peek() == Some('%') && min <= 8 {
                 self.bump();
                 left = Expr::Unary {

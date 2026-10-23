@@ -7,7 +7,7 @@ use poirot_parsing::formula::{
     FormulaParsePolicy, ParseError, ParsedFormula, parse_formula_with_policy,
 };
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     hash::{Hash, Hasher},
     sync::Arc,
 };
@@ -26,7 +26,7 @@ pub struct RegistryIdentity {
 impl Default for RegistryIdentity {
     fn default() -> Self {
         Self {
-            builtin_contract_version: 2,
+            builtin_contract_version: 4,
             extensions: None,
         }
     }
@@ -128,22 +128,12 @@ pub struct PotentialDependencies {
     /// Extension bindings captured in resolved bytecode calls.
     pub extensions: Vec<crate::extensions::ExtensionBinding>,
 }
-/// Static bounds for spill discovery, computed while syntax is temporary.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub(crate) struct SpillMetadata {
-    /// Statically known row and column counts, when available.
-    pub shape: Option<(u64, u64)>,
-    /// Whether runtime discovery may extend beyond a fixed shape.
-    pub unbounded: bool,
-}
 /// Prepared source, reusable bytecode, and possible dependencies shared by plans.
 /// Syntax inspection returns an independently owned parse view. Contains no evaluated result;
 /// name/reference resolution still needs a workbook run.
 #[derive(Clone, Debug)]
 pub struct CompiledFormula {
     source: Arc<str>,
-    /// Static spill discovery bounds captured while syntax is available.
-    pub(crate) spill: SpillMetadata,
     bytecode: crate::bytecode::Compiled,
     potential: PotentialDependencies,
     policy: EvaluationPolicy,
@@ -206,6 +196,22 @@ pub enum PreparedFormula {
     },
 }
 impl PreparedFormula {
+    /// Conservative producer geometry; syntax failures cannot produce array children.
+    pub(crate) fn spill_shape(&self) -> Option<poirot_model::ShapeBounds> {
+        match self {
+            Self::Ready(formula) => formula
+                .properties()
+                .filter(|p| p.result.may_spill())
+                .map(|p| p.shape),
+            Self::ParseFailure { error, .. } => (error.kind
+                != poirot_parsing::formula::ParseErrorKind::Syntax)
+                .then_some(poirot_model::ShapeBounds::UNKNOWN),
+            Self::CompilationFailure { .. } | Self::RegistryMismatch { .. } => {
+                Some(poirot_model::ShapeBounds::UNKNOWN)
+            }
+        }
+    }
+
     /// Return the exact source text for either a program or a deferred failure.
     pub fn source(&self) -> &str {
         match self {
@@ -334,14 +340,190 @@ pub struct FormulaCompiler {
     usage: CompilerUsage,
     templates: Vec<TemplatePool>,
     template_hits: u64,
+    classification_key: Vec<u8>,
+    classification_cells: Vec<(usize, usize)>,
 }
-/// Candidate buckets for lexical rebinding and exact executable interning.
+/// Scalar proof classes, lexical rebinding candidates and exact executable interning.
 #[derive(Default)]
 // Hashes select candidate buckets only. Sharing still requires normalized-source
 // equality for rebinding, or full executable equality for structural interning.
 struct TemplatePool {
+    scalar: HashSet<Vec<u8>>,
+    last_scalar: Option<ScalarMatcher>,
+    scalar_probation: Option<u64>,
     classified: HashMap<u64, Vec<Arc<CompiledFormula>>>,
     structural: HashMap<u64, Vec<Arc<crate::bytecode::Executable>>>,
+}
+/// Advisory locality hint whose admission was checked during the existing key pass.
+#[derive(Clone, Copy)]
+enum ScalarLocality {
+    /// Existing storage limits exclude a matcher; retain ordinary scalar proof reuse.
+    Ineligible,
+    /// Hash selects promotion only; exact spans and decoded cells authorize reuse.
+    Eligible(u64),
+}
+/// One bounded scalar proof template, with exact literal gaps around varied point cells.
+#[derive(Default)]
+struct ScalarMatcher {
+    source: String,
+    cells: Vec<(usize, usize)>,
+}
+impl ScalarMatcher {
+    /// Maximum source retained by the one-pattern locality optimization.
+    const MAX_SOURCE_BYTES: usize = 16 * 1024;
+    /// Maximum variable point spans retained by the locality optimization.
+    const MAX_CELLS: usize = 64;
+    /// Reuse storage for spans already validated by the canonical key pass.
+    fn update(&mut self, source: &str, cells: &[(usize, usize)]) -> bool {
+        if source.len() > Self::MAX_SOURCE_BYTES || cells.len() > Self::MAX_CELLS {
+            return false;
+        }
+        // Reserve both buffers before changing either value. A refusal leaves the
+        // previous source and spans usable, even if the first reserve grew capacity.
+        if self
+            .source
+            .try_reserve(source.len().saturating_sub(self.source.len()))
+            .is_err()
+            || self
+                .cells
+                .try_reserve(cells.len().saturating_sub(self.cells.len()))
+                .is_err()
+        {
+            return false;
+        }
+        self.source.clear();
+        // SAFETY: Reservation above admitted source.len() total bytes before clear.
+        self.source.push_str(source);
+        self.cells.clear();
+        // SAFETY: Reservation above admitted cells.len() total spans before clear.
+        self.cells.extend_from_slice(cells);
+        true
+    }
+    /// Compare exact literal gaps and validate varying cells with the shared canonical decoder.
+    fn matches(&self, source: &str, policy: &EvaluationPolicy) -> bool {
+        let mut tail = source;
+        let mut previous = 0;
+        for &(start, end) in &self.cells {
+            let Some(literal) = self.source.get(previous..start) else {
+                return false;
+            };
+            let Some(rest) = tail.strip_prefix(literal) else {
+                return false;
+            };
+            let Some((rest, cell)) = poirot_parsing::formula::classified::cell_prefix(rest) else {
+                return false;
+            };
+            if cell.row >= policy.parse.max_rows || cell.column >= policy.parse.max_columns {
+                return false;
+            }
+            tail = rest;
+            previous = end;
+        }
+        self.source
+            .get(previous..)
+            .is_some_and(|literal| tail == literal)
+    }
+}
+impl TemplatePool {
+    /// Require repeated literal-preserving locality before replacing the single matcher.
+    fn observe_scalar(&mut self, source: &str, locality: ScalarLocality, cells: &[(usize, usize)]) {
+        let ScalarLocality::Eligible(hint) = locality else {
+            self.scalar_probation = None;
+            return;
+        };
+        if self.scalar_probation == Some(hint) {
+            if let Some(matcher) = &mut self.last_scalar {
+                matcher.update(source, cells);
+            } else {
+                let mut matcher = ScalarMatcher::default();
+                if matcher.update(source, cells) {
+                    self.last_scalar = Some(matcher);
+                }
+            }
+            self.scalar_probation = None;
+        } else {
+            self.scalar_probation = Some(hint);
+        }
+    }
+}
+/// Key scalar proofs by token structure and core literal kinds, validating varied coordinates.
+fn scalar_classification_key(
+    source: &str,
+    policy: &EvaluationPolicy,
+    key: &mut Vec<u8>,
+    cells: &mut Vec<(usize, usize)>,
+) -> Option<ScalarLocality> {
+    key.clear();
+    cells.clear();
+    let mut point_cells = 0usize;
+    let mut literal_values = (source.len() <= ScalarMatcher::MAX_SOURCE_BYTES)
+        .then(std::collections::hash_map::DefaultHasher::new);
+    for token in poirot_parsing::formula::classified::Tokens::new(source) {
+        let Ok(token) = token else {
+            return None;
+        };
+        use poirot_parsing::formula::classified::TokenKind;
+        if matches!(token.kind, TokenKind::Cell(_)) {
+            point_cells = point_cells.saturating_add(1);
+            if point_cells > ScalarMatcher::MAX_CELLS {
+                literal_values = None;
+            }
+            if literal_values.is_some() {
+                if cells.try_reserve(1).is_ok() {
+                    // SAFETY: Reservation admitted one additional canonical point span.
+                    cells.push((token.start, token.end));
+                } else {
+                    literal_values = None;
+                }
+            }
+        }
+        // The key already retains every fixed token and cell placeholder. Only
+        // value-erased literal spellings need a separate advisory hash stream.
+        if matches!(token.kind, TokenKind::Text | TokenKind::Number)
+            && let Some(values) = &mut literal_values
+        {
+            token.raw.hash(values);
+        }
+        let additional = match token.kind {
+            TokenKind::Literal | TokenKind::FixedReference => token
+                .raw
+                .len()
+                .checked_add(std::mem::size_of::<usize>())
+                .and_then(|n| n.checked_add(1)),
+            _ => Some(1),
+        };
+        let additional = additional?;
+        if key.try_reserve(additional).is_err() {
+            return None;
+        }
+        match token.kind {
+            TokenKind::Text | TokenKind::Number => {
+                // SAFETY: The reservation above admitted one additional byte.
+                key.push(if token.kind == TokenKind::Text { 2 } else { 3 });
+            }
+            TokenKind::Literal | TokenKind::FixedReference => {
+                // SAFETY: The reservation admitted tag + length word + raw bytes.
+                key.push(0);
+                // SAFETY: After the tag, the reserved length word and raw bytes remain.
+                key.extend_from_slice(&token.raw.len().to_le_bytes());
+                // SAFETY: After the tag and length word, raw.len() reserved bytes remain.
+                key.extend_from_slice(token.raw.as_bytes());
+            }
+            TokenKind::Cell(cell) => {
+                if cell.row >= policy.parse.max_rows || cell.column >= policy.parse.max_columns {
+                    return None;
+                }
+                // SAFETY: The reservation above admitted one additional byte.
+                key.push(1);
+            }
+        }
+    }
+    Some(literal_values.map_or(ScalarLocality::Ineligible, |values| {
+        let mut locality = std::collections::hash_map::DefaultHasher::new();
+        key.hash(&mut locality);
+        values.finish().hash(&mut locality);
+        ScalarLocality::Eligible(locality.finish())
+    }))
 }
 fn executable_hash(program: &crate::bytecode::Executable) -> u64 {
     let mut hash = std::collections::hash_map::DefaultHasher::new();
@@ -382,7 +564,7 @@ fn rebound(exemplar: &CompiledFormula, source: &str, cell_count: usize) -> Optio
     let program = &exemplar.bytecode;
     // Rebinding point cells preserves shape. Range endpoints can change a
     // producer's dimensions, so those bounds must be compiled again.
-    if exemplar.spill.shape.is_some()
+    if exemplar.properties().is_some_and(|p| p.result.may_spill())
         && poirot_parsing::formula::classified::Tokens::new(source)
             .any(|token| token.is_ok_and(|token| token.raw == ":"))
     {
@@ -444,7 +626,6 @@ fn rebound(exemplar: &CompiledFormula, source: &str, cell_count: usize) -> Optio
     }
     Some(CompiledFormula {
         source: Arc::from(source),
-        spill: exemplar.spill,
         bytecode: crate::bytecode::Compiled {
             executable: Arc::clone(&program.executable),
             references,
@@ -454,6 +635,92 @@ fn rebound(exemplar: &CompiledFormula, source: &str, cell_count: usize) -> Optio
     })
 }
 impl FormulaCompiler {
+    /// Classify possible geometry without binding scalar source variants.
+    pub(crate) fn spill_shape(
+        &mut self,
+        source: &str,
+        policy: &EvaluationPolicy,
+        registry: Option<&crate::extensions::ExtensionRegistry>,
+    ) -> Option<poirot_model::ShapeBounds> {
+        let namespace_matches = policy.registry.extensions
+            == registry.map(crate::extensions::ExtensionRegistry::identity);
+        let pool_index = self.pool.iter().position(|(p, _)| p == policy);
+        if namespace_matches
+            && let Some(prepared) = self
+                .pool
+                .iter()
+                .find(|(p, _)| p == policy)
+                .and_then(|(_, sources)| sources.get(source))
+        {
+            if let Some(pool) = pool_index.and_then(|index| self.templates.get_mut(index)) {
+                pool.scalar_probation = None;
+            }
+            return prepared.spill_shape();
+        }
+        if namespace_matches
+            && let Some(pool) = pool_index.and_then(|index| self.templates.get_mut(index))
+            && pool
+                .last_scalar
+                .as_ref()
+                .is_some_and(|matcher| matcher.matches(source, policy))
+        {
+            pool.scalar_probation = None;
+            return None;
+        }
+        let hint = namespace_matches
+            .then(|| {
+                scalar_classification_key(
+                    source,
+                    policy,
+                    &mut self.classification_key,
+                    &mut self.classification_cells,
+                )
+            })
+            .flatten();
+        let classified = hint.is_some();
+        if classified
+            && self
+                .pool
+                .iter()
+                .position(|(p, _)| p == policy)
+                .and_then(|index| self.templates.get(index))
+                .is_some_and(|pool| pool.scalar.contains(self.classification_key.as_slice()))
+        {
+            if let (Some(pool), Some(hint)) = (
+                pool_index.and_then(|index| self.templates.get_mut(index)),
+                hint,
+            ) {
+                pool.observe_scalar(source, hint, &self.classification_cells);
+            }
+            return None;
+        }
+        // Ordinary compilation does not modify the classification scratch buffers;
+        // the key and bounded point spans still belong to this exact source below.
+        let prepared = self.compile_formula_with_registry(source, policy, registry);
+        let shape = prepared.spill_shape();
+        if classified
+            && matches!(prepared.as_ref(), PreparedFormula::Ready(formula)
+                if formula.properties().is_some_and(|p| !p.result.may_spill()))
+            && let Some(index) = self.pool.iter().position(|(p, _)| p == policy)
+            && let Some(pool) = self.templates.get_mut(index)
+        {
+            let mut key = Vec::new();
+            if pool.scalar.try_reserve(1).is_ok()
+                && key.try_reserve_exact(self.classification_key.len()).is_ok()
+            {
+                // SAFETY: The successful reservation admitted the complete key bytes.
+                key.extend_from_slice(&self.classification_key);
+                // SAFETY: The set reservation admitted one additional learned proof.
+                pool.scalar.insert(key);
+            }
+            if let Some(hint) = hint {
+                pool.observe_scalar(source, hint, &self.classification_cells);
+            }
+        } else if let Some(pool) = pool_index.and_then(|index| self.templates.get_mut(index)) {
+            pool.scalar_probation = None;
+        }
+        shape
+    }
     /// Create an empty compiled-source and executable-template cache.
     pub fn new() -> Self {
         Self::default()
@@ -591,12 +858,6 @@ impl FormulaCompiler {
                 }
                 PreparedFormula::Ready(Arc::new(CompiledFormula {
                     source: Arc::from(parsed.source()),
-                    spill: SpillMetadata {
-                        shape: crate::spill_publication::spill_shape(parsed.expression()),
-                        unbounded: crate::spill_publication::unbounded_producer(
-                            parsed.expression(),
-                        ),
-                    },
                     bytecode,
                     potential,
                     policy: policy.clone(),
@@ -1068,19 +1329,19 @@ mod template_tests {
     }
 
     #[test]
-    fn operator_shape_metadata_preserves_point_templates_and_recompiles_range_bounds() {
+    fn operator_typing_preserves_point_templates_and_recompiles_range_bindings() {
         let mut compiler = FormulaCompiler::new();
         let policy = EvaluationPolicy::default();
         let first = compiler.compile_formula("A1+IF(TRUE,B2,3)", &policy);
         let second = compiler.compile_formula("C3+IF(TRUE,D4,3)", &policy);
         assert_eq!(compiler.template_hits(), 1);
-        assert_eq!(ready(&first).spill.shape, Some((1, 1)));
-        assert_eq!(ready(&second).spill.shape, Some((1, 1)));
+        assert!(!ready(&first).properties().unwrap().result.may_spill());
+        assert!(!ready(&second).properties().unwrap().result.may_spill());
         let short = compiler.compile_formula("A1:A2+1", &policy);
         let long = compiler.compile_formula("B1:B4+1", &policy);
         assert_eq!(compiler.template_hits(), 1);
-        assert_eq!(ready(&short).spill.shape, Some((2, 1)));
-        assert_eq!(ready(&long).spill.shape, Some((4, 1)));
+        assert!(ready(&short).properties().unwrap().result.may_spill());
+        assert!(ready(&long).properties().unwrap().result.may_spill());
     }
 }
 
@@ -1113,3 +1374,494 @@ pub mod snapshot;
 
 /// Serializable compiled-source cache used by overlay snapshots.
 pub(crate) mod cache_snapshot;
+
+#[cfg(test)]
+mod spill_classification_tests {
+    use super::*;
+    use poirot_model::ShapeBounds;
+
+    fn check(compiler: &mut FormulaCompiler, source: &str, policy: &EvaluationPolicy) {
+        // A separate compiler performs authoritative full binding and inference.
+        let expected = FormulaCompiler::new()
+            .compile_formula(source, policy)
+            .spill_shape();
+        assert_eq!(
+            compiler.spill_shape(source, policy, None),
+            expected,
+            "{source}"
+        );
+    }
+
+    #[test]
+    fn scalar_proofs_do_not_materialize_coordinate_or_literal_variants() {
+        let policy = EvaluationPolicy::default();
+        let mut compiler = FormulaCompiler::new();
+        for row in 1..=128 {
+            let source =
+                format!("IFERROR(VLOOKUP(A{row},'O''Brien'!$B:$C,2,FALSE),\"missing {row}\")");
+            check(&mut compiler, &source, &policy);
+        }
+        assert_eq!(compiler.usage().parse_attempts, 1);
+        assert_eq!(compiler.pool[0].1.len(), 1);
+        assert_eq!(compiler.templates[0].scalar.len(), 1);
+        // Classification cannot substitute a stale coordinate binding when reached.
+        let actual = compiler.compile_formula(
+            "IFERROR(VLOOKUP(A128,'O''Brien'!$B:$C,2,FALSE),\"missing 128\")",
+            &policy,
+        );
+        assert_eq!(
+            actual.source(),
+            "IFERROR(VLOOKUP(A128,'O''Brien'!$B:$C,2,FALSE),\"missing 128\")"
+        );
+        assert_eq!(compiler.pool[0].1.len(), 2);
+    }
+
+    #[test]
+    fn scalar_proofs_agree_with_full_inference_across_result_forms() {
+        let policy = EvaluationPolicy::default();
+        let mut compiler = FormulaCompiler::new();
+        for row in 1..=8 {
+            for number in [1, 3, 17] {
+                for source in [
+                    format!("SUM(A{row}:C{number})"),
+                    format!("SUM('S'!{row}:{number})"),
+                    format!("SUM(SEQUENCE({number}))"),
+                    format!("SUM(TRANSPOSE(SEQUENCE({number},2)))"),
+                    format!("@SEQUENCE({number})"),
+                    format!("IF(TRUE,A{row},{number})"),
+                    format!("IFERROR(A{row},\"a\"\"{number}\")"),
+                    format!("IF(TRUE,SEQUENCE({number}),A{row})"),
+                    format!("IFERROR(SEQUENCE({number}),A{row})"),
+                    format!("INDEX(A{row}:C{number},{number})"),
+                    format!("CHOOSE({number},A{row},SEQUENCE({number}))"),
+                    format!("SUM(INDEX(A{row}:C{number},{number}))"),
+                    format!("ISNUMBER(SEQUENCE({number}))"),
+                    format!("unknown(A{row},{number})"),
+                    format!("SUM(unresolved_name,A{row})"),
+                    format!("A{row}+{number}"),
+                ] {
+                    check(&mut compiler, &source, &policy);
+                }
+            }
+        }
+        for source in [
+            "{1;2}",
+            "SUM({1;2})",
+            "#N/A",
+            "IFERROR(#N/A,1)",
+            "SUM(S!name)",
+            "SEQUENCE(RAND())",
+            "A1#",
+            "SUM(A1#)",
+            "TRUE",
+            "FALSE",
+            "LOG10(A1)",
+            "log10(A2)",
+        ] {
+            check(&mut compiler, source, &policy);
+        }
+    }
+
+    #[test]
+    fn array_geometry_is_never_reused_from_scalar_proof_keys() {
+        let policy = EvaluationPolicy::default();
+        let mut compiler = FormulaCompiler::new();
+        for (source, expected) in [
+            ("SEQUENCE(3,2)", ShapeBounds::new(3, 2)),
+            ("SEQUENCE(8,4)", ShapeBounds::new(8, 4)),
+            ("A1:B3", ShapeBounds::new(3, 2)),
+            ("C2:H9", ShapeBounds::new(8, 6)),
+            ("TRANSPOSE(C2:H9)", ShapeBounds::new(6, 8)),
+        ] {
+            assert_eq!(compiler.spill_shape(source, &policy, None), Some(expected));
+        }
+        assert!(compiler.templates[0].scalar.is_empty());
+    }
+
+    #[test]
+    fn grammar_grid_and_policy_failures_cannot_acquire_a_scalar_proof() {
+        let policy = EvaluationPolicy::default();
+        let mut compiler = FormulaCompiler::new();
+        check(&mut compiler, "SUM(A1,1,\"ok\")", &policy);
+        for source in [
+            "SUM(A1048577,1,\"ok\")",
+            "SUM(XFE1,1,\"ok\")",
+            "SUM(A2,1e999,\"ok\")",
+            "SUM(A2,1,\"unterminated)",
+            "SUM(A2,1,,)",
+            "SUM(A2,1,\"ok\"))",
+            "SUM(A:A1)",
+            "SUM('S'!A:1)",
+            "SUM(A0:A1)",
+            "SUM('S'!0:1)",
+        ] {
+            check(&mut compiler, source, &policy);
+        }
+        for limited in [
+            FormulaParsePolicy {
+                max_expressions: 1,
+                ..policy.parse
+            },
+            FormulaParsePolicy {
+                max_depth: 1,
+                ..policy.parse
+            },
+            FormulaParsePolicy {
+                max_rows: 4,
+                max_columns: 4,
+                ..policy.parse
+            },
+            FormulaParsePolicy {
+                max_rows: 0,
+                ..policy.parse
+            },
+        ] {
+            let policy = EvaluationPolicy {
+                parse: limited,
+                ..policy.clone()
+            };
+            for source in [
+                "SUM(A1,1)",
+                "SUM(A2,2)",
+                "SUM(A5,2)",
+                "SUM('S'!A:E)",
+                "SUM('S'!1:5)",
+            ] {
+                check(&mut compiler, source, &policy);
+            }
+        }
+    }
+
+    #[test]
+    fn literal_kinds_and_qualifiers_preserve_syntax_distinctions() {
+        let policy = EvaluationPolicy::default();
+        let mut compiler = FormulaCompiler::new();
+        for source in [
+            "SUM(123!A1,1)",
+            "SUM(456!B2,2)",
+            "SUM('123'!A1,1)",
+            "SUM('456'!B2,2)",
+            "IFERROR(A1,\"a\"\"b\")",
+            "IFERROR(B2,\"longer text\")",
+            "SUM(A1,1.25e-3)",
+            "SUM(B2,.5)",
+            "SUM(C3,2E+4)",
+            "SUM('O''Brien'!$A:$C)",
+            "SUM('O''Brien'!$1:$3)",
+            "SUM((A1:B2,C3:D4))",
+            "SUM(A1:B2 C2:D3)",
+        ] {
+            check(&mut compiler, source, &policy);
+        }
+    }
+
+    #[test]
+    fn every_catalog_transfer_keeps_literal_variants_conservative() {
+        let policy = EvaluationPolicy::default();
+        let mut compiler = FormulaCompiler::new();
+        for descriptor in crate::registry::descriptors_for_policy(
+            crate::BuiltinSemanticsPolicy::ExcelDocumentation,
+        ) {
+            for (cell, number, text) in [("A1", 1, "a"), ("B2", 7, "longer")] {
+                for source in [
+                    format!("{}({cell},{number},\"{text}\")", descriptor.name),
+                    format!(
+                        "SUM({}(SEQUENCE({number}),{cell},\"{text}\"))",
+                        descriptor.name
+                    ),
+                ] {
+                    check(&mut compiler, &source, &policy);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn extension_argument_forms_and_namespaces_remain_conservative() {
+        use crate::extensions::*;
+        for arrays in [false, true] {
+            let mut registry = ExtensionRegistry::new();
+            registry
+                .register(
+                    ExtensionNamespace::UserDefined,
+                    "CUSTOM",
+                    "v1",
+                    ExtensionContract {
+                        arity: crate::registry::Arity {
+                            minimum: 1,
+                            maximum: 1,
+                        },
+                        evaluation: ExtensionEvaluationStrategy::Deferred,
+                        capabilities: ExtensionCapabilities {
+                            references: true,
+                            arrays,
+                            context: false,
+                        },
+                        cacheability: ExtensionCacheability::Deterministic,
+                    },
+                    |_: &mut dyn ExtensionHost| -> ExtensionResult<ExtensionOutput> {
+                        panic!("classification never executes providers")
+                    },
+                )
+                .unwrap();
+            let policy =
+                EvaluationPolicy::with_extensions(FormulaParsePolicy::default(), &registry);
+            let mut compiler = FormulaCompiler::new();
+            for source in [
+                "CUSTOM(A1)",
+                "CUSTOM(B2)",
+                "CUSTOM(SEQUENCE(2))",
+                "CUSTOM(SEQUENCE(7))",
+                "CUSTOM(unresolved_name)",
+                "SUM(CUSTOM(A1))",
+                "SUM(CUSTOM(B2))",
+                "SUM(CUSTOM(SEQUENCE(3)))",
+                "SUM(CUSTOM(SEQUENCE(8)))",
+            ] {
+                let expected = FormulaCompiler::new()
+                    .compile_formula_with_extensions(source, &policy, &registry)
+                    .spill_shape();
+                assert_eq!(
+                    compiler.spill_shape(source, &policy, Some(&registry)),
+                    expected,
+                    "{source}, arrays={arrays}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn restored_compilers_relearn_proofs_without_persisted_authority() {
+        let policy = EvaluationPolicy::default();
+        let mut compiler = FormulaCompiler::new();
+        assert_eq!(compiler.spill_shape("SUM(A1:A3)", &policy, None), None);
+        let cache = cache_snapshot::Cache::capture(&compiler, &policy)
+            .unwrap()
+            .into_owned();
+        let mut restored = cache.restore(&policy).unwrap();
+        assert!(restored.templates[0].scalar.is_empty());
+        assert_eq!(restored.spill_shape("SUM(A1:A3)", &policy, None), None);
+        assert_eq!(restored.spill_shape("SUM(B2:B7)", &policy, None), None);
+        assert_eq!(restored.usage().parse_attempts, 0);
+        assert_eq!(restored.template_hits(), 1);
+        assert_eq!(restored.spill_shape("SUM(C3:C9)", &policy, None), None);
+        assert_eq!(restored.pool[0].1.len(), 2);
+        check(&mut restored, "C2:D8", &policy);
+    }
+
+    #[test]
+    fn registry_mismatch_never_reuses_a_scalar_proof() {
+        let registry = crate::extensions::ExtensionRegistry::new();
+        let policy = EvaluationPolicy::with_extensions(FormulaParsePolicy::default(), &registry);
+        let mut compiler = FormulaCompiler::new();
+        assert_eq!(
+            compiler.spill_shape("SUM(A1)", &policy, Some(&registry)),
+            None
+        );
+        assert_eq!(
+            compiler.spill_shape("SUM(A2)", &policy, None),
+            Some(ShapeBounds::UNKNOWN)
+        );
+        assert_eq!(
+            compiler.spill_shape("SUM(A2)", &policy, Some(&registry)),
+            None
+        );
+        let mut invalid = policy.clone();
+        invalid.registry.builtin_contract_version += 1;
+        assert_eq!(
+            compiler.spill_shape("SUM(A3)", &invalid, Some(&registry)),
+            None
+        );
+        assert_eq!(compiler.pool.len(), 2);
+    }
+}
+
+#[cfg(test)]
+mod scalar_matcher_tests {
+    use super::*;
+
+    /// Build a test matcher from spans produced by the authoritative key pass.
+    fn scalar_matcher(source: &str) -> Option<ScalarMatcher> {
+        let mut key = Vec::new();
+        let mut cells = Vec::new();
+        if !matches!(
+            scalar_classification_key(source, &EvaluationPolicy::default(), &mut key, &mut cells),
+            Some(ScalarLocality::Eligible(_))
+        ) {
+            return None;
+        }
+        let mut matcher = ScalarMatcher::default();
+        matcher.update(source, &cells).then_some(matcher)
+    }
+
+    #[test]
+    fn promotion_reuses_buffers_and_declined_updates_preserve_the_old_pattern() {
+        let policy = EvaluationPolicy::default();
+        let mut matcher = scalar_matcher("SUM(A1:A2)").unwrap();
+        matcher.source.reserve(256);
+        matcher.cells.reserve(8);
+        let source_buffer = matcher.source.as_ptr();
+        let cells_buffer = matcher.cells.as_ptr();
+        let source = "IFERROR(COUNT($B3:C$4),0)";
+        let mut key = Vec::new();
+        let mut cells = Vec::new();
+        assert!(matches!(
+            scalar_classification_key(source, &policy, &mut key, &mut cells),
+            Some(ScalarLocality::Eligible(_))
+        ));
+        assert!(matcher.update(source, &cells));
+        assert_eq!(matcher.source.as_ptr(), source_buffer);
+        assert_eq!(matcher.cells.as_ptr(), cells_buffer);
+        assert!(matcher.matches("IFERROR(COUNT(D5:$E6),0)", &policy));
+        assert!(!matcher.matches("SUM(A1:A2)", &policy));
+        let excessive = "x".repeat(ScalarMatcher::MAX_SOURCE_BYTES + 1);
+        assert!(!matcher.update(&excessive, &[]));
+        assert!(matcher.matches("IFERROR(COUNT(D5:$E6),0)", &policy));
+        assert!(!matcher.update("A1", &vec![(0, 2); ScalarMatcher::MAX_CELLS + 1]));
+        assert!(matcher.matches("IFERROR(COUNT(D5:$E6),0)", &policy));
+    }
+
+    #[test]
+    fn exact_gaps_and_canonical_cells_reject_syntax_changes() {
+        let policy = EvaluationPolicy::default();
+        for (pattern, matching) in [
+            ("A1", "$B$2"),
+            ("SUM($A1,A$2)", "SUM(B$3,$C4)"),
+            (
+                "SUM('O''Brien'!A1:B2,\"a\"\"b\")",
+                "SUM('O''Brien'!$C$3:D4,\"a\"\"b\")",
+            ),
+            ("SUM(A1,'S'!$B:$C)", "SUM(B2,'S'!$B:$C)"),
+            ("SUM(A1 (A2))", "SUM(B3 (C4))"),
+        ] {
+            let matcher = scalar_matcher(pattern).unwrap();
+            assert!(matcher.matches(matching, &policy), "{pattern}: {matching}");
+            assert!(!matcher.matches(&format!("{matching}+SEQUENCE(2)"), &policy));
+            assert!(!matcher.matches(&format!("{matching}garbage"), &policy));
+        }
+        let matcher = scalar_matcher("SUM(A1,'S'!$B:$C,\"text\")").unwrap();
+        for source in [
+            "SUM(A1048577,'S'!$B:$C,\"text\")",
+            "SUM(XFE1,'S'!$B:$C,\"text\")",
+            "SUM(A:A,'S'!$B:$C,\"text\")",
+            "SUM(LOG10(A1),'S'!$B:$C,\"text\")",
+            "SUM(A2,'Other'!$B:$C,\"text\")",
+            "SUM(A2,'S'!$B:$D,\"text\")",
+            "SUM(A2,'S'!$B:$C,\"different\")",
+            "sum(A2,'S'!$B:$C,\"text\")",
+            "SUM(A2,'S'!$B:$C,\"text\"))",
+        ] {
+            assert!(!matcher.matches(source, &policy), "{source}");
+        }
+        let matcher = scalar_matcher("SUM(A1)").unwrap();
+        let limited = EvaluationPolicy {
+            parse: FormulaParsePolicy {
+                max_rows: 4,
+                max_columns: 4,
+                ..policy.parse
+            },
+            ..policy
+        };
+        assert!(!matcher.matches("SUM(A5)", &limited));
+        assert!(!matcher.matches("SUM(E1)", &limited));
+    }
+
+    #[test]
+    fn promoted_scalar_sources_still_match_authoritative_inference() {
+        let policy = EvaluationPolicy::default();
+        let mut compiler = FormulaCompiler::new();
+        for row in [1, 2, 3, 127, 4, 16, 7] {
+            let source = format!("IFERROR(VLOOKUP(A{row},'S'!$B:$C,2,FALSE),\"missing\")");
+            let expected = FormulaCompiler::new()
+                .compile_formula(&source, &policy)
+                .spill_shape();
+            assert_eq!(compiler.spill_shape(&source, &policy, None), expected);
+        }
+        assert!(compiler.templates[0].last_scalar.is_some());
+        assert_eq!(compiler.pool[0].1.len(), 1);
+        for source in [
+            "IFERROR(VLOOKUP(A0,'S'!$B:$C,2,FALSE),\"missing\")",
+            "IFERROR(VLOOKUP(A2,'S'!$B:$C,2,FALSE),SEQUENCE(3))",
+            "SEQUENCE(3)",
+            "SEQUENCE(8)",
+        ] {
+            let expected = FormulaCompiler::new()
+                .compile_formula(source, &policy)
+                .spill_shape();
+            assert_eq!(compiler.spill_shape(source, &policy, None), expected);
+        }
+    }
+
+    #[test]
+    fn alternating_classes_and_unique_literals_do_not_rebuild_patterns() {
+        let policy = EvaluationPolicy::default();
+        let mut alternating = FormulaCompiler::new();
+        let mut unique = FormulaCompiler::new();
+        for row in 1..=128 {
+            let function = if row % 2 == 0 { "COUNT" } else { "SUM" };
+            assert_eq!(
+                alternating.spill_shape(&format!("{function}(A{row})"), &policy, None),
+                None
+            );
+            assert_eq!(
+                unique.spill_shape(&format!("SUM(A{row},\"text {row}\",{row})"), &policy, None),
+                None
+            );
+            assert!(alternating.templates[0].last_scalar.is_none());
+            assert!(unique.templates[0].last_scalar.is_none());
+        }
+        assert_eq!(alternating.usage().parse_attempts, 2);
+        assert_eq!(unique.usage().parse_attempts, 1);
+    }
+
+    #[test]
+    fn matcher_storage_limits_decline_optimization_without_changing_types() {
+        let source = format!("SUM(\"{}\")", "x".repeat(16 * 1024));
+        assert!(scalar_matcher(&source).is_none());
+        let source = format!(
+            "SUM({})",
+            (1..=65)
+                .map(|row| format!("A{row}"))
+                .collect::<Vec<_>>()
+                .join(",")
+        );
+        assert!(scalar_matcher(&source).is_none());
+        let policy = EvaluationPolicy::default();
+        let mut compiler = FormulaCompiler::new();
+        for source in [
+            source.clone(),
+            source.replace('A', "B"),
+            source.replace('A', "C"),
+        ] {
+            assert_eq!(compiler.spill_shape(&source, &policy, None), None);
+            assert!(compiler.templates[0].last_scalar.is_none());
+            assert!(compiler.templates[0].scalar_probation.is_none());
+        }
+    }
+
+    #[test]
+    fn promoted_matchers_cannot_cross_registry_or_parser_policy() {
+        let policy = EvaluationPolicy::default();
+        let mut compiler = FormulaCompiler::new();
+        for source in ["SUM(A1)", "SUM(A2)"] {
+            assert_eq!(compiler.spill_shape(source, &policy, None), None);
+        }
+        assert!(compiler.templates[0].last_scalar.is_some());
+        let registry = crate::extensions::ExtensionRegistry::new();
+        assert_eq!(
+            compiler.spill_shape("SUM(A3)", &policy, Some(&registry)),
+            Some(poirot_model::ShapeBounds::UNKNOWN)
+        );
+        let limited = EvaluationPolicy {
+            parse: FormulaParsePolicy {
+                max_expressions: 1,
+                ..policy.parse
+            },
+            ..policy
+        };
+        let expected = FormulaCompiler::new()
+            .compile_formula("SUM(A3)", &limited)
+            .spill_shape();
+        assert_eq!(compiler.spill_shape("SUM(A3)", &limited, None), expected);
+    }
+}

@@ -14,7 +14,6 @@ pub(crate) struct Cache<'a> {
 struct Formula<'a> {
     source: Cow<'a, str>,
     body: Body<'a>,
-    spill: SpillMetadata,
 }
 /// Serialized compiler-cache entry retaining ready programs or preparation failures.
 #[derive(Serialize, Deserialize)]
@@ -71,10 +70,6 @@ impl<'a> Cache<'a> {
             snapshot.formulas.push(Formula {
                 source: Cow::Borrowed(source),
                 body,
-                spill: match prepared.as_ref() {
-                    PreparedFormula::Ready(f) => f.spill,
-                    _ => SpillMetadata::default(),
-                },
             });
         }
         Ok(snapshot)
@@ -92,7 +87,7 @@ impl<'a> Cache<'a> {
                 .into_iter()
                 .map(|f| Formula {
                     source: Cow::Owned(f.source.into_owned()),
-                    spill: f.spill,
+
                     body: match f.body {
                         Body::Ready {
                             program,
@@ -177,7 +172,7 @@ impl<'a> Cache<'a> {
                     )?;
                     PreparedFormula::Ready(Arc::new(CompiledFormula {
                         source: Arc::from(source.as_str()),
-                        spill: formula.spill,
+
                         bytecode: crate::bytecode::Compiled {
                             executable,
                             references: references.into_owned(),

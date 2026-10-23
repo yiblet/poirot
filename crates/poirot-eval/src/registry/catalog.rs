@@ -170,7 +170,7 @@ registry! {
     "MDETERM" => Matrix(MatrixFunction::Mdeterm), 1, 1, FamilyControlled, REFERENCE_READS, Scalar;
     "MINVERSE" => Matrix(MatrixFunction::Minverse), 1, 1, FamilyControlled, REFERENCE_READS, Array;
     "MMULT" => Matrix(MatrixFunction::Mmult), 2, 2, FamilyControlled, REFERENCE_READS, Array;
-    "TRANSPOSE" => Matrix(MatrixFunction::Transpose), 1, 1, FamilyControlled, REFERENCE_READS, Array;
+    "TRANSPOSE" => Matrix(MatrixFunction::Transpose), 1, 1, FamilyControlled, REFERENCE_READS, Transpose;
     "FREQUENCY" => Matrix(MatrixFunction::Frequency), 2, 2, FamilyControlled, REFERENCE_READS, Array;
     "SUMPRODUCT" => Matrix(MatrixFunction::Sumproduct), 1, usize::MAX, FamilyControlled, REFERENCE_READS, Scalar;
     "TREND" => Matrix(MatrixFunction::Trend), 1, 4, FamilyControlled, REFERENCE_READS, Array;
@@ -316,6 +316,8 @@ registry! {
     "ARABIC" => Text(TextFunction::Arabic), 1, 1, FamilyControlled, REFERENCE_READS, Scalar;
     }
     excel {
+    "SEQUENCE" => Matrix(MatrixFunction::Sequence), 1, 4, FamilyControlled, NUMERIC_COERCION, Sequence;
+    "ANCHORARRAY" => Reference(ReferenceFunction::AnchorArray), 1, 1, FamilyControlled, REFERENCE_READS, SpillRange;
 
     "PERCENTILE.INC" => Statistics(StatisticsFunction::Percentile), 2, 2, FamilyControlled, REFERENCE_READS, Scalar;
     "QUARTILE.INC" => Statistics(StatisticsFunction::QuartileInc), 2, 2, FamilyControlled, REFERENCE_READS, Scalar;

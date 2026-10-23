@@ -165,7 +165,7 @@
 pub mod artifact;
 
 pub use poirot_eval as eval;
-pub use poirot_eval::NumberLocaleV2;
+pub use poirot_eval::{NumberLocaleV2, ProducerPolicy};
 pub use poirot_format as format;
 pub use poirot_io as io;
 pub use poirot_model as model;

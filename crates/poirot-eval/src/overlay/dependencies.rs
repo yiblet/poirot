@@ -93,8 +93,8 @@ pub(crate) struct Reads {
     /// Traces suspended when execution switches to another consumer.
     pub traces: CellMap<Dependencies>,
     current: Option<(Key, Dependencies)>,
-    /// Cells actually executed rather than restored from the persistent cache.
-    pub evaluated: CellSet,
+    /// Newly computed or source-restored results awaiting incremental admission.
+    pub fresh_results: CellSet,
     /// Cells whose results may be retained after successful execution.
     pub completed: CellSet,
 }
@@ -115,6 +115,15 @@ impl Reads {
             .get_or_insert_with(|| (key, Dependencies::default()))
             .1
     }
+    /// Remove speculative consumers while preserving previously settled evidence.
+    pub(crate) fn discard_consumers(&mut self, speculative: &CellSet) {
+        self.flush();
+        for key in speculative {
+            self.traces.remove(key);
+            self.completed.remove(key);
+            self.fresh_results.remove(key);
+        }
+    }
     /// Return the active trace to the map before publishing the batch.
     pub fn flush(&mut self) {
         if let Some((key, trace)) = self.current.take() {
@@ -133,6 +142,12 @@ impl crate::DependencyReadSink for Reads {
                 trace.cell((cell.sheet, cell.address));
             }
             DependencyRead::SparseMembership { sheet, first, last } => {
+                if first == last {
+                    // A point edge invalidates both present and absent coordinates,
+                    // including generated publication, exactly like this guard.
+                    trace.cell((sheet, first));
+                    return;
+                }
                 let range = RangeMembership { sheet, first, last };
                 if let Some(previous) = trace.ranges.last_mut() {
                     if previous.sheet == sheet

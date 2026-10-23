@@ -24,12 +24,12 @@ fn demand_memoization_preserves_references_without_reading_cells() {
     assert_eq!(host.kind(0).unwrap(), OperandKind::Reference);
     assert_eq!(host.session.budget.usage.expressions, expression_count);
     assert_eq!(host.session.budget.usage.cell_reads, 0);
-    assert_eq!(host.memo.len(), 1);
+    assert_eq!(host.prepared_arguments, 1);
     assert!(matches!(
         host.scalar(0, MissingPolicy::Reject),
         Err(FunctionFailure::Spreadsheet(CellError::Div0))
     ));
-    assert_eq!(host.memo.len(), 1);
+    assert_eq!(host.prepared_arguments, 1);
 }
 #[test]
 fn missing_and_blank_and_array_missing_are_distinct() {
@@ -554,7 +554,7 @@ fn array_demand_restores_after_operational_failure() {
             host.kind(0),
             Err(FunctionFailure::Operational(EvaluationFailure::Budget(_)))
         ));
-        assert!(host.memo.is_empty());
+        assert!(host.prepared_arguments == 0);
     }
     assert!(matches!(
         session.expression_demand,

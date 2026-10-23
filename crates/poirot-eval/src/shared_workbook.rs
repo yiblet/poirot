@@ -192,7 +192,7 @@ impl SharedWorkbook {
         let mut run = EvaluationRun::new_with_configuration(view, configuration, budgets)?
             .with_inputs(inputs);
         // This source is immutable for the whole session; prefixes never escape
-        // this run, and observed/dynamic executions keep streamed selection.
+        // this run, and observed executions keep streamed selection.
         run.session.lookup_prefixes.enable();
         if let Some(limits) = memo_limits {
             run = run.with_memo_limits(limits);
