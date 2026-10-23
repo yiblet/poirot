@@ -12,6 +12,8 @@
 //! `Invoke` must never eagerly execute the blocks following it. References stay values
 //! on the stack until an operator or family adapter requests dereferencing/coercion.
 
+pub mod aggregation;
+
 use poirot_parsing::formula::{BinaryOp, Expr, UnaryOp};
 use std::sync::Arc;
 
@@ -117,6 +119,8 @@ impl Instruction {
 /// Shared instructions and literal operand bytes. Reference instructions name
 /// slots; their concrete coordinates live in each formula's [`ReferenceBindings`].
 pub struct Template {
+    /// Contextual aggregation projections keyed by expression entry.
+    pub aggregations: Vec<aggregation::Entry>,
     /// Executable instructions in instruction-pointer order.
     pub code: Vec<Instruction>,
     /// Packed literal and name bytes addressed by instructions.
@@ -230,6 +234,24 @@ pub fn compile_with_registry(
 ) -> Result<Compiled, CompileError> {
     compile_inner(expression, registry, false)
 }
+/// Compile an independently supplied argument for the contextual aggregation role.
+/// Ordinary compile entry points deliberately do not project root worksheet names.
+pub fn compile_aggregation_argument(expression: &Expr) -> Result<Compiled, CompileError> {
+    let mut compiled = compile_inner(expression, None, true)?;
+    if let Some(plan) = aggregation::lower(expression)? {
+        compiled
+            .template
+            .aggregations
+            .try_reserve(1)
+            .map_err(|_| CompileError::ResourceLimit)?;
+        // SAFETY: Index zero is always a valid insertion position; one additional slot was reserved locally.
+        compiled
+            .template
+            .aggregations
+            .insert(0, aggregation::Entry { start: 0, plan });
+    }
+    Ok(compiled)
+}
 fn compile_inner(
     expression: &Expr,
     registry: Option<&crate::extensions::ExtensionRegistry>,
@@ -250,6 +272,7 @@ fn compile_inner(
             executable: Arc::new(Executable {
                 typing: crate::typing::FormulaTyping::default(),
                 template: Template {
+                    aggregations: Vec::new(),
                     code: Vec::with_capacity(sizes.code),
                     operands: Vec::with_capacity(sizes.text),
                     reference_slots: 0,
@@ -264,6 +287,7 @@ fn compile_inner(
         },
         error: None,
         heads: [NONE; DEPTH * 2],
+        aggregation_roles: [false; DEPTH],
         registry,
     };
     stream(expression, 0, &mut writer);
@@ -347,7 +371,7 @@ enum High<'a> {
     ArrayAllocate(usize, usize),
     Scalarize,
     Invoke(&'a str, usize, usize),
-    Argument(usize, usize),
+    Argument(usize, usize, usize, &'a Expr),
     YieldArgument,
     Goto(usize),
     Label(usize),
@@ -390,7 +414,7 @@ fn stream(e: &Expr, depth: usize, sink: &mut impl Sink) {
             sink.emit(High::Invoke(name, args.len(), done));
             sink.emit(High::Goto(done));
             for (i, a) in args.iter().enumerate() {
-                sink.emit(High::Argument(i, next));
+                sink.emit(High::Argument(i, next, depth, a));
                 stream(a, depth + 1, sink);
                 sink.emit(High::YieldArgument);
                 sink.emit(High::Label(next));
@@ -519,6 +543,7 @@ struct Writer<'a> {
     registry: Option<&'a crate::extensions::ExtensionRegistry>,
     output: Compiled,
     heads: [u32; DEPTH * 2],
+    aggregation_roles: [bool; DEPTH],
 }
 impl Writer<'_> {
     fn text(&mut self, s: &str) -> (u32, u32) {
@@ -640,6 +665,14 @@ impl Sink for Writer<'_> {
                     },
                     None => CallTarget::Unresolved,
                 };
+                if let Some(role) = self.aggregation_roles.get_mut(label / 2) {
+                    *role = !matches!(call_target, CallTarget::Extension(_))
+                        && lookup
+                            .and_then(|name| crate::registry::resolve_excel_function(&name.into()))
+                            == Some(crate::registry::FunctionId::Matrix(
+                                crate::registry::MatrixFunction::Groupby,
+                            ));
+                }
                 self.output.calls.push(Call {
                     source_offset: a,
                     resolved_name: lookup.filter(|s| *s != name).map(str::to_owned),
@@ -648,7 +681,28 @@ impl Sink for Writer<'_> {
                 target = Some(label);
                 Instruction::new(Opcode::Invoke, index, count as u32)
             }
-            High::Argument(index, label) => {
+            High::Argument(index, label, depth, expression) => {
+                if index == 2 && self.aggregation_roles.get(depth) == Some(&true) {
+                    match aggregation::lower_with_registry(expression, self.registry) {
+                        Ok(Some(plan)) => {
+                            let start = self.output.template.code.len().saturating_add(1);
+                            if self.output.template.aggregations.try_reserve(1).is_err() {
+                                self.error = Some(CompileError::ResourceLimit);
+                                return;
+                            }
+                            // SAFETY: The successful reservation admits one entry and nothing has been inserted since.
+                            self.output
+                                .template
+                                .aggregations
+                                .push(aggregation::Entry { start, plan });
+                        }
+                        Ok(None) => {}
+                        Err(error) => {
+                            self.error = Some(error);
+                            return;
+                        }
+                    }
+                }
                 target = Some(label);
                 Instruction::new(Opcode::Argument, index as u32, 0)
             }

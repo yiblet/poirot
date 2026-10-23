@@ -5,10 +5,21 @@
 //!
 //! The caller supplies arrays and a [`Budget`] for cell counts and estimated work.
 //! Exceeding a budget is reported separately from spreadsheet errors.
+mod trim;
+pub use trim::{TrimBounds, TrimMode, TrimRectangle};
 mod collection;
+mod flatten;
+pub use flatten::{Ignore, MemberKind, ScanOrder, flatten};
 mod linear_algebra;
 mod regression;
+mod reshape;
+mod selection;
 use poirot_functions_core::CellError;
+pub use reshape::{Axis, Transform};
+pub use selection::{
+    FieldRelationship, Group, Partition, SortOrder, filter, group_layout, hierarchy, partition,
+    select, selection_work, sort, unique,
+};
 
 /// Matrix formula error, resource-budget refusal, or unsupported reference-source behavior.
 #[derive(Debug, Clone, PartialEq)]

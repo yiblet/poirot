@@ -68,7 +68,7 @@ helper_map! {
         Mdeterm, Minverse, Mmult, Transpose, Frequency,
         Sumproduct, Trend,
     ];
-    local: [Sequence];
+    local: [Randarray, Trimrange, Groupby, Percentof, Filter, Sort, Sortby, Unique, Sequence, Hstack, Vstack, Take, Drop, Choosecols, Chooserows, Expand, Tocol, Torow, Wrapcols, Wraprows];
 }
 
 helper_map! {
@@ -137,7 +137,7 @@ helper_map! {
         Lower, Upper, Trim, Clean, Concat,
         Concatenate, Exact, Find, Search, Replace,
         Substitute, Rept, Value, Char, Code,
-        UniChar, Unicode,
+        UniChar, Unicode, TextBefore, TextAfter, TextSplit, ArrayToText, ValueToText, RegexTest, RegexExtract, RegexReplace,
     ];
 }
 

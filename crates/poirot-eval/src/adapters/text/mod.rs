@@ -7,7 +7,13 @@ use crate::host::{CallHost, MissingPolicy, NumericPolicy, ScalarOperand};
 use crate::*;
 use std::cell::RefCell;
 
+mod modern;
+mod regex;
+/// Modern PCRE2 text evaluation.
+pub(crate) use regex::execute as execute_regex;
 mod units;
+/// Modern text array and delimiter execution.
+pub(crate) use modern::execute as execute_modern;
 /// UTF-16-preserving text execution path.
 pub(crate) use units::execute as execute_units;
 

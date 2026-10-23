@@ -51,21 +51,22 @@ impl Names {
         match name {
             FunctionName::Known(name) => self.core.get(name.index()).copied().flatten(),
             // Also admit manually constructed Unknown values whose spelling is common.
-            FunctionName::Unknown(name) => {
-                if let Some(common) = CommonFunction::parse(name) {
-                    return self.core.get(common.index()).copied().flatten();
-                }
-                // Normal extension names fold on the stack, avoiding per-call allocation.
-                let mut folded = [0u8; 64];
-                if let Some(bytes) = folded.get_mut(..name.len()) {
-                    for (out, byte) in bytes.iter_mut().zip(name.bytes()) {
-                        *out = byte.to_ascii_uppercase();
-                    }
-                    self.other.get(std::str::from_utf8(bytes).ok()?).copied()
-                } else {
-                    self.other.get(&name.to_ascii_uppercase()).copied()
-                }
+            FunctionName::Unknown(name) => self.get_spelling(name),
+        }
+    }
+    /// Look up a borrowed spelling without allocating a temporary parsed function name.
+    fn get_spelling(&self, name: &str) -> Option<usize> {
+        if let Some(common) = CommonFunction::parse(name) {
+            return self.core.get(common.index()).copied().flatten();
+        }
+        let mut folded = [0u8; 64];
+        if let Some(bytes) = folded.get_mut(..name.len()) {
+            for (out, byte) in bytes.iter_mut().zip(name.bytes()) {
+                *out = byte.to_ascii_uppercase();
             }
+            self.other.get(std::str::from_utf8(bytes).ok()?).copied()
+        } else {
+            self.other.get(&name.to_ascii_uppercase()).copied()
         }
     }
 }
@@ -154,8 +155,23 @@ impl AdapterRegistry {
     fn lookup(&self, name: &FunctionName, names: &Names, prefixed: &Names) -> Option<usize> {
         match name {
             FunctionName::Unknown(name) if name.starts_with("_xlfn.") => {
-                // SAFETY: starts_with("_xlfn.") checks this six-byte ASCII prefix, so byte six is an in-bounds UTF-8 boundary.
-                prefixed.get(&FunctionName::from(&name[6..]))
+                let suffix = name.strip_prefix("_xlfn.")?;
+                // MS-XLSX §2.2.3 assigns this additional worksheet qualifier to
+                // FILTER, SORT and PY. PY has no executable registration here.
+                // https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/5d1b6d44-6fc1-4ecd-8fef-0b27406cc2bf
+                // Normative spellings only; no upstream code or tests reused.
+                let suffix = if let Some(worksheet) = suffix.strip_prefix("_xlws.") {
+                    if !["FILTER", "SORT"]
+                        .iter()
+                        .any(|name| worksheet.eq_ignore_ascii_case(name))
+                    {
+                        return None;
+                    }
+                    worksheet
+                } else {
+                    suffix
+                };
+                prefixed.get_spelling(suffix)
             }
             _ => names.get(name),
         }

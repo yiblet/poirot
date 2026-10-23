@@ -7,7 +7,7 @@ use std::borrow::Cow;
 /// Snapshot validation result carrying a diagnostic for unsupported or inconsistent compiled data.
 type Result<T> = std::result::Result<T, String>;
 const MAX: usize = 1_000_000;
-const VERSION: u32 = 4;
+const VERSION: u32 = 6;
 /// Serde view preserving source-to-program sharing for a trusted compiled workbook plan.
 #[derive(Serialize, Deserialize)]
 pub struct Plan<'a> {
@@ -329,6 +329,42 @@ pub(super) fn validate_template(t: &Template, calls: usize) -> Result<()> {
     {
         return Err("snapshot template limit".into());
     }
+    let mut previous = None;
+    if t.aggregations.len() > t.code.len() {
+        return Err("snapshot aggregation count".into());
+    }
+    let mut members = 0usize;
+    let mut bytes = 0usize;
+    for entry in &t.aggregations {
+        if !entry.plan.valid()
+            || previous.is_some_and(|p| entry.start <= p)
+            || t.code
+                .get(entry.start)
+                .is_none_or(|i| i.opcode != Opcode::Enter)
+        {
+            return Err("snapshot aggregation plan".into());
+        }
+        if entry.start != 0
+            && t.code
+                .get(entry.start - 1)
+                .is_none_or(|i| i.opcode != Opcode::Argument || i.a != 2)
+        {
+            return Err("snapshot aggregation argument role".into());
+        }
+        members = members
+            .checked_add(entry.plan.members.len())
+            .ok_or("snapshot aggregation count")?;
+        for candidate in &entry.plan.members {
+            bytes = bytes
+                .checked_add(candidate.name.len())
+                .and_then(|n| n.checked_add(candidate.sheet.as_ref().map_or(0, String::len)))
+                .ok_or("snapshot aggregation storage")?;
+        }
+        if members > MAX || bytes > 64 * 1024 * 1024 {
+            return Err("snapshot aggregation storage".into());
+        }
+        previous = Some(entry.start);
+    }
     let target = |n: u32| {
         if (n as usize) < t.code.len() {
             Ok(())
@@ -508,6 +544,65 @@ mod tests {
             .unwrap();
         }
         w
+    }
+
+    #[test]
+    fn random_array_and_trim_current_plans_roundtrip_without_reparsing() {
+        let mut book = Workbook::new();
+        let sheet = book.add_sheet("S").unwrap();
+        sheet
+            .set_formula("A1".parse().unwrap(), "RANDARRAY(2,3)")
+            .unwrap();
+        sheet
+            .set_formula("G1".parse().unwrap(), "TRIMRANGE(A1:D5)")
+            .unwrap();
+        let plan = FormulaCompiler::new().compile_workbook(&book, &EvaluationPolicy::default());
+        let dto = Plan::capture(&plan).unwrap().into_owned();
+        let restored = dto.restore().unwrap();
+        assert!(restored.matches(&book, &EvaluationPolicy::default()));
+        for (key, original) in &plan.formulas {
+            let PreparedFormula::Ready(original) = original.as_ref() else {
+                panic!()
+            };
+            let PreparedFormula::Ready(actual) = restored.formulas.get(key).unwrap().as_ref()
+            else {
+                panic!()
+            };
+            assert_eq!(actual.bytecode.typing, original.bytecode.typing);
+        }
+        let mut old = Plan::capture(&plan).unwrap();
+        old.version = VERSION - 1;
+        assert_eq!(
+            old.restore().unwrap_err(),
+            "unsupported compiled snapshot version"
+        );
+    }
+    #[test]
+    fn contextual_aggregation_metadata_roundtrips_and_rejects_malformed_plans() {
+        let mut book = Workbook::new();
+        book.add_sheet("S")
+            .unwrap()
+            .set_formula(
+                "A1".parse().unwrap(),
+                "GROUPBY({1;1},{2;8},HSTACK(SUM,AVERAGE),0,0)",
+            )
+            .unwrap();
+        let plan = FormulaCompiler::new().compile_workbook(&book, &EvaluationPolicy::default());
+        let dto = Plan::capture(&plan).unwrap().into_owned();
+        let restored = dto.restore().unwrap();
+        assert!(restored.matches(&book, &EvaluationPolicy::default()));
+        for mutation in 0..5 {
+            let mut dto = Plan::capture(&plan).unwrap().into_owned();
+            let entries = &mut dto.programs[0].template.to_mut().aggregations;
+            match mutation {
+                0 => entries[0].plan.columns = 3,
+                1 => entries[0].start = usize::MAX,
+                2 => entries[0].plan.rows = 2,
+                3 => entries[0].plan.members[0].name.clear(),
+                _ => entries.push(entries[0].clone()),
+            }
+            assert!(dto.restore().is_err());
+        }
     }
     #[test]
     fn snapshot_restores_source_and_program_sharing_without_lazy_trees() {

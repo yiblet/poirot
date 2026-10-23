@@ -77,5 +77,9 @@ See [Contributing](CONTRIBUTING.md) to work on Poirot.
   [ClosedXML](https://github.com/ClosedXML/ClosedXML).
   [IronCalc](https://github.com/ironcalc/IronCalc) provided design inspiration.
 
+- [PCRE2](https://github.com/PCRE2Project/pcre2) provides the regex engine through
+  the MIT-licensed [Rust bindings](https://github.com/BurntSushi/rust-pcre2).
+  See [PCRE2 provenance and notices](LICENSES/PCRE2.md).
+
 See [LICENSES/ACKNOWLEDGEMENTS](LICENSES/ACKNOWLEDGEMENTS) for credits and notices.
 Poirot's code is licensed under [MIT](LICENSES/MIT.txt).

@@ -1,17 +1,14 @@
-//! AST-aware storage spelling for the modern spill-range reference operator.
+//! AST-aware storage spelling for modern functions and spill-range references.
 use crate::IoError;
 use poirot_parsing::formula::{Expr, FormulaPrinter, UnaryOp, parse_formula};
 
-/// Encode postfix spill syntax using the stored future-function spelling.
+/// Encode modern function names and postfix spill syntax for XLSX storage.
 /// Format evidence: rust_xlsxwriter 0.101.0 Formula documentation, section
 /// "The Spilled Range Operator #" and its future-function table:
 /// https://docs.rs/rust_xlsxwriter/0.101.0/rust_xlsxwriter/struct.Formula.html
 /// This is writer-author format documentation, not Microsoft normative proof.
 /// No upstream implementation or tests were copied or adapted.
 pub(crate) fn stored_formula(source: &str) -> Result<String, IoError> {
-    if !source.contains('#') {
-        return Ok(source.trim_start_matches('=').into());
-    }
     let Ok(mut expression) = parse_formula(source) else {
         // Existing export accepts formulas beyond Poirot's executable grammar.
         return Ok(source.trim_start_matches('=').into());
@@ -21,7 +18,191 @@ pub(crate) fn stored_formula(source: &str) -> Result<String, IoError> {
     }
     FormulaPrinter::print(&expression).map_err(|error| IoError::Unsupported(error.to_string()))
 }
-/// Rewrite only spill operators using a fallibly grown stack of disjoint mutable nodes.
+/// Assign XLSX storage names independently of the evaluator's support catalog.
+/// MS-XLSX §2.2.3 lists the future-function spellings, retrieved 2026-10-21:
+/// https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/5d1b6d44-6fc1-4ecd-8fef-0b27406cc2bf
+/// ARRAYTOTEXT, VALUETOTEXT and XMATCH supplement that table from the public
+/// rust_xlsxwriter 0.101.0 Formula documentation's future-function table:
+/// https://docs.rs/rust_xlsxwriter/0.101.0/rust_xlsxwriter/struct.Formula.html
+/// Only format names were used; no upstream implementation or tests reused.
+/// REGEXTEST/EXTRACT/REPLACE and TRIMRANGE postdate those tables and use `_xlfn.`
+/// future-function convention; native Excel storage verification is still pending.
+/// Storage support does not make an unsupported function executable.
+fn modern_stored_name(name: &str) -> Option<&'static str> {
+    const NAMES: &[&str] = &[
+        "_xlfn._xlws.FILTER",
+        "_xlfn._xlws.SORT",
+        "_xlfn._xlws.PY",
+        "_xlfn.ACOT",
+        "_xlfn.ACOTH",
+        "_xlfn.AGGREGATE",
+        "_xlfn.ARABIC",
+        "_xlfn.BASE",
+        "_xlfn.BETA.DIST",
+        "_xlfn.BETA.INV",
+        "_xlfn.BINOM.DIST",
+        "_xlfn.BINOM.DIST.RANGE",
+        "_xlfn.BINOM.INV",
+        "_xlfn.BITAND",
+        "_xlfn.BITLSHIFT",
+        "_xlfn.BITOR",
+        "_xlfn.BITRSHIFT",
+        "_xlfn.BITXOR",
+        "_xlfn.BYCOL",
+        "_xlfn.BYROW",
+        "_xlfn.CEILING.MATH",
+        "_xlfn.CEILING.PRECISE",
+        "_xlfn.CHISQ.DIST",
+        "_xlfn.CHISQ.DIST.RT",
+        "_xlfn.CHISQ.INV",
+        "_xlfn.CHISQ.INV.RT",
+        "_xlfn.CHISQ.TEST",
+        "_xlfn.CHOOSECOLS",
+        "_xlfn.CHOOSEROWS",
+        "_xlfn.COMBINA",
+        "_xlfn.CONCAT",
+        "_xlfn.CONFIDENCE.NORM",
+        "_xlfn.CONFIDENCE.T",
+        "_xlfn.COT",
+        "_xlfn.COTH",
+        "_xlfn.COVARIANCE.P",
+        "_xlfn.COVARIANCE.S",
+        "_xlfn.CSC",
+        "_xlfn.CSCH",
+        "_xlfn.DAYS",
+        "_xlfn.DECIMAL",
+        "_xlfn.DROP",
+        "_xlfn.ERF.PRECISE",
+        "_xlfn.ERFC.PRECISE",
+        "_xlfn.EXPAND",
+        "_xlfn.EXPON.DIST",
+        "_xlfn.F.DIST",
+        "_xlfn.F.DIST.RT",
+        "_xlfn.F.INV",
+        "_xlfn.F.INV.RT",
+        "_xlfn.F.TEST",
+        "_xlfn.FIELDVALUE",
+        "_xlfn.FILTERXML",
+        "_xlfn.FLOOR.MATH",
+        "_xlfn.FLOOR.PRECISE",
+        "_xlfn.FORECAST.ETS",
+        "_xlfn.FORECAST.ETS.CONFINT",
+        "_xlfn.FORECAST.ETS.SEASONALITY",
+        "_xlfn.FORECAST.ETS.STAT",
+        "_xlfn.FORECAST.LINEAR",
+        "_xlfn.FORMULATEXT",
+        "_xlfn.GAMMA",
+        "_xlfn.GAMMA.DIST",
+        "_xlfn.GAMMA.INV",
+        "_xlfn.GAMMALN.PRECISE",
+        "_xlfn.GAUSS",
+        "_xlfn.HSTACK",
+        "_xlfn.HYPGEOM.DIST",
+        "_xlfn.IFNA",
+        "_xlfn.IFS",
+        "_xlfn.IMCOSH",
+        "_xlfn.IMCOT",
+        "_xlfn.IMCSC",
+        "_xlfn.IMCSCH",
+        "_xlfn.IMSEC",
+        "_xlfn.IMSECH",
+        "_xlfn.IMSINH",
+        "_xlfn.IMTAN",
+        "_xlfn.ISFORMULA",
+        "_xlfn.ISOMITTED",
+        "_xlfn.ISOWEEKNUM",
+        "_xlfn.LAMBDA",
+        "_xlfn.LET",
+        "_xlfn.LOGNORM.DIST",
+        "_xlfn.LOGNORM.INV",
+        "_xlfn.MAKEARRAY",
+        "_xlfn.MAP",
+        "_xlfn.MAXIFS",
+        "_xlfn.MINIFS",
+        "_xlfn.MODE.MULT",
+        "_xlfn.MODE.SNGL",
+        "_xlfn.MUNIT",
+        "_xlfn.NEGBINOM.DIST",
+        "_xlfn.NORM.DIST",
+        "_xlfn.NORM.INV",
+        "_xlfn.NORM.S.DIST",
+        "_xlfn.NORM.S.INV",
+        "_xlfn.NUMBERVALUE",
+        "_xlfn.PDURATION",
+        "_xlfn.PERCENTILE.EXC",
+        "_xlfn.PERCENTILE.INC",
+        "_xlfn.PERCENTRANK.EXC",
+        "_xlfn.PERCENTRANK.INC",
+        "_xlfn.PERMUTATIONA",
+        "_xlfn.PHI",
+        "_xlfn.POISSON.DIST",
+        "_xlfn.PQSOURCE",
+        "_xlfn.PYTHON_STR",
+        "_xlfn.PYTHON_TYPE",
+        "_xlfn.PYTHON_TYPENAME",
+        "_xlfn.QUARTILE.EXC",
+        "_xlfn.QUARTILE.INC",
+        "_xlfn.QUERYSTRING",
+        "_xlfn.RANDARRAY",
+        "_xlfn.RANK.AVG",
+        "_xlfn.RANK.EQ",
+        "_xlfn.REDUCE",
+        "_xlfn.REGEXEXTRACT",
+        "_xlfn.REGEXREPLACE",
+        "_xlfn.GROUPBY",
+        "_xlfn.TRIMRANGE",
+        "_xlfn.PERCENTOF",
+        "_xlfn.REGEXTEST",
+        "_xlfn.RRI",
+        "_xlfn.SCAN",
+        "_xlfn.SEC",
+        "_xlfn.SECH",
+        "_xlfn.SEQUENCE",
+        "_xlfn.SHEET",
+        "_xlfn.SHEETS",
+        "_xlfn.SKEW.P",
+        "_xlfn.SORTBY",
+        "_xlfn.STDEV.P",
+        "_xlfn.STDEV.S",
+        "_xlfn.SWITCH",
+        "_xlfn.T.DIST",
+        "_xlfn.T.DIST.2T",
+        "_xlfn.T.DIST.RT",
+        "_xlfn.T.INV",
+        "_xlfn.T.INV.2T",
+        "_xlfn.T.TEST",
+        "_xlfn.TAKE",
+        "_xlfn.TEXTAFTER",
+        "_xlfn.TEXTBEFORE",
+        "_xlfn.TEXTJOIN",
+        "_xlfn.TEXTSPLIT",
+        "_xlfn.TOCOL",
+        "_xlfn.TOROW",
+        "_xlfn.UNICHAR",
+        "_xlfn.UNICODE",
+        "_xlfn.UNIQUE",
+        "_xlfn.VAR.P",
+        "_xlfn.VAR.S",
+        "_xlfn.VSTACK",
+        "_xlfn.WEBSERVICE",
+        "_xlfn.WEIBULL.DIST",
+        "_xlfn.WRAPCOLS",
+        "_xlfn.WRAPROWS",
+        "_xlfn.XLOOKUP",
+        "_xlfn.XOR",
+        "_xlfn.Z.TEST",
+        "_xlfn.ARRAYTOTEXT",
+        "_xlfn.VALUETOTEXT",
+        "_xlfn.XMATCH",
+    ];
+    NAMES.iter().copied().find(|stored| {
+        stored
+            .strip_prefix("_xlfn.")
+            .map(|suffix| suffix.strip_prefix("_xlws.").unwrap_or(suffix))
+            .is_some_and(|canonical| name.eq_ignore_ascii_case(canonical))
+    })
+}
+/// Rewrite storage-only syntax using a fallibly grown stack of disjoint mutable nodes.
 fn rewrite(expression: &mut Expr) -> Result<bool, IoError> {
     let allocation = |_| IoError::Unsupported("spill formula export allocation failed".into());
     let mut pending = Vec::new();
@@ -30,6 +211,12 @@ fn rewrite(expression: &mut Expr) -> Result<bool, IoError> {
     pending.push(expression);
     let mut changed = false;
     while let Some(expression) = pending.pop() {
+        if let Expr::Function { name, .. } = expression
+            && let Some(stored) = modern_stored_name(name.as_str())
+        {
+            *name = stored.into();
+            changed = true;
+        }
         if matches!(
             expression,
             Expr::Unary {

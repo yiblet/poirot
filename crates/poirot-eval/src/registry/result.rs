@@ -12,10 +12,18 @@ pub enum ResultRule {
     Array,
     /// Produce sequential values with independently specified dimensions.
     Sequence,
+    /// Produce random numbers with optional independently specified dimensions.
+    RandomArray,
+    /// Crop references as references and other operands as materialized arrays.
+    TrimRange,
     /// Exchange the rows and columns of the first operand.
     Transpose,
     /// Inspect elements, preserving possible array lifting.
     ElementwiseBoolean,
+    /// Return text with lifting driven by the input arguments.
+    ElementwiseText,
+    /// Return regex match text, including variable-length extraction arrays.
+    RegexExtract,
     /// Select IF branches, with lifting driven by its condition and branches.
     If,
     /// Select an original value or fallback, preserving array lifting.
@@ -58,10 +66,32 @@ impl ResultRule {
             Self::Scalar => T::scalar(K::ANY),
             Self::Number => T::scalar(K::NUMBER.join(K::ERROR)),
             Self::Array | Self::Sequence | Self::Transpose => T::array(K::ANY).join(error),
-            Self::ElementwiseBoolean => {
-                let scalar = T::scalar(K::BOOLEAN.join(K::ERROR));
+            Self::RandomArray => T::array(K::NUMBER).join(error),
+            Self::TrimRange => {
+                let first = args.first().copied().unwrap_or(T::BOTTOM);
+                let mut result = error;
+                if !first.single_reference.is_empty() || !first.multi_reference.is_empty() {
+                    result = result
+                        .join(T::single_reference(K::ANY))
+                        .join(T::multi_reference(K::ANY));
+                }
+                if !first.array.is_empty() || !first.scalar.is_empty() {
+                    result = result.join(T::array(K::ANY));
+                }
+                result
+            }
+            Self::RegexExtract => {
+                T::scalar(K::TEXT.join(K::ERROR)).join(T::array(K::TEXT.join(K::ERROR)))
+            }
+            Self::ElementwiseBoolean | Self::ElementwiseText => {
+                let kinds = if self == Self::ElementwiseBoolean {
+                    K::BOOLEAN
+                } else {
+                    K::TEXT
+                };
+                let scalar = T::scalar(kinds.join(K::ERROR));
                 if all.may_spill() {
-                    scalar.join(T::array(K::BOOLEAN.join(K::ERROR)))
+                    scalar.join(T::array(kinds.join(K::ERROR)))
                 } else {
                     scalar
                 }
@@ -113,7 +143,7 @@ impl ResultRule {
         match self {
             Self::Scalar | Self::Number => S::SCALAR,
             Self::Transpose => args.first().copied().unwrap_or(S::UNKNOWN).transpose(),
-            Self::Sequence => {
+            Self::Sequence | Self::RandomArray => {
                 let dimension = |index: usize| {
                     constants
                         .get(index)
@@ -132,15 +162,38 @@ impl ResultRule {
                     columns: dimension(1),
                 }
             }
+            Self::RegexExtract => {
+                match constants
+                    .get(2)
+                    .copied()
+                    .flatten()
+                    .or_else(|| (args.len() <= 2).then_some(0.0))
+                {
+                    Some(0.0) => args.iter().copied().fold(S::SCALAR, S::join),
+                    Some(1.0) if args.iter().all(|s| *s == S::SCALAR) => S {
+                        rows: None,
+                        columns: S::SCALAR.columns,
+                    },
+                    Some(2.0) if args.iter().all(|s| *s == S::SCALAR) => S {
+                        rows: S::SCALAR.rows,
+                        columns: None,
+                    },
+                    _ => S::UNKNOWN,
+                }
+            }
             Self::ElementwiseBoolean
+            | Self::ElementwiseText
             | Self::If
             | Self::Fallback
             | Self::Ifs
             | Self::Switch
             | Self::Choose => args.iter().copied().fold(S::SCALAR, S::join),
-            Self::Array | Self::Reference | Self::SpillRange | Self::Index | Self::Any => {
-                S::UNKNOWN
-            }
+            Self::Array
+            | Self::TrimRange
+            | Self::Reference
+            | Self::SpillRange
+            | Self::Index
+            | Self::Any => S::UNKNOWN,
         }
     }
 }

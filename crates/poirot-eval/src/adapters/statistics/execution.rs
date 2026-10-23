@@ -237,11 +237,21 @@ impl Session<'_> {
                     v
                 };
                 if name == AggregateFunction::Statistics(StatisticsFunction::CountA) {
-                    count += u64::from(v != Blank);
+                    count += poirot_functions_statistics::count_member(
+                        poirot_functions_statistics::BuiltinAggregator::CountA,
+                        false,
+                        v != Blank,
+                        false,
+                    );
                     continue;
                 }
                 if name == AggregateFunction::Statistics(StatisticsFunction::CountBlank) {
-                    count += u64::from(v == Blank || v == Text(String::new()));
+                    count += poirot_functions_statistics::count_member(
+                        poirot_functions_statistics::BuiltinAggregator::CountBlank,
+                        false,
+                        v != Blank,
+                        v == Text(String::new()),
+                    );
                     continue;
                 }
                 if name == AggregateFunction::Statistics(StatisticsFunction::Count) {
@@ -333,7 +343,6 @@ impl Session<'_> {
                 None => err(Div0),
             });
         }
-        let len = nums.len();
         let result = match name {
             AggregateFunction::Statistics(
                 StatisticsFunction::AveDev
@@ -393,16 +402,9 @@ impl Session<'_> {
                 | StatisticsFunction::Product,
             ) => return Ok(err(VALUE_ERROR)),
             AggregateFunction::Statistics(StatisticsFunction::Median) => {
-                if len == 0 {
-                    return Ok(err(Num));
-                }
-                nums.sort_by(f64::total_cmp);
-                if len % 2 == 0 {
-                    // SAFETY: The median branch rejects len == 0 before selecting middle elements; the count/logical branches return before the final numeric match.
-                    nums[len / 2 - 1] / 2. + nums[len / 2] / 2.
-                } else {
-                    // SAFETY: The median branch rejects len == 0 before selecting middle elements; the count/logical branches return before the final numeric match.
-                    nums[len / 2]
+                match poirot_functions_statistics::median(&mut nums) {
+                    Ok(value) => value,
+                    Err(error) => return Ok(err(error)),
                 }
             }
             AggregateFunction::Statistics(

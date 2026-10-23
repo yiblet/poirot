@@ -2,6 +2,8 @@
 //! This module does not resolve function names or select a family implementation.
 use super::*;
 
+mod aggregation;
+pub(crate) use aggregation::Aggregators;
 mod coercionv2;
 mod numeric_policy;
 mod operand;
@@ -28,6 +30,7 @@ enum ArgumentDemand {
     Scalar,
     Inherited(expression_execution::ExpressionDemand),
     ArrayPrefix(usize),
+    ArraySlots(&'static [usize]),
     SelectedResults {
         first: usize,
         default: Option<usize>,
@@ -40,6 +43,7 @@ impl ArgumentDemand {
         match self {
             Self::Inherited(demand) => demand,
             Self::ArrayPrefix(count) if index < count => ExpressionDemand::Array,
+            Self::ArraySlots(slots) if slots.contains(&index) => ExpressionDemand::Array,
             Self::SelectedResults {
                 first,
                 default,
@@ -170,6 +174,18 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
     ) -> Self {
         let mut host = Self::new(session, sheet, address, arguments);
         host.argument_demand = ArgumentDemand::ArrayPrefix(array_count);
+        host
+    }
+    /// Declare noncontiguous array-valued argument roles before forcing any operand.
+    pub(crate) fn new_array_slots(
+        session: &'call mut Session<'workbook>,
+        sheet: usize,
+        address: CellAddress,
+        arguments: impl Into<ArgumentsRef<'call>>,
+        slots: &'static [usize],
+    ) -> Self {
+        let mut host = Self::new(session, sheet, address, arguments);
+        host.argument_demand = ArgumentDemand::ArraySlots(slots);
         host
     }
     /// Selection results inherit the caller's demand; tests and keys remain scalar.
@@ -450,6 +466,10 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             budget.allocation(text.len_units())?;
         }
         Ok(value.clone())
+    }
+    /// Copy one retained cell value after admitting its owned text storage.
+    pub(crate) fn copy_cell_value(&mut self, value: &CellValue) -> FunctionResult<CellValue> {
+        Ok(Self::copy_cell(&mut self.session.runtime.budget, value)?)
     }
     /// Clone a value only after admitting its text, array, and reference storage.
     pub(crate) fn copy_value(budget: &mut BudgetMeter, value: &Value) -> EvalResult<Value> {

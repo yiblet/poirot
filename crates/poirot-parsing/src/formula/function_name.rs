@@ -300,6 +300,34 @@ common_functions! {
     SeriesSum = 264 => "SERIESSUM";
     AnchorArray = 265 => "ANCHORARRAY";
     Sequence = 266 => "SEQUENCE";
+    Hstack = 267 => "HSTACK";
+    Vstack = 268 => "VSTACK";
+    Take = 269 => "TAKE";
+    Drop = 270 => "DROP";
+    Choosecols = 271 => "CHOOSECOLS";
+    Chooserows = 272 => "CHOOSEROWS";
+    Expand = 273 => "EXPAND";
+    Tocol = 274 => "TOCOL";
+    Torow = 275 => "TOROW";
+    Wrapcols = 276 => "WRAPCOLS";
+    Wraprows = 277 => "WRAPROWS";
+    Filter = 278 => "FILTER";
+    Sort = 279 => "SORT";
+    Sortby = 280 => "SORTBY";
+    Unique = 281 => "UNIQUE";
+    TextBefore = 282 => "TEXTBEFORE";
+    TextAfter = 283 => "TEXTAFTER";
+    TextSplit = 284 => "TEXTSPLIT";
+    ArrayToText = 285 => "ARRAYTOTEXT";
+    ValueToText = 286 => "VALUETOTEXT";
+    RegexTest = 287 => "REGEXTEST";
+    RegexExtract = 288 => "REGEXEXTRACT";
+    RegexReplace = 289 => "REGEXREPLACE";
+    Groupby = 290 => "GROUPBY";
+    Percentof = 291 => "PERCENTOF";
+    Randarray = 292 => "RANDARRAY";
+    Trimrange = 293 => "TRIMRANGE";
+
 }
 
 /// Parsed function spelling, interned when it belongs to the common symbol table.

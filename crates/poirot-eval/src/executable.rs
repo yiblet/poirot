@@ -29,6 +29,26 @@ impl<'a> From<&'a Expression> for ExecutableRef<'a> {
     }
 }
 impl<'a> ExecutableRef<'a> {
+    /// Borrow a contextual aggregation projection without executing a worksheet operand.
+    pub(crate) fn aggregation(
+        self,
+    ) -> Result<
+        Option<std::borrow::Cow<'a, crate::bytecode::aggregation::Plan>>,
+        crate::bytecode::CompileError,
+    > {
+        match self {
+            #[cfg(test)]
+            Self::Tree(expression) => crate::bytecode::aggregation::lower_tree(expression)
+                .map(|plan| plan.map(std::borrow::Cow::Owned)),
+            Self::Bytecode { program, start } => Ok(program
+                .template
+                .aggregations
+                .binary_search_by_key(&start, |e| e.start)
+                .ok()
+                .and_then(|i| program.template.aggregations.get(i))
+                .map(|entry| std::borrow::Cow::Borrowed(&entry.plan))),
+        }
+    }
     /// Classify syntax provenance without evaluating the expression.
     pub(crate) fn origin(self) -> ArgumentOrigin {
         match self {

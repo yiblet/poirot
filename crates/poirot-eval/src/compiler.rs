@@ -26,7 +26,7 @@ pub struct RegistryIdentity {
 impl Default for RegistryIdentity {
     fn default() -> Self {
         Self {
-            builtin_contract_version: 4,
+            builtin_contract_version: 6,
             extensions: None,
         }
     }
@@ -528,6 +528,7 @@ fn scalar_classification_key(
 fn executable_hash(program: &crate::bytecode::Executable) -> u64 {
     let mut hash = std::collections::hash_map::DefaultHasher::new();
     program.template.operands.hash(&mut hash);
+    program.template.aggregations.hash(&mut hash);
     program.template.reference_slots.hash(&mut hash);
     for instruction in &program.template.code {
         (

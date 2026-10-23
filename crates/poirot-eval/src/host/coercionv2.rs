@@ -28,6 +28,51 @@ impl CallHost<'_, '_> {
             coercev2_arithmetic_number(value, &mut self.session.budget)
         }
     }
+    /// Render a nonmissing scalar losslessly for UTF-16 text consumers.
+    pub(crate) fn coercev2_text_units(&mut self, value: &CellValue) -> FunctionResult<Vec<u16>> {
+        if *value == Blank {
+            return Ok(Vec::new());
+        }
+        if let Some(text) = value.text_ref() {
+            self.check_text_capacity(
+                text.len_units()
+                    .checked_mul(2)
+                    .ok_or_else(|| self.budget_exceeded())?,
+            )?;
+            self.check_values_capacity(text.len_units())?;
+            self.charge_work(text.len_units() as u64)?;
+            let mut units = Vec::new();
+            units
+                .try_reserve_exact(text.len_units())
+                .map_err(|_| self.budget_exceeded())?;
+            // SAFETY: This unchanged TextRef emits exactly len_units members, reserved locally above.
+            units.extend(text.units());
+            return Ok(units);
+        }
+        use poirot_coercionv2::compatibility::{DeferredText, ScalarRef};
+        let text = poirot_coercionv2::compatibility::coercev2_text_argument(
+            ScalarRef::from(value),
+            false,
+            |request| match request {
+                DeferredText::Number(number) => {
+                    self.coercev2_number_to_text(number, NumericPolicy::PinnedPoi)
+                }
+                DeferredText::Missing => Err(CellError::Value.into()),
+                DeferredText::Text(text) => self.project_text(text),
+            },
+        )?;
+        let units = text.encode_utf16().count();
+        self.check_text_capacity(units.checked_mul(2).ok_or_else(|| self.budget_exceeded())?)?;
+        self.check_values_capacity(units)?;
+        self.charge_work(units as u64)?;
+        let mut output = Vec::new();
+        output
+            .try_reserve_exact(units)
+            .map_err(|_| self.budget_exceeded())?;
+        // SAFETY: units was counted from this unchanged string's UTF-16 iterator immediately above.
+        output.extend(text.encode_utf16());
+        Ok(output)
+    }
     /// Render a scalar under shared text coercion and allocation limits.
     pub(crate) fn coercev2_scalar_text(&mut self, value: &CellValue) -> FunctionResult<String> {
         coercev2_formula_text(value, &mut self.session.budget)

@@ -693,3 +693,12 @@ pub fn coercev2_weekday_option<'a, E: From<CellError>>(
     coercev2_date_integer(coercev2_number(value, NumberPolicy::Finite, deferred)?)
         .map_err(|_| CellError::Num.into())
 }
+
+/// Admit a mixed-value modern array member, exposing empty cells as numeric zero.
+/// Text representations and embedded spreadsheet errors pass through unchanged.
+pub fn coercev2_array_member(value: CellValue) -> CellValue {
+    match value {
+        CellValue::Blank => CellValue::Number(0.0),
+        value => value,
+    }
+}

@@ -57,6 +57,11 @@ impl CallHost<'_, '_> {
         index: usize,
     ) -> FunctionResult<Option<Vec<(usize, usize)>>> {
         self.prepare(index)?;
+        // External readers may supply values at physically absent source cells.
+        // Workbook membership alone cannot prove those cells are blank.
+        if self.session.cell_reader.is_some() {
+            return Ok(None);
+        }
         let (area, row, column) = match &self.operand(index).ok_or(VALUE_ERROR)?.value {
             Value::Refs(areas) | Value::SheetSpan(areas) if areas.len() == 1 => {
                 let area = *areas.first().ok_or(VALUE_ERROR)?;

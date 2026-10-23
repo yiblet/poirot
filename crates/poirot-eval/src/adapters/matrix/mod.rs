@@ -372,3 +372,9 @@ pub(crate) fn sequence(
         Err(_) => Err(host.budget_exceeded()),
     }
 }
+
+mod grouping;
+mod modern;
+mod random_trim;
+mod selection;
+pub(crate) use modern::execute as modern;

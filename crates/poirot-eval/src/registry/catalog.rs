@@ -316,6 +316,33 @@ registry! {
     "ARABIC" => Text(TextFunction::Arabic), 1, 1, FamilyControlled, REFERENCE_READS, Scalar;
     }
     excel {
+    "GROUPBY" => Matrix(MatrixFunction::Groupby), 3, 8, FamilyControlled, NUMERIC_COERCION, Array;
+    "PERCENTOF" => Matrix(MatrixFunction::Percentof), 2, 2, FamilyControlled, NUMERIC_COERCION, Scalar;
+    "REGEXTEST" => Text(TextFunction::RegexTest), 2, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseBoolean;
+    "REGEXEXTRACT" => Text(TextFunction::RegexExtract), 2, 4, FamilyControlled, NUMERIC_COERCION, RegexExtract;
+    "REGEXREPLACE" => Text(TextFunction::RegexReplace), 3, 5, FamilyControlled, NUMERIC_COERCION, ElementwiseText;
+    "TEXTBEFORE" => Text(TextFunction::TextBefore), 2, 6, FamilyControlled, REFERENCE_READS, Array;
+    "TEXTAFTER" => Text(TextFunction::TextAfter), 2, 6, FamilyControlled, REFERENCE_READS, Array;
+    "TEXTSPLIT" => Text(TextFunction::TextSplit), 2, 6, FamilyControlled, REFERENCE_READS, Array;
+    "ARRAYTOTEXT" => Text(TextFunction::ArrayToText), 1, 2, FamilyControlled, REFERENCE_READS, Scalar;
+    "VALUETOTEXT" => Text(TextFunction::ValueToText), 1, 2, FamilyControlled, REFERENCE_READS, Array;
+    "HSTACK" => Matrix(MatrixFunction::Hstack), 1, 255, FamilyControlled, REFERENCE_READS, Array;
+    "VSTACK" => Matrix(MatrixFunction::Vstack), 1, 255, FamilyControlled, REFERENCE_READS, Array;
+    "TAKE" => Matrix(MatrixFunction::Take), 2, 3, FamilyControlled, REFERENCE_READS, Array;
+    "DROP" => Matrix(MatrixFunction::Drop), 2, 3, FamilyControlled, REFERENCE_READS, Array;
+    "CHOOSECOLS" => Matrix(MatrixFunction::Choosecols), 2, 255, FamilyControlled, REFERENCE_READS, Array;
+    "CHOOSEROWS" => Matrix(MatrixFunction::Chooserows), 2, 255, FamilyControlled, REFERENCE_READS, Array;
+    "EXPAND" => Matrix(MatrixFunction::Expand), 2, 4, FamilyControlled, REFERENCE_READS, Array;
+    "FILTER" => Matrix(MatrixFunction::Filter), 2, 3, FamilyControlled, REFERENCE_READS, Array;
+    "SORT" => Matrix(MatrixFunction::Sort), 1, 4, FamilyControlled, REFERENCE_READS, Array;
+    "SORTBY" => Matrix(MatrixFunction::Sortby), 2, 255, FamilyControlled, REFERENCE_READS, Array;
+    "UNIQUE" => Matrix(MatrixFunction::Unique), 1, 3, FamilyControlled, REFERENCE_READS, Array;
+    "TOCOL" => Matrix(MatrixFunction::Tocol), 1, 3, FamilyControlled, REFERENCE_READS, Array;
+    "TOROW" => Matrix(MatrixFunction::Torow), 1, 3, FamilyControlled, REFERENCE_READS, Array;
+    "WRAPCOLS" => Matrix(MatrixFunction::Wrapcols), 2, 3, FamilyControlled, REFERENCE_READS, Array;
+    "WRAPROWS" => Matrix(MatrixFunction::Wraprows), 2, 3, FamilyControlled, REFERENCE_READS, Array;
+    "RANDARRAY" => Matrix(MatrixFunction::Randarray), 0, 5, FamilyControlled, RANDOM_NUMERIC, RandomArray;
+    "TRIMRANGE" => Matrix(MatrixFunction::Trimrange), 1, 3, FamilyControlled, NUMERIC_COERCION, TrimRange;
     "SEQUENCE" => Matrix(MatrixFunction::Sequence), 1, 4, FamilyControlled, NUMERIC_COERCION, Sequence;
     "ANCHORARRAY" => Reference(ReferenceFunction::AnchorArray), 1, 1, FamilyControlled, REFERENCE_READS, SpillRange;
 

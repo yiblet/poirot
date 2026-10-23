@@ -266,7 +266,8 @@ family_adapter!(
             helper,
             parameters.0
         ),
-        None => matrix::sequence(
+        None => matrix::modern(
+            function,
             context.session,
             context.target.sheet,
             context.target.address,

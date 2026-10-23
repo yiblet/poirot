@@ -9,8 +9,12 @@
 //! slicing rules.
 /// Unicode15 full-case mapping with contextual final sigma.
 pub mod java_case;
+/// Modern delimiter selection, splitting, and text serialization.
+pub mod modern;
 /// NUMBERVALUE parsing with spreadsheet/source failure separation.
 pub mod numeric;
+/// Bounded PCRE2 matching, extraction and replacement.
+pub mod regex;
 /// Allocation-free UTF-16 selection and output-reservation plans.
 pub mod units;
 

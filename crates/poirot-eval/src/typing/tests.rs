@@ -28,6 +28,9 @@ fn representative_successful_expression_results_belong_to_their_possible_types()
     sheet.set_value("A1".parse().unwrap(), 2.).unwrap();
     sheet.set_value("A2".parse().unwrap(), "text").unwrap();
     let formulas = [
+        "RANDARRAY(2,3)",
+        "TRIMRANGE(A1:A2)",
+        "TRIMRANGE({1,2})",
         "2",
         "\"text\"",
         "TRUE",
@@ -100,4 +103,57 @@ fn effects_join_is_a_least_upper_bound_with_opaque_subsuming_volatile() {
             }
         }
     }
+}
+
+#[test]
+fn random_array_and_trim_geometry_effects_and_channels_are_truthful() {
+    for (formula, rows, columns) in [
+        ("RANDARRAY()", Some(1), Some(1)),
+        ("RANDARRAY(2,3)", Some(2), Some(3)),
+        ("RANDARRAY(A1,3)", None, Some(3)),
+    ] {
+        let syntax = poirot_parsing::formula::parse_formula(formula).unwrap();
+        let compiled = crate::bytecode::compile(&syntax).unwrap();
+        let properties = compiled.typing.root().unwrap();
+        assert_eq!(properties.shape.rows.map(std::num::NonZeroU32::get), rows);
+        assert_eq!(
+            properties.shape.columns.map(std::num::NonZeroU32::get),
+            columns
+        );
+        assert_eq!(properties.result.array, K::NUMBER);
+        assert!(
+            properties
+                .effects
+                .possible_reads
+                .contains(DependencyPolicy::RANDOM_READS)
+        );
+        assert!(
+            properties
+                .effects
+                .possible_reads
+                .contains(DependencyPolicy::NUMERIC_COERCION)
+        );
+        // Profile-only calls retain the existing unresolved-binding opacity.
+        assert_eq!(properties.effects.external, ExternalBehavior::Opaque);
+    }
+    for (formula, reference) in [("TRIMRANGE(A1:A2)", true), ("TRIMRANGE({1,2})", false)] {
+        let syntax = poirot_parsing::formula::parse_formula(formula).unwrap();
+        let compiled = crate::bytecode::compile(&syntax).unwrap();
+        let properties = compiled.typing.root().unwrap();
+        assert_eq!(!properties.result.multi_reference.is_empty(), reference);
+        // A reference expression can itself fail, and trimming a scalar error
+        // has an array channel, so the joined compiled contract admits both.
+        assert!(!properties.result.array.is_empty());
+        assert_eq!(properties.shape, S::UNKNOWN);
+    }
+}
+
+#[test]
+fn trim_result_rule_preserves_a_proven_reference_channel() {
+    let reference = crate::registry::ResultRule::TrimRange.apply(&[T::multi_reference(K::ANY)]);
+    assert!(!reference.multi_reference.is_empty());
+    assert!(reference.array.is_empty());
+    let array = crate::registry::ResultRule::TrimRange.apply(&[T::array(K::ANY)]);
+    assert!(!array.array.is_empty());
+    assert!(array.multi_reference.is_empty());
 }

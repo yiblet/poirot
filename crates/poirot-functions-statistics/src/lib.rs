@@ -10,6 +10,8 @@
 use poirot_functions_core::CellError;
 
 mod aggregate;
+mod grouped;
+pub use grouped::{BuiltinAggregator, count_member, median};
 mod commons_gamma;
 mod distribution;
 mod inverse_erf;

@@ -11,6 +11,22 @@ impl Session<'_> {
         name: TextFunction,
         args: ArgumentsRef<'_>,
     ) -> EvalResult<Value> {
+        if matches!(
+            name,
+            TextFunction::RegexTest | TextFunction::RegexExtract | TextFunction::RegexReplace
+        ) {
+            return adapters::text::execute_regex(name, self, s, at, args);
+        }
+        if matches!(
+            name,
+            TextFunction::TextBefore
+                | TextFunction::TextAfter
+                | TextFunction::TextSplit
+                | TextFunction::ArrayToText
+                | TextFunction::ValueToText
+        ) {
+            return adapters::text::execute_modern(name, self, s, at, args);
+        }
         // CODE's documented numeric contract is independent of text indexing policy.
         if name == TextFunction::Code
             && self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
@@ -241,7 +257,15 @@ impl Session<'_> {
             | TextFunction::Lower
             | TextFunction::Upper
             | TextFunction::Rept
-            | TextFunction::Code => return Err(VALUE_ERROR.into()),
+            | TextFunction::Code
+            | TextFunction::TextBefore
+            | TextFunction::TextAfter
+            | TextFunction::TextSplit
+            | TextFunction::ArrayToText
+            | TextFunction::ValueToText
+            | TextFunction::RegexTest
+            | TextFunction::RegexExtract
+            | TextFunction::RegexReplace => return Err(VALUE_ERROR.into()),
         })
     }
 }

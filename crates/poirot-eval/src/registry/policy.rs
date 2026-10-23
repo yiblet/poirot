@@ -42,6 +42,8 @@ impl DependencyPolicy {
     pub const RANDOM_READS: Self = Self::REFERENCE_READS
         .union(Self::SEED)
         .union(Self::POSITION);
+    /// Random draws plus locale/time-sensitive numeric option coercion.
+    pub const RANDOM_NUMERIC: Self = Self::RANDOM_READS.union(Self::NUMERIC_COERCION);
     /// Combine possible dependency categories.
     pub const fn union(self, other: Self) -> Self {
         Self(self.0 | other.0)

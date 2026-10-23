@@ -32,21 +32,10 @@ fn rendered(h: &mut TextHost<'_, '_>, s: &ScalarOperand) -> Result<Vec<u16>, Tex
             Err(h.source_fault("POI string coercion rejects MissingArgEval"))
         };
     }
-    if matches!(s.value, Blank) {
-        return Ok(Vec::new());
-    }
-    if let Some(text) = s.value.text_ref() {
-        let len = text.len_units();
-        let r = plan(h, units::Reservation::units(len, len))?;
-        reserve(h, r)?;
-        return Ok(text.units().collect());
-    }
-    // Numeric conversion admits its bounded scalar operation and actual output.
-    let utf8 = h.coercev2_text_scalar(s, false)?;
-    let len = utf8.encode_utf16().count();
-    let r = plan(h, units::Reservation::units(len, len))?;
-    reserve(h, r)?;
-    Ok(utf8.encode_utf16().collect())
+    h.host
+        .get_mut()
+        .coercev2_text_units(&s.value)
+        .map_err(failure)
 }
 fn coercev2_text_integer(h: &mut TextHost<'_, '_>, index: usize) -> Result<i32, TextFailure> {
     let s = h.single(&index)?;
