@@ -16,7 +16,7 @@ use poirot_parsing::formula::{BinaryOp, Expr, UnaryOp};
 use std::sync::Arc;
 
 const LIMIT: usize = 100_000;
-const DEPTH: usize = 128;
+pub(crate) const DEPTH: usize = 128;
 const NONE: u32 = u32::MAX;
 
 /// Structural or resource failure while producing an executable program.
@@ -165,6 +165,8 @@ pub struct ReferenceBindings {
 /// shared only when this complete binding identity agrees, not just their opcodes.
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Executable {
+    /// Possible root and intermediate properties inferred during preparation.
+    pub typing: crate::typing::FormulaTyping,
     /// Shared instruction and literal layout.
     pub template: Template,
     /// Bound call identities indexed by invocation instructions.
@@ -246,6 +248,7 @@ fn compile_inner(
     let mut writer = Writer {
         output: Compiled {
             executable: Arc::new(Executable {
+                typing: crate::typing::FormulaTyping::default(),
                 template: Template {
                     code: Vec::with_capacity(sizes.code),
                     operands: Vec::with_capacity(sizes.text),
@@ -274,6 +277,7 @@ fn compile_inner(
     {
         return Err(CompileError::InvalidReference);
     }
+    writer.output.typing = crate::typing::infer(expression, &writer.output)?;
     Ok(writer.output)
 }
 

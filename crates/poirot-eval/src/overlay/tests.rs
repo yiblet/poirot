@@ -121,7 +121,7 @@ fn formula_replacement_and_return_to_base_drop_redundant_writes() {
     assert_eq!(overlay.edited_cells(), 0);
 }
 #[test]
-fn volatile_cells_and_dependents_run_again_but_unrelated_cells_reuse() {
+fn unchanged_captured_randomness_and_dependents_reuse() {
     let mut book = book();
     let s = book.sheet_mut(0).unwrap();
     s.set_formula(at("E1").address, "RAND()").unwrap();
@@ -135,8 +135,8 @@ fn volatile_cells_and_dependents_run_again_but_unrelated_cells_reuse() {
         .unwrap();
     let mut evaluation = overlay.evaluation(&context).unwrap();
     evaluation.outputs(&[at("F1"), at("D1")]).unwrap();
-    assert_eq!(evaluation.usage().formula_executions, 2);
-    assert_eq!(evaluation.usage().external_cache_hits, 1);
+    assert_eq!(evaluation.usage().formula_executions, 0);
+    assert_eq!(evaluation.usage().external_cache_hits, 2);
 }
 #[test]
 fn snapshots_preserve_sources_programs_results_and_dependency_invalidation() {
@@ -677,7 +677,7 @@ fn active_dependency_trace_preserves_reads_before_and_after_nested_formulas() {
 }
 
 #[test]
-fn volatile_root_index_tracks_branch_replacement_and_snapshot_restore() {
+fn captured_random_dependencies_track_branch_replacement_and_snapshot_restore() {
     let mut book = book();
     let sheet = book.sheet_mut(0).unwrap();
     sheet.set_value(at("A2").address, false).unwrap();
@@ -702,7 +702,7 @@ fn volatile_root_index_tracks_branch_replacement_and_snapshot_restore() {
     {
         let mut evaluation = restored.evaluation(&context).unwrap();
         evaluation.cell(at("F1")).unwrap();
-        assert_eq!(evaluation.usage().formula_executions, 2);
+        assert_eq!(evaluation.usage().formula_executions, 0);
     }
     restored.set_value(at("A2"), false).unwrap();
     assert_eq!(value(&mut restored, "F1", &context), CellValue::Number(8.));
@@ -918,13 +918,19 @@ fn lookup_indices_expire_for_context_sensitive_formula_candidates() {
         })
         .build()
         .unwrap();
-    let context = EvaluationContext::default();
+    let mut context = EvaluationContext::default();
     value(&mut overlay, "E1", &context);
     overlay.set_value(at("D1"), 100.).unwrap();
     let mut next = overlay.evaluation(&context).unwrap();
     assert_eq!(next.cell(at("E1")).unwrap(), CellValue::Number(500.));
-    assert_eq!(next.usage().lookup_prefix_scans, 50);
-    assert_eq!(next.usage().lookup_prefix_hits, 0);
+    assert_eq!(next.usage().lookup_prefix_scans, 0);
+    assert_eq!(next.usage().lookup_prefix_hits, 1);
+    drop(next);
+    context.as_of_time += Duration::from_secs(1);
+    let mut changed = overlay.evaluation(&context).unwrap();
+    assert_eq!(changed.cell(at("E1")).unwrap(), CellValue::Number(500.));
+    assert_eq!(changed.usage().lookup_prefix_scans, 50);
+    assert_eq!(changed.usage().lookup_prefix_hits, 0);
 }
 
 #[test]
@@ -1073,11 +1079,11 @@ fn numeric_locale_identity_and_consumption_survive_retained_snapshot() {
 fn raw_snapshot_restore_rejects_previous_execution_semantics_versions() {
     let workbook = book();
     let overlay = Overlay::with_workbook(&workbook).build().unwrap();
-    for previous in 8..48 {
+    for previous in 8..49 {
         let mut bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
         // Payload's first field is its small postcard varint version.
         let version = bytes.first_mut().unwrap();
-        assert_eq!(*version, 48);
+        assert_eq!(*version, 49);
         *version = previous;
         let snapshot = postcard::from_bytes(&bytes).unwrap();
         assert!(

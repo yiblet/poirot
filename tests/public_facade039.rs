@@ -126,17 +126,23 @@ fn overlay_recursively_invalidates_and_applies_owned_cached_changes() {
     assert!(!evaluation.result_changes().unwrap().is_empty());
 }
 #[test]
-fn volatile_cells_are_reexecuted_for_each_evaluation_instance() {
+fn captured_random_cells_reuse_until_the_seed_changes() {
     let book = formula_book(&[("A1", "RAND()"), ("B1", "A1+1"), ("C1", "8")]);
-    let context = poirot::EvaluationContext::default();
+    let mut context = poirot::EvaluationContext::default();
     let mut overlay = poirot::Overlay::with_workbook(book.model())
         .build()
         .unwrap();
     overlay.evaluation(&context).unwrap().all().unwrap();
     let mut evaluation = overlay.evaluation(&context).unwrap();
     evaluation.outputs(&[target("B1"), target("C1")]).unwrap();
-    assert_eq!(evaluation.usage().formula_executions, 2);
-    assert_eq!(evaluation.usage().external_cache_hits, 1);
+    assert_eq!(evaluation.usage().formula_executions, 0);
+    assert_eq!(evaluation.usage().external_cache_hits, 2);
+    drop(evaluation);
+    context.randomness_seed = context.randomness_seed.wrapping_add(1);
+    let mut changed = overlay.evaluation(&context).unwrap();
+    changed.outputs(&[target("B1"), target("C1")]).unwrap();
+    assert_eq!(changed.usage().formula_executions, 2);
+    assert_eq!(changed.usage().external_cache_hits, 1);
 }
 #[test]
 fn formatting_context_and_text_policy_invalidate_actual_consumers() {

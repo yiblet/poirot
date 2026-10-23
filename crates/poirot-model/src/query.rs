@@ -76,7 +76,7 @@ pub struct DenseBudget {
 /// These counters describe query work, not elapsed time or CPU instructions.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct QueryCounters {
-    /// Sparse row-index seeks performed by this query.
+    /// Sparse row-index or row-page seeks performed by this query.
     pub row_seeks: u64,
     /// Sparse column-index seeks performed by this query.
     pub column_seeks: u64,

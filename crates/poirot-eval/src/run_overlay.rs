@@ -143,7 +143,9 @@ impl<'a> EffectiveWorkbook<'a> {
     }
 }
 
-/// Row seeks and visits describe the effective union, exactly as a staged worksheet.
+/// Borrowed effective cells with counters for the traversal actually performed.
+/// Column queries count source page seeks and visits, including merge prefetches;
+/// rectangular queries seek occupied rows and visit the effective union.
 /// Both ranges borrow their source. No retained membership index or per-read allocation.
 pub struct EffectiveStoredCells<'a> {
     baseline: poirot_model::WorksheetCells<'a>,
@@ -214,17 +216,12 @@ fn advance<'a>(
         range.next()
     }
 }
-/// Merge baseline and override column reads while charging effective row seeks.
+/// Merge baseline and override column cursors without a separate accounting walk.
 struct ColumnTraversal<'a> {
     base: poirot_model::ColumnCells<'a>,
-    input: Option<InputRange<'a>>,
+    input: Option<poirot_model::ColumnCells<'a, Cell, 16, 2>>,
     base_next: Option<(&'a CellAddress, &'a Cell)>,
     input_next: Option<(&'a CellAddress, &'a Cell)>,
-    rows: std::iter::Peekable<poirot_model::OccupiedRows<'a>>,
-    input_rows: Option<std::iter::Peekable<InputRange<'a>>>,
-    column: u32,
-    last: u32,
-    last_row: Option<u32>,
     started: bool,
     finished: bool,
 }
@@ -236,59 +233,14 @@ impl<'a> ColumnTraversal<'a> {
     ) -> Self {
         Self {
             base: base.column(area.first.col, area.first.row, area.last.row),
-            input: input.map(|c| c.cells().range(area.first..=area.last)),
+            input: input.map(|c| {
+                c.cells()
+                    .column(area.first.col, area.first.row, area.last.row)
+            }),
             base_next: None,
             input_next: None,
-            rows: base.occupied_rows(area.first.row, area.last.row).peekable(),
-            input_rows: input.map(|c| {
-                c.cells()
-                    .range(
-                        CellAddress {
-                            row: area.first.row,
-                            col: 0,
-                        }..=CellAddress {
-                            row: area.last.row,
-                            col: poirot_model::MAX_COLUMNS - 1,
-                        },
-                    )
-                    .peekable()
-            }),
-            column: area.first.col,
-            last: area.last.row,
-            last_row: None,
             started: false,
             finished: false,
-        }
-    }
-    fn advance_input(&mut self) -> Option<(&'a CellAddress, &'a Cell)> {
-        self.input.as_mut()?.find(|(a, _)| a.col == self.column)
-    }
-    fn charge_rows(&mut self, through: u32, counters: &mut QueryCounters) {
-        loop {
-            let base = self.rows.peek().copied();
-            let input = self
-                .input_rows
-                .as_mut()
-                .and_then(|r| r.peek().map(|(a, _)| a.row));
-            let row = match (base, input) {
-                (Some(a), Some(b)) => a.min(b),
-                (Some(a), None) | (None, Some(a)) => a,
-                (None, None) => break,
-            };
-            if row > through {
-                break;
-            }
-            if base == Some(row) {
-                self.rows.next();
-            }
-            if let Some(rows) = &mut self.input_rows {
-                while rows.peek().is_some_and(|(a, _)| a.row == row) {
-                    rows.next();
-                }
-            }
-            self.last_row = Some(row);
-            counters.row_seeks += 1;
-            counters.column_seeks += 1;
         }
     }
     fn next(&mut self, counters: &mut QueryCounters) -> Option<(&'a CellAddress, &'a Cell)> {
@@ -298,12 +250,12 @@ impl<'a> ColumnTraversal<'a> {
         if !self.started {
             self.started = true;
             self.base_next = self.base.next();
-            self.input_next = self.advance_input();
+            self.input_next = self.input.as_mut().and_then(Iterator::next);
         }
         let selected = match (self.base_next, self.input_next) {
             (Some(base), Some(input)) if base.0 == input.0 => {
                 self.base_next = self.base.next();
-                self.input_next = self.advance_input();
+                self.input_next = self.input.as_mut().and_then(Iterator::next);
                 Some(input)
             }
             (Some(base), Some(input)) if base.0 < input.0 => {
@@ -311,7 +263,7 @@ impl<'a> ColumnTraversal<'a> {
                 Some(base)
             }
             (_, Some(input)) => {
-                self.input_next = self.advance_input();
+                self.input_next = self.input.as_mut().and_then(Iterator::next);
                 Some(input)
             }
             (Some(base), None) => {
@@ -320,15 +272,14 @@ impl<'a> ColumnTraversal<'a> {
             }
             (None, None) => None,
         };
-        self.charge_rows(selected.map_or(self.last, |(a, _)| a.row), counters);
-        if selected.is_some() {
-            counters.cells_visited += 1;
-        } else {
-            self.finished = true;
-            if self.last_row != Some(self.last) {
-                counters.row_seeks += 1;
-            }
+        *counters = self.base.counters();
+        if let Some(input) = &self.input {
+            let input = input.counters();
+            counters.row_seeks = counters.row_seeks.saturating_add(input.row_seeks);
+            counters.column_seeks = counters.column_seeks.saturating_add(input.column_seeks);
+            counters.cells_visited = counters.cells_visited.saturating_add(input.cells_visited);
         }
+        self.finished = selected.is_none();
         selected
     }
 }
@@ -356,7 +307,6 @@ impl<'a> Iterator for EffectiveStoredCells<'a> {
                         return Some((item.0, source));
                     }
                 }
-                self.counters.cells_visited -= 1;
             }
         }
         loop {
@@ -488,6 +438,54 @@ impl<'a> Iterator for EffectiveStoredCells<'a> {
 mod page_column_tests {
     use super::*;
     #[test]
+    fn column_counters_include_source_prefetch_overrides_and_deleted_visits() {
+        let mut book = Workbook::new();
+        let sheet = book.add_sheet("S").unwrap();
+        for row in [0, 32] {
+            sheet.set_value(CellAddress { row, col: 0 }, 1.).unwrap();
+        }
+        // Unselected columns occupy unrelated pages, which the column index skips.
+        sheet
+            .set_value(CellAddress { row: 50, col: 8 }, 99.)
+            .unwrap();
+        let mut input = RunInputs::new(
+            &book,
+            [
+                (0, CellAddress { row: 0, col: 0 }, CellValue::Number(2.)),
+                (0, CellAddress { row: 16, col: 0 }, CellValue::Number(3.)),
+                (0, CellAddress { row: 40, col: 2 }, CellValue::Number(99.)),
+            ],
+            3,
+            std::sync::Arc::new(()),
+        )
+        .unwrap();
+        input.deleted.insert((0, CellAddress { row: 32, col: 0 }));
+        let area = RangeMembership::new(
+            0,
+            CellAddress { row: 0, col: 0 },
+            CellAddress { row: 63, col: 0 },
+        )
+        .unwrap();
+        let mut cells = EffectiveWorkbook::new(&book, Some(&input))
+            .stored(area)
+            .unwrap();
+        assert_eq!(cells.next().unwrap().1.value, CellValue::Number(2.));
+        // Merging A1 consumes both sources and prefetches A33/A17. That is
+        // two column bound seeks, four loaded pages, four physical stored visits.
+        let work = QueryCounters {
+            row_seeks: 4,
+            column_seeks: 2,
+            cells_visited: 4,
+            key_lookups: 0,
+        };
+        assert_eq!(cells.counters(), work);
+        assert_eq!(cells.next().unwrap().1.value, CellValue::Number(3.));
+        assert!(cells.next().is_none());
+        assert!(cells.next().is_none());
+        // Hiding A33 and replacing A1 cannot undo physical source visits.
+        assert_eq!(cells.counters(), work);
+    }
+    #[test]
     fn column_tiles_preserve_overlay_precedence_and_sparse_query_counters() {
         let mut book = Workbook::new();
         let sheet = book.add_sheet("S").unwrap();
@@ -527,7 +525,9 @@ mod page_column_tests {
                     let a = actual.next();
                     let b = expected.next();
                     assert_eq!(a, b);
-                    assert_eq!(actual.counters(), expected.counters());
+                    // Value order agrees although column pages and worksheet row
+                    // queries perform different index operations.
+                    assert_eq!(actual.counters().key_lookups, 0);
                     if a.is_none() {
                         break;
                     }

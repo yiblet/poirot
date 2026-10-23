@@ -11,9 +11,15 @@ pub enum EvaluationStrategy {
 }
 /// Conservative flags for settings or workbook services a selected handler may use.
 /// These flags are not a trace of actual argument or cell reads.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(
+    Clone, Copy, Debug, Default, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize,
+)]
 pub struct DependencyPolicy(u16);
 impl DependencyPolicy {
+    /// No possible host dependency.
+    pub const NONE: Self = Self(0);
+    /// May consume execution policy, text/number coercion, or formatting settings.
+    pub const HOST_POLICY: Self = Self(512);
     /// May consume argument values.
     pub const ARGUMENTS: Self = Self(1);
     /// May consume the formula's coordinates.
@@ -103,6 +109,7 @@ mod tests {
             DependencyPolicy::NAMESPACE,
             DependencyPolicy::SEED,
             DependencyPolicy::CURRENCY,
+            DependencyPolicy::HOST_POLICY,
         ];
         for (index, category) in categories.iter().enumerate() {
             assert_eq!(category.0.count_ones(), 1);

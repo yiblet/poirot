@@ -18,9 +18,11 @@ mod order;
 mod paired;
 mod percent_rank;
 mod poisson_mass;
+mod reduction;
 
 // Statistical reduction over already collected numeric operands.
 pub use aggregate::{aggregate, aggregate_with_policy};
+pub use reduction::{NumericReduction, NumericReductionState};
 // Distribution probability/inverse kernels with optional host metering.
 pub use distribution::{
     legacy_t_dist, normal_dist, normal_dist_metered, normal_dist_source_metered, normal_inverse,

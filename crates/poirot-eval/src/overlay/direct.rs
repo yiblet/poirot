@@ -178,23 +178,25 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
         }
         let mut session = self.state.resume(&self.source, &self.context);
         let result = evaluate(&mut session);
-        // The local memo grows monotonically between edits. A cache-only request
-        // needs no rescan of all previously published dependencies and spill roots.
-        if result.is_ok() && session.cache.len() != self.completed.len() {
-            self.completed.extend(session.cache.keys().copied());
-            // Scalar results must also clear saved children from an earlier spill policy.
-            self.spill_resets.extend(
-                session
-                    .cache
-                    .keys()
-                    .filter(|&&(sheet, at)| {
-                        self.source
-                            .effective()
-                            .cell(sheet, at)
-                            .is_some_and(|c| c.formula.is_some())
-                    })
-                    .copied(),
-            );
+        // Admissions are journaled at the shared memo boundary, including spill
+        // children. Failed calls retain their local memo but publish no changes.
+        if let Some(admitted) = &mut session.admitted {
+            if result.is_ok() {
+                for key in admitted.drain(..) {
+                    self.completed.insert(key);
+                    // Scalar formulas also clear saved children from earlier spills.
+                    if self
+                        .source
+                        .effective()
+                        .cell(key.0, key.1)
+                        .is_some_and(|cell| cell.formula.is_some())
+                    {
+                        self.spill_resets.insert(key);
+                    }
+                }
+            } else {
+                admitted.clear();
+            }
         }
         self.state = Continuation::capture(session);
         if let Err(failure) = &result {

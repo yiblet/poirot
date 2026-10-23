@@ -94,11 +94,11 @@ fn random_identity_survives_order_batching_cache_warmth_and_snapshot_restore() {
                 Overlay::from_snapshot(postcard::from_bytes(&bytes).unwrap()).unwrap();
             let mut restored = restored_state.attach(&restored_workbook).unwrap();
             assert_eq!(requests(&mut restored, &context, &order, batch), expected);
-            // Refresh volatility at a new boundary without changing its explicit identity.
+            // A new boundary retains results whose captured random identity is unchanged.
             let mut evaluation = restored.evaluation(&context).unwrap();
             evaluation.outputs(&targets).unwrap();
-            assert_eq!(evaluation.usage().formula_executions, 3);
-            assert_eq!(evaluation.usage().external_cache_hits, 1);
+            assert_eq!(evaluation.usage().formula_executions, 0);
+            assert_eq!(evaluation.usage().external_cache_hits, 4);
         }
     }
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();

@@ -21,7 +21,7 @@ pub(crate) enum AdmissionOrder {
 }
 
 impl Session<'_> {
-    /// Observe and admit a call before recording its selected-handler context guards.
+    /// Observe and admit a call; operand and handler execution record actual context reads.
     pub(crate) fn admit_resolved_call(
         &mut self,
         call: ResolvedCall<'_>,
@@ -41,9 +41,6 @@ impl Session<'_> {
                 self.observe_resolved_call(call)?;
             }
         }
-        if let Some(invocation) = call.invocation {
-            self.read_builtin_context(invocation.handler);
-        }
         Ok(())
     }
 
@@ -54,27 +51,6 @@ impl Session<'_> {
             observer.consumed(invocation)?;
         }
         Ok(())
-    }
-
-    /// Record conservative context categories for an actually selected builtin.
-    pub(crate) fn read_builtin_context(&mut self, handler: FunctionId) {
-        if !matches!(handler, FunctionId::Date(_)) {
-            let dependencies = handler.descriptor().dependencies;
-            let mut context: Option<DependencyPolicy> = None;
-            for field in [
-                DependencyPolicy::TIME,
-                DependencyPolicy::LOCALIZATION,
-                DependencyPolicy::DATE_SYSTEM,
-                DependencyPolicy::POSITION,
-            ] {
-                if dependencies.contains(field) {
-                    context = Some(context.map_or(field, |previous| previous.union(field)));
-                }
-            }
-            if let Some(context) = context {
-                self.read(DependencyRead::Context(context));
-            }
-        }
     }
 }
 

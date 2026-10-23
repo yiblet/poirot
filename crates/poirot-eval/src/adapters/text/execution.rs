@@ -85,6 +85,13 @@ impl Session<'_> {
                 Ok(format) => format,
                 Err(_) => return Ok(err(VALUE_ERROR)),
             };
+            if format
+                .sections()
+                .iter()
+                .any(|section| section.kind() == poirot_format::SectionKind::DateTime)
+            {
+                self.read(DependencyRead::ContextField(run::ContextRead::DateSystem));
+            }
             let context = poirot_format::FormatRenderContext {
                 date_system: self.workbook.date_system,
                 width: None,

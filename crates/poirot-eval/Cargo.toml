@@ -7,7 +7,7 @@ license.workspace = true
 repository.workspace = true
 readme = "README.md"
 description = "Spreadsheet formula compilation and evaluation"
-include = ["/src/**", "/README.md"]
+include = ["/src/**", "/README.md", "/FORMULA_TYPES.md"]
 
 [dependencies]
 poirot-functions-dates = { version = "0.1.0", path = "../poirot-functions-dates" }

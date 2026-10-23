@@ -153,7 +153,7 @@ fn exact_topology_and_policy_checks_detect_direct_mutation() {
     assert!(!plan.matches(&original, &other_policy));
     other_policy = policy.clone();
     other_policy.registry = RegistryIdentity {
-        builtin_contract_version: 2,
+        builtin_contract_version: RegistryIdentity::default().builtin_contract_version + 1,
         ..RegistryIdentity::default()
     };
     assert!(!plan.matches(&original, &other_policy));
@@ -166,7 +166,7 @@ fn standalone_policy_mismatch_is_operational_and_parse_failure_keeps_text_budget
     let plan = compiler.compile_workbook(&workbook, &policy);
     let changed = EvaluationPolicy {
         registry: RegistryIdentity {
-            builtin_contract_version: 2,
+            builtin_contract_version: RegistryIdentity::default().builtin_contract_version + 1,
             ..RegistryIdentity::default()
         },
         ..policy.clone()

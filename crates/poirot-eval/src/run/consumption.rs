@@ -52,7 +52,7 @@ pub enum DependencyRead {
         /// Inclusive bottom-right boundary.
         last: CellAddress,
     },
-    /// Conservative context guards for a handler that was actually selected.
+    /// Explicit coarse context read; normal builtin execution reports consumed fields.
     Context(crate::registry::DependencyPolicy),
     /// A specific context field consumed by the executed operation.
     ContextField(ContextRead),

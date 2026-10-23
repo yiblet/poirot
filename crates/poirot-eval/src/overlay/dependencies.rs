@@ -37,6 +37,15 @@ pub(crate) struct Dependencies {
 }
 impl Dependencies {
     fn cell(&mut self, (sheet, at): Key) {
+        // Membership already invalidates every cell in this rectangle, including
+        // missing cells. Keep outside reads such as spill owners as point edges.
+        if self
+            .ranges
+            .last()
+            .is_some_and(|range| range.contains(sheet, at))
+        {
+            return;
+        }
         if let Some(run) = self.point_runs.last_mut() {
             if run.contains(sheet, at) {
                 return;
@@ -173,22 +182,16 @@ impl crate::DependencyReadSink for Reads {
                 }
             }
             DependencyRead::Volatile(_) => trace.volatile = true,
-            DependencyRead::Random(_) => {
-                trace.context.seed = true;
-                trace.volatile = true;
-            }
+            DependencyRead::Random(_) => trace.context.seed = true,
             DependencyRead::Context(policy) => {
                 use crate::registry::DependencyPolicy as P;
                 trace.context.as_of |= policy.contains(P::TIME);
+                trace.context.date_system |= policy.contains(P::DATE_SYSTEM);
                 trace.context.utc_offset |= policy.contains(P::LOCALIZATION);
                 trace.context.date_order |= policy.contains(P::LOCALIZATION);
-                trace.volatile |= policy.contains(P::TIME);
             }
             DependencyRead::ContextField(field) => match field {
-                crate::run::ContextRead::AsOf => {
-                    trace.context.as_of = true;
-                    trace.volatile = true;
-                }
+                crate::run::ContextRead::AsOf => trace.context.as_of = true,
                 crate::run::ContextRead::UtcOffset => trace.context.utc_offset = true,
                 crate::run::ContextRead::DateOrder => trace.context.date_order = true,
                 crate::run::ContextRead::DateSystem => trace.context.date_system = true,
@@ -223,6 +226,7 @@ pub(crate) struct Cache {
     reverse: CellMap<CellSet>,
     always_dirty: CellSet,
     ranges: RangeIndex,
+    ranges_dirty: bool,
 }
 impl Cache {
     /// Admit a complete batch before publishing values, indexes, and spill cleanup together.
@@ -267,15 +271,11 @@ impl Cache {
         for (key, _) in &staged {
             key.1.validate().map_err(|_| EvaluationFailure::StalePlan)?;
         }
-        let changed = !staged.is_empty();
         for (key, entry) in staged {
             self.insert(key, entry)
                 .map_err(|_| EvaluationFailure::StalePlan)?;
         }
         self.spill_resets.extend(spill_resets);
-        if changed {
-            self.rebuild_ranges();
-        }
         Ok(())
     }
     /// Look up a retained result without evaluating it.
@@ -290,6 +290,8 @@ impl Cache {
     pub fn remove(&mut self, key: Key) {
         self.always_dirty.remove(&key);
         if let Some(entry) = self.sheets.get_mut(&key.0).and_then(|s| s.remove(&key.1)) {
+            self.ranges_dirty |=
+                !entry.dependencies.ranges.is_empty() || !entry.dependencies.point_runs.is_empty();
             self.retained_bytes -= entry.retained_bytes();
             for dependency in &entry.dependencies.cells {
                 if let Some(readers) = self.reverse.get_mut(dependency) {
@@ -317,6 +319,8 @@ impl Cache {
             .and_then(|bytes| bytes.checked_add(entry.retained_bytes()))
             .ok_or_else(|| poirot_model::ModelError("cache retention size overflow".into()))?;
         self.remove(key);
+        self.ranges_dirty |=
+            !entry.dependencies.ranges.is_empty() || !entry.dependencies.point_runs.is_empty();
         self.retained_bytes = retained_bytes;
         if entry.dependencies.opaque || entry.dependencies.volatile {
             self.always_dirty.insert(key);
@@ -329,7 +333,12 @@ impl Cache {
     }
     /// Iterative traversal handles arbitrary chain lengths and cycles without stack recursion.
     pub fn invalidate(&mut self, seeds: impl IntoIterator<Item = Key>) {
+        // Publication only marks rectangle changes; build once when an edit
+        // actually needs the index rather than after every output request.
         let mut pending: Vec<_> = seeds.into_iter().collect();
+        if self.ranges_dirty && !pending.is_empty() {
+            self.rebuild_ranges();
+        }
         let mut seen = CellSet::default();
         while let Some(key) = pending.pop() {
             if !seen.insert(key) {
@@ -338,7 +347,7 @@ impl Cache {
             if let Some(readers) = self.reverse.remove(&key) {
                 pending.extend(readers);
             }
-            self.ranges.readers(key, &mut pending);
+            self.ranges.take_readers(key, &mut pending);
             self.remove(key);
         }
         self.lookup_prefixes.invalidate(&seen);
@@ -399,6 +408,7 @@ impl Cache {
     /// Rebuild the rectangle lookup after dependency traces have changed.
     pub fn rebuild_ranges(&mut self) {
         self.ranges = RangeIndex::new(&self.sheets);
+        self.ranges_dirty = false;
     }
 }
 /// Per-sheet lookup of consumers whose read rectangles contain a changed cell.
@@ -406,11 +416,13 @@ impl Cache {
 struct RangeIndex {
     sheets: BTreeMap<usize, RangeTree>,
 }
-/// Row-sorted read rectangles with subtree row bounds for pruning queries.
+/// Row-sorted read rectangles with live subtree row bounds and whole-sheet column bounds.
 #[derive(Default)]
 struct RangeTree {
     entries: Vec<(RangeMembership, Key)>,
-    max_end: Vec<u32>,
+    max_end: Vec<Option<u32>>,
+    first_col: u32,
+    last_col: u32,
 }
 impl RangeIndex {
     fn new(sheets: &BTreeMap<usize, CellStore<Cached, 16, 2>>) -> Self {
@@ -433,26 +445,41 @@ impl RangeIndex {
             }
         }
         for tree in index.sheets.values_mut() {
+            (tree.first_col, tree.last_col) = tree
+                .entries
+                .iter()
+                .fold((u32::MAX, 0), |(first, last), (range, _)| {
+                    (first.min(range.first.col), last.max(range.last.col))
+                });
             tree.entries.sort_by_key(|(range, _)| range.first.row);
-            tree.max_end.resize(tree.entries.len() * 4, 0);
+            tree.max_end.resize(tree.entries.len() * 4, None);
             tree.build(1, 0, tree.entries.len());
         }
         index
     }
-    fn readers(&self, key: Key, out: &mut Vec<Key>) {
-        if let Some(tree) = self.sheets.get(&key.0) {
+    // A matched entry can be consumed: its consumer is now pending and will
+    // propagate once through `seen`, even if other entries reach it again.
+    // Unmatched entries remain live, including column misses and row-zero reads.
+    // Invalidation removes every reached consumer, marking the index dirty; the
+    // next nonempty pass rebuilds only surviving traces. Exclusive mutable access
+    // keeps a pass synchronous, so no nested pass can observe a partial closure.
+    fn take_readers(&mut self, key: Key, out: &mut Vec<Key>) {
+        if let Some(tree) = self.sheets.get_mut(&key.0)
+            && tree.first_col <= key.1.col
+            && key.1.col <= tree.last_col
+        {
             tree.query(1, 0, tree.entries.len(), key, out);
         }
     }
 }
 impl RangeTree {
-    fn build(&mut self, node: usize, lo: usize, hi: usize) -> u32 {
+    fn build(&mut self, node: usize, lo: usize, hi: usize) -> Option<u32> {
         if lo >= hi || hi > self.entries.len() || node >= self.max_end.len() {
-            return 0;
+            return None;
         }
         if hi - lo == 1 {
             // SAFETY: The entry guard checks lo < hi <= entries.len() and node < max_end.len(); these vectors are not resized during this invocation.
-            self.max_end[node] = self.entries[lo].0.last.row;
+            self.max_end[node] = Some(self.entries[lo].0.last.row);
         } else {
             let mid = (lo + hi) / 2;
             // SAFETY: The entry guard checks lo < hi <= entries.len() and node < max_end.len(); these vectors are not resized during this invocation.
@@ -463,10 +490,10 @@ impl RangeTree {
         // SAFETY: The entry guard checks lo < hi <= entries.len() and node < max_end.len(); these vectors are not resized during this invocation.
         self.max_end[node]
     }
-    fn query(&self, node: usize, lo: usize, hi: usize, key: Key, out: &mut Vec<Key>) {
+    fn query(&mut self, node: usize, lo: usize, hi: usize, key: Key, out: &mut Vec<Key>) {
         if lo >= hi || hi > self.entries.len() || node >= self.max_end.len()
             // SAFETY: Short-circuit entry checks require lo < hi <= entries.len() and node < max_end.len() before either index is read.
-            || self.entries[lo].0.first.row > key.1.row || self.max_end[node] < key.1.row
+            || self.entries[lo].0.first.row > key.1.row || self.max_end[node].is_none_or(|end| end < key.1.row)
         {
             return;
         }
@@ -475,11 +502,17 @@ impl RangeTree {
             if self.entries[lo].0.contains(key.0, key.1) {
                 // SAFETY: Short-circuit entry checks require lo < hi <= entries.len() and node < max_end.len() before either index is read.
                 out.push(self.entries[lo].1);
+                // SAFETY: The entry guard checks node < max_end.len(); no vector is resized here.
+                self.max_end[node] = None;
             }
         } else {
             let mid = (lo + hi) / 2;
             self.query(node * 2, lo, mid, key, out);
             self.query(node * 2 + 1, mid, hi, key, out);
+            let left = self.max_end.get(node * 2).copied().flatten();
+            let right = self.max_end.get(node * 2 + 1).copied().flatten();
+            // SAFETY: The entry guard checks node < max_end.len(); recursive calls do not resize it.
+            self.max_end[node] = left.max(right);
         }
     }
 }
@@ -526,5 +559,412 @@ mod retention_overflow_tests {
         assert!(cache.insert(key, entry()).is_err());
         assert_eq!(cache.retained_bytes, usize::MAX);
         assert_eq!(cache.len(), 0);
+    }
+}
+
+#[cfg(test)]
+mod range_index_tests {
+    use super::*;
+
+    #[test]
+    fn consuming_matches_keeps_row_zero_and_column_misses_live() {
+        let a = (0, CellAddress { row: 0, col: 0 });
+        let c = (0, CellAddress { row: 0, col: 2 });
+        let reader = (1, CellAddress { row: 0, col: 0 });
+        let other = (1, CellAddress { row: 1, col: 0 });
+        let mut cache = Cache::default();
+        for (key, source) in [(reader, a), (reader, c), (other, c)] {
+            let mut deps = cache
+                .get(key)
+                .map(|e| (*e.dependencies).clone())
+                .unwrap_or_default();
+            deps.ranges
+                .push(RangeMembership::new(0, source.1, source.1).unwrap());
+            cache
+                .insert(
+                    key,
+                    Cached {
+                        value: Arc::new(1.0.into()),
+                        dependencies: Box::new(deps),
+                    },
+                )
+                .unwrap();
+        }
+        let mut index = RangeIndex::new(&cache.sheets);
+        let mut found = Vec::new();
+        // B1 lies inside global column bounds, but matches no rectangle.
+        index.take_readers((0, CellAddress { row: 0, col: 1 }), &mut found);
+        assert!(found.is_empty());
+        index.take_readers(a, &mut found);
+        assert_eq!(found, [reader]);
+        found.clear();
+        index.take_readers(a, &mut found);
+        assert!(found.is_empty());
+        index.take_readers(c, &mut found);
+        found.sort();
+        assert_eq!(found, [reader, other]);
+        found.clear();
+        index.take_readers(c, &mut found);
+        assert!(found.is_empty());
+        assert!(
+            index
+                .sheets
+                .values()
+                .all(|t| t.max_end.get(1) == Some(&None))
+        );
+
+        // A real pass removes the first reader; the second survives and its
+        // column-C entry must be reconstructed for a later independent pass.
+        cache.invalidate([a, a, reader]);
+        assert!(cache.get(reader).is_none());
+        assert!(cache.get(other).is_some());
+        cache.invalidate([c]);
+        assert_eq!(cache.len(), 0);
+    }
+
+    #[test]
+    fn duplicate_points_ranges_and_cycles_preserve_transitive_closure() {
+        let keys = (0..4)
+            .map(|row| (0, CellAddress { row, col: 0 }))
+            .collect::<Vec<_>>();
+        let mut cache = Cache::default();
+        // 0 -> 1 -> 2 -> 1 is a cycle, and 2 -> 3 closes the chain.
+        // Each arrow has both a point edge and two separate rectangle entries.
+        for (consumer, source) in [(1, 0), (2, 1), (1, 2), (3, 2)] {
+            let mut deps = cache
+                .get(keys[consumer])
+                .map(|e| (*e.dependencies).clone())
+                .unwrap_or_default();
+            deps.cells.push(keys[source]);
+            let range = RangeMembership::new(0, keys[source].1, keys[source].1).unwrap();
+            deps.ranges.push(range);
+            deps.point_runs.push(range);
+            cache
+                .insert(
+                    keys[consumer],
+                    Cached {
+                        value: Arc::new(1.0.into()),
+                        dependencies: Box::new(deps),
+                    },
+                )
+                .unwrap();
+        }
+        cache.invalidate([keys[0], keys[1], keys[0]]);
+        assert_eq!(cache.len(), 0);
+        cache.invalidate([keys[0]]);
+        assert_eq!(cache.len(), 0);
+    }
+
+    #[test]
+    fn indexed_readers_match_rectangle_membership_on_both_axes_and_sheets() {
+        // Plain inclusive inequalities form the independent rectangle oracle.
+        // Include column gaps within global bounds, points, overlapping rectangles,
+        // transposes, a blank-dependency rectangle and a second source sheet.
+        let rectangles = [
+            (0, 0, 0, 5, 0),
+            (0, 0, 3, 5, 3),
+            (0, 3, 0, 3, 5),
+            (0, 1, 1, 4, 4),
+            (0, 7, 7, 7, 7),
+            (1, 0, 0, 5, 0),
+        ];
+        let mut cache = Cache::default();
+        for (i, &(sheet, top, left, bottom, right)) in rectangles.iter().enumerate() {
+            let range = RangeMembership::new(
+                sheet,
+                CellAddress {
+                    row: top,
+                    col: left,
+                },
+                CellAddress {
+                    row: bottom,
+                    col: right,
+                },
+            )
+            .unwrap();
+            let mut dependencies = Dependencies::default();
+            if i % 2 == 0 {
+                dependencies.ranges.push(range);
+            } else {
+                dependencies.point_runs.push(range);
+            }
+            cache
+                .insert(
+                    (
+                        2,
+                        CellAddress {
+                            row: i as u32,
+                            col: 9,
+                        },
+                    ),
+                    Cached {
+                        value: Arc::new(CellValue::Number(i as f64)),
+                        dependencies: Box::new(dependencies),
+                    },
+                )
+                .unwrap();
+        }
+        for sheet in 0..4 {
+            for row in 0..10 {
+                for col in 0..10 {
+                    let mut actual = Vec::new();
+                    let mut index = RangeIndex::new(&cache.sheets);
+                    index.take_readers((sheet, CellAddress { row, col }), &mut actual);
+                    actual.sort();
+                    let expected = rectangles
+                        .iter()
+                        .enumerate()
+                        .filter_map(|(i, &(s, t, l, b, r))| {
+                            (s == sheet && t <= row && row <= b && l <= col && col <= r).then_some(
+                                (
+                                    2,
+                                    CellAddress {
+                                        row: i as u32,
+                                        col: 9,
+                                    },
+                                ),
+                            )
+                        })
+                        .collect::<Vec<_>>();
+                    assert_eq!(actual, expected, "sheet={sheet}, row={row}, col={col}");
+                }
+            }
+        }
+        let mut actual = Vec::new();
+        RangeIndex::default().take_readers((0, CellAddress { row: 0, col: 0 }), &mut actual);
+        assert!(actual.is_empty());
+    }
+}
+
+#[cfg(test)]
+mod covered_point_tests {
+    use super::*;
+
+    fn key(sheet: usize, row: u32, col: u32) -> Key {
+        (sheet, CellAddress { row, col })
+    }
+
+    fn membership(sheet: usize, top: u32, left: u32, bottom: u32, right: u32) -> RangeMembership {
+        RangeMembership::new(sheet, key(sheet, top, left).1, key(sheet, bottom, right).1).unwrap()
+    }
+
+    #[test]
+    fn suppressing_covered_reads_preserves_the_independent_dependency_union() {
+        // The oracle records explicit points plus inclusive rectangle inequalities,
+        // independently of the production compression and RangeMembership::contains.
+        let mut deps = Dependencies::default();
+        let mut points = Vec::new();
+        let mut rectangles = Vec::new();
+        for (sheet, top, left, bottom, right) in [
+            (0, 1, 1, 4, 3),
+            (0, 3, 2, 6, 5),
+            (0, 1, 6, 4, 7),
+            (1, 1, 1, 4, 3),
+        ] {
+            // Points before membership must remain safe; points after membership
+            // include overlaps, adjacent coordinates, other sheets and outside owners.
+            for at in [key(sheet, top, left), key(sheet, top, right + 1)] {
+                deps.cell(at);
+                points.push(at);
+            }
+            deps.ranges
+                .push(membership(sheet, top, left, bottom, right));
+            rectangles.push((sheet, top, left, bottom, right));
+            let old_runs = deps.point_runs.len();
+            let old_points = deps.cells.len();
+            for row in top..=bottom {
+                for col in left..=right {
+                    deps.cell(key(sheet, row, col));
+                }
+            }
+            assert_eq!(deps.point_runs.len(), old_runs);
+            assert_eq!(deps.cells.len(), old_points);
+            for at in [
+                key(sheet, 0, 0),
+                key(sheet, bottom + 1, right),
+                key(2, top, left),
+            ] {
+                deps.cell(at);
+                points.push(at);
+            }
+        }
+        for sheet in 0..4 {
+            for row in 0..9 {
+                for col in 0..10 {
+                    let at = key(sheet, row, col);
+                    let expected = points.contains(&at)
+                        || rectangles.iter().any(|&(s, t, l, b, r)| {
+                            s == sheet && t <= row && row <= b && l <= col && col <= r
+                        });
+                    let actual = deps.cells.contains(&at)
+                        || deps
+                            .ranges
+                            .iter()
+                            .chain(&deps.point_runs)
+                            .any(|r| r.contains(sheet, at.1));
+                    assert_eq!(actual, expected, "{at:?}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn older_membership_and_gaps_conservatively_keep_point_edges() {
+        let mut deps = Dependencies::default();
+        deps.ranges.push(membership(0, 1, 1, 3, 1));
+        deps.ranges.push(membership(0, 1, 3, 3, 3));
+        let old_range_point = key(0, 2, 1);
+        let gap = key(0, 2, 2);
+        deps.cell(old_range_point);
+        assert_eq!(deps.cells, vec![old_range_point]);
+        deps.cell(gap);
+        // These points may compress together, but the gap must never be dropped.
+        assert!(
+            deps.cells.contains(&gap) || deps.point_runs.iter().any(|r| r.contains(gap.0, gap.1))
+        );
+        assert!(
+            deps.cells.contains(&old_range_point)
+                || deps
+                    .point_runs
+                    .iter()
+                    .any(|r| r.contains(old_range_point.0, old_range_point.1))
+        );
+    }
+
+    #[test]
+    fn internal_compaction_keeps_external_events_and_work_identical() {
+        use crate::{DependencyReadSink, EvaluationRun, FormulaCompiler, WorkbookView};
+        /// Retain callbacks for an exact ordered comparison.
+        #[derive(Default)]
+        struct Events(Vec<ReadEvent>);
+        impl DependencyReadSink for Events {
+            fn read(&mut self, event: ReadEvent) {
+                self.0.push(event);
+            }
+        }
+        let mut book = Workbook::new();
+        let sheet = book.add_sheet("S").unwrap();
+        sheet.set_value(key(0, 0, 0).1, 3.).unwrap();
+        sheet.set_formula(key(0, 1, 0).1, "C1*2").unwrap();
+        sheet.set_value(key(0, 0, 2).1, 4.).unwrap();
+        sheet.set_formula(key(0, 0, 5).1, "SUM(A1:A3)+C1").unwrap();
+        let policy = crate::EvaluationPolicy::default();
+        let plan = FormulaCompiler::new().compile_workbook(&book, &policy);
+        let mut observed = Vec::new();
+        for with_internal in [false, true] {
+            let mut events = Events::default();
+            let mut run = EvaluationRun::new(
+                WorkbookView::new(&book, &plan, &policy).unwrap(),
+                crate::EvaluationInputs::default(),
+                crate::EvaluationBudgets::default(),
+            )
+            .unwrap()
+            .with_dependency_sink(&mut events);
+            if with_internal {
+                run.session.overlay_reads = Some(Reads::default());
+            }
+            let value = run
+                .evaluate_cell(crate::EvaluationTarget {
+                    sheet: 0,
+                    address: key(0, 0, 5).1,
+                })
+                .unwrap();
+            assert_eq!(value, CellValue::Number(15.));
+            let usage = run.finish(Ok(())).execution;
+            observed.push((events.0, usage));
+        }
+        assert_eq!(observed[0], observed[1]);
+        assert!(
+            observed[0]
+                .0
+                .iter()
+                .any(|e| matches!(e.read, DependencyRead::SparseMembership { .. }))
+        );
+        assert!(observed[0].0.iter().any(|e| e.consumer
+            == Some(crate::EvaluationTarget {
+                sheet: 0,
+                address: key(0, 0, 5).1
+            })
+            && e.read
+                == DependencyRead::Cell(crate::EvaluationTarget {
+                    sheet: 0,
+                    address: key(0, 1, 0).1
+                })));
+    }
+
+    #[test]
+    fn nested_consumers_keep_their_own_guards_and_outside_reads() {
+        use crate::DependencyReadSink;
+        let parent = key(0, 10, 10);
+        let child = key(0, 2, 1);
+        let owner = key(0, 0, 0);
+        let mut reads = Reads::default();
+        let emit = |reads: &mut Reads, consumer: Key, read| {
+            reads.read(ReadEvent {
+                consumer: Some(crate::EvaluationTarget {
+                    sheet: consumer.0,
+                    address: consumer.1,
+                }),
+                read,
+            });
+        };
+        emit(
+            &mut reads,
+            parent,
+            DependencyRead::SparseMembership {
+                sheet: 0,
+                first: key(0, 1, 1).1,
+                last: key(0, 4, 1).1,
+            },
+        );
+        emit(
+            &mut reads,
+            child,
+            DependencyRead::Cell(crate::EvaluationTarget {
+                sheet: 0,
+                address: owner.1,
+            }),
+        );
+        emit(
+            &mut reads,
+            parent,
+            DependencyRead::Cell(crate::EvaluationTarget {
+                sheet: 0,
+                address: child.1,
+            }),
+        );
+        emit(
+            &mut reads,
+            parent,
+            DependencyRead::Cell(crate::EvaluationTarget {
+                sheet: 0,
+                address: owner.1,
+            }),
+        );
+        // Adjacent membership merges do not invalidate the already covered guard.
+        emit(
+            &mut reads,
+            parent,
+            DependencyRead::SparseMembership {
+                sheet: 0,
+                first: key(0, 5, 1).1,
+                last: key(0, 6, 1).1,
+            },
+        );
+        emit(
+            &mut reads,
+            parent,
+            DependencyRead::Cell(crate::EvaluationTarget {
+                sheet: 0,
+                address: key(0, 6, 1).1,
+            }),
+        );
+        reads.flush();
+        let parent_trace = reads.traces.get(&parent).unwrap();
+        assert_eq!(parent_trace.cells, vec![owner]);
+        assert!(parent_trace.point_runs.is_empty());
+        assert_eq!(parent_trace.ranges.len(), 1);
+        assert!(parent_trace.ranges[0].contains(0, key(0, 6, 1).1));
+        assert_eq!(reads.traces.get(&child).unwrap().cells, vec![owner]);
     }
 }

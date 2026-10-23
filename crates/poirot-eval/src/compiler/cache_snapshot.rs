@@ -121,6 +121,9 @@ impl<'a> Cache<'a> {
             .into_iter()
             .map(|p| {
                 snapshot::validate_template(&p.template, p.calls.len())?;
+                if !p.typing.matches(&p.template) {
+                    return Err("compiler typing boundaries".into());
+                }
                 if p.extension_identity != policy.registry.extensions {
                     return Err("compiled registry identity differs from overlay policy".into());
                 }

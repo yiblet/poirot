@@ -654,6 +654,8 @@ pub struct FunctionDescriptor {
     pub strategy: EvaluationStrategy,
     /// Declared context, volatility, and reference dependencies.
     pub dependencies: DependencyPolicy,
+    /// Possible result form and element-kind transformation.
+    pub result: ResultRule,
 }
 /// Legacy lightweight metadata identity. Executable providers use
 /// `extensions::ExtensionBinding` and the full explicit registry contract.
@@ -667,6 +669,9 @@ pub struct UdfIdentity {
 mod adapters;
 mod catalog;
 mod policy;
+mod result;
+// Mandatory possible-result transfer rules for registered builtins.
+pub use result::ResultRule;
 
 /// Catalog used for Excel-compatible name resolution.
 pub(crate) use catalog::{EXCEL_DESCRIPTORS, resolve_excel_function};

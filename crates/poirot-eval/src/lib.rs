@@ -81,6 +81,8 @@ pub mod execution_observation;
 pub mod execution_retention;
 /// Sparse workbook edits, compiled formula reuse, and incremental evaluations.
 pub mod overlay;
+/// Possible-result types and composable properties of prepared expressions.
+pub mod typing;
 /// Complete per-evaluation clock, formatting, work, and retention settings.
 pub use overlay::EvaluationContext;
 /// Bounded execution sessions, read ports, and completion reports.
@@ -255,8 +257,11 @@ pub struct Localization {
 #[derive(Clone, Copy, Debug)]
 pub struct EvaluationInputs {
     /// Fixed instant used by date functions and extension contexts during this pass.
+    /// Retained NOW/TODAY results reuse while this and their consumed conversion
+    /// settings are unchanged; changing it invalidates actual clock consumers.
     pub as_of_time: SystemTime,
-    /// Seed for reproducible cell-specific random streams.
+    /// Seed for reproducible cell-specific random streams. Retained draws reuse
+    /// with unchanged source and seed; change the seed to request fresh draws.
     pub randomness_seed: u64,
     /// Date parsing and fixed-offset clock policy.
     pub localization: Localization,
@@ -486,11 +491,14 @@ struct Session<'a> {
     builtin_policy: BuiltinSemanticsPolicy,
     array_result_policy: ArrayResultPolicy,
     expression_demand: expression_execution::ExpressionDemand,
+    spill_discovery: std::collections::BTreeMap<usize, spill_publication::Discovery>,
     spill_owners: CellMap<CellAddress>,
     pending_spills: CellMap<ArrayView>,
     spill_read_ranges: CellMap<Vec<Area>>,
     blank_reads: CellMap<CellSet>,
     cache: run::CellMemo,
+    // Enabled by direct workspaces to publish only admissions from the current call.
+    admitted: Option<Vec<(usize, CellAddress)>>,
     memo_limits: Option<run::MemoRetentionLimits>,
     memo_usage: run::MemoRetentionUsage,
     visiting: CellSet,

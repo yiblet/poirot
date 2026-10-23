@@ -802,19 +802,26 @@ fn bounded_conditional_operator_shapes_shrink_and_scalar_calls_do_not_claim_chil
 }
 
 #[test]
-fn volatile_operator_producers_and_their_consumers_execute_again() {
+fn captured_random_operator_producers_reuse_and_refresh_when_seed_changes() {
     let w = model(&[("D1", "{1,2}+RAND()"), ("H1", "E1+1"), ("H2", "21")]);
     let mut overlay = poirot::Overlay::with_workbook(&w)
         .with_policy(policy())
         .build()
         .unwrap();
-    let config = poirot::EvaluationContext::default();
-    for iteration in 0..2 {
+    let mut config = poirot::EvaluationContext::default();
+    for iteration in 0..3 {
+        if iteration == 2 {
+            config.randomness_seed = config.randomness_seed.wrapping_add(1);
+        }
         let mut evaluation = overlay.evaluation(&config).unwrap();
         evaluation.outputs(&[target("H1"), target("H2")]).unwrap();
         assert_eq!(
             evaluation.usage().formula_executions,
-            if iteration == 0 { 3 } else { 2 }
+            match iteration {
+                0 => 3,
+                1 => 0,
+                _ => 2,
+            }
         );
         if iteration == 1 {
             assert!(evaluation.usage().external_cache_hits > 0);

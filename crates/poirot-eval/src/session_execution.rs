@@ -51,12 +51,14 @@ impl<'a> Session<'a> {
             builtin_policy: BuiltinSemanticsPolicy::default(),
             array_result_policy: ArrayResultPolicy::default(),
             expression_demand: Default::default(),
+            spill_discovery: Default::default(),
             spill_owners: Default::default(),
             pending_spills: Default::default(),
             blank_reads: Default::default(),
             spill_read_ranges: Default::default(),
             text_policy: poirot_text::TextSemanticsPolicy::default(),
             cache: Default::default(),
+            admitted: None,
             memo_limits: None,
             memo_usage: run::MemoRetentionUsage::default(),
             visiting: Default::default(),
@@ -89,20 +91,16 @@ impl<'a> Session<'a> {
     }
     /// Attribute a consumed read to the active cell and forward it to installed sinks.
     pub(super) fn read(&mut self, read: DependencyRead) {
-        let event = ReadEvent {
-            consumer: self.consumer,
-            read,
-        };
-        match (&mut self.overlay_reads, &mut self.dependency_sink) {
-            (Some(reads), Some(sink)) => {
-                crate::DependencyReadSink::read(reads, event.clone());
-                sink.read(event);
-            }
-            (Some(reads), None) => crate::DependencyReadSink::read(reads, event),
-            (None, Some(sink)) => sink.read(event),
-            _ => {}
-        }
+        record_read(
+            &mut self.overlay_reads,
+            &mut self.dependency_sink,
+            ReadEvent {
+                consumer: self.consumer,
+                read,
+            },
+        );
     }
+
     /// Execute prepared source, preserving deferred parse failures and registry checks.
     pub(super) fn prepared_expression(
         &mut self,
@@ -310,50 +308,48 @@ impl<'a> Session<'a> {
                 failure.set_target(EvaluationTarget { sheet, address });
                 failure
             })?;
-        self.read(DependencyRead::Cell(EvaluationTarget { sheet, address }));
-        if self.array_result_policy == ArrayResultPolicy::DynamicSpill {
+        self.read_lazy(|| DependencyRead::Cell(EvaluationTarget { sheet, address }));
+        // Retain a local hit while cold discovery runs only on the disjoint miss path.
+        let cached = if let Some(value) = self.cache.get(&(sheet, address)) {
+            Some(value)
+        } else if self.array_result_policy == ArrayResultPolicy::DynamicSpill {
             self.restore_cached_spill(sheet, address)?;
-        }
-        if self.array_result_policy == ArrayResultPolicy::DynamicSpill
-            && !self.cache.contains_key(&(sheet, address))
-            && run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs)
-                .cell(sheet, address)
-                .is_some_and(|cell| cell.formula.is_some())
+            if !self.cache.contains_key(&(sheet, address)) {
+                let source = run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs)
+                    .cell(sheet, address);
+                if source.is_some_and(|cell| cell.formula.is_some()) {
+                    let previous = self.consumer.replace(EvaluationTarget { sheet, address });
+                    let arbitration = self.arbitrate_spill(sheet, address);
+                    self.consumer = previous;
+                    arbitration?;
+                } else if source.is_none_or(|cell| cell.value == Blank) {
+                    self.discover_spill(sheet, address)?;
+                }
+            }
+            self.cache.get(&(sheet, address))
+        } else {
+            None
+        };
+        if (self.overlay_reads.is_some() || self.dependency_sink.is_some())
+            && let Some(owner) = self.spill_owners.get(&(sheet, address)).copied()
         {
-            let previous = self.consumer.replace(EvaluationTarget { sheet, address });
-            let arbitration = self.arbitrate_spill(sheet, address);
-            self.consumer = previous;
-            arbitration?;
+            record_read(
+                &mut self.overlay_reads,
+                &mut self.dependency_sink,
+                ReadEvent {
+                    consumer: self.consumer,
+                    read: DependencyRead::Cell(EvaluationTarget {
+                        sheet,
+                        address: owner,
+                    }),
+                },
+            );
         }
-        if self.array_result_policy == ArrayResultPolicy::DynamicSpill
-            && !self.cache.contains_key(&(sheet, address))
-            && run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs)
-                .cell(sheet, address)
-                .is_none_or(|cell| cell.formula.is_none() && cell.value == Blank)
-        {
-            self.discover_spill(sheet, address)?;
-        }
-        if let Some(owner) = self.spill_owners.get(&(sheet, address)).copied() {
-            self.read(DependencyRead::Cell(EvaluationTarget {
-                sheet,
-                address: owner,
-            }));
-        }
-        if let Some(value) = self.cache.get(&(sheet, address)) {
+        if let Some(value) = cached {
             *provenance = CellProvenance::SessionMemo;
             self.run_usage.session_memo_hits = self.run_usage.session_memo_hits.saturating_add(1);
-            self.budget.usage.cache_hits += 1;
-            // Copying a memoized dependency belongs to that target's own frame,
-            // not to the caller: previous bulk workload cannot alter its cell allowance.
-            self.budget.push_cell(EvaluationTarget { sheet, address });
-            let result = (|| {
-                if let Some(text) = value.text_ref() {
-                    self.budget.text(text.storage_bytes())?;
-                }
-                Ok(value.clone())
-            })();
-            self.budget.pop_cell();
-            return result;
+            self.budget.usage.cache_hits = self.budget.usage.cache_hits.saturating_add(1);
+            return copy_cached_value(&mut self.budget, EvaluationTarget { sheet, address }, value);
         }
         if self.inputs.is_none()
             && let Some(reader) = &mut self.cell_reader
@@ -365,15 +361,11 @@ impl<'a> Session<'a> {
             self.run_usage.external_cache_hits =
                 self.run_usage.external_cache_hits.saturating_add(1);
             self.budget.usage.cache_hits += 1;
-            self.budget.push_cell(EvaluationTarget { sheet, address });
-            let result = (|| {
-                if let Some(text) = value.as_ref().text_ref() {
-                    self.budget.text(text.storage_bytes())?;
-                }
-                Ok(value.as_ref().clone())
-            })();
-            self.budget.pop_cell();
-            return result;
+            return copy_cached_value(
+                &mut self.budget,
+                EvaluationTarget { sheet, address },
+                value.as_ref(),
+            );
         }
         let cached = self.overlay_cache.and_then(|cache| {
             cache
@@ -387,13 +379,11 @@ impl<'a> Session<'a> {
             self.run_usage.external_cache_hits =
                 self.run_usage.external_cache_hits.saturating_add(1);
             self.budget.usage.cache_hits += 1;
-            self.budget.push_cell(EvaluationTarget { sheet, address });
-            let result = (|| {
-                self.budget.text(value.text_storage_bytes())?;
-                Ok(value.as_ref().clone())
-            })();
-            self.budget.pop_cell();
-            return result;
+            return copy_cached_value(
+                &mut self.budget,
+                EvaluationTarget { sheet, address },
+                value.as_ref(),
+            );
         }
         let cell =
             run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs).cell(sheet, address);
@@ -472,6 +462,40 @@ impl<'a> Session<'a> {
         self.spill_read_ranges.remove(&(sheet, address));
         result
     }
+}
+
+/// Forward a read while allowing the memo and sink fields to be borrowed independently.
+fn record_read(
+    reads: &mut Option<overlay::dependencies::Reads>,
+    sink: &mut Option<&mut dyn DependencyReadSink>,
+    event: ReadEvent,
+) {
+    match (reads, sink) {
+        (Some(reads), Some(sink)) => {
+            crate::DependencyReadSink::read(reads, event.clone());
+            sink.read(event);
+        }
+        (Some(reads), None) => crate::DependencyReadSink::read(reads, event),
+        (None, Some(sink)) => sink.read(event),
+        _ => {}
+    }
+}
+
+/// Copy a cached value, charging text in its own cell frame rather than its caller's.
+#[inline]
+fn copy_cached_value(
+    budget: &mut BudgetMeter,
+    target: EvaluationTarget,
+    value: &CellValue,
+) -> EvalResult<CellValue> {
+    // Nontext copies have no charge or rejection point requiring a cell frame.
+    if let Some(text) = value.text_ref() {
+        budget.push_cell(target);
+        let result = budget.text(text.storage_bytes());
+        budget.pop_cell();
+        result?;
+    }
+    Ok(value.clone())
 }
 
 #[cfg(test)]

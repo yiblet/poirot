@@ -1,6 +1,19 @@
 //! Rectangular array publication and shared atomic memo admission.
 use super::*;
 
+/// Syntax-only discovery frontier and possible producers for an immutable run source.
+#[derive(Default)]
+pub(super) struct Discovery {
+    frontier: Vec<CellAddress>,
+    producers: Vec<Producer>,
+}
+/// Source geometry retained without evaluating the producer or its dependencies.
+#[derive(Clone, Copy)]
+struct Producer {
+    anchor: CellAddress,
+    shape: Option<(u64, u64)>,
+    unknown: bool,
+}
 /// Legal committed spill roles shared by local and retained result publication.
 #[derive(Clone, Copy, Debug, Default, serde::Serialize, serde::Deserialize)]
 pub(crate) enum SpillRole {
@@ -310,11 +323,17 @@ impl Session<'_> {
                         col: at.col + c as u32,
                     };
                     self.cache.insert((sheet, child), value);
+                    if let Some(admitted) = &mut self.admitted {
+                        admitted.push((sheet, child));
+                    }
                     self.spill_owners.insert((sheet, child), at);
                 }
             }
         } else {
             self.cache.insert((sheet, at), value.clone());
+            if let Some(admitted) = &mut self.admitted {
+                admitted.push((sheet, at));
+            }
         }
         self.budget.usage.completed_cells += count as u64;
         Ok(())
@@ -427,6 +446,126 @@ impl Session<'_> {
     ) -> EvalResult<()> {
         self.discover_spills_before(area, point, None)
     }
+    /// Extend syntax discovery only across source coordinates not previously inspected.
+    fn extend_spill_discovery(&mut self, sheet: usize, through: CellAddress) -> EvalResult<()> {
+        let previous = self.spill_discovery.get(&sheet);
+        if previous.is_some_and(|d| {
+            d.frontier
+                .iter()
+                .any(|p| p.row >= through.row && p.col >= through.col)
+        }) {
+            return Ok(());
+        }
+        // Origin rectangles form a staircase: ascending row ends have descending
+        // column ends. Scan only the newly requested strips, even for demands
+        // that alternate between tall/narrow and short/wide rectangles.
+        let mut bands = Vec::new();
+        let mut first_row = 0;
+        if let Some(discovery) = previous {
+            for p in &discovery.frontier {
+                let last_row = p.row.min(through.row);
+                if p.col < through.col {
+                    self.budget
+                        .check_allocation(bands.len().saturating_add(1))?;
+                    bands.push((
+                        CellAddress {
+                            row: first_row,
+                            col: p.col.saturating_add(1),
+                        },
+                        CellAddress {
+                            row: last_row,
+                            col: through.col,
+                        },
+                    ));
+                }
+                first_row = last_row.saturating_add(1);
+                if p.row >= through.row {
+                    break;
+                }
+            }
+        }
+        if first_row <= through.row {
+            self.budget
+                .check_allocation(bands.len().saturating_add(1))?;
+            bands.push((
+                CellAddress {
+                    row: first_row,
+                    col: 0,
+                },
+                through,
+            ));
+        }
+        let frontier_len = previous.map_or(1, |d| {
+            d.frontier
+                .iter()
+                .filter(|p| p.row > through.row || p.col > through.col)
+                .count()
+                .saturating_add(1)
+        });
+        self.budget.check_allocation(frontier_len)?;
+        let effective = run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs);
+        let mut producers = Vec::new();
+        for (first, last) in bands {
+            let membership = poirot_model::query::RangeMembership::new(sheet, first, last)
+                .map_err(|_| EvaluationFailure::StalePlan)?;
+            for (&anchor, cell) in effective
+                .stored(membership)
+                .map_err(|_| EvaluationFailure::StalePlan)?
+            {
+                self.budget.charge(WorkKind::ReferencePair, 1)?;
+                let Some(source) = cell.formula.as_deref() else {
+                    continue;
+                };
+                let prepared = self
+                    .plan
+                    .and_then(|plan| {
+                        plan.formula(EvaluationTarget {
+                            sheet,
+                            address: anchor,
+                        })
+                    })
+                    .cloned()
+                    .unwrap_or_else(|| self.prepare_source(source));
+                let (shape, unknown) = match prepared.as_ref() {
+                    PreparedFormula::Ready(formula) => (
+                        formula.spill.shape,
+                        formula.spill.unbounded
+                            || formula.bytecode().calls.iter().any(|c| {
+                                matches!(c.target, crate::bytecode::CallTarget::Extension(_))
+                            }),
+                    ),
+                    _ => (None, false),
+                };
+                // A bounded scalar has no generated cells to discover. Ordinary
+                // range traversal remains responsible for evaluating its own cell.
+                if shape.is_some_and(|(rows, cols)| rows > 1 || cols > 1) || unknown {
+                    let retained = self
+                        .spill_discovery
+                        .get(&sheet)
+                        .map_or(0, |d| d.producers.len());
+                    self.budget.check_allocation(
+                        retained.saturating_add(producers.len()).saturating_add(1),
+                    )?;
+                    producers.push(Producer {
+                        anchor,
+                        shape,
+                        unknown,
+                    });
+                }
+            }
+        }
+        let discovery = self.spill_discovery.entry(sheet).or_default();
+        if !producers.is_empty() {
+            discovery.producers.extend(producers);
+            discovery.producers.sort_by_key(|p| p.anchor);
+        }
+        discovery
+            .frontier
+            .retain(|p| p.row > through.row || p.col > through.col);
+        discovery.frontier.push(through);
+        discovery.frontier.sort_by_key(|p| p.row);
+        Ok(())
+    }
     fn discover_spills_before(
         &mut self,
         area: Area,
@@ -452,49 +591,38 @@ impl Session<'_> {
         });
         let mut candidates = Vec::new();
         if self.workbook.sheet(sheet).is_some() {
-            let effective = run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs);
-            let membership = poirot_model::query::RangeMembership::new(
+            self.extend_spill_discovery(
                 sheet,
-                CellAddress { row: 0, col: 0 },
                 CellAddress {
                     row: area.r1,
                     col: area.c1,
                 },
-            )
-            .map_err(|_| EvaluationFailure::StalePlan)?;
-            for (&anchor, cell) in effective
-                .stored(membership)
-                .map_err(|_| EvaluationFailure::StalePlan)?
-            {
-                self.budget.charge(WorkKind::ReferencePair, 1)?;
-                if Some(anchor) == point
+            )?;
+            let count = self
+                .spill_discovery
+                .get(&sheet)
+                .map_or(0, |d| d.producers.len());
+            for index in 0..count {
+                let Some(Producer {
+                    anchor,
+                    shape,
+                    unknown,
+                }) = self
+                    .spill_discovery
+                    .get(&sheet)
+                    .and_then(|d| d.producers.get(index))
+                    .copied()
+                else {
+                    continue;
+                };
+                if anchor.row > area.r1
+                    || anchor.col > area.c1
+                    || Some(anchor) == point
                     || before.is_some_and(|before| anchor >= before)
-                    || cell.formula.is_none()
                 {
                     continue;
                 }
-                let prepared = self
-                    .plan
-                    .and_then(|plan| {
-                        plan.formula(EvaluationTarget {
-                            sheet,
-                            address: anchor,
-                        })
-                    })
-                    .cloned()
-                    .unwrap_or_else(|| self.prepare_source(cell.formula.as_deref().unwrap_or("")));
-                let (shape, unknown) = match prepared.as_ref() {
-                    PreparedFormula::Ready(formula) => (
-                        formula.spill.shape,
-                        formula.spill.unbounded || {
-                            let p = formula.bytecode();
-                            p.calls.iter().any(|c| {
-                                matches!(c.target, crate::bytecode::CallTarget::Extension(_))
-                            })
-                        },
-                    ),
-                    _ => (None, false),
-                };
+                self.budget.charge(WorkKind::ReferencePair, 1)?;
                 let covers = shape.is_some_and(|(rows, cols)| {
                     u64::from(anchor.row).saturating_add(rows) > u64::from(area.r0)
                         && u64::from(anchor.col).saturating_add(cols) > u64::from(area.c0)

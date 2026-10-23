@@ -19,6 +19,7 @@ pub struct Plan<'a> {
 /// Shared bytecode template and serialized call bindings.
 #[derive(Serialize, Deserialize)]
 struct Program<'a> {
+    typing: Cow<'a, crate::typing::FormulaTyping>,
     template: Cow<'a, Template>,
     calls: Vec<CallDto<'a>>,
 }
@@ -103,6 +104,7 @@ impl<'a> Plan<'a> {
                     .collect::<Result<Vec<_>>>()?;
                 let id = output.programs.len();
                 output.programs.push(Program {
+                    typing: Cow::Borrowed(&compiled.typing),
                     template: Cow::Borrowed(&compiled.template),
                     calls,
                 });
@@ -143,6 +145,7 @@ impl<'a> Plan<'a> {
                 .programs
                 .into_iter()
                 .map(|p| Program {
+                    typing: Cow::Owned(p.typing.into_owned()),
                     template: Cow::Owned(p.template.into_owned()),
                     calls: p
                         .calls
@@ -196,6 +199,9 @@ impl<'a> Plan<'a> {
             .into_iter()
             .map(|p| {
                 validate_template(&p.template, p.calls.len())?;
+                if !p.typing.matches(&p.template) {
+                    return Err("snapshot typing boundaries".into());
+                }
                 let calls = p
                     .calls
                     .into_iter()
@@ -224,6 +230,7 @@ impl<'a> Plan<'a> {
                     })
                     .collect::<Result<Vec<_>>>()?;
                 Ok(Arc::new(Executable {
+                    typing: p.typing.into_owned(),
                     template: p.template.into_owned(),
                     calls,
                     extension_identity: None,

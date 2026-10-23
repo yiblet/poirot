@@ -9,6 +9,9 @@
 //! use [poirot](https://docs.rs/poirot) for those workflows.
 use std::{collections::BTreeMap, fmt, str::FromStr};
 
+mod formula_types;
+// Possible formula-result vocabulary, independent of parsing and execution.
+pub use formula_types::{FormulaType, ScalarKinds};
 mod numeric_fidelity;
 // Numeric file-representation checks shared by import and export adapters.
 pub use numeric_fidelity::*;

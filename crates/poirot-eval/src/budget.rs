@@ -11,7 +11,8 @@ use poirot_model::CellAddress;
 /// `cell_work` counts work in one formula, excluding its dependency formulas.
 /// Collection limits count elements in one collection, not total heap allocation.
 /// Text limits count bytes in one variable buffer: UTF-8 bytes or two bytes per
-/// UTF-16 unit. Fixed-size kernel scratch is outside these limits.
+/// UTF-16 unit. Fixed-size kernel scratch, including one run-local ordered
+/// reduction state, is outside these limits.
 ///
 /// Reused results still pass collection and text checks. Memo storage, tracing,
 /// parsing, formatting, and file codecs have separate limits.

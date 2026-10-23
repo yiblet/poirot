@@ -239,6 +239,10 @@ impl<'a, T, const HEIGHT: u32, const WIDTH: u32> WorksheetCells<'a, T, HEIGHT, W
             next: first,
             last,
             page: None,
+            counters: crate::query::QueryCounters {
+                column_seeks: u64::from(first <= last),
+                ..Default::default()
+            },
         }
     }
     /// Iterate only rows containing stored payloads.
@@ -623,6 +627,15 @@ pub struct ColumnCells<'a, T = Cell, const HEIGHT: u32 = 32, const WIDTH: u32 = 
     next: u32,
     last: u32,
     page: Option<(u32, &'a Page<T, HEIGHT, WIDTH>)>,
+    counters: crate::query::QueryCounters,
+}
+impl<T, const HEIGHT: u32, const WIDTH: u32> ColumnCells<'_, T, HEIGHT, WIDTH> {
+    /// Report the column-index bound seek, page-map seeks, and stored slots visited.
+    /// Each page seek admits at most HEIGHT slot probes; holes are skipped locally.
+    /// Empty ordered ranges still seek the column index; inverted bounds do not.
+    pub fn counters(&self) -> crate::query::QueryCounters {
+        self.counters
+    }
 }
 impl<'a, T, const HEIGHT: u32, const WIDTH: u32> Iterator for ColumnCells<'a, T, HEIGHT, WIDTH> {
     /// Borrowed coordinate and payload from the selected column.
@@ -645,11 +658,13 @@ impl<'a, T, const HEIGHT: u32, const WIDTH: u32> Iterator for ColumnCells<'a, T,
                         )
                         .and_then(Option::as_ref)
                     {
+                        self.counters.cells_visited = self.counters.cells_visited.saturating_add(1);
                         return Some((a, c));
                     }
                 }
             }
             let (col, row) = *self.pages.next()?;
+            self.counters.row_seeks = self.counters.row_seeks.saturating_add(1);
             self.next = self.next.max(row * HEIGHT);
             self.page = Some((row, self.store.pages.get(&PageId { row, col })?));
         }

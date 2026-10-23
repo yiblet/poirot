@@ -514,3 +514,101 @@ fn scalar_writeback_clears_saved_spill_children_on_both_paths() {
         }
     }
 }
+
+#[test]
+fn direct_publication_matches_batch_after_dependencies_spills_cached_calls_and_edits() {
+    let mut book = workbook();
+    book.sheet_mut(0)
+        .unwrap()
+        .set_formula(at("G1").address, "{1,2;3,4}")
+        .unwrap();
+    let mut cells = Evaluation::with_workbook(&book).build(context()).unwrap();
+    let mut batch = Evaluation::with_workbook(&book).build(context()).unwrap();
+    let outputs = [at("C1"), at("D1"), at("G1"), at("H2"), at("C1")];
+    for value in [2., 7., 11.] {
+        cells.begin(context()).unwrap();
+        batch.begin(context()).unwrap();
+        cells.set_value(at("A1"), value).unwrap();
+        batch.set_value(at("A1"), value).unwrap();
+        let expected = [2. * value + 1., 21., 1., 4., 2. * value + 1.];
+        for (target, value) in outputs.iter().zip(expected) {
+            assert_eq!(cells.cell(*target).unwrap(), CellValue::Number(value));
+        }
+        batch.outputs(&outputs).unwrap();
+        assert!(cells.cached_cells() >= 8);
+        assert_eq!(cells.cached_value(at("H2")), Some(&CellValue::Number(4.)));
+        assert!(!cells.changes().is_empty());
+        assert_eq!(cells.changes(), batch.changes());
+        assert_eq!(cells.cached_cells(), batch.cached_cells());
+        let changes = cells.changes();
+        let executed = cells.usage().formula_executions;
+        cells.outputs(&outputs).unwrap();
+        assert_eq!(cells.changes(), changes);
+        assert_eq!(cells.usage().formula_executions, executed);
+        for target in outputs {
+            assert_eq!(cells.cached_value(target), batch.cached_value(target));
+        }
+    }
+}
+
+#[test]
+fn overlay_deferred_range_index_tracks_per_cell_publication_edits_and_replaced_ranges() {
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("S").unwrap();
+    for row in 1..=6 {
+        sheet
+            .set_value(at(&format!("A{row}")).address, row as f64)
+            .unwrap();
+    }
+    for (cell, formula) in [
+        ("C1", "SUM(A1:A3)"),
+        ("C2", "SUM(A4:A6)"),
+        ("D1", "SUM(C1:C2)"),
+        ("E1", "D1+1"),
+    ] {
+        sheet.set_formula(at(cell).address, formula).unwrap();
+    }
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let context = context();
+    {
+        let mut run = overlay.evaluation(&context).unwrap();
+        for (cell, value) in [("C1", 6.), ("C2", 15.), ("D1", 21.), ("E1", 22.)] {
+            assert_eq!(run.cell(at(cell)).unwrap(), CellValue::Number(value));
+        }
+    }
+    for (cell, value, expected) in [("A2", 12., 32.), ("A5", 15., 42.)] {
+        overlay.set_value(at(cell), value).unwrap();
+        assert_eq!(
+            overlay
+                .evaluation(&context)
+                .unwrap()
+                .cell(at("E1"))
+                .unwrap(),
+            CellValue::Number(expected)
+        );
+    }
+    overlay.set_formula(at("C1"), "SUM(B1:B3)").unwrap();
+    assert_eq!(
+        overlay
+            .evaluation(&context)
+            .unwrap()
+            .cell(at("E1"))
+            .unwrap(),
+        CellValue::Number(26.)
+    );
+    overlay.set_value(at("B2"), 9.).unwrap();
+    assert_eq!(
+        overlay
+            .evaluation(&context)
+            .unwrap()
+            .cell(at("E1"))
+            .unwrap(),
+        CellValue::Number(35.)
+    );
+    overlay.set_value(at("A2"), 99.).unwrap();
+    let mut run = overlay.evaluation(&context).unwrap();
+    assert_eq!(run.cell(at("E1")).unwrap(), CellValue::Number(35.));
+    let executions = run.usage().formula_executions;
+    assert_eq!(run.cell(at("E1")).unwrap(), CellValue::Number(35.));
+    assert_eq!(run.usage().formula_executions, executions);
+}

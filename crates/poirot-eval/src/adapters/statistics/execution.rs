@@ -10,10 +10,37 @@ pub(crate) enum AggregateFunction {
     /// Logical disjunction over selected members.
     Or,
 }
-/// Pending statistical aggregate operand retaining reference traversal state.
-enum AggregateItem {
-    Value(CellValue, bool, poirot_coercionv2::Origin),
-    Cell(usize, CellAddress),
+/// Aggregate members retaining either eagerly read values or deferred sheet cells.
+enum AggregateItems {
+    Values(std::vec::IntoIter<(CellValue, bool)>),
+    Projected(std::vec::IntoIter<AggregateMember>),
+    Cells(std::vec::IntoIter<(usize, CellAddress)>),
+}
+/// Reference and array members retain only the information aggregate consumers inspect.
+enum AggregateMember {
+    Blank,
+    Number(f64),
+    Boolean(bool),
+    Error(CellError),
+    Text { empty: bool },
+}
+impl AggregateMember {
+    /// Compact only after a full cell read has completed its observations and admission.
+    fn project(value: CellValue, _indirect: bool) -> Self {
+        match value {
+            Blank => Self::Blank,
+            Number(value) => Self::Number(value),
+            Boolean(value) => Self::Boolean(value),
+            Error(value) => Self::Error(value),
+            // CellValue text equality compares UTF-16 units across both representations.
+            Text(value) => Self::Text {
+                empty: value.is_empty(),
+            },
+            CellValue::TextUtf16(value) => Self::Text {
+                empty: value.units().is_empty(),
+            },
+        }
+    }
 }
 impl Session<'_> {
     /// Dispatch statistical calls to helper policies or the shared aggregate path.
@@ -37,9 +64,25 @@ impl Session<'_> {
         name: AggregateFunction,
         args: ArgumentsRef<'_>,
     ) -> EvalResult<Value> {
+        use poirot_functions_statistics::{NumericReduction as R, NumericReductionState};
+        let operation = match name {
+            AggregateFunction::Statistics(StatisticsFunction::Sum) => Some(R::Sum),
+            AggregateFunction::Statistics(StatisticsFunction::SumSq) => Some(R::SumSq),
+            AggregateFunction::Statistics(StatisticsFunction::Average) => Some(R::Average),
+            AggregateFunction::Statistics(StatisticsFunction::Min) => Some(R::Minimum),
+            AggregateFunction::Statistics(StatisticsFunction::Max) => Some(R::Maximum),
+            AggregateFunction::Statistics(StatisticsFunction::Product) => Some(R::Product),
+            _ => None,
+        };
+        let mut reduction = operation.map(NumericReductionState::new);
         let mut nums = Vec::new();
         let mut count = 0u64;
-        let mut truth = Vec::new();
+        use poirot_functions_logical::{LogicalReduction, LogicalReductionState};
+        let mut truth = LogicalReductionState::new(if name == AggregateFunction::And {
+            LogicalReduction::And
+        } else {
+            LogicalReduction::Or
+        });
         for e in args {
             let v = self.expr(s, at, e)?;
             // RefListEval is not an area; pinned SUM throws before traversing its cells.
@@ -100,7 +143,7 @@ impl Session<'_> {
             // Keep true sheet spans deferred until each ordered value is consumed.
             // A spreadsheet error on an earlier sheet must win over a later cell's
             // operational failure, as MultiOperandNumericFunction.collectValues does.
-            let items = match v {
+            let (mut items, selected_origin) = match v {
                 Value::SheetSpan(areas) => {
                     let mut items = Vec::new();
                     for area in areas {
@@ -109,53 +152,85 @@ impl Session<'_> {
                             .check_allocation(items.len().saturating_add(addresses.len()))?;
                         self.budget
                             .charge(WorkKind::Materialization, addresses.len() as u64)?;
-                        items.extend(
-                            addresses
-                                .into_iter()
-                                .map(|address| AggregateItem::Cell(area.sheet, address)),
-                        );
+                        items.extend(addresses.into_iter().map(|address| (area.sheet, address)));
                     }
-                    items
+                    (AggregateItems::Cells(items.into_iter()), None)
                 }
                 Value::SelectedScalar(value, origin) => {
                     self.budget.allocation(1)?;
-                    vec![AggregateItem::Value(
-                        value,
-                        false,
-                        match origin {
+                    (
+                        AggregateItems::Values(vec![(value, false)].into_iter()),
+                        Some(match origin {
                             host::OperandOrigin::Direct => poirot_coercionv2::Origin::Direct,
                             host::OperandOrigin::ReferencedCell => {
                                 poirot_coercionv2::Origin::Reference
                             }
                             host::OperandOrigin::ArrayElement => poirot_coercionv2::Origin::Array,
-                        },
-                    )]
+                        }),
+                    )
                 }
-                other => self
-                    .items(other)?
-                    .into_iter()
-                    .map(|(value, referenced)| {
-                        AggregateItem::Value(
-                            value,
-                            referenced,
-                            if referenced {
-                                poirot_coercionv2::Origin::Reference
-                            } else {
-                                poirot_coercionv2::Origin::Direct
-                            },
-                        )
-                    })
-                    .collect(),
-            };
-            for item in items {
-                let (v, indirect, origin) = match item {
-                    AggregateItem::Value(value, referenced, origin) => (value, referenced, origin),
-                    AggregateItem::Cell(sheet, address) => (
-                        self.cell(sheet, address)?,
-                        true,
-                        poirot_coercionv2::Origin::Reference,
+                Value::Missing => {
+                    self.budget.allocation(1)?;
+                    // SAFETY: One fixed-size element cannot overflow vector capacity; its logical allocation was admitted above.
+                    (
+                        AggregateItems::Values(vec![(Blank, false)].into_iter()),
+                        None,
+                    )
+                }
+                Value::Scalar(value) => {
+                    self.budget.allocation(1)?;
+                    // SAFETY: One fixed-size element cannot overflow vector capacity; its logical allocation was admitted above.
+                    (
+                        AggregateItems::Values(vec![(value, false)].into_iter()),
+                        None,
+                    )
+                }
+                other => (
+                    AggregateItems::Projected(
+                        self.items_map(other, AggregateMember::project)?.into_iter(),
                     ),
-                };
+                    None,
+                ),
+            };
+            'members: while let Some((v, indirect)) = match &mut items {
+                AggregateItems::Values(values) => values.next(),
+                AggregateItems::Projected(values) => match values.next() {
+                    Some(AggregateMember::Text { empty }) => {
+                        // All projected members are indirect. Text is ignored by numeric
+                        // and logical aggregates, but retains its presence for counts.
+                        if name == AggregateFunction::Statistics(StatisticsFunction::CountA)
+                            || (empty
+                                && name
+                                    == AggregateFunction::Statistics(
+                                        StatisticsFunction::CountBlank,
+                                    ))
+                        {
+                            count = count.saturating_add(1);
+                        }
+                        continue 'members;
+                    }
+                    Some(value) => Some((
+                        match value {
+                            AggregateMember::Blank => Blank,
+                            AggregateMember::Number(value) => Number(value),
+                            AggregateMember::Boolean(value) => Boolean(value),
+                            AggregateMember::Error(value) => Error(value),
+                            AggregateMember::Text { .. } => continue 'members,
+                        },
+                        true,
+                    )),
+                    None => None,
+                },
+                AggregateItems::Cells(cells) => cells
+                    .next()
+                    .map(|(sheet, address)| self.cell(sheet, address).map(|value| (value, true)))
+                    .transpose()?,
+            } {
+                let origin = selected_origin.unwrap_or(if indirect {
+                    poirot_coercionv2::Origin::Reference
+                } else {
+                    poirot_coercionv2::Origin::Direct
+                });
                 let v = if matches!(name, AggregateFunction::Statistics(_)) && !e.is_missing() {
                     poirot_coercionv2::collections::coercev2_aggregate_argument(v, origin)
                 } else {
@@ -185,9 +260,7 @@ impl Session<'_> {
                     }
                     match core_projection::coercev2_operand_boolean(&v) {
                         Ok(b) => {
-                            self.budget.check_allocation(truth.len() + 1)?;
-                            self.budget.charge(WorkKind::Materialization, 1)?;
-                            truth.push(b)
+                            truth.push(b);
                         }
                         Err(e) => return Ok(err(e)),
                     }
@@ -214,9 +287,20 @@ impl Session<'_> {
                 };
                 match semantic(number)? {
                     Ok(n) => {
-                        self.budget.check_allocation(nums.len() + 1)?;
-                        self.budget.charge(WorkKind::Materialization, 1)?;
-                        nums.push(n)
+                        if let Some(reduction) = &mut reduction {
+                            reduction.push(n);
+                        } else {
+                            self.budget.check_allocation(nums.len().saturating_add(1))?;
+                            self.budget.charge(WorkKind::Materialization, 1)?;
+                            nums.try_reserve(1)
+                                .map_err(|_| EvaluationFailure::ResourceLimit {
+                                    capability: CapabilityId::FunctionAdapter,
+                                    source: self.consumer,
+                                    detail: "numeric aggregate allocation failed".into(),
+                                })?;
+                            // SAFETY: The successful reservation provides room for this one push.
+                            nums.push(n);
+                        }
                     }
                     Err(e) => return Ok(err(e)),
                 }
@@ -238,19 +322,18 @@ impl Session<'_> {
             .into());
         }
         if matches!(name, AggregateFunction::And | AggregateFunction::Or) {
-            return Ok(if truth.is_empty() {
-                err(VALUE_ERROR)
-            } else {
-                Boolean(if name == AggregateFunction::And {
-                    truth.iter().all(|b| *b)
-                } else {
-                    truth.iter().any(|b| *b)
-                })
-                .into()
+            return Ok(match truth.finish() {
+                Some(value) => Boolean(value).into(),
+                None => err(VALUE_ERROR),
+            });
+        }
+        if let Some(reduction) = reduction {
+            return Ok(match reduction.finish() {
+                Some(value) => numeric_outcome::coerce_checked_numeric_result(value).into(),
+                None => err(Div0),
             });
         }
         let len = nums.len();
-        let sum: f64 = nums.iter().sum();
         let result = match name {
             AggregateFunction::Statistics(
                 StatisticsFunction::AveDev
@@ -301,31 +384,14 @@ impl Session<'_> {
                 | StatisticsFunction::TDistRt
                 | StatisticsFunction::TDist2T,
             ) => return Ok(err(VALUE_ERROR)),
-            AggregateFunction::Statistics(StatisticsFunction::Sum) => {
-                nums.iter().fold(0.0, |acc, n| acc + *n)
-            }
-            AggregateFunction::Statistics(StatisticsFunction::SumSq) => {
-                nums.iter().map(|x| x * x).sum()
-            }
-            AggregateFunction::Statistics(StatisticsFunction::Average) => {
-                if len == 0 {
-                    return Ok(err(Div0));
-                }
-                sum / len as f64
-            }
-            AggregateFunction::Statistics(StatisticsFunction::Min) => {
-                nums.iter().copied().reduce(f64::min).unwrap_or(0.)
-            }
-            AggregateFunction::Statistics(StatisticsFunction::Max) => {
-                nums.iter().copied().reduce(f64::max).unwrap_or(0.)
-            }
-            AggregateFunction::Statistics(StatisticsFunction::Product) => {
-                if len == 0 {
-                    0.
-                } else {
-                    nums.iter().product()
-                }
-            }
+            AggregateFunction::Statistics(
+                StatisticsFunction::Sum
+                | StatisticsFunction::SumSq
+                | StatisticsFunction::Average
+                | StatisticsFunction::Min
+                | StatisticsFunction::Max
+                | StatisticsFunction::Product,
+            ) => return Ok(err(VALUE_ERROR)),
             AggregateFunction::Statistics(StatisticsFunction::Median) => {
                 if len == 0 {
                     return Ok(err(Num));

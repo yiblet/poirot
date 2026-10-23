@@ -276,58 +276,89 @@ impl<'a> Session<'a> {
         // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
         Ok(numeric_outcome::coerce_checked_numeric_result(result))
     }
-    // A reference or array supplies only stored cells; aggregate functions ignore blanks.
-    /// Collect aggregation members, retaining reference origin and sparse traversal behavior.
-    pub(super) fn items(&mut self, value: Value) -> EvalResult<Vec<(CellValue, bool)>> {
+    /// Collect sparse members after each existing cell read, without changing read policy.
+    pub(super) fn items_map<T>(
+        &mut self,
+        value: Value,
+        mut project: impl FnMut(CellValue, bool) -> T,
+    ) -> EvalResult<Vec<T>> {
+        let mut values = Vec::new();
+        // Keep admission and fallible reservation local to each projected growth.
+        macro_rules! reserve {
+            ($additional:expr) => {{
+                let additional = $additional;
+                let count = values.len().checked_add(additional).ok_or_else(|| {
+                    EvaluationFailure::ResourceLimit {
+                        capability: CapabilityId::FunctionAdapter,
+                        source: self.consumer,
+                        detail: "aggregate member count overflow".into(),
+                    }
+                })?;
+                self.budget.check_allocation(count)?;
+                self.budget
+                    .charge(WorkKind::Materialization, additional as u64)?;
+                values
+                    .try_reserve(additional)
+                    .map_err(|_| EvaluationFailure::ResourceLimit {
+                        capability: CapabilityId::FunctionAdapter,
+                        source: self.consumer,
+                        detail: "aggregate member allocation failed".into(),
+                    })?;
+            }};
+        }
         match value {
             Value::Missing => {
-                self.budget.allocation(1)?;
-                Ok(vec![(Blank, false)])
+                reserve!(1);
+                // SAFETY: The local reserve! expansion checked len + 1 and successfully reserved that capacity.
+                values.push(project(Blank, false));
             }
             Value::Scalar(value) | Value::SelectedScalar(value, _) => {
-                self.budget.allocation(1)?;
-                Ok(vec![(value, false)])
+                reserve!(1);
+                // SAFETY: The local reserve! expansion checked len + 1 and successfully reserved that capacity.
+                values.push(project(value, false));
             }
             Value::Array(rows) => {
-                let count = rows.iter().map(Vec::len).sum();
-                self.budget.allocation(count)?;
-                Ok(rows
-                    .into_iter()
-                    .flatten()
-                    .map(|value| (value, true))
-                    .collect())
+                let count = rows
+                    .iter()
+                    .try_fold(0usize, |count, row| count.checked_add(row.len()))
+                    .ok_or_else(|| EvaluationFailure::ResourceLimit {
+                        capability: CapabilityId::FunctionAdapter,
+                        source: self.consumer,
+                        detail: "aggregate member count overflow".into(),
+                    })?;
+                reserve!(count);
+                // SAFETY: count is the checked total of row lengths; local reserve! reserved that many slots.
+                values.extend(rows.into_iter().flatten().map(|value| project(value, true)));
             }
             Value::SignedRefs(areas) => {
-                let mut values = Vec::new();
                 for area in areas {
                     let Some(physical) = area.physical() else {
                         continue;
                     };
                     let addresses = self.sparse_addresses(physical)?;
-                    self.budget
-                        .check_allocation(values.len().saturating_add(addresses.len()))?;
-                    self.budget
-                        .charge(WorkKind::Materialization, addresses.len() as u64)?;
+                    reserve!(addresses.len());
                     for address in addresses {
-                        values.push((self.cell(area.sheet, address)?, true));
+                        // SAFETY: The local reserve! expansion reserved one slot per address before this loop; each iteration pushes exactly one member.
+                        values.push(project(self.cell(area.sheet, address)?, true));
                     }
                 }
-                Ok(values)
             }
             Value::Refs(areas) | Value::SheetSpan(areas) => {
-                let mut values = Vec::new();
                 for area in areas {
                     let addresses = self.sparse_addresses(area)?;
-                    self.budget
-                        .check_allocation(values.len().saturating_add(addresses.len()))?;
-                    self.budget
-                        .charge(WorkKind::Materialization, addresses.len() as u64)?;
+                    reserve!(addresses.len());
                     for address in addresses {
-                        values.push((self.cell(area.sheet, address)?, true));
+                        // SAFETY: The local reserve! expansion reserved one slot per address before this loop; each iteration pushes exactly one member.
+                        values.push(project(self.cell(area.sheet, address)?, true));
                     }
                 }
-                Ok(values)
             }
         }
+        Ok(values)
+    }
+    /// Retain owned sparse members for host traversal contract tests.
+    #[cfg(test)]
+    pub(super) fn items(&mut self, value: Value) -> EvalResult<Vec<(CellValue, bool)>> {
+        self.items_map(value, |value, indirect| (value, indirect))
     }
 }

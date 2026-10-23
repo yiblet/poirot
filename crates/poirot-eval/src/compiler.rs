@@ -26,7 +26,7 @@ pub struct RegistryIdentity {
 impl Default for RegistryIdentity {
     fn default() -> Self {
         Self {
-            builtin_contract_version: 1,
+            builtin_contract_version: 2,
             extensions: None,
         }
     }
@@ -149,6 +149,10 @@ pub struct CompiledFormula {
     policy: EvaluationPolicy,
 }
 impl CompiledFormula {
+    /// Root possible-result type and conservative characteristics for this bound source.
+    pub fn properties(&self) -> Option<crate::typing::ExpressionProperties> {
+        self.bytecode.typing.root()
+    }
     /// Parse an independently owned inspection view on demand. Execution retains no tree.
     /// This diagnostic work is not included in [`CompilerUsage`].
     pub fn parsed(&self) -> Result<ParsedFormula, ParseError> {

@@ -688,3 +688,97 @@ fn finite_work_admission_stays_transactional_beside_unlimited_counters() {
         matches!(finite.charge(WorkKind::Comparison, 1), Err(EvaluationFailure::Budget(BudgetFailure { kind: BudgetKind::RunWork, consumed, requested: 1, .. })) if consumed == u64::MAX - 1)
     );
 }
+
+#[test]
+fn zero_work_preserves_accounting_and_next_charge_attribution() {
+    let kinds = [
+        WorkKind::Expression,
+        WorkKind::CellRead,
+        WorkKind::SparseScan,
+        WorkKind::NamespaceScan,
+        WorkKind::Materialization,
+        WorkKind::Comparison,
+        WorkKind::ScalarOperator,
+        WorkKind::HelperOperation,
+        WorkKind::WildcardState,
+        WorkKind::TextByte,
+        WorkKind::CalendarStep,
+        WorkKind::ReferencePair,
+    ];
+    let target = EvaluationTarget {
+        sheet: 2,
+        address: AT,
+    };
+    for kind in kinds {
+        for (run_work, cell_work) in [
+            (0, 0),
+            (3, 3),
+            (u64::MAX, u64::MAX),
+            (u64::MAX, 3),
+            (3, u64::MAX),
+        ] {
+            for consumed in [0, 3, u64::MAX] {
+                for active in [false, true] {
+                    let mut meter = BudgetMeter::new(EvaluationBudgets::default()).unwrap();
+                    // Seed every category, including saturated counters, independently of
+                    // the remaining allowance. Zero remains admissible even if a finite
+                    // allowance is already exceeded: 0 <= limit.saturating_sub(consumed).
+                    for category in kinds {
+                        meter.charge(category, consumed).unwrap();
+                    }
+                    meter.usage.work_units = consumed;
+                    meter.limits.run_work = run_work;
+                    meter.limits.cell_work = cell_work;
+                    meter.enter_depth().unwrap();
+                    if active {
+                        meter.push_cell(EvaluationTarget {
+                            sheet: 1,
+                            address: AT,
+                        });
+                        meter.frames.last_mut().unwrap().1 = 2;
+                        meter.push_cell(target);
+                        meter.frames.last_mut().unwrap().1 = consumed;
+                    }
+                    let usage = meter.usage.clone();
+                    let frames = meter.frames.clone();
+                    let depth = meter.depth;
+                    meter.charge(kind, 0).unwrap();
+                    assert_eq!(meter.usage, usage);
+                    assert_eq!(meter.frames, frames);
+                    assert_eq!(meter.depth, depth);
+
+                    let rejection = if run_work != u64::MAX && consumed >= run_work {
+                        Some((BudgetKind::RunWork, run_work))
+                    } else if active && cell_work != u64::MAX && consumed >= cell_work {
+                        Some((BudgetKind::CellWork, cell_work))
+                    } else {
+                        None
+                    };
+                    let next = meter.charge(kind, 1);
+                    if let Some((kind, limit)) = rejection {
+                        assert_eq!(
+                            next,
+                            Err(EvaluationFailure::Budget(BudgetFailure {
+                                kind,
+                                limit,
+                                consumed,
+                                requested: 1,
+                                target: active.then_some(target),
+                            }))
+                        );
+                        assert_eq!(meter.usage, usage);
+                        assert_eq!(meter.frames, frames);
+                    } else {
+                        next.unwrap();
+                        assert_eq!(meter.usage.work_units, consumed.saturating_add(1));
+                        if active {
+                            assert_eq!(meter.frames.last().unwrap().1, consumed.saturating_add(1));
+                            assert_eq!(meter.frames.first().unwrap().1, 2);
+                        }
+                    }
+                    assert_eq!(meter.depth, depth);
+                }
+            }
+        }
+    }
+}

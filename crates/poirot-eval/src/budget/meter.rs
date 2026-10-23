@@ -47,7 +47,11 @@ impl BudgetMeter {
         })
     }
     /// Admit work against run and active-cell limits before updating counters.
+    #[inline]
     pub fn charge(&mut self, kind: WorkKind, amount: u64) -> EvalResult<()> {
+        if amount == 0 {
+            return Ok(());
+        }
         let ChargeRequest { kind, amount } = policy::admit_work(
             self.limits,
             WorkSnapshot {

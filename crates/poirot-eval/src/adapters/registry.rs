@@ -238,6 +238,7 @@ mod tests {
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     static EXTRA: FunctionDescriptor = FunctionDescriptor {
+        result: crate::registry::ResultRule::Scalar,
         name: "TEAM.CUSTOM",
         handler: FunctionId::Math(MathFunction::Acosh),
         arity: Arity {

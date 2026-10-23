@@ -2,9 +2,11 @@
 #[derive(Clone, Debug)]
 pub struct EvaluationContext {
     /// Fixed clock used by date and time functions during this evaluation.
+    /// NOW/TODAY reuse while this and their consumed conversion settings remain
+    /// unchanged; changing it invalidates actual clock consumers and dependents.
     pub as_of_time: std::time::SystemTime,
     /// Explicit identity for reproducible per-cell random streams. Reusing the
-    /// seed reproduces draws after volatile refresh; change it for fresh draws.
+    /// seed permits reuse of unchanged draws; change it for fresh draws.
     pub randomness_seed: u64,
     /// Date ordering and fixed UTC offset used by localized operations.
     pub localization: crate::Localization,

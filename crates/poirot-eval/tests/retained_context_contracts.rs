@@ -100,8 +100,8 @@ fn localized_date_context_refreshes_actual_consumers_and_preserves_constants() {
     context.localization.date_order = DateOrder::DayMonthYear;
     let mut evaluation = overlay.evaluation(&context).unwrap();
     evaluation.outputs(&targets).unwrap();
-    // NOW is volatile in every canonical evaluation, independently of context changes.
-    assert_eq!(evaluation.usage().formula_executions, 3);
+    // Only the two date-text consumers observe date ordering; NOW keeps its clock result.
+    assert_eq!(evaluation.usage().formula_executions, 2);
     drop(evaluation);
     assert!(Arc::ptr_eq(
         &time_only,
@@ -395,4 +395,125 @@ fn formatted_argument_date_failure_is_operational_across_text_policy_changes() {
         })
     ));
     assert_eq!(w, before);
+}
+
+#[test]
+fn captured_clock_reuses_and_only_actual_clock_consumers_refresh() {
+    let w = book(&["NOW()", "TODAY()", "A1+1", "IF(FALSE,NOW(),7)"]);
+    let mut overlay = Overlay::with_workbook(&w).build().unwrap();
+    let mut context = context();
+    let targets = (0..4).map(target).collect::<Vec<_>>();
+    let values = overlay
+        .evaluation(&context)
+        .unwrap()
+        .outputs(&targets)
+        .unwrap();
+    // The supplied instant is 2021-01-01 12:00 UTC. Excel's 1900-system serial
+    // is 44197 at midnight, with the fractional day representing noon.
+    assert_eq!(
+        values.iter().map(|v| v.value.clone()).collect::<Vec<_>>(),
+        vec![
+            CellValue::Number(44197.5),
+            CellValue::Number(44197.),
+            CellValue::Number(44198.5),
+            CellValue::Number(7.),
+        ]
+    );
+    let skipped = overlay.cached_value(target(3)).unwrap();
+    {
+        let mut unchanged = overlay.evaluation(&context).unwrap();
+        assert_eq!(unchanged.outputs(&targets).unwrap(), values);
+        assert_eq!(unchanged.usage().formula_executions, 0);
+    }
+    let bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
+    let (baseline, state) = Overlay::from_snapshot(postcard::from_bytes(&bytes).unwrap()).unwrap();
+    let mut restored = state.attach(&baseline).unwrap();
+    {
+        let mut unchanged = restored.evaluation(&context).unwrap();
+        assert_eq!(unchanged.outputs(&targets).unwrap(), values);
+        assert_eq!(unchanged.usage().formula_executions, 0);
+    }
+    context.as_of_time += Duration::from_secs(86400);
+    {
+        let mut changed = overlay.evaluation(&context).unwrap();
+        let values = changed.outputs(&targets).unwrap();
+        assert_eq!(values[0].value, CellValue::Number(44198.5));
+        assert_eq!(values[1].value, CellValue::Number(44198.));
+        assert_eq!(changed.usage().formula_executions, 3);
+    }
+    assert!(Arc::ptr_eq(
+        &skipped,
+        &overlay.cached_value(target(3)).unwrap()
+    ));
+    context.localization.utc_offset_seconds = 3600;
+    let mut localized = restored.evaluation(&context).unwrap();
+    let values = localized.outputs(&targets).unwrap();
+    assert!(
+        (match values[0].value {
+            CellValue::Number(n) => n,
+            _ => panic!(),
+        } - (44198.5 + 1. / 24.))
+            .abs()
+            < 1e-10
+    );
+    assert_eq!(localized.usage().formula_executions, 3);
+}
+
+#[test]
+fn captured_random_streams_reuse_until_seed_changes() {
+    let w = book(&["RAND()+RAND()", "A1+1", "IF(FALSE,RAND(),7)"]);
+    let mut overlay = Overlay::with_workbook(&w).build().unwrap();
+    let mut context = context();
+    context.randomness_seed = 17;
+    let targets = (0..3).map(target).collect::<Vec<_>>();
+    let first = overlay
+        .evaluation(&context)
+        .unwrap()
+        .outputs(&targets)
+        .unwrap();
+    {
+        let mut unchanged = overlay.evaluation(&context).unwrap();
+        assert_eq!(unchanged.outputs(&targets).unwrap(), first);
+        assert_eq!(unchanged.usage().formula_executions, 0);
+    }
+    let skipped = overlay.cached_value(target(2)).unwrap();
+    context.as_of_time += Duration::from_secs(1);
+    {
+        let mut changed_clock = overlay.evaluation(&context).unwrap();
+        assert_eq!(changed_clock.outputs(&targets).unwrap(), first);
+        assert_eq!(changed_clock.usage().formula_executions, 0);
+    }
+    context.randomness_seed = 18;
+    let mut changed_seed = overlay.evaluation(&context).unwrap();
+    let second = changed_seed.outputs(&targets).unwrap();
+    assert_ne!(second[0].value, first[0].value);
+    assert_eq!(changed_seed.usage().formula_executions, 2);
+    drop(changed_seed);
+    assert!(Arc::ptr_eq(
+        &skipped,
+        &overlay.cached_value(target(2)).unwrap()
+    ));
+}
+
+#[test]
+fn numeric_calls_do_not_observe_unused_clock_or_localization_capabilities() {
+    let w = book(&["SUM(1,2)", "ABS(-4)", "A1+B1", "ABS(\"1 Jan\")"]);
+    let mut overlay = Overlay::with_workbook(&w).build().unwrap();
+    let mut context = context();
+    let targets = (0..4).map(target).collect::<Vec<_>>();
+    let first = overlay
+        .evaluation(&context)
+        .unwrap()
+        .outputs(&targets)
+        .unwrap();
+    assert_eq!(first[0].value, CellValue::Number(3.));
+    assert_eq!(first[1].value, CellValue::Number(4.));
+    assert_eq!(first[2].value, CellValue::Number(7.));
+    context.as_of_time += Duration::from_secs(366 * 86400);
+    let mut next = overlay.evaluation(&context).unwrap();
+    let second = next.outputs(&targets).unwrap();
+    assert_eq!(next.usage().formula_executions, 1);
+    assert_eq!(second[0].value, first[0].value);
+    assert_eq!(second[2].value, first[2].value);
+    assert_ne!(second[3].value, first[3].value);
 }

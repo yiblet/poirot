@@ -110,6 +110,11 @@ impl Session<'_> {
     }
     /// Discover spill values and record membership before collecting occupied coordinates.
     pub(super) fn sparse_addresses(&mut self, area: Area) -> EvalResult<Vec<CellAddress>> {
+        self.prepare_sparse_area(area)?;
+        self.collect_sparse_addresses(area, 0)
+    }
+    /// Establish full-area discovery and dependency guards before any sparse read.
+    pub(super) fn prepare_sparse_area(&mut self, area: Area) -> EvalResult<()> {
         self.discover_spills_in(area, None)?;
         if self.array_result_policy == ArrayResultPolicy::DynamicSpill
             && let Some(consumer) = self.consumer
@@ -138,6 +143,14 @@ impl Session<'_> {
                 col: area.c1,
             },
         });
+        Ok(())
+    }
+    /// Collect occupied coordinates after the caller established its full-area guards.
+    pub(super) fn collect_sparse_addresses(
+        &mut self,
+        area: Area,
+        prefix_members: usize,
+    ) -> EvalResult<Vec<CellAddress>> {
         let membership = poirot_model::query::RangeMembership::new(
             area.sheet,
             CellAddress {
@@ -151,31 +164,43 @@ impl Session<'_> {
         )
         .map_err(|_| EvaluationFailure::StalePlan)?;
         let view = crate::run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs);
-        // Count before reserving: sparse collections retain the same allocation limits
-        // as dense consumers, without charging unrelated worksheet entries.
-        let mut count = 0usize;
-        let mut cells = view
-            .stored(membership)
-            .map_err(|_| EvaluationFailure::StalePlan)?;
-        while sparse_next(&mut cells, &mut self.budget)?.is_some() {
-            self.budget.check_allocation(count.saturating_add(1))?;
-            count += 1;
-        }
-        self.budget.allocation(count)?;
-        let mut addresses = Vec::with_capacity(count);
+        // Admit each coordinate before growing the private collection. Finish
+        // collecting before consumers execute any referenced cell bodies.
+        let mut addresses = Vec::new();
         let mut cells = view
             .stored(membership)
             .map_err(|_| EvaluationFailure::StalePlan)?;
         while let Some(address) = sparse_next(&mut cells, &mut self.budget)? {
+            self.budget.check_allocation(
+                prefix_members
+                    .saturating_add(addresses.len())
+                    .saturating_add(1),
+            )?;
+            self.budget.charge(WorkKind::Materialization, 1)?;
+            addresses
+                .try_reserve(1)
+                .map_err(|_| EvaluationFailure::ResourceLimit {
+                    capability: CapabilityId::FunctionAdapter,
+                    source: self.consumer,
+                    detail: "sparse coordinate allocation failed".into(),
+                })?;
+            // SAFETY: The successful reservation provides room for this one push.
             addresses.push(address);
         }
-        if self.array_result_policy == ArrayResultPolicy::DynamicSpill {
+        // Effective stored coordinates are already unique and row-major. Only
+        // merging generated spill cells can disturb that order or add duplicates.
+        if self.array_result_policy == ArrayResultPolicy::DynamicSpill
+            && !self.spill_owners.is_empty()
+        {
             let mut seen: HashSet<_> = addresses.iter().copied().collect();
             for &(sheet, address) in self.spill_owners.keys() {
                 self.budget.charge(WorkKind::SparseScan, 1)?;
                 if sheet == area.sheet && area.contains(address) && !seen.contains(&address) {
-                    self.budget
-                        .check_allocation(addresses.len().saturating_add(1))?;
+                    self.budget.check_allocation(
+                        prefix_members
+                            .saturating_add(addresses.len())
+                            .saturating_add(1),
+                    )?;
                     self.budget.charge(WorkKind::Materialization, 1)?;
                     seen.insert(address);
                     addresses.push(address);
@@ -267,9 +292,9 @@ mod sparse_tests {
                 ..
             }
         ));
-        // Two passes: each seeks the occupied row and its columns, visits one
-        // cell, then performs a final unsuccessful row seek within A1:A3.
-        assert_eq!(result.usage().sparse_entries, 8);
+        // One column-index seek, one page-map seek, and one stored slot visit.
+        // Exhausting the loaded page performs no further tree lookup.
+        assert_eq!(result.usage().sparse_entries, 3);
     }
     #[test]
     fn empty_query_charges_terminal_seek_and_honors_limit() {
@@ -281,13 +306,16 @@ mod sparse_tests {
                 .unwrap()
                 .is_empty()
         );
-        assert_eq!(session.budget.usage.sparse_entries, 2);
+        assert_eq!(session.budget.usage.sparse_entries, 1);
         let mut limited = session_for_empty(&book);
         assert!(matches!(
             limited.sparse_addresses(area(0, 9, 0, 0)),
             Err(EvaluationFailure::Budget(BudgetFailure {
                 kind: BudgetKind::RunWork,
-                ..
+                limit: 0,
+                consumed: 0,
+                requested: 1,
+                target: None,
             }))
         ));
     }
@@ -295,7 +323,7 @@ mod sparse_tests {
         session(
             book,
             EvaluationBudgets {
-                run_work: 1,
+                run_work: 0,
                 ..EvaluationBudgets::default()
             },
         )
