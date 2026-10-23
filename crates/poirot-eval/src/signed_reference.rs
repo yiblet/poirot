@@ -252,6 +252,13 @@ impl Session<'_> {
             GridRead::Cell { sheet, address } => self.cell(sheet, address),
         }
     }
+    /// Read a signed range member, borrowing eligible authored literals directly.
+    pub(super) fn signed_range_read(&mut self, plan: GridRead) -> EvalResult<super::CellValue> {
+        match plan {
+            GridRead::Blank => Ok(super::Blank),
+            GridRead::Cell { sheet, address } => self.range_cell(sheet, address),
+        }
+    }
     fn signed_areas(&mut self, value: Value) -> EvalResult<Option<Vec<SignedArea>>> {
         Ok(match value {
             Value::SignedRefs(areas) => Some(areas),

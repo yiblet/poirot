@@ -66,7 +66,7 @@ pub mod translation_edit;
 
 pub use eval::overlay::{
     CalculationCycle, CalculationReport, CompilationUsage, EvaluationBuilder, EvaluationContext,
-    OverlayBuilder, OverlayError, OverlayEvaluation, OverlayPolicy,
+    OverlayBuilder, OverlayEdits, OverlayError, OverlayEvaluation, OverlayPolicy,
 };
 pub use model::WorkbookChange;
 pub use public::{

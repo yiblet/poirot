@@ -267,7 +267,7 @@ fn compile_inner(
     {
         return Err(CompileError::ResourceLimit);
     }
-    let mut writer = Writer {
+    let writer = Writer {
         output: Compiled {
             executable: Arc::new(Executable {
                 typing: crate::typing::FormulaTyping::default(),
@@ -290,8 +290,18 @@ fn compile_inner(
         aggregation_roles: [false; DEPTH],
         registry,
     };
-    stream(expression, 0, &mut writer);
-    if let Some(error) = writer.error {
+    let mut preparation = Preparation {
+        writer,
+        inference: crate::typing::InferenceMachine::new(sizes.expressions)?,
+        error: None,
+    };
+    stream(expression, 0, &mut preparation);
+    let Preparation {
+        mut writer,
+        inference,
+        error,
+    } = preparation;
+    if let Some(error) = error.or(writer.error) {
         return Err(error);
     }
     if writer.heads.iter().any(|h| *h != NONE)
@@ -301,7 +311,7 @@ fn compile_inner(
     {
         return Err(CompileError::InvalidReference);
     }
-    writer.output.typing = crate::typing::infer(expression, &writer.output)?;
+    writer.output.typing = inference.finish()?;
     Ok(writer.output)
 }
 
@@ -361,7 +371,7 @@ fn validate(e: &Expr, depth: usize, nodes: &mut usize, strict: bool) -> Result<(
 // Labels are scoped by syntax depth, so an on-stack fixed table is sufficient.
 /// Temporary high-level instruction stream lowered into fixed-width executable bytecode.
 enum High<'a> {
-    Enter(usize),
+    Enter(usize, &'a Expr),
     Leave,
     Atom(&'a Expr),
     Truncated,
@@ -377,11 +387,11 @@ enum High<'a> {
     Label(usize),
 }
 /// Bytecode lowering destination shared by sizing and emission passes.
-trait Sink {
-    fn emit(&mut self, op: High<'_>);
+trait Sink<'ast> {
+    fn emit(&mut self, op: High<'ast>);
 }
-fn stream(e: &Expr, depth: usize, sink: &mut impl Sink) {
-    sink.emit(High::Enter(depth));
+fn stream<'ast>(e: &'ast Expr, depth: usize, sink: &mut impl Sink<'ast>) {
+    sink.emit(High::Enter(depth, e));
     if depth >= DEPTH {
         sink.emit(High::Truncated);
         sink.emit(High::Leave);
@@ -508,14 +518,16 @@ struct Sizes {
     refs: usize,
     reference_bytes: usize,
     calls: usize,
+    expressions: usize,
 }
-impl Sink for Sizes {
-    fn emit(&mut self, op: High<'_>) {
+impl<'ast> Sink<'ast> for Sizes {
+    fn emit(&mut self, op: High<'ast>) {
         if matches!(op, High::Label(_)) {
             return;
         }
         self.code += 1;
         match op {
+            High::Enter(_, _) => self.expressions += 1,
             High::Truncated => self.text += 5,
             High::Invoke(s, _, _) => {
                 self.text += 4 + s.len();
@@ -537,10 +549,49 @@ impl Sink for Sizes {
         }
     }
 }
-/// Lowers streamed operations into final buffers and resolves label fixups.
-struct Writer<'a> {
+/// Coordinates independent inference and bytecode machines over the same expression events.
+struct Preparation<'registry, 'ast> {
+    writer: Writer<'registry>,
+    inference: crate::typing::InferenceMachine<'ast>,
     error: Option<CompileError>,
-    registry: Option<&'a crate::extensions::ExtensionRegistry>,
+}
+impl<'ast> Sink<'ast> for Preparation<'_, 'ast> {
+    fn emit(&mut self, op: High<'ast>) {
+        if self.error.is_some() || self.writer.error.is_some() {
+            return;
+        }
+        let invocation = matches!(&op, High::Invoke(..));
+        let inferred = match &op {
+            High::Enter(depth, expression) => u32::try_from(self.writer.output.template.code.len())
+                .map_err(|_| CompileError::ResourceLimit)
+                .and_then(|instruction| self.inference.enter(expression, *depth, instruction)),
+            High::Leave => self.inference.leave(&self.writer.output.calls),
+            _ => Ok(()),
+        };
+        if let Err(error) = inferred {
+            self.error = Some(error);
+            return;
+        }
+        self.writer.emit(op);
+        if self.writer.error.is_some() {
+            return;
+        }
+        if invocation {
+            let Some((index, binding)) = self.writer.output.calls.iter().enumerate().next_back()
+            else {
+                self.error = Some(CompileError::InvalidReference);
+                return;
+            };
+            if let Err(error) = self.inference.bind(&binding.target, index) {
+                self.error = Some(error);
+            }
+        }
+    }
+}
+/// Lowers streamed operations into final buffers and resolves label fixups.
+struct Writer<'registry> {
+    error: Option<CompileError>,
+    registry: Option<&'registry crate::extensions::ExtensionRegistry>,
     output: Compiled,
     heads: [u32; DEPTH * 2],
     aggregation_roles: [bool; DEPTH],
@@ -602,8 +653,8 @@ impl Writer<'_> {
         }
     }
 }
-impl Sink for Writer<'_> {
-    fn emit(&mut self, op: High<'_>) {
+impl<'ast> Sink<'ast> for Writer<'_> {
+    fn emit(&mut self, op: High<'ast>) {
         if self.error.is_some() {
             return;
         }
@@ -625,7 +676,7 @@ impl Sink for Writer<'_> {
         }
         let mut target = None;
         let mut instruction = match op {
-            High::Enter(d) => Instruction::new(Opcode::Enter, d as u32, 0),
+            High::Enter(d, _) => Instruction::new(Opcode::Enter, d as u32, 0),
             High::Leave => Instruction::new(Opcode::Leave, 0, 0),
             High::Atom(e) => self.atom(e),
             High::Truncated => {

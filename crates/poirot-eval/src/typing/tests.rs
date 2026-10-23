@@ -29,6 +29,9 @@ fn representative_successful_expression_results_belong_to_their_possible_types()
     sheet.set_value("A2".parse().unwrap(), "text").unwrap();
     let formulas = [
         "MUNIT(2)",
+        "TEXTBEFORE(\"a\",\",\",1,0,0,42)",
+        "TEXTAFTER(\"a\",\",\",1,0,0,TRUE)",
+        "TEXTBEFORE(\"a\",\",\",1,0,0,)",
         "ACOT({1;2})",
         "NETWORKDAYS.INTL(45292,45298,1,{45293;45294})",
         "XOR(TRUE,FALSE)",
@@ -303,4 +306,64 @@ fn financial_collections_do_not_expand_numeric_parameter_results() {
         );
         assert_eq!(properties.result.elements(), K::NUMBER.join(K::ERROR));
     }
+}
+
+#[test]
+fn inference_machine_rejects_incomplete_event_streams_and_unrepresentable_storage() {
+    assert!(matches!(
+        InferenceMachine::new(usize::MAX),
+        Err(CompileError::ResourceLimit)
+    ));
+    let expression = Expr::Number(1.);
+    let mut state = InferenceMachine::new(1).unwrap();
+    assert!(matches!(
+        state.leave(&[]),
+        Err(CompileError::InvalidReference)
+    ));
+    state.enter(&expression, 0, 0).unwrap();
+    assert!(matches!(
+        state.bind(&CallTarget::Unresolved, 0),
+        Err(CompileError::InvalidReference)
+    ));
+    assert!(matches!(
+        state.finish(),
+        Err(CompileError::InvalidReference)
+    ));
+}
+
+#[test]
+fn depth_truncation_has_an_error_atom_contract_without_unvisited_operands() {
+    let mut expression = Expr::Number(1.);
+    for _ in 0..crate::bytecode::DEPTH + 2 {
+        expression = Expr::Unary {
+            op: UnaryOp::Minus,
+            operand: Box::new(expression),
+        };
+    }
+    let compiled = crate::bytecode::compile_with_registry(&expression, None).unwrap();
+    let deepest = compiled.typing.expressions().last().unwrap();
+    assert_eq!(deepest.contract, ExpressionContract::Atom);
+    assert_eq!(deepest.properties.result, T::scalar(K::ERROR));
+    assert_eq!(deepest.properties.shape, S::SCALAR);
+}
+
+#[test]
+fn failed_parent_inference_cannot_publish_its_completed_child_as_a_root() {
+    let expression = poirot_parsing::formula::parse_formula("SUM(1)").unwrap();
+    let Expr::Function { args, .. } = &expression else {
+        panic!("function syntax");
+    };
+    let mut state = InferenceMachine::new(2).unwrap();
+    state.enter(&expression, 0, 0).unwrap();
+    state.enter(args.first().unwrap(), 1, 1).unwrap();
+    state.leave(&[]).unwrap();
+    // The driver omitted the parent's binding. Completed children are not a root.
+    assert!(matches!(
+        state.leave(&[]),
+        Err(CompileError::InvalidReference)
+    ));
+    assert!(matches!(
+        state.finish(),
+        Err(CompileError::InvalidReference)
+    ));
 }

@@ -862,13 +862,9 @@ fn retained_lookup_indices_revalidate_smaller_materialization_limits() {
         ..Default::default()
     };
     let mut next = overlay.evaluation(&small).unwrap();
-    assert!(matches!(
-        next.cell(at("E1")),
-        Err(EvaluationFailure::Budget(crate::BudgetFailure {
-            kind: crate::BudgetKind::Materialization,
-            ..
-        }))
-    ));
+    // Oversized retained indices are discarded under the smaller cap. Literal
+    // scanning itself needs no per-cell memo allocation, so the fallback fits.
+    assert_eq!(next.cell(at("E1")).unwrap(), CellValue::Number(1000.));
     assert!(next.usage().lookup_prefix_scans > 0);
     assert_eq!(next.usage().lookup_prefix_hits, 0);
 }
@@ -1083,11 +1079,11 @@ fn numeric_locale_identity_and_consumption_survive_retained_snapshot() {
 fn raw_snapshot_restore_rejects_previous_execution_semantics_versions() {
     let workbook = book();
     let overlay = Overlay::with_workbook(&workbook).build().unwrap();
-    for previous in 8..71 {
+    for previous in 8..72 {
         let mut bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
         // Payload's first field is its small postcard varint version.
         let version = bytes.first_mut().unwrap();
-        assert_eq!(*version, 71);
+        assert_eq!(*version, 72);
         *version = previous;
         let snapshot = postcard::from_bytes(&bytes).unwrap();
         assert!(

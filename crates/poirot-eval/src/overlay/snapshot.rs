@@ -2,7 +2,7 @@
 use super::*;
 use serde::{Deserialize, Serialize, ser::Error as _};
 use std::borrow::Cow;
-const VERSION: u32 = 71;
+const VERSION: u32 = 72;
 /// Compatibility revision for persisted engine preparation and retained results.
 /// Bump when wire layout or execution semantics invalidate prepared snapshots,
 /// including changes that leave Serde field layouts intact. This is separate from

@@ -237,6 +237,72 @@ impl<'a> Session<'a> {
         self.expression_demand = previous_demand;
         result
     }
+    /// Read an encountered range member without memoizing authored nonblank literals.
+    /// Observation ports and spill-owned content retain the ordinary cell protocol.
+    pub(super) fn range_cell(
+        &mut self,
+        sheet: usize,
+        address: CellAddress,
+    ) -> EvalResult<CellValue> {
+        if self.extensions.is_some()
+            || self.dependency_sink.is_some()
+            || self.cell_reader.is_some()
+            || self.cell_observer.is_some()
+            || self.builtin_invocation_observer.is_some()
+            || self.execution_observer.is_some()
+            || self.runtime.preparation.failed()
+            || self
+                .runtime
+                .preparation
+                .roles
+                .contains_key(&(sheet, address))
+            || address.validate().is_err()
+        {
+            return self.cell(sheet, address);
+        }
+        let Some(worksheet) = self.workbook.sheet(sheet) else {
+            return self.cell(sheet, address);
+        };
+        let cell =
+            run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs).cell(sheet, address);
+        let Some(cell) = cell.filter(|cell| {
+            cell.formula.is_none()
+                && cell.value != Blank
+                && worksheet.spill_owner(address).is_none()
+        }) else {
+            return self.cell(sheet, address);
+        };
+        let target = EvaluationTarget { sheet, address };
+        self.runtime
+            .budget
+            .charge(WorkKind::CellRead, 1)
+            .map_err(|mut failure| {
+                failure.set_target(target);
+                failure
+            })?;
+        self.read_lazy(|| DependencyRead::Cell(target));
+        self.runtime.budget.enter_depth().map_err(|mut failure| {
+            failure.set_target(target);
+            failure
+        })?;
+        // Retain the literal's frame for quota attribution, but not its value: the
+        // immutable source already owns it. Memo quotas count only retained entries.
+        self.runtime.budget.push_cell(target);
+        let value = if let Some(text) = cell.value.text_ref() {
+            self.runtime
+                .budget
+                .text(text.storage_bytes())
+                .map(|()| cell.value.clone())
+        } else {
+            Ok(match &cell.value {
+                Number(value) => numeric_outcome::coerce_numeric_outcome(*value),
+                value => value.clone(),
+            })
+        };
+        self.runtime.budget.pop_cell();
+        self.runtime.budget.leave_depth();
+        value
+    }
     /// Read or evaluate a cell, recording dependencies, spill effects, and completion provenance.
     pub(super) fn cell(&mut self, sheet: usize, address: CellAddress) -> EvalResult<CellValue> {
         let consumer = self.runtime.consumer;

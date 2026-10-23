@@ -104,30 +104,46 @@ pub struct CellCoordinates {
 /// Decode an A1 token, retaining absolute-axis flags.
 pub(super) fn cell_coordinates(text: &str) -> Result<Option<CellCoordinates>, ()> {
     let column_absolute = text.starts_with('$');
-    let rest = text.trim_start_matches('$');
-    let split = rest
-        .find(|c: char| !c.is_ascii_alphabetic())
-        .unwrap_or(rest.len());
-    if split == 0 || split == rest.len() {
+    let mut bytes = text.bytes().peekable();
+    while bytes.peek() == Some(&b'$') {
+        bytes.next();
+    }
+    let mut column = Some(0u32);
+    let mut has_letters = false;
+    while let Some(byte) = bytes.next_if(u8::is_ascii_alphabetic) {
+        has_letters = true;
+        // SAFETY: next_if admitted only ASCII letters, whose uppercase lies in A..=Z.
+        column = column.and_then(|n| {
+            n.checked_mul(26)?
+                .checked_add(u32::from(byte.to_ascii_uppercase() - b'A') + 1)
+        });
+    }
+    if !has_letters || bytes.peek().is_none() {
         return Ok(None);
     }
-    // SAFETY: split is produced by str::find on a character predicate, or rest.len(), both valid UTF-8 boundaries.
-    let row_text = &rest[split..];
-    let row_absolute = row_text.starts_with('$');
-    let digits = row_text.trim_start_matches('$');
-    if digits.is_empty() || !digits.bytes().all(|c| c.is_ascii_digit()) {
+    let row_absolute = bytes.peek() == Some(&b'$');
+    while bytes.peek() == Some(&b'$') {
+        bytes.next();
+    }
+    if bytes.peek().is_none() {
         return Ok(None);
     }
-    // SAFETY: split is produced by str::find on a character predicate, or rest.len(), both valid UTF-8 boundaries.
-    let col = column(&rest[..split]);
-    let row = digits
-        .parse::<u32>()
-        .ok()
-        .filter(|r| (1..=1048576).contains(r));
-    match (col, row) {
+    let mut row = Some(0u32);
+    for byte in bytes {
+        if !byte.is_ascii_digit() {
+            return Ok(None);
+        }
+        // SAFETY: The digit check above proves byte >= b'0'.
+        row = row.and_then(|n| n.checked_mul(10)?.checked_add(u32::from(byte - b'0')));
+    }
+    match (
+        column.filter(|n| (1..=16384).contains(n)),
+        row.filter(|n| (1..=1048576).contains(n)),
+    ) {
+        // SAFETY: Both filters above admit only positive coordinates before subtracting one.
         (Some(column), Some(row)) => Ok(Some(CellCoordinates {
             row: row - 1,
-            column,
+            column: column - 1,
             row_absolute,
             column_absolute,
         })),
@@ -238,5 +254,43 @@ pub(super) fn inherit_sheet(left: &Expr, right: &mut Expr) {
     };
     if target.is_none() {
         target.clone_from(sheet);
+    }
+}
+
+#[cfg(test)]
+mod coordinate_tests {
+    use super::*;
+    #[test]
+    fn checked_coordinate_decoder_preserves_axes_bounds_and_non_reference_tokens() {
+        for (text, row, column, row_absolute, column_absolute) in [
+            ("A1", 0, 0, false, false),
+            ("$XFD$1048576", 1048575, 16383, true, true),
+            ("aa0007", 6, 26, false, false),
+            ("AZ$12", 11, 51, true, false),
+            ("$BA13", 12, 52, false, true),
+        ] {
+            assert_eq!(
+                cell_coordinates(text),
+                Ok(Some(CellCoordinates {
+                    row,
+                    column,
+                    row_absolute,
+                    column_absolute
+                })),
+                "{text}"
+            );
+        }
+        for text in [
+            "XFE1",
+            "A1048577",
+            "A0",
+            "A9999999999999999999999999",
+            "ZZZZZZZZZZZZZZZZZZZZZZZZZ1",
+        ] {
+            assert_eq!(cell_coordinates(text), Err(()), "{text}");
+        }
+        for text in ["", "A", "1A", "A1x", "SUM", "A$", "é1", "A1é"] {
+            assert_eq!(cell_coordinates(text), Ok(None), "{text}");
+        }
     }
 }

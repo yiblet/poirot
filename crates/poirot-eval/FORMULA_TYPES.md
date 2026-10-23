@@ -1,7 +1,15 @@
 ## Formula type contract
 
 Preparation interprets existing expression syntax and resolved function identities.
-It retains a possible type at every executable `Enter` boundary, including lazy
+The parser retains its own syntax state and limits. A common depth-first expression
+walk advances the bytecode writer and a separate inference state machine: enter a
+node, bind its call, finish its operands, then infer and emit the completed node.
+Inference does not perform another recursive syntax walk. The compiler still checks
+structure and sizes buffers before emission; those checks do not traverse workbook
+cells. The evaluator's memoized cell DFS requests preparation as it encounters cells,
+and exact source/policy caches and executable templates reuse completed preparation.
+There is no second retained syntax tree or eager whole-workbook inference pass.
+Preparation retains a possible type at every executable `Enter` boundary, including lazy
 argument blocks. The first boundary describes the prepared cell's root expression.
 No extra type/effect payload is attached to a runtime value. Public mutable source
 cells have no authoritative cached annotation: exact source and binding identities
@@ -16,7 +24,10 @@ T ::= Scalar(K) | Array(K) | Ref1(K) | RefN(K) | Missing | T ∨ T
 E ::= (possible host-read categories, external behavior)
 d ::= positive integer | ∞
 D ::= (d, d)
+A ::= conditional selection protocol | eager errors before arity | handler-controlled
+C ::= atom | broadcast | scalar intersection | reference | array | function(rule, A)
 P ::= (T, D) with E
+TypedExpression ::= (instruction boundary, P, C)
 external behavior ::= Tracked ≤ Volatile ≤ Opaque
 ```
 
@@ -56,8 +67,25 @@ references, coerce to their result kind, include errors, and allow array lifting
 when an operand admits arrays or RefN. `@` consumes those forms and returns a scalar.
 Reference operators preserve reference possibilities and include reference errors.
 
-Every registry declaration supplies an explicit typed result rule. Scalar consumers
-such as SUM discard argument array forms. Matrix producers introduce arrays. Information
+Every registry declaration supplies an explicit typed result rule.
+Each typed expression also retains its operation contract, including the function's
+argument-demand protocol. IF, IFERROR, IFNA, CHOOSE, IFS and SWITCH distinguish their
+selection protocols. Other family-controlled/provider calls remain conservative;
+the metadata does not authorize eager execution or change error ordering.
+The broadcast contract applies to concatenation as well as arithmetic/comparisons:
+`A[i,1] + B[1,j] -> C[i,j]` and `A[i,j] & scalar -> Text[i,j]`. SUM reduces
+array arguments to a scalar number or error.
+
+Shape rules compose independent **maximum** row and column counts. Sorting,
+deduplication and cropping preserve the input bounds; stacking sums one axis and
+joins the other; flattening uses a checked element-count product; row/column
+selection admits repeated indices; matrix multiplication takes its outer dimensions.
+FILTER joins the input bound with its separately bounded empty-result fallback.
+Unknown and overflowing dimensions remain unknown independently. Two equal upper
+bounds do not prove equal actual dimensions, so runtime broadcasting checks remain
+necessary. A maximum 100 by 3 result anchored at D5 can only occupy D5:F104.
+
+Scalar consumers such as SUM discard argument array forms. Matrix producers introduce arrays. Information
 predicates lift over arrays. IF, IFS, CHOOSE and SWITCH join possible selected result
 forms and also allow lifting from array condition/index arguments. Fallback selection
 retains input/fallback forms and lifting. INDEX retains reference versus value channel
@@ -289,3 +317,15 @@ seals it only outside private settlement; point reads do not replace it. Private
 attempts and sticky failure disable it. Cohort reset clears it, and snapshots do
 not serialize it. This fact is stronger than inspected source coverage and is not
 an additional formula type or a promise that unknown producers have finite shape.
+
+## Design references
+
+The shape/inference review consulted [MLIR shape inference](https://mlir.llvm.org/docs/ShapeInference/),
+[Futhark size types](https://futhark.readthedocs.io/en/latest/language-reference.html#size-types),
+and [Julia broadcasting](https://docs.julialang.org/en/v1/manual/arrays/#Broadcasting),
+rolling documentation retrieved 2026-10-23. These informed the separation of element
+types, dimensions, operation rules and inference state. Poirot uses conservative
+maximum bounds and Excel's evaluation policies, rather than assuming another
+language's exact-size or broadcasting error semantics. The implementation and tests
+were written independently; no upstream source, tests or algorithm implementation
+was copied or translated for this refactor.

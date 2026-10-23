@@ -429,3 +429,64 @@ fn extension_created_arrays_have_unknown_bounds_instead_of_argument_guesses() {
     assert_eq!(formula.properties().unwrap().shape, S::UNKNOWN);
     assert!(formula.properties().unwrap().result.may_spill());
 }
+
+#[test]
+fn compositional_bounds_cover_stacking_flattening_selection_products_and_filter_fallbacks() {
+    // Independent rectangular arithmetic, not inferred Poirot output, supplies these bounds.
+    // HSTACK's documented rule is max(rows), sum(columns):
+    // https://support.microsoft.com/en-us/excel/functions/hstack-function
+    for (source, bound, actual) in [
+        ("HSTACK({1;2},{3,4})", S::new(2, 3), (2, 3)),
+        ("VSTACK({1,2},{3;4})", S::new(3, 2), (3, 2)),
+        ("TOCOL({1,2;3,4})", S::new(4, 1), (4, 1)),
+        ("TOROW({1,2;3,4})", S::new(1, 4), (1, 4)),
+        ("CHOOSECOLS({1,2;3,4},2,2,1)", S::new(2, 3), (2, 3)),
+        ("CHOOSEROWS({1,2;3,4},1,1,2)", S::new(3, 2), (3, 2)),
+        ("MMULT({1,2,3;4,5,6},{1;2;3})", S::new(2, 1), (2, 1)),
+        ("FILTER({1,2;3,4},{TRUE;FALSE})", S::new(2, 2), (1, 2)),
+        (
+            "FILTER({1,2;3,4},{FALSE;FALSE},{5,6,7;8,9,10;11,12,13})",
+            S::new(3, 3),
+            (3, 3),
+        ),
+    ] {
+        assert_eq!(properties(source).shape, bound, "{source}");
+        let mut book = Workbook::new();
+        let sheet = book.add_sheet("S").unwrap();
+        sheet.set_formula(at("D10").address, source).unwrap();
+        sheet.set_formula(at("A1").address, "ROWS(D10#)").unwrap();
+        sheet
+            .set_formula(at("A2").address, "COLUMNS(D10#)")
+            .unwrap();
+        let mut evaluation = Evaluation::with_workbook(&book)
+            .build(Default::default())
+            .unwrap();
+        assert_eq!(
+            evaluation.cell(at("A1")).unwrap(),
+            CellValue::Number(f64::from(actual.0)),
+            "{source}"
+        );
+        assert_eq!(
+            evaluation.cell(at("A2")).unwrap(),
+            CellValue::Number(f64::from(actual.1)),
+            "{source}"
+        );
+        assert!(bound.admits(actual.0, actual.1));
+    }
+    // Products/sums that exceed the finite dimension representation must widen.
+    assert_eq!(properties("TOCOL(A:XFD)").shape.rows, None);
+    assert_eq!(
+        properties("HSTACK(SEQUENCE(A1,2),SEQUENCE(3,4))").shape,
+        S {
+            rows: None,
+            columns: std::num::NonZeroU32::new(6)
+        }
+    );
+    assert_eq!(
+        properties("VSTACK(SEQUENCE(2,A1),SEQUENCE(4,3))").shape,
+        S {
+            rows: std::num::NonZeroU32::new(6),
+            columns: None
+        }
+    );
+}

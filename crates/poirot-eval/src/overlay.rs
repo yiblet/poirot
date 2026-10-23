@@ -10,6 +10,8 @@ use poirot_model::{
     Cell, CellAddress, CellStore, CellStyle, CellValue, ModelError, Workbook, WorkbookChange,
 };
 use std::{borrow::Borrow, cell::RefCell, collections::BTreeMap, sync::Arc};
+mod edits;
+pub use edits::OverlayEdits;
 mod context;
 mod target;
 use context::ContextKey;
@@ -135,6 +137,17 @@ impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
         })
     }
     source_methods!();
+    /// Apply source edits and invalidate their combined dependency closure once.
+    ///
+    /// The closure receives only write operations; evaluation and cache reads are
+    /// unavailable until it returns. Successful edits remain applied if the closure
+    /// returns an error or unwinds. Their invalidation still completes before the
+    /// overlay can be used again. There is no rollback or separate commit step.
+    pub fn edit<R>(&mut self, apply: impl FnOnce(&mut OverlayEdits<'_, 'a, W>) -> R) -> R {
+        let mut edits = OverlayEdits::new(&mut self.source, self.cache.get_mut());
+        apply(&mut edits)
+    }
+
     /// Discard pending authored edits and calculated results, keeping the baseline unchanged.
     pub fn discard_edits(&mut self) {
         self.reset();

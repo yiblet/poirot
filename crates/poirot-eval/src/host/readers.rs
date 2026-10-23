@@ -154,7 +154,7 @@ impl CallHost<'_, '_> {
                     return Err(Ref.into());
                 }
                 (
-                    self.session.cell(
+                    self.session.range_cell(
                         area.sheet,
                         CellAddress {
                             row: area.r0 + row as u32,
@@ -169,7 +169,7 @@ impl CallHost<'_, '_> {
                 // SAFETY: Both reference match arms explicitly require areas.len() == 1.
                 let plan = areas[0].read(row as u64, column as u64).ok_or(Ref)?;
                 (
-                    self.session.signed_read(plan)?,
+                    self.session.signed_range_read(plan)?,
                     OperandOrigin::ReferencedCell,
                     false,
                 )
@@ -206,7 +206,7 @@ impl CallHost<'_, '_> {
             self.session.budget.charge(WorkKind::ReferencePair, 1)?;
             let plan = area.relative(row, column).ok_or(Ref)?;
             return Ok(ScalarOperand {
-                value: self.session.signed_read(plan)?,
+                value: self.session.signed_range_read(plan)?,
                 origin: OperandOrigin::ReferencedCell,
                 missing: false,
             });
@@ -220,7 +220,7 @@ impl CallHost<'_, '_> {
             self.session.budget.charge(WorkKind::ReferencePair, 1)?;
             let plan = resolution::CellReadPlan::relative(area, row, column)?;
             return Ok(ScalarOperand {
-                value: self.session.cell(plan.sheet, plan.address)?,
+                value: self.session.range_cell(plan.sheet, plan.address)?,
                 origin: OperandOrigin::ReferencedCell,
                 missing: false,
             });
@@ -311,7 +311,7 @@ impl CallHost<'_, '_> {
                             .read(remaining / area.width(), remaining % area.width())
                             .ok_or(Ref)?;
                         return Ok(ScalarOperand {
-                            value: self.session.signed_read(plan)?,
+                            value: self.session.signed_range_read(plan)?,
                             origin: OperandOrigin::ReferencedCell,
                             missing: false,
                         });
@@ -332,7 +332,7 @@ impl CallHost<'_, '_> {
                         };
                         let sheet = area.sheet;
                         return Ok(ScalarOperand {
-                            value: self.session.cell(sheet, address)?,
+                            value: self.session.range_cell(sheet, address)?,
                             origin: OperandOrigin::ReferencedCell,
                             missing: false,
                         });

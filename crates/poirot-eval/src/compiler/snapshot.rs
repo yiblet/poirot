@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 /// Snapshot validation result carrying a diagnostic for unsupported or inconsistent compiled data.
 type Result<T> = std::result::Result<T, String>;
-const VERSION: u32 = 19;
+const VERSION: u32 = 20;
 /// Serde view preserving source-to-program sharing for a trusted compiled workbook plan.
 #[derive(Serialize, Deserialize)]
 pub struct Plan<'a> {

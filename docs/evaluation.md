@@ -47,6 +47,27 @@ let bytes = overlay.save_xlsx().to_buffer()?;
 
 Each `evaluation(&context)` starts an explicit cycle and resets its work allowance. Edits and valid results survive between cycles. Use `evaluation_with_profiling(&context, true)` when you need category counters. Direct reads instead share the cycle started by construction or `start_cycle(context)`. Editing does not replenish work. Use `book.recalculate()` when you want a full calculation written into the workbook's stored results.
 
+Group scenario inputs with `overlay.edit` to invalidate their combined dependencies once:
+
+```rust
+# use poirot::{Workbook, ModelError};
+# fn main() -> Result<(), Box<dyn std::error::Error>> {
+# let mut book = Workbook::new();
+# book.add_sheet("Energy")?;
+# let mut overlay = book.overlay().build()?;
+let hours = overlay.target("Energy!A1")?;
+let price = overlay.target("Energy!A2")?;
+overlay.edit(|edits| -> Result<(), ModelError> {
+    edits.set_value(hours, 24.)?;
+    edits.set_value(price, 0.15)?;
+    Ok(())
+})?;
+# Ok(())
+# }
+```
+
+The closure exposes only edits; reads and evaluation resume after it returns. Edits apply in order. If an operation fails or the closure unwinds, earlier successful edits remain applied and their results are invalidated. This groups invalidation without rollback or a separate commit step.
+
 ## Export is a snapshot of effective state
 
 `save_xlsx()` captures effective authored edits and currently valid results in one isolated workbook copy. It never evaluates formulas, applies edits to the baseline, or clears warm state. The returned builder owns that captured copy: later scenario edits do not change a pending export. `.options(options)` uses the same output settings and defaults as a workbook save. Validation and serialization finish before a destination file is opened; filesystem failure can still leave a partial file.

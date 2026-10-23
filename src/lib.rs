@@ -234,9 +234,9 @@ pub use poirot_model::{
 pub use poirot_workbook::{
     Calculation, CalculationCycle, CalculationError, CalculationReport, CellEvaluation,
     CompilationUsage, Evaluation, EvaluationBuilder, EvaluationContext, EvaluationFailure,
-    EvaluationTarget, LoadBuilder, Overlay, OverlayBuilder, OverlayError, OverlayEvaluation,
-    OverlayPolicy, OverlaySnapshot, SavePlan, Workbook, WorkbookError, WorkbookSnapshot,
-    WorkspaceState, XlsxSaveBuilder, edit, translation_edit,
+    EvaluationTarget, LoadBuilder, Overlay, OverlayBuilder, OverlayEdits, OverlayError,
+    OverlayEvaluation, OverlayPolicy, OverlaySnapshot, SavePlan, Workbook, WorkbookError,
+    WorkbookSnapshot, WorkspaceState, XlsxSaveBuilder, edit, translation_edit,
 };
 
 // Workbook-owned convenience APIs; legacy evaluator constructors remain available.

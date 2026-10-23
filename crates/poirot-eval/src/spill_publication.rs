@@ -195,6 +195,13 @@ pub(super) struct Preparation {
     /// Committed roles also represent private admissions during settlement.
     pub roles: CellMap<SpillRole>,
 }
+impl Preparation {
+    /// Whether an earlier spill attempt has already aborted this evaluation.
+    pub(super) fn failed(&self) -> bool {
+        self.failure.is_some()
+    }
+}
+
 /// A physical operand whose source discovery and ownership settlement both completed.
 #[derive(Clone, Copy)]
 struct SettledArea(Area);
@@ -1697,6 +1704,28 @@ impl Session<'_> {
         }
         if self.ready_area(area) {
             return Ok(());
+        }
+        // Authored nonblank values and nonspilling formulas block every other
+        // producer. Their point values therefore need no origin-prefix search.
+        // Derived saved children still require ownership reconciliation.
+        if area.kind == AreaKind::Cell {
+            let at = CellAddress {
+                row: area.r0,
+                col: area.c0,
+            };
+            if self
+                .workbook
+                .sheet(area.sheet)
+                .is_some_and(|sheet| sheet.spill_owner(at).is_none())
+                && let Some(cell) = run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs)
+                    .cell(area.sheet, at)
+                && match cell.formula.as_deref() {
+                    Some(source) => self.source_spill_shape(area.sheet, at, source).is_none(),
+                    None => cell.value != Blank,
+                }
+            {
+                return Ok(());
+            }
         }
         match self.discover_candidates(
             area.sheet,

@@ -132,15 +132,15 @@ fn memoized_text_failure_retains_target_provenance_usage_and_frame_unwinding() {
     );
     let failure = run.evaluate_cell(target("A1")).unwrap_err();
     // Initial read copies six text bytes into the result and again into the memo,
-    // and admits one memo value. Cold preparation inspects only A1: B1 lies
-    // outside its origin prefix (15 units total). A memo read costs one more; its six
+    // and admits one memo value. Authored nonblank A1 blocks other spills, so
+    // preparation needs no sparse inspection (14 units total). A memo read costs one more; its six
     // text bytes exceed twenty. The rejected charge is atomic.
     assert_eq!(
         failure,
         EvaluationFailure::Budget(BudgetFailure {
             kind: BudgetKind::RunWork,
             limit: 20,
-            consumed: 16,
+            consumed: 15,
             requested: 6,
             target: Some(target("A1"))
         })
@@ -153,7 +153,7 @@ fn memoized_text_failure_retains_target_provenance_usage_and_frame_unwinding() {
         report.outcome,
         EvaluationOutcome::Aborted {
             usage: EvaluationUsage {
-                work_units: 16,
+                work_units: 15,
                 cell_reads: 2,
                 text_bytes: 12,
                 ..

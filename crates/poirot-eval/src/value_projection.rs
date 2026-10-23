@@ -360,7 +360,7 @@ impl<'a> Session<'a> {
                     reserve!(addresses.len());
                     for address in addresses {
                         // SAFETY: The local reserve! expansion reserved one slot per address before this loop; each iteration pushes exactly one member.
-                        values.push(project(self.cell(area.sheet, address)?, true));
+                        values.push(project(self.range_cell(area.sheet, address)?, true));
                     }
                 }
             }
@@ -370,7 +370,7 @@ impl<'a> Session<'a> {
                     reserve!(addresses.len());
                     for address in addresses {
                         // SAFETY: The local reserve! expansion reserved one slot per address before this loop; each iteration pushes exactly one member.
-                        values.push(project(self.cell(area.sheet, address)?, true));
+                        values.push(project(self.range_cell(area.sheet, address)?, true));
                     }
                 }
             }

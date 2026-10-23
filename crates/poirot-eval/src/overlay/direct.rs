@@ -134,7 +134,8 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
     pub fn all(&mut self) -> Result<Vec<crate::CellEvaluation>, EvaluationFailure> {
         self.perform(output::all)
     }
-    /// Values from successful calls, including dependencies and spill children.
+    /// Memoized values from successful calls, including dependencies and spill children.
+    /// Authored literals read directly by range consumers need no memo entry.
     pub fn values(&self) -> impl Iterator<Item = (EvaluationTarget, &CellValue)> {
         let state = &self.state;
         self.completed.iter().filter_map(move |key| {

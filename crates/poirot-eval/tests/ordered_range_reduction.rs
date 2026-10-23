@@ -488,7 +488,8 @@ fn failed_overlay_retention_never_publishes_a_partial_batch() {
     );
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let mut context = EvaluationContext::default();
-    context.retention.cells = 4;
+    // Literal range members need no memo entries; admit only the first formula.
+    context.retention.cells = 1;
     {
         let mut run = overlay.evaluation(&context).unwrap();
         assert_eq!(run.cell(at("Z1")).unwrap(), 3.0.into());

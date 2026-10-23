@@ -33,7 +33,7 @@ impl Session<'_> {
         match table {
             LookupTable::SheetCells(areas) => {
                 let a = *areas.get(row).ok_or(EvaluationFailure::StalePlan)?;
-                self.cell(
+                self.range_cell(
                     a.sheet,
                     CellAddress {
                         row: a.r0,
@@ -41,14 +41,14 @@ impl Session<'_> {
                     },
                 )
             }
-            LookupTable::Reference(a) => self.cell(
+            LookupTable::Reference(a) => self.range_cell(
                 a.sheet,
                 CellAddress {
                     row: a.r0 + row as u32,
                     col: a.c0 + col as u32,
                 },
             ),
-            LookupTable::Signed(a) => self.signed_read(
+            LookupTable::Signed(a) => self.signed_range_read(
                 a.read(row as u64, col as u64)
                     .ok_or(EvaluationFailure::StalePlan)?,
             ),

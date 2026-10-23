@@ -151,6 +151,10 @@ See [Contributing](CONTRIBUTING.md) to work on Poirot.
 - [Boost.Math](https://github.com/boostorg/math) supplies the adapted binary64
   Bessel K approximations. See [source attribution and license](LICENSES/Boost-Math.md).
 
+- [MLIR shape inference](https://mlir.llvm.org/docs/ShapeInference/) and
+  [Futhark size types](https://futhark.readthedocs.io/en/latest/language-reference.html#size-types)
+  informed the independently implemented [formula type system](crates/poirot-eval/FORMULA_TYPES.md).
+
 See [LICENSES/ACKNOWLEDGEMENTS](LICENSES/ACKNOWLEDGEMENTS) for credits and notices.
 Poirot's code is licensed under [MIT](LICENSES/MIT.txt).
 

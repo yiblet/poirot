@@ -308,6 +308,95 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
     }
 }
 
+/// Source edits shared by immediate workspaces and write-only overlay batches.
+macro_rules! edit_methods {
+    () => {
+        /// Replace a cell with a literal, preserving its style and invalidating results.
+        pub fn set_value(
+            &mut self,
+            target: EvaluationTarget,
+            value: impl Into<CellValue>,
+        ) -> Result<(), ModelError> {
+            let style = self
+                .source
+                .source_cell(target)
+                .map(|c| c.style.clone())
+                .unwrap_or_default();
+            self.write_cell(
+                target,
+                Cell {
+                    value: value.into(),
+                    formula: None,
+                    shared_formula: None,
+                    style,
+                },
+                source::EditKind::Content,
+            )
+        }
+        /// Replace a formula and clear its saved value, preserving its style.
+        pub fn set_formula(
+            &mut self,
+            target: EvaluationTarget,
+            formula: impl Into<String>,
+        ) -> Result<(), ModelError> {
+            let mut cell = Cell::with_formula(formula, CellValue::Blank)?;
+            cell.style = self
+                .source
+                .source_cell(target)
+                .map(|c| c.style.clone())
+                .unwrap_or_default();
+            self.write_cell(target, cell, source::EditKind::Content)
+        }
+        /// Replace authored style and invalidate potentially affected results.
+        pub fn set_style(
+            &mut self,
+            target: EvaluationTarget,
+            style: CellStyle,
+        ) -> Result<(), ModelError> {
+            let mut cell = self.source.source_cell(target).cloned().unwrap_or_default();
+            cell.style = style;
+            self.write_cell(target, cell, source::EditKind::Style)
+        }
+        /// Change a formula's saved source value; the default Compute policy still recalculates it.
+        pub fn set_cached_value(
+            &mut self,
+            target: EvaluationTarget,
+            value: impl Into<CellValue>,
+        ) -> Result<(), ModelError> {
+            let mut cell = self
+                .source
+                .source_cell(target)
+                .cloned()
+                .ok_or_else(|| ModelError("cache target is absent".into()))?;
+            if cell.formula.is_none() {
+                return Err(ModelError("cache target has no formula".into()));
+            }
+            cell.value = value.into();
+            self.write_cell(target, cell, source::EditKind::Content)
+        }
+        /// Remove effective authored content and invalidate results.
+        pub fn remove_cell(&mut self, target: EvaluationTarget) -> Result<(), ModelError> {
+            if self.source.remove_cell(target)? {
+                self.source_changed(target);
+            }
+            Ok(())
+        }
+        fn write_cell(
+            &mut self,
+            target: EvaluationTarget,
+            cell: Cell,
+            kind: source::EditKind,
+        ) -> Result<(), ModelError> {
+            if self.source.write_cell(target, cell, kind)? {
+                self.source_changed(target);
+            }
+            Ok(())
+        }
+    };
+}
+/// Shared edit expansion with a caller-supplied invalidation hook.
+pub(super) use edit_methods;
+
 /// Shared public source operations; each workspace supplies its own invalidation hook.
 macro_rules! source_methods {
     () => {
@@ -339,73 +428,7 @@ macro_rules! source_methods {
         pub fn compile_all(&mut self) -> CompilationUsage {
             self.source.compile_all()
         }
-        /// Replace a cell with a literal, preserving its style and invalidating results.
-        pub fn set_value(
-            &mut self,
-            target: EvaluationTarget,
-            value: impl Into<CellValue>,
-        ) -> Result<(), ModelError> {
-            let style = self
-                .source_cell(target)
-                .map(|c| c.style.clone())
-                .unwrap_or_default();
-            self.write_cell(
-                target,
-                Cell {
-                    value: value.into(),
-                    formula: None,
-                    shared_formula: None,
-                    style,
-                },
-                source::EditKind::Content,
-            )
-        }
-        /// Replace a formula and clear its saved value, preserving its style.
-        pub fn set_formula(
-            &mut self,
-            target: EvaluationTarget,
-            formula: impl Into<String>,
-        ) -> Result<(), ModelError> {
-            let mut cell = Cell::with_formula(formula, CellValue::Blank)?;
-            cell.style = self
-                .source_cell(target)
-                .map(|c| c.style.clone())
-                .unwrap_or_default();
-            self.write_cell(target, cell, source::EditKind::Content)
-        }
-        /// Replace authored style and invalidate potentially affected results.
-        pub fn set_style(
-            &mut self,
-            target: EvaluationTarget,
-            style: CellStyle,
-        ) -> Result<(), ModelError> {
-            let mut cell = self.source_cell(target).cloned().unwrap_or_default();
-            cell.style = style;
-            self.write_cell(target, cell, source::EditKind::Style)
-        }
-        /// Change a formula's saved source value; the default Compute policy still recalculates it.
-        pub fn set_cached_value(
-            &mut self,
-            target: EvaluationTarget,
-            value: impl Into<CellValue>,
-        ) -> Result<(), ModelError> {
-            let mut cell = self
-                .source_cell(target)
-                .cloned()
-                .ok_or_else(|| ModelError("cache target is absent".into()))?;
-            if cell.formula.is_none() {
-                return Err(ModelError("cache target has no formula".into()));
-            }
-            cell.value = value.into();
-            self.write_cell(target, cell, source::EditKind::Content)
-        }
-        /// Remove effective authored content and invalidate results.
-        pub fn remove_cell(&mut self, target: EvaluationTarget) -> Result<(), ModelError> {
-            if self.source.remove_cell(target)? {
-                self.source_changed(target);
-            }
-            Ok(())
-        }
+        source::edit_methods!();
         /// Replace policies; reusable programs survive changes outside parser preparation.
         pub fn set_policy(&mut self, policy: OverlayPolicy) -> Result<(), OverlayError> {
             if self.source.policy != policy {
@@ -416,17 +439,6 @@ macro_rules! source_methods {
                 self.source.preparation.parse = policy.parse;
                 let previous = std::mem::replace(&mut self.source.policy, policy);
                 self.policy_changed(&previous);
-            }
-            Ok(())
-        }
-        fn write_cell(
-            &mut self,
-            target: EvaluationTarget,
-            cell: Cell,
-            kind: source::EditKind,
-        ) -> Result<(), ModelError> {
-            if self.source.write_cell(target, cell, kind)? {
-                self.source_changed(target);
             }
             Ok(())
         }

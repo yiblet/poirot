@@ -216,8 +216,10 @@ fn shared_runs_share_immutable_source_and_keep_memos_isolated() {
     }
     for (worker, number) in workers.into_iter().zip([3., 8.]) {
         let result = worker.join().unwrap();
+        // Range consumers borrow the authored input instead of retaining a copy.
+        assert!(!result.cells.contains_key(&(0, at(0, 0))));
         assert_eq!(
-            result.cells.get(&(0, at(0, 0))),
+            result.cells.get(&(0, at(0, 1))),
             Some(&CellValue::Number(number))
         );
         match result.report.outcome {

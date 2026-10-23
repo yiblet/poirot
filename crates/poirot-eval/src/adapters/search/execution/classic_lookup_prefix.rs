@@ -486,13 +486,23 @@ mod interval_tests {
         let mut book = Workbook::new();
         let sheet = book.add_sheet("S").unwrap();
         sheet.set_value("A1".parse().unwrap(), 1.).unwrap();
-        sheet.set_value("A2".parse().unwrap(), 2.).unwrap();
+        sheet
+            .set_value("A2".parse().unwrap(), "a long unread literal")
+            .unwrap();
         let mut run = Session::with_context(&book, EvaluationInputs::default());
         run.lookup_prefixes.enable();
         assert_eq!(lookup(&mut run, "MATCH(1,A1:A2,0)").unwrap(), Number(1.));
-        // The next uncached candidate exceeds the reduced memo admission limit.
-        run.budget.limits.materialized_values = 1;
-        assert!(lookup(&mut run, "MATCH(2,A1:A2,0)").is_err());
+        // The retained first candidate succeeds; extending to the next candidate
+        // refuses its text before the newly extended prefix can be published.
+        run.budget.limits.text_bytes = 8;
+        let failure = lookup(&mut run, "MATCH(2,A1:A2,0)").unwrap_err();
+        assert_eq!(
+            failure.budget().unwrap().target,
+            Some(EvaluationTarget {
+                sheet: 0,
+                address: "A2".parse().unwrap()
+            })
+        );
         assert!(run.lookup_prefixes.axes.is_empty());
     }
 

@@ -264,3 +264,153 @@ fn spill_reference_and_runtime_profile_fallback_use_reference_result_contracts()
         );
     }
 }
+
+#[test]
+fn typed_operators_retain_broadcasting_and_conditional_argument_contracts() {
+    use typing::{ArgumentEvaluation as A, ConditionalArguments as C, ExpressionContract as E};
+    for (source, wanted) in [
+        ("IF(TRUE,1,RAND())", C::If),
+        ("IFERROR(1,NOW())", C::IfError),
+        ("IFNA(1,2)", C::IfNa),
+        ("CHOOSE(1,2,3)", C::Choose),
+        ("IFS(TRUE,1,FALSE,2)", C::Ifs),
+        ("SWITCH(1,1,2,3)", C::Switch),
+    ] {
+        let formula = prepared(source);
+        let PreparedFormula::Ready(formula) = formula.as_ref() else {
+            panic!("valid conditional");
+        };
+        assert!(
+            matches!(formula.bytecode().typing.expressions().first().unwrap().contract,
+            E::Function {arguments:A::Conditional(actual),..} if actual==wanted)
+        );
+    }
+    for (source, kinds) in [
+        ("{1;2;3}+{10,20}", K::NUMBER),
+        ("{1;2;3}&{\"x\",\"y\"}", K::TEXT),
+    ] {
+        let formula = prepared(source);
+        let PreparedFormula::Ready(formula) = formula.as_ref() else {
+            panic!("valid broadcasting");
+        };
+        let root = formula.bytecode().typing.expressions().first().unwrap();
+        assert_eq!(root.contract, E::Broadcast);
+        assert_eq!(root.properties.shape, poirot_model::ShapeBounds::new(3, 2));
+        assert_eq!(root.properties.result.array, kinds.join(K::ERROR));
+    }
+    let formula = prepared("SUM({1,2;3,4})");
+    let PreparedFormula::Ready(formula) = formula.as_ref() else {
+        panic!("valid reduction");
+    };
+    let root = formula.bytecode().typing.expressions().first().unwrap();
+    assert!(matches!(
+        root.contract,
+        E::Function {
+            result: ResultRule::Number,
+            ..
+        }
+    ));
+    assert_eq!(root.properties.shape, poirot_model::ShapeBounds::SCALAR);
+    assert_eq!(root.properties.result, T::scalar(K::NUMBER.join(K::ERROR)));
+}
+
+#[test]
+fn bounded_array_functions_preserve_maximum_dimensions_without_evaluating_arguments() {
+    for source in [
+        "SORT(A1:C10)",
+        "SORTBY(A1:C10,B1:B10)",
+        "UNIQUE(A1:C10)",
+        "TAKE(A1:C10,3)",
+        "DROP(A1:C10,3)",
+        "MINVERSE(A1:C10)",
+    ] {
+        let root = properties(source);
+        assert!(root.result.may_spill(), "{source}");
+        assert_eq!(
+            root.shape,
+            poirot_model::ShapeBounds::new(10, 3),
+            "maximum bound for {source}"
+        );
+    }
+    assert_eq!(
+        properties("SORT(A:A)").shape,
+        poirot_model::ShapeBounds::new(poirot_model::MAX_ROWS, 1)
+    );
+    assert_eq!(properties("SORT(SEQUENCE(A1,2))").shape.rows, None);
+    assert_eq!(
+        properties("SORT(SEQUENCE(A1,2))").shape.columns,
+        std::num::NonZeroU32::new(2)
+    );
+}
+
+#[test]
+fn text_elementwise_contracts_prove_scalar_inputs_without_hiding_array_lifting() {
+    for source in [
+        "TEXTBEFORE(\"a,b\",\",\")",
+        "TEXTAFTER(\"a,b\",\",\")",
+        "VALUETOTEXT(12)",
+    ] {
+        assert_eq!(
+            properties(source).result,
+            T::scalar(K::TEXT.join(K::ERROR)),
+            "{source}"
+        );
+    }
+    for source in [
+        "TEXTBEFORE({\"a,b\";\"c,d\"},\",\")",
+        "TEXTAFTER({\"a,b\";\"c,d\"},\",\")",
+        "VALUETOTEXT({1;2})",
+    ] {
+        assert_eq!(
+            properties(source).result.array,
+            K::TEXT.join(K::ERROR),
+            "{source}"
+        );
+        assert_eq!(
+            properties(source).shape,
+            poirot_model::ShapeBounds::new(2, 1),
+            "{source}"
+        );
+    }
+}
+
+#[test]
+fn text_extraction_fallbacks_keep_numeric_boolean_and_missing_kinds() {
+    for (source, kind) in [
+        ("TEXTBEFORE(\"a\",\",\",1,0,0,42)", K::NUMBER),
+        ("TEXTAFTER(\"a\",\",\",1,0,0,TRUE)", K::BOOLEAN),
+        ("TEXTBEFORE(\"a\",\",\",1,0,0,)", K::NUMBER),
+    ] {
+        assert!(
+            kind.is_subtype_of(properties(source).result.scalar),
+            "{source}"
+        );
+        assert!(!properties(source).result.may_spill(), "{source}");
+    }
+}
+
+#[test]
+fn array_transforms_propagate_data_kinds_without_confusing_control_arguments_with_output() {
+    for (source, kinds) in [
+        ("SEQUENCE(3,2)", K::NUMBER),
+        ("SORT({3;1;2})", K::NUMBER),
+        ("SORT({\"b\";\"a\"})", K::TEXT),
+        ("UNIQUE({TRUE;FALSE;TRUE})", K::BOOLEAN),
+        ("TAKE({1;2},1)", K::NUMBER),
+        ("HSTACK({1;2},{\"a\";\"b\"})", K::NUMBER.join(K::TEXT)),
+        ("TRANSPOSE({\"a\",\"b\"})", K::TEXT),
+        ("FILTER({1;2},{TRUE;FALSE})", K::NUMBER),
+        (
+            "FILTER({1;2},{FALSE;FALSE},\"empty\")",
+            K::NUMBER.join(K::TEXT),
+        ),
+        ("MMULT({1,2},{3;4})", K::NUMBER),
+        ("MINVERSE({1,0;0,1})", K::NUMBER),
+    ] {
+        assert_eq!(
+            properties(source).result.array,
+            kinds.join(K::ERROR),
+            "{source}"
+        );
+    }
+}

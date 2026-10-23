@@ -126,7 +126,7 @@ impl Session<'_> {
                     let addresses = self.sparse_addresses(*area)?;
                     let mut used = 0;
                     for a in addresses {
-                        let x = self.cell(area.sheet, a)?;
+                        let x = self.range_cell(area.sheet, a)?;
                         if !matches!(x, Blank) && x != Text(String::new()) {
                             used += 1
                         }
@@ -146,7 +146,7 @@ impl Session<'_> {
                     let mut used = 0;
                     if let Some(physical) = area.physical() {
                         for address in self.sparse_addresses(physical)? {
-                            let value = self.cell(area.sheet, address)?;
+                            let value = self.range_cell(area.sheet, address)?;
                             if !matches!(value, Blank) && value != Text(String::new()) {
                                 used += 1;
                             }
@@ -245,7 +245,9 @@ impl Session<'_> {
                 },
                 AggregateItems::Cells(cells) => cells
                     .next()
-                    .map(|(sheet, address)| self.cell(sheet, address).map(|value| (value, true)))
+                    .map(|(sheet, address)| {
+                        self.range_cell(sheet, address).map(|value| (value, true))
+                    })
                     .transpose()?,
             } {
                 let origin = selected_origin.unwrap_or(if indirect {

@@ -77,7 +77,8 @@ impl<'a> OverlayEvaluation<'a> {
         self.perform(output::all)
     }
 
-    /// Values reached in this instance, including dependency and spill cells.
+    /// Memoized values in this instance, including dependency and spill results.
+    /// Authored literals read directly by range consumers need no memo entry.
     pub fn values(&self) -> impl Iterator<Item = (EvaluationTarget, &CellValue)> {
         self.session
             .runtime

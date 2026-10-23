@@ -107,6 +107,7 @@ impl<'a> WorkbookView<'a> {
     }
 }
 /// Logical bounds on owned Session memo retention, independent of calculation budgets.
+/// Range readers borrow authored literals directly; those reads do not retain memo entries.
 /// Each accepted entry costs 128 fixed units plus its owned text storage bytes.
 /// These are deterministic retention units, not an allocator-exact heap measure.
 /// Defaults are unlimited; `usize::MAX` disables the respective policy limit.

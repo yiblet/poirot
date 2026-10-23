@@ -918,3 +918,39 @@ fn spill_anchor_children_publish_zero_and_preserve_empty_text() {
         }
     }
 }
+
+#[test]
+fn authored_scalar_blockers_survive_reads_and_become_spill_children_after_removal() {
+    // SEQUENCE(2,2) is [1,2;3,4]. An authored value/formula at B2 blocks it.
+    for formula_blocker in [false, true] {
+        let mut w = model(&[("A1", "SEQUENCE(2,2)"), ("D1", "B2*2")]);
+        let sheet = w.sheet_mut(0).unwrap();
+        if formula_blocker {
+            sheet.set_formula("B2".parse().unwrap(), "40+2").unwrap();
+        } else {
+            sheet.set_value("B2".parse().unwrap(), 42.).unwrap();
+        }
+        let mut direct = poirot::Evaluation::with_workbook(&w)
+            .with_policy(policy())
+            .build(Default::default())
+            .unwrap();
+        assert_eq!(direct.cell(target("B2")).unwrap(), CellValue::Number(42.));
+        assert_eq!(
+            direct.cell(target("A1")).unwrap(),
+            CellValue::Error(CellError::Spill)
+        );
+        let mut ctx = context(&w);
+        complete(&mut ctx, &["B2", "A1", "D1"]);
+        assert_eq!(value(&ctx, "B2"), CellValue::Number(42.));
+        assert_eq!(value(&ctx, "A1"), CellValue::Error(CellError::Spill));
+        assert_eq!(value(&ctx, "D1"), CellValue::Number(84.));
+        ctx.overlay.remove_cell(target("B2")).unwrap();
+        complete(&mut ctx, &["B2", "D1"]);
+        assert_eq!(value(&ctx, "B2"), CellValue::Number(4.));
+        assert_eq!(value(&ctx, "D1"), CellValue::Number(8.));
+        ctx.overlay.set_value(target("B2"), 99.).unwrap();
+        complete(&mut ctx, &["D1", "A1"]);
+        assert_eq!(value(&ctx, "D1"), CellValue::Number(198.));
+        assert_eq!(value(&ctx, "A1"), CellValue::Error(CellError::Spill));
+    }
+}

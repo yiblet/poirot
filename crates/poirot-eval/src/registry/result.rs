@@ -2,7 +2,7 @@
 use poirot_model::{FormulaType as T, ScalarKinds as K};
 
 /// A builtin's possible result transformation, independent of its read effects.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ResultRule {
     /// Consume arguments and return a scalar of any kind.
     Scalar,
@@ -12,6 +12,26 @@ pub enum ResultRule {
     Text,
     /// Produce a materialized rectangular array, or an error.
     Array,
+    /// Produce an array whose dimensions cannot exceed the first argument.
+    InputBounds,
+    /// Produce numeric array elements within the first input's dimensions.
+    NumericInputBounds,
+    /// Append inputs vertically, summing row bounds and joining column bounds.
+    StackRows,
+    /// Append inputs horizontally, joining row bounds and summing column bounds.
+    StackColumns,
+    /// Flatten an input into one row, bounded by its maximum element count.
+    FlattenRows,
+    /// Flatten an input into one column, bounded by its maximum element count.
+    FlattenColumns,
+    /// Select columns with possible repetition from scalar or array index arguments.
+    SelectColumns,
+    /// Select rows with possible repetition from scalar or array index arguments.
+    SelectRows,
+    /// Multiply matrices with outer dimensions supplied by the two operands.
+    MatrixProduct,
+    /// Select from the first input or a separately bounded empty-result fallback.
+    Filter,
     /// Produce sequential values with independently specified dimensions.
     Sequence,
     /// Produce random numbers with optional independently specified dimensions.
@@ -44,6 +64,8 @@ pub enum ResultRule {
     UnitMatrix,
     /// Return text with lifting driven by the input arguments.
     ElementwiseText,
+    /// Extract text or preserve the optional sixth fallback argument's scalar kinds.
+    TextWithFallback,
     /// Return regex match text, including variable-length extraction arrays.
     RegexExtract,
     /// Select IF branches, with lifting driven by its condition and branches.
@@ -112,7 +134,25 @@ impl ResultRule {
             Self::Scalar => T::scalar(K::ANY),
             Self::Number => T::scalar(K::NUMBER.join(K::ERROR)),
             Self::Text => T::scalar(K::TEXT.join(K::ERROR)),
-            Self::Array | Self::Sequence | Self::Transpose => T::array(K::ANY).join(error),
+            Self::Array => T::array(K::ANY).join(error),
+            Self::Sequence | Self::MatrixProduct | Self::NumericInputBounds => {
+                T::array(K::NUMBER.join(K::ERROR)).join(error)
+            }
+            Self::InputBounds
+            | Self::FlattenRows
+            | Self::FlattenColumns
+            | Self::SelectRows
+            | Self::SelectColumns
+            | Self::Transpose => T::array(materialized_kinds(
+                args.first().copied().unwrap_or(T::BOTTOM),
+            ))
+            .join(error),
+            Self::StackRows | Self::StackColumns => T::array(materialized_kinds(all)).join(error),
+            Self::Filter => {
+                let input = args.first().copied().unwrap_or(T::BOTTOM);
+                let fallback = args.get(2).copied().unwrap_or(T::BOTTOM);
+                T::array(materialized_kinds(input.join(fallback))).join(error)
+            }
             Self::RandomArray | Self::UnitMatrix => T::array(K::NUMBER).join(error),
             Self::TrimRange => {
                 let first = args.first().copied().unwrap_or(T::BOTTOM);
@@ -126,6 +166,21 @@ impl ResultRule {
                     result = result.join(T::array(K::ANY));
                 }
                 result
+            }
+            Self::TextWithFallback => {
+                let mut kinds = K::TEXT.join(K::ERROR);
+                if let Some(fallback) = args.get(5) {
+                    kinds = kinds.join(fallback.elements());
+                    if fallback.missing || K::BLANK.is_subtype_of(fallback.elements()) {
+                        kinds = kinds.join(K::NUMBER);
+                    }
+                }
+                let scalar = T::scalar(kinds);
+                if all.may_spill() {
+                    scalar.join(T::array(kinds))
+                } else {
+                    scalar
+                }
             }
             Self::RegexExtract => {
                 T::scalar(K::TEXT.join(K::ERROR)).join(T::array(K::TEXT.join(K::ERROR)))
@@ -212,6 +267,69 @@ impl ResultRule {
                 .unwrap_or(S::SCALAR)
                 .join(args.get(2).copied().unwrap_or(S::SCALAR)),
             Self::Scalar | Self::Number | Self::Text => S::SCALAR,
+            Self::InputBounds | Self::NumericInputBounds => {
+                args.first().copied().unwrap_or(S::UNKNOWN)
+            }
+            Self::StackRows | Self::StackColumns => {
+                let joined = args.iter().copied().fold(S::SCALAR, S::join);
+                let summed = sum_dimensions(args.iter().map(|shape| {
+                    if self == Self::StackRows {
+                        shape.rows
+                    } else {
+                        shape.columns
+                    }
+                }));
+                if self == Self::StackRows {
+                    S {
+                        rows: summed,
+                        columns: joined.columns,
+                    }
+                } else {
+                    S {
+                        rows: joined.rows,
+                        columns: summed,
+                    }
+                }
+            }
+            Self::FlattenRows | Self::FlattenColumns => {
+                let bound = args.first().copied().unwrap_or(S::UNKNOWN);
+                let count = element_bound(bound);
+                if self == Self::FlattenRows {
+                    S {
+                        rows: S::SCALAR.rows,
+                        columns: count,
+                    }
+                } else {
+                    S {
+                        rows: count,
+                        columns: S::SCALAR.columns,
+                    }
+                }
+            }
+            Self::SelectRows | Self::SelectColumns => {
+                let input = args.first().copied().unwrap_or(S::UNKNOWN);
+                let count = sum_dimensions(args.iter().skip(1).copied().map(element_bound));
+                if self == Self::SelectRows {
+                    S {
+                        rows: count,
+                        columns: input.columns,
+                    }
+                } else {
+                    S {
+                        rows: input.rows,
+                        columns: count,
+                    }
+                }
+            }
+            Self::MatrixProduct => S {
+                rows: args.first().copied().unwrap_or(S::UNKNOWN).rows,
+                columns: args.get(1).copied().unwrap_or(S::UNKNOWN).columns,
+            },
+            Self::Filter => args
+                .first()
+                .copied()
+                .unwrap_or(S::UNKNOWN)
+                .join(args.get(2).copied().unwrap_or(S::SCALAR)),
             Self::Transpose => args.first().copied().unwrap_or(S::UNKNOWN).transpose(),
             Self::Sequence | Self::RandomArray => {
                 let dimension = |index: usize| {
@@ -267,6 +385,7 @@ impl ResultRule {
             Self::ElementwiseNumber
             | Self::ElementwiseBoolean
             | Self::ElementwiseText
+            | Self::TextWithFallback
             | Self::If
             | Self::Fallback
             | Self::Ifs
@@ -279,5 +398,33 @@ impl ResultRule {
             | Self::Index
             | Self::Any => S::UNKNOWN,
         }
+    }
+}
+
+/// Bound a flattened rectangular operand, refusing unknown or overflowing products.
+fn element_bound(shape: poirot_model::ShapeBounds) -> Option<std::num::NonZeroU32> {
+    shape
+        .rows?
+        .get()
+        .checked_mul(shape.columns?.get())
+        .and_then(std::num::NonZeroU32::new)
+}
+/// Sum independent maximum extents; an unknown or overflowing term stays unknown.
+fn sum_dimensions(
+    dimensions: impl Iterator<Item = Option<std::num::NonZeroU32>>,
+) -> Option<std::num::NonZeroU32> {
+    dimensions
+        .map(|n| n.map(std::num::NonZeroU32::get))
+        .try_fold(0u32, |sum, n| sum.checked_add(n?))
+        .and_then(std::num::NonZeroU32::new)
+}
+
+/// Preserve data element kinds while admitting blank materialization and positional errors.
+fn materialized_kinds(input: T) -> K {
+    let kinds = input.elements().join(K::ERROR);
+    if input.missing || K::BLANK.is_subtype_of(kinds) {
+        kinds.join(K::NUMBER)
+    } else {
+        kinds
     }
 }
