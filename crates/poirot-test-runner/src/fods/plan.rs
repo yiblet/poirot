@@ -2,7 +2,7 @@
 use crate::fods::{
     Error,
     corpus::{BaselineCase, BaselineStatus, Corpus, FixtureEntry, load_fixture},
-    report::{CaseFailure, FailureKind},
+    report::{CaseFailure, FailureKind, NameDiagnostic, NameDisposition},
     xml::model::{FodsWorkbook, FormulaCase, InputValue, Omission},
 };
 use poirot_model::{CellAddress, CellValue, Workbook};
@@ -51,6 +51,8 @@ pub struct FixturePlan {
     pub calculation_settings: Vec<BTreeMap<String, String>>,
     /// Inspectable source constructs not represented by the canonical workbook.
     pub omissions: Vec<Omission>,
+    /// Retained rejected declarations and their explicit preparation dispositions.
+    pub preparation_diagnostics: Vec<NameDiagnostic>,
     /// Native CSE cells whose stored values cannot stand in for matrix execution.
     pub matrix_cells: BTreeSet<(usize, CellAddress)>,
 }
@@ -84,7 +86,10 @@ fn value(input: &InputValue) -> CellValue {
     }
 }
 
-fn workbook(data: &FodsWorkbook) -> Result<Workbook, String> {
+fn workbook(
+    data: &FodsWorkbook,
+    diagnostics: &mut Vec<NameDiagnostic>,
+) -> Result<Workbook, String> {
     let mut book = Workbook::new();
     for sheet in &data.sheets {
         book.add_sheet(&sheet.name).map_err(|e| e.to_string())?;
@@ -105,9 +110,42 @@ fn workbook(data: &FodsWorkbook) -> Result<Workbook, String> {
             }
         }
     }
-    for name in &data.names {
-        book.define_name(&name.name, &name.formula, None)
-            .map_err(|e| e.to_string())?;
+    let mut blocked = None;
+    for (index, name) in data.names.iter().enumerate() {
+        if let Err(error) = book.define_name(&name.name, &name.formula, None) {
+            let rejection = error.to_string();
+            // Only lexical name rejection is eligible. Duplicate, formula and scope
+            // errors retain their existing preparation failure without quarantine.
+            if rejection != "invalid defined name" {
+                blocked.get_or_insert(rejection);
+                continue;
+            }
+            let proof = super::name_admission::prove_unused(data, &name.name);
+            let (disposition, reason) = match proof {
+                Ok(()) => (NameDisposition::QuarantinedUnused,
+                    "bounded inspection of every original cell, matrix anchor and name definition found no potential use or runtime resolver".to_owned()),
+                Err(reason) => {
+                    blocked.get_or_insert_with(|| format!(
+                        "rejected declaration {:?}: {rejection}; non-use not proved: {reason}", name.name));
+                    (NameDisposition::BlocksPreparation, reason)
+                }
+            };
+            diagnostics.push(NameDiagnostic {
+                source: data.source.clone(),
+                source_commit: data.source_commit.clone(),
+                sha256: data.sha256.clone(),
+                declaration: index,
+                name: name.name.clone(),
+                original_definition: name.original_definition.clone(),
+                base_cell_address: name.base_cell_address.clone(),
+                rejection,
+                disposition,
+                reason,
+            });
+        }
+    }
+    if let Some(reason) = blocked {
+        return Err(reason);
     }
     Ok(book)
 }
@@ -129,7 +167,8 @@ pub(crate) fn prepare_fixture(
             message: "computed source caches must be blank before planning".into(),
         });
     }
-    let book = match workbook(&data) {
+    let mut preparation_diagnostics = Vec::new();
+    let book = match workbook(&data, &mut preparation_diagnostics) {
         Ok(book) => WorkbookPreparation::Ready(Box::new(book)),
         Err(message) => WorkbookPreparation::Unsupported(CaseFailure {
             kind: FailureKind::WorkbookContext,
@@ -242,6 +281,7 @@ pub(crate) fn prepare_fixture(
         calculation_settings: data.calculation_settings,
         omissions: data.omissions,
         matrix_cells,
+        preparation_diagnostics,
     })
 }
 

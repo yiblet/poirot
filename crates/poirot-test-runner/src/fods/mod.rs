@@ -26,3 +26,5 @@ pub mod xml;
 pub use error::Error;
 
 mod execution_trace;
+
+mod name_admission;

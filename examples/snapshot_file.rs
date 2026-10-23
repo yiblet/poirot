@@ -1,4 +1,5 @@
-//! Persist a prepared workbook, restore it, calculate every modeled cell, and write XLSX.
+//! Save a generated model as a native snapshot, restore it, and export calculated XLSX.
+//! Run with MODEL.poirot OUTPUT.xlsx; both files are created by this example.
 use poirot::{CellValue, Evaluation, EvaluationContext, Workbook, artifact};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

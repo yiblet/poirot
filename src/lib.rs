@@ -1,28 +1,29 @@
-//! Read, edit, calculate, and write Excel workbooks without running Excel.
+//! Fast Excel calculation in Rust, without running Excel.
 //!
-//! Start with [`Workbook`]. It can open XLSX and XLS files, edit cells, calculate
-//! formulas, and save the results. Poirot is intended for applications that use
-//! known spreadsheets as calculation models. Excel compatibility is incomplete;
-//! test the workbooks your application needs.
+//! Use Poirot to run known spreadsheet models inside your application, including
+//! workbooks you or an AI generate. Start with [`Workbook`] to read or create XLSX
+//! and XLS workbooks, edit inputs, calculate formulas, and save results.
+//! Straightforward formulas under your control are a particularly good fit;
+//! validate the model across the input cases your application needs.
 //!
-//! # Example: update a quote
+//! # Example: recalculate energy use
 //!
-//! Suppose `quote.xlsx` has a sheet named `Quote`, with quantity in `A1`, unit
-//! price in `B1`, and the formula `A1*B1` in `C1`. Change the quantity, calculate
-//! the new total, and save a copy:
+//! Suppose `energy.xlsx` has a sheet named `Energy`, with operating hours in `A1`,
+//! power in kilowatts in `B1`, and the formula `A1*B1` in `C1` for energy in
+//! kilowatt-hours. Change the operating hours, recalculate, and save a copy:
 //!
 //! ```no_run
 //! use poirot::Workbook;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let mut book = Workbook::open("quote.xlsx")?;
-//! let sheet = book.sheet_by_name_mut("Quote").ok_or("missing Quote sheet")?;
+//! let mut book = Workbook::open("energy.xlsx")?;
+//! let sheet = book.sheet_by_name_mut("Energy").ok_or("missing Energy sheet")?;
 //! sheet.set_value("A1".parse()?, 12.)?;
 //! book.recalculate()?;
 //!
-//! let total = book.cell("Quote", "C1".parse()?).ok_or("missing total")?;
-//! println!("Total: {:?}", total.value);
-//! book.save_xlsx().write_file("quote-updated.xlsx")?;
+//! let energy = book.cell("Energy", "C1".parse()?).ok_or("missing energy result")?;
+//! println!("Energy (kWh): {:?}", energy.value);
+//! book.save_xlsx().write_file("energy-updated.xlsx")?;
 //! # Ok(())
 //! # }
 //! ```
@@ -43,25 +44,37 @@
 //!
 //! # Example: create a workbook
 //!
-//! Here is the same quote built from scratch. Cell addresses use A1 notation;
-//! formulas accept an optional leading `=`. Twelve items at 25 each cost 300:
+//! Build the same energy model from scratch. Cell addresses use A1 notation;
+//! formulas accept an optional leading `=`. Twelve hours at 25 kW consume 300 kWh:
 //!
 //! ```
 //! use poirot::{CellValue, Workbook};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let mut book = Workbook::new();
-//! let sheet = book.add_sheet("Quote")?;
+//! let sheet = book.add_sheet("Energy")?;
 //! sheet.set_value("A1".parse()?, 12.)?;
 //! sheet.set_value("B1".parse()?, 25.)?;
 //! sheet.set_formula("C1".parse()?, "A1*B1")?;
 //! book.recalculate()?;
-//! let total = book.cell("Quote", "C1".parse()?).ok_or("missing total")?;
-//! assert_eq!(total.value, CellValue::Number(300.));
+//! let energy = book.cell("Energy", "C1".parse()?).ok_or("missing energy result")?;
+//! assert_eq!(energy.value, CellValue::Number(300.));
 //! let bytes = book.save_xlsx().to_buffer()?;
 //! # Ok(())
 //! # }
 //! ```
+//!
+//! # Choose a calculation path
+//!
+//! Poirot is optimized for fast calculation and repeated edits. Choose how much
+//! calculation state your application needs to retain:
+//!
+//! | Use case | API | Calculation state |
+//! | --- | --- | --- |
+//! | Edit and save a workbook | [`Workbook::recalculate`] | Updates stored formula results. |
+//! | Query a cell or formula text directly | [direct cell evaluation](poirot_eval::run_cell), [direct formula evaluation](poirot_eval::run_formula) | Runs against workbook data. |
+//! | Compare scenarios | [`Evaluation`] | Calculates requested dependencies; edits clear results. |
+//! | Repeatedly change a model | [`Overlay`] | Retains edits and reuses unaffected results. |
 //!
 //! # When formulas are calculated
 //!
@@ -70,8 +83,9 @@
 //! by the application that wrote it. Those results may be out of date.
 //!
 //! Changing an input does not update dependent cells until you call
-//! [`Workbook::recalculate`]. In the quote above, changing the quantity from 12 to
-//! 24 leaves the old total of 300 in `C1` until recalculation changes it to 600.
+//! [`Workbook::recalculate`]. In the model above, changing operating hours from 12
+//! to 24 leaves the old result of 300 kWh in `C1` until recalculation changes it
+//! to 600 kWh.
 //! Saving also uses the stored results, so calculate before saving when you need
 //! the file to contain current values.
 //!
@@ -96,32 +110,32 @@
 //! }
 //! ```
 //!
-//! # Example: compare quantities without changing the workbook
+//! # Example: compare operating hours without changing the workbook
 //!
-//! To compare quotes for 12 and 24 items without editing the original, use an
-//! [`Evaluation`]. Set a temporary quantity and ask for the total:
+//! To compare energy use for 12 and 24 operating hours without editing the original,
+//! use an [`Evaluation`]. Set temporary operating hours and ask for energy use:
 //!
 //! ```
 //! use poirot::{CellValue, Evaluation, EvaluationContext, Workbook};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let mut book = Workbook::new();
-//! let sheet = book.add_sheet("Quote")?;
+//! let sheet = book.add_sheet("Energy")?;
 //! sheet.set_value("A1".parse()?, 12.)?;
 //! sheet.set_value("B1".parse()?, 25.)?;
 //! sheet.set_formula("C1".parse()?, "A1*B1")?;
 //!
 //! let mut evaluation = Evaluation::with_workbook(&book)
 //!     .build(EvaluationContext::default())?;
-//! let quantity = evaluation.target("Quote!A1")?;
-//! let total = evaluation.target("Quote!C1")?;
-//! let mut totals = Vec::new();
-//! for count in [12., 24.] {
-//!     evaluation.set_value(quantity, count)?;
-//!     totals.push(evaluation.cell(total)?);
+//! let hours = evaluation.target("Energy!A1")?;
+//! let energy = evaluation.target("Energy!C1")?;
+//! let mut energies = Vec::new();
+//! for hours_per_day in [12., 24.] {
+//!     evaluation.set_value(hours, hours_per_day)?;
+//!     energies.push(evaluation.cell(energy)?);
 //! }
-//! assert_eq!(totals, [CellValue::Number(300.), CellValue::Number(600.)]);
-//! assert_eq!(book.cell("Quote", "A1".parse()?).ok_or("missing quantity")?.value,
+//! assert_eq!(energies, [CellValue::Number(300.), CellValue::Number(600.)]);
+//! assert_eq!(book.cell("Energy", "A1".parse()?).ok_or("missing operating hours")?.value,
 //!     CellValue::Number(12.));
 //! # Ok(())
 //! # }
@@ -143,6 +157,12 @@
 //! same clock and seed. The same settings can be used with
 //! [`Workbook::recalculate_with_context`].
 //!
+//! # Excel compatibility
+//!
+//! Poirot targets modern Excel. Validate the input cases your application uses;
+//! see the [compatibility guide](https://github.com/yiblet/poirot/blob/master/docs/compatibility.md)
+//! for function and file support, known gaps, test evidence, and reporting issues.
+//!
 //! # Other APIs
 //!
 //! [`Workbook`] handles the usual load, edit, calculate, and save workflow. Use
@@ -156,11 +176,25 @@
 //!   it. [`mod@format`] renders cell values as display text, such as `12.50` for
 //!   the number `12.5` with format `0.00`.
 //! - [`eval`] exposes the compiler and custom-function interfaces for embedding
-//!   the calculation engine.
+//!   the calculation engine. Register custom functions through
+//!   [the extension registry](poirot_eval::extensions); registrations cannot override existing builtins.
 //! - [`edit`] updates formula references when changing workbook structure.
 //!   [`translation_edit`] adjusts references within existing formulas.
 //! - [`artifact`] saves native Poirot snapshots for restoring workbook or
 //!   calculation state. Use the XLS/XLSX save methods for files opened in Excel.
+//!
+//! # Project direction
+//!
+//! We want to build the fastest Excel calculation engine so developers can use AI
+//! to write spreadsheets and run them in applications. The roadmap is more modern
+//! Excel compatibility, additional evaluation modes, faster existing modes, and
+//! more extensibility, while keeping Poirot lightweight and easy to embed.
+//!
+//! Component crates and custom functions provide extension points today. Broader
+//! support for alternative calculation behavior and execution strategies is a goal:
+//! applications should be able to adapt Excel to their use cases through explicit
+//! choices. Contributors are welcome, including AI-written PRs; see
+//! [Contributing](https://github.com/yiblet/poirot/blob/master/CONTRIBUTING.md).
 
 pub mod artifact;
 

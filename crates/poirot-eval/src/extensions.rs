@@ -1,4 +1,9 @@
-//! Explicit, revisioned runtime functions. Providers declare capabilities and cacheability.
+//! Add application-specific functions to spreadsheet formulas.
+//!
+//! Register a function, then attach its registry to an `Evaluation` or `Overlay`
+//! builder with `with_extensions`, or use the direct entry points below. Providers
+//! declare which inputs they can read and when their results can be reused.
+//! Registration revisions identify the implementation used by compiled formulas.
 //! ASCII names follow POI's ROOT case policy; Unicode casing needs a separate policy.
 //!
 //! Register a provider, then use [`crate::extensions::run_formula_with_extensions`] or

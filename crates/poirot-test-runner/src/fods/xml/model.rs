@@ -127,6 +127,9 @@ pub struct NamedDefinition {
     pub name: String,
     /// Translated expression backing the name.
     pub formula: String,
+    /// Exact XML-decoded expression or cell-range address, before translation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub original_definition: Option<String>,
     /// Native base-cell spelling used to interpret relative definitions.
     pub base_cell_address: Option<String>,
 }
@@ -195,6 +198,29 @@ pub struct Omission {
     pub reason: String,
 }
 
+/// Native XML attribute whose decoded source must participate in non-use proof.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FormulaAttribute {
+    /// Ordinary or matrix-anchor cell formula.
+    CellFormula,
+    /// Defined-name expression.
+    NameExpression,
+    /// Defined-name reference address.
+    NameRange,
+    /// Relative base address for a defined name.
+    NameBase,
+}
+
+/// Original decoded source with its native attribute kind, including excluded tables.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OriginalFormulaSource {
+    /// Native source attribute kind.
+    pub attribute: FormulaAttribute,
+    /// Exact XML-decoded attribute value, without formula translation.
+    pub source: String,
+}
+
 /// Complete extracted native fixture consumed by corpus planning.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct FodsWorkbook {
@@ -208,6 +234,10 @@ pub struct FodsWorkbook {
     pub sheets: Vec<Sheet>,
     /// Extracted formula-backed defined names.
     pub names: Vec<NamedDefinition>,
+    /// Every decoded native formula, name definition and base, including omitted tables.
+    /// None means extraction did not retain a complete original-source inspection record.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub original_formula_sources: Option<Vec<OriginalFormulaSource>>,
     /// Native calculation settings retained for context/fidelity checks.
     pub calculation_settings: Vec<BTreeMap<String, String>>,
     /// Extracted formula checks in source order.

@@ -1,7 +1,10 @@
-//! Temporary cell edits and reusable results over an unchanged workbook.
+//! Retain model edits and reuse unaffected calculations across scenarios.
 //!
-//! `Source` combines the baseline with edits and compiled formulas. `Cache` stores
-//! results and the reads used to invalidate them when an input changes.
+//! An overlay keeps edits, compiled formulas, intermediate results, and dependency
+//! information between calculations. Input changes invalidate affected results;
+//! unrelated results remain available. Context changes and volatile functions
+//! also participate in invalidation. The baseline changes only when edits are
+//! explicitly applied or flushed; snapshots can save state for later restoration.
 use crate::{EvaluationFailure, EvaluationTarget, FormulaCompiler};
 use poirot_model::{
     Cell, CellAddress, CellStore, CellStyle, CellValue, ModelError, Workbook, WorkbookChange,
@@ -84,9 +87,10 @@ impl From<EvaluationFailure> for OverlayError {
     }
 }
 
-/// Temporary workbook inputs with dependency tracking for repeated calculations.
+/// Editable workbook scenarios that reuse calculations across input changes.
 ///
 /// Input edits invalidate affected results while retaining unrelated results.
+/// Edits and intermediate results remain available between evaluations.
 /// Input edits leave the baseline unchanged until explicitly applied or flushed.
 /// Select outputs through [`Overlay::evaluation`].
 pub struct Overlay<'a, W = &'a Workbook> {

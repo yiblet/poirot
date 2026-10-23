@@ -1,8 +1,13 @@
 # poirot-workbook
 
-Read an Excel workbook, change its inputs, calculate its outputs, and save it.
+Run known spreadsheet models: read or create a workbook, change inputs,
+calculate outputs, and save the results.
 
-`Workbook::open` reads XLS or XLSX files. You can also create a workbook in memory:
+Use this workflow for workbooks your application already knows, including models
+you or an AI generate. Validate the formulas across the input cases you expect.
+
+`Workbook::open` reads XLS or XLSX files. You can also create an energy model in memory.
+`A1` holds operating hours, `B1` power in kW, and `C1` energy use in kWh:
 
 ```rust
 use poirot_workbook::Workbook;
@@ -10,14 +15,14 @@ use poirot_workbook::model::CellValue;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut book = Workbook::new();
-    let sheet = book.add_sheet("Quote")?;
+    let sheet = book.add_sheet("Energy")?;
     sheet.set_value("A1".parse()?, 12.)?;
     sheet.set_value("B1".parse()?, 25.)?;
     sheet.set_formula("C1".parse()?, "A1*B1")?;
     book.recalculate()?;
 
-    let total = book.cell("Quote", "C1".parse()?).ok_or("missing total")?;
-    assert_eq!(total.value, CellValue::Number(300.));
+    let energy = book.cell("Energy", "C1".parse()?).ok_or("missing energy result")?;
+    assert_eq!(energy.value, CellValue::Number(300.));
     let bytes = book.save_xlsx().to_buffer()?;
     Ok(())
 }
@@ -33,8 +38,14 @@ between returning bytes and writing a file. Import warnings are kept in
 
 For temporary inputs, use `Evaluation` to query results without editing the
 workbook. For repeated scenarios, `Overlay` tracks dependencies to reuse
-unaffected results. Native snapshots save Poirot state for later restoration;
-they are separate from Excel files.
+unaffected results. Both retain edits between requests and leave the baseline
+unchanged until you explicitly apply changes. Overlays also retain intermediate
+results across calculations. Native snapshots save Poirot state for later
+restoration; they are separate from Excel files.
+
+Review import warnings before relying on a saved copy. See the
+[compatibility guide](https://github.com/yiblet/poirot/blob/master/docs/compatibility.md)
+for formula and file support, known gaps, and reporting issues.
 
 Most applications should depend on [poirot](https://docs.rs/poirot), which
 re-exports these types alongside cell values and addresses.

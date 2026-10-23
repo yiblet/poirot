@@ -45,7 +45,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
-include = ["/src/**", "/examples/**", "/README.md", "/CONTRIBUTING.md", "/LICENSES/**"]
+include = ["/src/**", "/examples/**", "/README.md", "/CONTRIBUTING.md", "/docs/compatibility.md", "/LICENSES/**"]
 
 [dependencies]
 poirot-workbook = { version = "0.1.0", path = "crates/poirot-workbook" }

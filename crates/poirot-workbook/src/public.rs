@@ -127,6 +127,9 @@ impl Workbook {
     }
     /// Calculate the workbook and update its stored cell values.
     ///
+    /// Use [`crate::Evaluation`] to query selected outputs with scenario inputs,
+    /// or [`crate::Overlay`] to reuse unaffected calculations across edits.
+    ///
     /// If calculation fails, none of the calculated values are written. Edits made
     /// before this call remain. Spreadsheet errors such as `#DIV/0!` are stored as
     /// cell values and do not make this method return an error.

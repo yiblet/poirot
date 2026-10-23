@@ -1,4 +1,5 @@
-//! Publish source edits while retaining dependency-aware calculation in a worker.
+//! Keep overlay edits and calculated results across repeated input changes.
+//! Flush edits into the owned workbook while retaining reusable calculations.
 use poirot::{EvaluationContext, Overlay, Workbook};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -19,8 +20,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             return Err("flush failed to retain the calculated result".into());
         }
     }
-    // Clone only at the persistence boundary, never for an edit-sized flush.
-    // Source flush does not itself update the workbook's saved formula results.
+    // Build an export copy with current results. flush() updates inputs in the
+    // baseline; calculated formula results remain in the overlay until applied.
     let mut saved = overlay.workbook().clone();
     saved.apply(overlay.changes())?;
     let bytes = Workbook::from_model(saved).save_xlsx().to_buffer()?;

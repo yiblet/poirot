@@ -1,0 +1,9 @@
+{
+  "name": "poirot-hyperformula-speed-comparison",
+  "private": true,
+  "version": "0.1.0",
+  "license": "GPL-3.0-only",
+  "dependencies": {
+    "hyperformula": "3.5.0"
+  }
+}

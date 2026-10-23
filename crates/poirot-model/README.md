@@ -1,6 +1,9 @@
 # poirot-model
 
-Store and edit workbook data.
+Store and edit workbook data independently of file handling and calculation.
+
+Use this crate as the data layer when you want to supply your own evaluator or
+file adapters, or build a workbook model programmatically.
 
 `Workbook` holds sparse worksheets, cell values, formulas, named formulas, and
 a date system. `Worksheet` provides cell access through zero-based `CellAddress`

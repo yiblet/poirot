@@ -277,6 +277,7 @@ pub(crate) fn fixture_observations(
                 baseline: case.baseline,
                 status,
                 failure: check.err(),
+                preparation_diagnostics: plan.preparation_diagnostics.clone(),
             };
             observer(&result)?;
             Ok((result, observed))

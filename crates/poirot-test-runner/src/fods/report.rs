@@ -53,6 +53,41 @@ pub enum CaseStatus {
     HarnessError,
 }
 
+/// Disposition of a source declaration rejected by Excel name validation.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum NameDisposition {
+    /// Whole-fixture original-source inspection proves the declaration unused.
+    QuarantinedUnused,
+    /// Non-use could not be established, so workbook preparation remains blocked.
+    BlocksPreparation,
+}
+
+/// Retained source and reason for a rejected declaration's preparation disposition.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NameDiagnostic {
+    /// Pinned native fixture source path.
+    pub source: String,
+    /// Pinned native fixture revision.
+    pub source_commit: String,
+    /// Original fixture byte digest.
+    pub sha256: String,
+    /// Zero-based source declaration ordinal.
+    pub declaration: usize,
+    /// Original declaration spelling.
+    pub name: String,
+    /// Exact decoded definition, if available.
+    pub original_definition: Option<String>,
+    /// Original relative-base context.
+    pub base_cell_address: Option<String>,
+    /// Unchanged canonical model rejection reason.
+    pub rejection: String,
+    /// Whether the declaration can be quarantined from the transient workbook.
+    pub disposition: NameDisposition,
+    /// Proof outcome or conservative reason non-use cannot be proved.
+    pub reason: String,
+}
+
 /// Source identity, baseline comparison, and optional diagnostic for one check.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CaseResult {
@@ -70,6 +105,9 @@ pub struct CaseResult {
     pub baseline: BaselineStatus,
     /// Observed comparison with that baseline.
     pub status: CaseStatus,
+    /// Explicit preparation dispositions for rejected native declarations.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub preparation_diagnostics: Vec<NameDiagnostic>,
     /// Structured failure details when the check does not pass.
     pub failure: Option<CaseFailure>,
 }
@@ -171,6 +209,18 @@ pub fn render_case(
                 }
             };
             writeln!(output, "test {} ... {status}", case.id).map_err(Error::Output)?;
+            for diagnostic in &case.preparation_diagnostics {
+                writeln!(
+                    output,
+                    "  preparation {:?}: declaration {} {:?}: {}; {}",
+                    diagnostic.disposition,
+                    diagnostic.declaration,
+                    diagnostic.name,
+                    diagnostic.rejection,
+                    diagnostic.reason
+                )
+                .map_err(Error::Output)?;
+            }
             if (matches!(
                 case.status,
                 CaseStatus::Regression | CaseStatus::HarnessError

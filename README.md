@@ -1,15 +1,18 @@
 # Poirot
 
-Read, edit, calculate, and write Excel workbooks in Rust, without running Excel.
+Fast Excel calculation in Rust, without running Excel.
 
-Poirot is for applications that use spreadsheets as calculation models: load a
-workbook, change its inputs, and calculate its outputs. It reads and writes XLSX
-and XLS files. You can also build a workbook from scratch.
+Poirot lets you use spreadsheets as calculation models inside your application.
+Read or create a workbook, change its inputs, evaluate its formulas, and write
+the results to XLSX or XLS.
 
-Excel compatibility is incomplete, and the API is under development. Test the
-workbooks your application uses. Import warnings report features that were changed
-or omitted; saving a file does not guarantee that all of its original features
-survive.
+Use Poirot when you know the workbooks you want to evaluate, when you or an AI
+generate the spreadsheets, or when fast recalculation matters. Workbooks with
+straightforward formulas under your control are a particularly good fit: you can
+validate the model across the input cases your application needs.
+
+[Run the speed benchmarks](benchmarks/README.md) to compare calculation modes
+with IronCalc and HyperFormula using the same workloads in separate containers.
 
 ## Quick start
 
@@ -20,30 +23,77 @@ Poirot requires Rust 1.90 or newer. Add the Git dependency to `Cargo.toml`:
 poirot = { git = "https://github.com/yiblet/poirot.git", branch = "master" }
 ```
 
-Suppose `quote.xlsx` has a sheet named `Quote`, with quantity in `A1`, unit
-price in `B1`, and the formula `A1*B1` in `C1`. Change the quantity, calculate the
-new total, and save a copy:
+Model daily energy use with operating hours in `A1`, power in kilowatts in `B1`,
+and energy in kilowatt-hours in `C1`:
 
 ```rust
-use poirot::Workbook;
+use poirot::{CellValue, Workbook};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut book = Workbook::open("quote.xlsx")?;
-    let sheet = book.sheet_by_name_mut("Quote").ok_or("missing Quote sheet")?;
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("Energy")?;
     sheet.set_value("A1".parse()?, 12.)?;
+    sheet.set_value("B1".parse()?, 25.)?;
+    sheet.set_formula("C1".parse()?, "=A1*B1")?;
     book.recalculate()?;
 
-    let total = book.cell("Quote", "C1".parse()?).ok_or("missing total")?;
-    println!("Total: {:?}", total.value);
-    book.save_xlsx().write_file("quote-updated.xlsx")?;
+    let energy = book.cell("Energy", "C1".parse()?).ok_or("missing energy result")?;
+    assert_eq!(energy.value, CellValue::Number(300.));
+    book.save_xlsx().write_file("energy.xlsx")?;
     Ok(())
 }
 ```
 
-Saving does not calculate formulas. Call `recalculate()` after changing inputs
-when you need current results. Import warnings are available in
-`book.file_metadata`; review them before relying on an exported copy.
-Use `Workbook::new()` to build a workbook from scratch.
+To use an existing model, start with `Workbook::open("energy.xlsx")` or
+`Workbook::from_bytes(&bytes)`. Reading a cell returns its stored result; call
+`recalculate()` after editing inputs to update it. Saving writes those results.
+
+## Calculate the way your application needs
+
+Poirot is optimized for fast evaluation, including repeated changes to a model.
+Choose how much calculation state to keep:
+
+| Workflow | API | What it does |
+| --- | --- | --- |
+| Edit a workbook and save current results | `Workbook::recalculate` | Calculates the workbook and updates stored values. |
+| Query individual cells or formula text | `eval::run_cell`, `eval::run_formula` | Runs a direct calculation against workbook data. |
+| Compare scenarios without changing the original | `Evaluation` | Calculates requested outputs and their dependencies; input edits clear calculated results. |
+| Repeatedly edit a larger model | `Overlay` | Retains edits, compiled formulas, and intermediate results; reuses computations unaffected by changes. |
+
+An overlay keeps state between calculations. It leaves the baseline workbook
+unchanged until you explicitly apply its changes. Native snapshots let you save
+calculation state and resume it later.
+
+The component crates also let you use parsing, workbook storage, formatting, or
+function algorithms independently. Custom functions can be registered through
+`eval::extensions`; existing built-in functions keep their implementations.
+
+## Excel compatibility
+
+Poirot targets modern Excel and is useful today for known spreadsheet models.
+Validate the input cases your application uses. The [compatibility guide](docs/compatibility.md)
+covers function and file support, known gaps, test evidence, and reporting issues.
+
+## Roadmap and contributing
+
+We want to build the fastest Excel calculation engine, so developers can use AI
+to write spreadsheets and run them inside their applications. Our directions are:
+
+- **More compatibility:** fill function and edge-case gaps against modern Excel.
+- **More evaluation modes:** support workloads that benefit from different
+  execution strategies.
+- **Faster existing modes:** improve direct evaluation, `Evaluation`, and
+  `Overlay`, measuring both workbook calculations and repeated edits.
+- **More extensibility:** make Poirot modular enough to adapt Excel to your use
+  case, including custom functions, alternative behavior, and execution strategies.
+  Intentional variations should be explicit choices.
+
+Keeping Poirot lightweight and easy to embed is part of that work. These are
+ongoing goals; custom functions and component crates are available today, with
+broader customization still ahead.
+
+We're looking for contributors. AI-written PRs are welcome: review the changes,
+include evidence for expected behavior, and follow [Contributing](CONTRIBUTING.md).
 
 ## Examples
 
@@ -51,6 +101,8 @@ Use `Workbook::new()` to build a workbook from scratch.
   calculate, and save.
 - [Query a model](examples/direct_evaluation.rs): try different inputs without
   changing the original workbook.
+- [Reuse calculations](examples/flush_overlay.rs): retain overlay results across
+  edits and flush inputs into an owned workbook.
 - [Save calculation state](examples/snapshot_file.rs): save a checkpoint and
   resume it later.
 

@@ -1,14 +1,17 @@
-//! Temporary inputs and requested formula results over workbook data.
+//! Query spreadsheet scenarios while keeping the baseline workbook unchanged.
 //!
-//! Edits clear calculated results rather than maintaining a dependency graph.
-//! The continuation keeps work counters and failures until a new context begins.
+//! Input edits persist between requests; each edit clears calculated results.
+//! Compiled formulas are retained. For dependency tracking and reuse of unaffected
+//! results across edits, use [`Overlay`]. Work counters and failures accumulate
+//! until a new context begins.
 use super::continuation::Continuation;
 use super::*;
 
-/// Temporary inputs and calculated outputs over an unchanged baseline workbook.
+/// Editable scenarios that calculate requested outputs over a baseline workbook.
 ///
 /// Choose outputs with [`Self::cell`], [`Self::outputs`], or [`Self::all`]; formula
 /// dependencies are calculated as needed. Each input edit clears calculated results.
+/// Input edits and compiled formulas remain available between requests.
 /// Work usage accumulates across requests and edits. An operational failure remains
 /// active until [`Self::begin`] starts a new context and resets usage and results.
 pub struct Evaluation<'a, W = &'a Workbook> {

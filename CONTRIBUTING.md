@@ -1,19 +1,36 @@
 # Contributing
 
-Thanks for helping improve Poirot! Bug reports, fixes, tests, and documentation
-improvements are all welcome.
+Help make Poirot a fast, lightweight, Excel-compatible calculation engine.
+Bug reports, fixes, tests, and documentation improvements are welcome, including
+AI-written PRs. Review what you submit and make the behavior easy to verify.
+
+## Where to contribute
+
+Our roadmap is more modern Excel compatibility, new evaluation modes, faster
+existing modes, and more extensibility. Useful contributions include a small
+reproduction of an Excel edge case, a missing function, a measured speedup, or an
+extension point that lets applications adapt calculation to their needs.
+
+Read the [compatibility guide](docs/compatibility.md) for current scope and known
+gaps. Keep intentional deviations explicit and preserve default compatibility
+behavior.
 
 ## Getting started
 
 Open an issue to discuss larger changes before starting. For bugs, include a small
-reproduction, the expected result, and what happened instead. A sample workbook
-or formula is especially helpful.
+reproduction, input values, the Excel version used, the expected result, and what
+happened instead. A small workbook or formula is especially helpful. Edge cases
+involving blanks, text, errors, or references are worth reporting even when the
+formula itself looks simple.
 
 ## Pull requests
 
 Keep changes focused and follow the surrounding code. Add regression tests for
 bug fixes, and base expected spreadsheet results on Excel, documented behavior,
-or another reliable reference—not Poirot's output alone.
+or another reliable reference. Record that evidence rather than deriving expected
+results from Poirot's output alone. For performance changes, include a repeatable
+workload and before/after measurements. Keep component boundaries intact so
+applications can use the parts they need.
 
 From the repository root, run:
 

@@ -1,7 +1,10 @@
 //! Namespace-aware XML input reader. Cached formula results are discarded.
 use super::{
     SOURCE_COMMIT,
-    model::{CellInput, FodsWorkbook, InputValue, MatrixSpan, NamedDefinition, Omission, Sheet},
+    model::{
+        CellInput, FodsWorkbook, FormulaAttribute, InputValue, MatrixSpan, NamedDefinition,
+        Omission, OriginalFormulaSource, Sheet,
+    },
 };
 use crate::fods::{cases, formula::translate};
 use regex::{Captures, Regex};
@@ -351,16 +354,18 @@ pub fn extract_bytes(bytes: &[u8], source: &str) -> Result<FodsWorkbook, String>
             }) {
                 continue;
             }
-            let formula = if let Some(raw) =
+            let (original_definition, formula) = if let Some(raw) =
                 attr(node, TABLE, "cell-range-address").filter(|s| !s.is_empty())
             {
-                translate(&format!("of:=[{raw}]"))
+                (raw.to_owned(), translate(&format!("of:=[{raw}]")))
             } else {
-                translate(required(node, TABLE, "expression")?)
+                let raw = required(node, TABLE, "expression")?;
+                (raw.to_owned(), translate(raw))
             };
             names.push(NamedDefinition {
                 name: required(node, TABLE, "name")?.into(),
                 formula,
+                original_definition: Some(original_definition),
                 base_cell_address: attr(node, TABLE, "base-cell-address").map(str::to_owned),
             });
         }
@@ -379,6 +384,26 @@ pub fn extract_bytes(bytes: &[u8], source: &str) -> Result<FodsWorkbook, String>
                 .collect()
         })
         .collect();
+    // Preserve these even in excluded linked tables. They are inspection inputs,
+    // never workbook cells or substitutes for executing the native Correct check.
+    let original_formula_sources = document
+        .descendants()
+        .flat_map(|node| {
+            [
+                ("formula", FormulaAttribute::CellFormula),
+                ("expression", FormulaAttribute::NameExpression),
+                ("cell-range-address", FormulaAttribute::NameRange),
+                ("base-cell-address", FormulaAttribute::NameBase),
+            ]
+            .into_iter()
+            .filter_map(move |(name, attribute)| {
+                attr(node, TABLE, name).map(|source| OriginalFormulaSource {
+                    attribute,
+                    source: source.to_owned(),
+                })
+            })
+        })
+        .collect();
     Ok(FodsWorkbook {
         source: source.into(),
         source_commit: SOURCE_COMMIT.into(),
@@ -386,6 +411,7 @@ pub fn extract_bytes(bytes: &[u8], source: &str) -> Result<FodsWorkbook, String>
         sheets,
         names,
         calculation_settings,
+        original_formula_sources: Some(original_formula_sources),
         cases,
         omissions,
     })
