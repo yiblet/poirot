@@ -30,6 +30,16 @@ pub enum ResultRule {
     FirstNumericArgument,
     /// Lift an optional third numeric parameter while consuming earlier collections.
     ThirdNumericArgument,
+    /// Lift only the second scalar argument, reducing the first collection.
+    SecondNumericArgument,
+    /// Lift scalar parameters after the first collection.
+    AfterFirstNumericArguments,
+    /// Lift scalar parameters after two collections.
+    AfterSecondNumericArguments,
+    /// Lift forecast target and options, excluding the values and timeline collections.
+    ForecastArguments,
+    /// Lift rank target and optional order, reducing the second argument.
+    RankArguments,
     /// Produce a square numeric identity matrix from one dimension.
     UnitMatrix,
     /// Return text with lifting driven by the input arguments.
@@ -82,6 +92,23 @@ impl ResultRule {
             Self::ThirdNumericArgument => {
                 Self::ElementwiseNumber.apply(args.get(2..3).unwrap_or(&[]))
             }
+            Self::SecondNumericArgument => {
+                Self::ElementwiseNumber.apply(args.get(1..2).unwrap_or(&[]))
+            }
+            Self::AfterFirstNumericArguments => {
+                Self::ElementwiseNumber.apply(args.get(1..).unwrap_or(&[]))
+            }
+            Self::AfterSecondNumericArguments => {
+                Self::ElementwiseNumber.apply(args.get(2..).unwrap_or(&[]))
+            }
+            Self::ForecastArguments => {
+                let first = args.first().copied().unwrap_or(T::BOTTOM);
+                Self::ElementwiseNumber.apply(&[first, selected(&|i| i >= 3)])
+            }
+            Self::RankArguments => Self::ElementwiseNumber.apply(&[
+                args.first().copied().unwrap_or(T::BOTTOM),
+                args.get(2).copied().unwrap_or(T::BOTTOM),
+            ]),
             Self::Scalar => T::scalar(K::ANY),
             Self::Number => T::scalar(K::NUMBER.join(K::ERROR)),
             Self::Text => T::scalar(K::TEXT.join(K::ERROR)),
@@ -166,6 +193,24 @@ impl ResultRule {
             Self::BusinessDays => args.iter().take(3).copied().fold(S::SCALAR, S::join),
             Self::FirstNumericArgument => args.first().copied().unwrap_or(S::SCALAR),
             Self::ThirdNumericArgument => args.get(2).copied().unwrap_or(S::SCALAR),
+            Self::SecondNumericArgument => args.get(1).copied().unwrap_or(S::SCALAR),
+            Self::AfterFirstNumericArguments => {
+                args.iter().skip(1).copied().fold(S::SCALAR, S::join)
+            }
+            Self::AfterSecondNumericArguments => {
+                args.iter().skip(2).copied().fold(S::SCALAR, S::join)
+            }
+            Self::ForecastArguments => args
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| *i == 0 || *i >= 3)
+                .map(|(_, s)| *s)
+                .fold(S::SCALAR, S::join),
+            Self::RankArguments => args
+                .first()
+                .copied()
+                .unwrap_or(S::SCALAR)
+                .join(args.get(2).copied().unwrap_or(S::SCALAR)),
             Self::Scalar | Self::Number | Self::Text => S::SCALAR,
             Self::Transpose => args.first().copied().unwrap_or(S::UNKNOWN).transpose(),
             Self::Sequence | Self::RandomArray => {

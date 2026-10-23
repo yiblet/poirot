@@ -10,8 +10,10 @@ pub use trim::{TrimBounds, TrimMode, TrimRectangle};
 mod collection;
 mod flatten;
 pub use flatten::{Ignore, MemberKind, ScanOrder, flatten};
+mod least_squares;
 mod linear_algebra;
 mod regression;
+pub use least_squares::{Diagnostics, Fit, Intercept, Statistic, least_squares, regression_budget};
 mod reshape;
 mod selection;
 use poirot_functions_core::CellError;
@@ -203,7 +205,7 @@ pub fn sumproduct(args: &[Input], budget: Budget) -> Result<f64> {
 pub enum TrendFitPolicy {
     /// Preserve the pinned POI minimum sizes and constant-predictor shortcut.
     PinnedPoi,
-    /// Permit a full-rank determined fit without residual degrees of freedom.
+    /// Use the modern rank-aware fit, including determined and redundant designs.
     Determined,
 }
 

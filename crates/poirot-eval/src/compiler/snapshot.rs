@@ -7,7 +7,7 @@ use std::borrow::Cow;
 /// Snapshot validation result carrying a diagnostic for unsupported or inconsistent compiled data.
 type Result<T> = std::result::Result<T, String>;
 const MAX: usize = 1_000_000;
-const VERSION: u32 = 13;
+const VERSION: u32 = 19;
 /// Serde view preserving source-to-program sharing for a trusted compiled workbook plan.
 #[derive(Serialize, Deserialize)]
 pub struct Plan<'a> {
@@ -609,6 +609,56 @@ mod tests {
                 "AMORLINC({1000;2000},45000,45090,100,0,0.2)",
             )
             .unwrap();
+        book.sheet_mut(0)
+            .unwrap()
+            .set_formula("AO1".parse().unwrap(), "BETA.DIST({0.25;0.5},2,2,TRUE)")
+            .unwrap();
+        book.sheet_mut(0)
+            .unwrap()
+            .set_formula("AP1".parse().unwrap(), "BETA.INV({0.25;0.5},2,1)")
+            .unwrap();
+        for (cell, formula) in [
+            ("AQ1", "MODE.MULT({7;2;7;2})"),
+            ("AR1", "RANK.AVG({2;7},{2;2;7},{0,1})"),
+            ("AT1", "T.TEST({0;2},{2;3;4},{1;2},{2,3})"),
+            ("AV1", "PROB({0;1},{0.25;0.75},{0;1})"),
+            ("AW1", "Z.TEST({0;1;2},{0;1},{1,2})"),
+            ("AZ1", "LINEST({1;2;2},{0;1;2},TRUE,TRUE)"),
+            ("BC1", "LOGEST({3;6;12},{0;1;2})"),
+            ("BF1", "GROWTH({3;6;12},{0;1;2},{3;4})"),
+            ("BI1", "FORECAST.ETS({4;5},{1;2;3},{1;2;3},0)"),
+            ("BL1", "FORECAST.ETS.CONFINT(4,{1;2;3},{1;2;3},,0)"),
+            ("BO1", "FORECAST.ETS.SEASONALITY({1;2;3},{1;2;3})"),
+            ("BR1", "FORECAST.ETS.STAT({1;2;3},{1;2;3},{7,8},0)"),
+            ("C1", "BETADIST(3,1,1,2,6)"),
+            ("C2", "BETAINV(0.25,1,1,2,6)"),
+            ("C3", "BINOMDIST(1,4,0.5,FALSE)"),
+            ("C4", "CHIDIST(2*LN(2),2)"),
+            ("C5", "CHIINV(0.5,2)"),
+            ("C6", "CHITEST({2,2;2,2},{2,2;2,2})"),
+            ("C7", "CONFIDENCE(0.05,1,1)"),
+            ("C8", "CRITBINOM(4,0.5,5/16)"),
+            ("C9", "EXPONDIST(2,0.5,TRUE)"),
+            ("C10", "FDIST(3,2,2)"),
+            ("C11", "FINV(0.25,2,2)"),
+            ("C12", "FTEST({0;1;2},{2;3;4})"),
+            ("C13", "GAMMADIST(2,1,2,TRUE)"),
+            ("C14", "GAMMAINV(0.5,1,2)"),
+            ("C15", "HYPGEOMDIST(1,2,2,4)"),
+            ("C16", "LOGINV(0.5,0,1)"),
+            ("C17", "LOGNORMDIST(1,0,1)"),
+            ("C18", "NEGBINOMDIST(1,2,0.5)"),
+            ("C19", "QUARTILE({0;4},1)"),
+            ("C20", "TINV(0.5,1)"),
+            ("C21", "TTEST({0;1;2},{0;1;2},2,2)"),
+            ("C22", "WEIBULL(2,1,2,TRUE)"),
+            ("C23", "ZTEST({0;1;2},1)"),
+        ] {
+            book.sheet_mut(0)
+                .unwrap()
+                .set_formula(cell.parse().unwrap(), formula)
+                .unwrap();
+        }
         let plan = FormulaCompiler::new().compile_workbook(&book, &EvaluationPolicy::default());
         let dto = Plan::capture(&plan).unwrap().into_owned();
         let restored = dto.restore().unwrap();

@@ -70,7 +70,7 @@ helper_map! {
         Mdeterm, Minverse, Mmult, Transpose, Frequency,
         Sumproduct, Trend,
     ];
-    local: [Munit, Randarray, Trimrange, Groupby, Percentof, Filter, Sort, Sortby, Unique, Sequence, Hstack, Vstack, Take, Drop, Choosecols, Chooserows, Expand, Tocol, Torow, Wrapcols, Wraprows];
+    local: [Growth, Linest, Logest, Munit, Randarray, Trimrange, Groupby, Percentof, Filter, Sort, Sortby, Unique, Sequence, Hstack, Vstack, Take, Drop, Choosecols, Chooserows, Expand, Tocol, Torow, Wrapcols, Wraprows];
 }
 
 helper_map! {
@@ -127,6 +127,11 @@ helper_map! {
         Sum, Average, Count, CountA, CountBlank,
         Min, Max, Product, SumSq, Stdev,
         StdevP, Var, VarP, Median,
+        ForecastEts, ForecastEtsConfint, ForecastEtsSeasonality, ForecastEtsStat,
+        ChisqTest,FTest,Fisher,FisherInv,HarMean,Kurt,ModeMult,ModeSngl,PercentileExc,Permut,PermutationA,Prob,QuartileExc,RankAvg,RSq,Skew,SkewP,Steyx,TTest,TrimMean,ZTest,
+        BetaDistLegacy, BetaInvLegacy, BinomDistLegacy, ChisqDistRtLegacy, ChisqInvRtLegacy, ChisqTestLegacy, ConfidenceNormLegacy, BinomInvLegacy, ExponDistLegacy, FDistRtLegacy, FInvRtLegacy, FTestLegacy, GammaDistLegacy, GammaInvLegacy, HypgeomDistLegacy, LognormInvLegacy, LognormDistLegacy, NegbinomDistLegacy, QuartileIncLegacy, TInv2TLegacy, TTestLegacy, WeibullDistLegacy, ZTestLegacy,
+        BetaInv, BinomInv, ChisqInv, ChisqInvRt, ConfidenceNorm, ConfidenceT, FInv, FInvRt, GammaInv, LognormInv, TInv, TInv2T,
+        BetaDist, BinomDist, BinomDistRange, ChisqDist, ChisqDistRt, ExponDist, FDist, FDistRt, Gamma, GammaDist, Gammaln, GammalnPrecise, Gauss, HypgeomDist, LognormDist, NegbinomDist, Phi, WeibullDist,
     ];
 }
 

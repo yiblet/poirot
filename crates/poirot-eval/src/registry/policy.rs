@@ -78,6 +78,8 @@ impl DependencyPolicy {
     pub const NUMERIC_COERCION: Self = Self::REFERENCE_READS
         .union(Self::TIME)
         .union(Self::LOCALIZATION);
+    /// Numeric scalar coercion plus the date system used to prepare calendar grids.
+    pub const FORECAST_READS: Self = Self::NUMERIC_COERCION.union(Self::DATE_SYSTEM);
     /// Argument values and the date system used by text formatting.
     pub const TEXT_FORMATTING: Self = Self::ARGUMENTS.union(Self::DATE_SYSTEM);
 }

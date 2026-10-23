@@ -13,6 +13,7 @@ include = ["/src/**", "/README.md"]
 poirot-coercionv2 = { version = "0.1.0", path = "../poirot-coercionv2" }
 poirot-functions-core = { version = "0.1.0", path = "../poirot-functions-core" }
 statrs.workspace = true
+libm.workspace = true
 bigdecimal.workspace = true
 poirot-numeric = { version = "0.1.0", path = "../poirot-numeric" }
 

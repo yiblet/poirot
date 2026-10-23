@@ -53,6 +53,24 @@ impl Session<'_> {
         function: StatisticsFunction,
         args: ArgumentsRef<'_>,
     ) -> EvalResult<Value> {
+        if super::ets::handles(function) {
+            return super::ets::execute(self, s, at, function, args);
+        }
+        if super::sample::handles(function) {
+            return super::sample::execute(self, s, at, function, args);
+        }
+        if super::modern::handles(function) {
+            return super::modern::execute(self, s, at, function, args);
+        }
+        if function == StatisticsFunction::QuartileIncLegacy {
+            return adapters::statistics::execute(
+                self,
+                s,
+                at,
+                super::policy::StatisticsFunction::QuartileInc,
+                args,
+            );
+        }
         if let Some(function) = function.helper() {
             return adapters::statistics::execute(self, s, at, function, args);
         }
@@ -361,7 +379,32 @@ impl Session<'_> {
         let result = match name {
             AggregateFunction::Xor => return Err(EvaluationFailure::StalePlan),
             AggregateFunction::Statistics(
-                StatisticsFunction::AveDev
+                StatisticsFunction::ForecastEts
+                | StatisticsFunction::ForecastEtsConfint
+                | StatisticsFunction::ForecastEtsSeasonality
+                | StatisticsFunction::ForecastEtsStat
+                | StatisticsFunction::ChisqTest
+                | StatisticsFunction::FTest
+                | StatisticsFunction::Fisher
+                | StatisticsFunction::FisherInv
+                | StatisticsFunction::HarMean
+                | StatisticsFunction::Kurt
+                | StatisticsFunction::ModeMult
+                | StatisticsFunction::ModeSngl
+                | StatisticsFunction::PercentileExc
+                | StatisticsFunction::Permut
+                | StatisticsFunction::PermutationA
+                | StatisticsFunction::Prob
+                | StatisticsFunction::QuartileExc
+                | StatisticsFunction::RankAvg
+                | StatisticsFunction::RSq
+                | StatisticsFunction::Skew
+                | StatisticsFunction::SkewP
+                | StatisticsFunction::Steyx
+                | StatisticsFunction::TTest
+                | StatisticsFunction::TrimMean
+                | StatisticsFunction::ZTest
+                | StatisticsFunction::AveDev
                 | StatisticsFunction::AverageA
                 | StatisticsFunction::DevSq
                 | StatisticsFunction::GeoMean
@@ -407,7 +450,60 @@ impl Session<'_> {
                 | StatisticsFunction::TDistLegacy
                 | StatisticsFunction::TDist
                 | StatisticsFunction::TDistRt
-                | StatisticsFunction::TDist2T,
+                | StatisticsFunction::TDist2T
+                | StatisticsFunction::BetaInv
+                | StatisticsFunction::BinomInv
+                | StatisticsFunction::ChisqInv
+                | StatisticsFunction::ChisqInvRt
+                | StatisticsFunction::ConfidenceNorm
+                | StatisticsFunction::ConfidenceT
+                | StatisticsFunction::FInv
+                | StatisticsFunction::FInvRt
+                | StatisticsFunction::GammaInv
+                | StatisticsFunction::LognormInv
+                | StatisticsFunction::TInv
+                | StatisticsFunction::TInv2T
+                | StatisticsFunction::BetaDist
+                | StatisticsFunction::BinomDist
+                | StatisticsFunction::BinomDistRange
+                | StatisticsFunction::ChisqDist
+                | StatisticsFunction::ChisqDistRt
+                | StatisticsFunction::ExponDist
+                | StatisticsFunction::FDist
+                | StatisticsFunction::FDistRt
+                | StatisticsFunction::Gamma
+                | StatisticsFunction::GammaDist
+                | StatisticsFunction::Gammaln
+                | StatisticsFunction::GammalnPrecise
+                | StatisticsFunction::Gauss
+                | StatisticsFunction::HypgeomDist
+                | StatisticsFunction::LognormDist
+                | StatisticsFunction::NegbinomDist
+                | StatisticsFunction::Phi
+                | StatisticsFunction::WeibullDist
+                | StatisticsFunction::BetaDistLegacy
+                | StatisticsFunction::BetaInvLegacy
+                | StatisticsFunction::BinomDistLegacy
+                | StatisticsFunction::ChisqDistRtLegacy
+                | StatisticsFunction::ChisqInvRtLegacy
+                | StatisticsFunction::ChisqTestLegacy
+                | StatisticsFunction::ConfidenceNormLegacy
+                | StatisticsFunction::BinomInvLegacy
+                | StatisticsFunction::ExponDistLegacy
+                | StatisticsFunction::FDistRtLegacy
+                | StatisticsFunction::FInvRtLegacy
+                | StatisticsFunction::FTestLegacy
+                | StatisticsFunction::GammaDistLegacy
+                | StatisticsFunction::GammaInvLegacy
+                | StatisticsFunction::HypgeomDistLegacy
+                | StatisticsFunction::LognormInvLegacy
+                | StatisticsFunction::LognormDistLegacy
+                | StatisticsFunction::NegbinomDistLegacy
+                | StatisticsFunction::QuartileIncLegacy
+                | StatisticsFunction::TInv2TLegacy
+                | StatisticsFunction::TTestLegacy
+                | StatisticsFunction::WeibullDistLegacy
+                | StatisticsFunction::ZTestLegacy,
             ) => return Ok(err(VALUE_ERROR)),
             AggregateFunction::Statistics(
                 StatisticsFunction::Sum

@@ -321,6 +321,9 @@ pub(crate) fn execute(
     address: CellAddress,
     args: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
+    if matches!(function, F::Growth | F::Linest | F::Logest) {
+        return super::regression::execute(function, session, sheet, address, args);
+    }
     if function == F::Munit {
         return super::unit::execute(session, sheet, address, args);
     }

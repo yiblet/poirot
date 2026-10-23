@@ -178,6 +178,19 @@ fn aggregate(
             .ok_or_else(|| host.budget_exceeded())?;
         host.charge_work(work as u64)?;
     }
+    if operation == A::Mode {
+        host.check_values(numeric.len().saturating_mul(3))?;
+        use poirot_functions_statistics::modern::Failure as SampleFailure;
+        poirot_functions_statistics::modern_sample::modes(&mut numeric, host.budget_exceeded())
+            .map_err(|error| match error {
+                SampleFailure::Spreadsheet(error) => FunctionFailure::from(error),
+                SampleFailure::Operational(error) => error.into(),
+                SampleFailure::NonConvergence | SampleFailure::ComputationalLimit => {
+                    host.budget_exceeded().into()
+                }
+            })?;
+        return Ok(Number(*numeric.first().ok_or(CellError::NA)?));
+    }
     Ok(numeric_outcome::coerce_checked_numeric_result(
         operation.numeric(&mut numeric)?,
     ))

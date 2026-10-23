@@ -96,6 +96,158 @@ pub enum LogicalFunction {
 /// Aggregation, ranking, regression, and distribution handlers.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum StatisticsFunction {
+    /// Documented CHISQ.TEST sample-statistics handler.
+    ChisqTest,
+    /// Documented F.TEST sample-statistics handler.
+    FTest,
+    /// Documented FISHER sample-statistics handler.
+    Fisher,
+    /// Documented FISHERINV sample-statistics handler.
+    FisherInv,
+    /// Documented HARMEAN sample-statistics handler.
+    HarMean,
+    /// Documented KURT sample-statistics handler.
+    Kurt,
+    /// Documented MODE.MULT sample-statistics handler.
+    ModeMult,
+    /// Documented MODE.SNGL sample-statistics handler.
+    ModeSngl,
+    /// Documented PERCENTILE.EXC sample-statistics handler.
+    PercentileExc,
+    /// Documented PERMUT sample-statistics handler.
+    Permut,
+    /// Documented PERMUTATIONA sample-statistics handler.
+    PermutationA,
+    /// Documented PROB sample-statistics handler.
+    Prob,
+    /// Documented QUARTILE.EXC sample-statistics handler.
+    QuartileExc,
+    /// Documented RANK.AVG sample-statistics handler.
+    RankAvg,
+    /// Documented RSQ sample-statistics handler.
+    RSq,
+    /// Documented SKEW sample-statistics handler.
+    Skew,
+    /// Documented SKEW.P sample-statistics handler.
+    SkewP,
+    /// Documented STEYX sample-statistics handler.
+    Steyx,
+    /// Documented T.TEST sample-statistics handler.
+    TTest,
+    /// Documented TRIMMEAN sample-statistics handler.
+    TrimMean,
+    /// Documented Z.TEST sample-statistics handler.
+    ZTest,
+
+    /// Legacy BETADIST worksheet contract.
+    BetaDistLegacy,
+    /// Legacy BETAINV worksheet contract.
+    BetaInvLegacy,
+    /// Legacy BINOMDIST worksheet contract.
+    BinomDistLegacy,
+    /// Legacy CHIDIST worksheet contract.
+    ChisqDistRtLegacy,
+    /// Legacy CHIINV worksheet contract.
+    ChisqInvRtLegacy,
+    /// Legacy CHITEST worksheet contract.
+    ChisqTestLegacy,
+    /// Legacy CONFIDENCE worksheet contract.
+    ConfidenceNormLegacy,
+    /// Legacy CRITBINOM worksheet contract.
+    BinomInvLegacy,
+    /// Legacy EXPONDIST worksheet contract.
+    ExponDistLegacy,
+    /// Legacy FDIST worksheet contract.
+    FDistRtLegacy,
+    /// Legacy FINV worksheet contract.
+    FInvRtLegacy,
+    /// Legacy FTEST worksheet contract.
+    FTestLegacy,
+    /// Legacy GAMMADIST worksheet contract.
+    GammaDistLegacy,
+    /// Legacy GAMMAINV worksheet contract.
+    GammaInvLegacy,
+    /// Legacy HYPGEOMDIST worksheet contract.
+    HypgeomDistLegacy,
+    /// Legacy LOGINV worksheet contract.
+    LognormInvLegacy,
+    /// Legacy LOGNORMDIST worksheet contract.
+    LognormDistLegacy,
+    /// Legacy NEGBINOMDIST worksheet contract.
+    NegbinomDistLegacy,
+    /// Legacy QUARTILE worksheet contract.
+    QuartileIncLegacy,
+    /// Legacy TINV worksheet contract.
+    TInv2TLegacy,
+    /// Legacy TTEST worksheet contract.
+    TTestLegacy,
+    /// Legacy WEIBULL worksheet contract.
+    WeibullDistLegacy,
+    /// Legacy ZTEST worksheet contract.
+    ZTestLegacy,
+
+    /// Documented BETA.INV inverse or confidence handler.
+    BetaInv,
+    /// Documented BINOM.INV inverse or confidence handler.
+    BinomInv,
+    /// Documented CHISQ.INV inverse or confidence handler.
+    ChisqInv,
+    /// Documented CHISQ.INV.RT inverse or confidence handler.
+    ChisqInvRt,
+    /// Documented CONFIDENCE.NORM inverse or confidence handler.
+    ConfidenceNorm,
+    /// Documented CONFIDENCE.T inverse or confidence handler.
+    ConfidenceT,
+    /// Documented F.INV inverse or confidence handler.
+    FInv,
+    /// Documented F.INV.RT inverse or confidence handler.
+    FInvRt,
+    /// Documented GAMMA.INV inverse or confidence handler.
+    GammaInv,
+    /// Documented LOGNORM.INV inverse or confidence handler.
+    LognormInv,
+    /// Documented T.INV inverse or confidence handler.
+    TInv,
+    /// Documented T.INV.2T inverse or confidence handler.
+    TInv2T,
+
+    /// Documented BETA.DIST distribution handler.
+    BetaDist,
+    /// Documented BINOM.DIST distribution handler.
+    BinomDist,
+    /// Documented BINOM.DIST.RANGE distribution handler.
+    BinomDistRange,
+    /// Documented CHISQ.DIST distribution handler.
+    ChisqDist,
+    /// Documented CHISQ.DIST.RT distribution handler.
+    ChisqDistRt,
+    /// Documented EXPON.DIST distribution handler.
+    ExponDist,
+    /// Documented F.DIST distribution handler.
+    FDist,
+    /// Documented F.DIST.RT distribution handler.
+    FDistRt,
+    /// Documented GAMMA distribution handler.
+    Gamma,
+    /// Documented GAMMA.DIST distribution handler.
+    GammaDist,
+    /// Documented GAMMALN distribution handler.
+    Gammaln,
+    /// Documented GAMMALN.PRECISE distribution handler.
+    GammalnPrecise,
+    /// Documented GAUSS distribution handler.
+    Gauss,
+    /// Documented HYPGEOM.DIST distribution handler.
+    HypgeomDist,
+    /// Documented LOGNORM.DIST distribution handler.
+    LognormDist,
+    /// Documented NEGBINOM.DIST distribution handler.
+    NegbinomDist,
+    /// Documented PHI distribution handler.
+    Phi,
+    /// Documented WEIBULL.DIST distribution handler.
+    WeibullDist,
+
     /// AVEDEV handler.
     AveDev,
     /// AVERAGEA handler.
@@ -148,6 +300,14 @@ pub enum StatisticsFunction {
     CovarianceS,
     /// Legacy FORECAST handler.
     Forecast,
+    /// FORECAST.ETS additive smoothing forecast.
+    ForecastEts,
+    /// FORECAST.ETS.CONFINT future-observation interval.
+    ForecastEtsConfint,
+    /// FORECAST.ETS.SEASONALITY automatic period.
+    ForecastEtsSeasonality,
+    /// FORECAST.ETS.STAT fitted gain or diagnostic.
+    ForecastEtsStat,
     /// FORECAST.LINEAR handler.
     ForecastLinear,
     /// INTERCEPT handler.
@@ -791,6 +951,12 @@ pub enum MatrixFunction {
     Trimrange,
     /// Numeric identity matrix.
     Munit,
+    /// Exponential regression predictions.
+    Growth,
+    /// Linear least-squares coefficients and optional diagnostics.
+    Linest,
+    /// Exponential least-squares coefficients and optional diagnostics.
+    Logest,
 }
 /// Criteria-based aggregation and subtotal handlers.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]

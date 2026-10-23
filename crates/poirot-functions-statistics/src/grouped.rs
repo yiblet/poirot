@@ -142,7 +142,7 @@ impl BuiltinAggregator {
             }
             Self::MinimumA | Self::MaximumA => crate::Collection::ExtremaA,
             Self::GeoMean => crate::Collection::GeoMean,
-            Self::Mode => crate::Collection::Mode,
+            Self::Mode => crate::Collection::NumericAggregate,
             _ => crate::Collection::NumericAggregate,
         }
     }

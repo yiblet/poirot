@@ -6,6 +6,7 @@ use crate::*;
 pub(super) struct Lift {
     shapes: poirot_functions_core::ParamVec<OperandDescription>,
     start: usize,
+    indices: Option<poirot_functions_core::ParamVec<usize>>,
     rows: usize,
     columns: usize,
 }
@@ -22,14 +23,40 @@ impl Lift {
         start: usize,
         count: usize,
     ) -> FunctionResult<Self> {
+        let end = start.checked_add(count).ok_or(VALUE_ERROR)?;
+        Self::from_arguments(host, start..end, start, None)
+    }
+    /// Describe explicitly selected scalar slots, excluding fixed collection operands.
+    pub(super) fn new_selected(
+        host: &mut CallHost<'_, '_>,
+        selected: &[usize],
+    ) -> FunctionResult<Self> {
+        host.check_values(selected.len())?;
+        let mut indices = poirot_functions_core::ParamVec::new();
+        indices
+            .try_reserve(selected.len())
+            .map_err(|_| host.budget_exceeded())?;
+        // SAFETY: selected.len slots were reserved for exactly selected.len indices.
+        indices.extend(selected.iter().copied());
+        Self::from_arguments(host, selected.iter().copied(), 0, Some(indices))
+    }
+    /// Build shared geometry, retaining contiguous slots without an index allocation.
+    fn from_arguments(
+        host: &mut CallHost<'_, '_>,
+        mut selected: impl ExactSizeIterator<Item = usize>,
+        start: usize,
+        indices: Option<poirot_functions_core::ParamVec<usize>>,
+    ) -> FunctionResult<Self> {
+        let count = selected.len();
         host.check_values(count)?;
         let mut shapes = poirot_functions_core::ParamVec::new();
         shapes
             .try_reserve(count)
             .map_err(|_| host.budget_exceeded())?;
         let (mut rows, mut columns) = (1, 1);
-        for index in 0..count {
-            let shape = host.describe(start.checked_add(index).ok_or(VALUE_ERROR)?)?;
+        for _ in 0..count {
+            let index = selected.next().ok_or(VALUE_ERROR)?;
+            let shape = host.describe(index)?;
             if shape.sheets != 1 || shape.rows == 0 || shape.columns == 0 {
                 return Err(VALUE_ERROR.into());
             }
@@ -49,6 +76,7 @@ impl Lift {
         Ok(Self {
             shapes,
             start,
+            indices,
             rows,
             columns,
         })
@@ -70,7 +98,10 @@ impl Lift {
             return Err(NA.into());
         }
         host.read_cell(
-            self.start.checked_add(index).ok_or(VALUE_ERROR)?,
+            match &self.indices {
+                Some(indices) => *indices.get(index).ok_or(VALUE_ERROR)?,
+                None => self.start.checked_add(index).ok_or(VALUE_ERROR)?,
+            },
             if shape.rows == 1 { 0 } else { row },
             if shape.columns == 1 { 0 } else { column },
         )

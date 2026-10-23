@@ -785,6 +785,7 @@ name = "poirot-functions-statistics"
 version = "0.1.0"
 dependencies = [
  "bigdecimal",
+ "libm",
  "poirot-coercionv2",
  "poirot-functions-core",
  "poirot-numeric",

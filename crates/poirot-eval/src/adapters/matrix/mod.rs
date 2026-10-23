@@ -98,6 +98,18 @@ pub(crate) fn execute(
     function: helper::MatrixFunction,
     args: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
+    if function == helper::MatrixFunction::Trend
+        && session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
+    {
+        session.read(DependencyRead::BuiltinPolicy);
+        return regression::execute(
+            crate::registry::MatrixFunction::Trend,
+            session,
+            sheet,
+            address,
+            args,
+        );
+    }
     // Check arity before allocating argument handles or evaluating expressions.
     if !function.accepts(args.len()) {
         return Ok(err(VALUE_ERROR));
@@ -376,6 +388,7 @@ pub(crate) fn sequence(
 mod grouping;
 mod modern;
 mod random_trim;
+mod regression;
 mod selection;
 mod unit;
 pub(crate) use modern::execute as modern;

@@ -7,7 +7,7 @@ license.workspace = true
 repository.workspace = true
 readme = "README.md"
 description = "Matrix and array calculations for spreadsheet functions"
-include = ["/src/**", "/README.md"]
+include = ["/src/**", "/README.md", "/REGRESSION_SOURCES.md"]
 
 [dependencies]
 poirot-coercionv2 = { version = "0.1.0", path = "../poirot-coercionv2" }

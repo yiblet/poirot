@@ -316,6 +316,67 @@ registry! {
     "ARABIC" => Text(TextFunction::Arabic), 1, 1, FamilyControlled, REFERENCE_READS, Scalar;
     }
     excel {
+    "GROWTH" => Matrix(MatrixFunction::Growth), 1, 4, FamilyControlled, REFERENCE_READS, Array;
+
+    "FORECAST.ETS" => Statistics(StatisticsFunction::ForecastEts), 3, 6, FamilyControlled, FORECAST_READS, ForecastArguments;
+    "FORECAST.ETS.CONFINT" => Statistics(StatisticsFunction::ForecastEtsConfint), 3, 7, FamilyControlled, FORECAST_READS, ForecastArguments;
+    "FORECAST.ETS.SEASONALITY" => Statistics(StatisticsFunction::ForecastEtsSeasonality), 2, 4, FamilyControlled, FORECAST_READS, AfterSecondNumericArguments;
+    "FORECAST.ETS.STAT" => Statistics(StatisticsFunction::ForecastEtsStat), 3, 6, FamilyControlled, FORECAST_READS, AfterSecondNumericArguments;
+
+    "LINEST" => Matrix(MatrixFunction::Linest), 1, 4, FamilyControlled, REFERENCE_READS, Array;
+    "LOGEST" => Matrix(MatrixFunction::Logest), 1, 4, FamilyControlled, REFERENCE_READS, Array;
+    "CHISQ.TEST" => Statistics(StatisticsFunction::ChisqTest), 2, 2, FamilyControlled, NUMERIC_COERCION, Number;
+    "F.TEST" => Statistics(StatisticsFunction::FTest), 2, 2, FamilyControlled, NUMERIC_COERCION, Number;
+    "FISHER" => Statistics(StatisticsFunction::Fisher), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "FISHERINV" => Statistics(StatisticsFunction::FisherInv), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "HARMEAN" => Statistics(StatisticsFunction::HarMean), 1, 255, FamilyControlled, NUMERIC_COERCION, Number;
+    "KURT" => Statistics(StatisticsFunction::Kurt), 1, 255, FamilyControlled, NUMERIC_COERCION, Number;
+    "MODE.MULT" => Statistics(StatisticsFunction::ModeMult), 1, 254, FamilyControlled, NUMERIC_COERCION, Array;
+    "MODE.SNGL" => Statistics(StatisticsFunction::ModeSngl), 1, 254, FamilyControlled, NUMERIC_COERCION, Number;
+    "PERCENTILE.EXC" => Statistics(StatisticsFunction::PercentileExc), 2, 2, FamilyControlled, NUMERIC_COERCION, SecondNumericArgument;
+    "PERMUT" => Statistics(StatisticsFunction::Permut), 2, 2, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "PERMUTATIONA" => Statistics(StatisticsFunction::PermutationA), 2, 2, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "PROB" => Statistics(StatisticsFunction::Prob), 2, 4, FamilyControlled, NUMERIC_COERCION, AfterSecondNumericArguments;
+    "QUARTILE.EXC" => Statistics(StatisticsFunction::QuartileExc), 2, 2, FamilyControlled, NUMERIC_COERCION, SecondNumericArgument;
+    "RANK.AVG" => Statistics(StatisticsFunction::RankAvg), 2, 3, FamilyControlled, NUMERIC_COERCION, RankArguments;
+    "RSQ" => Statistics(StatisticsFunction::RSq), 2, 2, FamilyControlled, NUMERIC_COERCION, Number;
+    "SKEW" => Statistics(StatisticsFunction::Skew), 1, 255, FamilyControlled, NUMERIC_COERCION, Number;
+    "SKEW.P" => Statistics(StatisticsFunction::SkewP), 1, 254, FamilyControlled, NUMERIC_COERCION, Number;
+    "STEYX" => Statistics(StatisticsFunction::Steyx), 2, 2, FamilyControlled, NUMERIC_COERCION, Number;
+    "T.TEST" => Statistics(StatisticsFunction::TTest), 4, 4, FamilyControlled, NUMERIC_COERCION, AfterSecondNumericArguments;
+    "TRIMMEAN" => Statistics(StatisticsFunction::TrimMean), 2, 2, FamilyControlled, NUMERIC_COERCION, SecondNumericArgument;
+    "Z.TEST" => Statistics(StatisticsFunction::ZTest), 2, 3, FamilyControlled, NUMERIC_COERCION, AfterFirstNumericArguments;
+    "BETA.INV" => Statistics(StatisticsFunction::BetaInv), 3, 5, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "BINOM.INV" => Statistics(StatisticsFunction::BinomInv), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "CHISQ.INV" => Statistics(StatisticsFunction::ChisqInv), 2, 2, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "CHISQ.INV.RT" => Statistics(StatisticsFunction::ChisqInvRt), 2, 2, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "CONFIDENCE.NORM" => Statistics(StatisticsFunction::ConfidenceNorm), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "CONFIDENCE.T" => Statistics(StatisticsFunction::ConfidenceT), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "F.INV" => Statistics(StatisticsFunction::FInv), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "F.INV.RT" => Statistics(StatisticsFunction::FInvRt), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "GAMMA.INV" => Statistics(StatisticsFunction::GammaInv), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "LOGNORM.INV" => Statistics(StatisticsFunction::LognormInv), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "T.INV" => Statistics(StatisticsFunction::TInv), 2, 2, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "T.INV.2T" => Statistics(StatisticsFunction::TInv2T), 2, 2, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "BETA.DIST" => Statistics(StatisticsFunction::BetaDist), 4, 6, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "BINOM.DIST" => Statistics(StatisticsFunction::BinomDist), 4, 4, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "BINOM.DIST.RANGE" => Statistics(StatisticsFunction::BinomDistRange), 3, 4, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "CHISQ.DIST" => Statistics(StatisticsFunction::ChisqDist), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "CHISQ.DIST.RT" => Statistics(StatisticsFunction::ChisqDistRt), 2, 2, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "EXPON.DIST" => Statistics(StatisticsFunction::ExponDist), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "F.DIST" => Statistics(StatisticsFunction::FDist), 4, 4, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "F.DIST.RT" => Statistics(StatisticsFunction::FDistRt), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "GAMMA" => Statistics(StatisticsFunction::Gamma), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "GAMMA.DIST" => Statistics(StatisticsFunction::GammaDist), 4, 4, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "GAMMALN" => Statistics(StatisticsFunction::Gammaln), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "GAMMALN.PRECISE" => Statistics(StatisticsFunction::GammalnPrecise), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "GAUSS" => Statistics(StatisticsFunction::Gauss), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "HYPGEOM.DIST" => Statistics(StatisticsFunction::HypgeomDist), 5, 5, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "LOGNORM.DIST" => Statistics(StatisticsFunction::LognormDist), 4, 4, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "NEGBINOM.DIST" => Statistics(StatisticsFunction::NegbinomDist), 4, 4, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "PHI" => Statistics(StatisticsFunction::Phi), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "WEIBULL.DIST" => Statistics(StatisticsFunction::WeibullDist), 4, 4, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+
     "IMABS" => Engineering(EngineeringFunction::Imabs), 1, 1, FamilyControlled, REFERENCE_READS, ElementwiseNumber;
     "IMARGUMENT" => Engineering(EngineeringFunction::Imargument), 1, 1, FamilyControlled, REFERENCE_READS, ElementwiseNumber;
     "IMCONJUGATE" => Engineering(EngineeringFunction::Imconjugate), 1, 1, FamilyControlled, REFERENCE_READS, ElementwiseText;
@@ -453,6 +514,29 @@ registry! {
     "PERCENTILE.INC" => Statistics(StatisticsFunction::Percentile), 2, 2, FamilyControlled, REFERENCE_READS, Scalar;
     "QUARTILE.INC" => Statistics(StatisticsFunction::QuartileInc), 2, 2, FamilyControlled, REFERENCE_READS, Scalar;
     "RANK.EQ" => Statistics(StatisticsFunction::RankEq), 2, 3, FamilyControlled, REFERENCE_READS, Scalar;
+    "BETADIST" => Statistics(StatisticsFunction::BetaDistLegacy), 3, 5, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "BETAINV" => Statistics(StatisticsFunction::BetaInvLegacy), 3, 5, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "BINOMDIST" => Statistics(StatisticsFunction::BinomDistLegacy), 4, 4, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "CHIDIST" => Statistics(StatisticsFunction::ChisqDistRtLegacy), 2, 2, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "CHIINV" => Statistics(StatisticsFunction::ChisqInvRtLegacy), 2, 2, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "CHITEST" => Statistics(StatisticsFunction::ChisqTestLegacy), 2, 2, FamilyControlled, NUMERIC_COERCION, Number;
+    "CONFIDENCE" => Statistics(StatisticsFunction::ConfidenceNormLegacy), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "CRITBINOM" => Statistics(StatisticsFunction::BinomInvLegacy), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "EXPONDIST" => Statistics(StatisticsFunction::ExponDistLegacy), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "FDIST" => Statistics(StatisticsFunction::FDistRtLegacy), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "FINV" => Statistics(StatisticsFunction::FInvRtLegacy), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "FTEST" => Statistics(StatisticsFunction::FTestLegacy), 2, 2, FamilyControlled, NUMERIC_COERCION, Number;
+    "GAMMADIST" => Statistics(StatisticsFunction::GammaDistLegacy), 4, 4, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "GAMMAINV" => Statistics(StatisticsFunction::GammaInvLegacy), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "HYPGEOMDIST" => Statistics(StatisticsFunction::HypgeomDistLegacy), 4, 4, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "LOGINV" => Statistics(StatisticsFunction::LognormInvLegacy), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "LOGNORMDIST" => Statistics(StatisticsFunction::LognormDistLegacy), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "NEGBINOMDIST" => Statistics(StatisticsFunction::NegbinomDistLegacy), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "QUARTILE" => Statistics(StatisticsFunction::QuartileIncLegacy), 2, 2, FamilyControlled, REFERENCE_READS, Scalar;
+    "TINV" => Statistics(StatisticsFunction::TInv2TLegacy), 2, 2, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "TTEST" => Statistics(StatisticsFunction::TTestLegacy), 4, 4, FamilyControlled, NUMERIC_COERCION, AfterSecondNumericArguments;
+    "WEIBULL" => Statistics(StatisticsFunction::WeibullDistLegacy), 4, 4, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+    "ZTEST" => Statistics(StatisticsFunction::ZTestLegacy), 2, 3, FamilyControlled, NUMERIC_COERCION, AfterFirstNumericArguments;
     }
 }
 /// POI ATP strips exactly lowercase `_xlfn.` before case-insensitive lookup.
