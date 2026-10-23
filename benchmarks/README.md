@@ -195,3 +195,12 @@ formula errors, and blank cells to fail with no timing report, including when
 zero could otherwise conceal a nonnumeric result.
 A positive sparse-edit check also starts with `A1=1` and `C1=A1+B2`, then creates
 `B2=2`; both native evaluators must change the cached result from 1 to 3.
+
+## Persistent scenario replay
+
+The separate [incremental replay harness](incremental-replay/README.md) compares
+persistent, reset-per-request and fresh Overlays on generated controls and an
+optional external XLSX/JSONL workload. It checks output hashes across all modes,
+keeps private values out of reports, and measures first and repeated evaluation
+separately with bounded paired statistics. This is a Poirot source comparison,
+not a cross-engine XLSX import benchmark.

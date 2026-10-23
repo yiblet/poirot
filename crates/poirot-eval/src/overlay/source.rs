@@ -26,6 +26,14 @@ pub(super) enum EditKind {
     Style,
 }
 
+/// Whether value-only dependency cutoffs are sound for an authored mutation.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum SourceChange {
+    /// Literal content changed without changing formula or style metadata.
+    Value,
+    /// Formula, style, or stored spill ownership may have changed.
+    Metadata,
+}
 /// Baseline handle plus authored diff and compilation; contains no evaluated results.
 pub(super) struct Source<'a, W> {
     /// Immutable borrowed or shared baseline handle.
@@ -111,6 +119,35 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
             }
         }
     }
+    /// Classify literal writes before changing effective source or saved ownership.
+    pub fn change_kind(
+        &self,
+        target: EvaluationTarget,
+        new: Option<&Cell>,
+        kind: EditKind,
+    ) -> SourceChange {
+        let old = self.source_cell(target);
+        let saved_spill = self.workbook().sheet(target.sheet).is_some_and(|sheet| {
+            sheet.spill_owner(target.address).is_some()
+                || sheet.spill_extent(target.address).is_some()
+        });
+        let style_unchanged = old.map(|cell| &cell.style) == new.map(|cell| &cell.style)
+            || (old.is_none() && new.is_some_and(|cell| cell.style == CellStyle::default()));
+        let occupancy_unchanged = old
+            .is_none_or(|cell| cell.formula.is_none() && cell.value == CellValue::Blank)
+            == new.is_none_or(|cell| cell.formula.is_none() && cell.value == CellValue::Blank);
+        if kind == EditKind::Content
+            && occupancy_unchanged
+            && !saved_spill
+            && style_unchanged
+            && old.is_none_or(|cell| cell.formula.is_none())
+            && new.is_none_or(|cell| cell.formula.is_none())
+        {
+            SourceChange::Value
+        } else {
+            SourceChange::Metadata
+        }
+    }
     /// Replace source, dropping redundant overrides; report whether invalidation is needed.
     pub fn write_cell(
         &mut self,
@@ -192,6 +229,32 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
             self.inputs.deleted.insert((target.sheet, target.address));
         }
         Ok(true)
+    }
+    /// Restore baseline inputs, invalidating source proofs only where formulas change.
+    pub fn discard_inputs(&mut self) {
+        let workbook = self.workbook.borrow();
+        let candidates = self.spill_candidates.get_mut();
+        for (&sheet, overrides) in &self.inputs.sheets {
+            let baseline = workbook.sheet(sheet);
+            if overrides.cells().into_iter().any(|(&address, cell)| {
+                cell.formula.as_deref()
+                    != baseline
+                        .and_then(|sheet| sheet.source_cell(address))
+                        .and_then(|cell| cell.formula.as_deref())
+            }) {
+                candidates.remove(&sheet);
+            }
+        }
+        for &(sheet, address) in &self.inputs.deleted {
+            if workbook
+                .sheet(sheet)
+                .and_then(|sheet| sheet.source_cell(address))
+                .is_some_and(|cell| cell.formula.is_some())
+            {
+                candidates.remove(&sheet);
+            }
+        }
+        self.inputs = crate::run_overlay::RunInputs::empty();
     }
     /// Count authored overrides and removal markers rather than edit history.
     pub fn edited_cells(&self) -> usize {
@@ -376,8 +439,11 @@ macro_rules! edit_methods {
         }
         /// Remove effective authored content and invalidate results.
         pub fn remove_cell(&mut self, target: EvaluationTarget) -> Result<(), ModelError> {
+            let change = self
+                .source
+                .change_kind(target, None, source::EditKind::Content);
             if self.source.remove_cell(target)? {
-                self.source_changed(target);
+                self.source_changed(target, change);
             }
             Ok(())
         }
@@ -387,8 +453,9 @@ macro_rules! edit_methods {
             cell: Cell,
             kind: source::EditKind,
         ) -> Result<(), ModelError> {
+            let change = self.source.change_kind(target, Some(&cell), kind);
             if self.source.write_cell(target, cell, kind)? {
-                self.source_changed(target);
+                self.source_changed(target, change);
             }
             Ok(())
         }

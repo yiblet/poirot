@@ -1,0 +1,19 @@
+[package]
+name = "poirot-incremental-replay"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+publish = false
+
+[workspace]
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[dependencies]
+poirot = { path = "../.." }
+serde_json = "=1.0.154"
+sha2 = "=0.11.1"
+
+[lints]
+workspace = true

@@ -929,7 +929,9 @@ fn lookup_indices_expire_for_context_sensitive_formula_candidates() {
     context.as_of_time += Duration::from_secs(1);
     let mut changed = overlay.evaluation(&context).unwrap();
     assert_eq!(changed.cell(at("E1")).unwrap(), CellValue::Number(500.));
-    assert_eq!(changed.usage().lookup_prefix_scans, 50);
+    // The clock consumer executes, but its stable result now cuts off the lookup.
+    assert_eq!(changed.usage().formula_executions, 1);
+    assert_eq!(changed.usage().lookup_prefix_scans, 0);
     assert_eq!(changed.usage().lookup_prefix_hits, 0);
 }
 
@@ -1079,11 +1081,11 @@ fn numeric_locale_identity_and_consumption_survive_retained_snapshot() {
 fn raw_snapshot_restore_rejects_previous_execution_semantics_versions() {
     let workbook = book();
     let overlay = Overlay::with_workbook(&workbook).build().unwrap();
-    for previous in 8..72 {
+    for previous in 8..74 {
         let mut bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
         // Payload's first field is its small postcard varint version.
         let version = bytes.first_mut().unwrap();
-        assert_eq!(*version, 72);
+        assert_eq!(*version, 74);
         *version = previous;
         let snapshot = postcard::from_bytes(&bytes).unwrap();
         assert!(

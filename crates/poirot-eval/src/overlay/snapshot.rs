@@ -2,12 +2,12 @@
 use super::*;
 use serde::{Deserialize, Serialize, ser::Error as _};
 use std::borrow::Cow;
-const VERSION: u32 = 72;
+const VERSION: u32 = 74;
 /// Compatibility revision for persisted engine preparation and retained results.
 /// Bump when wire layout or execution semantics invalidate prepared snapshots,
 /// including changes that leave Serde field layouts intact. This is separate from
 /// durable workbook-source versioning owned by the public file envelope.
-pub const COMPATIBILITY_REVISION: u64 = 71;
+pub const COMPATIBILITY_REVISION: u64 = 73;
 
 /// Serde view of a baseline workbook and its sparse overlay state.
 pub struct Snapshot<'a> {
@@ -219,6 +219,7 @@ impl<'a> Payload<'a> {
                     cells
                         .cells()
                         .into_iter()
+                        .filter(|(_, entry)| entry.validity.is_clean())
                         .map(move |(&at, entry)| CachedValue {
                             key: (sheet, at),
                             value: poirot_model::snapshot::Value::capture(&entry.value),
@@ -415,6 +416,8 @@ impl<'a> Snapshot<'a> {
                     .ranges
                     .iter()
                     .chain(&entry.dependencies.point_runs)
+                    .chain(&entry.dependencies.spill_ranges)
+                    .chain(entry.dependencies.value_reads.iter())
                 {
                     overlay.source.validate_target(EvaluationTarget {
                         sheet: range.sheet,
@@ -432,6 +435,8 @@ impl<'a> Snapshot<'a> {
                 cache.insert(
                     entry.key,
                     Cached {
+                        version: 0,
+                        validity: super::dependencies::Validity::Clean,
                         value: Arc::new(entry.value.restore()),
                         dependencies: Box::new(entry.dependencies.into_owned()),
                     },

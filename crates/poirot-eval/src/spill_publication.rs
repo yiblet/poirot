@@ -354,6 +354,11 @@ impl Session<'_> {
             row: area.r0,
             col: area.c0,
         };
+        // Spill references consume extent/ownership, not merely the anchor's
+        // scalar value. Scalar dependency equality cannot certify this read.
+        if let Some(reads) = &mut self.overlay_reads {
+            reads.mark_metadata(self.runtime.consumer);
+        }
         let value = self.cell(area.sheet, anchor)?;
         let Some(last) = self
             .runtime
@@ -388,8 +393,14 @@ impl Session<'_> {
             let cache = cache
                 .try_borrow()
                 .map_err(|_| EvaluationFailure::StalePlan)?;
+            let validated = |key| {
+                self.overlay_reads
+                    .as_ref()
+                    .is_some_and(|reads| reads.validated.contains(&key))
+            };
             let Some(owner) = cache
-                .get((sheet, at))
+                .retained((sheet, at))
+                .filter(|entry| entry.validity.is_clean() || validated((sheet, at)))
                 .and_then(|c| c.dependencies.spill.owner(at))
             else {
                 return Ok(());
@@ -397,8 +408,10 @@ impl Session<'_> {
             if self.runtime.cache.contains_key(&(sheet, owner)) {
                 return Ok(());
             }
+            let owner_validated = validated((sheet, owner));
             let Some(last) = cache
-                .get((sheet, owner))
+                .retained((sheet, owner))
+                .filter(|entry| entry.validity.is_clean() || owner_validated)
                 .and_then(|c| c.dependencies.spill.last())
             else {
                 return Ok(());
@@ -420,7 +433,10 @@ impl Session<'_> {
             for row in owner.row..=last.row {
                 let mut values = Vec::with_capacity(width);
                 for col in owner.col..=last.col {
-                    let Some(entry) = cache.get((sheet, CellAddress { row, col })) else {
+                    let Some(entry) = cache
+                        .retained((sheet, CellAddress { row, col }))
+                        .filter(|entry| entry.validity.is_clean() || owner_validated)
+                    else {
                         return Ok(());
                     };
                     let address = CellAddress { row, col };
@@ -489,11 +505,7 @@ impl Session<'_> {
         self.runtime.budget.check_allocation(count)?;
         // SAFETY: The preceding last.is_none_or guard returns on None before this unwrap; last is not reassigned.
         let last = last.unwrap();
-        self.read(DependencyRead::SparseMembership {
-            sheet,
-            first: CellAddress { row: 0, col: 0 },
-            last,
-        });
+        self.read_spill_membership(sheet, CellAddress { row: 0, col: 0 }, last);
         let effective = run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs);
         for r in 0..height {
             for c in 0..width {
@@ -1420,6 +1432,32 @@ impl Session<'_> {
                 "dynamic spill ownership is incompatible with an external scalar cell cache",
             ));
         }
+        let conditional = self
+            .overlay_cache
+            .and_then(|cache| {
+                cache.try_borrow().ok().and_then(|cache| {
+                    cache.retained(key).map(|entry| {
+                        matches!(
+                            entry.validity,
+                            overlay::dependencies::Validity::Cause { .. }
+                                | overlay::dependencies::Validity::Causes(_)
+                        )
+                    })
+                })
+            })
+            .unwrap_or(false);
+        if conditional {
+            // Dirty evidence can itself read a potential child of this producer.
+            // Guard validation just like execution against unpublished recursion.
+            self.runtime.preparation.computing.insert(key);
+            let validated = self.revalidate_cached(key);
+            self.runtime.preparation.computing.remove(&key);
+            if validated?.is_some()
+                && let Some(reads) = &mut self.overlay_reads
+            {
+                reads.fresh_results.insert(key);
+            }
+        }
         self.restore_cached_spill(sheet, at)?;
         if self.runtime.preparation.held.contains_key(&key) {
             return Ok(());
@@ -1428,7 +1466,14 @@ impl Session<'_> {
             cache
                 .try_borrow()
                 .ok()?
-                .get(key)
+                .retained(key)
+                .filter(|entry| {
+                    entry.validity.is_clean()
+                        || self
+                            .overlay_reads
+                            .as_ref()
+                            .is_some_and(|reads| reads.validated.contains(&key))
+                })
                 .filter(|entry| entry.dependencies.spill.owner(at).is_none())
                 .map(|entry| entry.value.as_ref().clone())
         });
@@ -1670,14 +1715,14 @@ impl Session<'_> {
     pub(super) fn prepare_spills_in(&mut self, area: Area) -> EvalResult<()> {
         self.resolve_spills_in(area)?;
         if self.array_result_policy == ArrayResultPolicy::DynamicSpill {
-            self.read_lazy(|| DependencyRead::SparseMembership {
-                sheet: area.sheet,
-                first: CellAddress { row: 0, col: 0 },
-                last: CellAddress {
+            self.read_spill_membership(
+                area.sheet,
+                CellAddress { row: 0, col: 0 },
+                CellAddress {
                     row: area.r1,
                     col: area.c1,
                 },
-            });
+            );
         }
         Ok(())
     }

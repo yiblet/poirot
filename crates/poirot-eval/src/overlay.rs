@@ -169,21 +169,27 @@ impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
             self.cache.get_mut().invalidate_text_policy();
         }
     }
-    fn source_changed(&mut self, target: EvaluationTarget) {
-        self.cache
-            .get_mut()
-            .invalidate([(target.sheet, target.address)]);
+    fn source_changed(&mut self, target: EvaluationTarget, change: source::SourceChange) {
+        let cache = self.cache.get_mut();
+        match change {
+            source::SourceChange::Value => {
+                cache.invalidate_values([(target.sheet, target.address)])
+            }
+            source::SourceChange::Metadata => {
+                cache.invalidate_geometry([(target.sheet, target.address)])
+            }
+        }
     }
     /// Discard edits and evaluated values while retaining compiled programs.
     pub fn reset(&mut self) {
-        self.source.inputs = crate::run_overlay::RunInputs::empty();
+        self.source.discard_inputs();
         self.clear_cache();
     }
     /// Clear calculated results and their dependencies, keeping edits and compiled formulas.
     pub fn clear_cache(&mut self) {
         self.cache = RefCell::new(Cache::default());
     }
-    /// Inspect persistent logical retention, independent of cycle work and detailed profiling.
+    /// Inspect persistent storage, including dirty evidence awaiting revalidation.
     pub fn retained_usage(&mut self) -> crate::run::MemoRetentionUsage {
         let cache = self.cache.get_mut();
         crate::run::MemoRetentionUsage {
@@ -191,11 +197,11 @@ impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
             bytes: cache.retained_bytes,
         }
     }
-    /// Count retained formula results and spill children.
+    /// Count current formula results and spill children; dirty retained evidence is excluded.
     pub fn cached_cells(&mut self) -> usize {
-        self.cache.get_mut().len()
+        self.cache.get_mut().valid_len()
     }
-    /// Inspect a retained result without triggering execution.
+    /// Inspect a current cached result without executing; dirty evidence remains hidden.
     pub fn cached_value(&self, target: EvaluationTarget) -> Option<Arc<CellValue>> {
         self.cache
             .try_borrow()
@@ -232,6 +238,9 @@ impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
         changes.extend(self.source.source_changes());
         for (&sheet, cells) in &cache.sheets {
             for (&address, entry) in cells.cells() {
+                if !entry.validity.is_clean() {
+                    continue;
+                }
                 if let Some(change) = evaluation::evaluated_change(
                     self.source.effective(),
                     (sheet, address),
@@ -318,7 +327,9 @@ impl<W: Borrow<Workbook> + std::borrow::BorrowMut<Workbook>> Overlay<'_, W> {
                 .ok_or_else(|| ModelError("worksheet index out of bounds".into()))?
                 .set_style(address, style)?;
         }
-        self.source.inputs = crate::run_overlay::RunInputs::empty();
+        // The baseline now contains the effective formulas, so dropping the diff
+        // preserves source classification for these committed edits.
+        self.source.discard_inputs();
         Ok(count)
     }
 }

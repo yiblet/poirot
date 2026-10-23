@@ -67,7 +67,7 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
     fn policy_changed(&mut self, _previous: &OverlayPolicy) {
         self.clear_cache();
     }
-    fn source_changed(&mut self, _target: EvaluationTarget) {
+    fn source_changed(&mut self, _target: EvaluationTarget, _change: source::SourceChange) {
         self.clear_cache();
     }
     /// Discard calculated values and spill results.
@@ -83,7 +83,7 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
     /// This does not reset work usage or a previous failure; use [`Self::begin`]
     /// for those.
     pub fn reset(&mut self) {
-        self.source.inputs = crate::run_overlay::RunInputs::empty();
+        self.source.discard_inputs();
         self.clear_cache();
         // Cleanup belonged to the discarded scenario, not to the restored baseline.
         self.spill_resets.clear();

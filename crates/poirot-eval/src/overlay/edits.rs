@@ -20,6 +20,7 @@ pub struct OverlayEdits<'e, 'a, W: Borrow<Workbook>> {
     source: &'e mut Source<'a, W>,
     cache: &'e mut Cache,
     changed: CellSet,
+    values: CellSet,
 }
 impl<'e, 'a, W: Borrow<Workbook>> OverlayEdits<'e, 'a, W> {
     /// Borrow source and retained state exclusively until deferred invalidation completes.
@@ -28,18 +29,26 @@ impl<'e, 'a, W: Borrow<Workbook>> OverlayEdits<'e, 'a, W> {
             source,
             cache,
             changed: CellSet::default(),
+            values: CellSet::default(),
         }
     }
     source::edit_methods!();
 
-    fn source_changed(&mut self, target: EvaluationTarget) {
-        self.changed.insert((target.sheet, target.address));
+    fn source_changed(&mut self, target: EvaluationTarget, change: source::SourceChange) {
+        let key = (target.sheet, target.address);
+        if change == source::SourceChange::Metadata {
+            self.values.remove(&key);
+            self.changed.insert(key);
+        } else if !self.changed.contains(&key) {
+            self.values.insert(key);
+        }
     }
 }
 impl<W: Borrow<Workbook>> Drop for OverlayEdits<'_, '_, W> {
     fn drop(&mut self) {
         if !self.changed.is_empty() {
-            self.cache.invalidate(self.changed.drain());
+            self.cache.invalidate_geometry(self.changed.drain());
         }
+        self.cache.invalidate_values(self.values.drain());
     }
 }

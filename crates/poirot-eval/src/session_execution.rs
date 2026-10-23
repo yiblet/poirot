@@ -101,9 +101,51 @@ impl<'a> Session<'a> {
             self.read(read());
         }
     }
+    /// Record spill geometry without claiming every coordinate's value was consumed.
+    pub(super) fn read_spill_membership(
+        &mut self,
+        sheet: usize,
+        first: CellAddress,
+        last: CellAddress,
+    ) {
+        if self.overlay_reads.is_none() && self.dependency_sink.is_none() && !self.settling_spills()
+        {
+            return;
+        }
+        let read = DependencyRead::SparseMembership { sheet, first, last };
+        self.record_spill_effect(&read);
+        if let Some(reads) = &mut self.overlay_reads {
+            reads.spill_membership(
+                self.runtime.consumer,
+                poirot_model::query::RangeMembership { sheet, first, last },
+            );
+        }
+        if let Some(sink) = &mut self.dependency_sink {
+            sink.read(ReadEvent {
+                consumer: self.runtime.consumer,
+                read,
+            });
+        }
+    }
     /// Attribute a consumed read to the active cell and forward it to installed sinks.
     pub(super) fn read(&mut self, read: DependencyRead) {
         self.record_spill_effect(&read);
+        if self.array_result_policy == ArrayResultPolicy::DynamicSpill
+            && let DependencyRead::SparseMembership { sheet, last, .. } = &read
+            && let Some(reads) = &mut self.overlay_reads
+        {
+            // Sparse consumers may observe an empty interval without reading
+            // individual blank coordinates. Retain their ownership-query guard
+            // even when an indexed lookup supplied the values from another caller.
+            reads.spill_membership(
+                self.runtime.consumer,
+                poirot_model::query::RangeMembership {
+                    sheet: *sheet,
+                    first: CellAddress { row: 0, col: 0 },
+                    last: *last,
+                },
+            );
+        }
         record_read(
             &mut self.overlay_reads,
             &mut self.dependency_sink,
@@ -126,6 +168,12 @@ impl<'a> Session<'a> {
             .is_some_and(|plan| plan.policy() != prepared.policy())
         {
             return Err(EvaluationFailure::StalePlan);
+        }
+        if self.array_result_policy == ArrayResultPolicy::DynamicSpill
+            && prepared.spill_shape().is_some()
+            && let Some(reads) = &mut self.overlay_reads
+        {
+            reads.mark_spill_sensitive((sheet, at));
         }
         if self.runtime.budget.profiling {
             self.runtime.run_usage.compiled_lookups =
@@ -204,6 +252,7 @@ impl<'a> Session<'a> {
         self.runtime.budget.pop_cell();
         self.runtime.consumer = previous;
         self.expression_demand = previous_demand;
+
         result
     }
     /// Execute a supplied bytecode plan after checking its extension identity and target.
@@ -319,13 +368,8 @@ impl<'a> Session<'a> {
             && matches!(result, Ok(Blank))
             && let Some(consumer) = consumer
         {
-            // Every consumer observes absence, including consumers of a memoized
-            // blank. A dirty earlier producer can later grow into this coordinate.
-            self.read_lazy(|| DependencyRead::SparseMembership {
-                sheet,
-                first: CellAddress { row: 0, col: 0 },
-                last: address,
-            });
+            // Private ownership arbitration tracks blank observations, including
+            // memo hits: a producer can later grow into an ancestor's footprint.
             let tracked = (|| {
                 if !self.settling_spills() {
                     return Ok(());
@@ -386,6 +430,92 @@ impl<'a> Session<'a> {
         }
         result
     }
+    /// Settle only dirty immediate causes, keeping successful validation local until publication.
+    pub(super) fn revalidate_cached(
+        &mut self,
+        key: (usize, CellAddress),
+    ) -> EvalResult<Option<CellValue>> {
+        let Some(cache) = self.overlay_cache else {
+            return Ok(None);
+        };
+        let mut evidence = {
+            let cache = cache
+                .try_borrow()
+                .map_err(|_| EvaluationFailure::StalePlan)?;
+            let Some(entry) = cache.retained(key) else {
+                return Ok(None);
+            };
+            let Some(causes) = entry
+                .dependencies
+                .ordered_causes(&entry.validity, &mut self.runtime.budget)?
+            else {
+                return Ok(None);
+            };
+            (std::sync::Arc::clone(&entry.value), causes)
+        };
+        // Validating evidence must not replace the original consumed dependency trace
+        // with the narrower set of dirty causes, or leak these reads into a caller.
+        let previous = self.runtime.consumer.take();
+        let unchanged = (|| {
+            loop {
+                let prior = {
+                    let cache = cache
+                        .try_borrow()
+                        .map_err(|_| EvaluationFailure::StalePlan)?;
+                    let entry = cache.retained(key).ok_or(EvaluationFailure::StalePlan)?;
+                    let Some((cause, expected_version)) =
+                        evidence.1.next(&entry.validity, &mut self.runtime.budget)?
+                    else {
+                        return Ok(true);
+                    };
+                    cache.retained(cause).map(|entry| {
+                        (
+                            cause,
+                            expected_version,
+                            entry.version,
+                            std::sync::Arc::clone(&entry.value),
+                            entry.validity.is_clean(),
+                        )
+                    })
+                };
+                let Some((cause, expected_version, version, prior, clean)) = prior else {
+                    return Ok(false);
+                };
+                if version != expected_version {
+                    return Ok(false);
+                }
+                self.runtime.budget.charge(WorkKind::Comparison, 1)?;
+                if clean {
+                    continue;
+                }
+                // Stop at the first changed value: normal execution decides which
+                // old lazy dependencies are still relevant, and in what order.
+                let unchanged = match self.runtime.cache.get(&cause) {
+                    Some(value) => crate::same_result_identity(&prior, value),
+                    None => crate::same_result_identity(&prior, &self.cell(cause.0, cause.1)?),
+                };
+                if !unchanged {
+                    return Ok(false);
+                }
+            }
+        })();
+        self.runtime.consumer = previous;
+        if !unchanged? {
+            return Ok(None);
+        }
+        let value = copy_cached_value(
+            &mut self.runtime.budget,
+            EvaluationTarget {
+                sheet: key.0,
+                address: key.1,
+            },
+            &evidence.0,
+        )?;
+        if let Some(reads) = &mut self.overlay_reads {
+            reads.validated.insert(key);
+        }
+        Ok(Some(value))
+    }
     fn cell_value(
         &mut self,
         sheet: usize,
@@ -404,16 +534,89 @@ impl<'a> Session<'a> {
                 failure
             })?;
         self.read_lazy(|| DependencyRead::Cell(EvaluationTarget { sheet, address }));
-        self.resolve_spills_in(Area {
+        let source =
+            run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs).cell(sheet, address);
+        let incoming = self.array_result_policy == ArrayResultPolicy::DynamicSpill
+            && (source.is_none_or(|cell| cell.formula.is_none() && cell.value == Blank)
+                || self
+                    .workbook
+                    .sheet(sheet)
+                    .is_some_and(|sheet| sheet.spill_owner(address).is_some()));
+        // A clean unowned blank certificate already includes its empty-owner
+        // query guard. Owned coordinates still restore a whole footprint for
+        // coherent export and spill-reference readiness. Active arbitration and
+        // locally admitted values retain their ordinary protocol.
+        if incoming
+            && !self.settling_spills()
+            && !self.runtime.cache.contains_key(&(sheet, address))
+            && let Some(value) = self.overlay_cache.and_then(|cache| {
+                let cache = cache.try_borrow().ok()?;
+                let entry = cache.get((sheet, address))?;
+                if entry.dependencies.spill.owner(address).is_some() {
+                    return None;
+                }
+                Some(std::sync::Arc::clone(&entry.value))
+            })
+        {
+            *provenance = CellProvenance::ExternalCache;
+            *completion_candidate = true;
+            if self.runtime.budget.profiling {
+                self.runtime.run_usage.external_cache_hits =
+                    self.runtime.run_usage.external_cache_hits.saturating_add(1);
+                self.runtime.budget.usage.cache_hits =
+                    self.runtime.budget.usage.cache_hits.saturating_add(1);
+            }
+            return copy_cached_value(
+                &mut self.runtime.budget,
+                EvaluationTarget { sheet, address },
+                value.as_ref(),
+            );
+        }
+        // Empty coordinates own their spatial-query dependency, including empty
+        // query results. Their callers depend on the coordinate's actual value.
+        let previous = if incoming {
+            self.runtime
+                .consumer
+                .replace(EvaluationTarget { sheet, address })
+        } else {
+            self.runtime.consumer
+        };
+        let resolution = self.resolve_spills_in(Area {
             kind: AreaKind::Cell,
             sheet,
             r0: address.row,
             r1: address.row,
             c0: address.col,
             c1: address.col,
-        })?;
-
-        if (self.overlay_reads.is_some() || self.dependency_sink.is_some())
+        });
+        if incoming && resolution.is_ok() {
+            self.read_spill_membership(sheet, CellAddress { row: 0, col: 0 }, address);
+            if let Some(owner) = self
+                .runtime
+                .preparation
+                .roles
+                .get(&(sheet, address))
+                .and_then(|role| role.owner(address))
+                && let Some(reads) = &mut self.overlay_reads
+            {
+                crate::DependencyReadSink::read(
+                    reads,
+                    ReadEvent {
+                        consumer: self.runtime.consumer,
+                        read: DependencyRead::Cell(EvaluationTarget {
+                            sheet,
+                            address: owner,
+                        }),
+                    },
+                );
+            }
+        }
+        self.runtime.consumer = previous;
+        resolution?;
+        // Preserve the public read observer's owner notification for its caller;
+        // retained incremental edges are attached to the coordinate node above.
+        if incoming
+            && let Some(sink) = &mut self.dependency_sink
             && let Some(owner) = self
                 .runtime
                 .preparation
@@ -421,18 +624,15 @@ impl<'a> Session<'a> {
                 .get(&(sheet, address))
                 .and_then(|role| role.owner(address))
         {
-            record_read(
-                &mut self.overlay_reads,
-                &mut self.dependency_sink,
-                ReadEvent {
-                    consumer: self.runtime.consumer,
-                    read: DependencyRead::Cell(EvaluationTarget {
-                        sheet,
-                        address: owner,
-                    }),
-                },
-            );
+            sink.read(ReadEvent {
+                consumer: previous,
+                read: DependencyRead::Cell(EvaluationTarget {
+                    sheet,
+                    address: owner,
+                }),
+            });
         }
+        *completion_candidate = incoming;
         let runtime = &mut *self.runtime;
         if let Some(value) = runtime.cache.get(&(sheet, address)) {
             *provenance = CellProvenance::SessionMemo;
@@ -466,13 +666,24 @@ impl<'a> Session<'a> {
                 value.as_ref(),
             );
         }
-        let cached = self.overlay_cache.and_then(|cache| {
-            cache
-                .try_borrow()
-                .ok()?
-                .get((sheet, address))
-                .map(|entry| std::sync::Arc::clone(&entry.value))
-        });
+        let (cached, needs_validation) = self
+            .overlay_cache
+            .and_then(|cache| {
+                let cache = cache.try_borrow().ok()?;
+                let entry = cache.retained((sheet, address))?;
+                Some((
+                    entry
+                        .validity
+                        .is_clean()
+                        .then(|| std::sync::Arc::clone(&entry.value)),
+                    matches!(
+                        entry.validity,
+                        overlay::dependencies::Validity::Cause { .. }
+                            | overlay::dependencies::Validity::Causes(_)
+                    ),
+                ))
+            })
+            .unwrap_or_default();
         if let Some(value) = cached {
             *provenance = CellProvenance::ExternalCache;
             if self.runtime.budget.profiling {
@@ -489,7 +700,7 @@ impl<'a> Session<'a> {
         }
         let cell =
             run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs).cell(sheet, address);
-        *completion_candidate = cell.is_some_and(|cell| cell.formula.is_some());
+        *completion_candidate |= cell.is_some_and(|cell| cell.formula.is_some());
         // Scalar literals and absent cells cannot recurse. Dynamic spill execution
         // also uses visiting for ownership and footprint tracking, so retain its path.
         let track_visiting = self.array_result_policy == ArrayResultPolicy::DynamicSpill
@@ -521,6 +732,20 @@ impl<'a> Session<'a> {
             .consumer
             .replace(EvaluationTarget { sheet, address });
         let result = (|| {
+            if needs_validation && let Some(value) = self.revalidate_cached((sheet, address))? {
+                self.admit_cell(sheet, address, &value)?;
+                *provenance = CellProvenance::ExternalCache;
+                if self.runtime.budget.profiling {
+                    self.runtime.run_usage.external_cache_hits =
+                        self.runtime.run_usage.external_cache_hits.saturating_add(1);
+                    self.runtime.budget.usage.cache_hits =
+                        self.runtime.budget.usage.cache_hits.saturating_add(1);
+                }
+                if let Some(reads) = &mut self.overlay_reads {
+                    reads.fresh_results.insert((sheet, address));
+                }
+                return Ok(value);
+            }
             let value = match cell {
                 None => Ok(Blank),
                 Some(cell) => match &cell.formula {

@@ -195,8 +195,13 @@ impl<'a> OverlayEvaluation<'a> {
                 continue;
             };
             let source = effective.cell(key.0, key.1);
-            // Literal/absent reads need graph edges, but no retained copy of their values.
-            if !self.session.runtime.preparation.roles.contains_key(&key)
+            // Ordinary literals need no retained copy. Empty coordinates with
+            // ownership-query guards retain values for downstream change cutoffs.
+            if !reads
+                .traces
+                .get(&key)
+                .is_some_and(|trace| !trace.spill_ranges.is_empty())
+                && !self.session.runtime.preparation.roles.contains_key(&key)
                 && source.is_none_or(|cell| cell.formula.is_none())
                 && source.map_or(matches!(value, CellValue::Blank), |cell| {
                     crate::same_result_identity(&cell.value, value)
@@ -204,7 +209,17 @@ impl<'a> OverlayEvaluation<'a> {
             {
                 continue;
             }
-            let mut dependencies = Box::new(reads.traces.remove(&key).unwrap_or_default());
+            let mut dependencies = if reads.validated.remove(&key) {
+                self.cache
+                    .try_borrow()
+                    .map_err(|_| EvaluationFailure::StalePlan)?
+                    .retained(key)
+                    .ok_or(EvaluationFailure::StalePlan)?
+                    .dependencies
+                    .clone()
+            } else {
+                Box::new(reads.traces.remove(&key).unwrap_or_default())
+            };
             dependencies.spill = self
                 .session
                 .runtime
@@ -224,6 +239,8 @@ impl<'a> OverlayEvaluation<'a> {
                 .cells
                 .retain(|&(sheet, at)| !dependencies.ranges.iter().any(|r| r.contains(sheet, at)));
             let entry = Cached {
+                version: 0,
+                validity: dependencies::Validity::Clean,
                 value: Arc::new(value.clone()),
                 dependencies,
             };

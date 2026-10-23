@@ -19,6 +19,13 @@ pub(crate) struct Dependencies {
     pub ranges: Vec<RangeMembership>,
     /// Consecutive point reads compressed into rectangles.
     pub point_runs: Vec<RangeMembership>,
+    /// Actual value reads in execution order, compressed into forward point spans.
+    /// Repeated spans are harmless: validation selects each cause's first occurrence.
+    pub value_reads: ValueReadOrder,
+    /// Metadata reads cannot be certified by comparing cell values alone.
+    pub metadata_reads: bool,
+    /// Geometry-only guards; literal value changes do not create new producers.
+    pub spill_ranges: Vec<RangeMembership>,
     /// Execution consumed a provider whose dependencies cannot be fully observed.
     pub opaque: bool,
     /// Execution must be repeated in each new evaluation.
@@ -34,8 +41,149 @@ pub(crate) struct Dependencies {
     pub text_policy: bool,
     /// Whether the result owns a spill region or belongs to another cell's spill.
     pub spill: crate::spill_publication::SpillRole,
+    /// A possible producer needs ownership validation even when its current result is scalar.
+    pub spill_sensitive: bool,
 }
 impl Dependencies {
+    fn value_read(&mut self, (sheet, at): Key) {
+        if let Some(last) = self.value_reads.last_mut() {
+            if last.contains(sheet, at) {
+                return;
+            }
+            if last.sheet == sheet
+                && last.first.col == last.last.col
+                && at.col == last.last.col
+                && Some(at.row) == last.last.row.checked_add(1)
+            {
+                last.last = at;
+                return;
+            }
+            if last.sheet == sheet
+                && last.first.row == last.last.row
+                && at.row == last.last.row
+                && Some(at.col) == last.last.col.checked_add(1)
+            {
+                last.last = at;
+                return;
+            }
+        }
+        self.value_reads.push(RangeMembership {
+            sheet,
+            first: at,
+            last: at,
+        });
+    }
+
+    /// Order dirty value dependencies by their first consumed read; other evidence forces execution.
+    pub fn ordered_causes(
+        &self,
+        validity: &Validity,
+        budget: &mut crate::budget::BudgetMeter,
+    ) -> crate::EvalResult<Option<OrderedCauses>> {
+        if self.metadata_reads {
+            return Ok(None);
+        }
+        match validity {
+            // A single cause needs no ordering evidence. Cached lookup indexes,
+            // for example, can retain membership without replaying point reads.
+            Validity::Cause { key, version } => {
+                Ok(Some(OrderedCauses::One(Some((*key, *version)))))
+            }
+            Validity::Causes(causes) => {
+                if matches!(self.value_reads, ValueReadOrder::Unavailable) {
+                    return Ok(None);
+                }
+                if let ValueReadOrder::One(span) = &self.value_reads {
+                    if (span.first.col != span.last.col && span.first.row != span.last.row)
+                        || span.first.row > span.last.row
+                        || span.first.col > span.last.col
+                    {
+                        return Ok(None);
+                    }
+                    // Establish complete evidence before evaluating anything: an
+                    // unordered membership cause could change an old lazy branch.
+                    for key in causes.keys() {
+                        budget.charge(crate::WorkKind::Comparison, 1)?;
+                        if !span.contains(key.0, key.1) {
+                            return Ok(None);
+                        }
+                    }
+                    return Ok(Some(OrderedCauses::Span {
+                        next: Some(span.first),
+                        span: *span,
+                        remaining: causes.len(),
+                    }));
+                }
+                // Irregular multi-span traces need a complete safe ordering.
+                // Index only dirty causes, not the potentially enormous scanned ranges.
+                let mut rows = BTreeMap::new();
+                let mut columns = BTreeMap::new();
+                for (&key, &version) in causes {
+                    budget.charge(crate::WorkKind::Comparison, 1)?;
+                    rows.insert((key.0, key.1.row, key.1.col), version);
+                    columns.insert((key.0, key.1.col, key.1.row), version);
+                }
+                let mut ordered = Vec::new();
+                if ordered.try_reserve(causes.len()).is_err() {
+                    return Ok(None);
+                }
+                for span in self.value_reads.iter() {
+                    budget.charge(crate::WorkKind::Comparison, 1)?;
+                    let vertical = span.first.col == span.last.col;
+                    if !vertical && span.first.row != span.last.row {
+                        return Ok(None);
+                    }
+                    let (first, last) = if vertical {
+                        (
+                            (span.sheet, span.first.col, span.first.row),
+                            (span.sheet, span.last.col, span.last.row),
+                        )
+                    } else {
+                        (
+                            (span.sheet, span.first.row, span.first.col),
+                            (span.sheet, span.last.row, span.last.col),
+                        )
+                    };
+                    if first > last {
+                        return Ok(None);
+                    }
+                    loop {
+                        let index = if vertical { &columns } else { &rows };
+                        // SAFETY: The local comparison above proves the inclusive range is ordered.
+                        let next = index.range(first..=last).next().map(
+                            |(&(sheet, axis, offset), &version)| {
+                                let address = if vertical {
+                                    CellAddress {
+                                        row: offset,
+                                        col: axis,
+                                    }
+                                } else {
+                                    CellAddress {
+                                        row: axis,
+                                        col: offset,
+                                    }
+                                };
+                                ((sheet, address), version)
+                            },
+                        );
+                        let Some((key, version)) = next else {
+                            break;
+                        };
+                        rows.remove(&(key.0, key.1.row, key.1.col));
+                        columns.remove(&(key.0, key.1.col, key.1.row));
+                        // SAFETY: Reserved causes.len() slots above; removing each selected key
+                        // from both indexes means at most that many unique causes are pushed.
+                        ordered.push((key, version));
+                    }
+                    if rows.is_empty() {
+                        return Ok(Some(OrderedCauses::Many(ordered.into_iter())));
+                    }
+                }
+                Ok(None)
+            }
+            _ => Ok(None),
+        }
+    }
     fn cell(&mut self, (sheet, at): Key) {
         // Membership already invalidates every cell in this rectangle, including
         // missing cells. Keep outside reads such as spill owners as point edges.
@@ -97,6 +245,8 @@ pub(crate) struct Reads {
     pub fresh_results: CellSet,
     /// Cells whose results may be retained after successful execution.
     pub completed: CellSet,
+    /// Results whose old consumed trace was validated without executing their formula.
+    pub validated: CellSet,
 }
 impl Reads {
     // Range consumers issue many reads without changing the consumer. Keep its
@@ -115,6 +265,26 @@ impl Reads {
             .get_or_insert_with(|| (key, Dependencies::default()))
             .1
     }
+    /// Keep ownership guards separate from consumed values while recording the same public event.
+    pub fn spill_membership(&mut self, consumer: Option<EvaluationTarget>, range: RangeMembership) {
+        if let Some(consumer) = consumer {
+            let ranges = &mut self.trace((consumer.sheet, consumer.address)).spill_ranges;
+            if !ranges.contains(&range) {
+                ranges.push(range);
+            }
+        }
+    }
+    /// Mark geometry-sensitive reads that scalar equality cannot validate.
+    pub fn mark_metadata(&mut self, consumer: Option<EvaluationTarget>) {
+        if let Some(consumer) = consumer {
+            self.trace((consumer.sheet, consumer.address))
+                .metadata_reads = true;
+        }
+    }
+    /// Mark a producer whose future footprint cannot be certified by scalar equality.
+    pub fn mark_spill_sensitive(&mut self, key: Key) {
+        self.trace(key).spill_sensitive = true;
+    }
     /// Remove speculative consumers while preserving previously settled evidence.
     pub(crate) fn discard_consumers(&mut self, speculative: &CellSet) {
         self.flush();
@@ -122,6 +292,7 @@ impl Reads {
             self.traces.remove(key);
             self.completed.remove(key);
             self.fresh_results.remove(key);
+            self.validated.remove(key);
         }
     }
     /// Return the active trace to the map before publishing the batch.
@@ -138,7 +309,12 @@ impl crate::DependencyReadSink for Reads {
         };
         let trace = self.trace((consumer.sheet, consumer.address));
         match event.read {
-            DependencyRead::Cell(cell) | DependencyRead::SubtotalMetadata(cell) => {
+            DependencyRead::Cell(cell) => {
+                trace.value_read((cell.sheet, cell.address));
+                trace.cell((cell.sheet, cell.address));
+            }
+            DependencyRead::SubtotalMetadata(cell) => {
+                trace.metadata_reads = true;
                 trace.cell((cell.sheet, cell.address));
             }
             DependencyRead::SparseMembership { sheet, first, last } => {
@@ -222,8 +398,155 @@ impl crate::DependencyReadSink for Reads {
 pub(crate) struct Cached {
     /// Shared result storage, independent of the evaluation that produced it.
     pub value: Arc<CellValue>,
+    /// Last publication at which the observable value changed.
+    pub version: u64,
+    /// Whether retained evidence is current, forced to execute, or awaiting direct causes.
+    pub validity: Validity,
     /// Consumed reads, context flags, and spill ownership for this result.
     pub dependencies: Box<Dependencies>,
+}
+/// Immediate invalidation evidence, separate from the last retained value.
+#[derive(Clone, Default)]
+pub(crate) enum Validity {
+    /// The retained result is available to ordinary cache readers.
+    #[default]
+    Clean,
+    /// A source/context change requires normal execution.
+    Forced,
+    /// One dirty input can settle without speculating over an unordered set of reads.
+    Cause { key: Key, version: u64 },
+    /// Multiple dirty inputs are settled in the retained value-read order.
+    Causes(CellMap<u64>),
+}
+impl Validity {
+    /// Whether the retained result can be published without further validation.
+    pub fn is_clean(&self) -> bool {
+        matches!(self, Self::Clean)
+    }
+}
+/// Ordered actual value reads; the common single span needs no heap allocation.
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub(crate) enum ValueReadOrder {
+    /// No point value was read.
+    #[default]
+    Empty,
+    /// One consecutive traversal or one cell.
+    One(RangeMembership),
+    /// Nonconsecutive traversals retained in execution order.
+    Many(Vec<RangeMembership>),
+    /// Optional evidence could not be allocated; normal execution remains available.
+    Unavailable,
+}
+impl ValueReadOrder {
+    fn last_mut(&mut self) -> Option<&mut RangeMembership> {
+        match self {
+            Self::One(span) => Some(span),
+            Self::Many(spans) => spans.last_mut(),
+            _ => None,
+        }
+    }
+    fn push(&mut self, span: RangeMembership) {
+        match self {
+            Self::Empty => *self = Self::One(span),
+            Self::One(first) => {
+                let mut spans = Vec::new();
+                if spans.try_reserve(2).is_err() {
+                    *self = Self::Unavailable;
+                    return;
+                }
+                // SAFETY: try_reserve(2) succeeded above, providing capacity for both spans.
+                spans.push(*first);
+                // SAFETY: Exactly one of the two reserved slots has been filled.
+                spans.push(span);
+                *self = Self::Many(spans);
+            }
+            Self::Many(spans) => {
+                if spans.try_reserve(1).is_err() {
+                    *self = Self::Unavailable;
+                    return;
+                }
+                // SAFETY: try_reserve(1) succeeded immediately above.
+                spans.push(span);
+            }
+            Self::Unavailable => {}
+        }
+    }
+    /// Visit the retained spans without expanding their coordinates.
+    pub fn iter(&self) -> std::slice::Iter<'_, RangeMembership> {
+        match self {
+            Self::One(span) => std::slice::from_ref(span).iter(),
+            Self::Many(spans) => spans.iter(),
+            _ => [].iter(),
+        }
+    }
+    fn len(&self) -> usize {
+        match self {
+            Self::One(_) => 1,
+            Self::Many(spans) => spans.len(),
+            _ => 0,
+        }
+    }
+}
+
+/// Dirty causes in consumed order, with lazy allocation-free single-span traversal.
+pub(crate) enum OrderedCauses {
+    /// One dirty input needs no temporary collection.
+    One(Option<(Key, u64)>),
+    /// A single ordered read span can yield dirty coordinates on demand.
+    Span {
+        span: RangeMembership,
+        next: Option<CellAddress>,
+        remaining: usize,
+    },
+    /// Irregular traces require sorting by the consumed read order.
+    Many(std::vec::IntoIter<(Key, u64)>),
+}
+impl OrderedCauses {
+    /// Find the next cause using a short cache borrow, released before recursive evaluation.
+    pub fn next(
+        &mut self,
+        validity: &Validity,
+        budget: &mut crate::budget::BudgetMeter,
+    ) -> crate::EvalResult<Option<(Key, u64)>> {
+        match self {
+            Self::One(cause) => Ok(cause.take()),
+            Self::Many(causes) => Ok(causes.next()),
+            Self::Span {
+                span,
+                next,
+                remaining,
+            } => {
+                if *remaining == 0 {
+                    return Ok(None);
+                }
+                let Validity::Causes(causes) = validity else {
+                    return Err(crate::EvaluationFailure::StalePlan);
+                };
+                while let Some(address) = next.take() {
+                    budget.charge(crate::WorkKind::Comparison, 1)?;
+                    if address != span.last {
+                        *next = if span.first.col == span.last.col {
+                            address.row.checked_add(1).map(|row| CellAddress {
+                                row,
+                                col: address.col,
+                            })
+                        } else {
+                            address.col.checked_add(1).map(|col| CellAddress {
+                                row: address.row,
+                                col,
+                            })
+                        };
+                    }
+                    let key = (span.sheet, address);
+                    if let Some(&version) = causes.get(&key) {
+                        *remaining = remaining.saturating_sub(1);
+                        return Ok(Some((key, version)));
+                    }
+                }
+                Ok(None)
+            }
+        }
+    }
 }
 /// Persistent overlay results with reverse edges for transitive invalidation.
 #[derive(Default)]
@@ -241,7 +564,9 @@ pub(crate) struct Cache {
     reverse: CellMap<CellSet>,
     always_dirty: CellSet,
     ranges: RangeIndex,
+    spill_ranges: RangeIndex,
     ranges_dirty: bool,
+    next_version: u64,
 }
 impl Cache {
     /// Admit a complete batch before publishing values, indexes, and spill cleanup together.
@@ -256,7 +581,7 @@ impl Cache {
         let mut bytes = self.retained_bytes;
         let mut overflow = false;
         for (key, entry) in &staged {
-            if let Some(old) = self.get(*key) {
+            if let Some(old) = self.retained(*key) {
                 let remaining = bytes.checked_sub(old.retained_bytes());
                 overflow |= remaining.is_none();
                 bytes = remaining.unwrap_or(usize::MAX);
@@ -283,6 +608,9 @@ impl Cache {
                 source: consumer,
             });
         }
+        self.next_version
+            .checked_add(staged.len() as u64)
+            .ok_or(EvaluationFailure::StalePlan)?;
         for (key, _) in &staged {
             key.1.validate().map_err(|_| EvaluationFailure::StalePlan)?;
         }
@@ -293,9 +621,27 @@ impl Cache {
         self.spill_resets.extend(spill_resets);
         Ok(())
     }
-    /// Look up a retained result without evaluating it.
+    /// Look up a current result without evaluating or exposing dirty evidence.
     pub fn get(&self, key: Key) -> Option<&Cached> {
+        self.retained(key).filter(|entry| entry.validity.is_clean())
+    }
+    /// Read retained evidence, including results that must not be exposed as current.
+    pub fn retained(&self, key: Key) -> Option<&Cached> {
         self.sheets.get(&key.0)?.get(&key.1)
+    }
+    /// Count only values whose validity has already been established.
+    pub fn valid_len(&self) -> usize {
+        self.sheets
+            .values()
+            .map(|sheet| {
+                sheet
+                    .cells()
+                    .into_iter()
+                    .map(|(_, entry)| entry)
+                    .filter(|entry| entry.validity.is_clean())
+                    .count()
+            })
+            .sum()
     }
     /// Count retained results across all sparse sheets.
     pub fn len(&self) -> usize {
@@ -305,8 +651,9 @@ impl Cache {
     pub fn remove(&mut self, key: Key) {
         self.always_dirty.remove(&key);
         if let Some(entry) = self.sheets.get_mut(&key.0).and_then(|s| s.remove(&key.1)) {
-            self.ranges_dirty |=
-                !entry.dependencies.ranges.is_empty() || !entry.dependencies.point_runs.is_empty();
+            self.ranges_dirty |= !entry.dependencies.ranges.is_empty()
+                || !entry.dependencies.point_runs.is_empty()
+                || !entry.dependencies.spill_ranges.is_empty();
             self.retained_bytes -= entry.retained_bytes();
             for dependency in &entry.dependencies.cells {
                 if let Some(readers) = self.reverse.get_mut(dependency) {
@@ -326,16 +673,27 @@ impl Cache {
         }
     }
     /// Replace a result and register its point edges and always-dirty status.
-    pub fn insert(&mut self, key: Key, entry: Cached) -> Result<(), poirot_model::ModelError> {
+    pub fn insert(&mut self, key: Key, mut entry: Cached) -> Result<(), poirot_model::ModelError> {
         key.1.validate()?;
+        let version = match self.retained(key) {
+            Some(old) if crate::same_result_identity(&old.value, &entry.value) => old.version,
+            _ => self
+                .next_version
+                .checked_add(1)
+                .ok_or_else(|| poirot_model::ModelError("cache generation overflow".into()))?,
+        };
+        entry.version = version;
+        entry.validity = Validity::Clean;
         let retained_bytes = self
             .retained_bytes
-            .checked_sub(self.get(key).map_or(0, Cached::retained_bytes))
+            .checked_sub(self.retained(key).map_or(0, Cached::retained_bytes))
             .and_then(|bytes| bytes.checked_add(entry.retained_bytes()))
             .ok_or_else(|| poirot_model::ModelError("cache retention size overflow".into()))?;
+        self.next_version = self.next_version.max(version);
         self.remove(key);
-        self.ranges_dirty |=
-            !entry.dependencies.ranges.is_empty() || !entry.dependencies.point_runs.is_empty();
+        self.ranges_dirty |= !entry.dependencies.ranges.is_empty()
+            || !entry.dependencies.point_runs.is_empty()
+            || !entry.dependencies.spill_ranges.is_empty();
         self.retained_bytes = retained_bytes;
         if entry.dependencies.opaque || entry.dependencies.volatile {
             self.always_dirty.insert(key);
@@ -363,9 +721,146 @@ impl Cache {
                 pending.extend(readers);
             }
             self.ranges.take_readers(key, &mut pending);
+            self.spill_ranges.take_readers(key, &mut pending);
             self.remove(key);
         }
         self.lookup_prefixes.invalidate(&seen);
+    }
+
+    /// Force spatial membership consumers after an authored occupancy/formula edit.
+    pub fn invalidate_geometry(&mut self, seeds: impl IntoIterator<Item = Key>) {
+        let seeds: Vec<_> = seeds.into_iter().collect();
+        for key in &seeds {
+            self.remove(*key);
+        }
+        let geometry = seeds.iter().copied().collect();
+        self.invalidate_context_with_geometry(seeds, &geometry);
+    }
+    /// Retain scalar evidence while propagating only immediate invalidation causes.
+    pub fn invalidate_values(&mut self, seeds: impl IntoIterator<Item = Key>) {
+        let seeds: Vec<_> = seeds.into_iter().collect();
+        // Authored literals are sources, never generation certificates. Even a
+        // retained numeric-coercion result must force its immediate readers.
+        for key in &seeds {
+            self.remove(*key);
+        }
+        self.invalidate_context(seeds);
+    }
+    fn invalidate_context(&mut self, seeds: impl IntoIterator<Item = Key>) {
+        self.invalidate_context_with_geometry(seeds, &CellSet::default());
+    }
+    fn invalidate_context_with_geometry(
+        &mut self,
+        seeds: impl IntoIterator<Item = Key>,
+        geometry_seeds: &CellSet,
+    ) {
+        let seeds: Vec<_> = seeds.into_iter().collect();
+        if seeds.is_empty() {
+            return;
+        }
+        if self.ranges_dirty {
+            self.rebuild_ranges();
+        }
+        let mut pending = seeds.clone();
+        let mut seen = CellSet::default();
+        for key in &seeds {
+            self.force(*key);
+        }
+        while let Some(key) = pending.pop() {
+            if !seen.insert(key) {
+                continue;
+            }
+            let mut readers = Vec::new();
+            if let Some(points) = self.reverse.get(&key) {
+                readers.extend(points.iter().copied());
+            }
+            self.ranges.readers(key, &mut readers);
+            readers.sort_unstable();
+            readers.dedup();
+            // Geometry changes force the coordinate/producer that consumed the
+            // membership guard. Its value readers remain conditionally valid.
+            let mut geometry = Vec::new();
+            if geometry_seeds.contains(&key)
+                || self.retained(key).is_some_and(|entry| {
+                    entry.dependencies.spill_sensitive
+                        || matches!(
+                            entry.dependencies.spill,
+                            crate::spill_publication::SpillRole::Anchor { .. }
+                        )
+                })
+            {
+                self.spill_ranges.readers(key, &mut geometry);
+            }
+            for reader in geometry {
+                if reader != key {
+                    self.force(reader);
+                    readers.push(reader);
+                }
+            }
+            let version = self.retained(key).map(|entry| entry.version);
+            for reader in readers {
+                if !seen.contains(&reader) {
+                    pending.push(reader);
+                }
+                let Some(entry) = self
+                    .sheets
+                    .get_mut(&reader.0)
+                    .and_then(|sheet| sheet.get_mut(&reader.1))
+                else {
+                    continue;
+                };
+                let prior_bytes = entry.retained_bytes();
+                // A spill child must resolve its owner again: the anchor's
+                // top-left scalar cannot certify the child's contents or extent.
+                if matches!(entry.dependencies.spill,
+                    crate::spill_publication::SpillRole::Child { anchor } if (reader.0, anchor) == key)
+                {
+                    entry.validity = Validity::Forced;
+                }
+                match (version, &mut entry.validity) {
+                    (_, Validity::Forced) => {}
+                    (None, _) => entry.validity = Validity::Forced,
+                    (Some(version), Validity::Clean) => {
+                        entry.validity = Validity::Cause { key, version }
+                    }
+                    (Some(_), Validity::Cause { key: prior, .. }) if *prior == key => {}
+                    (
+                        Some(version),
+                        Validity::Cause {
+                            key: prior,
+                            version: old,
+                        },
+                    ) => {
+                        let mut causes = CellMap::default();
+                        causes.insert(*prior, *old);
+                        causes.insert(key, version);
+                        entry.validity = Validity::Causes(causes);
+                    }
+                    (Some(version), Validity::Causes(causes)) => {
+                        causes.entry(key).or_insert(version);
+                    }
+                }
+                self.retained_bytes = self
+                    .retained_bytes
+                    .saturating_sub(prior_bytes)
+                    .saturating_add(entry.retained_bytes());
+            }
+        }
+        self.lookup_prefixes.invalidate(&seen);
+    }
+    fn force(&mut self, key: Key) {
+        if let Some(entry) = self
+            .sheets
+            .get_mut(&key.0)
+            .and_then(|sheet| sheet.get_mut(&key.1))
+        {
+            let prior_bytes = entry.retained_bytes();
+            entry.validity = Validity::Forced;
+            self.retained_bytes = self
+                .retained_bytes
+                .saturating_sub(prior_bytes)
+                .saturating_add(entry.retained_bytes());
+        }
     }
 
     /// Invalidate volatile, opaque, and context-sensitive results for a new evaluation.
@@ -374,7 +869,7 @@ impl Cache {
             // The common unchanged-context path only needs volatile/opaque roots.
             // insert/remove maintain this derived index, including snapshot restore.
             let seeds = self.always_dirty.iter().copied().collect::<Vec<_>>();
-            self.invalidate(seeds);
+            self.invalidate_context(seeds);
             return;
         }
         let seeds = self
@@ -402,7 +897,7 @@ impl Cache {
                     .map(move |(at, _)| (*sheet, *at))
             })
             .collect::<Vec<_>>();
-        self.invalidate(seeds);
+        self.invalidate_context(seeds);
         self.context = Some(context);
     }
     /// Invalidate cells that consumed text policy and all their dependents.
@@ -423,8 +918,16 @@ impl Cache {
     /// Rebuild the rectangle lookup after dependency traces have changed.
     pub fn rebuild_ranges(&mut self) {
         self.ranges = RangeIndex::new(&self.sheets);
+        self.spill_ranges = RangeIndex::build(&self.sheets, RangePurpose::SpillGeometry);
         self.ranges_dirty = false;
     }
+}
+/// Which dependency rectangles an index resolves.
+enum RangePurpose {
+    /// Values consumed by formulas, including compressed point reads.
+    Values,
+    /// Potential ownership or future-growth guards.
+    SpillGeometry,
 }
 /// Per-sheet lookup of consumers whose read rectangles contain a changed cell.
 #[derive(Default)]
@@ -440,16 +943,39 @@ struct RangeTree {
     last_col: u32,
 }
 impl RangeIndex {
+    #[cfg(test)]
+    fn intersects(&self, key: Key) -> bool {
+        self.sheets.get(&key.0).is_some_and(|tree| {
+            key.1.col >= tree.first_col
+                && key.1.col <= tree.last_col
+                && tree.intersects(1, 0, tree.entries.len(), key)
+        })
+    }
+    fn readers(&self, key: Key, out: &mut Vec<Key>) {
+        if let Some(tree) = self.sheets.get(&key.0)
+            && key.1.col >= tree.first_col
+            && key.1.col <= tree.last_col
+        {
+            tree.readers(1, 0, tree.entries.len(), key, out);
+        }
+    }
+
     fn new(sheets: &BTreeMap<usize, CellStore<Cached, 16, 2>>) -> Self {
+        Self::build(sheets, RangePurpose::Values)
+    }
+    fn build(sheets: &BTreeMap<usize, CellStore<Cached, 16, 2>>, purpose: RangePurpose) -> Self {
         let mut index = Self::default();
         for (sheet, cells) in sheets {
             for (at, entry) in cells.cells() {
-                for range in entry
-                    .dependencies
-                    .ranges
-                    .iter()
-                    .chain(&entry.dependencies.point_runs)
-                {
+                let (ranges, points) = if !matches!(purpose, RangePurpose::Values) {
+                    (entry.dependencies.spill_ranges.as_slice(), &[][..])
+                } else {
+                    (
+                        entry.dependencies.ranges.as_slice(),
+                        entry.dependencies.point_runs.as_slice(),
+                    )
+                };
+                for range in ranges.iter().chain(points) {
                     index
                         .sheets
                         .entry(range.sheet)
@@ -488,6 +1014,73 @@ impl RangeIndex {
     }
 }
 impl RangeTree {
+    #[cfg(test)]
+    fn intersects(&self, node: usize, lo: usize, hi: usize, key: Key) -> bool {
+        let Some((range, _)) = self.entries.get(lo) else {
+            return false;
+        };
+        if lo >= hi
+            || hi > self.entries.len()
+            || range.first.row > key.1.row
+            || self
+                .max_end
+                .get(node)
+                .copied()
+                .flatten()
+                .is_none_or(|end| end < key.1.row)
+        {
+            return false;
+        }
+        // SAFETY: The preceding guard establishes lo < hi <= entries.len().
+        if hi - lo == 1 {
+            return range.contains(key.0, key.1);
+        }
+        // SAFETY: lo < hi proves hi - lo is defined and the midpoint cannot exceed hi.
+        let mid = lo + (hi - lo) / 2;
+        let Some(left) = node.checked_mul(2) else {
+            return false;
+        };
+        let Some(right) = left.checked_add(1) else {
+            return false;
+        };
+        self.intersects(left, lo, mid, key) || self.intersects(right, mid, hi, key)
+    }
+
+    fn readers(&self, node: usize, lo: usize, hi: usize, key: Key, out: &mut Vec<Key>) {
+        let Some((range, reader)) = self.entries.get(lo) else {
+            return;
+        };
+        if lo >= hi
+            || hi > self.entries.len()
+            || range.first.row > key.1.row
+            || self
+                .max_end
+                .get(node)
+                .copied()
+                .flatten()
+                .is_none_or(|end| end < key.1.row)
+        {
+            return;
+        }
+        // SAFETY: The preceding guard establishes lo < hi <= entries.len().
+        if hi - lo == 1 {
+            if range.contains(key.0, key.1) {
+                out.push(*reader);
+            }
+            return;
+        }
+        // SAFETY: lo < hi proves hi - lo is defined and the midpoint cannot exceed hi.
+        let mid = lo + (hi - lo) / 2;
+        let Some(left) = node.checked_mul(2) else {
+            return;
+        };
+        let Some(right) = left.checked_add(1) else {
+            return;
+        };
+        self.readers(left, lo, mid, key, out);
+        self.readers(right, mid, hi, key, out);
+    }
+
     fn build(&mut self, node: usize, lo: usize, hi: usize) -> Option<u32> {
         if lo >= hi || hi > self.entries.len() || node >= self.max_end.len() {
             return None;
@@ -535,12 +1128,19 @@ impl RangeTree {
 impl Cached {
     /// Estimate result and dependency storage for retention accounting.
     pub fn retained_bytes(&self) -> usize {
-        128usize
+        224usize
+            .saturating_add(match &self.validity {
+                Validity::Causes(causes) => causes.len().saturating_mul(64),
+                _ => 0,
+            })
             .saturating_add(self.value.text_storage_bytes())
             .saturating_add(self.dependencies.cells.len().saturating_mul(48))
             .saturating_add(
-                (self.dependencies.ranges.len() + self.dependencies.point_runs.len())
-                    .saturating_mul(64),
+                (self.dependencies.ranges.len()
+                    + self.dependencies.point_runs.len()
+                    + self.dependencies.spill_ranges.len()
+                    + self.dependencies.value_reads.len())
+                .saturating_mul(64),
             )
     }
 }
@@ -550,6 +1150,8 @@ mod retention_overflow_tests {
     use super::*;
     fn entry() -> Cached {
         Cached {
+            version: 0,
+            validity: Validity::Clean,
             value: Arc::new(CellValue::Number(1.)),
             dependencies: Box::default(),
         }
@@ -599,6 +1201,8 @@ mod range_index_tests {
                 .insert(
                     key,
                     Cached {
+                        version: 0,
+                        validity: Validity::Clean,
                         value: Arc::new(1.0.into()),
                         dependencies: Box::new(deps),
                     },
@@ -658,6 +1262,8 @@ mod range_index_tests {
                 .insert(
                     keys[consumer],
                     Cached {
+                        version: 0,
+                        validity: Validity::Clean,
                         value: Arc::new(1.0.into()),
                         dependencies: Box::new(deps),
                     },
@@ -713,6 +1319,8 @@ mod range_index_tests {
                         },
                     ),
                     Cached {
+                        version: 0,
+                        validity: Validity::Clean,
                         value: Arc::new(CellValue::Number(i as f64)),
                         dependencies: Box::new(dependencies),
                     },
@@ -724,7 +1332,18 @@ mod range_index_tests {
                 for col in 0..10 {
                     let mut actual = Vec::new();
                     let mut index = RangeIndex::new(&cache.sheets);
-                    index.take_readers((sheet, CellAddress { row, col }), &mut actual);
+                    let key = (sheet, CellAddress { row, col });
+                    let mut retained = Vec::new();
+                    index.readers(key, &mut retained);
+                    assert_eq!(index.intersects(key), !retained.is_empty());
+                    // Read-only certificates must survive repeated queries.
+                    let mut repeated = Vec::new();
+                    index.readers(key, &mut repeated);
+                    assert_eq!(retained, repeated);
+                    index.take_readers(key, &mut actual);
+                    retained.sort_unstable();
+                    actual.sort_unstable();
+                    assert_eq!(retained, actual);
                     actual.sort();
                     let expected = rectangles
                         .iter()
@@ -981,5 +1600,131 @@ mod covered_point_tests {
         assert_eq!(parent_trace.ranges.len(), 1);
         assert!(parent_trace.ranges[0].contains(0, key(0, 6, 1).1));
         assert_eq!(reads.traces.get(&child).unwrap().cells, vec![owner]);
+    }
+}
+
+#[cfg(test)]
+mod value_order_tests {
+    use super::*;
+
+    #[test]
+    fn compressed_read_spans_preserve_first_occurrences_across_repeated_traversals() {
+        let key = |sheet, row, col| (sheet, CellAddress { row, col });
+        let sequence = [
+            key(0, 5, 4),
+            key(0, 6, 4),
+            key(0, 7, 4),
+            key(0, 6, 4),
+            key(0, 0, 2),
+            key(0, 0, 3),
+            key(0, 0, 4),
+            key(0, 5, 4),
+            key(1, 0, 0),
+            key(1, 1, 0),
+            key(0, 0, 2),
+            key(0, 3, 9),
+        ];
+        for mask in 1usize..(1 << sequence.len()) {
+            let mut dependencies = Dependencies::default();
+            for point in sequence {
+                dependencies.value_read(point);
+            }
+            let mut causes = CellMap::default();
+            for (position, point) in sequence.iter().enumerate() {
+                if mask & (1 << position) != 0 {
+                    causes.insert(*point, 1);
+                }
+            }
+            let mut seen = CellSet::default();
+            let expected = sequence
+                .into_iter()
+                .filter(|point| causes.contains_key(point) && seen.insert(*point))
+                .collect::<Vec<_>>();
+            let mut budget =
+                crate::budget::BudgetMeter::new(crate::EvaluationBudgets::default()).unwrap();
+            let causes = Validity::Causes(causes);
+            let actual = dependencies
+                .ordered_causes(&causes, &mut budget)
+                .unwrap()
+                .unwrap();
+            let mut actual = actual;
+            let mut observed = Vec::new();
+            while let Some((point, _)) = actual.next(&causes, &mut budget).unwrap() {
+                observed.push(point);
+            }
+            let actual = observed;
+            assert_eq!(actual, expected);
+        }
+    }
+
+    #[test]
+    fn one_span_yields_causes_lazily_and_stops_after_last_dirty_coordinate() {
+        let first = (0, CellAddress { row: 0, col: 0 });
+        let second = (0, CellAddress { row: 1, col: 0 });
+        let dependencies = Dependencies {
+            value_reads: ValueReadOrder::One(RangeMembership {
+                sheet: 0,
+                first: first.1,
+                last: CellAddress {
+                    row: 1_000_000,
+                    col: 0,
+                },
+            }),
+            ..Default::default()
+        };
+        let causes = Validity::Causes([(first, 7), (second, 9)].into_iter().collect());
+        let mut budget = crate::budget::BudgetMeter::new(crate::EvaluationBudgets {
+            run_work: 4,
+            ..Default::default()
+        })
+        .unwrap();
+        let mut ordered = dependencies
+            .ordered_causes(&causes, &mut budget)
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            ordered.next(&causes, &mut budget).unwrap(),
+            Some((first, 7))
+        );
+        assert_eq!(
+            ordered.next(&causes, &mut budget).unwrap(),
+            Some((second, 9))
+        );
+        assert_eq!(ordered.next(&causes, &mut budget).unwrap(), None);
+    }
+
+    #[test]
+    fn metadata_and_membership_without_value_evidence_do_not_certify_multiple_causes() {
+        let first = (0, CellAddress { row: 0, col: 0 });
+        let second = (0, CellAddress { row: 1, col: 0 });
+        let mut dependencies = Dependencies::default();
+        dependencies.value_read(first);
+        let causes = Validity::Causes([(first, 1), (second, 2)].into_iter().collect());
+        let mut budget =
+            crate::budget::BudgetMeter::new(crate::EvaluationBudgets::default()).unwrap();
+        assert!(
+            dependencies
+                .ordered_causes(&causes, &mut budget)
+                .unwrap()
+                .is_none()
+        );
+        dependencies.value_read(second);
+        dependencies.metadata_reads = true;
+        assert!(
+            dependencies
+                .ordered_causes(&causes, &mut budget)
+                .unwrap()
+                .is_none()
+        );
+        let cause = Validity::Cause {
+            key: first,
+            version: 1,
+        };
+        assert!(
+            dependencies
+                .ordered_causes(&cause, &mut budget)
+                .unwrap()
+                .is_none()
+        );
     }
 }

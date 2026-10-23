@@ -1,8 +1,16 @@
 # Prepared dynamic spills
 
-`ArrayResultPolicy::DynamicSpill` prepares possible owners of the demanded cell
-or range before ordinary cache consumption. Formal result types and independent
-row/column bounds define possible rectangles on each sheet. Unknown dimensions
+`ArrayResultPolicy::DynamicSpill` resolves possible owners when a demanded
+coordinate is eligible for incoming spills, or when a range needs ownership
+completeness. Authored formulas and nonblank literals block incoming spills and
+ordinary reads evaluate them directly. Eligible coordinates are retained cache
+nodes: they depend on their possible owners and on the spatial query that found
+them. An empty query is still a dependency, so inserting a new possible owner
+invalidates a previously blank read. Public dependency observations name that
+coordinate as the consumer; producer completion notifications keep their owner.
+
+Formal result types and independent row/column bounds define possible
+rectangles on each sheet. Unknown dimensions
 extend down/right to the grid edge. A source-owned index retains these proofs
 across evaluations; source, parser and registry changes invalidate classification.
 Cold classification still inspects and meters effective stored formulas. A read
@@ -61,8 +69,17 @@ require all possible owners of the full searched area to have settled. Ordered
 reduction buffering, reuse and retention use the same area completeness proof;
 no provisional range enters a reusable reduction. Persistent directional guards
 also cover missing cells, so later growth invalidates consumers and indexes.
-Complete dependency-valid retained footprints undergo priority preparation before
-reuse, preserving their original dependency evidence and indexes when unchanged.
+Source value changes and geometry changes have distinct invalidation paths. Dirty
+coordinate reads validate their potential owners through the ordinary dependency
+engine; unchanged coordinate values cut off downstream recalculation. Complete
+retained producers can validate several dirty dependencies without executing
+their formula when all consumed results remain identical. Their array payload,
+shape and ownership are retained together. Owned child reads still restore the
+complete footprint through priority preparation before reuse, preserving original
+dependency evidence and indexes when unchanged. Source metadata edits force
+direct readers conservatively; geometry changes also force sparse interval
+consumers. This does not remove private overlap arbitration or make child reads
+settlement-free.
 New geometry invalidates intersecting consumed lookup prefixes. A sparse journal
 carries admitted ownership to Overlay publication. A failed component discards
 its new admissions and poisons further dynamic reads; the existing successful-call
@@ -117,8 +134,8 @@ Snapshots retain valid declarations, validate all serialized coordinates, and dr
 stale declarations after raw source changes. XLSX import records only array-formula
 `ref` attributes, never shared-formula bounds. Export preserves declared extents,
 and legacy manually attached children can still supply their bounding rectangle.
-The source schema is 4, compiled plan version 4, builtin contract version 4, and
-Overlay compatibility revision 55; older positional payloads reject explicitly.
+Serialized source, compiled plans, builtin contracts and Overlay state carry
+compatibility versions; incompatible positional payloads reject explicitly.
 
 `ProducerPolicy::Compute` remains the default. With `DynamicSpill`, the explicit
 `ProducerPolicy::TrustSaved` classifies the same possible producers but consumes
@@ -154,6 +171,6 @@ source recovery and flush. Content edits dominate later style changes; an explic
 Blank assignment cannot be reinterpreted as a style edit. Restored markers require
 an existing, nondeleted override with exactly unchanged baseline content. Model
 style updates retain saved ownership and the authored style beneath child caches.
-Native Overlay snapshots use compatibility revision 55 for policy and edit metadata.
-Source schema 4 already represents saved extents and ownership, so XLSX and source
-snapshots retain the same data. Incompatible Overlay revisions reject explicitly.
+Native Overlay snapshots version policy, edit metadata and dependency evidence.
+XLSX and source snapshots retain saved extents and ownership. Incompatible
+Overlay revisions reject explicitly.
