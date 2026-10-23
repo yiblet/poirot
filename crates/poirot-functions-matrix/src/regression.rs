@@ -29,7 +29,7 @@ pub(super) fn trend(
     });
     let q = p
         .checked_add(usize::from(constant))
-        .ok_or(Error::BudgetExceeded)?;
+        .ok_or(Error::SizeOverflow)?;
     let pred_n = new_x.map_or(n, |x| if p == 1 { x.values.len() } else { x.rows });
     let cells = n
         .checked_mul(q)
@@ -226,7 +226,7 @@ fn modern_prediction(
         let mut values = Vec::new();
         values
             .try_reserve_exact(source.values.len())
-            .map_err(|_| Error::BudgetExceeded)?;
+            .map_err(|_| Error::AllocationFailure)?;
         // SAFETY: source length was reserved above; the copy adds exactly that many values.
         values.extend_from_slice(&source.values);
         Matrix::new(source.rows, source.cols, values)
@@ -254,7 +254,7 @@ fn modern_prediction(
             let mut values = Vec::new();
             values
                 .try_reserve_exact(n)
-                .map_err(|_| Error::BudgetExceeded)?;
+                .map_err(|_| Error::AllocationFailure)?;
             for i in 0..n {
                 // SAFETY: n slots reserved; exactly n values are appended.
                 values.push(i as f64 + 1.0);

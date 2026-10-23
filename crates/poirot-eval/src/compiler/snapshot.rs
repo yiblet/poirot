@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 /// Snapshot validation result carrying a diagnostic for unsupported or inconsistent compiled data.
 type Result<T> = std::result::Result<T, String>;
-const MAX: usize = 1_000_000;
 const VERSION: u32 = 19;
 /// Serde view preserving source-to-program sharing for a trusted compiled workbook plan.
 #[derive(Serialize, Deserialize)]
@@ -191,13 +190,6 @@ impl<'a> Plan<'a> {
         if self.version != VERSION {
             return Err("unsupported compiled snapshot version".into());
         }
-        if self.programs.len() > MAX
-            || self.sources.len() > MAX
-            || self.formulas.len() > 10 * MAX
-            || self.names.len() > MAX
-        {
-            return Err("snapshot plan count limit".into());
-        }
         let programs = self
             .programs
             .into_iter()
@@ -321,20 +313,15 @@ impl<'a> Plan<'a> {
 }
 /// Validate instruction structure, operand bounds, and call descriptor indices.
 pub(super) fn validate_template(t: &Template, calls: usize) -> Result<()> {
-    if t.code.is_empty()
-        || t.code.len() > 1_000_000
-        || t.operands.len() > 64 * 1024 * 1024
-        || t.reference_slots as usize > MAX
-        || calls > MAX
-    {
-        return Err("snapshot template limit".into());
+    // Loading quotas belong to SnapshotLimits. This validator checks only encoded
+    // instruction/index structure; no independent workbook-size quota is hidden here.
+    if t.code.is_empty() {
+        return Err("snapshot empty template".into());
     }
     let mut previous = None;
     if t.aggregations.len() > t.code.len() {
         return Err("snapshot aggregation count".into());
     }
-    let mut members = 0usize;
-    let mut bytes = 0usize;
     for entry in &t.aggregations {
         if !entry.plan.valid()
             || previous.is_some_and(|p| entry.start <= p)
@@ -350,18 +337,6 @@ pub(super) fn validate_template(t: &Template, calls: usize) -> Result<()> {
                 .is_none_or(|i| i.opcode != Opcode::Argument || i.a != 2)
         {
             return Err("snapshot aggregation argument role".into());
-        }
-        members = members
-            .checked_add(entry.plan.members.len())
-            .ok_or("snapshot aggregation count")?;
-        for candidate in &entry.plan.members {
-            bytes = bytes
-                .checked_add(candidate.name.len())
-                .and_then(|n| n.checked_add(candidate.sheet.as_ref().map_or(0, String::len)))
-                .ok_or("snapshot aggregation storage")?;
-        }
-        if members > MAX || bytes > 64 * 1024 * 1024 {
-            return Err("snapshot aggregation storage".into());
         }
         previous = Some(entry.start);
     }
@@ -397,7 +372,7 @@ pub(super) fn validate_template(t: &Template, calls: usize) -> Result<()> {
                 return Err("snapshot reference slot".into());
             }
             Opcode::Invoke => {
-                if i.a as usize >= calls || i.b as usize > MAX {
+                if i.a as usize >= calls {
                     return Err("snapshot call index/arity".into());
                 }
                 target(i.c)?;
@@ -485,7 +460,7 @@ impl<'a> Reader<'a> {
 }
 /// Validate concrete reference encodings against a template's slot requirements.
 pub(super) fn validate_references(r: &ReferenceBindings, slots: u32) -> Result<()> {
-    if r.slots.len() != slots as usize || r.data.len() > 64 * 1024 * 1024 {
+    if r.slots.len() != slots as usize {
         return Err("snapshot reference count/bytes".into());
     }
     for s in &r.slots {

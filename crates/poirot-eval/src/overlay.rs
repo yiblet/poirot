@@ -21,7 +21,10 @@ use dependencies::{Cache, Cached, Dependencies, Key, Reads};
 mod evaluation;
 /// Bounded execution borrowing an overlay's retained state.
 pub use evaluation::OverlayEvaluation;
+mod calculation;
 mod continuation;
+// Ordinary calculation reports distinguish disabled profiling from zero work.
+pub use calculation::{Calculation, CalculationCycle, CalculationReport};
 mod direct;
 mod output;
 mod source;
@@ -112,7 +115,35 @@ impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
             extensions: None,
         }
     }
+    /// Start an ordinary cycle without detailed profiling. Valid cached results survive.
+    /// The context is borrowed for the cycle; starting another cycle explicitly resets work.
+    pub fn calculation<'e>(
+        &'e mut self,
+        context: &'e EvaluationContext,
+    ) -> Result<CalculationCycle<'e>, OverlayError> {
+        self.calculation_with_profiling(context, false)
+    }
+    /// Start a cycle with independently selected detailed profiling and configured quotas.
+    pub fn calculation_with_profiling<'e>(
+        &'e mut self,
+        context: &'e EvaluationContext,
+        profiling: bool,
+    ) -> Result<CalculationCycle<'e>, OverlayError> {
+        Ok(CalculationCycle {
+            inner: OverlayEvaluation::configured(self, context, profiling)?,
+            profiling,
+        })
+    }
     source_methods!();
+    /// Discard pending authored edits and calculated results, keeping the baseline unchanged.
+    pub fn discard_edits(&mut self) {
+        self.reset();
+    }
+    /// Clear calculated results while retaining authored edits and compiled preparation.
+    pub fn clear_calculated_cache(&mut self) {
+        self.clear_cache();
+    }
+
     fn policy_changed(&mut self, previous: &OverlayPolicy) {
         let policy = &self.source.policy;
         if previous.parse != policy.parse
@@ -138,6 +169,14 @@ impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
     /// Clear calculated results and their dependencies, keeping edits and compiled formulas.
     pub fn clear_cache(&mut self) {
         self.cache = RefCell::new(Cache::default());
+    }
+    /// Inspect persistent logical retention, independent of cycle work and detailed profiling.
+    pub fn retained_usage(&mut self) -> crate::run::MemoRetentionUsage {
+        let cache = self.cache.get_mut();
+        crate::run::MemoRetentionUsage {
+            cells: cache.len(),
+            bytes: cache.retained_bytes,
+        }
     }
     /// Count retained formula results and spill children.
     pub fn cached_cells(&mut self) -> usize {
@@ -207,6 +246,12 @@ impl Overlay<'static, &'static Workbook> {
     }
 }
 impl<W: Borrow<Workbook> + std::borrow::BorrowMut<Workbook>> Overlay<'_, W> {
+    /// Atomically apply pending authored edits, preserving calculated results in the overlay.
+    /// This does not write calculated results to the baseline or save a file.
+    pub fn apply_edits_to_workbook(&mut self) -> Result<usize, ModelError> {
+        self.flush()
+    }
+
     /// Apply input edits to the baseline, keeping compiled formulas and cached results.
     ///
     /// If validation fails, the baseline and edits are unchanged. On success, the
@@ -295,7 +340,10 @@ fn same_stored_value(a: &CellValue, b: &CellValue) -> bool {
     std::mem::discriminant(a) == std::mem::discriminant(b) && crate::same_result_identity(a, b)
 }
 fn same_cell(a: &Cell, b: &Cell) -> bool {
-    a.formula == b.formula && a.style == b.style && same_stored_value(&a.value, &b.value)
+    a.formula == b.formula
+        && a.shared_formula == b.shared_formula
+        && a.style == b.style
+        && same_stored_value(&a.value, &b.value)
 }
 fn append_cell_changes(
     changes: &mut Vec<WorkbookChange>,
@@ -303,6 +351,16 @@ fn append_cell_changes(
     original: Option<&Cell>,
     cell: &Cell,
 ) {
+    // A same-text source replacement can still detach shared membership. Publish
+    // the complete record so cache/style-only changes retain the original metadata.
+    if original.and_then(|c| c.shared_formula) != cell.shared_formula {
+        changes.push(WorkbookChange::SetCell {
+            sheet,
+            address,
+            cell: cell.clone(),
+        });
+        return;
+    }
     let formula_changed = original.and_then(|c| c.formula.as_deref()) != cell.formula.as_deref();
     if formula_changed && let Some(formula) = &cell.formula {
         changes.push(WorkbookChange::SetFormula {

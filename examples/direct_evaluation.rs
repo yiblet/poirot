@@ -1,7 +1,7 @@
 //! Compare energy use for different operating hours without changing the workbook.
 //! A1 holds operating hours, B1 power in kW, and C1 energy use in kWh.
 //! Evaluation retains input edits and compiled formulas; each edit clears results.
-use poirot::{Evaluation, EvaluationContext, Workbook};
+use poirot::Workbook;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut book = Workbook::new();
@@ -10,7 +10,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     sheet.set_value("B1".parse()?, 25.)?;
     sheet.set_formula("C1".parse()?, "A1*B1")?;
 
-    let mut evaluation = Evaluation::with_workbook(&book).build(EvaluationContext::default())?;
+    let mut evaluation = book.evaluation().build()?;
     let hours = evaluation.target("Energy!A1")?;
     let energy = evaluation.target("Energy!C1")?;
 

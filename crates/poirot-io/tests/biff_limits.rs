@@ -60,7 +60,7 @@ fn compound(stream: &[u8]) -> Vec<u8> {
 }
 #[test]
 fn tiny_budget_refuses_invalid_cfb_before_backend_decode() {
-    // No FAT or directories: this cannot be decoded by calamine. The typed
+    // No FAT or directories: this cannot be decoded as a compound file. The typed
     // resource result proves the preflight ran first and suppressed the backend.
     let mut b = vec![0; 512];
     b[..8].copy_from_slice(&[0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
@@ -98,7 +98,7 @@ fn malformed_chain_is_typed_and_does_not_panic() {
     ));
 }
 #[test]
-fn huge_extent_is_refused_in_a_bounded_subprocess() {
+fn huge_extent_does_not_allocate_a_dense_rectangle() {
     const CHILD: &str = "ROI_BIFF_HAZARD_CHILD";
     if std::env::var_os(CHILD).is_some() {
         let mut bound = vec![0; 9];
@@ -115,20 +115,16 @@ fn huge_extent_is_refused_in_a_bounded_subprocess() {
         stream.extend(record(0x200, &dimensions));
         stream.extend(record(0xa, &[]));
         let actual = read_workbook_bytes(&compound(&stream));
-        eprintln!("huge extent typed outcome: {actual:?}");
-        assert!(matches!(
-            actual,
-            Err(IoError::BiffPreflight(PreflightError::Resource {
-                resource: "Dimensions reservation cells",
-                ..
-            }))
-        ));
+        // rxls ignores Dimensions reservations and stores actual cells only.
+        let workbook = actual.unwrap();
+        assert_eq!(workbook.sheets().len(), 1);
+        assert!(workbook.sheet(0).unwrap().cells().is_empty());
         return;
     }
     let mut child = Command::new(std::env::current_exe().unwrap())
         .args([
             "--exact",
-            "huge_extent_is_refused_in_a_bounded_subprocess",
+            "huge_extent_does_not_allocate_a_dense_rectangle",
             "--nocapture",
         ])
         .env(CHILD, "1")
@@ -143,7 +139,7 @@ fn huge_extent_is_refused_in_a_bounded_subprocess() {
         if Instant::now() >= deadline {
             child.kill().unwrap();
             child.wait().unwrap();
-            panic!("BIFF resource refusal did not terminate within five seconds");
+            panic!("sparse BIFF decoding did not terminate within five seconds");
         }
         std::thread::sleep(Duration::from_millis(10));
     }

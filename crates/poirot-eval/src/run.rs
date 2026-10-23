@@ -126,6 +126,38 @@ impl Default for MemoRetentionLimits {
         }
     }
 }
+impl MemoRetentionLimits {
+    /// Set maximum cached entries across the retained state's lifetime; zero admits none.
+    /// Admissions are checked before publication; tightening below usage explicitly refuses.
+    pub fn max_cached_cells(mut self, maximum: usize) -> Self {
+        self.cells = maximum;
+        self
+    }
+    /// Remove the cached entries quota without clearing retained state.
+    pub fn without_cached_cells_limit(mut self) -> Self {
+        self.cells = usize::MAX;
+        self
+    }
+    /// Inspect the cached entries quota; `None` means no configured maximum.
+    pub fn cached_cells_limit(&self) -> Option<usize> {
+        (self.cells != usize::MAX).then_some(self.cells)
+    }
+    /// Set maximum logical retention bytes (128 fixed units per entry plus owned text) across the retained state's lifetime; zero admits none.
+    /// Admissions are checked before publication; tightening below usage explicitly refuses.
+    pub fn max_logical_memo_bytes(mut self, maximum: usize) -> Self {
+        self.bytes = maximum;
+        self
+    }
+    /// Remove the logical retention bytes (128 fixed units per entry plus owned text) quota without clearing retained state.
+    pub fn without_logical_memo_bytes_limit(mut self) -> Self {
+        self.bytes = usize::MAX;
+        self
+    }
+    /// Inspect the logical retention bytes (128 fixed units per entry plus owned text) quota; `None` means no configured maximum.
+    pub fn logical_memo_bytes_limit(&self) -> Option<usize> {
+        (self.bytes != usize::MAX).then_some(self.bytes)
+    }
+}
 /// Logical memo entries and retained bytes, using the same units as [`MemoRetentionLimits`].
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct MemoRetentionUsage {
@@ -182,6 +214,7 @@ pub use crate::consumed_calls::{BuiltinInvocationObserver, ConsumedBuiltinInvoca
 pub struct EvaluationRun<'a> {
     /// Execution state shared by this run's probes and nested formula calls.
     pub(super) session: Session<'a>,
+    pub(super) failure: Option<EvaluationFailure>,
 }
 impl<'a> EvaluationRun<'a> {
     /// Start a bounded run over a checked workbook view without extensions.
@@ -216,7 +249,10 @@ impl<'a> EvaluationRun<'a> {
         let mut session = Session::new(view.workbook, context, meter);
         session.plan = Some(view.plan);
         session.extensions = registry;
-        Ok(Self { session })
+        Ok(Self {
+            session,
+            failure: None,
+        })
     }
     /// Start a run using explicit formatting and computation policies.
     pub fn new_with_configuration(
@@ -254,8 +290,30 @@ impl<'a> EvaluationRun<'a> {
     /// Set before evaluating. Retention exhaustion aborts before cloning the
     /// rejected memo value; previously completed memo entries remain available.
     pub fn with_memo_limits(mut self, limits: MemoRetentionLimits) -> Self {
-        self.session.memo_limits = Some(limits);
+        if self.session.runtime.memo_usage.cells > limits.cells
+            || self.session.runtime.memo_usage.bytes > limits.bytes
+        {
+            self.failure = Some(EvaluationFailure::MemoRetentionLimit {
+                limits,
+                consumed: self.session.runtime.memo_usage,
+                requested: Default::default(),
+                source: self.session.runtime.consumer,
+            });
+        } else {
+            self.session.memo_limits = Some(limits);
+        }
         self
+    }
+    /// Set memo retention before work, refusing a tighter quota below already retained usage.
+    pub fn try_with_memo_limits(
+        self,
+        limits: MemoRetentionLimits,
+    ) -> Result<Self, EvaluationFailure> {
+        let run = self.with_memo_limits(limits);
+        if let Some(failure) = &run.failure {
+            return Err(failure.clone());
+        }
+        Ok(run)
     }
     /// Assignments suppress baseline formulas, without mutating the checked plan source.
     pub(crate) fn with_inputs(mut self, inputs: &'a crate::run_overlay::RunInputs) -> Self {
@@ -308,7 +366,7 @@ impl<'a> EvaluationRun<'a> {
         &mut self,
         target: EvaluationTarget,
     ) -> Result<CellValue, EvaluationFailure> {
-        self.session.cell(target.sheet, target.address)
+        self.perform(|session| session.cell(target.sheet, target.address))
     }
     /// Evaluate a supplied prepared expression at the given coordinates.
     /// This does not publish a worksheet cell; blank expression results remain blank.
@@ -317,7 +375,7 @@ impl<'a> EvaluationRun<'a> {
         target: EvaluationTarget,
         formula: &PreparedFormula,
     ) -> Result<CellValue, EvaluationFailure> {
-        self.session.prepared_at(target, formula)
+        self.perform(|session| session.prepared_at(target, formula))
     }
     /// Evaluate supplied bound syntax at the given coordinates without worksheet publication.
     pub fn evaluate_bound(
@@ -325,7 +383,20 @@ impl<'a> EvaluationRun<'a> {
         target: EvaluationTarget,
         formula: &bound::FormulaPlan,
     ) -> Result<CellValue, EvaluationFailure> {
-        self.session.bound_at(target, formula)
+        self.perform(|session| session.bound_at(target, formula))
+    }
+    fn perform<T>(
+        &mut self,
+        execute: impl FnOnce(&mut Session<'a>) -> Result<T, EvaluationFailure>,
+    ) -> Result<T, EvaluationFailure> {
+        if let Some(failure) = &self.failure {
+            return Err(failure.clone());
+        }
+        let result = execute(&mut self.session);
+        if let Err(failure) = &result {
+            self.failure = Some(failure.clone());
+        }
+        result
     }
     /// Evaluate ordered probes and finish with their values and usage report.
     pub fn evaluate_probes(
@@ -357,61 +428,62 @@ impl<'a> EvaluationRun<'a> {
         &mut self,
         targets: &[EvaluationTarget],
     ) -> Result<(), EvaluationFailure> {
-        self.session.runtime.budget.allocation(targets.len())?;
-        for target in targets {
-            self.evaluate_cell(*target)?;
-        }
-        Ok(())
+        self.perform(|session| {
+            session.runtime.budget.allocation(targets.len())?;
+            for target in targets {
+                session.cell(target.sheet, target.address)?;
+            }
+            Ok(())
+        })
     }
     /// Read-only full recalculation with the ordinary discovery/usage gates.
     /// Inputs suppress formulas and newly stored cells count in the sparse scan.
     pub fn evaluate_workbook(&mut self) -> Result<usize, EvaluationFailure> {
-        let effective =
-            crate::run_overlay::EffectiveWorkbook::new(self.session.workbook, self.session.inputs);
-        let mut targets = Vec::new();
-        for sheet in 0..self.session.workbook.sheets().len() {
-            let area = poirot_model::query::RangeMembership::new(
-                sheet,
-                poirot_model::CellAddress { row: 0, col: 0 },
-                poirot_model::CellAddress {
-                    row: poirot_model::MAX_ROWS - 1,
-                    col: poirot_model::MAX_COLUMNS - 1,
-                },
-            )
-            .map_err(|_| EvaluationFailure::StalePlan)?;
-            let count = effective
-                .stored(area)
-                .map_err(|_| EvaluationFailure::StalePlan)?
-                .count();
-            self.session
-                .runtime
-                .budget
-                .charge(crate::WorkKind::SparseScan, count as u64)?;
-            for (address, cell) in effective
-                .stored(area)
-                .map_err(|_| EvaluationFailure::StalePlan)?
-            {
-                if cell.formula.is_some() {
-                    self.session
-                        .runtime
-                        .budget
-                        .check_allocation(targets.len() + 1)?;
-                    self.session
-                        .runtime
-                        .budget
-                        .charge(crate::WorkKind::Materialization, 1)?;
-                    targets.push(EvaluationTarget {
-                        sheet,
-                        address: *address,
-                    });
+        self.perform(|session| {
+            let effective =
+                crate::run_overlay::EffectiveWorkbook::new(session.workbook, session.inputs);
+            let mut targets = Vec::new();
+            for sheet in 0..session.workbook.sheets().len() {
+                let area = poirot_model::query::RangeMembership::new(
+                    sheet,
+                    poirot_model::CellAddress { row: 0, col: 0 },
+                    poirot_model::CellAddress {
+                        row: poirot_model::MAX_ROWS - 1,
+                        col: poirot_model::MAX_COLUMNS - 1,
+                    },
+                )
+                .map_err(|_| EvaluationFailure::StalePlan)?;
+                let count = effective
+                    .stored(area)
+                    .map_err(|_| EvaluationFailure::StalePlan)?
+                    .count();
+                session
+                    .runtime
+                    .budget
+                    .charge(crate::WorkKind::SparseScan, count as u64)?;
+                for (address, cell) in effective
+                    .stored(area)
+                    .map_err(|_| EvaluationFailure::StalePlan)?
+                {
+                    if cell.formula.is_some() {
+                        session.runtime.budget.check_allocation(targets.len() + 1)?;
+                        session
+                            .runtime
+                            .budget
+                            .charge(crate::WorkKind::Materialization, 1)?;
+                        targets.push(EvaluationTarget {
+                            sheet,
+                            address: *address,
+                        });
+                    }
                 }
             }
-        }
-        self.session.runtime.budget.allocation(targets.len())?;
-        for target in &targets {
-            self.evaluate_cell(*target)?;
-        }
-        Ok(targets.len())
+            session.runtime.budget.allocation(targets.len())?;
+            for target in &targets {
+                session.cell(target.sheet, target.address)?;
+            }
+            Ok(targets.len())
+        })
     }
     /// Finish while moving the memo into the report's retained result owner.
     pub fn finish_retaining_cells<T>(
@@ -430,7 +502,12 @@ impl<'a> EvaluationRun<'a> {
     pub fn finish<T>(mut self, result: Result<T, EvaluationFailure>) -> RunReport<T> {
         RunReport {
             execution: std::mem::take(&mut self.session.runtime.run_usage),
-            outcome: self.session.runtime.budget.take().outcome(result),
+            outcome: self
+                .session
+                .runtime
+                .budget
+                .take()
+                .outcome(self.failure.map_or(result, Err)),
         }
     }
 }

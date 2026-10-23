@@ -12,3 +12,20 @@ coordinates.
 A formula cell stores both its formula and a saved result. Changing workbook data
 does not calculate a new result. This crate has no file reader or formula evaluator;
 use [poirot](https://docs.rs/poirot) for those workflows.
+
+`Cell::shared_formula` can carry manually supplied worksheet-local XLSX group provenance.
+Current imports materialize shared formulas without this optional metadata.
+The complete `Cell::formula` string remains authoritative; the original template
+coordinate is provenance, not a dependency on another cell. Formula/value source
+setters detach the edited member, while cache/style edits retain membership.
+Direct mutable access can leave stale provenance, which writers must validate.
+Shared groups are independent of array/spill ownership and evaluator templates.
+
+Construct cell records with constructors or `..Cell::default()` to default optional
+metadata. Exhaustive `Cell` struct literals must now include `shared_formula`.
+Source snapshot schema 5 includes provenance and the Arc-backed compressed
+legacy XLSX package; artifact envelopes reject older
+source revisions explicitly rather than decoding them as the current layout.
+
+Current XLSX imports do not retain original packages, and saves ignore legacy
+`retained_xlsx` bytes carried by a source snapshot.

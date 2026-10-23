@@ -31,7 +31,7 @@ fn schedule(host: &mut CallHost<'_, '_>) -> FunctionResult<Vec<f64>> {
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for offset in 0..count {
         host.charge_work(1)?;
         let operand = host.collection_cell(1, offset)?;
@@ -59,7 +59,7 @@ fn dated_flows(host: &mut CallHost<'_, '_>, first: usize) -> FunctionResult<Vec<
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     let mut anchor = None;
     for offset in 0..count {
         host.charge_work(1)?;
@@ -213,7 +213,7 @@ pub(super) fn execute(
                     host.charge_work(
                         (schedule.len() as u64)
                             .checked_mul(2)
-                            .ok_or_else(|| host.budget_exceeded())?,
+                            .ok_or_else(|| host.size_overflow())?,
                     )?;
                     kernel::fvschedule(principal, schedule).map_err(spreadsheet)?
                 }
@@ -223,7 +223,7 @@ pub(super) fn execute(
                     host.charge_work(
                         (flows.len() as u64)
                             .checked_mul(3)
-                            .ok_or_else(|| host.budget_exceeded())?,
+                            .ok_or_else(|| host.size_overflow())?,
                     )?;
                     kernel::xnpv(rate, flows).map_err(spreadsheet)?
                 }

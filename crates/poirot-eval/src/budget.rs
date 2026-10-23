@@ -43,6 +43,133 @@ impl Default for EvaluationBudgets {
         }
     }
 }
+/// Reusable, opt-in calculation quotas, independent of profiling and semantic context.
+///
+/// Work is cumulative until an explicit new cycle; formula work excludes dependencies.
+/// Collection values and text bytes are checked before each logical allocation or cached
+/// result admission, not against total heap usage. No quotas are configured by default.
+/// Nesting retains the engine's 128-frame safety ceiling.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct EvaluationLimits {
+    work: Option<u64>,
+    formula_work: Option<u64>,
+    collection_values: Option<usize>,
+    text_bytes: Option<usize>,
+    wildcard_states: Option<u64>,
+    depth: Option<usize>,
+}
+impl EvaluationLimits {
+    /// Set cumulative work units per explicit cycle; zero allows none. Checked before the operation.
+    pub fn max_work(mut self, maximum: u64) -> Self {
+        self.work = Some(maximum);
+        self
+    }
+    /// Remove the work quota. Does not reset an existing cycle.
+    pub fn without_work_limit(mut self) -> Self {
+        self.work = None;
+        self
+    }
+    /// Inspect cumulative work units per explicit cycle; `None` means no application quota.
+    pub fn work_limit(&self) -> Option<u64> {
+        self.work
+    }
+    /// Set direct work units per formula; zero allows none. Checked before the operation.
+    pub fn max_formula_work(mut self, maximum: u64) -> Self {
+        self.formula_work = Some(maximum);
+        self
+    }
+    /// Remove the formula work quota. Does not reset an existing cycle.
+    pub fn without_formula_work_limit(mut self) -> Self {
+        self.formula_work = None;
+        self
+    }
+    /// Inspect direct work units per formula; `None` means no application quota.
+    pub fn formula_work_limit(&self) -> Option<u64> {
+        self.formula_work
+    }
+    /// Set values per logical collection; zero allows none. Checked before the operation.
+    pub fn max_collection_values(mut self, maximum: usize) -> Self {
+        self.collection_values = Some(maximum);
+        self
+    }
+    /// Remove the collection values quota. Does not reset an existing cycle.
+    pub fn without_collection_values_limit(mut self) -> Self {
+        self.collection_values = None;
+        self
+    }
+    /// Inspect values per logical collection; `None` means no application quota.
+    pub fn collection_values_limit(&self) -> Option<usize> {
+        self.collection_values
+    }
+    /// Set bytes per logical text buffer; zero allows none. Checked before the operation.
+    pub fn max_text_bytes(mut self, maximum: usize) -> Self {
+        self.text_bytes = Some(maximum);
+        self
+    }
+    /// Remove the text bytes quota. Does not reset an existing cycle.
+    pub fn without_text_bytes_limit(mut self) -> Self {
+        self.text_bytes = None;
+        self
+    }
+    /// Inspect bytes per logical text buffer; `None` means no application quota.
+    pub fn text_bytes_limit(&self) -> Option<usize> {
+        self.text_bytes
+    }
+    /// Set visited states per wildcard match; zero allows none. Checked before the operation.
+    pub fn max_wildcard_states(mut self, maximum: u64) -> Self {
+        self.wildcard_states = Some(maximum);
+        self
+    }
+    /// Remove the wildcard states quota. Does not reset an existing cycle.
+    pub fn without_wildcard_states_limit(mut self) -> Self {
+        self.wildcard_states = None;
+        self
+    }
+    /// Inspect visited states per wildcard match; `None` means no application quota.
+    pub fn wildcard_states_limit(&self) -> Option<u64> {
+        self.wildcard_states
+    }
+    /// Set nested evaluation frames, at most 128; zero allows none. Checked before the operation.
+    pub fn max_depth(mut self, maximum: usize) -> Self {
+        self.depth = Some(maximum);
+        self
+    }
+    /// Remove the depth quota. Does not reset an existing cycle.
+    pub fn without_depth_limit(mut self) -> Self {
+        self.depth = None;
+        self
+    }
+    /// Inspect nested evaluation frames, at most 128; `None` means no application quota.
+    pub fn depth_limit(&self) -> Option<usize> {
+        self.depth
+    }
+}
+impl From<EvaluationLimits> for EvaluationBudgets {
+    fn from(limits: EvaluationLimits) -> Self {
+        Self {
+            run_work: limits.work.unwrap_or(u64::MAX),
+            cell_work: limits.formula_work.unwrap_or(u64::MAX),
+            depth: limits.depth.unwrap_or(128),
+            materialized_values: limits.collection_values.unwrap_or(usize::MAX),
+            wildcard_states: limits.wildcard_states.unwrap_or(u64::MAX),
+            text_bytes: limits.text_bytes.unwrap_or(usize::MAX),
+        }
+    }
+}
+impl From<EvaluationBudgets> for EvaluationLimits {
+    fn from(budgets: EvaluationBudgets) -> Self {
+        Self {
+            work: (budgets.run_work != u64::MAX).then_some(budgets.run_work),
+            formula_work: (budgets.cell_work != u64::MAX).then_some(budgets.cell_work),
+            depth: (budgets.depth != 128).then_some(budgets.depth),
+            collection_values: (budgets.materialized_values != usize::MAX)
+                .then_some(budgets.materialized_values),
+            text_bytes: (budgets.text_bytes != usize::MAX).then_some(budgets.text_bytes),
+            wildcard_states: (budgets.wildcard_states != u64::MAX)
+                .then_some(budgets.wildcard_states),
+        }
+    }
+}
 /// The resource category that rejected an evaluation request.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BudgetKind {
@@ -90,6 +217,9 @@ pub enum WorkKind {
     ReferencePair,
 }
 /// A cell identified by a zero-based workbook sheet index and row/column address.
+/// Resolve once with an evaluation's `target` method, including quoted sheet names.
+/// Targets bind to that workbook's sheet topology; arbitrary structural edits can invalidate them.
+/// A valid unstored coordinate evaluates as blank; a missing worksheet is a resolution error.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct EvaluationTarget {
     /// Zero-based workbook sheet index.
@@ -136,6 +266,16 @@ pub enum CapabilityId {
     /// User-defined provider execution.
     UserDefinedFunction,
 }
+/// Operational cause distinct from a configured quota or unsupported spreadsheet feature.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ResourceFailureKind {
+    /// A checked size or work estimate cannot be represented on this platform.
+    SizeOverflow,
+    /// The allocator refused a fallible reservation.
+    Allocation,
+    /// A native backend stopped under its own execution or representation guards.
+    BackendGuard,
+}
 /// A failure that stops calculation rather than producing a spreadsheet error value.
 ///
 /// Includes exhausted limits, stale plans, and unsupported operations. Formula
@@ -166,6 +306,17 @@ pub enum EvaluationFailure {
     StalePlan,
     /// A metered engine operation exceeded its configured limit.
     Budget(BudgetFailure),
+    /// A representation, allocation, or backend failure with no invented usage counts.
+    Resource {
+        /// Actual failure category, independent of application quotas.
+        kind: ResourceFailureKind,
+        /// Rejecting subsystem.
+        capability: CapabilityId,
+        /// Active cell when known.
+        source: Option<EvaluationTarget>,
+        /// Operation or native backend diagnostic.
+        detail: String,
+    },
     /// A component exceeded a structural limit or overflowed a size estimate.
     ///
     /// Unlike [`Self::Budget`], this has no evaluator work charge to report.
@@ -196,6 +347,7 @@ impl EvaluationFailure {
             | Self::KnownSourceException { .. }
             | Self::UnsupportedCapability { .. }
             | Self::ResourceLimit { .. }
+            | Self::Resource { .. }
             | Self::StalePlan
             | Self::MemoRetentionLimit { .. } => None,
         }
@@ -207,6 +359,7 @@ impl EvaluationFailure {
             Self::KnownSourceException { source, .. }
             | Self::UnsupportedCapability { source, .. }
             | Self::ResourceLimit { source, .. }
+            | Self::Resource { source, .. }
             | Self::MemoRetentionLimit { source, .. } => *source = Some(target),
             Self::IncompatibleMaterializationPolicy | Self::StalePlan => {}
         }
@@ -236,6 +389,12 @@ impl std::fmt::Display for EvaluationFailure {
                 "evaluation {:?} limit {} exceeded (consumed {}, requested {})",
                 failure.kind, failure.limit, failure.consumed, failure.requested
             ),
+            Self::Resource {
+                kind,
+                capability,
+                detail,
+                ..
+            } => write!(f, "evaluation {kind:?} in {capability:?}: {detail}"),
             Self::ResourceLimit {
                 capability, detail, ..
             } => {

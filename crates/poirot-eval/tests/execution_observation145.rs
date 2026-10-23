@@ -288,12 +288,26 @@ fn callback_failure_is_operational_and_trace_frame_is_cleaned_for_next_probe() {
         run.evaluate_formula(target, &prepared),
         Err(EvaluationFailure::UnsupportedCapability { .. })
     ));
+    assert!(matches!(
+        run.evaluate_formula(target, &second),
+        Err(EvaluationFailure::UnsupportedCapability { .. })
+    ));
+    let report = run.finish(Ok(()));
+    assert!(matches!(report.outcome, EvaluationOutcome::Aborted { .. }));
+    assert!(report.outcome.usage().random_accesses.is_empty());
+    // Starting a new cycle is the explicit recovery boundary; no trace frame leaks.
+    let mut run = EvaluationRun::new(
+        WorkbookView::new(&workbook, &plan, &policy).unwrap(),
+        EvaluationInputs::default(),
+        EvaluationBudgets::default(),
+    )
+    .unwrap()
+    .with_execution_observer(&mut observer);
     assert_eq!(
         run.evaluate_formula(target, &second).unwrap(),
         CellValue::Number(7.)
     );
-    let report = run.finish(Ok(()));
-    assert!(report.outcome.usage().random_accesses.is_empty());
+    let _ = run.finish(Ok(()));
     assert_eq!(observer.begins.last().unwrap().parent, None);
 }
 #[test]

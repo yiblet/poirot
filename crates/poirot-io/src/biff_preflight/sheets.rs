@@ -1,9 +1,9 @@
-//! Per-sheet row inventory, reservation admission, dense bounds and text charges.
+//! Per-sheet row inventory, record validation and text charges.
 use std::collections::BTreeSet;
 
 use super::{BiffPlan, PreflightError, Record, ResourceBudget, check, u16at, u32at};
 
-/// Inspect worksheet records and accumulate bounded backend allocation estimates.
+/// Inspect worksheet records and accumulate bounded text-allocation estimates.
 pub(super) fn sheets(
     rs: &[Record<'_>],
     positions: Vec<usize>,
@@ -16,12 +16,6 @@ pub(super) fn sheets(
     let mut cell_text = 0u64;
     for pos in positions {
         let mut rows = BTreeSet::new();
-        let mut minrow = u32::MAX;
-        let mut mincol = u32::MAX;
-        let mut maxrow = 0;
-        let mut maxcol = 0;
-        let mut cells = false;
-        let mut formula_position = (0u32, 0u32);
         for r in rs
             .iter()
             .skip_while(|r| r.at < pos)
@@ -47,44 +41,9 @@ pub(super) fn sheets(
                 cell_text = cell_text.saturating_add(u16at(r.data, offset)? as u64 * 4);
             }
             check("cell text bytes", cell_text, budget.max_cell_text_bytes)?;
-            if r.id == 0x200 {
-                let (rf, rl, mut cf, cl) = match r.data.len() {
-                    10 => (
-                        u16at(r.data, 0)? as u32,
-                        u16at(r.data, 2)? as u32,
-                        u16at(r.data, 4)? as u32,
-                        u16at(r.data, 6)? as u32,
-                    ),
-                    14 => (
-                        u32at(r.data, 0)?,
-                        u32at(r.data, 4)?,
-                        u16at(r.data, 8)? as u32,
-                        u16at(r.data, 10)? as u32,
-                    ),
-                    _ => return Err(PreflightError::Malformed("Dimensions length")),
-                };
-                // Match backend's permissive invalid first-column fallback.
-                if cf > 255 || cl < cf {
-                    cf = 0;
-                }
-                let area = if rl > 0 && cl > 0 {
-                    let rows = rl.checked_sub(rf).filter(|n| *n > 0).ok_or(
-                        PreflightError::Representation("Dimensions row subtraction underflow"),
-                    )?;
-                    let cols = cl - cf;
-                    (rows as u64) * (cols as u64)
-                } else {
-                    1
-                };
-                check("Dimensions reservation cells", area, budget.max_dense_cells)?;
-            }
-            if r.id == 0x207 {
-                let (row, col) = formula_position;
-                cells = true;
-                minrow = minrow.min(row);
-                maxrow = maxrow.max(row);
-                mincol = mincol.min(col);
-                maxcol = maxcol.max(col);
+            // rxls stores sparse cells and does not reserve from Dimensions.
+            if r.id == 0x200 && !matches!(r.data.len(), 10 | 14) {
+                return Err(PreflightError::Malformed("Dimensions length"));
             }
             if r.id == 0x6 {
                 let n = u16at(r.data, 20)? as usize;
@@ -108,12 +67,8 @@ pub(super) fn sheets(
                 if r.data.len() < minimum {
                     return Err(PreflightError::Malformed("truncated cell record"));
                 }
-                let row = u16at(r.data, 0)? as u32;
                 let col = u16at(r.data, 2)? as u32;
-                if r.id == 0x6 {
-                    formula_position = (row, col);
-                }
-                let last = if r.id == 0xbd {
+                if r.id == 0xbd {
                     let last = u16at(r.data, r.data.len() - 2)? as u32;
                     if last < col
                         || (last - col + 1) as usize != (r.data.len() - 6) / 6
@@ -121,30 +76,8 @@ pub(super) fn sheets(
                     {
                         return Err(PreflightError::Malformed("MulRK coordinates/length"));
                     }
-                    last
-                } else {
-                    col
-                };
-                cells = true;
-                minrow = minrow.min(row);
-                maxrow = maxrow.max(row);
-                mincol = mincol.min(col);
-                maxcol = maxcol.max(last);
+                }
             }
-        }
-        if cells {
-            let area = (maxrow - minrow + 1) as u64 * (maxcol - mincol + 1) as u64;
-            check("sheet dense cells", area, budget.max_dense_cells)?;
-            // Both value and formula dense ranges can cover the same rectangle.
-            plan.dense_cells = plan
-                .dense_cells
-                .checked_add(area * 2)
-                .ok_or(PreflightError::Representation("total dense cells overflow"))?;
-            check(
-                "total dense cells",
-                plan.dense_cells,
-                budget.max_total_dense_cells,
-            )?;
         }
         plan.row_indices.push(rows);
     }

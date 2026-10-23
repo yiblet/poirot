@@ -54,7 +54,7 @@ fn random(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<V
     let columns = columns.trunc() as usize;
     let count = rows
         .checked_mul(columns)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     host.check_values(count)?;
     host.check_values(rows)?;
     host.charge_work(count as u64)?;
@@ -62,11 +62,11 @@ fn random(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<V
     let mut result = Vec::new();
     result
         .try_reserve_exact(rows)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for _ in 0..rows {
         let mut row = Vec::new();
         row.try_reserve_exact(columns)
-            .map_err(|_| host.budget_exceeded())?;
+            .map_err(|_| host.allocation_failure())?;
         // SAFETY: The outer vector reserved rows slots and this loop pushes exactly rows rows.
         result.push(row);
     }
@@ -120,7 +120,7 @@ fn trim(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<Val
             let count = shape
                 .rows
                 .checked_mul(shape.columns)
-                .ok_or_else(|| host.budget_exceeded())?;
+                .ok_or_else(|| host.size_overflow())?;
             host.charge_work(count as u64)?;
             for row in 0..shape.rows {
                 for column in 0..shape.columns {
@@ -151,18 +151,18 @@ fn trim(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<Val
     host.check_values(
         row_count
             .checked_mul(columns)
-            .ok_or_else(|| host.budget_exceeded())?,
+            .ok_or_else(|| host.size_overflow())?,
     )?;
     host.check_values(row_count)?;
     let mut result = Vec::new();
     result
         .try_reserve_exact(row_count)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for row in rectangle.first_row..=rectangle.last_row {
         let mut output = Vec::new();
         output
             .try_reserve_exact(columns)
-            .map_err(|_| host.budget_exceeded())?;
+            .map_err(|_| host.allocation_failure())?;
         for column in rectangle.first_column..=rectangle.last_column {
             // SAFETY: The row reserved columns entries; the checked inclusive rectangle has that width.
             output.push(poirot_coercionv2::compatibility::coercev2_array_member(
@@ -229,7 +229,7 @@ fn crop_reference(
             host.check_values(1)?;
             areas
                 .try_reserve_exact(1)
-                .map_err(|_| host.budget_exceeded())?;
+                .map_err(|_| host.allocation_failure())?;
             // SAFETY: One element was reserved locally before this single push.
             areas.push(crop);
             Ok(Value::SignedRefs(areas))

@@ -15,13 +15,13 @@ fn collect(host: &mut CallHost<'_, '_>, index: usize) -> FunctionResult<Option<M
     let count = shape
         .rows
         .checked_mul(shape.columns)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     host.check_values(count)?;
     host.charge_work(count as u64)?;
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for r in 0..shape.rows {
         for c in 0..shape.columns {
             let cell = host.read_cell(index, r, c)?;
@@ -155,7 +155,8 @@ fn evaluate(
         None => {
             host.check_values(n)?;
             let mut v = Vec::new();
-            v.try_reserve_exact(n).map_err(|_| host.budget_exceeded())?;
+            v.try_reserve_exact(n)
+                .map_err(|_| host.allocation_failure())?;
             for i in 0..n {
                 // SAFETY: n slots reserved; exactly n default observations appended.
                 v.push(i as f64 + 1.0);
@@ -242,16 +243,16 @@ fn evaluate(
             address,
         );
     }
-    let width = p.checked_add(1).ok_or_else(|| host.budget_exceeded())?;
+    let width = p.checked_add(1).ok_or_else(|| host.size_overflow())?;
     let rows = if stats { 5 } else { 1 };
     let count = width
         .checked_mul(rows)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     host.check_values(count)?;
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for coefficient in fit
         .coefficients()
         .map_err(|e| modern::failure(host, e))?
@@ -306,11 +307,11 @@ fn array(
     host.check_values(rows)?;
     let mut out = Vec::new();
     out.try_reserve_exact(rows)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for _ in 0..rows {
         let mut row = Vec::new();
         row.try_reserve_exact(cols)
-            .map_err(|_| host.budget_exceeded())?;
+            .map_err(|_| host.allocation_failure())?;
         for _ in 0..cols {
             let v = values.next().ok_or(CellError::Ref)?;
             // SAFETY: cols slots reserved, exactly cols values appended.

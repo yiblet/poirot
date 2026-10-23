@@ -3,7 +3,7 @@ use crate::export_execution::serialize_xlsx;
 use crate::{IoError, WriteOptions};
 use poirot_model::{CellValue, Workbook};
 
-/// Container produced by the XLSX export adapter. XLS output uses the separate `poirot_xls` crate.
+/// Container produced by the XLSX export adapter.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExportFormat {
     /// OOXML spreadsheet package export.

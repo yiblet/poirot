@@ -30,6 +30,10 @@ pub enum Error {
     Formula(CellError),
     /// Operational refusal before exceeding the matrix resource budget.
     BudgetExceeded,
+    /// A checked shape or work estimate cannot be represented.
+    SizeOverflow,
+    /// A fallible storage reservation was refused by the allocator.
+    AllocationFailure,
     /// The pinned POI implementation explicitly throws NotImplementedException.
     SourceUnsupported(&'static str),
 }
@@ -60,7 +64,8 @@ impl Budget {
     pub fn check(self, cells: Option<usize>, work: Option<usize>) -> Result<()> {
         match (cells, work) {
             (Some(c), Some(w)) if c <= self.max_cells && w <= self.max_work => Ok(()),
-            _ => Err(Error::BudgetExceeded),
+            (Some(_), Some(_)) => Err(Error::BudgetExceeded),
+            _ => Err(Error::SizeOverflow),
         }
     }
 }
@@ -565,12 +570,12 @@ pub fn sequence(
     if !start.is_finite() || !step.is_finite() {
         return num();
     }
-    let count = rows.checked_mul(columns).ok_or(Error::BudgetExceeded)?;
+    let count = rows.checked_mul(columns).ok_or(Error::SizeOverflow)?;
     budget.check(Some(count), Some(count))?;
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| Error::BudgetExceeded)?;
+        .map_err(|_| Error::AllocationFailure)?;
     for index in 0..count {
         let number = start + step * index as f64;
         if !number.is_finite() {
@@ -618,7 +623,7 @@ mod sequence_tests {
         );
         assert_eq!(
             sequence(usize::MAX, 2, 1., 1., budget),
-            Err(Error::BudgetExceeded)
+            Err(Error::SizeOverflow)
         );
         assert_eq!(sequence(3, 2, 1., 1., budget), Err(Error::BudgetExceeded));
         assert_eq!(
@@ -652,12 +657,12 @@ pub fn unit(dimension: usize, budget: Budget) -> Result<Matrix<f64>> {
     }
     let count = dimension
         .checked_mul(dimension)
-        .ok_or(Error::BudgetExceeded)?;
+        .ok_or(Error::SizeOverflow)?;
     budget.check(Some(count), Some(count))?;
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| Error::BudgetExceeded)?;
+        .map_err(|_| Error::AllocationFailure)?;
     for row in 0..dimension {
         for column in 0..dimension {
             // SAFETY: count = dimension squared was checked and reserved above;

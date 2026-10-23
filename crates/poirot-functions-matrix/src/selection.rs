@@ -19,7 +19,9 @@ fn length<T>(input: &Matrix<T>, axis: Axis) -> usize {
     }
 }
 fn append<T>(values: &mut Vec<T>, value: T) -> Result<()> {
-    values.try_reserve(1).map_err(|_| Error::BudgetExceeded)?;
+    values
+        .try_reserve(1)
+        .map_err(|_| Error::AllocationFailure)?;
     // SAFETY: The successful local reservation admits exactly this one additional member.
     values.push(value);
     Ok(())
@@ -28,7 +30,7 @@ fn storage<T>(count: usize) -> Result<Vec<T>> {
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| Error::BudgetExceeded)?;
+        .map_err(|_| Error::AllocationFailure)?;
     Ok(values)
 }
 /// Copy selected zero-based rows or columns, preserving their requested order.
@@ -50,7 +52,7 @@ pub fn select<T: Clone>(
         Axis::Rows => (indices.len(), input.cols()),
         Axis::Columns => (input.rows(), indices.len()),
     };
-    let count = rows.checked_mul(cols).ok_or(Error::BudgetExceeded)?;
+    let count = rows.checked_mul(cols).ok_or(Error::SizeOverflow)?;
     budget.check(Some(count), Some(count))?;
     let mut values = storage(count)?;
     for row in 0..rows {
@@ -161,7 +163,9 @@ pub fn sort<T: Clone, K>(
         return Err(Error::Formula(CellError::Value));
     }
     // SAFETY: The preceding local guard establishes a nonzero chunk width.
-    records.try_reserve(n).map_err(|_| Error::BudgetExceeded)?;
+    records
+        .try_reserve(n)
+        .map_err(|_| Error::AllocationFailure)?;
     // SAFETY: The nonzero width guard above and local reservation admit all n unchanged chunks.
     records.extend(oriented.values().chunks(oriented.cols()).enumerate());
     ordered(&mut records, |(ai, a), (bi, b)| {
@@ -170,7 +174,7 @@ pub fn sort<T: Clone, K>(
     let mut indices = storage(n)?;
     indices
         .try_reserve(records.len())
-        .map_err(|_| Error::BudgetExceeded)?;
+        .map_err(|_| Error::AllocationFailure)?;
     // SAFETY: The unchanged source iterator emits exactly the locally reserved number of ordinals.
     indices.extend(records.into_iter().map(|(index, _)| index));
     select(input, axis, &indices, budget)
@@ -216,7 +220,7 @@ fn ordered<T: Copy>(values: &mut [T], compare: impl Fn(&T, &T) -> Ordering) -> R
     let mut scratch = storage(n)?;
     scratch
         .try_reserve(values.len())
-        .map_err(|_| Error::BudgetExceeded)?;
+        .map_err(|_| Error::AllocationFailure)?;
     // SAFETY: The successful local reservation admits this unchanged slice length.
     scratch.extend_from_slice(values);
     let mut width = 1usize;
@@ -293,7 +297,9 @@ pub fn partition<T>(
     }
     let mut records = storage(n)?;
     // SAFETY: The preceding local guard establishes a nonzero chunk width.
-    records.try_reserve(n).map_err(|_| Error::BudgetExceeded)?;
+    records
+        .try_reserve(n)
+        .map_err(|_| Error::AllocationFailure)?;
     // SAFETY: The local nonzero width guard and Matrix dimensions make exactly n chunks; n slots were reserved here.
     records.extend(keys.values().chunks(keys.cols()).enumerate());
     ordered(&mut records, |(ai, a), (bi, b)| {
@@ -304,16 +310,14 @@ pub fn partition<T>(
     for group in
         records.chunk_by(|(_, a), (_, b)| compare_rows(a, b, &compare, None) == Ordering::Equal)
     {
-        let end = start
-            .checked_add(group.len())
-            .ok_or(Error::BudgetExceeded)?;
+        let end = start.checked_add(group.len()).ok_or(Error::SizeOverflow)?;
         append(&mut groups, start..end)?;
         start = end;
     }
     let mut order = storage(n)?;
     order
         .try_reserve(records.len())
-        .map_err(|_| Error::BudgetExceeded)?;
+        .map_err(|_| Error::AllocationFailure)?;
     // SAFETY: The unchanged source iterator emits exactly the locally reserved number of ordinals.
     order.extend(records.into_iter().map(|(index, _)| index));
     Ok(Partition { order, groups })
@@ -341,13 +345,13 @@ pub fn hierarchy<T>(
     let count = n
         .checked_mul(width)
         .and_then(|v| v.checked_add(1))
-        .ok_or(Error::BudgetExceeded)?;
+        .ok_or(Error::SizeOverflow)?;
     budget.check(Some(count), Some(count))?;
     if partition.order.len() != n || partition.order.iter().any(|&r| r >= n) {
         return Err(Error::Formula(CellError::Value));
     }
     let mut seen = storage(n)?;
-    seen.try_reserve(n).map_err(|_| Error::BudgetExceeded)?;
+    seen.try_reserve(n).map_err(|_| Error::AllocationFailure)?;
     // SAFETY: This empty vector has locally reserved n slots; resizing to n needs no further capacity.
     seen.resize(n, false);
     for &row in &partition.order {
@@ -366,11 +370,11 @@ pub fn hierarchy<T>(
             members: 0..n,
         },
     )?;
-    let levels = width.checked_add(1).ok_or(Error::BudgetExceeded)?;
+    let levels = width.checked_add(1).ok_or(Error::SizeOverflow)?;
     let mut active = storage(levels)?;
     active
         .try_reserve(levels)
-        .map_err(|_| Error::BudgetExceeded)?;
+        .map_err(|_| Error::AllocationFailure)?;
     // SAFETY: This empty vector has locally reserved levels slots.
     active.resize(levels, 0usize);
     let mut previous = None;
@@ -463,7 +467,7 @@ pub fn group_layout(
     let mut children: Vec<Vec<usize>> = storage(groups.len())?;
     children
         .try_reserve(groups.len())
-        .map_err(|_| Error::BudgetExceeded)?;
+        .map_err(|_| Error::AllocationFailure)?;
     // SAFETY: This empty vector has locally reserved one slot per unchanged group; Vec::new cannot panic.
     children.resize_with(groups.len(), Vec::new);
     for (index, group) in groups.iter().enumerate().skip(1) {
@@ -478,7 +482,9 @@ pub fn group_layout(
         let siblings = children
             .get_mut(parent)
             .ok_or(Error::Formula(CellError::Value))?;
-        siblings.try_reserve(1).map_err(|_| Error::BudgetExceeded)?;
+        siblings
+            .try_reserve(1)
+            .map_err(|_| Error::AllocationFailure)?;
         append(siblings, index)?;
     }
     for siblings in &mut children {

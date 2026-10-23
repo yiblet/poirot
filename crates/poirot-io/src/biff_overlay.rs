@@ -4,7 +4,6 @@
 use crate::biff_preflight::{PreflightError, ResourceBudget, records, workbook_stream};
 use poirot_model::{Cell, CellAddress, CellValue, ExcelText, NamedRange, Workbook};
 
-mod backend;
 mod formula;
 mod reconstruct;
 mod sst;
@@ -19,10 +18,8 @@ struct Formula {
     address: CellAddress,
     text: String,
 }
-/// Checked BIFF source details and backend patches used to restore fidelity after decoding.
+/// Checked BIFF source details used to restore fidelity after decoding.
 pub(crate) struct Overlay {
-    /// Sanitized compound-file bytes passed to the XLS backend.
-    pub backend: Vec<u8>,
     /// Source sheet names in workbook order.
     pub sheet_names: Vec<String>,
     visibility: Vec<poirot_model::SheetVisibility>,
@@ -43,7 +40,6 @@ impl Overlay {
             .is_none_or(|r| r.data.get(..2) != Some(&[0, 6]))
         {
             return Ok(Self {
-                backend: bytes.to_vec(),
                 sheet_names: Vec::new(),
                 visibility: Vec::new(),
                 names: Vec::new(),
@@ -71,7 +67,6 @@ impl Overlay {
                 .into(),
         );
         Ok(Self {
-            backend: backend::backend_view(bytes, &stream, &plan.patches)?,
             sheet_names: plan.sheets,
             visibility,
             names: plan.names,

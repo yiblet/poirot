@@ -4,7 +4,7 @@ Fast Excel calculation in Rust, without running Excel.
 
 Poirot lets you use spreadsheets as calculation models inside your application.
 Read or create a workbook, change its inputs, evaluate its formulas, and write
-the results to XLSX or XLS.
+the results to XLSX. XLS is supported as input only.
 
 Use Poirot when you know the workbooks you want to evaluate, when you or an AI
 generate the spreadsheets, or when fast recalculation matters. Workbooks with
@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     sheet.set_formula("C1".parse()?, "=A1*B1")?;
     book.recalculate()?;
 
-    let energy = book.cell("Energy", "C1".parse()?).ok_or("missing energy result")?;
+    let energy = book.stored_cell("Energy", "C1".parse()?).ok_or("missing energy result")?;
     assert_eq!(energy.value, CellValue::Number(300.));
     book.save_xlsx().write_file("energy.xlsx")?;
     Ok(())
@@ -57,12 +57,18 @@ Choose how much calculation state to keep:
 | --- | --- | --- |
 | Edit a workbook and save current results | `Workbook::recalculate` | Calculates the workbook and updates stored values. |
 | Query individual cells or formula text | `eval::run_cell`, `eval::run_formula` | Runs a direct calculation against workbook data. |
-| Compare scenarios without changing the original | `Evaluation` | Calculates requested outputs and their dependencies; input edits clear calculated results. |
-| Repeatedly edit a larger model | `Overlay` | Retains edits, compiled formulas, and intermediate results; reuses computations unaffected by changes. |
+| Compare scenarios without changing the original | `book.evaluation().build()` | Calculates requested outputs and their dependencies; input edits clear calculated results. |
+| Repeatedly edit a larger model | `book.overlay().build()` | Retains edits, compiled formulas, and intermediate results; reuses computations unaffected by changes. |
 
 An overlay keeps state between calculations. It leaves the baseline workbook
 unchanged until you explicitly apply its changes. Native snapshots let you save
 calculation state and resume it later.
+
+Selected outputs need no explicit default context. Calculate first, then export the
+scenario directly with `evaluation.save_xlsx()` or `overlay.save_xlsx()`. Export
+preserves edits and warm state, and does not calculate untouched formulas; their
+saved results may still be stale. See [evaluation and export](docs/evaluation.md)
+for modes, cycle boundaries, lifecycle operations and snapshot recovery.
 
 The component crates also let you use parsing, workbook storage, formatting, or
 function algorithms independently. Custom functions can be registered through
@@ -95,6 +101,13 @@ broader customization still ahead.
 We're looking for contributors. AI-written PRs are welcome: review the changes,
 include evidence for expected behavior, and follow [Contributing](CONTRIBUTING.md).
 
+Imported shared formulas become independent, complete formula strings; replacing
+an original anchor leaves its former followers independent. The compiler reuses
+executable templates without retaining the original shared encoding. Optional
+manually supplied group provenance is checked before export. Native snapshot
+source version 5 can also carry legacy opaque source bytes, but XLSX I/O neither
+retains original packages nor uses those bytes when saving.
+
 ## Examples
 
 - [Edit a file](examples/public_workbook.rs): load a workbook, change an input,
@@ -118,6 +131,8 @@ See [Contributing](CONTRIBUTING.md) to work on Poirot.
 
 ## Acknowledgements
 
+- [Calamine](https://github.com/tafia/calamine) provides streaming XLSX decoding and shared-formula translation.
+- [rxls](https://github.com/HyunjoJung/rxls) provides XLS decoding and checked XLSX authoring.
 - [Apache POI](https://poi.apache.org/) shaped Poirot from the start: our first few
   commits translated portions of its code into Rust. Our name is a nod to the
   project. Statistical kernels also adapt
@@ -138,3 +153,7 @@ See [Contributing](CONTRIBUTING.md) to work on Poirot.
 
 See [LICENSES/ACKNOWLEDGEMENTS](LICENSES/ACKNOWLEDGEMENTS) for credits and notices.
 Poirot's code is licensed under [MIT](LICENSES/MIT.txt).
+
+Resource quotas are optional. Ordinary calculation can omit detailed profiling; see
+[resource configuration](docs/resources.md) for loading defaults, cycle boundaries,
+quota errors, and profiling.

@@ -9,6 +9,9 @@ struct RegexHost<'a, 'b, 'c>(&'a mut CallHost<'b, 'c>);
 impl regex::Host for RegexHost<'_, '_, '_> {
     /// Preserve the evaluator's spreadsheet/operational failure distinction.
     type Failure = FunctionFailure;
+    fn execution_limits(&self) -> regex::ExecutionLimits {
+        self.0.regex_settings()
+    }
     fn work(&mut self, units: usize) -> FunctionResult<()> {
         self.0.charge_work(units as u64)
     }
@@ -27,15 +30,18 @@ fn failure(host: &CallHost<'_, '_>, failure: regex::Failure<FunctionFailure>) ->
         regex::Failure::Unsupported(detail) => {
             host.unsupported(CapabilityId::FunctionAdapter, detail)
         }
-        regex::Failure::Resource => host.budget_exceeded().into(),
+        regex::Failure::Resource => host.allocation_failure().into(),
+        regex::Failure::SizeOverflow => host.size_overflow().into(),
         regex::Failure::InvalidState => host.unsupported(
             CapabilityId::FunctionAdapter,
             "PCRE2 capture geometry did not satisfy the checked adapter state",
         ),
-        regex::Failure::Native(code) => host.unsupported(
-            CapabilityId::FunctionAdapter,
-            format!("PCRE2 native execution/resource failure ({code})"),
-        ),
+        // PCRE2 public ABI: NOMEMORY=-48, HEAP_FAILED=121. The verified
+        // pcre2-sys revision/source is recorded beside compile_failure in the domain crate.
+        regex::Failure::Native(code) => host.resource_failure(
+            if code == -48 || code == 121 { crate::ResourceFailureKind::Allocation } else { crate::ResourceFailureKind::BackendGuard },
+            format!("PCRE2 native execution guard or representation failure ({code}); native consumption unavailable"),
+        ).into(),
     }
 }
 fn text(host: &mut CallHost<'_, '_>, value: &CellValue) -> FunctionResult<String> {
@@ -178,7 +184,7 @@ fn evaluate(
     let mut shapes = Vec::new();
     shapes
         .try_reserve_exact(length)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     let mut rows = 1;
     let mut columns = 1;
     for index in 0..length {
@@ -193,11 +199,11 @@ fn evaluate(
     // First-match extraction, matching and replacement broadcast singleton axes.
     let count = rows
         .checked_mul(columns)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for row in 0..rows {
         for column in 0..columns {
             let result = scalar_member(host, name, &shapes, row, column);

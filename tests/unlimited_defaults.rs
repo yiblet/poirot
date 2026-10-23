@@ -93,7 +93,9 @@ fn default_direct_overlay_and_low_level_runs_accept_text_beyond_the_old_cap() {
         Err(EvaluationFailure::MemoRetentionLimit { .. })
     ));
     assert!(matches!(
-        overlay.evaluation(&limited).unwrap().cell(target("A1")),
-        Err(EvaluationFailure::MemoRetentionLimit { .. })
+        overlay.evaluation(&limited),
+        Err(poirot::OverlayError::Evaluation(
+            EvaluationFailure::MemoRetentionLimit { .. }
+        ))
     ));
 }

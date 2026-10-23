@@ -76,14 +76,14 @@ fn spreadsheet_file_and_buffer_paths_share_format_detection_and_options() {
         ),
         (
             "book.xls",
-            book.save_xls().to_buffer().unwrap(),
+            include_bytes!("../crates/poirot-io/tests/fixtures/poi-StringFormulas.xls").to_vec(),
             FileFormat::Xls,
         ),
     ] {
         let path = dir.0.join(name);
         match format {
             FileFormat::Xlsx => book.save_xlsx().write_file(&path).unwrap(),
-            FileFormat::Xls => book.save_xls().write_file(&path).unwrap(),
+            FileFormat::Xls => std::fs::write(&path, &bytes).unwrap(),
         }
         let from_file = Workbook::open(&path).unwrap();
         let from_bytes = Workbook::load()
@@ -100,15 +100,17 @@ fn spreadsheet_file_and_buffer_paths_share_format_detection_and_options() {
                 .iter()
                 .any(|d| d.kind == ImportDiagnosticKind::OmittedFeatures)
         );
-        assert_eq!(
-            from_file
-                .sheet(0)
-                .unwrap()
-                .get("B1".parse().unwrap())
-                .unwrap()
-                .value,
-            CellValue::Number(-1.)
-        );
+        if format == FileFormat::Xlsx {
+            assert_eq!(
+                from_file
+                    .sheet(0)
+                    .unwrap()
+                    .get("B1".parse().unwrap())
+                    .unwrap()
+                    .value,
+                CellValue::Number(-1.)
+            );
+        }
         let options = io::ReadOptions {
             max_input_bytes: 0,
             ..Default::default()
@@ -308,7 +310,7 @@ fn owned_facade_flush_and_shared_model_handles_remain_explicit() {
 
 #[test]
 fn load_options_replace_all_fields_and_later_setters_override_their_field() {
-    let bytes = workbook().save_xls().to_buffer().unwrap();
+    let bytes = include_bytes!("../crates/poirot-io/tests/fixtures/poi-StringFormulas.xls");
     let small = io::ResourceBudget {
         max_records: 0,
         ..Default::default()
@@ -321,21 +323,21 @@ fn load_options_replace_all_fields_and_later_setters_override_their_field() {
         Workbook::load()
             .xls_budget(small)
             .options(io::ReadOptions::default())
-            .from_bytes(&bytes)
+            .from_bytes(bytes)
             .is_ok()
     );
     assert!(
         Workbook::load()
             .options(options)
             .xls_budget(io::ResourceBudget::default())
-            .from_bytes(&bytes)
+            .from_bytes(bytes)
             .is_ok()
     );
     assert!(matches!(
         Workbook::load()
             .options(io::ReadOptions::default())
             .xls_budget(small)
-            .from_bytes(&bytes),
+            .from_bytes(bytes),
         Err(poirot::WorkbookError::ImportOrXlsx(
             io::IoError::BiffPreflight(io::PreflightError::Resource { .. })
         ))

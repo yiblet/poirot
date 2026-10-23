@@ -85,6 +85,12 @@ impl EvaluationPort for MatrixPort<'_, '_> {
             .coercev2_number_text(text, NumericPolicy::PinnedPoi)
             .map_err(port_failure)
     }
+    fn size_overflow(&mut self) -> EvaluationFailure {
+        self.host.size_overflow()
+    }
+    fn allocation_failure(&mut self) -> EvaluationFailure {
+        self.host.allocation_failure()
+    }
     fn budget_exceeded(&mut self) -> EvaluationFailure {
         self.host.budget_exceeded()
     }
@@ -129,7 +135,7 @@ pub(crate) fn execute(
         let count = shape
             .rows
             .checked_mul(shape.columns)
-            .ok_or_else(|| host.budget_exceeded())?;
+            .ok_or_else(|| host.size_overflow())?;
         host.check_values(count).map_err(operational_only)?;
         host.check_values(shape.columns).map_err(operational_only)?;
         host.charge_work(count as u64).map_err(operational_only)?;
@@ -356,7 +362,7 @@ pub(crate) fn sequence(
     let rows = rows.trunc() as usize;
     let columns = columns.trunc() as usize;
     let Some(cells) = rows.checked_mul(columns) else {
-        return Err(host.budget_exceeded());
+        return Err(host.size_overflow());
     };
     host.check_values(cells).map_err(operational_only)?;
     host.check_values(rows).map_err(operational_only)?;
@@ -380,8 +386,10 @@ pub(crate) fn sequence(
                 .collect();
             Ok(Value::Array(ArrayView::anchored(values, Some(address))))
         }
-        Err(poirot_functions_matrix::Error::Formula(error)) => Ok(err(error)),
-        Err(_) => Err(host.budget_exceeded()),
+        Err(error) => match modern::failure(&mut host, error) {
+            FunctionFailure::Spreadsheet(error) => Ok(err(error)),
+            FunctionFailure::Operational(failure) => Err(failure),
+        },
     }
 }
 

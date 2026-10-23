@@ -1,7 +1,6 @@
 use poirot::{
     io,
     model::{CellAddress, CellValue, MAX_ROWS, Workbook},
-    xls,
 };
 
 fn source(last: u32) -> Workbook {
@@ -52,21 +51,7 @@ fn actual_xlsx_roundtrip_retains_empty_sparse_rows() {
     );
 }
 #[test]
-fn actual_xls_roundtrip_and_exact_immutable_plan() {
-    let workbook = source(65535);
-    let plan = xls::XlsExportPlan::new(&workbook, xls::XlsExportPolicy::default()).unwrap();
-    assert_eq!(
-        plan.predicted_stream_bytes(),
-        plan.encode_workbook_stream().unwrap().len()
-    );
-    assert_rows(
-        &io::read_workbook_bytes(&plan.to_buffer().unwrap()).unwrap(),
-        65535,
-    );
-    assert!(xls::XlsExportPlan::new(&source(65536), xls::XlsExportPolicy::default()).is_err());
-}
-#[test]
-fn empty_rows_are_charged_by_both_export_plans() {
+fn empty_rows_are_charged_by_xlsx_export_plan() {
     let mut workbook = Workbook::new();
     workbook.add_sheet("Rows").unwrap().create_row(10).unwrap();
     let opts = io::WriteOptions {
@@ -74,13 +59,4 @@ fn empty_rows_are_charged_by_both_export_plans() {
         ..Default::default()
     };
     assert!(io::plan_xlsx_export(&workbook, opts).is_err());
-    let baseline = xls::XlsExportPlan::new(&workbook, Default::default())
-        .unwrap()
-        .predicted_stream_bytes();
-    workbook.sheet_mut(0).unwrap().create_row(11).unwrap();
-    let policy = xls::XlsExportPolicy {
-        max_stream_bytes: baseline,
-        ..Default::default()
-    };
-    assert!(xls::XlsExportPlan::new(&workbook, policy).is_err());
 }

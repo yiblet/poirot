@@ -51,27 +51,23 @@ fn recalculate_replaces_saved_values_after_each_input_change() {
 }
 
 #[test]
-fn calculated_results_survive_xls_and_xlsx_buffers() {
+fn calculated_results_survive_xlsx_buffers() {
     let mut book = inputs();
     book.recalculate().unwrap();
-    for bytes in [
-        book.save_xlsx().to_buffer().unwrap(),
-        book.save_xls().to_buffer().unwrap(),
-    ] {
-        let loaded = Workbook::from_bytes(&bytes).unwrap();
-        assert_eq!(value(&loaded, 0, "B1"), CellValue::Number(42.));
-        assert_eq!(value(&loaded, 0, "C1"), CellValue::Number(43.));
-        assert_eq!(
-            loaded
-                .sheet(0)
-                .unwrap()
-                .get(at("B1"))
-                .unwrap()
-                .formula
-                .as_deref(),
-            Some("A1*2")
-        );
-    }
+    let bytes = book.save_xlsx().to_buffer().unwrap();
+    let loaded = Workbook::from_bytes(&bytes).unwrap();
+    assert_eq!(value(&loaded, 0, "B1"), CellValue::Number(42.));
+    assert_eq!(value(&loaded, 0, "C1"), CellValue::Number(43.));
+    assert_eq!(
+        loaded
+            .sheet(0)
+            .unwrap()
+            .get(at("B1"))
+            .unwrap()
+            .formula
+            .as_deref(),
+        Some("A1*2")
+    );
 }
 
 #[test]

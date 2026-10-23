@@ -225,7 +225,11 @@ fn native_exhaustion_and_unsupported_unicode_cannot_be_caught_by_iferror() {
                     Default::default()
                 ),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::UnsupportedCapability { .. },
+                    failure: EvaluationFailure::UnsupportedCapability { .. }
+                        | EvaluationFailure::Resource {
+                            kind: ResourceFailureKind::BackendGuard,
+                            ..
+                        },
                     ..
                 }
             ),

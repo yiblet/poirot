@@ -11,11 +11,13 @@ fn failure(host: &CallHost<'_, '_>, error: modern::Error) -> FunctionFailure {
         modern::Error::Value => CellError::Value.into(),
         modern::Error::NotFound => CellError::NA.into(),
         modern::Error::Empty => CellError::Calc.into(),
-        modern::Error::Limit => host.budget_exceeded().into(),
+        modern::Error::SizeOverflow => host.size_overflow().into(),
+        modern::Error::AllocationFailure => host.allocation_failure().into(),
+        modern::Error::InvalidGeometry => EvaluationFailure::StalePlan.into(),
     }
 }
 fn admit_text(host: &mut CallHost<'_, '_>, units: usize) -> FunctionResult<()> {
-    let bytes = units.checked_mul(2).ok_or_else(|| host.budget_exceeded())?;
+    let bytes = units.checked_mul(2).ok_or_else(|| host.size_overflow())?;
     host.check_text(bytes)?;
     host.check_values(units)
 }
@@ -109,7 +111,7 @@ pub(super) fn shape_admission(
     }
     let count = rows
         .checked_mul(columns)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     host.check_values(count)?;
     host.check_values(rows)
 }
@@ -134,12 +136,12 @@ pub(super) fn output(
     let mut result = Vec::new();
     result
         .try_reserve_exact(rows)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     let mut values = values.into_iter();
     for _ in 0..rows {
         let mut row = Vec::new();
         row.try_reserve_exact(columns)
-            .map_err(|_| host.budget_exceeded())?;
+            .map_err(|_| host.allocation_failure())?;
         for _ in 0..columns {
             // SAFETY: The local columns reservation bounds exactly columns pushes.
             row.push(values.next().ok_or(CellError::Value)?);
@@ -195,7 +197,7 @@ fn extract_member(
         .len()
         .checked_add(1)
         .and_then(|n| n.checked_mul(delimiter.len().max(1)))
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     host.charge_work(work as u64)?;
     match modern::extract(
         &text,
@@ -228,7 +230,7 @@ fn extraction(
     let mut shapes = Vec::new();
     shapes
         .try_reserve_exact(length.min(5))
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     let mut rows = 1;
     let mut columns = 1;
     for ordinal in 0..length.min(5) {
@@ -243,9 +245,9 @@ fn extraction(
     extracted
         .try_reserve_exact(
             rows.checked_mul(columns)
-                .ok_or_else(|| host.budget_exceeded())?,
+                .ok_or_else(|| host.size_overflow())?,
         )
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     let mut needs_fallback = false;
     for row in 0..rows {
         for column in 0..columns {
@@ -275,9 +277,9 @@ fn extraction(
         .try_reserve_exact(
             output_rows
                 .checked_mul(output_columns)
-                .ok_or_else(|| host.budget_exceeded())?,
+                .ok_or_else(|| host.size_overflow())?,
         )
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for row in 0..output_rows {
         for column in 0..output_columns {
             let source_row = if rows == 1 { 0 } else { row };
@@ -320,12 +322,12 @@ fn delimiters(host: &mut CallHost<'_, '_>, ordinal: usize) -> FunctionResult<Vec
     let count = shape
         .rows
         .checked_mul(shape.columns)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     host.check_values(count)?;
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for row in 0..shape.rows {
         for column in 0..shape.columns {
             let operand = host.read_cell(ordinal, row, column)?;
@@ -394,11 +396,11 @@ fn split(
     let count = shape
         .rows
         .checked_mul(shape.columns)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     let mut fields = fields.into_iter().peekable();
     for row in 0..shape.rows {
         for column in 0..shape.columns {
@@ -438,15 +440,15 @@ fn append(host: &mut CallHost<'_, '_>, output: &mut Vec<u16>, text: &[u16]) -> F
     let size = output
         .len()
         .checked_add(text.len())
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     if size > 32767 {
         return Err(CellError::Value.into());
     }
-    host.check_text_capacity(size.checked_mul(2).ok_or_else(|| host.budget_exceeded())?)?;
+    host.check_text_capacity(size.checked_mul(2).ok_or_else(|| host.size_overflow())?)?;
     host.check_values_capacity(size)?;
     output
         .try_reserve(text.len())
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     host.charge_work(text.len() as u64)?;
     // SAFETY: Checked size is at most 32767 and try_reserve admitted all appended units locally.
     output.extend_from_slice(text);
@@ -505,9 +507,9 @@ fn serialize(
     values
         .try_reserve_exact(
             rows.checked_mul(columns)
-                .ok_or_else(|| host.budget_exceeded())?,
+                .ok_or_else(|| host.size_overflow())?,
         )
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for row in 0..rows {
         for column in 0..columns {
             let value = (|| -> FunctionResult<CellValue> {
@@ -562,5 +564,35 @@ pub(crate) fn execute(
         Ok(value) => Ok(value),
         Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
         Err(FunctionFailure::Operational(error)) => Err(error),
+    }
+}
+
+#[cfg(test)]
+mod resource_mapping_tests {
+    use super::*;
+    #[test]
+    fn text_size_allocation_and_stale_geometry_are_distinct_operational_failures() {
+        let book = Workbook::new();
+        let mut session = Session::with_context(&book, Default::default());
+        let address = CellAddress { row: 2, col: 3 };
+        let host = CallHost::new_array(&mut session, 0, address, ArgumentsRef::Empty, 0);
+        for (error, expected) in [
+            (
+                modern::Error::SizeOverflow,
+                ResourceFailureKind::SizeOverflow,
+            ),
+            (
+                modern::Error::AllocationFailure,
+                ResourceFailureKind::Allocation,
+            ),
+        ] {
+            assert!(
+                matches!(failure(&host, error), FunctionFailure::Operational(EvaluationFailure::Resource { kind, source: Some(source), .. }) if kind == expected && source == EvaluationTarget { sheet: 0, address })
+            );
+        }
+        assert!(matches!(
+            failure(&host, modern::Error::InvalidGeometry),
+            FunctionFailure::Operational(EvaluationFailure::StalePlan)
+        ));
     }
 }

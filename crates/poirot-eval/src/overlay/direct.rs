@@ -38,7 +38,8 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
         source: Source<'a, W>,
         context: EvaluationContext,
     ) -> Result<Self, OverlayError> {
-        let meter = crate::budget::BudgetMeter::new(context.budgets)?;
+        let meter = crate::budget::BudgetMeter::new(context.budgets)?
+            .with_optional_limits(context.evaluation_limits());
         let state = Continuation::new(meter);
         Ok(Self {
             source,
@@ -49,7 +50,20 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
             failure: None,
         })
     }
+    /// Select detailed accounting before any work in an ordinary calculation cycle.
+    pub(super) fn set_profiling(&mut self, profiling: bool) {
+        self.state.budget.profiling = profiling;
+    }
     source_methods!();
+    /// Discard pending authored edits and calculated results, keeping the baseline unchanged.
+    pub fn discard_edits(&mut self) {
+        self.reset();
+    }
+    /// Clear calculated results while retaining authored edits and compiled preparation.
+    pub fn clear_calculated_cache(&mut self) {
+        self.clear_cache();
+    }
+
     fn policy_changed(&mut self, _previous: &OverlayPolicy) {
         self.clear_cache();
     }
@@ -71,18 +85,33 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
     pub fn reset(&mut self) {
         self.source.inputs = crate::run_overlay::RunInputs::empty();
         self.clear_cache();
+        // Cleanup belonged to the discarded scenario, not to the restored baseline.
+        self.spill_resets.clear();
     }
     /// Start a new calculation context, clearing results, usage, and any failure.
     ///
     /// Temporary input edits and compiled formulas are retained.
     pub fn begin(&mut self, context: EvaluationContext) -> Result<(), OverlayError> {
-        let meter = crate::budget::BudgetMeter::new(context.budgets)?;
+        let meter = crate::budget::BudgetMeter::new(context.budgets)?
+            .with_optional_limits(context.evaluation_limits());
         let state = Continuation::new(meter);
         self.context = context;
         self.state = state;
         self.completed.clear();
         self.failure = None;
         Ok(())
+    }
+    /// Start a new cycle, retaining edits and clearing results, work, and failure.
+    pub fn start_cycle(&mut self, context: EvaluationContext) -> Result<(), OverlayError> {
+        self.begin(context)
+    }
+    /// Select optional profiling while retaining this evaluation's prepared state.
+    pub fn into_calculation(mut self, profiling: bool) -> Calculation<'a, W> {
+        self.set_profiling(profiling);
+        Calculation {
+            inner: self,
+            profiling,
+        }
     }
     /// Read the time, randomness, locale, and limits used by this evaluation.
     pub fn context(&self) -> &EvaluationContext {
@@ -131,6 +160,10 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
             return None;
         }
         self.state.values().get(&key)
+    }
+    /// Inspect logical memo storage retained in this direct cycle, not allocator bytes.
+    pub fn retained_usage(&self) -> crate::run::MemoRetentionUsage {
+        self.state.memo_usage
     }
     /// Read work usage accumulated since construction or the last [`Self::begin`].
     pub fn usage(&self) -> &crate::RunUsage {
@@ -234,6 +267,23 @@ impl<'a, W: Borrow<Workbook>> EvaluationBuilder<'a, W> {
     ) -> Self {
         self.source = self.source.with_shared_extensions(registry);
         self
+    }
+    /// Build an ordinary calculation without detailed profiling. Quotas remain enforced.
+    pub fn build_calculation(
+        self,
+        context: EvaluationContext,
+    ) -> Result<super::Calculation<'a, W>, OverlayError> {
+        self.build_calculation_with_profiling(context, false)
+    }
+    /// Build ordinary calculation with profiling independently selected from quotas.
+    pub fn build_calculation_with_profiling(
+        self,
+        context: EvaluationContext,
+        profiling: bool,
+    ) -> Result<super::Calculation<'a, W>, OverlayError> {
+        let mut inner = self.build(context)?;
+        inner.set_profiling(profiling);
+        Ok(super::Calculation { inner, profiling })
     }
     /// Validate the options and create an evaluation with the supplied context.
     pub fn build(self, context: EvaluationContext) -> Result<Evaluation<'a, W>, OverlayError> {

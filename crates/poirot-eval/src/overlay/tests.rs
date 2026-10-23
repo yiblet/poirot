@@ -1083,11 +1083,11 @@ fn numeric_locale_identity_and_consumption_survive_retained_snapshot() {
 fn raw_snapshot_restore_rejects_previous_execution_semantics_versions() {
     let workbook = book();
     let overlay = Overlay::with_workbook(&workbook).build().unwrap();
-    for previous in 8..68 {
+    for previous in 8..71 {
         let mut bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
         // Payload's first field is its small postcard varint version.
         let version = bytes.first_mut().unwrap();
-        assert_eq!(*version, 70);
+        assert_eq!(*version, 71);
         *version = previous;
         let snapshot = postcard::from_bytes(&bytes).unwrap();
         assert!(
@@ -1355,4 +1355,54 @@ fn same_session_scalar_named_producer_tracks_future_footprint_dependency() {
     overlay.set_value(at("C1"), true).unwrap();
     assert!(overlay.cached_value(at("B2")).is_none());
     assert_eq!(value(&mut overlay, "B1", &context), CellValue::Number(20.));
+}
+
+#[test]
+fn shared_provenance_survives_cache_style_and_detaches_on_same_formula_edit() {
+    let mut book = book();
+    let shared = poirot_model::SharedFormula {
+        group: poirot_model::SharedFormulaId(2),
+        origin: at("B1").address,
+    };
+    book.sheet_mut(0)
+        .unwrap()
+        .get_mut(at("B1").address)
+        .unwrap()
+        .shared_formula = Some(shared);
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    overlay
+        .set_style(
+            at("B1"),
+            poirot_model::CellStyle {
+                number_format: Some("0.00".into()),
+            },
+        )
+        .unwrap();
+    assert_eq!(
+        value(&mut overlay, "B1", &EvaluationContext::default()),
+        CellValue::Number(4.)
+    );
+    let changes = overlay.changes();
+    let mut published = book.clone();
+    published.apply(changes).unwrap();
+    assert_eq!(
+        published
+            .sheet(0)
+            .unwrap()
+            .get(at("B1").address)
+            .unwrap()
+            .shared_formula,
+        Some(shared)
+    );
+    overlay.set_formula(at("B1"), "A1*2").unwrap();
+    published.apply(overlay.changes()).unwrap();
+    assert_eq!(
+        published
+            .sheet(0)
+            .unwrap()
+            .get(at("B1").address)
+            .unwrap()
+            .shared_formula,
+        None
+    );
 }

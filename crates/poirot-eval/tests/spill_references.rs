@@ -378,6 +378,7 @@ fn overlay_flush_preserves_singleton_extent_and_authored_child_style() {
         .set(
             at("B1").address,
             poirot_model::Cell {
+                shared_formula: None,
                 value: CellValue::Blank,
                 formula: None,
                 style: poirot_model::CellStyle {

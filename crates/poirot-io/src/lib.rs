@@ -3,7 +3,20 @@
 //! This crate converts workbook files to and from the shared data model. Imports
 //! retain saved formula results and record unsupported or altered content in workbook
 //! metadata. Writing preserves saved results; it does not calculate formulas.
-//! Use this crate when your application owns calculation or only needs file access.
+//!
+//! Calamine streams XLSX decoding; rxls supplies XLS decoding and fresh XLSX authoring.
+//! Imports project backend cells,
+//! number formats, names and presentation directly. Existing focused XML recovery
+//! preserves calculation-visible text units, missing caches and array/spill ownership.
+//! Backend sheets are released during conversion; original XML recovery then expands
+//! shared strings once and one worksheet at a time, without retaining the full archive.
+//! Charts, drawings, macros, rich styling and original shared-group encoding are
+//! omitted; saving does not preserve the original package or consult legacy source
+//! bytes carried by snapshots.
+//!
+//! Imported shared formulas have independent complete source strings. Optional
+//! manually supplied group provenance is verified before sharing on export;
+//! singletons, stale metadata and unsupported translations use ordinary formulas.
 //!
 //! ```rust
 //! use poirot_io::{read_workbook_bytes, write_xlsx_to_buffer};
@@ -23,11 +36,7 @@
 //! Both detect XLS or XLSX from the contents and return the same workbook type.
 //! [`ReadOptions`] configures import policies and limits.
 //!
-//! Review `Workbook::file_metadata` import warnings before relying on an exported
-//! copy. Unsupported content can be changed or omitted; the saved file contains the
-//! features represented by Poirot's model.
-//!
-//! Legacy XLS output lives in [poirot-xls](https://docs.rs/poirot-xls).
+//! XLS is supported as input only; saves produce XLSX.
 //! Most applications should use [poirot](https://docs.rs/poirot), which provides the
 //! same file operations alongside editing and calculation.
 /// Checked BIFF fidelity recovery around the backend XLS decoder.
@@ -47,7 +56,7 @@ mod import_conversion;
 mod numeric_representation;
 
 // Import errors and read/write options.
-pub use contract::{IoError, ReadOptions, WriteOptions};
+pub use contract::{IoError, IoQuotaFailure, IoResource, ReadOptions, WriteOptions};
 // XLSX serialization to a complete byte buffer before file publication.
 pub use export_execution::{
     write_xlsx, write_xlsx_to_buffer, write_xlsx_to_buffer_with_options, write_xlsx_with_options,

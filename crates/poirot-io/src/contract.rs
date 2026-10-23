@@ -3,15 +3,47 @@ use crate::{PreflightError, opc};
 use poirot_model::ModelError;
 use std::fmt;
 
+/// Caller-controlled import resource, measured independently of heap usage.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum IoResource {
+    /// Compressed source bytes for one load.
+    InputBytes,
+    /// Expanded bytes in an individual XLSX entry.
+    ZipEntryBytes,
+    /// Expanded bytes across one XLSX package.
+    ZipTotalBytes,
+    /// Entries declared in one XLSX package.
+    ZipEntries,
+}
+/// Actual claim rejected before import under an explicit caller quota.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct IoQuotaFailure {
+    /// Rejected resource and unit.
+    pub resource: IoResource,
+    /// Configured maximum.
+    pub limit: u64,
+    /// Previously accepted amount when the resource is cumulative.
+    pub consumed: u64,
+    /// Additional amount requested by this operation.
+    pub requested: u64,
+    /// File, package entry, or import operation when known.
+    pub operation: String,
+}
 /// An error reading or writing a workbook.
 #[derive(Debug)]
 pub enum IoError {
+    /// Configured import quota with the actual rejected request.
+    Quota(IoQuotaFailure),
+    /// A decoded/package size cannot be represented independently of caller quotas.
+    SizeOverflow(&'static str),
+    /// A fallible file-buffer allocation failed, independently of configured quotas.
+    Allocation(&'static str),
     /// Filesystem read/write failure.
     File(std::io::Error),
     /// Backend workbook-decoding failure.
     Read(String),
     /// Backend workbook-encoding failure.
-    Write(rust_xlsxwriter::XlsxError),
+    Write(rxls::WriteError),
     /// Decoded content cannot be represented by the workbook model.
     Model(ModelError),
     /// OOXML parsing or writing failure.
@@ -27,9 +59,34 @@ pub enum IoError {
     /// Numeric representation would violate the selected fidelity policy.
     NumericFidelity(poirot_model::NumericFidelityRefusal),
 }
+impl IoError {
+    /// Describe a real rejected source claim without inventing backend consumption.
+    pub(crate) fn quota(
+        resource: IoResource,
+        limit: u64,
+        consumed: u64,
+        requested: u64,
+        operation: impl Into<String>,
+    ) -> Self {
+        Self::Quota(IoQuotaFailure {
+            resource,
+            limit,
+            consumed,
+            requested,
+            operation: operation.into(),
+        })
+    }
+}
 impl fmt::Display for IoError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Quota(e) => write!(
+                f,
+                "import {:?} quota {} exceeded (consumed {}, requested {}) during {}",
+                e.resource, e.limit, e.consumed, e.requested, e.operation
+            ),
+            Self::SizeOverflow(operation) => write!(f, "size overflow during {operation}"),
+            Self::Allocation(operation) => write!(f, "allocation refused during {operation}"),
             Self::File(e) => write!(f, "file IO: {e}"),
             Self::Read(e) => write!(f, "workbook import: {e}"),
             Self::Write(e) => write!(f, "XLSX export: {e}"),
@@ -63,7 +120,11 @@ impl From<PreflightError> for IoError {
 }
 impl From<std::io::Error> for IoError {
     fn from(e: std::io::Error) -> Self {
-        Self::File(e)
+        if e.kind() == std::io::ErrorKind::OutOfMemory {
+            Self::Allocation("workbook file buffer")
+        } else {
+            Self::File(e)
+        }
     }
 }
 impl From<ModelError> for IoError {
@@ -71,8 +132,8 @@ impl From<ModelError> for IoError {
         Self::Model(e)
     }
 }
-impl From<rust_xlsxwriter::XlsxError> for IoError {
-    fn from(e: rust_xlsxwriter::XlsxError) -> Self {
+impl From<rxls::WriteError> for IoError {
+    fn from(e: rxls::WriteError) -> Self {
         Self::Write(e)
     }
 }
@@ -80,15 +141,17 @@ impl From<rust_xlsxwriter::XlsxError> for IoError {
 /// File-size limits and format policies for reading a workbook.
 ///
 /// ZIP limits apply only to XLSX. [`Self::xls_budget`] controls XLS decoding.
+/// Defaults impose no application quotas; integer maxima retain their historical
+/// unlimited meaning for direct field users. Named setters replace only one field.
 #[derive(Debug, Clone, Copy)]
 pub struct ReadOptions {
-    /// Maximum input bytes, from a file or buffer (default 32 MiB).
+    /// Maximum input bytes, from a file or buffer (unlimited by default).
     pub max_input_bytes: u64,
-    /// Maximum expanded bytes in one XLSX ZIP entry (default 32 MiB).
+    /// Maximum expanded bytes in one XLSX ZIP entry (unlimited by default).
     pub max_zip_entry_bytes: u64,
-    /// Maximum sum of expanded XLSX entry bytes (default 128 MiB).
+    /// Maximum sum of expanded XLSX entry bytes (unlimited by default).
     pub max_zip_total_bytes: u64,
-    /// Maximum XLSX ZIP entry count (default 10,000).
+    /// Maximum XLSX ZIP entry count (unlimited by default).
     pub max_zip_entries: usize,
     /// XLSX package relationship and external-link policy.
     pub xlsx_policy: opc::OpcImportPolicy,
@@ -98,10 +161,10 @@ pub struct ReadOptions {
 impl Default for ReadOptions {
     fn default() -> Self {
         Self {
-            max_input_bytes: 32 * 1024 * 1024,
-            max_zip_entry_bytes: 32 * 1024 * 1024,
-            max_zip_total_bytes: 128 * 1024 * 1024,
-            max_zip_entries: 10_000,
+            max_input_bytes: u64::MAX,
+            max_zip_entry_bytes: u64::MAX,
+            max_zip_total_bytes: u64::MAX,
+            max_zip_entries: usize::MAX,
             xlsx_policy: opc::OpcImportPolicy::default(),
             xls_budget: crate::ResourceBudget::default(),
         }
@@ -134,5 +197,63 @@ impl Default for WriteOptions {
             max_zip_entries: 10_000,
             max_source_bytes: u64::MAX,
         }
+    }
+}
+impl ReadOptions {
+    /// Set the maximum input byte before decoding; zero admits none. Replaces only this setting.
+    pub fn max_input_bytes(mut self, maximum: u64) -> Self {
+        self.max_input_bytes = maximum;
+        self
+    }
+    /// Remove the input byte quota. Structural and representation checks remain.
+    pub fn without_input_bytes_limit(mut self) -> Self {
+        self.max_input_bytes = u64::MAX;
+        self
+    }
+    /// Inspect the input byte quota; `None` means no configured maximum.
+    pub fn input_bytes_limit(&self) -> Option<u64> {
+        (self.max_input_bytes != u64::MAX).then_some(self.max_input_bytes)
+    }
+    /// Set the maximum expanded bytes in each XLSX entry before decoding; zero admits none. Replaces only this setting.
+    pub fn max_zip_entry_bytes(mut self, maximum: u64) -> Self {
+        self.max_zip_entry_bytes = maximum;
+        self
+    }
+    /// Remove the expanded bytes in each XLSX entry quota. Structural and representation checks remain.
+    pub fn without_zip_entry_bytes_limit(mut self) -> Self {
+        self.max_zip_entry_bytes = u64::MAX;
+        self
+    }
+    /// Inspect the expanded bytes in each XLSX entry quota; `None` means no configured maximum.
+    pub fn zip_entry_bytes_limit(&self) -> Option<u64> {
+        (self.max_zip_entry_bytes != u64::MAX).then_some(self.max_zip_entry_bytes)
+    }
+    /// Set the maximum expanded bytes across one XLSX package before decoding; zero admits none. Replaces only this setting.
+    pub fn max_zip_total_bytes(mut self, maximum: u64) -> Self {
+        self.max_zip_total_bytes = maximum;
+        self
+    }
+    /// Remove the expanded bytes across one XLSX package quota. Structural and representation checks remain.
+    pub fn without_zip_total_bytes_limit(mut self) -> Self {
+        self.max_zip_total_bytes = u64::MAX;
+        self
+    }
+    /// Inspect the expanded bytes across one XLSX package quota; `None` means no configured maximum.
+    pub fn zip_total_bytes_limit(&self) -> Option<u64> {
+        (self.max_zip_total_bytes != u64::MAX).then_some(self.max_zip_total_bytes)
+    }
+    /// Set the maximum XLSX entries in one package before decoding; zero admits none. Replaces only this setting.
+    pub fn max_zip_entries(mut self, maximum: usize) -> Self {
+        self.max_zip_entries = maximum;
+        self
+    }
+    /// Remove the XLSX entries in one package quota. Structural and representation checks remain.
+    pub fn without_zip_entries_limit(mut self) -> Self {
+        self.max_zip_entries = usize::MAX;
+        self
+    }
+    /// Inspect the XLSX entries in one package quota; `None` means no configured maximum.
+    pub fn zip_entries_limit(&self) -> Option<usize> {
+        (self.max_zip_entries != usize::MAX).then_some(self.max_zip_entries)
     }
 }

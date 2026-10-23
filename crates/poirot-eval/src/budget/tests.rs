@@ -730,6 +730,8 @@ fn zero_work_preserves_accounting_and_next_charge_attribution() {
                     meter.usage.work_units = consumed;
                     meter.limits.run_work = run_work;
                     meter.limits.cell_work = cell_work;
+                    let optional = meter.limits.into();
+                    meter = meter.with_optional_limits(optional);
                     meter.enter_depth().unwrap();
                     if active {
                         meter.push_cell(EvaluationTarget {
@@ -782,4 +784,25 @@ fn zero_work_preserves_accounting_and_next_charge_attribution() {
             }
         }
     }
+}
+
+#[test]
+fn ordinary_accounting_skips_details_but_explicit_maximum_work_remains_a_quota() {
+    let limits = EvaluationLimits::default().max_work(u64::MAX);
+    let mut meter = BudgetMeter::configured(limits.into(), false)
+        .unwrap()
+        .with_optional_limits(limits);
+    meter.charge(WorkKind::HelperOperation, u64::MAX).unwrap();
+    assert_eq!(meter.usage.helper_operations, 0);
+    assert!(
+        matches!(meter.charge(WorkKind::HelperOperation, 1), Err(EvaluationFailure::Budget(failure)) if failure.kind == BudgetKind::RunWork && failure.limit == u64::MAX && failure.consumed == u64::MAX && failure.requested == 1)
+    );
+    let mut ordinary = BudgetMeter::configured(Default::default(), false).unwrap();
+    ordinary
+        .charge(WorkKind::HelperOperation, u64::MAX)
+        .unwrap();
+    ordinary
+        .charge(WorkKind::HelperOperation, u64::MAX)
+        .unwrap();
+    assert_eq!(ordinary.usage, EvaluationUsage::default());
 }

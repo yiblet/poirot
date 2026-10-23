@@ -1,16 +1,20 @@
 //! Bounded file ingress and ordered XLSX/BIFF backend import execution.
 use crate::decoded_cells::{fidelity_warnings, identifier_warnings, value};
-use crate::{IoError, PreflightError, ReadOptions, biff_overlay, biff_preflight, ooxml, opc};
-use calamine::{Reader, Xls, Xlsx};
-use poirot_model::{Cell, CellAddress, CellValue, DateSystem, Workbook};
+use crate::{IoError, PreflightError, ReadOptions, biff_overlay, biff_preflight, ooxml};
+use poirot_model::{Cell, CellAddress, DateSystem, Workbook};
 use poirot_model::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
-use std::{fs, io::Cursor, path::Path};
+use std::{fs, path::Path};
 
 fn read_bytes(path: &Path, options: ReadOptions) -> Result<Vec<u8>, IoError> {
     use std::io::Read;
-    if fs::metadata(path)?.len() > options.max_input_bytes {
-        return Err(IoError::Limit(
-            "input exceeds configured byte budget".into(),
+    let claimed = fs::metadata(path)?.len();
+    if claimed > options.max_input_bytes {
+        return Err(IoError::quota(
+            crate::IoResource::InputBytes,
+            options.max_input_bytes,
+            0,
+            claimed,
+            path.display().to_string(),
         ));
     }
     let mut contents = Vec::new();
@@ -18,8 +22,12 @@ fn read_bytes(path: &Path, options: ReadOptions) -> Result<Vec<u8>, IoError> {
         .take(options.max_input_bytes.saturating_add(1))
         .read_to_end(&mut contents)?;
     if contents.len() as u64 > options.max_input_bytes {
-        return Err(IoError::Limit(
-            "input exceeds configured byte budget".into(),
+        return Err(IoError::quota(
+            crate::IoResource::InputBytes,
+            options.max_input_bytes,
+            0,
+            contents.len() as u64,
+            path.display().to_string(),
         ));
     }
     Ok(contents)
@@ -46,8 +54,12 @@ pub fn read_workbook_bytes_with_options(
     options: ReadOptions,
 ) -> Result<Workbook, IoError> {
     if bytes.len() as u64 > options.max_input_bytes {
-        return Err(IoError::Limit(
-            "input exceeds configured byte budget".into(),
+        return Err(IoError::quota(
+            crate::IoResource::InputBytes,
+            options.max_input_bytes,
+            0,
+            bytes.len() as u64,
+            "input buffer",
         ));
     }
     if bytes.starts_with(b"PK\x03\x04") {
@@ -62,48 +74,54 @@ pub fn read_workbook_bytes_with_options(
 }
 
 fn read_xlsx(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
-    let package = ooxml::read_package_with_options(bytes, options)?;
-    let plan = opc::PackageInventory {
-        parts: package.clone(),
-    }
-    .plan_with_policy(options.xlsx_policy)?;
-    let backend_bytes = ooxml::backend_package(&package, &plan)?;
-    let mut reader =
-        Xlsx::new(Cursor::new(backend_bytes)).map_err(|e| IoError::Read(e.to_string()))?;
-    let mut workbook = Workbook::new();
-    workbook.date_system = if reader.has_1904_epoch() {
-        DateSystem::Excel1904
+    let mut package = ooxml::ImportPackage::new(bytes, options)?;
+    let plan = package.plan(options.xlsx_policy)?;
+    let adapted = if ooxml::needs_backend_adapter(&plan) {
+        Some(ooxml::backend_package(&mut package, &plan)?)
     } else {
-        DateSystem::Excel1900
+        None
     };
-    let expected: Vec<_> = plan.sheets.iter().map(|s| s.name.clone()).collect();
-    if reader.sheet_names() != expected {
-        return Err(IoError::Opc(opc::OpcError::SheetMismatch(
-            "backend sheet inventory differs from checked OPC plan".into(),
-        )));
-    }
+    let mut workbook = match decode_xlsx(adapted.as_deref().unwrap_or(bytes), &plan) {
+        Err(XlsxDecodeError::NeedsAdapter) if adapted.is_none() => {
+            let adapted = ooxml::backend_package(&mut package, &plan)?;
+            decode_xlsx(&adapted, &plan).map_err(XlsxDecodeError::into_io)?
+        }
+        result => result.map_err(XlsxDecodeError::into_io)?,
+    };
+    drop(adapted);
+    let mut warnings = fidelity_warnings(FileFormat::Xlsx);
+    warnings.extend(plan.warnings.iter().cloned());
+    ooxml::apply_workbook_metadata(
+        &package.read(&plan.workbook_part)?,
+        &plan,
+        &mut workbook,
+        &mut warnings,
+    )?;
+    let formats = {
+        let styles = plan
+            .styles_part
+            .as_ref()
+            .map(|path| package.read(path))
+            .transpose()?;
+        ooxml::number_formats(styles.as_deref())?
+    };
+    let shared = {
+        let bytes = plan
+            .shared_strings_part
+            .as_ref()
+            .map(|path| package.read(path))
+            .transpose()?;
+        ooxml::shared_strings(bytes.as_deref())?
+    };
     for identity in plan.sheets.iter().filter(|s| s.supported) {
-        let name = &identity.name;
-        let sheet = workbook.import_sheet(name)?;
-        let mut cells = reader
-            .worksheet_cells_reader(name)
-            .map_err(|e| IoError::Read(e.to_string()))?;
-        while let Some(record) = cells
-            .next_cell_with_formula()
-            .map_err(|e| IoError::Read(e.to_string()))?
-        {
-            let address = CellAddress::new(record.pos.0, record.pos.1)?;
-            let mut cell = Cell::new(value(record.value.into())?);
-            cell.formula = record.formula;
-            sheet.set(address, cell)?;
+        let bytes = package.read(&identity.part)?;
+        let sheet = workbook
+            .sheet_by_name_mut(&identity.name)
+            .ok_or_else(|| IoError::Read("missing text worksheet".into()))?;
+        if ooxml::apply_sheet_text(&bytes, &shared, sheet, &formats)? {
+            ooxml::apply_sheet_spills(&bytes, &identity.name, &mut workbook)?;
         }
     }
-    let mut warnings = fidelity_warnings();
-    warnings.extend(plan.warnings.iter().cloned());
-    ooxml::apply_rows(&package, &plan, &mut workbook)?;
-    ooxml::apply_text(&package, &plan, &mut workbook)?;
-    ooxml::apply_metadata(&package, &plan, &mut workbook, &mut warnings)?;
-    ooxml::apply_spills(&package, &plan, &mut workbook)?;
     identifier_warnings(&workbook, &mut warnings);
     workbook.file_metadata = Some(FileMetadata {
         format: FileFormat::Xlsx,
@@ -112,28 +130,128 @@ fn read_xlsx(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
     Ok(workbook)
 }
 
-fn read_xls(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
-    let budget = options.xls_budget;
-    let row_plan = biff_preflight::inspect_xls(bytes, budget)?;
-    let overlay = biff_overlay::Overlay::read(bytes, budget)?;
-    // Calamine still contains unchecked BIFF formula-token accesses. Keep their
-    // failures operational rather than unwinding through the public import API.
-    let mut reader = std::panic::catch_unwind(|| Xls::new(Cursor::new(&overlay.backend)))
-        .map_err(|_| {
-            IoError::BiffPreflight(PreflightError::Representation(
-                "backend BIFF token decoder panicked",
-            ))
-        })?
-        .map_err(|e| IoError::Read(e.to_string()))?;
+/// Backend failures distinguish content needing transient adaptation from input errors.
+enum XlsxDecodeError {
+    NeedsAdapter,
+    Input(IoError),
+}
+impl XlsxDecodeError {
+    /// Convert a terminal backend failure to the public I/O error.
+    fn into_io(self) -> IoError {
+        match self {
+            Self::NeedsAdapter => IoError::Read("unsupported cell content after adaptation".into()),
+            Self::Input(error) => error,
+        }
+    }
+}
+impl From<IoError> for XlsxDecodeError {
+    fn from(error: IoError) -> Self {
+        Self::Input(error)
+    }
+}
+impl From<poirot_model::ModelError> for XlsxDecodeError {
+    fn from(error: poirot_model::ModelError) -> Self {
+        Self::Input(error.into())
+    }
+}
+/// Stream decoded cells directly into Poirot without allocating a second workbook.
+fn decode_xlsx(bytes: &[u8], plan: &crate::opc::OpcReadPlan) -> Result<Workbook, XlsxDecodeError> {
+    use calamine::{Reader, Xlsx, XlsxFormulaMetadata};
+    let backend_error = |error: calamine::XlsxError| match &error {
+        calamine::XlsxError::CellError(value) if matches!(value.as_str(), "#SPILL!" | "#CALC!") => {
+            XlsxDecodeError::NeedsAdapter
+        }
+        calamine::XlsxError::UnexpectedNode("v, f, or is") => XlsxDecodeError::NeedsAdapter,
+        _ => XlsxDecodeError::Input(IoError::Read(error.to_string())),
+    };
+    let mut reader = Xlsx::new(std::io::Cursor::new(bytes)).map_err(backend_error)?;
     let mut workbook = Workbook::new();
     workbook.date_system = if reader.has_1904_epoch() {
         DateSystem::Excel1904
     } else {
         DateSystem::Excel1900
     };
+    if reader
+        .sheet_names()
+        .iter()
+        .map(String::as_str)
+        .ne(plan.sheets.iter().map(|s| s.name.as_str()))
+    {
+        return Err(IoError::Read(
+            "backend worksheet inventory differs from checked OPC plan".into(),
+        )
+        .into());
+    }
+    for identity in plan.sheets.iter().filter(|s| s.supported) {
+        let sheet = workbook.import_sheet(&identity.name)?;
+        let mut cells = reader
+            .worksheet_cells_reader(&identity.name)
+            .map_err(backend_error)?;
+        let mut masters = std::collections::BTreeMap::new();
+        let mut followers = Vec::new();
+        // The metadata API avoids Calamine's dense si-indexed expansion table;
+        // its convenience formula API also offsets from range.start instead of
+        // the actual master coordinate. Resolve sparse followers below instead.
+        while let Some(record) = cells
+            .next_cell_with_formula_metadata()
+            .map_err(backend_error)?
+        {
+            let address = CellAddress::new(record.pos.0, record.pos.1)?;
+            let mut cell = Cell::new(crate::decoded_cells::xlsx_value(record.value.into())?);
+            cell.formula = match record.formula {
+                Some(XlsxFormulaMetadata::Normal { formula }) => Some(formula),
+                Some(XlsxFormulaMetadata::Shared {
+                    shared_index,
+                    formula,
+                    ..
+                }) => {
+                    masters.insert(shared_index, (record.pos, formula.clone()));
+                    Some(formula)
+                }
+                Some(XlsxFormulaMetadata::SharedDerived { shared_index }) => {
+                    followers.push((address, shared_index));
+                    None
+                }
+                _ => None,
+            };
+            sheet.set(address, cell)?;
+        }
+        for (address, index) in followers {
+            let (origin, source) = masters
+                .get(&index)
+                .ok_or_else(|| IoError::Read("shared formula has no master".into()))?;
+            let formula =
+                calamine::expand_shared_formula(source, *origin, (address.row, address.col))
+                    .map_err(backend_error)?;
+            let cell = sheet
+                .get_mut(address)
+                .ok_or_else(|| IoError::Read("missing shared follower".into()))?;
+            cell.formula = Some(formula);
+        }
+    }
+    Ok(workbook)
+}
+
+fn read_xls(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
+    let budget = options.xls_budget;
+    let row_plan = biff_preflight::inspect_xls(bytes, budget)?;
+    let overlay = biff_overlay::Overlay::read(bytes, budget)?;
+    let mut reader = rxls::Workbook::open(bytes).map_err(|e| IoError::Read(e.to_string()))?;
+    if reader.text_truncated {
+        return Err(IoError::Limit(
+            "backend text allocation budget exceeded".into(),
+        ));
+    }
+    let mut workbook = Workbook::new();
+    workbook.date_system = if reader.date1904 {
+        DateSystem::Excel1904
+    } else {
+        DateSystem::Excel1900
+    };
     let mut identity_warnings = Vec::new();
     let mut identity_comparisons = 0u64;
-    for (index, backend_name) in reader.sheet_names().into_iter().enumerate() {
+    for (index, decoded) in std::mem::take(&mut reader.sheets).into_iter().enumerate() {
+        let backend_name = decoded.name.clone();
         let name = overlay
             .sheet_names
             .get(index)
@@ -156,29 +274,16 @@ fn read_xls(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
                 });
             }
         }
-        let range = reader
-            .worksheet_range(&backend_name)
-            .map_err(|e| IoError::Read(e.to_string()))?;
-        let formulas = reader
-            .worksheet_formula(&backend_name)
-            .map_err(|e| IoError::Read(e.to_string()))?;
         let sheet = workbook.import_sheet(&name)?;
-        if let Some(start) = range.start() {
-            for (r, c, data) in range.used_cells() {
-                sheet.set(
-                    CellAddress::new(start.0 + r as u32, start.1 + c as u32)?,
-                    Cell::new(value(data.clone())?),
-                )?;
-            }
-        }
-        if let Some(start) = formulas.start() {
-            for (r, c, formula) in formulas.used_cells() {
-                let address = CellAddress::new(start.0 + r as u32, start.1 + c as u32)?;
-                let cached = sheet
-                    .get(address)
-                    .map_or(CellValue::Blank, |c| c.value.clone());
-                sheet.set_formula_with_cached_value(address, formula, cached)?;
-            }
+        for (row, col, data) in decoded.cells() {
+            let address = CellAddress::new(row, u32::from(col))?;
+            let (formula, cached) = match data {
+                rxls::Cell::Formula { formula, cached } => (Some(formula.clone()), cached.as_ref()),
+                other => (None, other),
+            };
+            let mut cell = Cell::new(value(cached)?);
+            cell.formula = formula;
+            sheet.set(address, cell)?;
         }
     }
     for (index, rows) in row_plan.row_indices.iter().enumerate() {
@@ -188,7 +293,7 @@ fn read_xls(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
             }
         }
     }
-    let mut warnings = fidelity_warnings();
+    let mut warnings = fidelity_warnings(FileFormat::Xls);
     warnings.extend(identity_warnings);
     warnings.extend(
         overlay
@@ -213,6 +318,7 @@ fn read_xls(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
             sheet_scope: None,
         });
     }
+    drop(reader);
     overlay.apply(&mut workbook)?;
     for (index, name) in workbook.named_ranges.iter().enumerate() {
         // SAFETY: index comes from enumerating the same named_ranges vector, which is not mutated during this loop.

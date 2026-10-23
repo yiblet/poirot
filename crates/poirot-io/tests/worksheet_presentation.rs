@@ -100,43 +100,7 @@ fn independent_xml_and_reload_preserve_first_hidden_very_hidden_and_rgb() {
             .tab_color,
         Some([0x12, 0x34, 0xab])
     );
-    // Each XML attribute combination has an independent expected loss diagnostic.
-    for attributes in [
-        "theme=\"4\" tint=\"0.5\"",
-        "indexed=\"3\"",
-        "auto=\"1\"",
-        "rgb=\"FF1234AB\" tint=\"0.5\"",
-        "rgb=\"FF1234AB\" theme=\"4\"",
-        "rgb=\"001234AB\"",
-        "rgb=\"invalid\"",
-    ] {
-        let changed = rewrite(&bytes, |name, b| {
-            if name == "xl/worksheets/sheet1.xml" {
-                String::from_utf8(b)
-                    .unwrap()
-                    .replace("rgb=\"FF1234AB\"", attributes)
-                    .into_bytes()
-            } else {
-                b
-            }
-        });
-        let report = read_workbook_bytes(&changed).unwrap();
-        assert_eq!(
-            report.sheet(0).unwrap().presentation().tab_color,
-            None,
-            "{attributes}"
-        );
-        assert!(
-            report
-                .file_metadata
-                .as_ref()
-                .unwrap()
-                .import_warnings
-                .iter()
-                .any(|s| s.detail.contains("Hidden: unsupported tab color")),
-            "{attributes}"
-        );
-    }
+    // Non-RGB color resolution follows rxls; exact source styling is not retained.
     // Imports preserve all-hidden source; exporter refuses rather than exposing it.
     let changed = rewrite(&bytes, |name, b| {
         if name == "xl/workbook.xml" {
@@ -159,4 +123,47 @@ fn independent_xml_and_reload_preserve_first_hidden_very_hidden_and_rgb() {
             .all(|s| s.presentation().visibility != SheetVisibility::Visible)
     );
     assert!(write_xlsx_to_buffer(&report).is_err());
+}
+
+#[test]
+fn prefixed_presentation_and_cell_styles_use_backend_metadata() {
+    // CT_Worksheet orders sheetPr before sheetData (ECMA-376 Part 1 §18.3.1.99).
+    let mut book = Workbook::new();
+    for color in [Some([18, 52, 86]), None] {
+        let name = format!("Sheet{}", book.sheets().len());
+        let sheet = book.add_sheet(name).unwrap();
+        sheet.set_presentation(SheetPresentation {
+            visibility: SheetVisibility::Visible,
+            tab_color: color,
+        });
+        let address = "A1".parse().unwrap();
+        sheet
+            .set_formula_with_cached_value(address, "1+2", 3.0.into())
+            .unwrap();
+        sheet.get_mut(address).unwrap().style.number_format = Some("0.00".into());
+    }
+    let bytes = write_xlsx_to_buffer(&book).unwrap();
+    let prefixed = rewrite(&bytes, |name, bytes| {
+        if !name.starts_with("xl/worksheets/") {
+            return bytes;
+        }
+        let mut source = String::from_utf8(bytes).unwrap().replace(
+            "<worksheet ",
+            "<worksheet xmlns:m=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" ",
+        );
+        for tag in ["sheetPr", "tabColor", "sheetData"] {
+            source = source
+                .replace(&format!("<{tag}"), &format!("<m:{tag}"))
+                .replace(&format!("</{tag}>"), &format!("</m:{tag}>"));
+        }
+        source.into_bytes()
+    });
+    let loaded = read_workbook_bytes(&prefixed).unwrap();
+    for (original, actual) in book.sheets().iter().zip(loaded.sheets()) {
+        assert_eq!(actual.presentation(), original.presentation());
+        assert_eq!(
+            actual.get("A1".parse().unwrap()),
+            original.get("A1".parse().unwrap())
+        );
+    }
 }

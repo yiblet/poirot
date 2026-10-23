@@ -333,7 +333,8 @@ impl Session<'_> {
                             self.budget.check_allocation(nums.len().saturating_add(1))?;
                             self.budget.charge(WorkKind::Materialization, 1)?;
                             nums.try_reserve(1)
-                                .map_err(|_| EvaluationFailure::ResourceLimit {
+                                .map_err(|_| EvaluationFailure::Resource {
+                                    kind: crate::ResourceFailureKind::Allocation,
                                     capability: CapabilityId::FunctionAdapter,
                                     source: self.consumer,
                                     detail: "numeric aggregate allocation failed".into(),

@@ -184,7 +184,8 @@ impl Session<'_> {
             runtime.budget.charge(WorkKind::Materialization, 1)?;
             addresses
                 .try_reserve(1)
-                .map_err(|_| EvaluationFailure::ResourceLimit {
+                .map_err(|_| EvaluationFailure::Resource {
+                    kind: crate::ResourceFailureKind::Allocation,
                     capability: CapabilityId::FunctionAdapter,
                     source: runtime.consumer,
                     detail: "sparse coordinate allocation failed".into(),

@@ -121,6 +121,7 @@ fn same_source(a: &Workbook, b: &Workbook) -> bool {
                 && a.cells().iter().zip(b.cells()).all(|((aa, ac), (ba, bc))| {
                     aa == ba
                         && ac.formula == bc.formula
+                        && ac.shared_formula == bc.shared_formula
                         && (ac.formula.is_some() || same_value(&ac.value, &bc.value))
                 })
         })
@@ -155,11 +156,13 @@ impl Workbook {
         for edit in &plan.replacements {
             match edit.source {
                 FormulaSource::Cell { sheet, address } => {
-                    self.sheets
+                    let cell = self
+                        .sheets
                         .get_mut(sheet)
                         .and_then(|worksheet| worksheet.cells.get_mut(&address))
-                        .ok_or_else(|| ModelError("sheet rename cell missing".into()))?
-                        .formula = Some(edit.replacement.clone())
+                        .ok_or_else(|| ModelError("sheet rename cell missing".into()))?;
+                    cell.formula = Some(edit.replacement.clone());
+                    cell.shared_formula = None;
                 }
                 FormulaSource::DefinedName { index } => self
                     .named_ranges

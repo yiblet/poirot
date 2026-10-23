@@ -80,7 +80,8 @@ impl Discovery {
             if end_row <= last.row && column != last.col {
                 budget.check_allocation(expansion.removed_columns.len().saturating_add(1))?;
                 expansion.removed_columns.try_reserve(1).map_err(|_| {
-                    EvaluationFailure::ResourceLimit {
+                    EvaluationFailure::Resource {
+                        kind: crate::ResourceFailureKind::Allocation,
                         capability: CapabilityId::FunctionAdapter,
                         source: consumer,
                         detail: "spill frontier replacement allocation failed".into(),
@@ -127,7 +128,8 @@ impl Expansion {
         budget.check_allocation(self.strips.len().saturating_add(1))?;
         self.strips
             .try_reserve(1)
-            .map_err(|_| EvaluationFailure::ResourceLimit {
+            .map_err(|_| EvaluationFailure::Resource {
+                kind: crate::ResourceFailureKind::Allocation,
                 capability: CapabilityId::FunctionAdapter,
                 source: consumer,
                 detail: "spill discovery strip allocation failed".into(),
@@ -442,8 +444,10 @@ impl Session<'_> {
                 retained: true,
             },
         );
-        self.runtime.run_usage.external_cache_hits =
-            self.runtime.run_usage.external_cache_hits.saturating_add(1);
+        if self.runtime.budget.profiling {
+            self.runtime.run_usage.external_cache_hits =
+                self.runtime.run_usage.external_cache_hits.saturating_add(1);
+        }
         Ok(())
     }
     /// Stage a producer's spill after checking blockers and ownership.
@@ -677,7 +681,8 @@ impl Session<'_> {
                 .preparation
                 .roles
                 .try_reserve(count)
-                .map_err(|_| EvaluationFailure::ResourceLimit {
+                .map_err(|_| EvaluationFailure::Resource {
+                    kind: crate::ResourceFailureKind::Allocation,
                     capability: CapabilityId::FunctionAdapter,
                     source: self.runtime.consumer,
                     detail: "spill role allocation failed".into(),
@@ -690,7 +695,8 @@ impl Session<'_> {
                     .preparation
                     .journal
                     .try_reserve(count)
-                    .map_err(|_| EvaluationFailure::ResourceLimit {
+                    .map_err(|_| EvaluationFailure::Resource {
+                        kind: crate::ResourceFailureKind::Allocation,
                         capability: CapabilityId::FunctionAdapter,
                         source: self.runtime.consumer,
                         detail: "spill journal allocation failed".into(),
@@ -735,7 +741,14 @@ impl Session<'_> {
                 admitted.push((sheet, at));
             }
         }
-        self.runtime.budget.usage.completed_cells += count as u64;
+        if self.runtime.budget.profiling {
+            self.runtime.budget.usage.completed_cells = self
+                .runtime
+                .budget
+                .usage
+                .completed_cells
+                .saturating_add(count as u64);
+        }
         Ok(())
     }
     /// Borrow or prepare a source formula using the existing exact-source compiler cache.
@@ -845,7 +858,8 @@ impl Session<'_> {
                             .check_allocation(unique.len().saturating_add(1))?;
                         unique
                             .try_reserve(1)
-                            .map_err(|_| EvaluationFailure::ResourceLimit {
+                            .map_err(|_| EvaluationFailure::Resource {
+                                kind: crate::ResourceFailureKind::Allocation,
                                 capability: CapabilityId::FunctionAdapter,
                                 source: self.runtime.consumer,
                                 detail: "legacy spill owner allocation failed".into(),
@@ -858,7 +872,8 @@ impl Session<'_> {
             let mut owners = Vec::new();
             owners
                 .try_reserve(unique.len())
-                .map_err(|_| EvaluationFailure::ResourceLimit {
+                .map_err(|_| EvaluationFailure::Resource {
+                    kind: crate::ResourceFailureKind::Allocation,
                     capability: CapabilityId::FunctionAdapter,
                     source: self.runtime.consumer,
                     detail: "legacy spill owner ordering allocation failed".into(),
@@ -886,7 +901,8 @@ impl Session<'_> {
                         .check_allocation(added.len().saturating_add(1))?;
                     added
                         .try_reserve(1)
-                        .map_err(|_| EvaluationFailure::ResourceLimit {
+                        .map_err(|_| EvaluationFailure::Resource {
+                            kind: crate::ResourceFailureKind::Allocation,
                             capability: CapabilityId::FunctionAdapter,
                             source: self.runtime.consumer,
                             detail: "spill candidate allocation failed".into(),
@@ -916,7 +932,8 @@ impl Session<'_> {
         let commit = |index: &mut CandidateIndex| -> EvalResult<()> {
             let update = |discovery: &mut Discovery| -> EvalResult<()> {
                 discovery.candidates.try_reserve(added.len()).map_err(|_| {
-                    EvaluationFailure::ResourceLimit {
+                    EvaluationFailure::Resource {
+                        kind: crate::ResourceFailureKind::Allocation,
                         capability: CapabilityId::FunctionAdapter,
                         source: consumer,
                         detail: "spill candidate append allocation failed".into(),
@@ -928,7 +945,8 @@ impl Session<'_> {
                 discovery
                     .ending_rows
                     .try_reserve(summary_additional)
-                    .map_err(|_| EvaluationFailure::ResourceLimit {
+                    .map_err(|_| EvaluationFailure::Resource {
+                        kind: crate::ResourceFailureKind::Allocation,
                         capability: CapabilityId::FunctionAdapter,
                         source: consumer,
                         detail: "spill candidate row summary allocation failed".into(),
@@ -1041,7 +1059,8 @@ impl Session<'_> {
                 budget.allocation(1)?;
                 pending
                     .try_reserve(1)
-                    .map_err(|_| EvaluationFailure::ResourceLimit {
+                    .map_err(|_| EvaluationFailure::Resource {
+                        kind: crate::ResourceFailureKind::Allocation,
                         capability: CapabilityId::FunctionAdapter,
                         source: consumer,
                         detail: "spill frontier allocation failed".into(),
@@ -1121,7 +1140,8 @@ impl Session<'_> {
         let mut accepted = Vec::new();
         accepted
             .try_reserve(capacity)
-            .map_err(|_| EvaluationFailure::ResourceLimit {
+            .map_err(|_| EvaluationFailure::Resource {
+                kind: crate::ResourceFailureKind::Allocation,
                 capability: CapabilityId::FunctionAdapter,
                 source: runtime.consumer,
                 detail: "spill arbitration allocation failed".into(),
@@ -1202,7 +1222,8 @@ impl Session<'_> {
             active
                 .notifications
                 .try_reserve(1)
-                .map_err(|_| EvaluationFailure::ResourceLimit {
+                .map_err(|_| EvaluationFailure::Resource {
+                    kind: crate::ResourceFailureKind::Allocation,
                     capability: CapabilityId::FunctionAdapter,
                     source: runtime.consumer,
                     detail: "spill notification allocation failed".into(),
@@ -1414,8 +1435,10 @@ impl Session<'_> {
                     retained: true,
                 },
             );
-            self.runtime.run_usage.external_cache_hits =
-                self.runtime.run_usage.external_cache_hits.saturating_add(1);
+            if self.runtime.budget.profiling {
+                self.runtime.run_usage.external_cache_hits =
+                    self.runtime.run_usage.external_cache_hits.saturating_add(1);
+            }
             if let Some(reads) = &mut self.overlay_reads {
                 reads.completed.insert(key);
             }
@@ -1451,8 +1474,10 @@ impl Session<'_> {
         let previous = self.runtime.consumer.replace(target);
         let demand = self.root_demand();
         let previous_demand = std::mem::replace(&mut self.expression_demand, demand);
-        self.runtime.run_usage.formula_executions =
-            self.runtime.run_usage.formula_executions.saturating_add(1);
+        if self.runtime.budget.profiling {
+            self.runtime.run_usage.formula_executions =
+                self.runtime.run_usage.formula_executions.saturating_add(1);
+        }
         let result = (|| {
             self.runtime.budget.text(prepared.source().len())?;
             let value = self.prepared_expression(sheet, at, &prepared)?;
@@ -1778,7 +1803,7 @@ impl Session<'_> {
                     }
                     self.runtime.budget.allocation(blocked.len().saturating_add(1))?;
                     seen.try_reserve(1)
-                        .map_err(|_| EvaluationFailure::ResourceLimit {
+                        .map_err(|_| EvaluationFailure::Resource { kind: crate::ResourceFailureKind::Allocation,
                             capability: CapabilityId::FunctionAdapter,
                             source: self.runtime.consumer,
                             detail: "spill settlement history allocation failed".into(),

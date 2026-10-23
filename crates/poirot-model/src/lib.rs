@@ -10,6 +10,14 @@
 //! A formula cell stores both its formula and a saved result. Changing workbook data
 //! does not calculate a new result. This crate has no file reader or formula evaluator;
 //! use [poirot](https://docs.rs/poirot) for those workflows.
+//!
+//! Each formula cell owns its complete source. Optional [`SharedFormula`]
+//! provenance can describe an XLSX group; its original anchor is not a live
+//! dependency. Source setters detach membership, while cache/style edits preserve
+//! it. Executable templates belong to the evaluator, independently of these cells.
+//! [`RetainedXlsx`] carries legacy opaque source bytes across clones and snapshots;
+//! current XLSX I/O leaves it empty and ignores it on save. Source snapshot schema
+//! version 5 persists these bytes and optional shared provenance.
 use std::{collections::BTreeMap, fmt, str::FromStr};
 
 mod formula_types;
@@ -133,6 +141,32 @@ pub struct CellStyle {
     /// Optional Excel format spelling; affects display rather than stored value.
     pub number_format: Option<String>,
 }
+/// Worksheet-local identity of an imported XLSX shared-formula group.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+)]
+pub struct SharedFormulaId(
+    /// Source group number, unique only within one worksheet.
+    pub u32,
+);
+
+/// Advisory shared-formula provenance; complete cell formula text remains authoritative.
+///
+/// The origin need not remain a live formula cell. This is unrelated to spill ownership.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct SharedFormula {
+    /// Shared group identity, scoped to the containing worksheet.
+    pub group: SharedFormulaId,
+    /// Original template coordinate used when the group was imported.
+    pub origin: CellAddress,
+}
+impl SharedFormula {
+    /// Report whether a member occupies the original template coordinate.
+    pub fn is_anchor(self, address: CellAddress) -> bool {
+        self.origin == address
+    }
+}
+
 /// A stored value, optional formula, and display metadata.
 ///
 /// For formula cells, `value` is the saved result and can be stale until recalculation.
@@ -144,6 +178,11 @@ pub struct Cell {
     pub value: CellValue,
     /// Normalized formula source; None denotes a literal cell.
     pub formula: Option<String>,
+    /// Optional XLSX group provenance, preserved by cache/style edits.
+    ///
+    /// Source setters detach membership. Direct field edits can leave this stale;
+    /// serializers must verify the complete formula before emitting shared records.
+    pub shared_formula: Option<SharedFormula>,
     /// Presentation metadata retained independently of calculation.
     pub style: CellStyle,
 }
@@ -163,8 +202,19 @@ impl Cell {
         Ok(Self {
             value: cached,
             formula: Some(normalize_formula(formula.into())?),
+            shared_formula: None,
             style: CellStyle::default(),
         })
+    }
+    /// Check provenance bounds and require an accompanying formula source.
+    pub(crate) fn validate_shared_formula(&self) -> Result<(), ModelError> {
+        if let Some(shared) = self.shared_formula {
+            shared.origin.validate()?;
+            if self.formula.is_none() {
+                return Err(ModelError("shared formula requires formula source".into()));
+            }
+        }
+        Ok(())
     }
 }
 fn normalize_formula(formula: String) -> Result<String, ModelError> {
@@ -175,6 +225,8 @@ fn normalize_formula(formula: String) -> Result<String, ModelError> {
         .trim();
     if text.is_empty() {
         Err(ModelError("formula must not be empty".into()))
+    } else if text.len() == formula.len() {
+        Ok(formula)
     } else {
         Ok(text.into())
     }
@@ -266,8 +318,8 @@ impl Worksheet {
     }
     /// Mutably borrow a stored cell.
     ///
-    /// Direct edits bypass formula normalization and spill cleanup. Use
-    /// [`Self::set_value`] or [`Self::set_formula`] when replacing cell contents.
+    /// Direct edits bypass formula normalization, shared-provenance detachment,
+    /// and spill cleanup. Use [`Self::set_value`] or [`Self::set_formula`] when replacing cell contents.
     pub fn get_mut(&mut self, address: CellAddress) -> Option<&mut Cell> {
         self.cells.get_mut(&address)
     }
@@ -280,6 +332,7 @@ impl Worksheet {
         if let Some(f) = cell.formula.take() {
             cell.formula = Some(normalize_formula(f)?);
         }
+        cell.validate_shared_formula()?;
         self.clear_spill_cache(address);
         if let Some(child) = self.spill_cache.remove(&address) {
             self.spill_extents.remove(&child.owner);
@@ -328,6 +381,7 @@ impl Worksheet {
             .ok_or_else(|| ModelError("cell insertion failed".into()))?;
         cell.value = value.into();
         cell.formula = None;
+        cell.shared_formula = None;
         Ok(())
     }
     /// Store a formula and clear its saved result, preserving the cell's style.
@@ -362,6 +416,7 @@ impl Worksheet {
             .get_mut(&address)
             .ok_or_else(|| ModelError("cell insertion failed".into()))?;
         cell.formula = Some(formula);
+        cell.shared_formula = None;
         cell.value = cached;
         Ok(())
     }
@@ -442,12 +497,36 @@ impl std::fmt::Display for ImportDiagnostic {
     }
 }
 
+/// Legacy opaque XLSX source carried by snapshots; current I/O ignores it.
+/// Clones share storage; Debug reports only its length. Snapshots include these bytes.
+#[derive(Clone, PartialEq, Eq)]
+pub struct RetainedXlsx(std::sync::Arc<[u8]>);
+impl RetainedXlsx {
+    /// Own compressed source bytes independently of a particular I/O backend.
+    pub fn new(bytes: impl Into<std::sync::Arc<[u8]>>) -> Self {
+        Self(bytes.into())
+    }
+    /// Borrow the original compressed package.
+    pub fn bytes(&self) -> &[u8] {
+        &self.0
+    }
+}
+impl std::fmt::Debug for RetainedXlsx {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RetainedXlsx")
+            .field("bytes", &self.0.len())
+            .finish()
+    }
+}
+
 /// Editable workbook data: ordered sheets, named formulas, and a date system.
 ///
 /// This model stores formulas and saved results but does not evaluate them.
 /// Use `poirot_eval` for calculation and `poirot_io` for file import/export.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Workbook {
+    /// Legacy source bytes; current imports leave this empty and saves ignore it.
+    pub retained_xlsx: Option<RetainedXlsx>,
     /// Optional provenance and diagnostics retained from file import.
     pub file_metadata: Option<FileMetadata>,
     sheets: Vec<Worksheet>,
@@ -1066,6 +1145,7 @@ impl Worksheet {
             Cell {
                 value,
                 formula: None,
+                shared_formula: None,
                 style,
             },
         );

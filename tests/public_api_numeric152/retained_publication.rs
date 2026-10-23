@@ -131,13 +131,12 @@ fn failed_batches_and_invalid_policies_preserve_previous_successful_outputs() {
     ));
     limited = context.clone();
     limited.retention.cells = 0;
-    assert!(
-        overlay
-            .evaluation(&limited)
-            .unwrap()
-            .outputs(&targets)
-            .is_err()
-    );
+    assert!(matches!(
+        overlay.evaluation(&limited),
+        Err(poirot::OverlayError::Evaluation(
+            eval::EvaluationFailure::MemoRetentionLimit { .. }
+        ))
+    ));
     assert_eq!(overlay.changes(), committed);
     let failure = overlay.target("S!C1").unwrap();
     overlay.set_formula(failure, "POISSON(1,0,FALSE)").unwrap();

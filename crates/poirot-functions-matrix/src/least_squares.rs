@@ -71,7 +71,7 @@ impl Center {
 fn alloc<T: Copy>(n: usize, value: T) -> Result<Vec<T>> {
     let mut out = Vec::new();
     out.try_reserve_exact(n)
-        .map_err(|_| Error::BudgetExceeded)?;
+        .map_err(|_| Error::AllocationFailure)?;
     for _ in 0..n {
         // SAFETY: n slots were reserved above; the loop appends exactly n copied values.
         out.push(value);
@@ -89,7 +89,7 @@ fn set(m: &mut Matrix<f64>, r: usize, c: usize, value: f64) -> Result<()> {
     let i = r
         .checked_mul(m.cols)
         .and_then(|i| i.checked_add(c))
-        .ok_or(Error::BudgetExceeded)?;
+        .ok_or(Error::SizeOverflow)?;
     put(&mut m.values, i, value)
 }
 fn sum(values: impl Iterator<Item = f64>) -> f64 {
@@ -140,9 +140,9 @@ pub fn regression_budget(
     predictions: usize,
     diagnostics: bool,
 ) -> Result<(usize, usize)> {
-    let np = n.checked_mul(p).ok_or(Error::BudgetExceeded)?;
-    let pp = p.checked_mul(p).ok_or(Error::BudgetExceeded)?;
-    let mp = predictions.checked_mul(p).ok_or(Error::BudgetExceeded)?;
+    let np = n.checked_mul(p).ok_or(Error::SizeOverflow)?;
+    let pp = p.checked_mul(p).ok_or(Error::SizeOverflow)?;
+    let mp = predictions.checked_mul(p).ok_or(Error::SizeOverflow)?;
     let cells = np
         .checked_mul(4)
         .and_then(|v| v.checked_add(pp))
@@ -150,7 +150,7 @@ pub fn regression_budget(
         .and_then(|v| v.checked_add(p.checked_mul(16)?))
         .and_then(|v| v.checked_add(mp))
         .and_then(|v| v.checked_add(predictions))
-        .ok_or(Error::BudgetExceeded)?;
+        .ok_or(Error::SizeOverflow)?;
     let work = np
         .checked_mul(n.min(p))
         .and_then(|v| v.checked_mul(20))
@@ -163,7 +163,7 @@ pub fn regression_budget(
                 0
             })
         })
-        .ok_or(Error::BudgetExceeded)?;
+        .ok_or(Error::SizeOverflow)?;
     Ok((cells, work))
 }
 /// Fit observations-by-predictors with deterministic relative-rank column-pivoted QR.
@@ -191,7 +191,7 @@ pub fn least_squares(
     let mut centers = Vec::new();
     centers
         .try_reserve_exact(p)
-        .map_err(|_| Error::BudgetExceeded)?;
+        .map_err(|_| Error::AllocationFailure)?;
     let mut a = Matrix::new(n, p, alloc(x.values.len(), 0.0)?)?;
     let mut column = alloc(n, 0.0)?;
     for c in 0..p {
@@ -212,7 +212,7 @@ pub fn least_squares(
     let mut rank = 0;
     let mut initial_norm = 0.0;
     for k in 0..n.min(p) {
-        let next = k.checked_add(1).ok_or(Error::BudgetExceeded)?;
+        let next = k.checked_add(1).ok_or(Error::SizeOverflow)?;
         let mut pivot = k;
         let mut norm = 0.0;
         for c in k..p {
@@ -431,7 +431,7 @@ impl Fit {
         let used = self
             .rank
             .checked_add(usize::from(self.intercept == Intercept::Estimate))
-            .ok_or(Error::BudgetExceeded)?;
+            .ok_or(Error::SizeOverflow)?;
         let degrees = self.observations.saturating_sub(used);
         let variance = if degrees == 0 {
             Err(CellError::Div0)
@@ -442,7 +442,7 @@ impl Fit {
         let mut inverse = Matrix::new(
             p,
             p,
-            alloc(p.checked_mul(p).ok_or(Error::BudgetExceeded)?, 0.0)?,
+            alloc(p.checked_mul(p).ok_or(Error::SizeOverflow)?, 0.0)?,
         )?;
         for j in 0..self.rank {
             for k in (0..self.rank).rev() {

@@ -147,7 +147,7 @@ fn invalid_empty_shapes_and_budgets_are_distinct() {
             columns: 3
         }
         .apply(&[input()], &0, B),
-        Err(Error::BudgetExceeded)
+        Err(Error::SizeOverflow)
     );
     assert_eq!(
         Transform::Stack(Axis::Rows).apply(

@@ -124,21 +124,22 @@ impl Session<'_> {
         let count = (shape.rows as u64).saturating_mul(shape.columns as u64);
         self.budget.allocation_u64(count)?;
         let mut rows = Vec::new();
-        rows.try_reserve_exact(shape.rows)
-            .map_err(|_| EvaluationFailure::ResourceLimit {
-                capability: CapabilityId::FunctionAdapter,
-                source: self.consumer,
-                detail: "rectangular row allocation failed".into(),
-            })?;
+        crate::resource::reserve_exact(
+            &mut rows,
+            shape.rows,
+            self.consumer,
+            CapabilityId::FunctionAdapter,
+            "rectangular row allocation",
+        )?;
         for row in 0..shape.rows {
             let mut values = Vec::new();
-            values.try_reserve_exact(shape.columns).map_err(|_| {
-                EvaluationFailure::ResourceLimit {
-                    capability: CapabilityId::FunctionAdapter,
-                    source: self.consumer,
-                    detail: "rectangular member allocation failed".into(),
-                }
-            })?;
+            crate::resource::reserve_exact(
+                &mut values,
+                shape.columns,
+                self.consumer,
+                CapabilityId::FunctionAdapter,
+                "rectangular member allocation",
+            )?;
             for column in 0..shape.columns {
                 // SAFETY: Reservation admitted shape.columns slots and this loop pushes exactly that many.
                 values.push(element(self, row, column)?);
@@ -233,7 +234,8 @@ mod tests {
                 })
                 .err()
                 .unwrap();
-            assert!(matches!(failure, EvaluationFailure::ResourceLimit {
+            assert!(matches!(failure, EvaluationFailure::Resource {
+                kind: crate::ResourceFailureKind::SizeOverflow,
                 capability: CapabilityId::FunctionAdapter,
                 source: Some(source), ..
             } if source == target));

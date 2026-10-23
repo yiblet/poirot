@@ -14,6 +14,8 @@ pub(super) struct SheetPatch<'a> {
     pub(super) bytes: &'a [u8],
     /// Canonical source sheet supplying formulas, caches, and metadata.
     pub(super) sheet: &'a Worksheet,
+    /// Shared-source equivalence proof reused for sizing and actual serialization.
+    pub(super) shared: &'a super::shared::SharedExport,
 }
 
 /// Resolved OOXML type and payload for one canonical source cell.
@@ -67,6 +69,7 @@ fn write_cells<W: Write>(
     sheet: &Worksheet,
     styles: &BTreeMap<CellAddress, String>,
     metadata: &BTreeMap<CellAddress, String>,
+    shared: &super::shared::SharedExport,
 ) -> Result<(), IoError> {
     let spills = super::spill::bounds(sheet)?;
     for index in sheet.row_indices() {
@@ -89,7 +92,9 @@ fn write_cells<W: Write>(
             if let Some(style) = styles.get(address) {
                 start.push_attribute(("s", style.as_str()));
             }
-            if let Some(index) = metadata.get(address) {
+            if spills.contains_key(address) {
+                start.push_attribute(("cm", "1"));
+            } else if let Some(index) = metadata.get(address) {
                 start.push_attribute(("cm", index.as_str()));
             }
             let CellEncoding { kind, value } =
@@ -111,6 +116,26 @@ fn write_cells<W: Write>(
                         Event::Text(BytesText::new(formula.trim_start_matches('='))),
                     )?;
                     write_event(writer, Event::End(BytesEnd::new("f")))?;
+                } else if let Some(role) = shared.get(*address) {
+                    let mut start = BytesStart::new("f");
+                    start.push_attribute(("t", "shared"));
+                    let index = match role {
+                        super::shared::SharedCell::Master { index, .. }
+                        | super::shared::SharedCell::Follower { index } => index.to_string(),
+                    };
+                    start.push_attribute(("si", index.as_str()));
+                    if let super::shared::SharedCell::Master { first, last, .. } = role {
+                        let range = format!("{first}:{last}");
+                        start.push_attribute(("ref", range.as_str()));
+                        write_event(writer, Event::Start(start))?;
+                        write_event(
+                            writer,
+                            Event::Text(BytesText::new(formula.trim_start_matches('='))),
+                        )?;
+                        write_event(writer, Event::End(BytesEnd::new("f")))?;
+                    } else {
+                        write_event(writer, Event::Empty(start))?;
+                    }
                 } else {
                     element(writer, "f", formula.trim_start_matches('='))?;
                 }
@@ -137,7 +162,11 @@ fn write_cells<W: Write>(
 impl SheetPatch<'_> {
     /// Rewrite worksheet XML using canonical cell types and saved results.
     pub(super) fn execute<W: Write>(&self, output: W) -> Result<W, IoError> {
-        let Self { bytes, sheet } = *self;
+        let Self {
+            bytes,
+            sheet,
+            shared,
+        } = *self;
         let styles = style_map(bytes, "s")?;
         let metadata = style_map(bytes, "cm")?;
         let mut reader = events(bytes);
@@ -148,7 +177,7 @@ impl SheetPatch<'_> {
                 Event::Start(e) if e.local_name().as_ref() == "sheetData" => {
                     write_event(&mut writer, Event::Start(e.clone().into_owned()))?;
                     reader.read_to_end(e.name()).map_err(xml)?;
-                    write_cells(&mut writer, sheet, &styles, &metadata)?;
+                    write_cells(&mut writer, sheet, &styles, &metadata, shared)?;
                     write_event(&mut writer, Event::End(BytesEnd::new("sheetData")))?;
                 }
                 Event::Eof => break,

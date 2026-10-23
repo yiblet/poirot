@@ -12,7 +12,7 @@ pub(super) fn preflight<P: EvaluationPort>(
     work_units: Option<usize>,
 ) -> Result<(), Failure<P::Operational>> {
     let (Some(c), Some(w)) = (cells, work_units) else {
-        return Err(Failure::Operational(p.budget_exceeded()));
+        return Err(Failure::Operational(p.size_overflow()));
     };
     p.check_collection(c).map_err(Failure::Operational)?;
     work(p, w)
@@ -22,6 +22,8 @@ pub(super) fn err<P: EvaluationPort>(p: &mut P, e: domain::Error) -> Failure<P::
     match e {
         domain::Error::Formula(e) => Failure::Spreadsheet(e),
         domain::Error::BudgetExceeded => Failure::Operational(p.budget_exceeded()),
+        domain::Error::SizeOverflow => Failure::Operational(p.size_overflow()),
+        domain::Error::AllocationFailure => Failure::Operational(p.allocation_failure()),
         domain::Error::SourceUnsupported(s) => {
             Failure::UnsupportedCapability(UnsupportedCapability::SourceException(s))
         }

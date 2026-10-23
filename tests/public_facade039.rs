@@ -1,4 +1,4 @@
-use poirot::{CellValue, Workbook, io, xls};
+use poirot::{CellValue, Workbook, io};
 
 #[test]
 fn saved_typed_formula_evidence_and_import_losses_remain_discoverable() {
@@ -7,40 +7,36 @@ fn saved_typed_formula_evidence_and_import_losses_remain_discoverable() {
     sheet
         .set_formula_with_cached_value("A1".parse().unwrap(), "1=1", CellValue::Boolean(true))
         .unwrap();
-    for bytes in [
-        book.save_xlsx().to_buffer().unwrap(),
-        book.save_xls().to_buffer().unwrap(),
-    ] {
-        let reopened = Workbook::load().from_bytes(&bytes).unwrap();
-        let cell = reopened
-            .model()
-            .sheet(0)
-            .unwrap()
-            .get("A1".parse().unwrap())
-            .unwrap();
-        assert_eq!(cell.value, CellValue::Boolean(true));
-        assert!(cell.formula.is_some());
-        assert!(
-            !reopened
-                .file_metadata
-                .as_ref()
-                .unwrap()
-                .import_warnings
-                .as_slice()
-                .is_empty()
-        );
-        let warnings = reopened
+    let bytes = book.save_xlsx().to_buffer().unwrap();
+    let reopened = Workbook::load().from_bytes(&bytes).unwrap();
+    let cell = reopened
+        .model()
+        .sheet(0)
+        .unwrap()
+        .get("A1".parse().unwrap())
+        .unwrap();
+    assert_eq!(cell.value, CellValue::Boolean(true));
+    assert!(cell.formula.is_some());
+    assert!(
+        !reopened
             .file_metadata
             .as_ref()
             .unwrap()
             .import_warnings
             .as_slice()
-            .to_vec();
-        assert_eq!(
-            reopened.into_model().file_metadata.unwrap().import_warnings,
-            warnings
-        );
-    }
+            .is_empty()
+    );
+    let warnings = reopened
+        .file_metadata
+        .as_ref()
+        .unwrap()
+        .import_warnings
+        .as_slice()
+        .to_vec();
+    assert_eq!(
+        reopened.into_model().file_metadata.unwrap().import_warnings,
+        warnings
+    );
 }
 
 #[test]
@@ -66,18 +62,8 @@ fn pure_planning_preserves_source_and_budget_failure_has_typed_cause() {
             .is_some()
     );
     assert_eq!(book.model(), &before);
-    let plan = book.save_xls().build().unwrap();
-    assert!(matches!(plan, poirot::SavePlan::Xls(_)));
-    assert_eq!(book.model(), &before);
-    let error = book
-        .save_xls()
-        .policy(xls::XlsExportPolicy {
-            max_cells: 0,
-            ..Default::default()
-        })
-        .build()
-        .unwrap_err();
-    assert!(matches!(error, poirot::WorkbookError::Xls(_)));
+    let plan = book.save_xlsx().build().unwrap();
+    assert!(!plan.to_buffer().unwrap().is_empty());
     assert_eq!(book.model(), &before);
 }
 
@@ -245,36 +231,13 @@ fn empty_rows_and_defined_names_flow_through_overlay_evaluation() {
 }
 
 #[test]
-fn unsupported_signature_and_xls_formula_keep_typed_error_chains() {
+fn unsupported_signature_keeps_typed_error_chain() {
     use std::error::Error;
     let error = Workbook::load().from_bytes(b"unsupported").unwrap_err();
     assert!(matches!(
         error.source().unwrap().downcast_ref::<io::IoError>(),
         Some(io::IoError::Unsupported(_))
     ));
-    let mut book = Workbook::new();
-    for name in ["Sheet1", "Sheet2", "Sheet3"] {
-        book.model_mut().add_sheet(name).unwrap();
-    }
-    book.model_mut()
-        .sheet_mut(0)
-        .unwrap()
-        .set_formula_with_cached_value(
-            "A1".parse().unwrap(),
-            "SUM(Sheet1:Sheet3!A1)",
-            CellValue::Number(-999.0),
-        )
-        .unwrap();
-    let saved = book.model().clone();
-    let error = book.save_xls().build().unwrap_err();
-    assert!(
-        error
-            .source()
-            .unwrap()
-            .downcast_ref::<xls::XlsError>()
-            .is_some()
-    );
-    assert_eq!(book.model(), &saved);
 }
 
 #[test]

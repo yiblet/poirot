@@ -306,7 +306,8 @@ impl<'a> Session<'a> {
             ($additional:expr) => {{
                 let additional = $additional;
                 let count = values.len().checked_add(additional).ok_or_else(|| {
-                    EvaluationFailure::ResourceLimit {
+                    EvaluationFailure::Resource {
+                        kind: crate::ResourceFailureKind::SizeOverflow,
                         capability: CapabilityId::FunctionAdapter,
                         source: self.consumer,
                         detail: "aggregate member count overflow".into(),
@@ -317,7 +318,8 @@ impl<'a> Session<'a> {
                     .charge(WorkKind::Materialization, additional as u64)?;
                 values
                     .try_reserve(additional)
-                    .map_err(|_| EvaluationFailure::ResourceLimit {
+                    .map_err(|_| EvaluationFailure::Resource {
+                        kind: crate::ResourceFailureKind::Allocation,
                         capability: CapabilityId::FunctionAdapter,
                         source: self.consumer,
                         detail: "aggregate member allocation failed".into(),
@@ -339,7 +341,8 @@ impl<'a> Session<'a> {
                 let count = rows
                     .iter()
                     .try_fold(0usize, |count, row| count.checked_add(row.len()))
-                    .ok_or_else(|| EvaluationFailure::ResourceLimit {
+                    .ok_or_else(|| EvaluationFailure::Resource {
+                        kind: crate::ResourceFailureKind::SizeOverflow,
                         capability: CapabilityId::FunctionAdapter,
                         source: self.consumer,
                         detail: "aggregate member count overflow".into(),

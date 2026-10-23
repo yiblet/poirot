@@ -18,7 +18,7 @@ fn holidays(host: &mut CallHost<'_, '_>) -> FunctionResult<Vec<i64>> {
     host.charge_work(count as u64)?;
     holidays
         .try_reserve_exact(count)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for offset in 0..count {
         let member = host.collection_cell(3, offset)?;
         if member.missing {

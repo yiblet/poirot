@@ -88,7 +88,7 @@ fn positions(
     let mut result = Vec::new();
     result
         .try_reserve_exact(len)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for offset in 0..len {
         let value = member(host, index, offset, admission)?;
         // SAFETY: len slots were reserved and the loop emits exactly len entries.
@@ -108,12 +108,12 @@ fn collect(
         let total = result
             .len()
             .checked_add(len)
-            .ok_or_else(|| host.budget_exceeded())?;
+            .ok_or_else(|| host.size_overflow())?;
         host.check_values(total)?;
         host.charge_work((len as u64).saturating_mul(12))?;
         result
             .try_reserve(len)
-            .map_err(|_| host.budget_exceeded())?;
+            .map_err(|_| host.allocation_failure())?;
         for offset in 0..len {
             if let Some(value) = member(host, index, offset, admission)? {
                 // SAFETY: len slots were reserved for at most len admitted members.
@@ -138,9 +138,9 @@ fn pairs(
     let b = positions(host, 1, admission)?;
     let (mut x, mut y) = (Vec::new(), Vec::new());
     x.try_reserve_exact(a_len)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     y.try_reserve_exact(a_len)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for (a, b) in a.into_iter().zip(b) {
         if let (Some(a), Some(b)) = (a, b) {
             // SAFETY: a_len slots were reserved and zip emits at most a_len pairs.
@@ -199,9 +199,11 @@ pub(super) fn execute(
             let mut values = collect(&mut host, 0..args.len(), Admission::Aggregate)?;
             processing(&mut host, values.len())?;
             if matches!(function, ModeSngl | ModeMult) {
-                let count =
-                    kernel::modes(&mut values, FunctionFailure::from(host.budget_exceeded()))
-                        .map_err(|e| failure(&host, e))?;
+                let count = kernel::modes(
+                    &mut values,
+                    FunctionFailure::from(host.allocation_failure()),
+                )
+                .map_err(|e| failure(&host, e))?;
                 if function == ModeSngl {
                     return Ok(Number(*values.first().ok_or(NA)?).into());
                 }
@@ -209,11 +211,11 @@ pub(super) fn execute(
                 host.charge_work(count as u64)?;
                 let mut rows = Vec::new();
                 rows.try_reserve_exact(count)
-                    .map_err(|_| host.budget_exceeded())?;
+                    .map_err(|_| host.allocation_failure())?;
                 for &value in values.iter().take(count) {
                     let mut row = Vec::new();
                     row.try_reserve_exact(1)
-                        .map_err(|_| host.budget_exceeded())?;
+                        .map_err(|_| host.allocation_failure())?;
                     // SAFETY: one slot was reserved immediately above.
                     row.push(Number(value));
                     // SAFETY: count rows were reserved and take(count) emits at most count rows.
@@ -370,9 +372,9 @@ pub(super) fn execute(
                     processing(host, a.len().saturating_add(b.len()))?;
                     let (mut x, mut y) = (Vec::new(), Vec::new());
                     x.try_reserve_exact(a.len())
-                        .map_err(|_| host.budget_exceeded())?;
+                        .map_err(|_| host.allocation_failure())?;
                     y.try_reserve_exact(b.len())
-                        .map_err(|_| host.budget_exceeded())?;
+                        .map_err(|_| host.allocation_failure())?;
                     if kind == 1.0 {
                         for (a, b) in a.iter().zip(b) {
                             if let (Some(a), Some(b)) = (a, b) {

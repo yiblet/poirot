@@ -29,8 +29,8 @@ sha2 = "0.11.1"
 cfb = "0.15.0"
 quick-xml = "0.42.0"
 zip = { version = "9.0.5", default-features = false, features = ["deflate"] }
-calamine = "0.37.0"
-rust_xlsxwriter = "0.101.0"
+calamine = "=0.37.0"
+rxls = { version = "=0.1.4", default-features = false, features = ["xlsx"] }
 rayon = "1.12.0"
 roxmltree = "0.21.1"
 clap = { version = "4.6.7", features = ["derive"] }
@@ -45,7 +45,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
-include = ["/src/**", "/examples/**", "/README.md", "/CONTRIBUTING.md", "/docs/compatibility.md", "/LICENSES/**"]
+include = ["/src/**", "/examples/**", "/README.md", "/CONTRIBUTING.md", "/docs/compatibility.md", "/docs/resources.md", "/docs/evaluation.md", "/LICENSES/**"]
 
 [dependencies]
 poirot-workbook = { version = "0.1.0", path = "crates/poirot-workbook" }
@@ -54,10 +54,11 @@ poirot-parsing = { version = "0.1.0", path = "crates/poirot-parsing" }
 poirot-eval = { version = "0.1.0", path = "crates/poirot-eval" }
 poirot-io = { version = "0.1.0", path = "crates/poirot-io" }
 poirot-format = { version = "0.1.0", path = "crates/poirot-format" }
-poirot-xls = { version = "0.1.0", path = "crates/poirot-xls" }
 
 [dev-dependencies]
 postcard.workspace = true
+rxls.workspace = true
+zip.workspace = true
 
 [lints]
 workspace = true

@@ -21,7 +21,7 @@
 //! sheet.set_value("A1".parse()?, 12.)?;
 //! book.recalculate()?;
 //!
-//! let energy = book.cell("Energy", "C1".parse()?).ok_or("missing energy result")?;
+//! let energy = book.stored_cell("Energy", "C1".parse()?).ok_or("missing energy result")?;
 //! println!("Energy (kWh): {:?}", energy.value);
 //! book.save_xlsx().write_file("energy-updated.xlsx")?;
 //! # Ok(())
@@ -30,17 +30,27 @@
 //!
 //! [`Workbook::open`] detects XLSX or XLS from the file contents.
 //! [`Workbook::from_bytes`] reads the same formats from memory. Use
-//! [`XlsxSaveBuilder::to_buffer`] when you need bytes instead of a file, or
-//! [`Workbook::save_xls`] for XLS output.
+//! [`XlsxSaveBuilder::to_buffer`] when you need bytes instead of a file. Saves
+//! produce XLSX; legacy XLS is supported as input only.
+//!
+//! Calamine streams XLSX input; rxls handles XLS input and XLSX authoring. Saves encode the modeled calculation
+//! data; charts, drawings, macros, rich styling and other unmodeled features are
+//! omitted. Review import warnings before relying on an exported copy.
+//!
+//! Imported shared formulas become complete, independent [`Cell::formula`] strings.
+//! Replacing the original anchor leaves followers independent. Optional manually
+//! supplied [`SharedFormula`] provenance is verified before saving shared records.
+//! Executable template reuse belongs to the compiler and does not depend on file
+//! provenance. Legacy [`RetainedXlsx`] snapshot data does not select a preservation
+//! mode; XLSX saves always author a fresh package.
 //!
 //! The main workbook operations are:
 //!
 //! - [`sheet_by_name_mut`](model::Workbook::sheet_by_name_mut) gives access to a
 //!   sheet for editing.
-//! - [`Workbook::cell`] reads a stored cell, including its value and formula.
+//! - [`Workbook::stored_cell`] reads a stored cell, including its value and formula.
 //! - [`Workbook::recalculate`] updates calculated values after input changes.
-//! - [`Workbook::save_xlsx`] and [`Workbook::save_xls`] choose the output format;
-//!   their builders write a file or return bytes.
+//! - [`Workbook::save_xlsx`] writes XLSX to a file or returns bytes.
 //!
 //! # Example: create a workbook
 //!
@@ -57,7 +67,7 @@
 //! sheet.set_value("B1".parse()?, 25.)?;
 //! sheet.set_formula("C1".parse()?, "A1*B1")?;
 //! book.recalculate()?;
-//! let energy = book.cell("Energy", "C1".parse()?).ok_or("missing energy result")?;
+//! let energy = book.stored_cell("Energy", "C1".parse()?).ok_or("missing energy result")?;
 //! assert_eq!(energy.value, CellValue::Number(300.));
 //! let bytes = book.save_xlsx().to_buffer()?;
 //! # Ok(())
@@ -73,8 +83,8 @@
 //! | --- | --- | --- |
 //! | Edit and save a workbook | [`Workbook::recalculate`] | Updates stored formula results. |
 //! | Query a cell or formula text directly | [direct cell evaluation](poirot_eval::run_cell), [direct formula evaluation](poirot_eval::run_formula) | Runs against workbook data. |
-//! | Compare scenarios | [`Evaluation`] | Calculates requested dependencies; edits clear results. |
-//! | Repeatedly change a model | [`Overlay`] | Retains edits and reuses unaffected results. |
+//! | Compare scenarios | [`Workbook::evaluation`] | Calculates requested dependencies; edits clear results. |
+//! | Repeatedly change a model | [`Workbook::overlay`] | Retains edits and reuses unaffected results. |
 //!
 //! # When formulas are calculated
 //!
@@ -116,7 +126,7 @@
 //! use an [`Evaluation`]. Set temporary operating hours and ask for energy use:
 //!
 //! ```
-//! use poirot::{CellValue, Evaluation, EvaluationContext, Workbook};
+//! use poirot::{CellValue, Workbook};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let mut book = Workbook::new();
@@ -125,8 +135,7 @@
 //! sheet.set_value("B1".parse()?, 25.)?;
 //! sheet.set_formula("C1".parse()?, "A1*B1")?;
 //!
-//! let mut evaluation = Evaluation::with_workbook(&book)
-//!     .build(EvaluationContext::default())?;
+//! let mut evaluation = book.evaluation().build()?;
 //! let hours = evaluation.target("Energy!A1")?;
 //! let energy = evaluation.target("Energy!C1")?;
 //! let mut energies = Vec::new();
@@ -141,9 +150,9 @@
 //! # }
 //! ```
 //!
-//! Creating an evaluation does not calculate any cells. [`Evaluation::cell`]
+//! Creating an evaluation does not calculate any cells. [`Calculation::cell`]
 //! calculates the requested cell and the dependencies needed to obtain its value.
-//! Use [`Evaluation::outputs`] for several outputs or [`Evaluation::all`] for all
+//! Use [`Calculation::outputs`] for several outputs or [`Calculation::all`] for all
 //! occupied cells and any spill cells produced by formulas.
 //!
 //! Each input edit clears the evaluation's calculated results. For repeated
@@ -151,6 +160,13 @@
 //! have not changed. It maintains dependency information between calculations;
 //! select its outputs through [`Overlay::evaluation`]. Both leave the original
 //! workbook unchanged unless you explicitly apply their changes.
+//!
+//! Export a scenario with [`WorkbookEvaluation::save_xlsx`] or
+//! [`WorkbookOverlay::save_xlsx`]. Export captures edits and valid results without
+//! calculation, baseline mutation or loss of warm state. Untouched saved formula
+//! values may be stale. See the
+//! [evaluation guide](https://github.com/yiblet/poirot/blob/master/docs/evaluation.md)
+//! for cycle boundaries, lifecycle operations and snapshot recovery.
 //!
 //! [`EvaluationContext`] supplies time, randomness, and calculation limits.
 //! For repeatable results from functions such as `NOW()` or `RAND()`, supply the
@@ -170,8 +186,8 @@
 //!
 //! - [`model`] stores workbook data without file handling or calculation. Use it
 //!   when another part of your application owns those operations.
-//! - [`io`] reads XLS and XLSX and writes XLSX; [`xls`] writes XLS. These adapters
-//!   work with the data model directly. [`Workbook`] already uses both.
+//! - [`io`] reads XLS and XLSX and writes XLSX using the data model directly.
+//!   [`Workbook`] already uses this adapter.
 //! - [`parsing`] lets you inspect a formula as an expression tree without running
 //!   it. [`mod@format`] renders cell values as display text, such as `12.50` for
 //!   the number `12.5` with format `0.00`.
@@ -181,7 +197,7 @@
 //! - [`edit`] updates formula references when changing workbook structure.
 //!   [`translation_edit`] adjusts references within existing formulas.
 //! - [`artifact`] saves native Poirot snapshots for restoring workbook or
-//!   calculation state. Use the XLS/XLSX save methods for files opened in Excel.
+//!   calculation state. Use XLSX saves for files opened in Excel.
 //!
 //! # Project direction
 //!
@@ -199,23 +215,34 @@
 pub mod artifact;
 
 pub use poirot_eval as eval;
-pub use poirot_eval::{NumberLocaleV2, ProducerPolicy};
+
+pub use poirot_eval::{
+    EvaluationLimits, NumberLocaleV2, ProducerPolicy, RegexSettings, ResourceFailureKind,
+};
 pub use poirot_format as format;
 pub use poirot_io as io;
 pub use poirot_model as model;
 pub use poirot_parsing as parsing;
 pub use poirot_workbook as workbook;
-pub use poirot_xls as xls;
 
 pub use poirot_model::{
     Cell, CellAddress, CellError, CellStyle, CellValue, DateSystem, ExcelText, FileFormat,
-    FileMetadata, ImportDiagnostic, ImportDiagnosticKind, ModelError, SheetPresentation,
-    SheetVisibility, TextRef, TextUnits, TextUnitsError, WorkbookChange, Worksheet,
+    FileMetadata, ImportDiagnostic, ImportDiagnosticKind, ModelError, RetainedXlsx, SharedFormula,
+    SharedFormulaId, SheetPresentation, SheetVisibility, TextRef, TextUnits, TextUnitsError,
+    WorkbookChange, Worksheet,
 };
 pub use poirot_workbook::{
-    CalculationError, CellEvaluation, CompilationUsage, Evaluation, EvaluationBuilder,
-    EvaluationContext, EvaluationFailure, EvaluationTarget, LoadBuilder, Overlay, OverlayBuilder,
-    OverlayError, OverlayEvaluation, OverlayPolicy, OverlaySnapshot, SavePlan, Workbook,
-    WorkbookError, WorkbookSnapshot, WorkspaceState, XlsSaveBuilder, XlsxSaveBuilder, edit,
-    translation_edit,
+    Calculation, CalculationCycle, CalculationError, CalculationReport, CellEvaluation,
+    CompilationUsage, Evaluation, EvaluationBuilder, EvaluationContext, EvaluationFailure,
+    EvaluationTarget, LoadBuilder, Overlay, OverlayBuilder, OverlayError, OverlayEvaluation,
+    OverlayPolicy, OverlaySnapshot, SavePlan, Workbook, WorkbookError, WorkbookSnapshot,
+    WorkspaceState, XlsxSaveBuilder, edit, translation_edit,
+};
+
+// Workbook-owned convenience APIs; legacy evaluator constructors remain available.
+pub use poirot_workbook::{
+    EvaluationPolicy, NumberLocale, PreparationPolicy, RestoredWorkbook,
+    RestoredWorkbookEvaluation, ScenarioSaveError, ScenarioXlsxSaveBuilder, WorkbookEvaluation,
+    WorkbookEvaluationBuilder, WorkbookOverlay, WorkbookOverlayBuilder,
+    WorkbookSnapshotLoadBuilder,
 };

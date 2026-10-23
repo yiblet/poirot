@@ -88,7 +88,7 @@ fn admit(
         input.cols()
     };
     let work = poirot_functions_matrix::selection_work(input.values().len(), records, keys)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     host.check_values(input.values().len())?;
     host.charge_work(work as u64)?;
     Ok(Budget {
@@ -127,7 +127,7 @@ fn evaluate(
         };
         let mut mask = Vec::new();
         mask.try_reserve_exact(include.values().len())
-            .map_err(|_| host.budget_exceeded())?;
+            .map_err(|_| host.allocation_failure())?;
         for value in include.values() {
             mask.push(core_projection::coercev2_operand_boolean(value)?);
         }
@@ -192,7 +192,7 @@ fn evaluate(
         let mut values = Vec::new();
         values
             .try_reserve_exact(records)
-            .map_err(|_| host.budget_exceeded())?;
+            .map_err(|_| host.allocation_failure())?;
         for i in 0..records {
             values.push(
                 match axis {
@@ -233,12 +233,12 @@ fn evaluate(
     };
     let count = records
         .checked_mul(keys.len())
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     host.check_values(count)?;
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for record in 0..records {
         for (key, order) in keys.iter().zip(&orders) {
             values.push(SortMember {

@@ -37,13 +37,13 @@ impl Session<'_> {
             .ok_or(EvaluationFailure::StalePlan)?;
         self.budget.allocation(count)?;
         let mut expanded = Vec::new();
-        expanded
-            .try_reserve_exact(count)
-            .map_err(|_| EvaluationFailure::ResourceLimit {
-                capability: CapabilityId::FunctionAdapter,
-                source: self.consumer,
-                detail: "selection expansion allocation failed".into(),
-            })?;
+        crate::resource::reserve_exact(
+            &mut expanded,
+            count,
+            self.consumer,
+            CapabilityId::FunctionAdapter,
+            "selection expansion allocation",
+        )?;
         for row in 0..output.rows {
             for column in 0..output.columns {
                 let old_row = if previous.rows == 1 { 0 } else { row };
@@ -72,13 +72,14 @@ impl Session<'_> {
         // broadcast exactly like conditions; referenced members remain deferred.
         self.budget.allocation(arguments.len())?;
         let mut branches = Vec::new();
-        branches.try_reserve_exact(arguments.len()).map_err(|_| {
-            EvaluationFailure::ResourceLimit {
+        branches
+            .try_reserve_exact(arguments.len())
+            .map_err(|_| EvaluationFailure::Resource {
+                kind: crate::ResourceFailureKind::Allocation,
                 capability: CapabilityId::FunctionAdapter,
                 source: self.consumer,
                 detail: "selected branch allocation failed".into(),
-            }
-        })?;
+            })?;
         // SAFETY: Reservation admitted arguments.len() slots, and resize_with fills exactly that many.
         branches.resize_with(arguments.len(), || None);
         for ordinal in result_ordinals {
@@ -163,7 +164,8 @@ mod tests {
                 columns: 1,
             },
         );
-        assert!(matches!(result, Err(EvaluationFailure::ResourceLimit {
+        assert!(matches!(result, Err(EvaluationFailure::Resource {
+            kind: crate::ResourceFailureKind::SizeOverflow,
             capability: CapabilityId::FunctionAdapter,
             source: Some(source), ..
         }) if source == target));

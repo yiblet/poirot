@@ -102,8 +102,8 @@ pub(super) fn sst(
         part: 0,
         at: 0,
     };
-    // Calamine reads actual strings until the record chain ends, ignoring counts.
-    // Do the same rather than treating an inaccurate count as semantic invalidity.
+    // Account for actual strings through the record chain, preserving the
+    // historical tolerance for inaccurate SST counts.
     while cursor.more() {
         if cursor.remaining() == 0 {
             cursor.advance();

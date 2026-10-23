@@ -78,15 +78,13 @@ impl Transform {
             for input in inputs {
                 match axis {
                     Axis::Rows => {
-                        rows = rows
-                            .checked_add(input.rows())
-                            .ok_or(Error::BudgetExceeded)?;
+                        rows = rows.checked_add(input.rows()).ok_or(Error::SizeOverflow)?;
                         columns = columns.max(input.cols());
                     }
                     Axis::Columns => {
                         columns = columns
                             .checked_add(input.cols())
-                            .ok_or(Error::BudgetExceeded)?;
+                            .ok_or(Error::SizeOverflow)?;
                         rows = rows.max(input.rows());
                     }
                 }
@@ -160,12 +158,12 @@ impl Transform {
         budget: Budget,
     ) -> Result<Matrix<T>> {
         let (rows, columns) = self.shape(inputs)?;
-        let count = rows.checked_mul(columns).ok_or(Error::BudgetExceeded)?;
+        let count = rows.checked_mul(columns).ok_or(Error::SizeOverflow)?;
         budget.check(Some(count), Some(count))?;
         let mut values = Vec::new();
         values
             .try_reserve_exact(count)
-            .map_err(|_| Error::BudgetExceeded)?;
+            .map_err(|_| Error::AllocationFailure)?;
         if let Self::Stack(axis) = self {
             match axis {
                 Axis::Columns => {
@@ -230,7 +228,7 @@ impl Transform {
                                 column.checked_mul(rows).and_then(|n| n.checked_add(row))
                             }
                         }
-                        .ok_or(Error::BudgetExceeded)?;
+                        .ok_or(Error::SizeOverflow)?;
                         first.values().get(index)
                     }
                     Self::Expand { .. } => first.get(row, column).ok(),

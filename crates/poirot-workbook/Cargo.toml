@@ -14,7 +14,6 @@ poirot-model = { version = "0.1.0", path = "../poirot-model" }
 poirot-parsing = { version = "0.1.0", path = "../poirot-parsing" }
 poirot-eval = { version = "0.1.0", path = "../poirot-eval" }
 poirot-io = { version = "0.1.0", path = "../poirot-io" }
-poirot-xls = { version = "0.1.0", path = "../poirot-xls" }
 
 [lints]
 workspace = true

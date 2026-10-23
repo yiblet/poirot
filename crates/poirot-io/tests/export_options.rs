@@ -39,16 +39,8 @@ fn plan_is_pure_borrowed_and_wrapper_content_matches_except_creation_clock() {
             .read_to_end(&mut expected)
             .unwrap();
         part.read_to_end(&mut actual).unwrap();
-        if name == "docProps/core.xml" {
-            // Separate backend DocProperties use utc_now; only the two validated
-            // creation-clock text values may differ, not core XML metadata.
-            assert_eq!(
-                export_clock::core_without_creation_clock(&actual).unwrap(),
-                export_clock::core_without_creation_clock(&expected).unwrap()
-            );
-        } else {
-            assert_eq!(actual, expected, "{}", name);
-        }
+        // rxls fresh authoring has no wall-clock defaults: every part is deterministic.
+        assert_eq!(actual, expected, "{}", name);
     }
     assert_eq!(format!("{workbook:?}"), before);
     assert!(matches!(
@@ -136,33 +128,8 @@ fn adequate_writer_budget_crosses_former_hidden_entry_threshold() {
 }
 
 #[test]
-fn repeated_literals_are_backend_shared_strings_but_final_inline_text() {
-    // rust_xlsxwriter 0.99.1 shared_strings_table.rs:39-47 deduplicates keys;
-    // worksheet.rs:15402-15420 stores ordinary literals as CellType::String.
+fn repeated_literals_and_formula_caches_use_budgeted_inline_text() {
     let text = "x".repeat(1000);
-    let mut backend = rust_xlsxwriter::Workbook::new();
-    let sheet = backend.add_worksheet();
-    sheet.set_name("Data").unwrap();
-    for row in 0..12 {
-        sheet.write_string(row, 0, &text).unwrap();
-    }
-    let generated = backend.save_to_buffer().unwrap();
-    let mut generated_zip = zip::ZipArchive::new(Cursor::new(generated)).unwrap();
-    assert!(
-        generated_zip
-            .by_name("xl/sharedStrings.xml")
-            .unwrap()
-            .size()
-            < 2000
-    );
-    assert!(
-        generated_zip
-            .by_name("xl/worksheets/sheet1.xml")
-            .unwrap()
-            .size()
-            < 3000
-    );
-
     for formula in [false, true] {
         let mut workbook = Workbook::new();
         let sheet = workbook.add_sheet("Data").unwrap();

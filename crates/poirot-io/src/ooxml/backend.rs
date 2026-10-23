@@ -1,7 +1,7 @@
 //! Transient checked-part adaptation for the pinned reader backend.
 use super::{
-    package::Package,
-    xml::{attr, element, events, part, text, write_event, xml},
+    package::ImportPackage,
+    xml::{attr, element, events, text, write_event, xml},
 };
 use crate::IoError;
 use quick_xml::{
@@ -11,38 +11,66 @@ use quick_xml::{
 use std::io::{Cursor, Write};
 use zip::{ZipWriter, write::SimpleFileOptions};
 
+/// Detect metadata identities that Calamine cannot resolve through relationships.
+pub(crate) fn needs_backend_adapter(plan: &crate::opc::OpcReadPlan) -> bool {
+    let prefix = plan
+        .workbook_part
+        .rsplit_once('/')
+        .map_or("", |(prefix, _)| prefix);
+    let sibling = |name: &str| {
+        if prefix.is_empty() {
+            name.to_owned()
+        } else {
+            format!("{prefix}/{name}")
+        }
+    };
+    plan.workbook_part != sibling("workbook.xml")
+        || plan
+            .styles_part
+            .as_ref()
+            .is_some_and(|path| *path != sibling("styles.xml"))
+        || plan
+            .shared_strings_part
+            .as_ref()
+            .is_some_and(|path| *path != sibling("sharedStrings.xml"))
+}
+
 /// Adapt checked part identities to the pinned backend's conventional metadata paths.
 /// Original parts are retained only inside this transient decoding package, not as preservation.
 pub(crate) fn backend_package(
-    package: &Package,
+    package: &mut ImportPackage<'_>,
     plan: &crate::opc::OpcReadPlan,
 ) -> Result<Vec<u8>, IoError> {
-    let mut adapted = package.clone();
-    adapted.insert(
-        "xl/workbook.xml".into(),
-        part(package, &plan.workbook_part)?.to_vec(),
-    );
+    let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
+    let mut write = |name: &str, bytes: &[u8]| -> Result<(), IoError> {
+        zip.start_file(name, SimpleFileOptions::default())
+            .map_err(xml)?;
+        zip.write_all(bytes)?;
+        Ok(())
+    };
+    write("xl/workbook.xml", &package.read(&plan.workbook_part)?)?;
     for (source, target) in [
         (&plan.styles_part, "xl/styles.xml"),
         (&plan.shared_strings_part, "xl/sharedStrings.xml"),
     ] {
-        adapted.remove(target);
         if let Some(source) = source {
-            adapted.insert(target.into(), part(package, source)?.to_vec());
+            write(target, &package.read(source)?)?;
         }
     }
     // Calamine's legacy error enum cannot decode modern #SPILL!/#CALC!.
     // Substitute only in this transient backend package; authoritative original
     // error spellings are restored by apply_spills after decoding.
-    for sheet in plan.sheets.iter().filter(|s| s.supported) {
-        let bytes = part(package, &sheet.part)?;
-        let mut reader = events(bytes);
+    for sheet in &plan.sheets {
+        let bytes = package.read(&sheet.part)?;
+        let mut reader = events(&bytes);
         let mut writer = Writer::new(Vec::new());
         let mut error_cell = false;
+        let mut in_cell = false;
         loop {
             let event = reader.read_event().map_err(xml)?;
             match event {
                 Event::Start(ref e) if e.local_name().as_ref() == "c" => {
+                    in_cell = true;
                     error_cell = attr(e, "t")?.as_deref() == Some("e");
                     write_event(&mut writer, event.into_owned())?;
                 }
@@ -58,11 +86,26 @@ pub(crate) fn backend_package(
                         },
                     )?;
                 }
+                Event::Start(ref e) if in_cell && e.local_name().as_ref() == "is" => {
+                    write_event(&mut writer, Event::Start(e.clone()))?;
+                    let inner = reader.read_text(e.name()).map_err(xml)?;
+                    writer.get_mut().write_all(inner.as_bytes())?;
+                    write_event(&mut writer, Event::End(e.to_end()))?;
+                }
+                Event::Start(ref e)
+                    if in_cell && !matches!(e.local_name().as_ref(), "f" | "v" | "is") =>
+                {
+                    reader.read_to_end(e.name()).map_err(xml)?;
+                }
+                Event::End(ref e) if e.local_name().as_ref() == "c" => {
+                    in_cell = false;
+                    write_event(&mut writer, event.into_owned())?;
+                }
                 Event::Eof => break,
                 _ => write_event(&mut writer, event.into_owned())?,
             }
         }
-        adapted.insert(sheet.part.clone(), writer.into_inner());
+        write(&sheet.part, &writer.into_inner())?;
     }
     let mut writer = Writer::new(Vec::new());
     let mut root = BytesStart::new("Relationships");
@@ -87,13 +130,7 @@ pub(crate) fn backend_package(
         write_event(&mut writer, Event::Empty(rel))?;
     }
     write_event(&mut writer, Event::End(BytesEnd::new("Relationships")))?;
-    adapted.insert("xl/_rels/workbook.xml.rels".into(), writer.into_inner());
-    adapted.insert("_rels/.rels".into(), br#"<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="poirotDocument" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>"#.to_vec());
-    let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
-    for (name, bytes) in adapted {
-        zip.start_file(name, SimpleFileOptions::default())
-            .map_err(xml)?;
-        zip.write_all(&bytes)?;
-    }
+    write("xl/_rels/workbook.xml.rels", &writer.into_inner())?;
+    write("_rels/.rels", br#"<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="poirotDocument" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>"#)?;
     Ok(zip.finish().map_err(xml)?.into_inner())
 }

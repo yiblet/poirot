@@ -22,7 +22,7 @@ pub(super) fn multiply(a: &Matrix<f64>, b: &Matrix<f64>, budget: Budget) -> Resu
     budget.check(cells, cells.and_then(|n| n.checked_mul(a.cols)))?;
     finite(&a.values)?;
     finite(&b.values)?;
-    let mut values = vec![0.0; cells.ok_or(Error::BudgetExceeded)?];
+    let mut values = vec![0.0; cells.ok_or(Error::SizeOverflow)?];
     for i in 0..a.rows {
         for j in 0..b.cols {
             let mut sum = 0.0;
@@ -124,7 +124,7 @@ pub(super) fn inverse(m: &Matrix<f64>, budget: Budget) -> Result<Matrix<f64>> {
     if singular {
         return num();
     }
-    let cells = n.checked_mul(n).ok_or(Error::BudgetExceeded)?;
+    let cells = n.checked_mul(n).ok_or(Error::SizeOverflow)?;
     if a.len() != cells || pivots.len() != n || pivots.iter().any(|&pivot| pivot >= n) {
         return value();
     }
@@ -170,7 +170,7 @@ pub(super) fn frequency(data: &[f64], bins: &[f64], budget: Budget) -> Result<Ma
     )?;
     finite(data)?;
     finite(bins)?;
-    let mut out = vec![0.0; cells.ok_or(Error::BudgetExceeded)?];
+    let mut out = vec![0.0; cells.ok_or(Error::SizeOverflow)?];
     for &x in data {
         let mut lo = 0;
         let mut hi = bins.len();

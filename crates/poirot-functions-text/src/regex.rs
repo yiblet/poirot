@@ -25,10 +25,52 @@ pub enum Extraction {
     /// Capturing groups from the first match, in group-number order.
     Groups,
 }
+/// Native PCRE2 execution guards, separate from caller work estimates.
+/// These guards interrupt native backtracking; consumed native work is unavailable.
+/// JIT remains disabled so depth and heap guards apply. PCRE2's own ceilings remain.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ExecutionLimits {
+    /// Maximum native match-loop steps per search.
+    pub match_steps: u32,
+    /// Maximum native backtracking frames per search.
+    pub depth: u32,
+    /// Maximum native backtracking heap in kibibytes per search.
+    pub heap_kib: u32,
+}
+impl Default for ExecutionLimits {
+    fn default() -> Self {
+        Self {
+            match_steps: 1_000_000,
+            depth: 256,
+            heap_kib: 8192,
+        }
+    }
+}
+impl ExecutionLimits {
+    /// Replace the native match-loop guard; zero is zero allowance.
+    pub fn max_match_steps(mut self, maximum: u32) -> Self {
+        self.match_steps = maximum;
+        self
+    }
+    /// Replace the native backtracking-frame guard.
+    pub fn max_depth(mut self, maximum: u32) -> Self {
+        self.depth = maximum;
+        self
+    }
+    /// Replace the native backtracking heap guard in kibibytes.
+    pub fn max_heap_kib(mut self, maximum: u32) -> Self {
+        self.heap_kib = maximum;
+        self
+    }
+}
 /// Caller-controlled admission before native searches and owned allocations.
 pub trait Host {
     /// Operational failure propagated unchanged to the caller.
     type Failure;
+    /// Native execution guards independent of estimated caller work.
+    fn execution_limits(&self) -> ExecutionLimits {
+        ExecutionLimits::default()
+    }
     /// Admit estimated search work before an uninterruptible native call.
     fn work(&mut self, units: usize) -> Result<(), Self::Failure>;
     /// Admit the byte capacity of a single owned text buffer.
@@ -49,19 +91,15 @@ pub enum Failure<E> {
     Unsupported(&'static str),
     /// Native execution or compilation failed; this is never a valid no-match.
     Native(i32),
-    /// A local allocation or checked size could not be admitted.
+    /// A fallible allocation could not be admitted.
     Resource,
+    /// A checked byte or collection size cannot be represented.
+    SizeOverflow,
     /// Backend capture geometry did not satisfy the checked adapter state.
     InvalidState,
     /// The caller refused work or allocation.
     Host(E),
 }
-/// Native match guards, independent of the caller's estimated-work meter.
-/// JIT is disabled so the depth and heap limits apply. PCRE2 start directives
-/// may lower these limits but cannot raise them. Values follow PCRE2's units:
-/// one million match-loop steps, 256 backtracking frames and 8 MiB of heap.
-const GUARDS: &str = "(*LIMIT_MATCH=1000000)(*LIMIT_DEPTH=256)(*LIMIT_HEAP=8192)";
-
 fn compile_failure<E>(error: pcre2::Error) -> Failure<E> {
     // Numeric codes are the PCRE2 public ABI, verified in pcre2-sys 0.2.10's
     // src/bindings.rs at fd05026e1bf3ad62b3876cf9bd952dc742368462:
@@ -163,19 +201,28 @@ impl Program {
                 "PCRE2 byte escape \\C cannot preserve UTF-16 code-unit semantics",
             ));
         }
+        let limits = host.execution_limits();
+        let guards = if limits == ExecutionLimits::default() {
+            std::borrow::Cow::Borrowed("(*LIMIT_MATCH=1000000)(*LIMIT_DEPTH=256)(*LIMIT_HEAP=8192)")
+        } else {
+            std::borrow::Cow::Owned(format!(
+                "(*LIMIT_MATCH={})(*LIMIT_DEPTH={})(*LIMIT_HEAP={})",
+                limits.match_steps, limits.depth, limits.heap_kib
+            ))
+        };
         let mut source = String::new();
-        let bytes = GUARDS
+        let bytes = guards
             .len()
             .checked_add(pattern.len())
-            .ok_or(Failure::Resource)?;
+            .ok_or(Failure::SizeOverflow)?;
         host.text(bytes).map_err(Failure::Host)?;
         host.work(bytes).map_err(Failure::Host)?;
         source
             .try_reserve_exact(bytes)
             .map_err(|_| Failure::Resource)?;
         // SAFETY: The checked local reservation covers both appended strings.
-        source.push_str(GUARDS);
-        // SAFETY: GUARDS.len()+pattern.len() was checked and reserved locally above.
+        source.push_str(&guards);
+        // SAFETY: guards.len()+pattern.len() was checked and reserved locally above.
         source.push_str(pattern);
         let regex = RegexBuilder::new()
             .utf(true)
@@ -363,7 +410,7 @@ fn retry_regex<H: Host>(program: &Program, host: &mut H) -> Result<Regex, Failur
     let bytes = source
         .len()
         .checked_add(prefix.len())
-        .ok_or(Failure::Resource)?;
+        .ok_or(Failure::SizeOverflow)?;
     host.text(bytes).map_err(Failure::Host)?;
     host.work(bytes).map_err(Failure::Host)?;
     let mut retry = String::new();

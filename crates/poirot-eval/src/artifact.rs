@@ -18,7 +18,9 @@ const FILE_VERSION: u16 = 1;
 const SOURCE_SCHEMA: u16 = poirot_model::snapshot::SCHEMA_VERSION;
 const HEADER: usize = 40;
 
-/// Resource bounds applied to file ingress and to each decoded value before allocation.
+/// Optional snapshot loading quotas checked before admission; integer maxima mean no quota.
+/// The default has no size quotas and retains a 256-level recursive decoder safety ceiling.
+/// Save builders independently use [`Self::for_writing`] to preserve export defaults.
 #[derive(Clone, Copy, Debug)]
 pub struct SnapshotLimits {
     /// Maximum complete file bytes, including envelope and optional prepared section.
@@ -33,6 +35,18 @@ pub struct SnapshotLimits {
 impl Default for SnapshotLimits {
     fn default() -> Self {
         Self {
+            max_file_bytes: usize::MAX,
+            max_decoded_values: usize::MAX,
+            max_decoded_bytes: usize::MAX,
+            max_depth: 256,
+        }
+    }
+}
+
+impl SnapshotLimits {
+    /// Historical snapshot output quotas, retained independently of unlimited loading defaults.
+    pub fn for_writing() -> Self {
+        Self {
             max_file_bytes: 64 * 1024 * 1024,
             max_decoded_values: 8_000_000,
             max_decoded_bytes: 64 * 1024 * 1024,
@@ -40,7 +54,6 @@ impl Default for SnapshotLimits {
         }
     }
 }
-
 /// Whether loading may reuse engine-prepared data or must recover only durable source.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum PreparedPolicy {
@@ -79,9 +92,39 @@ pub struct RestoredArtifact {
     pub prepared_status: PreparedStatus,
 }
 
+/// Resource admitted during native snapshot loading.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SnapshotResource {
+    /// Entire source file bytes.
+    FileBytes,
+    /// Typed values across source and prepared sections.
+    DecodedValues,
+    /// Copied text and byte payload across sections.
+    DecodedBytes,
+    /// Caller-selected recursive nesting below the engine ceiling.
+    Depth,
+}
+/// A configured native-snapshot quota refusal with actual decoder admission counts.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SnapshotQuotaFailure {
+    /// File bytes, decoded values, decoded bytes, or caller-selected depth.
+    pub resource: SnapshotResource,
+    /// Configured maximum.
+    pub limit: usize,
+    /// Amount admitted before this refused operation.
+    pub consumed: usize,
+    /// Additional amount requested.
+    pub requested: usize,
+}
 /// File-envelope, codec, resource, or semantic restoration failure.
 #[derive(Debug)]
 pub enum SnapshotError {
+    /// Caller-configured file or decoded-resource quota, separate from malformed input.
+    Quota(SnapshotQuotaFailure),
+    /// Recursive decoder safety guard or an invalid requested nesting ceiling.
+    EngineConstraint(&'static str),
+    /// A fallible file-buffer allocation failed; no invented byte count is reported.
+    Allocation(&'static str),
     /// Filesystem ingress failure.
     Io(std::io::Error),
     /// Unsupported, inconsistent, truncated, or oversized envelope.
@@ -93,9 +136,26 @@ pub enum SnapshotError {
     /// Prepared state failed the evaluator's semantic validation.
     Workspace(crate::overlay::OverlayError),
 }
+impl SnapshotError {
+    /// Preserve fallible file-buffer allocation failures independently of filesystem failures.
+    fn from_io(error: std::io::Error) -> Self {
+        if error.kind() == std::io::ErrorKind::OutOfMemory {
+            Self::Allocation("snapshot file buffer")
+        } else {
+            Self::Io(error)
+        }
+    }
+}
 impl fmt::Display for SnapshotError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Quota(e) => write!(
+                f,
+                "snapshot {:?} quota {} exceeded (consumed {}, requested {})",
+                e.resource, e.limit, e.consumed, e.requested
+            ),
+            Self::EngineConstraint(e) => write!(f, "snapshot engine constraint: {e}"),
+            Self::Allocation(e) => write!(f, "snapshot allocation refused: {e}"),
             Self::Io(e) => write!(f, "snapshot file: {e}"),
             Self::Envelope(e) => write!(f, "snapshot envelope: {e}"),
             Self::Codec(e) => write!(f, "snapshot codec or decode budget: {e}"),
@@ -111,7 +171,10 @@ impl std::error::Error for SnapshotError {
             Self::Codec(e) => Some(e),
             Self::Source(e) => Some(e),
             Self::Workspace(e) => Some(e),
-            Self::Envelope(_) => None,
+            Self::Envelope(_)
+            | Self::Quota(_)
+            | Self::EngineConstraint(_)
+            | Self::Allocation(_) => None,
         }
     }
 }
@@ -192,6 +255,11 @@ pub fn decode(
     limits: SnapshotLimits,
     policy: PreparedPolicy,
 ) -> Result<RestoredArtifact, SnapshotError> {
+    if limits.max_depth > 256 {
+        return Err(SnapshotError::EngineConstraint(
+            "recursive decoder nesting ceiling is 256",
+        ));
+    }
     let (source, prepared, revision) = sections(bytes, limits.max_file_bytes)?;
     let schema = bytes
         .get(10..12)
@@ -253,21 +321,37 @@ pub fn read_file(
     limits: SnapshotLimits,
     policy: PreparedPolicy,
 ) -> Result<RestoredArtifact, SnapshotError> {
-    let file = std::fs::File::open(path).map_err(SnapshotError::Io)?;
-    if file.metadata().map_err(SnapshotError::Io)?.len() > limits.max_file_bytes as u64 {
-        return Err(SnapshotError::Envelope("file byte limit"));
+    if limits.max_depth > 256 {
+        return Err(SnapshotError::EngineConstraint(
+            "recursive decoder nesting ceiling is 256",
+        ));
+    }
+    let file = std::fs::File::open(path).map_err(SnapshotError::from_io)?;
+    if file.metadata().map_err(SnapshotError::from_io)?.len() > limits.max_file_bytes as u64 {
+        return Err(SnapshotError::Quota(SnapshotQuotaFailure {
+            resource: SnapshotResource::FileBytes,
+            limit: limits.max_file_bytes,
+            consumed: 0,
+            requested: usize::try_from(file.metadata().map_err(SnapshotError::from_io)?.len())
+                .unwrap_or(usize::MAX),
+        }));
     }
     let mut bytes = Vec::new();
     file.take((limits.max_file_bytes as u64).saturating_add(1))
         .read_to_end(&mut bytes)
-        .map_err(SnapshotError::Io)?;
+        .map_err(SnapshotError::from_io)?;
     decode(&bytes, limits, policy)
 }
 
 fn sections(bytes: &[u8], max: usize) -> Result<(&[u8], &[u8], u64), SnapshotError> {
     let invalid = SnapshotError::Envelope;
     if bytes.len() > max {
-        return Err(invalid("file byte limit"));
+        return Err(SnapshotError::Quota(SnapshotQuotaFailure {
+            resource: SnapshotResource::FileBytes,
+            limit: max,
+            consumed: 0,
+            requested: bytes.len(),
+        }));
     }
     // SAFETY: The header guard requires at least HEADER (40) bytes; section lengths are checked against bytes.len() before slicing.
     if bytes.len() < HEADER || &bytes[..8] != MAGIC {
@@ -322,7 +406,7 @@ fn deserialize<T: serde::de::DeserializeOwned>(
         budget,
         depth: 0,
     })
-    .map_err(SnapshotError::Codec)?;
+    .map_err(|error| budget.failure().unwrap_or(SnapshotError::Codec(error)))?;
     if !decoder.finalize().map_err(SnapshotError::Codec)?.is_empty() {
         return Err(SnapshotError::Envelope("trailing section bytes"));
     }
@@ -378,14 +462,14 @@ impl<'a> SnapshotSaveBuilder<'a> {
     pub fn workbook(workbook: &'a Workbook) -> Self {
         Self {
             source: SnapshotSource::Workbook(workbook),
-            limits: SnapshotLimits::default(),
+            limits: SnapshotLimits::for_writing(),
         }
     }
     /// Persist authored edits, preparation, and any retained incremental results.
     pub fn checkpoint(snapshot: OverlaySnapshot<'a>) -> Self {
         Self {
             source: SnapshotSource::Checkpoint(snapshot),
-            limits: SnapshotLimits::default(),
+            limits: SnapshotLimits::for_writing(),
         }
     }
     /// Set encoding and file resource bounds.
@@ -402,7 +486,7 @@ impl<'a> SnapshotSaveBuilder<'a> {
     }
     /// Finish serialization before opening the output file.
     pub fn write_file(self, path: impl AsRef<Path>) -> Result<(), SnapshotError> {
-        std::fs::write(path, self.to_buffer()?).map_err(SnapshotError::Io)
+        std::fs::write(path, self.to_buffer()?).map_err(SnapshotError::from_io)
     }
 }
 /// Configure native snapshot decoding and prepared-state recovery.
@@ -486,6 +570,51 @@ impl RestoredArtifact {
             evaluation,
             prepared_status,
         })
+    }
+}
+
+impl SnapshotLimits {
+    /// Set the maximum file bytes before decoding; zero admits none. Replaces only this setting.
+    pub fn max_file_bytes(mut self, maximum: usize) -> Self {
+        self.max_file_bytes = maximum;
+        self
+    }
+    /// Remove the file bytes quota. Structural and representation checks remain.
+    pub fn without_file_bytes_limit(mut self) -> Self {
+        self.max_file_bytes = usize::MAX;
+        self
+    }
+    /// Inspect the file bytes quota; `None` means no configured maximum.
+    pub fn file_bytes_limit(&self) -> Option<usize> {
+        (self.max_file_bytes != usize::MAX).then_some(self.max_file_bytes)
+    }
+    /// Set the maximum decoded values before decoding; zero admits none. Replaces only this setting.
+    pub fn max_decoded_values(mut self, maximum: usize) -> Self {
+        self.max_decoded_values = maximum;
+        self
+    }
+    /// Remove the decoded values quota. Structural and representation checks remain.
+    pub fn without_decoded_values_limit(mut self) -> Self {
+        self.max_decoded_values = usize::MAX;
+        self
+    }
+    /// Inspect the decoded values quota; `None` means no configured maximum.
+    pub fn decoded_values_limit(&self) -> Option<usize> {
+        (self.max_decoded_values != usize::MAX).then_some(self.max_decoded_values)
+    }
+    /// Set the maximum decoded bytes before decoding; zero admits none. Replaces only this setting.
+    pub fn max_decoded_bytes(mut self, maximum: usize) -> Self {
+        self.max_decoded_bytes = maximum;
+        self
+    }
+    /// Remove the decoded bytes quota. Structural and representation checks remain.
+    pub fn without_decoded_bytes_limit(mut self) -> Self {
+        self.max_decoded_bytes = usize::MAX;
+        self
+    }
+    /// Inspect the decoded bytes quota; `None` means no configured maximum.
+    pub fn decoded_bytes_limit(&self) -> Option<usize> {
+        (self.max_decoded_bytes != usize::MAX).then_some(self.max_decoded_bytes)
     }
 }
 

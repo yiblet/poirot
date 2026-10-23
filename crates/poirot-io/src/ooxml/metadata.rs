@@ -1,14 +1,9 @@
-//! Ordered name, format, and physical-row import overlays.
-use super::{
-    package::Package,
-    xml::{attr, events, part, text, xml},
-};
+//! Small source workbook and number-format metadata recovery.
+use super::xml::{attr, events, text, xml};
 use crate::IoError;
-use poirot_model::{CellAddress, NamedRange, Workbook};
-use poirot_model::{ImportDiagnostic, ImportDiagnosticKind};
+use poirot_model::{ImportDiagnostic, ImportDiagnosticKind, NamedRange, Workbook};
 use quick_xml::events::Event;
 use std::collections::BTreeMap;
-
 fn builtin(id: u32) -> Option<&'static str> {
     Some(match id {
         0 => "General",
@@ -42,15 +37,15 @@ fn builtin(id: u32) -> Option<&'static str> {
         _ => return None,
     })
 }
-/// Restore checked workbook metadata omitted or altered by backend decoding.
-pub(crate) fn apply_metadata(
-    package: &Package,
+/// Restore workbook names and sheet visibility without reading worksheet cells.
+pub(crate) fn apply_workbook_metadata(
+    bytes: &[u8],
     plan: &crate::opc::OpcReadPlan,
     workbook: &mut Workbook,
     warnings: &mut Vec<ImportDiagnostic>,
 ) -> Result<(), IoError> {
     // Read workbook sheet states independently of the cell backend.
-    let mut states = events(part(package, &plan.workbook_part)?);
+    let mut states = events(bytes);
     loop {
         match states.read_event().map_err(xml)? {
             Event::Start(e) | Event::Empty(e) if e.local_name().as_ref() == "sheet" => {
@@ -73,46 +68,7 @@ pub(crate) fn apply_metadata(
             _ => {}
         }
     }
-    for identity in plan.sheets.iter().filter(|s| s.supported) {
-        let mut reader = events(part(package, &identity.part)?);
-        let mut in_properties = false;
-        loop {
-            match reader.read_event().map_err(xml)? {
-                Event::Start(e) if e.local_name().as_ref() == "sheetPr" => in_properties = true,
-                Event::End(e) if e.local_name().as_ref() == "sheetPr" => in_properties = false,
-                Event::Start(e) | Event::Empty(e)
-                    if in_properties && e.local_name().as_ref() == "tabColor" =>
-                {
-                    let rgb = attr(&e, "rgb")?;
-                    let other = ["theme", "indexed", "auto", "tint"]
-                        .into_iter()
-                        .map(|key| attr(&e, key))
-                        .collect::<Result<Vec<_>, _>>()?
-                        .iter()
-                        .any(Option::is_some);
-                    let channels = rgb
-                        .as_deref()
-                        .filter(|_| !other)
-                        .filter(|v| v.len() == 8)
-                        .and_then(|v| u32::from_str_radix(v, 16).ok())
-                        .filter(|n| n >> 24 == 0xff)
-                        .map(|n| [(n >> 16) as u8, (n >> 8) as u8, n as u8]);
-                    if let Some(color) = channels {
-                        if let Some(sheet) = workbook.sheet_by_name_mut(&identity.name) {
-                            let mut p = sheet.presentation();
-                            p.tab_color = Some(color);
-                            sheet.set_presentation(p);
-                        }
-                    } else {
-                        warnings.push(ImportDiagnostic { kind: ImportDiagnosticKind::RepresentationLoss, detail: format!("{}: unsupported tab color representation omitted (only opaque RGB is retained)", identity.name) });
-                    }
-                }
-                Event::Eof => break,
-                _ => {}
-            }
-        }
-    }
-    let mut reader = events(part(package, &plan.workbook_part)?);
+    let mut reader = events(bytes);
     loop {
         match reader.read_event().map_err(xml)? {
             Event::Start(e) if e.local_name().as_ref() == "definedName" => {
@@ -122,13 +78,23 @@ pub(crate) fn apply_metadata(
                     .map(|n| n.parse::<usize>().map_err(xml))
                     .transpose()?;
                 let formula = text(&mut reader, e.name())?;
+                if matches!(
+                    name.as_str(),
+                    "_xlnm.Print_Area" | "_xlnm.Print_Titles" | "_xlnm._FilterDatabase"
+                ) {
+                    continue;
+                }
                 let scope = match scope {
                     Some(source_index) => {
-                        let identity = plan.sheets.get(source_index).ok_or_else(|| {
-                            IoError::Opc(crate::opc::OpcError::SheetMismatch(format!(
-                                "defined name {name}: localSheetId out of range"
-                            )))
-                        })?;
+                        let Some(identity) = plan.sheets.get(source_index) else {
+                            warnings.push(ImportDiagnostic {
+                                kind: ImportDiagnosticKind::RepresentationLoss,
+                                detail: format!(
+                                    "defined name {name}: invalid local sheet scope omitted"
+                                ),
+                            });
+                            continue;
+                        };
                         if !identity.supported {
                             warnings.push(ImportDiagnostic {
                                 kind: ImportDiagnosticKind::RepresentationLoss,
@@ -163,8 +129,12 @@ pub(crate) fn apply_metadata(
             _ => {}
         }
     }
-    let Some(styles) = plan.styles_part.as_ref().and_then(|path| package.get(path)) else {
-        return Ok(());
+    Ok(())
+}
+/// Decode raw cell-XF number formats once for the existing worksheet recovery pass.
+pub(crate) fn number_formats(styles: Option<&[u8]>) -> Result<Vec<Option<String>>, IoError> {
+    let Some(styles) = styles else {
+        return Ok(Vec::new());
     };
     let mut formats = BTreeMap::new();
     let mut xf = Vec::new();
@@ -189,93 +159,17 @@ pub(crate) fn apply_metadata(
             _ => {}
         }
     }
-    for identity in plan.sheets.iter().filter(|s| s.supported) {
-        let path = &identity.part;
-        let index = workbook
-            .sheets()
-            .iter()
-            .position(|s| s.name() == identity.name)
-            .ok_or_else(|| {
-                IoError::Opc(crate::opc::OpcError::SheetMismatch(identity.name.clone()))
-            })?;
-        let sheet = workbook.sheet_mut(index).ok_or_else(|| {
-            IoError::Opc(crate::opc::OpcError::SheetMismatch(identity.name.clone()))
-        })?;
-        let mut reader = events(part(package, path)?);
-        loop {
-            match reader.read_event().map_err(xml)? {
-                Event::Start(e) if e.local_name().as_ref() == "c" => {
-                    let Some(reference) = attr(&e, "r")? else {
-                        continue;
-                    };
-                    let address: CellAddress = reference.parse()?;
-                    let style = attr(&e, "s")?
-                        .unwrap_or_else(|| "0".into())
-                        .parse::<usize>()
-                        .map_err(xml)?;
-                    if let Some(&id) = xf.get(style) {
-                        if id == 0 {
-                            continue;
-                        }
-                        let code = formats
-                            .get(&id)
-                            .cloned()
-                            .or_else(|| builtin(id).map(str::to_owned));
-                        if let Some(code) = code {
-                            if sheet.get(address).is_none() {
-                                sheet.set(address, poirot_model::Cell::default())?;
-                            }
-                            if let Some(cell) = sheet.get_mut(address) {
-                                cell.style.number_format = Some(code);
-                            }
-                        } else {
-                            warnings.push(ImportDiagnostic {
-                                kind: ImportDiagnosticKind::RepresentationLoss,
-                                detail: format!(
-                                    "number-format ID {id} at {}!{address} has no known raw code",
-                                    sheet.name()
-                                ),
-                            });
-                        }
-                    }
-                }
-                Event::Eof => break,
-                _ => {}
+    Ok(xf
+        .into_iter()
+        .map(|id| {
+            if id == 0 {
+                None
+            } else {
+                formats
+                    .get(&id)
+                    .cloned()
+                    .or_else(|| builtin(id).map(str::to_owned))
             }
-        }
-    }
-    Ok(())
-}
-/// Preserve physical row records separately from style metadata (which may be absent).
-pub(crate) fn apply_rows(
-    package: &BTreeMap<String, Vec<u8>>,
-    plan: &crate::opc::OpcReadPlan,
-    workbook: &mut Workbook,
-) -> Result<(), IoError> {
-    for identity in plan.sheets.iter().filter(|s| s.supported) {
-        let sheet = workbook
-            .sheet_by_name_mut(&identity.name)
-            .ok_or_else(|| IoError::Read("missing row worksheet".into()))?;
-        let mut reader = events(part(package, &identity.part)?);
-        let mut next_row = 0u32;
-        loop {
-            match reader.read_event().map_err(xml)? {
-                Event::Start(e) if e.local_name().as_ref() == "row" => {
-                    let index = match attr(&e, "r")? {
-                        Some(r) => r
-                            .parse::<u32>()
-                            .map_err(xml)?
-                            .checked_sub(1)
-                            .ok_or_else(|| IoError::Read("zero row index".into()))?,
-                        None => next_row,
-                    };
-                    sheet.create_row(index)?;
-                    next_row = index + 1;
-                }
-                Event::Eof => break,
-                _ => {}
-            }
-        }
-    }
-    Ok(())
+        })
+        .collect())
 }

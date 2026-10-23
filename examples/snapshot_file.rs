@@ -1,6 +1,6 @@
 //! Save a generated model as a native snapshot, restore it, and export calculated XLSX.
 //! Run with MODEL.poirot OUTPUT.xlsx; both files are created by this example.
-use poirot::{CellValue, Evaluation, EvaluationContext, Workbook, artifact};
+use poirot::{CellValue, EvaluationContext, Workbook};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args_os().skip(1);
@@ -18,7 +18,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let sheet = book.add_sheet("Inputs")?;
     sheet.set_value("A1".parse()?, 21.)?;
     sheet.set_formula("B1".parse()?, "A1*2")?;
-    let limits = artifact::SnapshotLimits::default();
     let context = EvaluationContext {
         as_of_time: std::time::UNIX_EPOCH,
         randomness_seed: 42,
@@ -28,34 +27,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         builtin: poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation,
         ..Default::default()
     };
-    let mut prepared = Evaluation::with_workbook(&book)
-        .with_policy(policy.clone())
-        .build(context.clone())?;
-    prepared.compile_all();
-    prepared
-        .save_snapshot()
-        .limits(limits)
-        .write_file(&snapshot_path)?;
+    let mut prepared = book
+        .evaluation()
+        .policy(policy)
+        .context(context.clone())
+        .build()?;
+    let output = prepared.target("Inputs!B1")?;
+    prepared.cell(output)?;
+    prepared.save_snapshot().write_file(&snapshot_path)?;
     drop(prepared);
 
-    let artifact::RestoredEvaluation {
+    let poirot::RestoredWorkbookEvaluation {
         mut evaluation,
         prepared_status,
-    } = Workbook::load_snapshot()
-        .limits(limits)
+    } = Workbook::restore_snapshot()
         .open(&snapshot_path)?
-        .into_evaluation(context, policy)?;
+        .into_evaluation(context)?;
     eprintln!("prepared state: {prepared_status:?}");
     // Refresh saved formula results explicitly before exporting the source.
     evaluation.all()?;
-    let mut output = Workbook::from_model(evaluation.workbook().clone());
-    output.apply(evaluation.into_changes())?;
-    if let Some(metadata) = &output.file_metadata {
-        for warning in &metadata.import_warnings {
-            eprintln!("{warning}");
-        }
-    }
-    output.save_xlsx().write_file(&output_path)?;
+    evaluation.save_xlsx().write_file(&output_path)?;
     let reopened = Workbook::open(&output_path)?;
     let address = "B1".parse()?;
     let saved = reopened

@@ -118,7 +118,8 @@ impl Session<'_> {
         let mut selected = Vec::new();
         selected
             .try_reserve_exact(count)
-            .map_err(|_| EvaluationFailure::ResourceLimit {
+            .map_err(|_| EvaluationFailure::Resource {
+                kind: crate::ResourceFailureKind::Allocation,
                 capability: CapabilityId::FunctionAdapter,
                 source: self.consumer,
                 detail: "SWITCH selection allocation failed".into(),

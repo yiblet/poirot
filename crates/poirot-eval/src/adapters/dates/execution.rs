@@ -106,7 +106,8 @@ impl Session<'_> {
         // Explicit second source stage, including the same four optional
         // formatter sections and DateParser's ORIGINAL dummy-prefixed input.
         let dummy_bytes = input.len().checked_add("1/01/2000 ".len()).ok_or_else(|| {
-            EvaluationFailure::ResourceLimit {
+            EvaluationFailure::Resource {
+                kind: crate::ResourceFailureKind::SizeOverflow,
                 capability: CapabilityId::DateParsing,
                 source: None,
                 detail: "TIMEVALUE dummy prefix length overflow".into(),

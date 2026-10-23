@@ -374,7 +374,7 @@ fn restored_execution_keeps_operational_failure_separate_from_spreadsheet_error(
 fn older_source_schemas_are_rejected_before_decoding() {
     let workbook = Workbook::new();
     let mut bytes = encode_workbook(&workbook, SnapshotLimits::default()).unwrap();
-    for schema in [0u16, 1, 2] {
+    for schema in 0..poirot_model::snapshot::SCHEMA_VERSION {
         bytes[10..12].copy_from_slice(&schema.to_le_bytes());
         assert!(matches!(
             decode_default(&bytes),

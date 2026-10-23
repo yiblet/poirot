@@ -2,12 +2,12 @@
 use super::*;
 use serde::{Deserialize, Serialize, ser::Error as _};
 use std::borrow::Cow;
-const VERSION: u32 = 70;
+const VERSION: u32 = 71;
 /// Compatibility revision for persisted engine preparation and retained results.
 /// Bump when wire layout or execution semantics invalidate prepared snapshots,
 /// including changes that leave Serde field layouts intact. This is separate from
 /// durable workbook-source versioning owned by the public file envelope.
-pub const COMPATIBILITY_REVISION: u64 = 70;
+pub const COMPATIBILITY_REVISION: u64 = 71;
 
 /// Serde view of a baseline workbook and its sparse overlay state.
 pub struct Snapshot<'a> {
@@ -319,13 +319,8 @@ impl<'a> Snapshot<'a> {
         if payload.preparation.parse != payload.policy.parse {
             return Err(OverlayError::Snapshot("parser policy mismatch".into()));
         }
-        if payload.writes.len() > 10_000_000
-            || payload.deleted.len() > 10_000_000
-            || payload.style_only.len() > 10_000_000
-            || payload.cached.len() > 10_000_000
-        {
-            return Err(OverlayError::Snapshot("overlay count limit".into()));
-        }
+        // Typed file decoding owns optional quotas. Restoration validates source,
+        // ownership and cache evidence without imposing another hidden size cap.
         let workbook = payload.model.restore()?;
         let policy = payload.policy.into_owned();
         let preparation = payload.preparation.into_owned();

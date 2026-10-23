@@ -35,7 +35,7 @@ impl Lift {
         let mut indices = poirot_functions_core::ParamVec::new();
         indices
             .try_reserve(selected.len())
-            .map_err(|_| host.budget_exceeded())?;
+            .map_err(|_| host.allocation_failure())?;
         // SAFETY: selected.len slots were reserved for exactly selected.len indices.
         indices.extend(selected.iter().copied());
         Self::from_arguments(host, selected.iter().copied(), 0, Some(indices))
@@ -52,7 +52,7 @@ impl Lift {
         let mut shapes = poirot_functions_core::ParamVec::new();
         shapes
             .try_reserve(count)
-            .map_err(|_| host.budget_exceeded())?;
+            .map_err(|_| host.allocation_failure())?;
         let (mut rows, mut columns) = (1, 1);
         for _ in 0..count {
             let index = selected.next().ok_or(VALUE_ERROR)?;
@@ -70,7 +70,7 @@ impl Lift {
         }
         host.check_values(
             rows.checked_mul(columns)
-                .ok_or_else(|| host.budget_exceeded())?,
+                .ok_or_else(|| host.size_overflow())?,
         )?;
         host.check_values(rows)?;
         Ok(Self {
@@ -134,12 +134,12 @@ impl Lift {
         let mut result = Vec::new();
         result
             .try_reserve_exact(self.rows)
-            .map_err(|_| host.budget_exceeded())?;
+            .map_err(|_| host.allocation_failure())?;
         for row in 0..self.rows {
             let mut values = Vec::new();
             values
                 .try_reserve_exact(self.columns)
-                .map_err(|_| host.budget_exceeded())?;
+                .map_err(|_| host.allocation_failure())?;
             for column in 0..self.columns {
                 host.charge_work(1)?;
                 let value = match evaluate(host, row, column) {

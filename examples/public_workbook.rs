@@ -1,5 +1,6 @@
 //! Change A1 in the first sheet of a workbook, recalculate, and save an XLSX file.
 //! Run with INPUT.xlsx OUTPUT.xlsx; A1 should be an input in the chosen workbook.
+//! Cell/cache edits preserve untouched XLSX package features through retained output.
 use poirot::Workbook;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

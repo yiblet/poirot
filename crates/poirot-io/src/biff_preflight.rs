@@ -1,13 +1,12 @@
-//! Bounded planning before calamine's CFB and dense BIFF allocations.
+//! Bounded CFB/BIFF admission before sparse XLS decoding.
 //! Budgets are operational limits, not Excel validity rules.
 //!
 //! Covers CFB metadata capacities/chains, BIFF record inventory and scan work,
-//! Dimensions reservations, actual value/formula dense rectangles, SST decoding
-//! and repeated text-cell clones. It does not estimate allocator overhead,
+//! row inventory, SST decoding and repeated text-cell clones. It does not estimate allocator overhead,
 //! backend formula-reconstruction text/stack growth, number-format/name decoding,
 //! or the sparse model's final allocation. Input byte limits remain separate.
 //! Unknown BIFF records and inaccurate SST counts within budgets remain accepted.
-//! Source contracts: POI DimensionsRecord/SSTRecord and calamine0.36.1 CFB/XLS.
+//! Source contracts: POI SSTRecord and historical calamine0.36.1 CFB/XLS framing.
 //! <https://github.com/tafia/calamine/tree/0a24c2a9f1e38c0932c1299e633270dc730db505/src>
 //! Calamine credit is in root LICENSES/ACKNOWLEDGEMENTS; terms in LICENSES/MIT.txt.
 use std::{collections::BTreeSet, fmt};
@@ -23,6 +22,8 @@ const END: u32 = 0xffff_fffe;
 
 /// Limits on BIFF/CFB inspection and backend allocation claims before XLS decoding.
 /// These complement [`crate::ReadOptions`] input limits; they are not Excel validity limits.
+/// Defaults impose no quotas. Integer maxima preserve the legacy unlimited sentinel.
+/// Each load starts fresh; checks precede the corresponding backend claim/decoding.
 #[derive(Debug, Clone, Copy)]
 pub struct ResourceBudget {
     /// Maximum admitted workbook stream byte size.
@@ -31,10 +32,6 @@ pub struct ResourceBudget {
     pub max_metadata_entries: usize,
     /// Maximum BIFF record count.
     pub max_records: usize,
-    /// Maximum per-sheet dense cell allocation claim.
-    pub max_dense_cells: u64,
-    /// Maximum combined dense cell allocation claim across sheets.
-    pub max_total_dense_cells: u64,
     /// Maximum shared-string entries.
     pub max_strings: usize,
     /// Maximum character claim for one shared string.
@@ -49,16 +46,14 @@ pub struct ResourceBudget {
 impl Default for ResourceBudget {
     fn default() -> Self {
         Self {
-            max_stream_bytes: 32 * 1024 * 1024,
-            max_metadata_entries: 1_000_000,
-            max_records: 1_000_000,
-            max_dense_cells: 1_000_000,
-            max_total_dense_cells: 4_000_000,
-            max_strings: 1_000_000,
-            max_string_chars: 65_535,
-            max_string_bytes: 32 * 1024 * 1024,
-            max_continuations: 4096,
-            max_cell_text_bytes: 128 * 1024 * 1024,
+            max_stream_bytes: usize::MAX,
+            max_metadata_entries: usize::MAX,
+            max_records: usize::MAX,
+            max_strings: usize::MAX,
+            max_string_chars: usize::MAX,
+            max_string_bytes: usize::MAX,
+            max_continuations: usize::MAX,
+            max_cell_text_bytes: u64::MAX,
         }
     }
 }
@@ -103,8 +98,6 @@ pub struct BiffPlan {
     pub records: usize,
     /// Checked worksheet count.
     pub sheets: usize,
-    /// Conservative combined dense backend cell allocation estimate.
-    pub dense_cells: u64,
     /// Explicit row-presence indices recovered for each sheet.
     pub row_indices: Vec<BTreeSet<u32>>,
     /// Checked shared-string count.
@@ -199,6 +192,121 @@ pub fn inspect_biff(bytes: &[u8], budget: ResourceBudget) -> Result<BiffPlan, Pr
     )
 }
 
+impl ResourceBudget {
+    /// Set the maximum stream bytes before decoding; zero admits none. Replaces only this setting.
+    pub fn max_stream_bytes(mut self, maximum: usize) -> Self {
+        self.max_stream_bytes = maximum;
+        self
+    }
+    /// Remove the stream bytes quota. Structural and representation checks remain.
+    pub fn without_stream_bytes_limit(mut self) -> Self {
+        self.max_stream_bytes = usize::MAX;
+        self
+    }
+    /// Inspect the stream bytes quota; `None` means no configured maximum.
+    pub fn stream_bytes_limit(&self) -> Option<usize> {
+        (self.max_stream_bytes != usize::MAX).then_some(self.max_stream_bytes)
+    }
+    /// Set the maximum metadata entries before decoding; zero admits none. Replaces only this setting.
+    pub fn max_metadata_entries(mut self, maximum: usize) -> Self {
+        self.max_metadata_entries = maximum;
+        self
+    }
+    /// Remove the metadata entries quota. Structural and representation checks remain.
+    pub fn without_metadata_entries_limit(mut self) -> Self {
+        self.max_metadata_entries = usize::MAX;
+        self
+    }
+    /// Inspect the metadata entries quota; `None` means no configured maximum.
+    pub fn metadata_entries_limit(&self) -> Option<usize> {
+        (self.max_metadata_entries != usize::MAX).then_some(self.max_metadata_entries)
+    }
+    /// Set the maximum records before decoding; zero admits none. Replaces only this setting.
+    pub fn max_records(mut self, maximum: usize) -> Self {
+        self.max_records = maximum;
+        self
+    }
+    /// Remove the records quota. Structural and representation checks remain.
+    pub fn without_records_limit(mut self) -> Self {
+        self.max_records = usize::MAX;
+        self
+    }
+    /// Inspect the records quota; `None` means no configured maximum.
+    pub fn records_limit(&self) -> Option<usize> {
+        (self.max_records != usize::MAX).then_some(self.max_records)
+    }
+    /// Set the maximum strings before decoding; zero admits none. Replaces only this setting.
+    pub fn max_strings(mut self, maximum: usize) -> Self {
+        self.max_strings = maximum;
+        self
+    }
+    /// Remove the strings quota. Structural and representation checks remain.
+    pub fn without_strings_limit(mut self) -> Self {
+        self.max_strings = usize::MAX;
+        self
+    }
+    /// Inspect the strings quota; `None` means no configured maximum.
+    pub fn strings_limit(&self) -> Option<usize> {
+        (self.max_strings != usize::MAX).then_some(self.max_strings)
+    }
+    /// Set the maximum string chars before decoding; zero admits none. Replaces only this setting.
+    pub fn max_string_chars(mut self, maximum: usize) -> Self {
+        self.max_string_chars = maximum;
+        self
+    }
+    /// Remove the string chars quota. Structural and representation checks remain.
+    pub fn without_string_chars_limit(mut self) -> Self {
+        self.max_string_chars = usize::MAX;
+        self
+    }
+    /// Inspect the string chars quota; `None` means no configured maximum.
+    pub fn string_chars_limit(&self) -> Option<usize> {
+        (self.max_string_chars != usize::MAX).then_some(self.max_string_chars)
+    }
+    /// Set the maximum string bytes before decoding; zero admits none. Replaces only this setting.
+    pub fn max_string_bytes(mut self, maximum: usize) -> Self {
+        self.max_string_bytes = maximum;
+        self
+    }
+    /// Remove the string bytes quota. Structural and representation checks remain.
+    pub fn without_string_bytes_limit(mut self) -> Self {
+        self.max_string_bytes = usize::MAX;
+        self
+    }
+    /// Inspect the string bytes quota; `None` means no configured maximum.
+    pub fn string_bytes_limit(&self) -> Option<usize> {
+        (self.max_string_bytes != usize::MAX).then_some(self.max_string_bytes)
+    }
+    /// Set the maximum continuations before decoding; zero admits none. Replaces only this setting.
+    pub fn max_continuations(mut self, maximum: usize) -> Self {
+        self.max_continuations = maximum;
+        self
+    }
+    /// Remove the continuations quota. Structural and representation checks remain.
+    pub fn without_continuations_limit(mut self) -> Self {
+        self.max_continuations = usize::MAX;
+        self
+    }
+    /// Inspect the continuations quota; `None` means no configured maximum.
+    pub fn continuations_limit(&self) -> Option<usize> {
+        (self.max_continuations != usize::MAX).then_some(self.max_continuations)
+    }
+    /// Set the maximum cell text bytes before decoding; zero admits none. Replaces only this setting.
+    pub fn max_cell_text_bytes(mut self, maximum: u64) -> Self {
+        self.max_cell_text_bytes = maximum;
+        self
+    }
+    /// Remove the cell text bytes quota. Structural and representation checks remain.
+    pub fn without_cell_text_bytes_limit(mut self) -> Self {
+        self.max_cell_text_bytes = u64::MAX;
+        self
+    }
+    /// Inspect the cell text bytes quota; `None` means no configured maximum.
+    pub fn cell_text_bytes_limit(&self) -> Option<u64> {
+        (self.max_cell_text_bytes != u64::MAX).then_some(self.max_cell_text_bytes)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -225,48 +333,75 @@ mod tests {
         data[2..4].copy_from_slice(&col.to_le_bytes());
         record(0x203, &data)
     }
+    fn importable_compound(cells: Vec<u8>) -> Vec<u8> {
+        use std::io::{Cursor, Write};
+        // Original BIFF8 fixture: global BOF, named worksheet, sheet BOF and
+        // sparse NUMBER records. BoundSheet8 points to the sheet substream.
+        let mut bof = vec![0; 16];
+        bof[..2].copy_from_slice(&0x600u16.to_le_bytes());
+        bof[2..4].copy_from_slice(&5u16.to_le_bytes());
+        let mut stream = record(0x809, &bof);
+        let bound_at = stream.len() + 4;
+        let mut bound = vec![0; 8];
+        bound[6] = 4;
+        bound.extend(b"Data");
+        stream.extend(record(0x85, &bound));
+        stream.extend(record(0xa, &[]));
+        let sheet_at = stream.len() as u32;
+        stream[bound_at..bound_at + 4].copy_from_slice(&sheet_at.to_le_bytes());
+        bof[2..4].copy_from_slice(&0x10u16.to_le_bytes());
+        stream.extend(record(0x809, &bof));
+        stream.extend(cells);
+        stream.extend(record(0xa, &[]));
+        let mut compound =
+            ::cfb::CompoundFile::create_with_version(::cfb::Version::V3, Cursor::new(Vec::new()))
+                .unwrap();
+        compound
+            .create_stream("/Workbook")
+            .unwrap()
+            .write_all(&stream)
+            .unwrap();
+        compound.into_inner().into_inner()
+    }
     #[test]
-    fn sparse_extreme_coordinates_are_refused_before_dense_expansion() {
+    fn sparse_extreme_coordinates_do_not_claim_dense_storage() {
         let mut cells = number(0, 0);
         cells.extend(number(65535, 255));
-        let b = sheet(cells);
-        assert!(matches!(
-            inspect_biff(&b, ResourceBudget::default()),
-            Err(PreflightError::Resource {
-                resource: "sheet dense cells",
-                ..
-            })
-        ));
+        let bytes = importable_compound(cells);
+        let plan = inspect_xls(&bytes, ResourceBudget::default()).unwrap();
+        assert_eq!(plan.sheets, 1);
+        let imported = crate::read_workbook_bytes(&bytes).unwrap();
+        let sheet = imported.sheet(0).unwrap();
+        assert_eq!(sheet.cells().into_iter().count(), 2);
+        assert!(
+            sheet
+                .get(poirot_model::CellAddress::new(65535, 255).unwrap())
+                .is_some()
+        );
     }
     #[test]
-    fn huge_dimensions_in_tiny_stream_are_refused() {
-        let mut d = vec![0; 14];
-        d[4..8].copy_from_slice(&u32::MAX.to_le_bytes());
-        d[10..12].copy_from_slice(&256u16.to_le_bytes());
-        assert!(matches!(
-            inspect_biff(&sheet(record(0x200, &d)), ResourceBudget::default()),
-            Err(PreflightError::Resource { .. })
-        ));
+    fn unused_dimensions_do_not_reserve_storage() {
+        let mut dimensions = vec![0; 14];
+        dimensions[4..8].copy_from_slice(&65536u32.to_le_bytes());
+        dimensions[10..12].copy_from_slice(&256u16.to_le_bytes());
+        let mut cells = record(0x200, &dimensions);
+        cells.extend(number(0, 0));
+        let bytes = importable_compound(cells);
+        assert!(inspect_xls(&bytes, ResourceBudget::default()).is_ok());
+        let imported = crate::read_workbook_bytes(&bytes).unwrap();
+        assert_eq!(imported.sheet(0).unwrap().cells().into_iter().count(), 1);
     }
     #[test]
-    fn resource_budgets_are_configurable() {
-        let mut cells = number(0, 0);
-        cells.extend(number(2, 2));
-        let b = sheet(cells);
+    fn record_resource_budgets_are_configurable() {
+        let bytes = sheet(number(0, 0));
         let budget = ResourceBudget {
-            max_dense_cells: 8,
+            max_records: 0,
             ..ResourceBudget::default()
         };
         assert!(matches!(
-            inspect_biff(&b, budget),
+            inspect_biff(&bytes, budget),
             Err(PreflightError::Resource { .. })
         ));
-        assert_eq!(
-            inspect_biff(&b, ResourceBudget::default())
-                .unwrap()
-                .dense_cells,
-            18
-        );
     }
     #[test]
     fn malformed_lengths_and_sheet_offsets_fail() {
@@ -287,7 +422,10 @@ mod tests {
         let mut data = vec![0; 8];
         data[4..8].copy_from_slice(&u32::MAX.to_le_bytes());
         assert!(matches!(
-            inspect_biff(&record(0xfc, &data), ResourceBudget::default()),
+            inspect_biff(
+                &record(0xfc, &data),
+                ResourceBudget::default().max_strings(1_000_000)
+            ),
             Err(PreflightError::Resource { .. })
         ));
     }
@@ -335,7 +473,10 @@ mod tests {
         b[32..34].copy_from_slice(&6u16.to_le_bytes());
         b[62..66].copy_from_slice(&u32::MAX.to_le_bytes());
         assert!(matches!(
-            inspect_xls(&b, ResourceBudget::default()),
+            inspect_xls(
+                &b,
+                ResourceBudget::default().max_metadata_entries(1_000_000)
+            ),
             Err(PreflightError::Resource { .. })
         ));
     }
@@ -381,7 +522,6 @@ mod tests {
         let b = compound(&sheet(number(1, 1)));
         let plan = inspect_xls(&b, ResourceBudget::default()).unwrap();
         assert_eq!(plan.sheets, 1);
-        assert_eq!(plan.dense_cells, 2);
     }
     #[test]
     fn cyclic_compound_chain_fails_without_backend_execution() {
@@ -407,7 +547,10 @@ mod tests {
         let d = 1024 + 128;
         b[d + 120..d + 124].copy_from_slice(&u32::MAX.to_le_bytes());
         assert!(matches!(
-            inspect_xls(&b, ResourceBudget::default()),
+            inspect_xls(
+                &b,
+                ResourceBudget::default().max_stream_bytes(32 * 1024 * 1024)
+            ),
             Err(PreflightError::Resource {
                 resource: "CFB stream bytes",
                 ..
@@ -415,18 +558,6 @@ mod tests {
         ));
     }
 
-    #[test]
-    fn orphan_formula_string_default_position_is_in_dense_bounds() {
-        let mut cells = number(65535, 255);
-        cells.extend(record(0x207, &[1, 0, 0, b'a']));
-        assert!(matches!(
-            inspect_biff(&sheet(cells), ResourceBudget::default()),
-            Err(PreflightError::Resource {
-                resource: "sheet dense cells",
-                ..
-            })
-        ));
-    }
     #[test]
     fn malformed_name_and_merge_count_fail_before_backend() {
         assert!(matches!(
@@ -446,8 +577,8 @@ mod tests {
         assert_eq!(
             inspect_biff(&stream, ResourceBudget::default())
                 .unwrap()
-                .dense_cells,
-            2
+                .sheets,
+            1
         );
         let mut bad = sheet(number(1, 1));
         bad.extend([0, 0, 1]);
@@ -481,7 +612,6 @@ mod tests {
         assert_eq!(plan.strings, 2);
         assert_eq!(plan.string_bytes, 16);
         assert_eq!(plan.sheets, 2);
-        assert_eq!(plan.dense_cells, 4);
         assert_eq!(plan.row_indices, vec![BTreeSet::from([9]); 2]);
         let budget = ResourceBudget {
             max_cell_text_bytes: 23,

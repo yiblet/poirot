@@ -6,11 +6,12 @@ use std::borrow::Cow;
 /// Source snapshot wire revision, checked by the public artifact envelope before decoding.
 /// Bump whenever the serialized source layout changes; provide an explicit migration or
 /// reject older revisions. Prepared engine compatibility is versioned separately.
-pub const SCHEMA_VERSION: u16 = 4;
+pub const SCHEMA_VERSION: u16 = 6;
 
 /// Borrowed-or-owned Serde transport for source state, separate from runtime workbook types.
 #[derive(Serialize, Deserialize)]
 pub struct Snapshot<'a> {
+    retained_xlsx: Option<Cow<'a, [u8]>>,
     sheets: Vec<Sheet<'a>>,
     date_system: DateSystem,
     names: Cow<'a, [NamedRange]>,
@@ -22,6 +23,7 @@ type SnapshotCell<'a> = (
     Value<'a>,
     Option<Cow<'a, str>>,
     Option<Cow<'a, str>>,
+    Option<SharedFormula>,
 );
 
 /// Serde worksheet payload including authored rows and saved spill provenance.
@@ -52,11 +54,12 @@ pub enum Value<'a> {
     Error(CellError),
 }
 impl<'a> Snapshot<'a> {
-    /// Compare calculation source and saved-cache identity, including exact numeric bits.
+    /// Compare source and saved-cache identity, including numeric bits and retained package bytes.
     /// File metadata is excluded because import diagnostics do not affect evaluation.
     pub fn matches(&self, workbook: &Workbook) -> bool {
         let other = Snapshot::capture(workbook);
-        self.date_system == other.date_system
+        self.retained_xlsx == other.retained_xlsx
+            && self.date_system == other.date_system
             && self.names == other.names
             && self.sheets.len() == other.sheets.len()
             && self.sheets.iter().zip(&other.sheets).all(|(a, b)| {
@@ -74,6 +77,7 @@ impl<'a> Snapshot<'a> {
                                 (None, None) => true,
                                 (Some(a), Some(b)) => {
                                     a.formula == b.formula
+                                        && a.shared_formula == b.shared_formula
                                         && a.style == b.style
                                         && Value::capture(&a.value) == Value::capture(&b.value)
                                 }
@@ -85,6 +89,10 @@ impl<'a> Snapshot<'a> {
     /// Borrow source records for serialization without requiring Workbook itself to implement Serde.
     pub fn capture(workbook: &'a Workbook) -> Self {
         Self {
+            retained_xlsx: workbook
+                .retained_xlsx
+                .as_ref()
+                .map(|source| Cow::Borrowed(source.bytes())),
             sheets: workbook
                 .sheets()
                 .iter()
@@ -123,6 +131,7 @@ impl<'a> Snapshot<'a> {
                                 },
                                 c.formula.as_deref().map(Cow::Borrowed),
                                 c.style.number_format.as_deref().map(Cow::Borrowed),
+                                c.shared_formula,
                             )
                         })
                         .collect(),
@@ -136,6 +145,9 @@ impl<'a> Snapshot<'a> {
     /// Copy borrowed payloads only when an independently owned snapshot is needed.
     pub fn into_owned(self) -> Snapshot<'static> {
         Snapshot {
+            retained_xlsx: self
+                .retained_xlsx
+                .map(|source| Cow::Owned(source.into_owned())),
             sheets: self
                 .sheets
                 .into_iter()
@@ -155,7 +167,7 @@ impl<'a> Snapshot<'a> {
                     cells: s
                         .cells
                         .into_iter()
-                        .map(|(a, v, f, n)| {
+                        .map(|(a, v, f, n, shared)| {
                             (
                                 a,
                                 match v {
@@ -168,6 +180,7 @@ impl<'a> Snapshot<'a> {
                                 },
                                 f.map(|v| Cow::Owned(v.into_owned())),
                                 n.map(|v| Cow::Owned(v.into_owned())),
+                                shared,
                             )
                         })
                         .collect(),
@@ -184,6 +197,9 @@ impl<'a> Snapshot<'a> {
             return Err(ModelError("snapshot model count limit".into()));
         }
         let mut workbook = Workbook::new();
+        workbook.retained_xlsx = self
+            .retained_xlsx
+            .map(|source| RetainedXlsx::new(source.into_owned()));
         workbook.date_system = self.date_system;
         workbook.file_metadata = self.file_metadata;
         for s in self.sheets {
@@ -203,7 +219,7 @@ impl<'a> Snapshot<'a> {
             for (row, flags) in s.visibility {
                 sheet.set_row_visibility(row, flags)?;
             }
-            for (a, v, formula, number_format) in s.cells {
+            for (a, v, formula, number_format, shared_formula) in s.cells {
                 let value = match v {
                     Value::Blank => CellValue::Blank,
                     Value::Number(b) => CellValue::Number(f64::from_bits(b)),
@@ -218,6 +234,7 @@ impl<'a> Snapshot<'a> {
                         Cell {
                             value,
                             formula: formula.map(Cow::into_owned),
+                            shared_formula,
                             style: CellStyle {
                                 number_format: number_format.map(Cow::into_owned),
                             },
@@ -254,9 +271,11 @@ impl<'a> Snapshot<'a> {
                     || at.col < owner.col
                     || sheet.get(owner).is_none_or(|c| c.formula.is_none())
                     || sheet.get(at).is_none_or(|c| c.formula.is_some())
-                    || source
-                        .as_ref()
-                        .is_some_and(|c| c.formula.is_some() || c.value != CellValue::Blank)
+                    || source.as_ref().is_some_and(|c| {
+                        c.formula.is_some()
+                            || c.shared_formula.is_some()
+                            || c.value != CellValue::Blank
+                    })
                 {
                     return Err(ModelError("invalid snapshot spill cache".into()));
                 }
@@ -291,6 +310,30 @@ impl<'a> Snapshot<'a> {
 mod tests {
     use super::*;
     #[test]
+    fn retained_binary_package_roundtrips_through_snapshot_wire() {
+        let original = vec![0, 0xff, 0x80, b'P', b'K', 13, 10];
+        let mut workbook = Workbook::new();
+        workbook.retained_xlsx = Some(RetainedXlsx::new(original.clone()));
+        workbook.add_sheet("Data").unwrap();
+        let borrowed = Snapshot::capture(&workbook);
+        assert!(matches!(borrowed.retained_xlsx, Some(Cow::Borrowed(_))));
+        assert_eq!(
+            borrowed.retained_xlsx.as_ref().unwrap().as_ptr(),
+            workbook.retained_xlsx.as_ref().unwrap().bytes().as_ptr()
+        );
+        let encoded = postcard::to_allocvec(&borrowed).unwrap();
+        let decoded: Snapshot<'_> = postcard::from_bytes(&encoded).unwrap();
+        assert!(decoded.matches(&workbook));
+        let owned = decoded.into_owned();
+        assert!(matches!(owned.retained_xlsx, Some(Cow::Owned(_))));
+        let restored = owned.restore().unwrap();
+        assert_eq!(restored.retained_xlsx.as_ref().unwrap().bytes(), original);
+        assert!(Snapshot::capture(&restored).matches(&workbook));
+        let mut changed = restored.clone();
+        changed.retained_xlsx = Some(RetainedXlsx::new(vec![1, 2]));
+        assert!(!Snapshot::capture(&workbook).matches(&changed));
+    }
+    #[test]
     fn capture_borrows_text_units_formulas_styles_and_names() {
         let mut w = Workbook::new();
         w.named_ranges.push(NamedRange {
@@ -305,6 +348,7 @@ mod tests {
                 Cell {
                     value: CellValue::Text("payload".repeat(100)),
                     formula: Some("1+1".into()),
+                    shared_formula: None,
                     style: CellStyle {
                         number_format: Some("0.00".into()),
                     },
@@ -325,6 +369,7 @@ mod tests {
             Value::Text(Cow::Borrowed(text)),
             Some(Cow::Borrowed(formula)),
             Some(Cow::Borrowed(style)),
+            _,
         ) = &dto.sheets[0].cells[0]
         else {
             panic!("text fields copied")
@@ -392,6 +437,7 @@ mod tests {
             Cell {
                 value: CellValue::TextUtf16(ExcelText::from_units(vec![0xd800, 0x61, 0xdc00])),
                 formula: Some("1+1".into()),
+                shared_formula: None,
                 style: CellStyle {
                     number_format: Some("0.000".into()),
                 },

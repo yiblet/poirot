@@ -97,7 +97,7 @@ fn rank_zero_and_determined_models_keep_coefficients_when_stats_unavailable() {
 fn rank_admission_and_bad_shapes_remain_fallible() {
     assert_eq!(
         regression_budget(usize::MAX, 2, 1, true),
-        Err(Error::BudgetExceeded)
+        Err(Error::SizeOverflow)
     );
     assert!(matches!(
         least_squares(

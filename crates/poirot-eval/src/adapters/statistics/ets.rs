@@ -46,7 +46,7 @@ fn points(
     let mut points = Vec::new();
     points
         .try_reserve_exact(count)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for offset in 0..count {
         let value = host.collection_cell(values, offset)?;
         let time = host.collection_cell(timeline, offset)?;
@@ -100,7 +100,7 @@ pub(super) fn execute(
         let mut actual = poirot_functions_core::ParamVec::new();
         actual
             .try_reserve(selected.len())
-            .map_err(|_| host.budget_exceeded())?;
+            .map_err(|_| host.allocation_failure())?;
         // SAFETY: selected.len slots reserved for at most selected.len present positions.
         actual.extend(selected.iter().copied().filter(|i| *i < args.len()));
         let lift = Lift::new_selected(&mut host, &actual)?;
@@ -156,7 +156,7 @@ pub(super) fn execute(
             let mut copied = Vec::new();
             copied
                 .try_reserve_exact(observed.len())
-                .map_err(|_| host.budget_exceeded())?;
+                .map_err(|_| host.allocation_failure())?;
             // SAFETY: observed.len slots reserved for exactly observed.len copied pairs.
             copied.extend(observed.iter().copied());
             let series = kernel::prepare(copied, aggregation, completion, epoch, maximum, |w| {

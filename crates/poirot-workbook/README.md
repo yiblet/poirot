@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     sheet.set_formula("C1".parse()?, "A1*B1")?;
     book.recalculate()?;
 
-    let energy = book.cell("Energy", "C1".parse()?).ok_or("missing energy result")?;
+    let energy = book.stored_cell("Energy", "C1".parse()?).ok_or("missing energy result")?;
     assert_eq!(energy.value, CellValue::Number(300.));
     let bytes = book.save_xlsx().to_buffer()?;
     Ok(())
@@ -32,16 +32,17 @@ Reading a cell returns its stored value. After changing inputs, call `recalculat
 to update dependent cells. Saving writes the current values without calculating.
 If calculation fails, it writes none of its results; earlier input edits remain.
 
-Use `from_bytes` to load a buffer. Both `save_xlsx` and `save_xls` let you choose
+Use `from_bytes` to load a buffer. `save_xlsx` lets you choose
 between returning bytes and writing a file. Import warnings are kept in
 `file_metadata`.
 
-For temporary inputs, use `Evaluation` to query results without editing the
-workbook. For repeated scenarios, `Overlay` tracks dependencies to reuse
-unaffected results. Both retain edits between requests and leave the baseline
-unchanged until you explicitly apply changes. Overlays also retain intermediate
-results across calculations. Native snapshots save Poirot state for later
-restoration; they are separate from Excel files.
+For selected outputs, use `book.evaluation().build()` without an explicit default
+context. Use `book.overlay().build()` for repeated edits that should retain
+unaffected results. Both leave the baseline unchanged. Their `save_xlsx()` exports
+effective edits and valid calculated results without evaluating untouched formulas;
+untouched saved values may be stale. Export preserves pending edits and warm state.
+Native snapshots can restore preparation with an explicit disposition through
+`Workbook::restore_snapshot()`; advanced artifact loading remains available.
 
 Review import warnings before relying on a saved copy. See the
 [compatibility guide](https://github.com/yiblet/poirot/blob/master/docs/compatibility.md)

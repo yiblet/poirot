@@ -67,7 +67,7 @@ pub fn flatten<T: Clone>(
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| Error::BudgetExceeded)?;
+        .map_err(|_| Error::AllocationFailure)?;
     let (outer, inner) = match scan {
         ScanOrder::Rows => (input.rows(), input.cols()),
         ScanOrder::Columns => (input.cols(), input.rows()),

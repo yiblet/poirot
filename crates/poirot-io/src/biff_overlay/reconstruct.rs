@@ -1,5 +1,4 @@
 //! Ordered global declarations, name formulas and sheet reconstruction.
-use super::backend::BackendPatch;
 use super::formula::{addins::AddIns, formula_with_addins};
 use super::text::{cached_text, take, text, units, word};
 use super::{Formula, PreflightError, ResourceBudget, Result};
@@ -34,8 +33,6 @@ pub(super) struct Reconstruction {
     pub(super) caches: Vec<(usize, CellAddress, ExcelText)>,
     /// Fidelity omissions retained for the import report.
     pub(super) warnings: Vec<String>,
-    /// Backend-only record replacements required for safe decoding.
-    pub(super) patches: Vec<BackendPatch>,
 }
 
 /// Inspect checked BIFF records and plan source recovery without mutating the workbook.
@@ -46,7 +43,6 @@ pub(super) fn reconstruct(rs: &[Record<'_>], budget: ResourceBudget) -> Result<R
     let mut name_tokens = Vec::new();
     let mut xtis = Vec::new();
     let mut addins = AddIns::default();
-    let mut patches = Vec::new();
     let mut warnings = Vec::new();
     let mut formula_bytes = 0u64;
     let mut cache_bytes = 0u64;
@@ -132,7 +128,6 @@ pub(super) fn reconstruct(rs: &[Record<'_>], budget: ResourceBudget) -> Result<R
                     sheet_scope: scope.checked_sub(1).map(usize::from),
                 });
                 name_tokens.push(take(&mut b, tokens)?);
-                patches.push(BackendPatch::SuppressName { at: r.at });
             }
             _ => {}
         }
@@ -239,9 +234,6 @@ pub(super) fn reconstruct(rs: &[Record<'_>], budget: ResourceBudget) -> Result<R
                         address,
                         text,
                     });
-                    if n >= 3 {
-                        patches.push(BackendPatch::FormulaPlaceholder { at: r.at });
-                    }
                 } else {
                     warnings.push(format!(
                         "Unsupported BIFF formula tokens on sheet {sheet} at {address}"
@@ -272,6 +264,5 @@ pub(super) fn reconstruct(rs: &[Record<'_>], budget: ResourceBudget) -> Result<R
         formulas,
         caches,
         warnings,
-        patches,
     })
 }

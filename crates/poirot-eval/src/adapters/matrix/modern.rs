@@ -23,12 +23,12 @@ pub(super) fn matrix(
     let count = shape
         .rows
         .checked_mul(shape.columns)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     host.check_values(count)?;
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for row in 0..shape.rows {
         for column in 0..shape.columns {
             let value = host.read_cell(index, row, column)?.value;
@@ -81,7 +81,7 @@ fn evaluate(
     let mut inputs = Vec::new();
     inputs
         .try_reserve_exact(length)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     inputs.push(first);
     let mut padding = Error(CellError::NA);
     let transform = match function {
@@ -115,11 +115,11 @@ fn evaluate(
                 let capacity = indices
                     .len()
                     .checked_add(input.values().len())
-                    .ok_or_else(|| host.budget_exceeded())?;
+                    .ok_or_else(|| host.size_overflow())?;
                 host.check_values(capacity)?;
                 indices
                     .try_reserve(input.values().len())
-                    .map_err(|_| host.budget_exceeded())?;
+                    .map_err(|_| host.allocation_failure())?;
                 for value in input.values() {
                     let n = host.coercev2_scalar_number(value, NumericPolicy::PinnedPoi)?;
                     if !n.is_finite() || n.abs() >= i64::MAX as f64 {
@@ -193,7 +193,7 @@ fn evaluate(
     }
     let cells = rows
         .checked_mul(columns)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     host.check_values(cells)?;
     host.check_values(rows)?;
     host.charge_work(cells as u64)?;
@@ -263,7 +263,7 @@ fn flatten(
         .values()
         .len()
         .checked_add(retained)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     host.check_values(retained)?;
     host.charge_work(work as u64)?;
     let result = poirot_functions_matrix::flatten(
@@ -304,13 +304,19 @@ pub(super) fn publish(result: Matrix<CellValue>, address: CellAddress) -> Functi
         .collect();
     Ok(Value::Array(ArrayView::anchored(values, Some(address))))
 }
+/// Preserve each pure matrix failure category at the evaluator boundary.
 pub(super) fn failure(
     host: &mut CallHost<'_, '_>,
     error: poirot_functions_matrix::Error,
 ) -> FunctionFailure {
     match error {
         poirot_functions_matrix::Error::Formula(error) => error.into(),
-        _ => host.budget_exceeded().into(),
+        poirot_functions_matrix::Error::SizeOverflow => host.size_overflow().into(),
+        poirot_functions_matrix::Error::AllocationFailure => host.allocation_failure().into(),
+        poirot_functions_matrix::Error::BudgetExceeded => host.budget_exceeded().into(),
+        poirot_functions_matrix::Error::SourceUnsupported(detail) => {
+            host.unsupported(CapabilityId::FunctionAdapter, detail)
+        }
     }
 }
 /// Execute a typed modern array operation, retaining operational failures outside cell errors.
@@ -365,5 +371,49 @@ pub(crate) fn execute(
         Ok(value) => Ok(value),
         Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
         Err(FunctionFailure::Operational(error)) => Err(error),
+    }
+}
+
+#[cfg(test)]
+mod resource_mapping_tests {
+    use super::*;
+    #[test]
+    fn pure_matrix_failure_categories_and_target_attribution_survive_adaptation() {
+        let book = Workbook::new();
+        let mut session = Session::with_context(&book, Default::default());
+        let address = CellAddress { row: 2, col: 3 };
+        let mut host = CallHost::new_array(&mut session, 0, address, ArgumentsRef::Empty, 0);
+        for (error, expected) in [
+            (
+                poirot_functions_matrix::Error::SizeOverflow,
+                ResourceFailureKind::SizeOverflow,
+            ),
+            (
+                poirot_functions_matrix::Error::AllocationFailure,
+                ResourceFailureKind::Allocation,
+            ),
+            (
+                poirot_functions_matrix::Error::BudgetExceeded,
+                ResourceFailureKind::BackendGuard,
+            ),
+        ] {
+            assert!(
+                matches!(failure(&mut host, error), FunctionFailure::Operational(EvaluationFailure::Resource { kind, source: Some(source), .. }) if kind == expected && source == EvaluationTarget { sheet: 0, address })
+            );
+        }
+        assert!(matches!(
+            failure(
+                &mut host,
+                poirot_functions_matrix::Error::SourceUnsupported("source behavior")
+            ),
+            FunctionFailure::Operational(EvaluationFailure::UnsupportedCapability { .. })
+        ));
+        assert!(matches!(
+            failure(
+                &mut host,
+                poirot_functions_matrix::Error::Formula(CellError::Value)
+            ),
+            FunctionFailure::Spreadsheet(CellError::Value)
+        ));
     }
 }

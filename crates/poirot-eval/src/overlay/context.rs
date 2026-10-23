@@ -16,6 +16,10 @@ pub struct EvaluationContext {
     pub number_locale: crate::NumberLocaleV2,
     /// Limits on work and allocation during this evaluation.
     pub budgets: crate::EvaluationBudgets,
+    /// Typed optional quota identity set by `limits`; legacy direct budget edits take precedence if different.
+    pub resource_limits: Option<crate::EvaluationLimits>,
+    /// Native PCRE2 execution guards; not included in spreadsheet cache identity.
+    pub regex: crate::RegexSettings,
     /// Limits on memoized values retained by the evaluation.
     pub retention: crate::run::MemoRetentionLimits,
 }
@@ -34,11 +38,31 @@ impl From<crate::EvaluationInputs> for EvaluationContext {
             formatting: Default::default(),
             number_locale: Default::default(),
             budgets: Default::default(),
+            resource_limits: None,
+            regex: Default::default(),
             retention: Default::default(),
         }
     }
 }
 impl EvaluationContext {
+    /// Replace calculation quotas without changing clock, randomness, or cache identity.
+    /// This configures the next explicit cycle; it never resumes a refused cycle.
+    pub fn limits(mut self, limits: crate::EvaluationLimits) -> Self {
+        self.budgets = limits.into();
+        self.resource_limits = Some(limits);
+        self
+    }
+    /// Inspect optional quotas, translating historical integer maxima to `None`.
+    pub fn evaluation_limits(&self) -> crate::EvaluationLimits {
+        self.resource_limits
+            .filter(|limits| crate::EvaluationBudgets::from(*limits) == self.budgets)
+            .unwrap_or_else(|| self.budgets.into())
+    }
+    /// Replace native regex guards, independent of profiling and caller work quotas.
+    pub fn regex_settings(mut self, settings: crate::RegexSettings) -> Self {
+        self.regex = settings;
+        self
+    }
     /// Create a context with the current clock and default limits.
     pub fn new() -> Self {
         Self::default()

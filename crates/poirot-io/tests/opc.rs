@@ -137,17 +137,15 @@ fn dangling_duplicate_wrong_namespace_and_external_required_relationships_fail_t
 }
 
 #[test]
-fn invalid_local_scope_is_an_error_instead_of_a_global_or_neighbor_name() {
+fn invalid_local_scope_is_omitted_without_leaking_into_a_global_or_neighbor_name() {
     let mut p = inventory();
     let workbook = p.parts.get_mut("documents/book.xml").unwrap();
     *workbook = String::from_utf8(workbook.clone())
         .unwrap()
         .replace("localSheetId=\"1\"", "localSheetId=\"2\"")
         .into_bytes();
-    assert!(matches!(
-        read_workbook_bytes(&bytes(p)),
-        Err(IoError::Opc(OpcError::SheetMismatch(_)))
-    ));
+    let workbook = read_workbook_bytes(&bytes(p)).unwrap();
+    assert!(workbook.named_ranges.is_empty());
 }
 
 #[test]

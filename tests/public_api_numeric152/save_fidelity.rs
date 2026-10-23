@@ -28,14 +28,10 @@ fn save_plans_refuse_raw_nonfinite_cache_and_accept_explicit_materialization() {
         .unwrap();
     let raw = overlay.cached_value(target(0, 0)).unwrap();
     let result = output(&mut overlay, &source);
-    for error in [
-        result.save_xlsx().build().unwrap_err(),
-        result.save_xls().build().unwrap_err(),
-    ] {
-        let refusal = numeric_refusal(&error).expect("typed numeric fidelity refusal");
-        assert_eq!(refusal.bits.bits(), f64::NEG_INFINITY.to_bits());
-        assert!(refusal.location.formula_cache);
-    }
+    let error = result.save_xlsx().build().unwrap_err();
+    let refusal = numeric_refusal(&error).expect("typed numeric fidelity refusal");
+    assert_eq!(refusal.bits.bits(), f64::NEG_INFINITY.to_bits());
+    assert!(refusal.location.formula_cache);
     overlay.set_policy(policy(M::PinnedPoiCellSetter)).unwrap();
     let mut evaluation = overlay.evaluation(&context).unwrap();
     evaluation.cell(target(0, 0)).unwrap();
@@ -46,23 +42,19 @@ fn save_plans_refuse_raw_nonfinite_cache_and_accept_explicit_materialization() {
         &overlay.cached_value(target(0, 0)).unwrap()
     ));
     let result = output(&mut overlay, &source);
-    for bytes in [
-        result.save_xlsx().to_buffer().unwrap(),
-        result.save_xls().to_buffer().unwrap(),
-    ] {
-        let reopened = Workbook::from_bytes(&bytes).unwrap();
-        assert_eq!(get(&reopened, 0, 0), CellValue::Error(CellError::Div0));
-        assert!(
-            reopened
-                .model()
-                .sheet(0)
-                .unwrap()
-                .get(at(0, 0))
-                .unwrap()
-                .formula
-                .is_some()
-        );
-    }
+    let bytes = result.save_xlsx().to_buffer().unwrap();
+    let reopened = Workbook::from_bytes(&bytes).unwrap();
+    assert_eq!(get(&reopened, 0, 0), CellValue::Error(CellError::Div0));
+    assert!(
+        reopened
+            .model()
+            .sheet(0)
+            .unwrap()
+            .get(at(0, 0))
+            .unwrap()
+            .formula
+            .is_some()
+    );
 }
 
 #[test]
@@ -100,13 +92,9 @@ fn nan_save_roundtrip_preserves_raw_computation_and_writes_num_errors() {
     ));
     assert_eq!(bits((*raw).clone()), nan);
     let result = output(&mut overlay, &source);
-    for bytes in [
-        result.save_xlsx().to_buffer().unwrap(),
-        result.save_xls().to_buffer().unwrap(),
-    ] {
-        let reopened = Workbook::from_bytes(&bytes).unwrap();
-        for col in [0, 1] {
-            assert_eq!(get(&reopened, 0, col), CellValue::Error(CellError::Num));
-        }
+    let bytes = result.save_xlsx().to_buffer().unwrap();
+    let reopened = Workbook::from_bytes(&bytes).unwrap();
+    for col in [0, 1] {
+        assert_eq!(get(&reopened, 0, col), CellValue::Error(CellError::Num));
     }
 }

@@ -7,24 +7,47 @@ pub(crate) struct BudgetMeter {
     pub limits: EvaluationBudgets,
     /// Accepted work and observed resource usage.
     pub usage: EvaluationUsage,
+    pub(crate) profiling: bool,
+    run_limited: bool,
+    cell_limited: bool,
+    depth_limited: bool,
     depth: usize,
     frames: Vec<(EvaluationTarget, u64)>,
 }
 impl BudgetMeter {
     /// Validate limits and start empty accounting.
     pub fn new(limits: EvaluationBudgets) -> EvalResult<Self> {
+        Self::configured(limits, true)
+    }
+    /// Start accounting only for enabled quotas; detailed counters remain opt-in.
+    pub(crate) fn configured(limits: EvaluationBudgets, profiling: bool) -> EvalResult<Self> {
         policy::validate_limits(limits).map_err(EvaluationFailure::Budget)?;
         Ok(Self {
             limits,
+            profiling,
+            run_limited: limits.run_work != u64::MAX,
+            cell_limited: limits.cell_work != u64::MAX,
+            depth_limited: true,
             usage: EvaluationUsage::default(),
             depth: 0,
             frames: Vec::new(),
         })
     }
+    /// Retain explicit maximum-valued quotas instead of interpreting them as legacy sentinels.
+    pub(crate) fn with_optional_limits(mut self, limits: EvaluationLimits) -> Self {
+        self.run_limited = limits.work_limit().is_some();
+        self.cell_limited = limits.formula_work_limit().is_some();
+        self.depth_limited = limits.depth_limit().is_some();
+        self
+    }
     /// Move run accounting out, leaving an empty meter with the same limits.
     pub(crate) fn take(&mut self) -> Self {
         let replacement = Self {
             limits: self.limits,
+            profiling: self.profiling,
+            run_limited: self.run_limited,
+            cell_limited: self.cell_limited,
+            depth_limited: self.depth_limited,
             usage: EvaluationUsage::default(),
             depth: 0,
             frames: Vec::new(),
@@ -49,12 +72,14 @@ impl BudgetMeter {
     /// Admit work against run and active-cell limits before updating counters.
     #[inline]
     pub fn charge(&mut self, kind: WorkKind, amount: u64) -> EvalResult<()> {
-        if amount == 0 {
+        if amount == 0 || (!self.profiling && !self.run_limited && !self.cell_limited) {
             return Ok(());
         }
         let ChargeRequest { kind, amount } = policy::admit_work(
             self.limits,
             WorkSnapshot {
+                run_limited: self.run_limited,
+                cell_limited: self.cell_limited,
                 run_consumed: self.usage.work_units,
                 cell_consumed: self.frames.last().map(|(_, consumed)| *consumed),
                 target: self.frames.last().map(|(target, _)| *target),
@@ -65,6 +90,9 @@ impl BudgetMeter {
         self.usage.work_units = self.usage.work_units.saturating_add(amount);
         if let Some((_, consumed)) = self.frames.last_mut() {
             *consumed = consumed.saturating_add(amount);
+        }
+        if !self.profiling {
+            return Ok(());
         }
         let counter = match kind {
             WorkKind::Expression => &mut self.usage.expressions,
@@ -103,6 +131,14 @@ impl BudgetMeter {
     /// Admit one nesting level and record peak depth.
     pub fn enter_depth(&mut self) -> EvalResult<()> {
         if self.depth >= self.limits.depth {
+            if !self.depth_limited {
+                return Err(EvaluationFailure::Resource {
+                    kind: ResourceFailureKind::BackendGuard,
+                    capability: CapabilityId::FunctionAdapter,
+                    source: self.frames.last().map(|(target, _)| *target),
+                    detail: "evaluation reached the engine's 128-frame nesting ceiling".into(),
+                });
+            }
             return Err(self.failure(
                 BudgetKind::Depth,
                 self.limits.depth as u64,
@@ -111,7 +147,9 @@ impl BudgetMeter {
             ));
         }
         self.depth += 1;
-        self.usage.maximum_depth = self.usage.maximum_depth.max(self.depth);
+        if self.profiling {
+            self.usage.maximum_depth = self.usage.maximum_depth.max(self.depth);
+        }
         Ok(())
     }
     /// Leave one previously admitted nesting level.

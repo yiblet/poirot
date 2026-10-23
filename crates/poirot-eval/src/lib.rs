@@ -27,6 +27,11 @@
 //! }
 //! ```
 //!
+//! For ordinary execution without detailed counters, use the same builder's
+//! `build_calculation(context)`. Its report uses `None` for unavailable profiling.
+//! Existing `build(context)` keeps its detailed usage contract. Quotas are optional
+//! through [`EvaluationLimits`] and remain independent of profiling.
+//!
 //! Creating an evaluation does not calculate anything. `cell` calculates one output
 //! and its dependencies; `outputs` accepts a list, and `all` calculates every occupied
 //! cell and any formula spill cells. Each input edit clears calculated results.
@@ -143,9 +148,12 @@ mod context_dependencies;
 // Public evaluation limits, outcomes, failures, and usage counters.
 pub use budget::{
     BudgetFailure, BudgetKind, CapabilityId, EvaluationBudgets, EvaluationFailure,
-    EvaluationOutcome, EvaluationTarget, EvaluationUsage, WorkKind,
+    EvaluationLimits, EvaluationOutcome, EvaluationTarget, EvaluationUsage, ResourceFailureKind,
+    WorkKind,
 };
 use budget::{BudgetMeter, EvalResult};
+/// Native regex guards, independently configurable from evaluator work quotas.
+pub use poirot_functions_text::regex::ExecutionLimits as RegexSettings;
 mod function_failure;
 mod signed_reference;
 use function_failure::{FunctionFailure, FunctionResult, function_value, identifier_failure};
@@ -340,7 +348,10 @@ fn execute_configuration<T>(
     session.array_result_policy = configuration.array_result_policy();
     session.producer_policy = configuration.producer_policy();
     session.plan = Some(&plan);
-    let mut run = EvaluationRun { session };
+    let mut run = EvaluationRun {
+        session,
+        failure: None,
+    };
     let result = operation(&mut run.session);
     run.finish(result).outcome
 }
@@ -499,6 +510,7 @@ struct Session<'a> {
     currency: Option<&'a CurrencyContext>,
     number_locale: &'a poirot_parsing::number::NumberLocaleV2,
     text_policy: poirot_text::TextSemanticsPolicy,
+    regex: RegexSettings,
 
     builtin_policy: BuiltinSemanticsPolicy,
     array_result_policy: ArrayResultPolicy,
@@ -519,6 +531,7 @@ struct Session<'a> {
     execution_observer: Option<&'a mut dyn execution_observation::ExecutionObserver>,
 }
 mod reference_areas;
+mod resource;
 mod runtime;
 use reference_areas::ReferenceAreas;
 mod criteria_adapter;

@@ -298,8 +298,10 @@ impl crate::EvaluationRun<'_> {
         }
         let previous = self.session.consumer.replace(target);
         self.session.budget.push_cell(target);
-        self.session.run_usage.formula_executions =
-            self.session.run_usage.formula_executions.saturating_add(1);
+        if self.session.budget.profiling {
+            self.session.run_usage.formula_executions =
+                self.session.run_usage.formula_executions.saturating_add(1);
+        }
         let result = (|| {
             self.session.budget.charge(crate::WorkKind::Expression, 1)?;
             self.session.budget.enter_depth()?;

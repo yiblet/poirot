@@ -1,12 +1,17 @@
 //! Decode budgets applied before collection reservations and owned string copies.
 use serde::de::{self, DeserializeSeed, EnumAccess, MapAccess, SeqAccess, VariantAccess, Visitor};
-use std::{cell::Cell, fmt};
+use std::{
+    cell::{Cell, RefCell},
+    fmt,
+};
 
 /// Shared budget for decoded values, payload bytes, and nesting.
 pub(super) struct Budget {
     values: Cell<usize>,
     bytes: Cell<usize>,
     depth: usize,
+    limits: (usize, usize),
+    failure: RefCell<Option<super::SnapshotError>>,
 }
 impl Budget {
     /// Create one cumulative decoding budget.
@@ -15,33 +20,83 @@ impl Budget {
             values: Cell::new(values),
             bytes: Cell::new(bytes),
             depth,
+            limits: (values, bytes),
+            failure: RefCell::new(None),
         }
     }
+    /// Recover structured refusal details instead of presenting a codec's custom-error sentinel.
+    pub fn failure(&self) -> Option<super::SnapshotError> {
+        self.failure
+            .try_borrow_mut()
+            .ok()
+            .and_then(|mut failure| failure.take())
+    }
+    fn refuse<E: de::Error>(
+        &self,
+        resource: super::SnapshotResource,
+        limit: usize,
+        consumed: usize,
+        requested: usize,
+    ) -> E {
+        if let Ok(mut failure) = self.failure.try_borrow_mut() {
+            *failure = Some(super::SnapshotError::Quota(super::SnapshotQuotaFailure {
+                resource,
+                limit,
+                consumed,
+                requested,
+            }));
+        }
+        E::custom("snapshot quota refused")
+    }
     fn charge<E: de::Error>(&self, bytes: usize) -> Result<(), E> {
-        let remaining = self
-            .bytes
-            .get()
-            .checked_sub(bytes)
-            .ok_or_else(|| E::custom("snapshot decoded byte limit"))?;
+        let remaining = self.bytes.get().checked_sub(bytes).ok_or_else(|| {
+            self.refuse(
+                super::SnapshotResource::DecodedBytes,
+                self.limits.1,
+                self.limits.1.saturating_sub(self.bytes.get()),
+                bytes,
+            )
+        })?;
         self.bytes.set(remaining);
         Ok(())
     }
     fn enter<E: de::Error>(&self, depth: usize) -> Result<(), E> {
         if depth > self.depth {
-            return Err(E::custom("snapshot decode depth limit"));
+            if self.depth == 256 {
+                if let Ok(mut failure) = self.failure.try_borrow_mut() {
+                    *failure = Some(super::SnapshotError::EngineConstraint(
+                        "recursive decoder nesting ceiling is 256",
+                    ));
+                }
+                return Err(E::custom("snapshot decoder nesting ceiling"));
+            }
+            return Err(self.refuse(
+                super::SnapshotResource::Depth,
+                self.depth,
+                depth.saturating_sub(1),
+                1,
+            ));
         }
-        let remaining = self
-            .values
-            .get()
-            .checked_sub(1)
-            .ok_or_else(|| E::custom("snapshot decoded value limit"))?;
+        let remaining = self.values.get().checked_sub(1).ok_or_else(|| {
+            self.refuse(
+                super::SnapshotResource::DecodedValues,
+                self.limits.0,
+                self.limits.0.saturating_sub(self.values.get()),
+                1,
+            )
+        })?;
         self.values.set(remaining);
         Ok(())
     }
     fn sequence<E: de::Error>(&self, len: Option<usize>) -> Result<(), E> {
-        if len.is_some_and(|len| len > self.values.get()) {
-            return Err(E::custom(
-                "snapshot collection length exceeds decode budget",
+        if let Some(len) = len
+            && len > self.values.get()
+        {
+            return Err(self.refuse(
+                super::SnapshotResource::DecodedValues,
+                self.limits.0,
+                self.limits.0.saturating_sub(self.values.get()),
+                len,
             ));
         }
         Ok(())

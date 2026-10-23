@@ -72,6 +72,7 @@ impl<'a> Session<'a> {
             context,
             currency: None,
             number_locale: &poirot_parsing::number::NumberLocaleV2::EN_US,
+            regex: Default::default(),
 
             builtin_policy: BuiltinSemanticsPolicy::default(),
             array_result_policy: ArrayResultPolicy::default(),
@@ -126,8 +127,10 @@ impl<'a> Session<'a> {
         {
             return Err(EvaluationFailure::StalePlan);
         }
-        self.runtime.run_usage.compiled_lookups =
-            self.runtime.run_usage.compiled_lookups.saturating_add(1);
+        if self.runtime.budget.profiling {
+            self.runtime.run_usage.compiled_lookups =
+                self.runtime.run_usage.compiled_lookups.saturating_add(1);
+        }
         match prepared {
             PreparedFormula::Ready(formula) => self.bytecode_expr(sheet, at, formula.bytecode()),
             PreparedFormula::CompilationFailure { error, .. } => {
@@ -188,8 +191,10 @@ impl<'a> Session<'a> {
         let previous_demand = std::mem::replace(&mut self.expression_demand, demand);
         let previous = self.runtime.consumer.replace(target);
         self.runtime.budget.push_cell(target);
-        self.runtime.run_usage.formula_executions =
-            self.runtime.run_usage.formula_executions.saturating_add(1);
+        if self.runtime.budget.profiling {
+            self.runtime.run_usage.formula_executions =
+                self.runtime.run_usage.formula_executions.saturating_add(1);
+        }
         let result = (|| {
             self.runtime.budget.text(prepared.source().len())?;
             let value = self.prepared_expression(target.sheet, target.address, prepared)?;
@@ -220,8 +225,10 @@ impl<'a> Session<'a> {
         let previous_demand = std::mem::replace(&mut self.expression_demand, demand);
         let previous = self.runtime.consumer.replace(target);
         self.runtime.budget.push_cell(target);
-        self.runtime.run_usage.formula_executions =
-            self.runtime.run_usage.formula_executions.saturating_add(1);
+        if self.runtime.budget.profiling {
+            self.runtime.run_usage.formula_executions =
+                self.runtime.run_usage.formula_executions.saturating_add(1);
+        }
         let result = self
             .bytecode_expr(target.sheet, target.address, formula.bytecode())
             .and_then(|v| self.result_scalar(target.sheet, target.address, v));
@@ -363,9 +370,11 @@ impl<'a> Session<'a> {
         let runtime = &mut *self.runtime;
         if let Some(value) = runtime.cache.get(&(sheet, address)) {
             *provenance = CellProvenance::SessionMemo;
-            runtime.run_usage.session_memo_hits =
-                runtime.run_usage.session_memo_hits.saturating_add(1);
-            runtime.budget.usage.cache_hits = runtime.budget.usage.cache_hits.saturating_add(1);
+            if runtime.budget.profiling {
+                runtime.run_usage.session_memo_hits =
+                    runtime.run_usage.session_memo_hits.saturating_add(1);
+                runtime.budget.usage.cache_hits = runtime.budget.usage.cache_hits.saturating_add(1);
+            }
             return copy_cached_value(
                 &mut runtime.budget,
                 EvaluationTarget { sheet, address },
@@ -379,9 +388,12 @@ impl<'a> Session<'a> {
                 .inspect_err(|_| *provenance = CellProvenance::ExternalCache)?
         {
             *provenance = CellProvenance::ExternalCache;
-            self.runtime.run_usage.external_cache_hits =
-                self.runtime.run_usage.external_cache_hits.saturating_add(1);
-            self.runtime.budget.usage.cache_hits += 1;
+            if self.runtime.budget.profiling {
+                self.runtime.run_usage.external_cache_hits =
+                    self.runtime.run_usage.external_cache_hits.saturating_add(1);
+                self.runtime.budget.usage.cache_hits =
+                    self.runtime.budget.usage.cache_hits.saturating_add(1);
+            }
             return copy_cached_value(
                 &mut self.runtime.budget,
                 EvaluationTarget { sheet, address },
@@ -397,9 +409,12 @@ impl<'a> Session<'a> {
         });
         if let Some(value) = cached {
             *provenance = CellProvenance::ExternalCache;
-            self.runtime.run_usage.external_cache_hits =
-                self.runtime.run_usage.external_cache_hits.saturating_add(1);
-            self.runtime.budget.usage.cache_hits += 1;
+            if self.runtime.budget.profiling {
+                self.runtime.run_usage.external_cache_hits =
+                    self.runtime.run_usage.external_cache_hits.saturating_add(1);
+                self.runtime.budget.usage.cache_hits =
+                    self.runtime.budget.usage.cache_hits.saturating_add(1);
+            }
             return copy_cached_value(
                 &mut self.runtime.budget,
                 EvaluationTarget { sheet, address },
@@ -455,8 +470,10 @@ impl<'a> Session<'a> {
                     }
                     Some(formula) => {
                         self.runtime.budget.text(formula.len())?;
-                        self.runtime.run_usage.formula_executions =
-                            self.runtime.run_usage.formula_executions.saturating_add(1);
+                        if self.runtime.budget.profiling {
+                            self.runtime.run_usage.formula_executions =
+                                self.runtime.run_usage.formula_executions.saturating_add(1);
+                        }
                         let compiled;
                         let prepared = match self
                             .plan

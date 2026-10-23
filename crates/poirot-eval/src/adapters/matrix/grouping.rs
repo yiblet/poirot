@@ -12,7 +12,8 @@ use poirot_functions_statistics::BuiltinAggregator as A;
 fn append<T>(values: &mut Vec<T>, value: T) -> FunctionResult<()> {
     values
         .try_reserve(1)
-        .map_err(|_| EvaluationFailure::ResourceLimit {
+        .map_err(|_| EvaluationFailure::Resource {
+            kind: crate::ResourceFailureKind::Allocation,
             capability: CapabilityId::FunctionAdapter,
             source: None,
             detail: "grouping output allocation failed".into(),
@@ -26,7 +27,7 @@ fn reserve<T>(host: &mut CallHost<'_, '_>, count: usize) -> FunctionResult<Vec<T
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     Ok(values)
 }
 fn generated_text(
@@ -36,18 +37,18 @@ fn generated_text(
     let count = parts
         .iter()
         .try_fold(0usize, |total, part| total.checked_add(part.len_units()))
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     if count > 32767 {
         return Err(CellError::Value.into());
     }
-    let bytes = count.checked_mul(2).ok_or_else(|| host.budget_exceeded())?;
+    let bytes = count.checked_mul(2).ok_or_else(|| host.size_overflow())?;
     host.check_text(bytes)?;
     host.check_values(count)?;
     host.charge_work(count as u64)?;
     let mut units = Vec::new();
     units
         .try_reserve_exact(count)
-        .map_err(|_| host.budget_exceeded())?;
+        .map_err(|_| host.allocation_failure())?;
     for part in parts {
         // SAFETY: count is the checked sum of these unchanged part lengths, and that total capacity was reserved locally.
         units.extend(part.units());
@@ -127,7 +128,7 @@ fn aggregate(
             let length = output
                 .len()
                 .checked_add(units.len())
-                .ok_or_else(|| host.budget_exceeded())?;
+                .ok_or_else(|| host.size_overflow())?;
             if length > 32767 {
                 return Err(CellError::Value.into());
             }
@@ -135,7 +136,7 @@ fn aggregate(
             host.check_text(length.saturating_mul(2))?;
             output
                 .try_reserve(units.len())
-                .map_err(|_| host.budget_exceeded())?;
+                .map_err(|_| host.allocation_failure())?;
             // SAFETY: The successful preceding reservation admits the unchanged units.len() additional members.
             output.extend(units);
         }
@@ -175,13 +176,13 @@ fn aggregate(
         poirot_functions_statistics::coercev2_statistics_collection(collection, &operands)?;
     if matches!(operation, A::Median | A::Mode) {
         let work = poirot_functions_matrix::selection_work(numeric.len(), numeric.len(), 1)
-            .ok_or_else(|| host.budget_exceeded())?;
+            .ok_or_else(|| host.size_overflow())?;
         host.charge_work(work as u64)?;
     }
     if operation == A::Mode {
         host.check_values(numeric.len().saturating_mul(3))?;
         use poirot_functions_statistics::modern::Failure as SampleFailure;
-        poirot_functions_statistics::modern_sample::modes(&mut numeric, host.budget_exceeded())
+        poirot_functions_statistics::modern_sample::modes(&mut numeric, host.allocation_failure())
             .map_err(|error| match error {
                 SampleFailure::Spreadsheet(error) => FunctionFailure::from(error),
                 SampleFailure::Operational(error) => error.into(),
@@ -224,7 +225,7 @@ fn percentof(host: &mut CallHost<'_, '_>) -> FunctionResult<Value> {
         let mut members = reserve(host, values.len())?;
         members
             .try_reserve(values.len())
-            .map_err(|_| host.budget_exceeded())?;
+            .map_err(|_| host.allocation_failure())?;
         // SAFETY: The unchanged source iterator emits exactly the locally reserved number of members.
         members.extend(values.iter());
         append(&mut sums, aggregate_value(host, A::Sum, &members)?)?;
@@ -322,11 +323,11 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
     let key_count = included
         .len()
         .checked_mul(fields)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     let value_count = included
         .len()
         .checked_mul(value_columns)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     let mut key_values = reserve(host, key_count)?;
     let mut values = reserve(host, value_count)?;
     for &row in &included {
@@ -341,7 +342,7 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
     let values =
         Matrix::new(included.len(), value_columns, values).map_err(|e| failure(host, e))?;
     let work = poirot_functions_matrix::selection_work(key_count, included.len(), fields)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     host.charge_work(work as u64)?;
     let partition = poirot_functions_matrix::partition(
         &keys,
@@ -355,7 +356,7 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
     .map_err(|e| failure(host, e))?;
     let hierarchy_count = key_count
         .checked_add(1)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     host.check_values(hierarchy_count)?;
     host.charge_work(hierarchy_count as u64)?;
     let groups = poirot_functions_matrix::hierarchy(
@@ -370,14 +371,14 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
     .map_err(|e| failure(host, e))?;
     let sortable_columns = fields
         .checked_add(value_columns)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     let reductions = value_columns
         .checked_mul(aggregators.members.len())
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     let scratch = groups
         .len()
         .checked_mul(reductions)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     let mut results = reserve(host, scratch)?;
     let mut denominators = reserve(host, value_columns)?;
     if aggregators.members.contains(&A::PercentOf) {
@@ -396,7 +397,7 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
         let mut ordinals = reserve(host, group.members.len())?;
         ordinals
             .try_reserve(group.members.len())
-            .map_err(|_| host.budget_exceeded())?;
+            .map_err(|_| host.allocation_failure())?;
         // SAFETY: The source range below has exactly the locally reserved member count.
         ordinals.extend_from_slice(
             partition
@@ -405,7 +406,7 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
                 .ok_or(CellError::Value)?,
         );
         let work = poirot_functions_matrix::selection_work(ordinals.len(), ordinals.len(), 1)
-            .ok_or_else(|| host.budget_exceeded())?;
+            .ok_or_else(|| host.size_overflow())?;
         host.charge_work(work as u64)?;
         // SAFETY: Source ordinals use a fixed usize total order, independent of worksheet comparisons.
         ordinals.sort_unstable();
@@ -443,7 +444,7 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
         let count = shape
             .rows
             .checked_mul(shape.columns)
-            .ok_or_else(|| host.budget_exceeded())?;
+            .ok_or_else(|| host.size_overflow())?;
         host.check_values(count)?;
         for row in 0..shape.rows {
             for column in 0..shape.columns {
@@ -457,7 +458,9 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
                 {
                     return Err(CellError::Value.into());
                 }
-                sorts.try_reserve(1).map_err(|_| host.budget_exceeded())?;
+                sorts
+                    .try_reserve(1)
+                    .map_err(|_| host.allocation_failure())?;
                 append(&mut sorts, n as i64)?;
             }
         }
@@ -518,7 +521,7 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
         std::cmp::Ordering::Equal
     };
     let work = poirot_functions_matrix::selection_work(groups.len(), groups.len(), 1)
-        .ok_or_else(|| host.budget_exceeded())?;
+        .ok_or_else(|| host.size_overflow())?;
     host.check_values(groups.len().saturating_mul(2))?;
     host.charge_work(work.saturating_mul(sorts.len().max(1)) as u64)?;
     let layout = poirot_functions_matrix::group_layout(
@@ -590,18 +593,18 @@ impl Output<'_> {
                     results.cols()
                 })
             })
-            .ok_or_else(|| host.budget_exceeded())?;
+            .ok_or_else(|| host.size_overflow())?;
         let rows = layout
             .len()
             .checked_mul(aggregators.rows)
             .and_then(|n| n.checked_add(usize::from(headers.show)))
-            .ok_or_else(|| host.budget_exceeded())?;
+            .ok_or_else(|| host.size_overflow())?;
         if rows > poirot_model::MAX_ROWS as usize || columns > poirot_model::MAX_COLUMNS as usize {
             return Err(CellError::Num.into());
         }
         let count = rows
             .checked_mul(columns)
-            .ok_or_else(|| host.budget_exceeded())?;
+            .ok_or_else(|| host.size_overflow())?;
         let mut output = reserve(host, count)?;
         if headers.show {
             for field in 0..fields {

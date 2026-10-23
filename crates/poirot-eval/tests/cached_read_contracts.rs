@@ -145,18 +145,16 @@ fn memoized_text_failure_retains_target_provenance_usage_and_frame_unwinding() {
             target: Some(target("A1"))
         })
     );
-    assert_eq!(
-        run.evaluate_cell(target("B1")).unwrap(),
-        CellValue::Number(9.)
-    );
+    // A refused cycle stays failed; no new read or observer event is performed.
+    assert_eq!(run.evaluate_cell(target("B1")).unwrap_err(), failure);
     let report = run.finish(Err::<(), _>(failure.clone()));
     assert_eq!(report.execution.session_memo_hits, 1);
     assert!(matches!(
         report.outcome,
         EvaluationOutcome::Aborted {
             usage: EvaluationUsage {
-                work_units: 19,
-                cell_reads: 3,
+                work_units: 16,
+                cell_reads: 2,
                 text_bytes: 12,
                 ..
             },

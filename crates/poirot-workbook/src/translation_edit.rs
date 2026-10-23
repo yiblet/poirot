@@ -106,6 +106,7 @@ impl FormulaTranslationEditPlan {
                         .and_then(|sheet| sheet.get_mut(*address))
                         .ok_or_else(|| model_error("stale translation formula source"))?;
                     cell.formula = Some(plan.replacement().into());
+                    cell.shared_formula = None;
                     match self.cache_policy {
                         TranslationCachePolicy::ClearChanged => cell.value = CellValue::Blank,
                     }
@@ -193,6 +194,14 @@ mod tests {
         assert!(plan.apply(&mut w).is_err());
         assert_eq!(w, stale);
         let (mut w, requests) = setup();
+        w.sheet_mut(0)
+            .unwrap()
+            .get_mut("A1".parse().unwrap())
+            .unwrap()
+            .shared_formula = Some(poirot_model::SharedFormula {
+            group: poirot_model::SharedFormulaId(1),
+            origin: "A1".parse().unwrap(),
+        });
         let plan = FormulaTranslationEditPlan::new(
             &w,
             &requests,
@@ -204,6 +213,7 @@ mod tests {
         let cell = w.sheet(0).unwrap().get("A1".parse().unwrap()).unwrap();
         assert_eq!(cell.formula.as_deref(), Some("B2+$B$2"));
         assert_eq!(cell.value, CellValue::Blank);
+        assert_eq!(cell.shared_formula, None);
     }
     #[test]
     fn unrepresentable_batch_and_sheet_identity_refuse() {

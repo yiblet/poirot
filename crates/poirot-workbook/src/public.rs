@@ -2,7 +2,7 @@
 //!
 //! Reading a formula cell returns its stored result. Call `recalculate` after
 //! changing inputs to update dependent cells. Saving does not calculate formulas.
-use crate::{io, model, xls};
+use crate::{io, model};
 
 use std::{fmt, path::Path};
 
@@ -11,8 +11,6 @@ use std::{fmt, path::Path};
 pub enum WorkbookError {
     /// Import or XLSX export failure from the shared I/O layer.
     ImportOrXlsx(io::IoError),
-    /// Checked BIFF export failure.
-    Xls(xls::XlsError),
     /// Filesystem failure while reading or writing a workbook.
     File(std::io::Error),
 }
@@ -20,7 +18,6 @@ impl fmt::Display for WorkbookError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::ImportOrXlsx(e) => e.fmt(f),
-            Self::Xls(e) => e.fmt(f),
             Self::File(e) => e.fmt(f),
         }
     }
@@ -29,7 +26,6 @@ impl std::error::Error for WorkbookError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         Some(match self {
             Self::ImportOrXlsx(e) => e,
-            Self::Xls(e) => e,
             Self::File(e) => e,
         })
     }
@@ -40,11 +36,6 @@ impl From<io::IoError> for WorkbookError {
             io::IoError::File(error) => Self::File(error),
             error => Self::ImportOrXlsx(error),
         }
-    }
-}
-impl From<xls::XlsError> for WorkbookError {
-    fn from(error: xls::XlsError) -> Self {
-        Self::Xls(error)
     }
 }
 
@@ -117,6 +108,24 @@ impl Workbook {
     pub fn load() -> LoadBuilder {
         LoadBuilder::default()
     }
+    /// Configure selected-output calculation with one captured default context.
+    pub fn evaluation(&self) -> crate::WorkbookEvaluationBuilder<'_> {
+        crate::WorkbookEvaluationBuilder::new(self)
+    }
+    /// Configure incremental scenarios that preserve unaffected results across edits.
+    pub fn overlay(&self) -> crate::WorkbookOverlayBuilder<'_> {
+        crate::WorkbookOverlayBuilder::new(self)
+    }
+    /// Configure usable snapshot restoration with compatible reuse or default source recovery.
+    /// Advanced artifact loading remains available through `load_snapshot`.
+    pub fn restore_snapshot() -> crate::WorkbookSnapshotLoadBuilder {
+        crate::WorkbookSnapshotLoadBuilder::default()
+    }
+    /// Inspect authored content and saved values without calculating.
+    /// Resolve `sheet_by_name` first when missing sheets must differ from unstored cells.
+    pub fn stored_cell(&self, sheet: &str, address: model::CellAddress) -> Option<&model::Cell> {
+        self.model.sheet_by_name(sheet)?.get(address)
+    }
     /// Read a stored cell from a named sheet without calculating its formula.
     ///
     /// Returns `None` if the sheet or cell is absent. An explicitly stored blank
@@ -156,7 +165,7 @@ impl Workbook {
         let changes = {
             let mut evaluation = crate::Evaluation::with_workbook(&self.model)
                 .with_policy(policy)
-                .build(context)
+                .build_calculation(context)
                 .map_err(CalculationError::Preparation)?;
             evaluation.all().map_err(CalculationError::Evaluation)?;
             evaluation.into_changes()
@@ -217,13 +226,6 @@ impl Workbook {
             options: io::WriteOptions::default(),
         }
     }
-    /// Configure an XLS save. Saving does not recalculate formulas.
-    pub fn save_xls(&self) -> XlsSaveBuilder<'_> {
-        XlsSaveBuilder {
-            workbook: &self.model,
-            policy: xls::XlsExportPolicy::default(),
-        }
-    }
 }
 
 /// Options for saving a workbook as XLSX.
@@ -241,10 +243,9 @@ impl<'a> XlsxSaveBuilder<'a> {
     }
     /// Validate the workbook without serializing or writing a file.
     pub fn build(self) -> Result<SavePlan<'a>, WorkbookError> {
-        Ok(SavePlan::Xlsx(io::plan_xlsx_export(
-            self.workbook,
-            self.options,
-        )?))
+        Ok(SavePlan {
+            plan: io::plan_xlsx_export(self.workbook, self.options)?,
+        })
     }
     /// Validate and serialize the workbook to an owned buffer.
     pub fn to_buffer(self) -> Result<Vec<u8>, WorkbookError> {
@@ -256,61 +257,15 @@ impl<'a> XlsxSaveBuilder<'a> {
     }
 }
 
-/// Options for saving a workbook as XLS.
+/// A workbook validated for XLSX output without mutating its source.
 #[derive(Debug)]
-#[must_use = "Call build, to_buffer, or write_file to save the workbook"]
-pub struct XlsSaveBuilder<'a> {
-    workbook: &'a model::Workbook,
-    policy: xls::XlsExportPolicy,
-}
-impl<'a> XlsSaveBuilder<'a> {
-    /// Replace the default representation and resource policy.
-    pub fn policy(mut self, policy: xls::XlsExportPolicy) -> Self {
-        self.policy = policy;
-        self
-    }
-    /// Validate the workbook without serializing or writing a file.
-    pub fn build(self) -> Result<SavePlan<'a>, WorkbookError> {
-        Ok(SavePlan::Xls(xls::XlsExportPlan::new(
-            self.workbook,
-            self.policy,
-        )?))
-    }
-    /// Validate and serialize the workbook to an owned buffer.
-    pub fn to_buffer(self) -> Result<Vec<u8>, WorkbookError> {
-        self.build()?.to_buffer()
-    }
-    /// Validate and serialize before opening the destination file.
-    pub fn write_file(self, path: impl AsRef<Path>) -> Result<(), WorkbookError> {
-        self.build()?.write_file(path)
-    }
-}
-
-/// A validated workbook ready to serialize as XLSX or XLS.
-///
-/// Planning performs no file writes and cannot mutate the workbook. Unsupported
-/// XLS formulas fail during XLS planning, rather than becoming cached literals.
-pub enum SavePlan<'a> {
-    /// A workbook validated for XLSX output.
-    Xlsx(io::ExportPlan<'a>),
-    /// A workbook validated for XLS output.
-    Xls(xls::XlsExportPlan<'a>),
-}
-impl fmt::Debug for SavePlan<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Xlsx(_) => f.write_str("SavePlan::Xlsx"),
-            Self::Xls(_) => f.write_str("SavePlan::Xls"),
-        }
-    }
+pub struct SavePlan<'a> {
+    plan: io::ExportPlan<'a>,
 }
 impl SavePlan<'_> {
     /// Serialize the validated workbook without recalculating formulas.
     pub fn to_buffer(&self) -> Result<Vec<u8>, WorkbookError> {
-        match self {
-            Self::Xlsx(plan) => Ok(plan.execute()?),
-            Self::Xls(plan) => Ok(plan.to_buffer()?),
-        }
+        Ok(self.plan.execute()?)
     }
     /// Write the serialized workbook to a file.
     ///
@@ -361,6 +316,51 @@ pub struct LoadBuilder {
     options: io::ReadOptions,
 }
 impl LoadBuilder {
+    /// Set input bytes for one load. A later `options` call replaces all options.
+    pub fn max_input_bytes(mut self, maximum: u64) -> Self {
+        self.options = self.options.max_input_bytes(maximum);
+        self
+    }
+    /// Remove the configured input bytes maximum.
+    pub fn without_input_bytes_limit(mut self) -> Self {
+        self.options = self.options.without_input_bytes_limit();
+        self
+    }
+    /// Set expanded bytes per XLSX entry for one load. A later `options` call replaces all options.
+    pub fn max_zip_entry_bytes(mut self, maximum: u64) -> Self {
+        self.options = self.options.max_zip_entry_bytes(maximum);
+        self
+    }
+    /// Remove the configured expanded bytes per XLSX entry maximum.
+    pub fn without_zip_entry_bytes_limit(mut self) -> Self {
+        self.options = self.options.without_zip_entry_bytes_limit();
+        self
+    }
+    /// Set total expanded XLSX bytes for one load. A later `options` call replaces all options.
+    pub fn max_zip_total_bytes(mut self, maximum: u64) -> Self {
+        self.options = self.options.max_zip_total_bytes(maximum);
+        self
+    }
+    /// Remove the configured total expanded XLSX bytes maximum.
+    pub fn without_zip_total_bytes_limit(mut self) -> Self {
+        self.options = self.options.without_zip_total_bytes_limit();
+        self
+    }
+    /// Set XLSX entry count for one load. A later `options` call replaces all options.
+    pub fn max_zip_entries(mut self, maximum: usize) -> Self {
+        self.options = self.options.max_zip_entries(maximum);
+        self
+    }
+    /// Remove the configured XLSX entry count maximum.
+    pub fn without_zip_entries_limit(mut self) -> Self {
+        self.options = self.options.without_zip_entries_limit();
+        self
+    }
+    /// Inspect the reusable configuration without consuming the builder.
+    pub fn read_options(&self) -> &io::ReadOptions {
+        &self.options
+    }
+
     /// Replace all import options, including format-specific policies and limits.
     pub fn options(mut self, options: io::ReadOptions) -> Self {
         self.options = options;

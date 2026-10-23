@@ -139,6 +139,14 @@ pub trait EvaluationPort {
     fn coercev2_number_text(&mut self, text: &str) -> Result<f64, Failure<Self::Operational>>;
     /// A concrete engine operational budget failure; never manufacture #VALUE!.
     fn budget_exceeded(&mut self) -> Self::Operational;
+    /// Refuse an unrepresentable shape or work estimate independently of quotas.
+    fn size_overflow(&mut self) -> Self::Operational {
+        self.budget_exceeded()
+    }
+    /// Refuse an allocator failure independently of quotas.
+    fn allocation_failure(&mut self) -> Self::Operational {
+        self.budget_exceeded()
+    }
     /// Apply explicit omitted-argument numeric coercion or reject the capability.
     fn missing_number(&mut self) -> Result<f64, Failure<Self::Operational>> {
         Err(Failure::UnsupportedCapability(

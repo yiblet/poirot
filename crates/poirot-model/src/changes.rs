@@ -177,6 +177,9 @@ impl Workbook {
             {
                 cell.formula = Some(normalize_formula(formula)?);
             }
+            if let Some(cell) = &cell {
+                cell.validate_shared_formula()?;
+            }
             prepared.entry(sheet).or_default().insert(address, cell);
         }
         // All fallible work precedes publication. Each changed sheet's saved
@@ -243,6 +246,18 @@ impl Workbook {
         }
         *self = staged;
         Ok(())
+    }
+    /// Clone the source once and apply changes to that isolated copy.
+    /// Failure leaves this source untouched; useful for exporting scenario state.
+    pub fn with_changes(
+        &self,
+        changes: impl IntoIterator<Item = WorkbookChange>,
+    ) -> Result<Self, ModelError> {
+        let mut staged = self.clone();
+        for change in changes {
+            staged.apply_one(change)?;
+        }
+        Ok(staged)
     }
     fn apply_one(&mut self, change: WorkbookChange) -> Result<(), ModelError> {
         use WorkbookChange::*;

@@ -19,8 +19,32 @@ impl<'a> OverlayEvaluation<'a> {
         overlay: &'a mut Overlay<'_, W>,
         context: &'a EvaluationContext,
     ) -> Result<Self, OverlayError> {
-        let meter = crate::budget::BudgetMeter::new(context.budgets)?;
-        overlay.cache.get_mut().begin(context.key());
+        Self::configured(overlay, context, true)
+    }
+    /// Validate retained admission and start a cycle with independently selected profiling.
+    pub(super) fn configured<W: Borrow<Workbook>>(
+        overlay: &'a mut Overlay<'_, W>,
+        context: &'a EvaluationContext,
+        profiling: bool,
+    ) -> Result<Self, OverlayError> {
+        let meter = crate::budget::BudgetMeter::configured(context.budgets, profiling)?
+            .with_optional_limits(context.evaluation_limits());
+        let retained = overlay.cache.get_mut();
+        if retained.len() > context.retention.cells
+            || retained.retained_bytes > context.retention.bytes
+        {
+            return Err(EvaluationFailure::MemoRetentionLimit {
+                limits: context.retention,
+                consumed: crate::run::MemoRetentionUsage {
+                    cells: retained.len(),
+                    bytes: retained.retained_bytes,
+                },
+                requested: Default::default(),
+                source: None,
+            }
+            .into());
+        }
+        retained.begin(context.key());
         let mut session = overlay.source.session(context, meter);
         session.overlay_reads = Some(Reads::default());
         session.overlay_cache = Some(&overlay.cache);

@@ -19,7 +19,7 @@ pub(super) fn execute(
             return Err(VALUE_ERROR.into());
         }
         let n = dimension.trunc() as usize;
-        let count = n.checked_mul(n).ok_or_else(|| host.budget_exceeded())?;
+        let count = n.checked_mul(n).ok_or_else(|| host.size_overflow())?;
         host.check_values(count)?;
         host.check_values(n)?;
         host.charge_work(count as u64)?;
@@ -33,12 +33,12 @@ pub(super) fn execute(
         .map_err(|e| modern::failure(&mut host, e))?;
         let mut rows = Vec::new();
         rows.try_reserve_exact(n)
-            .map_err(|_| host.budget_exceeded())?;
+            .map_err(|_| host.allocation_failure())?;
         // SAFETY: The local dimension >= 1 check and truncation establish n >= 1.
         for source in matrix.values().chunks(n) {
             let mut row = Vec::new();
             row.try_reserve_exact(n)
-                .map_err(|_| host.budget_exceeded())?;
+                .map_err(|_| host.allocation_failure())?;
             for &value in source {
                 // SAFETY: Matrix chunks have at most n entries, and this row reserved n.
                 row.push(Number(value));

@@ -184,7 +184,7 @@ fn configured_small_budgets_and_bad_files_fail_explicitly() {
     ] {
         assert!(matches!(
             read_workbook_bytes_with_options(&bytes, limits),
-            Err(IoError::Limit(_))
+            Err(IoError::Quota(_))
         ));
     }
     assert!(read_workbook_bytes(b"not a ZIP").is_err());
@@ -273,11 +273,11 @@ fn file_and_buffer_routes_retain_the_same_workbook_and_warnings() {
         };
         assert!(matches!(
             poirot_io::read_workbook_with_options(&path, options),
-            Err(IoError::Limit(_))
+            Err(IoError::Quota(_))
         ));
         assert!(matches!(
             read_workbook_bytes_with_options(&bytes, options),
-            Err(IoError::Limit(_))
+            Err(IoError::Quota(_))
         ));
         std::fs::write(&path, b"unknown file signature").unwrap();
         assert!(matches!(read_workbook(&path), Err(IoError::Unsupported(_))));

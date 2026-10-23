@@ -4,6 +4,10 @@ use super::{BudgetFailure, BudgetKind, EvaluationBudgets, EvaluationTarget, Work
 /// Immutable consumed-work state used to decide whether a charge fits.
 #[derive(Clone, Copy)]
 pub(super) struct WorkSnapshot {
+    /// Whether a cycle work quota is configured, including an explicit maximum integer.
+    pub run_limited: bool,
+    /// Whether a formula work quota is configured.
+    pub cell_limited: bool,
     /// Work already consumed by the run.
     pub run_consumed: u64,
     /// Direct work consumed by the active formula, when present.
@@ -52,8 +56,7 @@ pub(super) fn admit_work(
 ) -> Result<ChargeRequest, BudgetFailure> {
     // Every category has the same admission rule; its counter is committed by the meter.
     let amount = request.amount;
-    if limits.run_work != u64::MAX && amount > limits.run_work.saturating_sub(snapshot.run_consumed)
-    {
+    if snapshot.run_limited && amount > limits.run_work.saturating_sub(snapshot.run_consumed) {
         return Err(BudgetFailure {
             kind: BudgetKind::RunWork,
             limit: limits.run_work,
@@ -63,7 +66,7 @@ pub(super) fn admit_work(
         });
     }
     if let Some(consumed) = snapshot.cell_consumed
-        && limits.cell_work != u64::MAX
+        && snapshot.cell_limited
         && amount > limits.cell_work.saturating_sub(consumed)
     {
         return Err(BudgetFailure {

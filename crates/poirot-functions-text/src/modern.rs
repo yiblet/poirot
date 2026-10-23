@@ -15,8 +15,23 @@ pub enum Error {
     NotFound,
     /// All fields were excluded.
     Empty,
-    /// Size arithmetic or allocation exceeded available storage.
-    Limit,
+    /// Checked text or collection geometry exceeds representable storage.
+    SizeOverflow,
+    /// A fallible reservation was refused by the allocator.
+    AllocationFailure,
+    /// Supplied expected geometry does not match the independently scanned fields.
+    InvalidGeometry,
+}
+/// Check Rust vector byte-capacity representation before a fallible reservation.
+fn capacity<T>(count: usize) -> Result<(), Error> {
+    if count
+        .checked_mul(std::mem::size_of::<T>())
+        .is_some_and(|bytes| bytes <= isize::MAX as usize)
+    {
+        Ok(())
+    } else {
+        Err(Error::SizeOverflow)
+    }
 }
 /// Whether a literal delimiter comparison distinguishes letter case.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -107,12 +122,19 @@ pub fn extract(
             if at(text, start, delimiter, case) {
                 remaining = remaining.checked_sub(1).ok_or(Error::Value)?;
                 if remaining == 0 {
-                    found = Some(start..start.checked_add(delimiter.len()).ok_or(Error::Limit)?);
+                    found = Some(
+                        start
+                            ..start
+                                .checked_add(delimiter.len())
+                                .ok_or(Error::SizeOverflow)?,
+                    );
                     break;
                 }
-                start = start.checked_add(delimiter.len()).ok_or(Error::Limit)?;
+                start = start
+                    .checked_add(delimiter.len())
+                    .ok_or(Error::SizeOverflow)?;
             } else {
-                start = start.checked_add(1).ok_or(Error::Limit)?;
+                start = start.checked_add(1).ok_or(Error::SizeOverflow)?;
             }
         }
     }
@@ -194,11 +216,11 @@ impl Split<'_> {
                         column,
                         span: start..offset,
                     })?;
-                    column = column.checked_add(1).ok_or(Error::Limit)?;
-                    shape.fields = shape.fields.checked_add(1).ok_or(Error::Limit)?;
+                    column = column.checked_add(1).ok_or(Error::SizeOverflow)?;
+                    shape.fields = shape.fields.checked_add(1).ok_or(Error::SizeOverflow)?;
                 }
                 if (end || row_separator.is_some()) && column > 0 {
-                    shape.rows = shape.rows.checked_add(1).ok_or(Error::Limit)?;
+                    shape.rows = shape.rows.checked_add(1).ok_or(Error::SizeOverflow)?;
                     shape.columns = shape.columns.max(column);
                     column = 0;
                 }
@@ -206,10 +228,10 @@ impl Split<'_> {
                     break;
                 }
                 let width = row_separator.or(col_separator).map_or(0, Vec::len);
-                offset = offset.checked_add(width).ok_or(Error::Limit)?;
+                offset = offset.checked_add(width).ok_or(Error::SizeOverflow)?;
                 start = offset;
             } else {
-                offset = offset.checked_add(1).ok_or(Error::Limit)?;
+                offset = offset.checked_add(1).ok_or(Error::SizeOverflow)?;
             }
         }
         if shape.fields == 0 {
@@ -224,20 +246,21 @@ impl Split<'_> {
     }
     /// Materialize admitted spans; the caller checks rectangular output bounds first.
     pub fn fields(&self, text: &[u16], expected: Shape) -> Result<Vec<Field>, Error> {
+        capacity::<Field>(expected.fields)?;
         let mut fields = Vec::new();
         fields
             .try_reserve_exact(expected.fields)
-            .map_err(|_| Error::Limit)?;
+            .map_err(|_| Error::AllocationFailure)?;
         let actual = self.scan(text, |field| {
             if fields.len() >= expected.fields {
-                return Err(Error::Limit);
+                return Err(Error::InvalidGeometry);
             }
             // SAFETY: The local bound check limits pushes to the successfully reserved expected.fields slots.
             fields.push(field);
             Ok(())
         })?;
         if actual != expected {
-            return Err(Error::Limit);
+            return Err(Error::InvalidGeometry);
         }
         Ok(fields)
     }
@@ -248,12 +271,12 @@ impl Split<'_> {
             .iter()
             .chain(self.rows)
             .try_fold(0usize, |sum, d| {
-                sum.checked_add(d.len().max(1)).ok_or(Error::Limit)
+                sum.checked_add(d.len().max(1)).ok_or(Error::SizeOverflow)
             })?;
         length
             .checked_add(1)
             .and_then(|n| n.checked_mul(widths.max(1)))
-            .ok_or(Error::Limit)
+            .ok_or(Error::SizeOverflow)
     }
 }
 /// Calculate storage needed to escape one already-rendered scalar.
@@ -263,11 +286,11 @@ pub fn escaped_len(text: &[u16], quoted: bool) -> Result<usize, Error> {
             .filter(|u| **u == 34)
             .count()
             .checked_add(2)
-            .ok_or(Error::Limit)?
+            .ok_or(Error::SizeOverflow)?
     } else {
         0
     };
-    text.len().checked_add(extra).ok_or(Error::Limit)
+    text.len().checked_add(extra).ok_or(Error::SizeOverflow)
 }
 /// Escape one admitted scalar, doubling internal quotation marks in strict text.
 pub fn escape(text: &[u16], quoted: bool) -> Result<Vec<u16>, Error> {
@@ -280,9 +303,11 @@ pub fn escape(text: &[u16], quoted: bool) -> Result<Vec<u16>, Error> {
         .len()
         .checked_add(quotes)
         .and_then(|n| n.checked_add(if quoted { 2 } else { 0 }))
-        .ok_or(Error::Limit)?;
+        .ok_or(Error::SizeOverflow)?;
+    capacity::<u16>(length)?;
     let mut out = Vec::new();
-    out.try_reserve_exact(length).map_err(|_| Error::Limit)?;
+    out.try_reserve_exact(length)
+        .map_err(|_| Error::AllocationFailure)?;
     // SAFETY: The checked local length and reservation include both enclosing quotes and every doubled input quote.
     if quoted {
         out.push(34);
@@ -456,7 +481,17 @@ mod tests {
         assert_eq!(fields[1].span, 2..3);
         assert_eq!(
             plan.fields(&text, Shape { fields: 1, ..shape }),
-            Err(Error::Limit)
+            Err(Error::InvalidGeometry)
+        );
+        assert_eq!(
+            plan.fields(
+                &text,
+                Shape {
+                    fields: usize::MAX,
+                    ..shape
+                }
+            ),
+            Err(Error::SizeOverflow)
         );
     }
     #[test]

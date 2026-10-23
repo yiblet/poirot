@@ -296,6 +296,7 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         session.extensions = self.extensions.as_ref().map(Registry::get);
         session.currency = context.formatting.currency();
         session.number_locale = &context.number_locale;
+        session.regex = context.regex;
         session.text_policy = self.policy.text;
 
         session.builtin_policy = self.policy.builtin;
@@ -353,6 +354,7 @@ macro_rules! source_methods {
                 Cell {
                     value: value.into(),
                     formula: None,
+                    shared_formula: None,
                     style,
                 },
                 source::EditKind::Content,

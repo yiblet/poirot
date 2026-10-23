@@ -322,19 +322,25 @@ pub(super) fn select(
     let result = (|| {
         session.budget.charge(WorkKind::Comparison, 1)?;
         if let Some(found) = text.as_ref().and_then(|query| prefix.text.get(query)) {
-            session.run_usage.lookup_prefix_hits =
-                session.run_usage.lookup_prefix_hits.saturating_add(1);
+            if session.budget.profiling {
+                session.run_usage.lookup_prefix_hits =
+                    session.run_usage.lookup_prefix_hits.saturating_add(1);
+            }
             return Ok(*found);
         }
         if let Some(needle) = needle {
             if let Some(&found) = prefix.first.get(&needle) {
-                session.run_usage.lookup_prefix_hits =
-                    session.run_usage.lookup_prefix_hits.saturating_add(1);
+                if session.budget.profiling {
+                    session.run_usage.lookup_prefix_hits =
+                        session.run_usage.lookup_prefix_hits.saturating_add(1);
+                }
                 return Ok(Some(found));
             }
             if prefix.exhausted {
-                session.run_usage.lookup_prefix_hits =
-                    session.run_usage.lookup_prefix_hits.saturating_add(1);
+                if session.budget.profiling {
+                    session.run_usage.lookup_prefix_hits =
+                        session.run_usage.lookup_prefix_hits.saturating_add(1);
+                }
                 return Ok(None);
             }
         }
@@ -349,11 +355,13 @@ pub(super) fn select(
         };
         let mut next = reader.next(if text.is_some() { 0 } else { prefix.next }, vector.len)?;
         while let Some(index) = next {
-            reader.session.run_usage.lookup_prefix_scans = reader
-                .session
-                .run_usage
-                .lookup_prefix_scans
-                .saturating_add(1);
+            if reader.session.budget.profiling {
+                reader.session.run_usage.lookup_prefix_scans = reader
+                    .session
+                    .run_usage
+                    .lookup_prefix_scans
+                    .saturating_add(1);
+            }
             let value = reader.session.lookup_read(table, vector, index)?;
             // A recursive provider can temporarily yield #REF before completing.
             // Do not retain a prefix that skipped any spreadsheet error/nonfinite.

@@ -1,28 +1,28 @@
 //! Bounded OOXML adapter facade and ordered export patch coordination.
 mod backend;
 mod budget;
+pub(crate) use backend::{backend_package, needs_backend_adapter};
+mod dynamic;
 mod metadata;
 mod package;
+pub(crate) use metadata::{apply_workbook_metadata, number_formats};
+mod shared;
 mod spill;
 mod text;
 mod text_overlay;
 mod workbook;
 mod worksheet;
-pub(crate) use spill::bounds as spill_bounds;
-pub(crate) use spill::{apply_spills, validate_spills};
+pub(crate) use spill::{apply_sheet_spills, validate_spills};
 mod xml;
 /// Checked OOXML package overlays used around backend conversion.
-pub(crate) use text_overlay::apply_text;
+pub(crate) use text_overlay::{apply_sheet_text, shared_strings};
 
 /// Checked OOXML package overlays used around backend conversion.
-pub(crate) use backend::backend_package;
-/// Checked OOXML package overlays used around backend conversion.
-pub(crate) use metadata::{apply_metadata, apply_rows};
-/// Checked OOXML package overlays used around backend conversion.
-pub(crate) use package::read_package_with_options;
+pub(crate) use package::ImportPackage;
 
 use crate::{IoError, ReadOptions};
 use budget::{SizeCounter, next_total};
+use package::read_package_with_options;
 use poirot_model::Workbook;
 use workbook::WorkbookPatch;
 use worksheet::SheetPatch;
@@ -35,7 +35,7 @@ pub(crate) fn patch_export(
     options: crate::WriteOptions,
 ) -> Result<Vec<u8>, IoError> {
     package::check_generated_claims(bytes, options)?;
-    let mut package = read_package_with_options(
+    let package = read_package_with_options(
         bytes,
         ReadOptions {
             max_input_bytes: options.max_output_bytes,
@@ -44,11 +44,18 @@ pub(crate) fn patch_export(
             max_zip_entries: options.max_zip_entries,
             ..ReadOptions::default()
         },
-    )?;
-    let plan = crate::opc::PackageInventory {
-        parts: package.clone(),
-    }
-    .plan()?;
+    )
+    .map_err(|error| match error {
+        // Generated-package validation retains the existing export error contract.
+        IoError::Quota(failure) => IoError::Limit(format!(
+            "generated package {:?} limit {} exceeded (consumed {}, requested {})",
+            failure.resource, failure.limit, failure.consumed, failure.requested
+        )),
+        other => other,
+    })?;
+    let inventory = crate::opc::PackageInventory { parts: package };
+    let plan = inventory.plan()?;
+    let mut package = inventory.parts;
     if plan.sheets.len() != workbook.sheets().len() || plan.sheets.iter().any(|s| !s.supported) {
         return Err(IoError::Opc(crate::opc::OpcError::SheetMismatch(
             "export sheet cardinality mismatch".into(),
@@ -64,9 +71,11 @@ pub(crate) fn patch_export(
             .part
             .clone();
         let original = part(&package, &path)?;
+        let shared = shared::SharedExport::new(sheet)?;
         let patch = SheetPatch {
             bytes: original,
             sheet,
+            shared: &shared,
         };
         let size = patch.execute(SizeCounter::default())?.0;
         patched_total = next_total(size, original.len() as u64, patched_total, options)?;
@@ -82,6 +91,15 @@ pub(crate) fn patch_export(
     next_total(size, original.len() as u64, patched_total, options)?;
     let updated = patch.execute(Vec::new())?;
     package.insert(plan.workbook_part, updated);
+    if workbook.sheets().iter().any(|sheet| {
+        sheet.spill_extents().next().is_some()
+            || sheet
+                .cells()
+                .into_iter()
+                .any(|(address, _)| sheet.spill_owner(*address).is_some())
+    }) {
+        dynamic::add_metadata(&mut package)?;
+    }
     package::write_export(package, options)
 }
 

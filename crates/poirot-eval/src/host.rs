@@ -244,42 +244,48 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
                 .runtime
                 .budget
                 .check_allocation(self.session.runtime.random_streams.len().saturating_add(1))?;
-            self.session.runtime.budget.check_allocation(
-                self.session
-                    .runtime
-                    .budget
-                    .usage
-                    .random_accesses
-                    .len()
-                    .saturating_add(1),
-            )?;
+            if self.session.runtime.budget.profiling {
+                self.session.runtime.budget.check_allocation(
+                    self.session
+                        .runtime
+                        .budget
+                        .usage
+                        .random_accesses
+                        .len()
+                        .saturating_add(1),
+                )?;
+            }
             // Bounds describe both entire collections; work charges only the two
             // new records. Previous slots are neither copied nor rematerialized.
+            let records = 1 + u64::from(self.session.runtime.budget.profiling);
             self.session
                 .runtime
                 .budget
-                .charge(crate::WorkKind::Materialization, 2)?;
+                .charge(crate::WorkKind::Materialization, records)?;
         }
         self.charge_work(work + 1)?;
         let seed = self.session.context.randomness_seed;
         // Each stream owns a stable trace slot: distinct cells never rescan
         // earlier stream records. Both collections were bounded before insertion.
         let runtime = &mut *self.session.runtime;
+        let profiling = runtime.budget.profiling;
         let accesses = &mut runtime.budget.usage.random_accesses;
         let (stream, usage_slot) = runtime
             .random_streams
             .entry((self.sheet, self.address))
             .or_insert_with(|| {
                 let slot = accesses.len();
-                accesses.push(crate::random::RandomAccess {
-                    seed,
-                    sheet: self.sheet as u64,
-                    row: self.address.row,
-                    column: self.address.col,
-                    version: crate::random::STREAM_VERSION,
-                    draws: 0,
-                    words: 0,
-                });
+                if profiling {
+                    accesses.push(crate::random::RandomAccess {
+                        seed,
+                        sheet: self.sheet as u64,
+                        row: self.address.row,
+                        column: self.address.col,
+                        version: crate::random::STREAM_VERSION,
+                        draws: 0,
+                        words: 0,
+                    });
+                }
                 (
                     crate::random::Stream::new(
                         seed,
@@ -297,11 +303,13 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
                 None => (None, crate::random::INTEGER_WORK),
             },
         };
-        let access = accesses
-            .get_mut(*usage_slot)
-            .ok_or(EvaluationFailure::StalePlan)?;
-        access.draws += 1;
-        access.words += words;
+        if profiling {
+            let access = accesses
+                .get_mut(*usage_slot)
+                .ok_or(EvaluationFailure::StalePlan)?;
+            access.draws = access.draws.saturating_add(1);
+            access.words = access.words.saturating_add(words);
+        }
         self.session
             .read(DependencyRead::Random(crate::random::RandomAccess {
                 seed,
@@ -318,6 +326,40 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
                 "bounded integer entropy rejection exhausted",
             ))
         })
+    }
+    /// Native regex execution guards selected independently of calculation work.
+    pub(crate) fn regex_settings(&self) -> crate::RegexSettings {
+        self.session.regex
+    }
+    /// Report an allocation refusal without inventing an exhausted quota.
+    pub(crate) fn allocation_failure(&self) -> EvaluationFailure {
+        self.resource_failure(
+            crate::ResourceFailureKind::Allocation,
+            "allocating a function result or scratch buffer",
+        )
+    }
+    /// Report an unrepresentable size independently of caller quotas.
+    pub(crate) fn size_overflow(&self) -> EvaluationFailure {
+        self.resource_failure(
+            crate::ResourceFailureKind::SizeOverflow,
+            "function size or work estimate overflow",
+        )
+    }
+    /// Preserve a native backend's execution guard as an operational failure.
+    pub(crate) fn resource_failure(
+        &self,
+        kind: crate::ResourceFailureKind,
+        detail: impl Into<String>,
+    ) -> EvaluationFailure {
+        EvaluationFailure::Resource {
+            kind,
+            capability: CapabilityId::FunctionAdapter,
+            source: Some(EvaluationTarget {
+                sheet: self.sheet,
+                address: self.address,
+            }),
+            detail: detail.into(),
+        }
     }
     /// Count syntactic argument positions.
     pub(crate) fn len(&self) -> usize {
@@ -659,9 +701,9 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
     }
     /// Reject a helper's unattributed internal resource exhaustion operationally.
     pub(crate) fn budget_exceeded(&self) -> EvaluationFailure {
-        self.capability_failure(
-            CapabilityId::FunctionAdapter,
-            "helper exhausted an internal budget without reporting its requested count",
+        self.resource_failure(
+            crate::ResourceFailureKind::BackendGuard,
+            "algorithm resource guard refused execution; native counts are unavailable",
         )
     }
     /// Record formatting consumption and copy explicitly configured currency settings.

@@ -193,7 +193,8 @@ fn valid_segment(segment: &str) -> bool {
     }
     true
 }
-fn relationship_part(owner: &str) -> String {
+/// Locate the relationship metadata belonging to a package part.
+pub(crate) fn relationship_part(owner: &str) -> String {
     if owner.is_empty() {
         "_rels/.rels".into()
     } else {
@@ -217,6 +218,35 @@ fn attrs(e: &quick_xml::events::BytesStart<'_>) -> Result<BTreeMap<String, Strin
         result.insert(key, value);
     }
     Ok(result)
+}
+/// Select one typed relationship under its cardinality constraint.
+fn select_relationship(
+    rels: &BTreeMap<String, Relationship>,
+    kind: &str,
+    required: bool,
+) -> Result<Option<String>, IoError> {
+    let found: Vec<_> = rels
+        .iter()
+        .filter(|(_, r)| r.kind == format!("{REL}{kind}"))
+        .collect();
+    if found.len() > 1 || (required && found.is_empty()) {
+        return Err(fail(OpcError::InvalidRelationship(format!(
+            "expected {} {kind} relationship",
+            if required {
+                "exactly one"
+            } else {
+                "at most one"
+            }
+        ))));
+    }
+    found
+        .first()
+        .map(|(id, r)| {
+            r.target
+                .clone()
+                .ok_or_else(|| fail(OpcError::ExternalRelationship((*id).clone())))
+        })
+        .transpose()
 }
 impl PackageInventory {
     fn part(&self, path: &str) -> Result<&[u8], IoError> {
@@ -290,6 +320,15 @@ impl PackageInventory {
         }
         Ok(result)
     }
+    /// Resolve the root workbook before loading only its planning metadata.
+    pub(crate) fn workbook_part(&self, policy: OpcImportPolicy) -> Result<String, IoError> {
+        let roots = self.relationships("", &mut Vec::new(), policy)?;
+        select_relationship(&roots, "officeDocument", true)?.ok_or_else(|| {
+            fail(OpcError::InvalidRelationship(
+                "missing officeDocument relationship".into(),
+            ))
+        })
+    }
     /// Validate package identity using the default external-relationship policy.
     pub fn plan(&self) -> Result<OpcReadPlan, IoError> {
         self.plan_with_policy(OpcImportPolicy::default())
@@ -298,41 +337,15 @@ impl PackageInventory {
     pub fn plan_with_policy(&self, policy: OpcImportPolicy) -> Result<OpcReadPlan, IoError> {
         let mut warnings = Vec::new();
         let roots = self.relationships("", &mut warnings, policy)?;
-        let select = |rels: &BTreeMap<String, Relationship>,
-                      kind: &str,
-                      required: bool|
-         -> Result<Option<String>, IoError> {
-            let found: Vec<_> = rels
-                .iter()
-                .filter(|(_, r)| r.kind == format!("{REL}{kind}"))
-                .collect();
-            if found.len() > 1 || (required && found.is_empty()) {
-                return Err(fail(OpcError::InvalidRelationship(format!(
-                    "expected {} {kind} relationship",
-                    if required {
-                        "exactly one"
-                    } else {
-                        "at most one"
-                    }
-                ))));
-            }
-            found
-                .first()
-                .map(|(id, r)| {
-                    r.target
-                        .clone()
-                        .ok_or_else(|| fail(OpcError::ExternalRelationship((*id).clone())))
-                })
-                .transpose()
-        };
-        let workbook_part = select(&roots, "officeDocument", true)?.ok_or_else(|| {
-            fail(OpcError::InvalidRelationship(
-                "missing officeDocument relationship".into(),
-            ))
-        })?;
+        let workbook_part =
+            select_relationship(&roots, "officeDocument", true)?.ok_or_else(|| {
+                fail(OpcError::InvalidRelationship(
+                    "missing officeDocument relationship".into(),
+                ))
+            })?;
         let rels = self.relationships(&workbook_part, &mut warnings, policy)?;
-        let styles_part = select(&rels, "styles", false)?;
-        let shared_strings_part = select(&rels, "sharedStrings", false)?;
+        let styles_part = select_relationship(&rels, "styles", false)?;
+        let shared_strings_part = select_relationship(&rels, "sharedStrings", false)?;
         let mut reader = NsReader::from_reader(self.part(&workbook_part)?);
         reader.config_mut().expand_empty_elements = true;
         let mut sheets = Vec::new();
