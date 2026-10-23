@@ -321,6 +321,9 @@ pub(crate) fn execute(
     address: CellAddress,
     args: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
+    if function == F::Munit {
+        return super::unit::execute(session, sheet, address, args);
+    }
     if matches!(function, F::Randarray | F::Trimrange) {
         return super::random_trim::execute(function, session, sheet, address, args);
     }

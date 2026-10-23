@@ -104,7 +104,7 @@ pub(crate) fn execute(
         Err(Failure::Operational(error)) => Err(error),
         Err(Failure::UnsupportedCapability(capability)) => Err(host.capability_failure(
             CapabilityId::FunctionAdapter,
-            format!("engineering coercion requires {capability:?}"),
+            format!("engineering execution requires {capability:?}"),
         )),
     }
 }
@@ -142,3 +142,32 @@ mod source_grammar_tests {
 
 /// Lazy engineering operation contracts and compatibility rules.
 pub mod policy;
+
+/// Documented complex execution and retained source-selected engineering helpers.
+mod modern_complex;
+/// Signed radix, bitwise and physical measurement execution.
+mod modern_radix;
+/// Documented bounded real engineering special functions.
+mod modern_special;
+
+/// Select the typed modern complex path or the existing family policy adapter.
+pub(crate) fn execute_function(
+    session: &mut Session<'_>,
+    sheet: usize,
+    address: CellAddress,
+    function: EngineeringFunction,
+    arguments: ArgumentsRef<'_>,
+) -> EvalResult<Value> {
+    if session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
+        && modern_special::handles(function)
+    {
+        return modern_special::execute(session, sheet, address, function, arguments);
+    }
+    match function.helper() {
+        Some(helper) => execute(session, sheet, address, helper, arguments),
+        None if modern_radix::handles(function) => {
+            modern_radix::execute(session, sheet, address, function, arguments)
+        }
+        None => modern_complex::execute(session, sheet, address, function, arguments),
+    }
+}

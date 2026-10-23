@@ -75,6 +75,7 @@ mod interface;
 pub use interface::{
     CallContext, FunctionAdapter, FunctionInput, FunctionParameters, FunctionValue,
 };
+mod elementwise;
 mod registry;
 /// Indexed adapter composition owning flattened executors.
 pub use registry::AdapterRegistry;
@@ -230,11 +231,11 @@ family_adapter!(
     function,
     context,
     parameters,
-    financial::execute(
+    financial::execute_function(
         context.session,
         context.target.sheet,
         context.target.address,
-        function.helper(),
+        function,
         parameters.0
     )
 );
@@ -244,11 +245,11 @@ family_adapter!(
     function,
     context,
     parameters,
-    engineering::execute(
+    engineering::execute_function(
         context.session,
         context.target.sheet,
         context.target.address,
-        function.helper(),
+        function,
         parameters.0
     )
 );

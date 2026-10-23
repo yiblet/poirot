@@ -46,20 +46,22 @@ macro_rules! helper_map {
 }
 
 helper_map! {
-    total FinancialFunction => crate::adapters::financial::policy::FinancialFunction;
+    partial FinancialFunction => crate::adapters::financial::policy::FinancialFunction;
     helpers: [
         Fv, Pv, Pmt, Nper, Ipmt,
         Ppmt, Rate, Npv, Irr, Mirr,
         Dollar, DollarDe, DollarFr, Fixed,
     ];
+    local: [Euroconvert];
 }
 
 helper_map! {
-    total EngineeringFunction => crate::adapters::engineering::policy::EngineeringFunction;
+    partial EngineeringFunction => crate::adapters::engineering::policy::EngineeringFunction;
     helpers: [
         Besselj, Bin2dec, Complex, Dec2bin, Dec2hex,
         Delta, Hex2dec, Imaginary, Imreal, Oct2dec,
     ];
+    local: [Besseli,Besselk,Bessely,Erf,ErfPrecise,Erfc,ErfcPrecise,Gestep,Imabs, Imargument, Imconjugate, Imcos, Imcosh, Imcot, Imcsc, Imcsch, Imdiv, Imexp, Imln, Imlog10, Imlog2, Impower, Improduct, Imsec, Imsech, Imsin, Imsinh, Imsqrt, Imsub, Imsum, Imtan, Bin2hex, Bin2oct, Bitand, Bitlshift, Bitor, Bitrshift, Bitxor, Convert, Dec2oct, Hex2bin, Hex2oct, Oct2bin, Oct2hex];
 }
 
 helper_map! {
@@ -68,7 +70,7 @@ helper_map! {
         Mdeterm, Minverse, Mmult, Transpose, Frequency,
         Sumproduct, Trend,
     ];
-    local: [Randarray, Trimrange, Groupby, Percentof, Filter, Sort, Sortby, Unique, Sequence, Hstack, Vstack, Take, Drop, Choosecols, Chooserows, Expand, Tocol, Torow, Wrapcols, Wraprows];
+    local: [Munit, Randarray, Trimrange, Groupby, Percentof, Filter, Sort, Sortby, Unique, Sequence, Hstack, Vstack, Take, Drop, Choosecols, Chooserows, Expand, Tocol, Torow, Wrapcols, Wraprows];
 }
 
 helper_map! {
@@ -98,6 +100,7 @@ helper_map! {
         Sinh, Sqrtpi, Tanh,
     ];
     local: [
+        Acot, Acoth, Cot, Coth, Csc, Csch, Sec, Sech, IsoCeiling, Multinomial,
         Base, Decimal, SeriesSum, Pi, Abs, Sign, Sqrt, Exp,
         Ln, Log10, Log, Power, Mod,
         Int, Trunc, Round, RoundUp, RoundDown,
@@ -149,7 +152,7 @@ helper_map! {
     ];
     local: [
         If, IfError, IfNa, Choose, And,
-        Or, Not, True, False,
+        Or, Xor, Not, True, False,
     ];
 }
 

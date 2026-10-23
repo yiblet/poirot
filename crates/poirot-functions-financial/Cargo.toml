@@ -10,6 +10,7 @@ description = "Financial calculations for spreadsheet functions"
 include = ["/src/**", "/README.md"]
 
 [dependencies]
+poirot-functions-math = { version = "0.1.0", path = "../poirot-functions-math" }
 poirot-coercionv2 = { version = "0.1.0", path = "../poirot-coercionv2" }
 poirot-numeric = { version = "0.1.0", path = "../poirot-numeric" }
 

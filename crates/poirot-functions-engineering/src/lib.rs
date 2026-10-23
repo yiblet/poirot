@@ -13,6 +13,18 @@
 // Argument parsing and result spelling belong to poirot-coercionv2; references,
 // resource admission and operational errors belong to the evaluator adapter.
 
+/// Binary64 modified Bessel base approximations.
+mod bessel_k;
+/// Bounded real special functions and numeric threshold arithmetic.
+pub mod special;
+
+/// Stable complex arithmetic and principal transcendental kernels.
+pub mod complex;
+/// Strict signed engineering radix and checked bitwise arithmetic.
+pub mod radix;
+/// Physical measurement conversion using explicit unit definitions.
+pub mod units;
+
 /// Spreadsheet value/domain failures from engineering conversions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum EngineeringError {

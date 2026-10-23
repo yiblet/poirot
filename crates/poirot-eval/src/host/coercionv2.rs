@@ -2,6 +2,11 @@
 use super::*;
 
 impl CallHost<'_, '_> {
+    /// Coerce a calendar serial under the existing date-family rules.
+    pub(crate) fn coercev2_calendar_date(&mut self, value: &CellValue) -> FunctionResult<f64> {
+        self.session.coercev2_date_argument(value)
+    }
+
     /// Resolve and numerically coerce one argument under explicit missing and numeric rules.
     pub(crate) fn coercev2_argument_number(
         &mut self,

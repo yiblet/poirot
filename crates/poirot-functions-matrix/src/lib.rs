@@ -642,3 +642,26 @@ mod sequence_tests {
         );
     }
 }
+
+/// Generate a numeric identity matrix after admitting its square geometry.
+pub fn unit(dimension: usize, budget: Budget) -> Result<Matrix<f64>> {
+    if dimension == 0 {
+        return value();
+    }
+    let count = dimension
+        .checked_mul(dimension)
+        .ok_or(Error::BudgetExceeded)?;
+    budget.check(Some(count), Some(count))?;
+    let mut values = Vec::new();
+    values
+        .try_reserve_exact(count)
+        .map_err(|_| Error::BudgetExceeded)?;
+    for row in 0..dimension {
+        for column in 0..dimension {
+            // SAFETY: count = dimension squared was checked and reserved above;
+            // these two loops push exactly count entries.
+            values.push(f64::from(row == column));
+        }
+    }
+    Matrix::new(dimension, dimension, values)
+}

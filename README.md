@@ -81,5 +81,8 @@ See [Contributing](CONTRIBUTING.md) to work on Poirot.
   the MIT-licensed [Rust bindings](https://github.com/BurntSushi/rust-pcre2).
   See [PCRE2 provenance and notices](LICENSES/PCRE2.md).
 
+- [Boost.Math](https://github.com/boostorg/math) supplies the adapted binary64
+  Bessel K approximations. See [source attribution and license](LICENSES/Boost-Math.md).
+
 See [LICENSES/ACKNOWLEDGEMENTS](LICENSES/ACKNOWLEDGEMENTS) for credits and notices.
 Poirot's code is licensed under [MIT](LICENSES/MIT.txt).

@@ -8,6 +8,7 @@ mod business_days;
 mod calendar;
 mod components;
 mod day_count;
+mod modern;
 use business_days::{WorkdayPlan, WorkdayState, advance, network, weekend_policy};
 use calendar::{
     Date, calendar_date, civil, coercev2_date_integer, date, epoch, max_serial, serial, valid,
@@ -128,7 +129,8 @@ impl Session<'_> {
         };
         Ok(plan.resolve(year).map(|_| 0.)?)
     }
-    fn coercev2_date_argument(&mut self, v: &CellValue) -> FunctionResult<f64> {
+    /// Coerce a calendar serial with attributed text-date context reads.
+    pub(crate) fn coercev2_date_argument(&mut self, v: &CellValue) -> FunctionResult<f64> {
         let n = if let Some(text) = v.text_ref() {
             let text = checked_text_view(text, &mut self.budget)?;
             match poirot_coercionv2::compatibility::coercev2_date_numeric_text(&text) {
@@ -246,7 +248,16 @@ impl Session<'_> {
         name: DateFunction,
         args: ArgumentsRef<'_>,
     ) -> EvalResult<Value> {
+        if matches!(
+            name,
+            DateFunction::IsoWeekNum | DateFunction::NetworkDaysIntl
+        ) {
+            return modern::execute(self, s, at, name, args);
+        }
         match name {
+            DateFunction::IsoWeekNum | DateFunction::NetworkDaysIntl => {
+                Err(EvaluationFailure::StalePlan)
+            }
             DateFunction::Date
             | DateFunction::DateDif
             | DateFunction::DateValue

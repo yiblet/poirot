@@ -144,3 +144,24 @@ mod tests {
 
 /// Financial operation contracts, coercion, and formatting policies.
 pub mod policy;
+
+mod euro;
+/// Dispatch documented euro conversion separately from unchanged pinned helpers.
+pub(crate) fn execute_function(
+    session: &mut Session<'_>,
+    sheet: usize,
+    address: CellAddress,
+    function: FinancialFunction,
+    args: ArgumentsRef<'_>,
+) -> EvalResult<Value> {
+    if function == FinancialFunction::Euroconvert {
+        return euro::execute(session, sheet, address, args);
+    }
+    execute(
+        session,
+        sheet,
+        address,
+        function.helper().ok_or(EvaluationFailure::StalePlan)?,
+        args,
+    )
+}

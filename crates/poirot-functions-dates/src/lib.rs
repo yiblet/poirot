@@ -9,6 +9,8 @@
 use poirot_coercionv2::dates::calendar::{Date, civil, epoch};
 use poirot_coercionv2::{date_time::CalendarEpoch, dates::interval::DateIntervalUnit};
 use poirot_functions_core::CellError;
+mod business;
+pub use business::{iso_week, network_days};
 
 /// Compute completed calendar intervals from admitted date serials.
 /// Unit text is admitted by poirot-coercionv2. MD preserves the historical borrowing

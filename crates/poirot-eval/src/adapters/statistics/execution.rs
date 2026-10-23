@@ -9,6 +9,8 @@ pub(crate) enum AggregateFunction {
     And,
     /// Logical disjunction over selected members.
     Or,
+    /// Odd parity over selected logical members.
+    Xor,
 }
 /// Aggregate members retaining either eagerly read values or deferred sheet cells.
 enum AggregateItems {
@@ -80,6 +82,8 @@ impl Session<'_> {
         use poirot_functions_logical::{LogicalReduction, LogicalReductionState};
         let mut truth = LogicalReductionState::new(if name == AggregateFunction::And {
             LogicalReduction::And
+        } else if name == AggregateFunction::Xor {
+            LogicalReduction::Xor
         } else {
             LogicalReduction::Or
         });
@@ -264,8 +268,16 @@ impl Session<'_> {
                     }
                     continue;
                 }
-                if matches!(name, AggregateFunction::And | AggregateFunction::Or) {
-                    if indirect && matches!(v, Text(_) | CellValue::TextUtf16(_) | Blank) {
+                if matches!(
+                    name,
+                    AggregateFunction::And | AggregateFunction::Or | AggregateFunction::Xor
+                ) {
+                    let collection = if name == AggregateFunction::Xor {
+                        origin != poirot_coercionv2::Origin::Direct
+                    } else {
+                        indirect
+                    };
+                    if collection && matches!(v, Text(_) | CellValue::TextUtf16(_) | Blank) {
                         continue;
                     }
                     match core_projection::coercev2_operand_boolean(&v) {
@@ -331,7 +343,10 @@ impl Session<'_> {
             )
             .into());
         }
-        if matches!(name, AggregateFunction::And | AggregateFunction::Or) {
+        if matches!(
+            name,
+            AggregateFunction::And | AggregateFunction::Or | AggregateFunction::Xor
+        ) {
             return Ok(match truth.finish() {
                 Some(value) => Boolean(value).into(),
                 None => err(VALUE_ERROR),
@@ -344,6 +359,7 @@ impl Session<'_> {
             });
         }
         let result = match name {
+            AggregateFunction::Xor => return Err(EvaluationFailure::StalePlan),
             AggregateFunction::Statistics(
                 StatisticsFunction::AveDev
                 | StatisticsFunction::AverageA

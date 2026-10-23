@@ -7,7 +7,7 @@ use std::borrow::Cow;
 /// Snapshot validation result carrying a diagnostic for unsupported or inconsistent compiled data.
 type Result<T> = std::result::Result<T, String>;
 const MAX: usize = 1_000_000;
-const VERSION: u32 = 6;
+const VERSION: u32 = 10;
 /// Serde view preserving source-to-program sharing for a trusted compiled workbook plan.
 #[derive(Serialize, Deserialize)]
 pub struct Plan<'a> {
@@ -555,6 +555,37 @@ mod tests {
             .unwrap();
         sheet
             .set_formula("G1".parse().unwrap(), "TRIMRANGE(A1:D5)")
+            .unwrap();
+        book.sheet_mut(0)
+            .unwrap()
+            .set_formula("K1".parse().unwrap(), "MUNIT(2)")
+            .unwrap();
+        book.sheet_mut(0)
+            .unwrap()
+            .set_formula(
+                "P1".parse().unwrap(),
+                "NETWORKDAYS.INTL(45292,45298,1,A1:A10)",
+            )
+            .unwrap();
+        book.sheet_mut(0)
+            .unwrap()
+            .set_formula("T1".parse().unwrap(), "IMSUM(IMCONJUGATE({\"i\";\"2i\"}))")
+            .unwrap();
+        book.sheet_mut(0)
+            .unwrap()
+            .set_formula("W1".parse().unwrap(), "BIN2HEX({1;10})")
+            .unwrap();
+        book.sheet_mut(0)
+            .unwrap()
+            .set_formula("Y1".parse().unwrap(), "CONVERT({1;2},\"byte\",\"bit\")")
+            .unwrap();
+        book.sheet_mut(0)
+            .unwrap()
+            .set_formula("AA1".parse().unwrap(), "BESSELI({0;1},0)")
+            .unwrap();
+        book.sheet_mut(0)
+            .unwrap()
+            .set_formula("AD1".parse().unwrap(), "ERFC.PRECISE({0;1})")
             .unwrap();
         let plan = FormulaCompiler::new().compile_workbook(&book, &EvaluationPolicy::default());
         let dto = Plan::capture(&plan).unwrap().into_owned();

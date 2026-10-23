@@ -1,0 +1,80 @@
+//! Evaluator revision rejection retains authored utility formulas and edits.
+use poirot::{CellValue, EvaluationContext, Overlay, Workbook, artifact};
+#[test]
+fn old_preparation_recovers_utility_source_and_recalculates() {
+    let mut book = Workbook::new();
+    let s = book.add_sheet("S").unwrap();
+    s.set_value("J1".parse().unwrap(), 2.).unwrap();
+    s.set_formula("A1".parse().unwrap(), "MUNIT(J1)").unwrap();
+    s.set_formula("G1".parse().unwrap(), "MULTINOMIAL(J1,3)")
+        .unwrap();
+    let mut overlay = Overlay::with_workbook(book).build().unwrap();
+    let input = overlay.target("S!J1").unwrap();
+    let output = overlay.target("S!G1").unwrap();
+    overlay.set_value(input, 3.).unwrap();
+    let context = EvaluationContext::default();
+    assert_eq!(
+        overlay.evaluation(&context).unwrap().cell(output).unwrap(),
+        20.0.into()
+    );
+    let mut bytes = overlay.save_snapshot().to_buffer().unwrap();
+    let previous = poirot::eval::overlay::snapshot::COMPATIBILITY_REVISION - 1;
+    bytes[16..24].copy_from_slice(&previous.to_le_bytes());
+    assert!(
+        Workbook::load_snapshot()
+            .prepared_policy(artifact::PreparedPolicy::RequireCompatible)
+            .from_bytes(&bytes)
+            .is_err()
+    );
+    let artifact::RestoredCheckpoint::Source { workbook, status } = Workbook::load_snapshot()
+        .from_bytes(&bytes)
+        .unwrap()
+        .into_checkpoint()
+        .unwrap()
+    else {
+        panic!("old evaluator state accepted")
+    };
+    assert_eq!(status, artifact::PreparedStatus::DiscardedIncompatible);
+    assert_eq!(
+        workbook.sheet(0).unwrap().get(input.address).unwrap().value,
+        CellValue::Number(3.)
+    );
+    let mut direct = poirot::Evaluation::with_workbook(workbook)
+        .build(context)
+        .unwrap();
+    assert_eq!(direct.cell(output).unwrap(), 20.0.into());
+    let child = direct.target("S!C3").unwrap();
+    assert_eq!(direct.cell(child).unwrap(), 1.0.into());
+    let artifact::RestoredCheckpoint::Source { status, .. } = Workbook::load_snapshot()
+        .prepared_policy(artifact::PreparedPolicy::SourceOnly)
+        .from_bytes(&bytes)
+        .unwrap()
+        .into_checkpoint()
+        .unwrap()
+    else {
+        panic!("source-only reused preparation")
+    };
+    assert_eq!(status, artifact::PreparedStatus::DiscardedByRequest);
+}
+#[test]
+fn utility_xlsx_roundtrip_executes_prefixed_functions_and_spills() {
+    let mut b = Workbook::new();
+    let s = b.add_sheet("S").unwrap();
+    s.set_formula("A1".parse().unwrap(), "MUNIT(2)").unwrap();
+    s.set_formula("D1".parse().unwrap(), "NETWORKDAYS.INTL(45292,45298)")
+        .unwrap();
+    s.set_formula("G1".parse().unwrap(), "ACOT(1)").unwrap();
+    let bytes = poirot::io::write_xlsx_to_buffer(&b).unwrap();
+    let reopened = poirot::io::read_workbook_bytes(&bytes).unwrap();
+    let mut e = poirot::Evaluation::with_workbook(reopened)
+        .build(EvaluationContext::default())
+        .unwrap();
+    for (cell, n) in [
+        ("S!B2", 1.),
+        ("S!D1", 5.),
+        ("S!G1", std::f64::consts::FRAC_PI_4),
+    ] {
+        let target = e.target(cell).unwrap();
+        assert_eq!(e.cell(target).unwrap(), n.into());
+    }
+}

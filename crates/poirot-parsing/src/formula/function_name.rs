@@ -327,6 +327,69 @@ common_functions! {
     Percentof = 291 => "PERCENTOF";
     Randarray = 292 => "RANDARRAY";
     Trimrange = 293 => "TRIMRANGE";
+    Acot = 294 => "ACOT";
+    Acoth = 295 => "ACOTH";
+    Cot = 296 => "COT";
+    Coth = 297 => "COTH";
+    Csc = 298 => "CSC";
+    Csch = 299 => "CSCH";
+    Euroconvert = 300 => "EUROCONVERT";
+    IsoCeiling = 301 => "ISO.CEILING";
+    IsoWeekNum = 302 => "ISOWEEKNUM";
+    Multinomial = 303 => "MULTINOMIAL";
+    Munit = 304 => "MUNIT";
+    NetworkDaysIntl = 305 => "NETWORKDAYS.INTL";
+    Sec = 306 => "SEC";
+    Sech = 307 => "SECH";
+    Xor = 308 => "XOR";
+    Imabs = 309 => "IMABS";
+    Imargument = 310 => "IMARGUMENT";
+    Imconjugate = 311 => "IMCONJUGATE";
+    Imcos = 312 => "IMCOS";
+    Imcosh = 313 => "IMCOSH";
+    Imcot = 314 => "IMCOT";
+    Imcsc = 315 => "IMCSC";
+    Imcsch = 316 => "IMCSCH";
+    Imdiv = 317 => "IMDIV";
+    Imexp = 318 => "IMEXP";
+    Imln = 319 => "IMLN";
+    Imlog10 = 320 => "IMLOG10";
+    Imlog2 = 321 => "IMLOG2";
+    Impower = 322 => "IMPOWER";
+    Improduct = 323 => "IMPRODUCT";
+    Imsec = 324 => "IMSEC";
+    Imsech = 325 => "IMSECH";
+    Imsin = 326 => "IMSIN";
+    Imsinh = 327 => "IMSINH";
+    Imsqrt = 328 => "IMSQRT";
+    Imsub = 329 => "IMSUB";
+    Imsum = 330 => "IMSUM";
+    Imtan = 331 => "IMTAN";
+    Bin2hex = 332 => "BIN2HEX";
+    Bin2oct = 333 => "BIN2OCT";
+    Bitand = 334 => "BITAND";
+    Bitlshift = 335 => "BITLSHIFT";
+    Bitor = 336 => "BITOR";
+    Bitrshift = 337 => "BITRSHIFT";
+    Bitxor = 338 => "BITXOR";
+    Convert = 339 => "CONVERT";
+    Dec2oct = 340 => "DEC2OCT";
+    Hex2bin = 341 => "HEX2BIN";
+    Hex2oct = 342 => "HEX2OCT";
+    Oct2bin = 343 => "OCT2BIN";
+    Oct2hex = 344 => "OCT2HEX";
+    Besseli = 345 => "BESSELI";
+    Besselk = 346 => "BESSELK";
+    Bessely = 347 => "BESSELY";
+    Erf = 348 => "ERF";
+    ErfPrecise = 349 => "ERF.PRECISE";
+    Erfc = 350 => "ERFC";
+    ErfcPrecise = 351 => "ERFC.PRECISE";
+    Gestep = 352 => "GESTEP";
+
+
+
+
 
 }
 

@@ -145,3 +145,48 @@ fn grouping_storage_keeps_aggregation_identifiers_and_string_literals() {
         Some(r#"_xlfn.GROUPBY({1;1},{2;8},_xlfn.HSTACK(SUM,PERCENTOF),0,0)&"GROUPBY(1)""#)
     );
 }
+
+#[test]
+fn scalar_utility_storage_uses_normative_names_and_preserves_literals() {
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("S").unwrap();
+    let examples = [
+        ("A1", "MUNIT(2)", "_xlfn.MUNIT(2)"),
+        (
+            "D1",
+            "NETWORKDAYS.INTL(45292,45298,1)",
+            "NETWORKDAYS.INTL(45292,45298,1)",
+        ),
+        (
+            "G1",
+            "ACOT(1)+ISO.CEILING(1.2)",
+            "_xlfn.ACOT(1)+ISO.CEILING(1.2)",
+        ),
+        (
+            "J1",
+            r#"EUROCONVERT(1,"DEM","EUR")&"MUNIT(2)""#,
+            r#"EUROCONVERT(1,"DEM","EUR")&"MUNIT(2)""#,
+        ),
+        (
+            "M1",
+            "MULTINOMIAL(2,3)+XOR(TRUE,FALSE)",
+            "MULTINOMIAL(2,3)+_xlfn.XOR(TRUE,FALSE)",
+        ),
+    ];
+    for (cell, source, _) in examples {
+        sheet.set_formula(cell.parse().unwrap(), source).unwrap();
+    }
+    let reopened = read_workbook_bytes(&write_xlsx_to_buffer(&book).unwrap()).unwrap();
+    for (cell, _, stored) in examples {
+        assert_eq!(
+            reopened
+                .sheet(0)
+                .unwrap()
+                .get(cell.parse().unwrap())
+                .unwrap()
+                .formula
+                .as_deref(),
+            Some(stored)
+        );
+    }
+}

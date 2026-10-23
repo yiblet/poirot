@@ -118,6 +118,12 @@ impl Session<'_> {
             }
             And => self.aggregate(s, at, AggregateFunction::And, args)?,
             Or => self.aggregate(s, at, AggregateFunction::Or, args)?,
+            Xor => {
+                if !arity.accepts(args.len()) {
+                    return Ok(err(VALUE_ERROR));
+                }
+                self.aggregate(s, at, AggregateFunction::Xor, args)?
+            }
             True | False => {
                 if arity.accepts(args.len()) {
                     Boolean(function == True).into()

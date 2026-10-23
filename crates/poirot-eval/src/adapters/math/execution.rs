@@ -10,6 +10,21 @@ impl Session<'_> {
         name: MathFunction,
         args: ArgumentsRef<'_>,
     ) -> EvalResult<Value> {
+        if matches!(
+            name,
+            MathFunction::Acot
+                | MathFunction::Acoth
+                | MathFunction::Cot
+                | MathFunction::Coth
+                | MathFunction::Csc
+                | MathFunction::Csch
+                | MathFunction::Sec
+                | MathFunction::Sech
+                | MathFunction::IsoCeiling
+                | MathFunction::Multinomial
+        ) {
+            return super::modern::execute(self, s, at, name, args);
+        }
         if name == MathFunction::SeriesSum {
             return super::series::execute(self, s, at, args);
         }
@@ -96,7 +111,17 @@ impl Session<'_> {
         };
         let x = num(0)?;
         let result = match name {
-            MathFunction::Rand
+            MathFunction::Acot
+            | MathFunction::Acoth
+            | MathFunction::Cot
+            | MathFunction::Coth
+            | MathFunction::Csc
+            | MathFunction::Csch
+            | MathFunction::Sec
+            | MathFunction::Sech
+            | MathFunction::IsoCeiling
+            | MathFunction::Multinomial
+            | MathFunction::Rand
             | MathFunction::Randbetween
             | MathFunction::Acosh
             | MathFunction::Asinh

@@ -34,6 +34,8 @@ pub enum EngineeringFunction {
 /// Missing host coercions required by selected engineering operations.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum UnsupportedCapability {
+    /// The real Bessel kernel exceeded its bounded order or iteration envelope.
+    BesselComputationalLimit,
     /// Omitted-argument text coercion is unavailable.
     MissingStringCoercion,
     /// Omitted-argument numeric coercion is unavailable.
@@ -303,6 +305,17 @@ pub fn evaluate_with_policy<P: EvaluationPort>(
             };
             if f == Delta {
                 Output::Number(domain::delta(x, y))
+            } else if excel {
+                use domain::special::{self, Bessel};
+                let value = special::bessel(Bessel::First, x, y, |units| p.charge_work(units))
+                    .map_err(|failure| match failure {
+                        special::Failure::Number => Failure::Spreadsheet(CellError::Num),
+                        special::Failure::Operational(error) => Failure::Operational(error),
+                        special::Failure::ComputationalLimit => Failure::UnsupportedCapability(
+                            UnsupportedCapability::BesselComputationalLimit,
+                        ),
+                    })?;
+                Output::Number(value)
             } else {
                 // libm recurrence may scale with integer order; charge before work.
                 let units = if y.is_finite() && y >= 0.0 {

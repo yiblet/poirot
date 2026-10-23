@@ -742,6 +742,7 @@ name = "poirot-functions-financial"
 version = "0.1.0"
 dependencies = [
  "poirot-coercionv2",
+ "poirot-functions-math",
  "poirot-numeric",
 ]
 

@@ -33,6 +33,8 @@ pub enum LogicalReduction {
     And,
     /// Require at least one admitted value to be true.
     Or,
+    /// Require an odd number of admitted true values.
+    Xor,
 }
 
 /// Fixed-size logical scratch that consumes every admitted value.
@@ -56,6 +58,7 @@ impl LogicalReductionState {
             (_, None) => value,
             (LogicalReduction::And, Some(previous)) => previous & value,
             (LogicalReduction::Or, Some(previous)) => previous | value,
+            (LogicalReduction::Xor, Some(previous)) => previous ^ value,
         });
     }
 

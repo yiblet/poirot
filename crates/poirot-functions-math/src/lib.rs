@@ -12,6 +12,8 @@
 // Pure numeric algorithms. The evaluator owns coercion, references and arity.
 // Source: pinned POI NumericFunction, MathX, ExcelArithmetic, Gcd, Lcm,
 // FactDouble, Quotient, CeilingMath/Precise, FloorMath/Precise and atp/MRound.
+/// Documented reciprocal, inverse and multinomial utilities.
+pub mod modern;
 /// Source-compatible transcendental kernels shared by the math entry points.
 pub mod transcendental;
 use bigdecimal::{BigDecimal, RoundingMode, ToPrimitive};

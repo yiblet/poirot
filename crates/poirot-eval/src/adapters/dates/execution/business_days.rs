@@ -172,35 +172,11 @@ pub(super) fn network_serial(
     weekends: &[bool; 7],
     holidays: &[i64],
 ) -> Result<f64, CellError> {
-    let limit = max_serial(system);
-    if !(0..=i64::MAX / 16).contains(&limit)
-        || !(0..=limit).contains(&start)
-        || !(0..=limit).contains(&end)
-    {
-        return Err(Num);
-    }
-    // SAFETY: Both endpoints are checked in 0..=limit and limit <= i64::MAX/16,
-    // bounding all interval lengths and signed counts below i64 overflow.
-    let (lo, hi) = (start.min(end), start.max(end));
-    let length = hi - lo + 1;
-    let work_per_week = weekends.iter().filter(|day| !**day).count() as i64;
-    let mut count = length / 7 * work_per_week;
-    for offset in 0..length % 7 {
-        if is_serial_workday(lo + offset, system, weekends) {
-            count += 1;
-        }
-    }
-    for &holiday in holidays {
-        if (lo..=hi).contains(&holiday) && is_serial_workday(holiday, system, weekends) {
-            count = count.checked_sub(1).ok_or(Num)?;
-        }
-    }
-    let signed = if start > end {
-        count.checked_neg().ok_or(Num)?
-    } else {
-        count
+    let epoch = match system {
+        DateSystem::Excel1900 => poirot_coercionv2::date_time::CalendarEpoch::Excel1900,
+        DateSystem::Excel1904 => poirot_coercionv2::date_time::CalendarEpoch::Excel1904,
     };
-    Ok(signed as f64)
+    poirot_functions_dates::network_days(start, end, epoch, weekends, holidays)
 }
 fn is_serial_workday(day: i64, system: DateSystem, weekends: &[bool; 7]) -> bool {
     let weekday = super::calendar::excel_serial_weekday(day, system).rem_euclid(7) as usize;

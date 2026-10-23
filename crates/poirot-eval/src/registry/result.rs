@@ -8,6 +8,8 @@ pub enum ResultRule {
     Scalar,
     /// Consume arguments and return a number or spreadsheet error.
     Number,
+    /// Consume arguments and return complex or other scalar text.
+    Text,
     /// Produce a materialized rectangular array, or an error.
     Array,
     /// Produce sequential values with independently specified dimensions.
@@ -20,6 +22,12 @@ pub enum ResultRule {
     Transpose,
     /// Inspect elements, preserving possible array lifting.
     ElementwiseBoolean,
+    /// Return numbers or errors with rectangular scalar-argument lifting.
+    ElementwiseNumber,
+    /// Lift business-day endpoints/weekend options while reducing the holiday set.
+    BusinessDays,
+    /// Produce a square numeric identity matrix from one dimension.
+    UnitMatrix,
     /// Return text with lifting driven by the input arguments.
     ElementwiseText,
     /// Return regex match text, including variable-length extraction arrays.
@@ -63,10 +71,12 @@ impl ResultRule {
             }
         };
         match self {
+            Self::BusinessDays => Self::ElementwiseNumber.apply(args.get(..3).unwrap_or(args)),
             Self::Scalar => T::scalar(K::ANY),
             Self::Number => T::scalar(K::NUMBER.join(K::ERROR)),
+            Self::Text => T::scalar(K::TEXT.join(K::ERROR)),
             Self::Array | Self::Sequence | Self::Transpose => T::array(K::ANY).join(error),
-            Self::RandomArray => T::array(K::NUMBER).join(error),
+            Self::RandomArray | Self::UnitMatrix => T::array(K::NUMBER).join(error),
             Self::TrimRange => {
                 let first = args.first().copied().unwrap_or(T::BOTTOM);
                 let mut result = error;
@@ -83,9 +93,11 @@ impl ResultRule {
             Self::RegexExtract => {
                 T::scalar(K::TEXT.join(K::ERROR)).join(T::array(K::TEXT.join(K::ERROR)))
             }
-            Self::ElementwiseBoolean | Self::ElementwiseText => {
+            Self::ElementwiseBoolean | Self::ElementwiseText | Self::ElementwiseNumber => {
                 let kinds = if self == Self::ElementwiseBoolean {
                     K::BOOLEAN
+                } else if self == Self::ElementwiseNumber {
+                    K::NUMBER
                 } else {
                     K::TEXT
                 };
@@ -141,7 +153,8 @@ impl ResultRule {
     ) -> poirot_model::ShapeBounds {
         use poirot_model::ShapeBounds as S;
         match self {
-            Self::Scalar | Self::Number => S::SCALAR,
+            Self::BusinessDays => args.iter().take(3).copied().fold(S::SCALAR, S::join),
+            Self::Scalar | Self::Number | Self::Text => S::SCALAR,
             Self::Transpose => args.first().copied().unwrap_or(S::UNKNOWN).transpose(),
             Self::Sequence | Self::RandomArray => {
                 let dimension = |index: usize| {
@@ -160,6 +173,19 @@ impl ResultRule {
                 S {
                     rows: dimension(0),
                     columns: dimension(1),
+                }
+            }
+            Self::UnitMatrix => {
+                let size = constants.first().copied().flatten().and_then(|n| {
+                    if n.is_finite() && n >= 1.0 && n <= f64::from(poirot_model::MAX_COLUMNS) {
+                        std::num::NonZeroU32::new(n.trunc() as u32)
+                    } else {
+                        None
+                    }
+                });
+                S {
+                    rows: size,
+                    columns: size,
                 }
             }
             Self::RegexExtract => {
@@ -181,7 +207,8 @@ impl ResultRule {
                     _ => S::UNKNOWN,
                 }
             }
-            Self::ElementwiseBoolean
+            Self::ElementwiseNumber
+            | Self::ElementwiseBoolean
             | Self::ElementwiseText
             | Self::If
             | Self::Fallback
