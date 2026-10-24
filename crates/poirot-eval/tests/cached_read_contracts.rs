@@ -10,6 +10,43 @@ fn target(address: &str) -> EvaluationTarget {
     }
 }
 
+#[test]
+fn direct_cleanup_export_is_ordered_and_survives_cache_clears() {
+    let mut workbook = Workbook::new();
+    let worksheet = workbook.add_sheet("Sheet1").unwrap();
+    for address in ["B1", "A2", "Z20"] {
+        worksheet
+            .set_formula(address.parse().unwrap(), "1+1")
+            .unwrap();
+    }
+    let mut evaluation = overlay::Evaluation::with_workbook(&workbook)
+        .build(Default::default())
+        .unwrap();
+    for address in ["Z20", "A2", "B1"] {
+        assert_eq!(evaluation.cell(target(address)).unwrap(), 2.0.into());
+    }
+    let cleanup = |changes: Vec<poirot_model::WorkbookChange>| {
+        changes
+            .into_iter()
+            .filter_map(|change| match change {
+                poirot_model::WorkbookChange::ClearSpillCache { sheet, anchor } => {
+                    Some(EvaluationTarget {
+                        sheet,
+                        address: anchor,
+                    })
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+    };
+    let expected = vec![target("B1"), target("A2"), target("Z20")];
+    assert_eq!(cleanup(evaluation.changes()), expected);
+    evaluation.clear_calculated_cache();
+    assert_eq!(cleanup(evaluation.changes()), expected);
+    evaluation.discard_edits();
+    assert!(cleanup(evaluation.changes()).is_empty());
+}
+
 /// Capture every completion, including operational abort provenance.
 #[derive(Default)]
 struct Completions(
@@ -274,4 +311,53 @@ fn memoized_spill_child_reports_its_owner_before_completion() {
         *events.borrow(),
         ["read:E1", "read:D1", "completed:E1:SessionMemo"]
     );
+}
+
+#[test]
+fn overlay_cached_changes_keep_sheet_and_row_order_after_snapshot_restore() {
+    let mut workbook = Workbook::new();
+    for name in ["First", "Second"] {
+        let sheet = workbook.add_sheet(name).unwrap();
+        for address in ["Z20", "A2", "B1"] {
+            sheet.set_formula(address.parse().unwrap(), "2+3").unwrap();
+        }
+    }
+    let mut overlay = overlay::Overlay::with_workbook(&workbook).build().unwrap();
+    let context = EvaluationContext::default();
+    for sheet in [1, 0] {
+        for address in ["Z20", "A2", "B1"] {
+            assert_eq!(
+                overlay
+                    .evaluation(&context)
+                    .unwrap()
+                    .cell(EvaluationTarget {
+                        sheet,
+                        address: address.parse().unwrap(),
+                    })
+                    .unwrap(),
+                CellValue::Number(5.)
+            );
+        }
+    }
+    let cached = |changes: Vec<poirot_model::WorkbookChange>| {
+        changes
+            .into_iter()
+            .filter_map(|change| match change {
+                poirot_model::WorkbookChange::SetCachedValue { sheet, address, .. } => {
+                    Some((sheet, address))
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+    };
+    let expected = [0, 1]
+        .into_iter()
+        .flat_map(|sheet| ["B1", "A2", "Z20"].map(|address| (sheet, address.parse().unwrap())))
+        .collect::<Vec<_>>();
+    assert_eq!(cached(overlay.changes()), expected);
+    let bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
+    let (restored_workbook, state) =
+        overlay::Overlay::from_snapshot(postcard::from_bytes(&bytes).unwrap()).unwrap();
+    let mut restored = state.attach(&restored_workbook).unwrap();
+    assert_eq!(cached(restored.changes()), expected);
 }

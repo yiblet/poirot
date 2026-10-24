@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 /// Snapshot validation result carrying a diagnostic for unsupported or inconsistent compiled data.
 type Result<T> = std::result::Result<T, String>;
-const VERSION: u32 = 20;
+const VERSION: u32 = 21;
 /// Serde view preserving source-to-program sharing for a trusted compiled workbook plan.
 #[derive(Serialize, Deserialize)]
 pub struct Plan<'a> {
@@ -225,6 +225,18 @@ impl<'a> Plan<'a> {
                         })
                     })
                     .collect::<Result<Vec<_>>>()?;
+                for instruction in &p.template.code {
+                    if instruction.opcode == Opcode::Conditional
+                        && calls.get(instruction.a as usize).is_none_or(|call| {
+                            call.target
+                                != CallTarget::Builtin(registry::FunctionId::Logical(
+                                    registry::LogicalFunction::If,
+                                ))
+                        })
+                    {
+                        return Err("snapshot conditional binding".into());
+                    }
+                }
                 Ok(Arc::new(Executable {
                     typing: p.typing.into_owned(),
                     template: p.template.into_owned(),
@@ -340,12 +352,14 @@ pub(super) fn validate_template(t: &Template, calls: usize) -> Result<()> {
         }
         previous = Some(entry.start);
     }
+    if t.labels.len() > t.code.len() || t.labels.iter().any(|target| target.index() >= t.code.len())
+    {
+        return Err("snapshot label table".into());
+    }
     let target = |n: u32| {
-        if (n as usize) < t.code.len() {
-            Ok(())
-        } else {
-            Err("snapshot jump target".to_owned())
-        }
+        t.resolve_label(Label(n))
+            .map(InstructionIndex::index)
+            .ok_or_else(|| "snapshot jump label".to_owned())
     };
     for (ip, i) in t.code.iter().enumerate() {
         if i.flags != 0 || i.reserved != 0 {
@@ -371,12 +385,12 @@ pub(super) fn validate_template(t: &Template, calls: usize) -> Result<()> {
             Opcode::Reference if i.a >= t.reference_slots => {
                 return Err("snapshot reference slot".into());
             }
-            Opcode::Invoke => {
+            Opcode::Invoke | Opcode::Conditional => {
                 if i.a as usize >= calls {
                     return Err("snapshot call index/arity".into());
                 }
-                target(i.c)?;
-                if i.c as usize <= ip {
+                let continuation = target(i.c)?;
+                if continuation <= ip {
                     return Err("snapshot backwards invocation".into());
                 }
                 let jump = t.code.get(ip + 1).ok_or("snapshot invoke jump")?;
@@ -389,22 +403,23 @@ pub(super) fn validate_template(t: &Template, calls: usize) -> Result<()> {
                         .code
                         .get(descriptor)
                         .ok_or("snapshot argument descriptor")?;
+                    let next = target(argument.c)?;
                     if argument.opcode != Opcode::Argument
                         || argument.a != ordinal
-                        || argument.c as usize <= descriptor
-                        || argument.c > i.c
+                        || next <= descriptor
+                        || next > continuation
                     {
                         return Err("snapshot argument chain".into());
                     }
-                    descriptor = argument.c as usize;
+                    descriptor = next;
                 }
-                if descriptor != i.c as usize {
+                if descriptor != continuation {
                     return Err("snapshot argument count".into());
                 }
             }
             Opcode::Argument | Opcode::Jump => {
-                target(i.c)?;
-                if i.c as usize <= ip {
+                let continuation = target(i.c)?;
+                if continuation <= ip {
                     return Err("snapshot backwards jump".into());
                 }
             }
@@ -782,6 +797,39 @@ mod tests {
         *dto.programs[0].typing.to_mut() =
             postcard::from_bytes(&postcard::to_allocvec(&entries).unwrap()).unwrap();
         assert_eq!(dto.restore().unwrap_err(), "snapshot typing boundaries");
+    }
+    #[test]
+    fn snapshot_rejects_invalid_labels_and_conditional_bindings() {
+        let mut workbook = Workbook::new();
+        workbook
+            .add_sheet("S")
+            .unwrap()
+            .set_formula("A1".parse().unwrap(), "IF(TRUE,1,2)")
+            .unwrap();
+        let plan = FormulaCompiler::new().compile_workbook(&workbook, &EvaluationPolicy::default());
+
+        let mut dto = Plan::capture(&plan).unwrap();
+        dto.programs[0].template.to_mut().labels[0] = InstructionIndex(u32::MAX);
+        assert_eq!(dto.restore().unwrap_err(), "snapshot label table");
+
+        let mut dto = Plan::capture(&plan).unwrap();
+        let template = dto.programs[0].template.to_mut();
+        let invalid = template.labels.len() as u32;
+        template
+            .code
+            .iter_mut()
+            .find(|i| i.opcode == Opcode::Conditional)
+            .unwrap()
+            .c = invalid;
+        assert_eq!(dto.restore().unwrap_err(), "snapshot jump label");
+
+        let mut dto = Plan::capture(&plan).unwrap();
+        dto.programs[0].template.to_mut().labels[0] = InstructionIndex(0);
+        assert_eq!(dto.restore().unwrap_err(), "snapshot backwards invocation");
+
+        let mut dto = Plan::capture(&plan).unwrap();
+        dto.programs[0].calls[0].builtin = Some(Cow::Borrowed("SUM"));
+        assert_eq!(dto.restore().unwrap_err(), "snapshot conditional binding");
     }
     #[test]
     fn snapshot_rejects_unsupported_preparation_and_policy() {

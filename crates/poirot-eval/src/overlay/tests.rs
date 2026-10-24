@@ -993,7 +993,7 @@ fn lookup_index_invalidation_does_not_require_retained_formula_results() {
     let context = EvaluationContext::default();
     value(&mut overlay, "E1", &context);
     overlay.cache.get_mut().remove((0, at("E1").address));
-    assert!(overlay.cache.get_mut().sheets.is_empty());
+    assert!(overlay.cache.get_mut().entries.is_empty());
     overlay.set_value(at("A50"), 150.).unwrap();
     assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(500.));
     overlay.reset();
@@ -1081,11 +1081,11 @@ fn numeric_locale_identity_and_consumption_survive_retained_snapshot() {
 fn raw_snapshot_restore_rejects_previous_execution_semantics_versions() {
     let workbook = book();
     let overlay = Overlay::with_workbook(&workbook).build().unwrap();
-    for previous in 8..74 {
+    for previous in 8..75 {
         let mut bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
         // Payload's first field is its small postcard varint version.
         let version = bytes.first_mut().unwrap();
-        assert_eq!(*version, 74);
+        assert_eq!(*version, 75);
         *version = previous;
         let snapshot = postcard::from_bytes(&bytes).unwrap();
         assert!(

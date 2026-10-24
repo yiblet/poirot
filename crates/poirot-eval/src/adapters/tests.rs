@@ -242,7 +242,7 @@ fn borrowed_bytecode_arguments_force_once_and_skip_other_blocks() {
         .code
         .iter()
         .enumerate()
-        .find(|(_, instruction)| instruction.opcode == crate::bytecode::Opcode::Invoke)
+        .find(|(_, instruction)| instruction.opcode.is_call())
         .unwrap();
     let parameters = FunctionParameters(crate::ArgumentsRef::Bytecode {
         program: &program,

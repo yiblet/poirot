@@ -6,9 +6,7 @@
 //! also participate in invalidation. The baseline changes only when edits are
 //! explicitly applied or flushed; snapshots can save state for later restoration.
 use crate::{EvaluationFailure, EvaluationTarget, FormulaCompiler};
-use poirot_model::{
-    Cell, CellAddress, CellStore, CellStyle, CellValue, ModelError, Workbook, WorkbookChange,
-};
+use poirot_model::{Cell, CellAddress, CellStyle, CellValue, ModelError, Workbook, WorkbookChange};
 use std::{borrow::Borrow, cell::RefCell, collections::BTreeMap, sync::Arc};
 mod edits;
 pub use edits::OverlayEdits;
@@ -236,20 +234,21 @@ impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
             .map(|&(sheet, anchor)| WorkbookChange::ClearSpillCache { sheet, anchor })
             .collect::<Vec<_>>();
         changes.extend(self.source.source_changes());
-        for (&sheet, cells) in &cache.sheets {
-            for (&address, entry) in cells.cells() {
-                if !entry.validity.is_clean() {
-                    continue;
-                }
-                if let Some(change) = evaluation::evaluated_change(
-                    self.source.effective(),
-                    (sheet, address),
-                    &entry.value,
-                    entry.dependencies.spill,
-                    self.source.policy.materialization,
-                ) {
-                    changes.push(change);
-                }
+        let mut entries = cache
+            .entries
+            .iter()
+            .filter(|(_, entry)| entry.validity.is_clean())
+            .collect::<Vec<_>>();
+        entries.sort_unstable_by_key(|(key, _)| **key);
+        for (&key, entry) in entries {
+            if let Some(change) = evaluation::evaluated_change(
+                self.source.effective(),
+                key,
+                &entry.value,
+                entry.dependencies.spill,
+                self.source.policy.materialization,
+            ) {
+                changes.push(change);
             }
         }
         changes

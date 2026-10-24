@@ -26,6 +26,21 @@ writing Excel workbooks.
 - Derive expected spreadsheet results from documented evidence, never Poirot's
   output alone. Distinguish known compatibility gaps from regressions.
 
+## Documentation style
+
+- Write for a developer learning or using the current codebase.
+- Keep documentation short. Explain purpose, main concepts, entry points,
+  and important constraints.
+- Update an existing guide before creating another document.
+- Put local implementation details and invariants beside the relevant code.
+- Do not add implementation journals, exhaustive design narratives, historical
+  investigations, migration histories, or speculative plans to repository docs
+  unless explicitly requested.
+- Keep experiment logs, benchmark findings, and working notes outside the worktree.
+- Preserve required license, provenance, and attribution records.
+- Before adding prose, ask: does this help someone use the library or find
+  and understand the code? If not, leave it out.
+
 ## Safety
 
 - Forbid unsafe code in every target, including tests and examples. Each package

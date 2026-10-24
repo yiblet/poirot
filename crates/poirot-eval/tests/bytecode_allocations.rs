@@ -9,14 +9,15 @@ fn measure_allocations<T>(operation: impl FnOnce() -> T) -> (T, u64) {
 fn bytecode_only_final_buffers_and_shared_owner_allocate() {
     // Parent registries are built once. Measure compilation after registration,
     // so this gate continues to count only per-compile buffers and ownership.
-    // One additional final buffer retains expression typing and shares with the executable.
+    // Final buffers retain expression typing and, for calls, the dense label table.
+    // Both share with the executable; branches do not allocate separate programs.
     use poirot_eval::adapters::FunctionAdapter;
     assert!(
         poirot_eval::adapters::builtins()
             .resolve(&"SUM".into())
             .is_some()
     );
-    for (source, expected) in [("1+2", 3), ("SUM(A1,IFERROR(B2,\"fallback\"))", 7)] {
+    for (source, expected) in [("1+2", 3), ("SUM(A1,IFERROR(B2,\"fallback\"))", 8)] {
         let syntax = poirot_parsing::formula::parse_formula(source).unwrap();
         let (result, allocations) = measure_allocations(|| poirot_eval::bytecode::compile(&syntax));
         assert!(result.is_ok());

@@ -19,7 +19,7 @@ pub struct Evaluation<'a, W = &'a Workbook> {
     context: EvaluationContext,
     state: Continuation,
     completed: crate::coordinate_hash::CellSet,
-    spill_resets: std::collections::BTreeSet<Key>,
+    spill_resets: crate::coordinate_hash::CellSet,
     failure: Option<EvaluationFailure>,
 }
 /// Configures the workbook, formula policies, and extensions for an evaluation.
@@ -180,10 +180,13 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
     }
     /// Export owned authored edits and results from successful calls.
     pub fn changes(&self) -> Vec<WorkbookChange> {
-        let mut changes = self
-            .spill_resets
-            .iter()
-            .map(|&(sheet, anchor)| WorkbookChange::ClearSpillCache { sheet, anchor })
+        // Execution needs membership, not ordering. Sort only when exporting
+        // cleanup so writeback stays deterministic without tree inserts per cell.
+        let mut spill_resets = self.spill_resets.iter().copied().collect::<Vec<_>>();
+        spill_resets.sort_unstable();
+        let mut changes = spill_resets
+            .into_iter()
+            .map(|(sheet, anchor)| WorkbookChange::ClearSpillCache { sheet, anchor })
             .collect::<Vec<_>>();
         changes.extend(self.source.source_changes());
         let state = &self.state;

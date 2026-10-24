@@ -131,8 +131,8 @@ See [Contributing](CONTRIBUTING.md) to work on Poirot.
 
 The application API uses `Evaluation` for direct scenarios and `Overlay` for
 incremental scenarios. Both provide explicit editing, evaluation, reporting and
-export methods. See the [evaluation guide](docs/evaluation.md#public-vocabulary-and-migration)
-for lifecycle details and migration from the earlier overlapping names.
+export methods. See the [evaluation guide](docs/evaluation.md#public-vocabulary)
+for lifecycle details.
 
 ## Acknowledgements
 
@@ -158,7 +158,11 @@ for lifecycle details and migration from the earlier overlapping names.
 
 - [MLIR shape inference](https://mlir.llvm.org/docs/ShapeInference/) and
   [Futhark size types](https://futhark.readthedocs.io/en/latest/language-reference.html#size-types)
-  informed the independently implemented [formula type system](crates/poirot-eval/FORMULA_TYPES.md).
+  and [Julia broadcasting](https://docs.julialang.org/en/v1/manual/arrays/#Broadcasting)
+  informed the independently implemented formula type system. Their documentation,
+  consulted on 2026-10-23, helped separate element types, dimensions and inference
+  rules; no upstream implementation or tests were copied or translated. See the
+  [architecture overview](docs/architecture.md#types-and-spills).
 
 See [LICENSES/ACKNOWLEDGEMENTS](LICENSES/ACKNOWLEDGEMENTS) for credits and notices.
 Poirot's code is licensed under [MIT](LICENSES/MIT.txt).

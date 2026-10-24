@@ -613,7 +613,7 @@ struct Held {
     retained: bool,
 }
 /// Spill roles used by private admissions and settled retained publication.
-#[derive(Clone, Copy, Debug, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub(crate) enum SpillRole {
     /// A scalar result without a generated footprint.
     #[default]

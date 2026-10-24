@@ -179,10 +179,9 @@ identifiers separately.
 
 Use `--diagnostics` to add disjoint four-cell ranges and paired shared ranges
 near the top/bottom of a sheet. These distinguish output publication, useful
-range traversal and position-dependent discovery work. See [the baseline
-investigation](DIAGNOSIS.md) for correctness-gated scaling, execution counters,
-source mechanisms and remaining uncertainty. Original workloads and historical
-results remain available.
+range traversal and position-dependent discovery work. Validate outputs before
+interpreting timings, and use repeated process runs to check whether a difference
+persists.
 
 After building the two Java images, exercise their failure paths explicitly:
 

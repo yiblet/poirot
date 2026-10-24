@@ -1,5 +1,10 @@
 //! Possible-result abstract interpretation at the existing bytecode expression boundaries.
-#![doc = include_str!("../FORMULA_TYPES.md")]
+//!
+//! Inference tracks unions of scalar kinds, arrays and references, together with
+//! conservative row/column bounds and possible effects. Compilation advances this
+//! state alongside bytecode emission. Unknown names and function contracts remain
+//! conservative; inferred bounds never establish runtime spill ownership.
+//! Actual consumed dependencies determine whether evaluated values can be reused.
 use crate::{
     bytecode::{Call, CallTarget, CompileError, Opcode, Template},
     registry::DependencyPolicy,

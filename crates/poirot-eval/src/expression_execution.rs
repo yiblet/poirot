@@ -313,6 +313,17 @@ impl<'a> Session<'a> {
         }
         let left = self.select_legacy_scalar(at, left)?;
         let right = self.select_legacy_scalar(at, right)?;
+        self.scalar_binary_values(operation, left, right)
+    }
+
+    /// Apply a scalar operator after operand shape dispatch has completed.
+    pub(super) fn scalar_binary_values(
+        &mut self,
+        operation: BinaryOp,
+        left: CellValue,
+        right: CellValue,
+    ) -> EvalResult<Value> {
+        let op = &operation;
         if *op == BinaryOp::Concat {
             return function_value(self.text_concat_operator(left, right));
         }

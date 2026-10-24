@@ -267,7 +267,12 @@ impl<'a> ArgumentsRef<'a> {
                 }
                 let mut descriptor = first;
                 for _ in 0..ordinal {
-                    descriptor = program.template.code.get(descriptor)?.c as usize;
+                    descriptor = program
+                        .template
+                        .resolve_label(crate::bytecode::Label(
+                            program.template.code.get(descriptor)?.c,
+                        ))?
+                        .index();
                 }
                 Some(ExecutableRef::Bytecode {
                     program,

@@ -3,7 +3,7 @@ use super::*;
 use crate::run_overlay::CellEdit;
 use serde::{Deserialize, Serialize, ser::Error as _};
 use std::borrow::Cow;
-const VERSION: u32 = 74;
+const VERSION: u32 = 75;
 /// Compatibility revision for persisted engine preparation and retained results.
 /// Bump when wire layout or execution semantics invalidate prepared snapshots,
 /// including changes that leave Serde field layouts intact. This is separate from
@@ -188,6 +188,17 @@ impl<'a> Payload<'a> {
         compiler: &'a FormulaCompiler,
         cache: &'a Cache,
     ) -> Result<Self, OverlayError> {
+        let mut cached = cache
+            .entries
+            .iter()
+            .filter(|(_, entry)| entry.validity.is_clean())
+            .map(|(key, entry)| CachedValue {
+                key: *key,
+                value: poirot_model::snapshot::Value::capture(&entry.value),
+                dependencies: Cow::Borrowed(&entry.dependencies),
+            })
+            .collect::<Vec<_>>();
+        cached.sort_unstable_by_key(|entry| entry.key);
         Ok(Self {
             version: VERSION,
             model: overlay.workbook.snapshot(),
@@ -223,21 +234,7 @@ impl<'a> Payload<'a> {
                     .filter_map(|(sheet, at, edit)| edit.is_style_only().then_some((sheet, at)))
                     .collect(),
             ),
-            cached: cache
-                .sheets
-                .iter()
-                .flat_map(|(&sheet, cells)| {
-                    cells
-                        .cells()
-                        .into_iter()
-                        .filter(|(_, entry)| entry.validity.is_clean())
-                        .map(move |(&at, entry)| CachedValue {
-                            key: (sheet, at),
-                            value: poirot_model::snapshot::Value::capture(&entry.value),
-                            dependencies: Cow::Borrowed(&entry.dependencies),
-                        })
-                })
-                .collect(),
+            cached,
             context: cache.context.as_ref().map(Cow::Borrowed),
             spill_resets: Cow::Borrowed(&cache.spill_resets),
         })
@@ -472,38 +469,36 @@ impl<'a> Snapshot<'a> {
                 )?;
             }
             let mut footprints = BTreeMap::<Key, usize>::new();
-            for (&sheet, cells) in &cache.sheets {
-                for (&address, entry) in cells.cells() {
-                    if let Some(owner) = entry.dependencies.spill.owner(address) {
-                        if overlay
-                            .source
-                            .effective()
-                            .cell(sheet, owner)
-                            .is_none_or(|cell| cell.formula.is_none())
-                        {
-                            return Err(OverlayError::Snapshot(
-                                "spill producer lacks source formula".into(),
-                            ));
-                        }
-                        let key = (sheet, owner);
-                        let root = cache.get(key).ok_or_else(|| {
-                            OverlayError::Snapshot("spill child lacks its producer".into())
-                        })?;
-                        let last = root.dependencies.spill.last().ok_or_else(|| {
-                            OverlayError::Snapshot("spill producer lacks footprint bounds".into())
-                        })?;
-                        if root.dependencies.spill.owner(owner) != Some(owner)
-                            || owner.row > address.row
-                            || owner.col > address.col
-                            || address.row > last.row
-                            || address.col > last.col
-                        {
-                            return Err(OverlayError::Snapshot(
-                                "invalid cached spill ownership".into(),
-                            ));
-                        }
-                        *footprints.entry(key).or_default() += 1;
+            for (&(sheet, address), entry) in &cache.entries {
+                if let Some(owner) = entry.dependencies.spill.owner(address) {
+                    if overlay
+                        .source
+                        .effective()
+                        .cell(sheet, owner)
+                        .is_none_or(|cell| cell.formula.is_none())
+                    {
+                        return Err(OverlayError::Snapshot(
+                            "spill producer lacks source formula".into(),
+                        ));
                     }
+                    let key = (sheet, owner);
+                    let root = cache.get(key).ok_or_else(|| {
+                        OverlayError::Snapshot("spill child lacks its producer".into())
+                    })?;
+                    let last = root.dependencies.spill.last().ok_or_else(|| {
+                        OverlayError::Snapshot("spill producer lacks footprint bounds".into())
+                    })?;
+                    if root.dependencies.spill.owner(owner) != Some(owner)
+                        || owner.row > address.row
+                        || owner.col > address.col
+                        || address.row > last.row
+                        || address.col > last.col
+                    {
+                        return Err(OverlayError::Snapshot(
+                            "invalid cached spill ownership".into(),
+                        ));
+                    }
+                    *footprints.entry(key).or_default() += 1;
                 }
             }
             for ((sheet, owner), count) in footprints {

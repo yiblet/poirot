@@ -1,7 +1,7 @@
 //! Stack execution of owned instructions; calls borrow lazy blocks through family hosts.
 //! The unit-test tree oracle remains to check value, read, observation and budget parity.
 use super::*;
-use crate::bytecode::{CallTarget, Compiled, Opcode, ReferenceKind};
+use crate::bytecode::{CallTarget, Compiled, Label, Opcode, ReferenceKind};
 use crate::executable::ReferenceRef;
 use crate::execution_observation::{Operation, OperationKind, observed_value};
 
@@ -71,7 +71,7 @@ impl Session<'_> {
                                 .template
                                 .code
                                 .get(ip + 1)
-                                .filter(|next| next.opcode == Opcode::Invoke)
+                                .filter(|next| next.opcode.is_call())
                                 .and_then(|next| self.bytecode_handler(program, next.a as usize));
                             match self.observation_begin(
                                 EvaluationTarget { sheet, address: at },
@@ -201,7 +201,19 @@ impl Session<'_> {
                             self.unary_value(sheet, at, decode_unary(instruction.a)?, value)?;
                         self.runtime.vm.values.push(value);
                     }
-                    Opcode::Binary => {
+                    Opcode::Binary
+                    | Opcode::Add
+                    | Opcode::Subtract
+                    | Opcode::Multiply
+                    | Opcode::Divide
+                    | Opcode::Power
+                    | Opcode::Concat
+                    | Opcode::Equal
+                    | Opcode::NotEqual
+                    | Opcode::Less
+                    | Opcode::LessEqual
+                    | Opcode::Greater
+                    | Opcode::GreaterEqual => {
                         let right = self
                             .runtime
                             .vm
@@ -217,7 +229,10 @@ impl Session<'_> {
                         let value = self.binary_values(
                             sheet,
                             at,
-                            decode_binary(instruction.a)?,
+                            instruction
+                                .opcode
+                                .binary_operation()
+                                .map_or_else(|| decode_binary(instruction.a), Ok)?,
                             left,
                             right,
                         )?;
@@ -267,7 +282,13 @@ impl Session<'_> {
                                 Some(CellAddress { row: 0, col: 0 }),
                             )));
                     }
-                    Opcode::Invoke => {
+                    Opcode::Invoke | Opcode::Conditional => {
+                        if instruction.opcode == Opcode::Conditional
+                            && self.bytecode_handler(program, instruction.a as usize)
+                                != Some(FunctionId::Logical(LogicalFunction::If))
+                        {
+                            return Err(EvaluationFailure::StalePlan);
+                        }
                         let args = ArgumentsRef::Bytecode {
                             program,
                             first: ip + 2,
@@ -276,11 +297,19 @@ impl Session<'_> {
                         let value =
                             self.bytecode_call(sheet, at, program, instruction.a as usize, args)?;
                         self.runtime.vm.values.push(value);
-                        ip = instruction.c as usize;
+                        ip = program
+                            .template
+                            .resolve_label(Label(instruction.c))
+                            .ok_or(EvaluationFailure::StalePlan)?
+                            .index();
                         continue;
                     }
                     Opcode::Jump => {
-                        ip = instruction.c as usize;
+                        ip = program
+                            .template
+                            .resolve_label(Label(instruction.c))
+                            .ok_or(EvaluationFailure::StalePlan)?
+                            .index();
                         continue;
                     }
                     Opcode::YieldArgument | Opcode::Argument => {

@@ -93,13 +93,7 @@ impl Session<'_> {
         self.rectangular_values(at, output, |session, row, column| {
             let left = session.rectangular_element(&left, left_shape, row, column)?;
             let right = session.rectangular_element(&right, right_shape, row, column)?;
-            let result = session.binary_values(
-                sheet,
-                at,
-                operation,
-                Value::Scalar(left),
-                Value::Scalar(right),
-            )?;
+            let result = session.scalar_binary_values(operation, left, right)?;
             session.select_legacy_scalar(at, result)
         })
     }

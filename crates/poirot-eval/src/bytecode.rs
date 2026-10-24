@@ -1,16 +1,26 @@
 //! Owned stack compiler and runtime metadata for lazy bytecode execution.
 //!
-//! Compilation has three stages: validate/count, stream borrowed high-level operations
-//! (including N-ary arrays and lazy calls with labels), then lower to stack instructions.
-//! No AST is retained. The intermediate stream and label fixups allocate nothing;
-//! only final buffers and the shared executable owner allocate; call bindings may own registry
-//! metadata and resolved spellings. Source retention and
-//! template interning belong to the caller. The VM executes the final instructions through the shared family adapters.
+//! Preparation validates and counts the source, then emits instructions and type facts
+//! in one shared traversal. Each compiled body owns an instruction vector and a dense
+//! label vector. Branches and deferred arguments occupy that same instruction buffer;
+//! they do not own boxed child programs. Labels resolve to instruction positions.
 //!
-//! Every function, including unknown/extension functions, owns lazy argument blocks.
-//! Family adapters select blocks and preserve their own arity/error order.
-//! `Invoke` must never eagerly execute the blocks following it. References stay values
-//! on the stack until an operator or family adapter requests dereferencing/coercion.
+//! Operators consume values from the shared VM stack. They retain generic semantics:
+//! `Add` handles both scalar operands and singleton-axis array broadcasting at runtime.
+//! Operand types and shapes can change without rewriting or recompiling the instructions.
+//! Type inference remains available for preparation and spill bounds; no runtime
+//! specialization cache is required by this instruction format.
+//!
+//! Every call, including unknown and extension calls, owns deferred argument blocks.
+//! Selection preserves function-specific arity, laziness, omission and error ordering.
+//! Calls dispatch through function-family executors, which request only the argument
+//! blocks they need. `Conditional` identifies `IF` calls and uses the same execution
+//! path as `Invoke`; neither instruction eagerly executes every argument block.
+//! References stay values until an operator or family adapter requests a read.
+//!
+//! Only final buffers and the shared executable owner allocate during compilation;
+//! the streamed preparation events and temporary label bindings allocate nothing.
+//! Source retention and template interning belong to the caller.
 
 pub mod aggregation;
 
@@ -37,6 +47,20 @@ impl std::fmt::Display for CompileError {
     }
 }
 impl std::error::Error for CompileError {}
+
+/// Index into a compiled body's label table, distinct from an instruction offset.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct Label(pub u32);
+
+/// Position in a compiled body's instruction vector.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct InstructionIndex(pub u32);
+impl InstructionIndex {
+    /// Convert to a slice index for bounds-checked instruction access.
+    pub fn index(self) -> usize {
+        self.0 as usize
+    }
+}
 
 /// Stack operations and lazy argument descriptors understood by the VM.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -74,18 +98,88 @@ pub enum Opcode {
     ArrayAllocate,
     /// Scalarize the preceding array element before evaluating its successor.
     Scalarize,
-    /// `a`: call binding index; `b`: arity; `c`: continuation.
+    /// `a`: call binding index; `b`: arity; `c`: continuation label.
     /// Arguments start at ip+2; following `Argument.c` walks the descriptors.
     Invoke,
-    /// Inline argument descriptor: `a`: argument ordinal; `c`: next descriptor/end.
+    /// Inline argument descriptor: `a`: argument ordinal; `c`: next descriptor/end label.
     Argument,
     /// Return the argument's reference/value to the requesting family adapter.
     YieldArgument,
-    /// Continue at absolute instruction index `c`.
+    /// Continue at label `c`, resolved through the enclosing template's label table.
     Jump,
+    /// Add scalar or broadcast array operands using their runtime types.
+    Add,
+    /// Subtract scalar or broadcast array operands using their runtime types.
+    Subtract,
+    /// Multiply scalar or broadcast array operands using their runtime types.
+    Multiply,
+    /// Divide scalar or broadcast array operands using their runtime types.
+    Divide,
+    /// Exponentiate scalar or broadcast array operands using their runtime types.
+    Power,
+    /// Concatenate scalar or broadcast array operands using their runtime types.
+    Concat,
+    /// Compare scalar or broadcast array operands for equality.
+    Equal,
+    /// Compare scalar or broadcast array operands for inequality.
+    NotEqual,
+    /// Compare scalar or broadcast array operands with less-than ordering.
+    Less,
+    /// Compare scalar or broadcast array operands with less-or-equal ordering.
+    LessEqual,
+    /// Compare scalar or broadcast array operands with greater-than ordering.
+    Greater,
+    /// Compare scalar or broadcast array operands with greater-or-equal ordering.
+    GreaterEqual,
+    /// Conditional over deferred branch labels, with the same operand layout as `Invoke`.
+    Conditional,
 }
 
-/// Fixed-width stack instruction. Branch targets are absolute instruction indices.
+impl Opcode {
+    /// Whether the instruction owns deferred argument blocks and a continuation label.
+    pub(crate) fn is_call(self) -> bool {
+        matches!(self, Self::Invoke | Self::Conditional)
+    }
+
+    /// Scalar operation lifted by this stable, shape-polymorphic instruction.
+    pub(crate) fn binary_operation(self) -> Option<BinaryOp> {
+        Some(match self {
+            Self::Add => BinaryOp::Add,
+            Self::Subtract => BinaryOp::Subtract,
+            Self::Multiply => BinaryOp::Multiply,
+            Self::Divide => BinaryOp::Divide,
+            Self::Power => BinaryOp::Power,
+            Self::Concat => BinaryOp::Concat,
+            Self::Equal => BinaryOp::Equal,
+            Self::NotEqual => BinaryOp::NotEqual,
+            Self::Less => BinaryOp::Less,
+            Self::LessEqual => BinaryOp::LessEqual,
+            Self::Greater => BinaryOp::Greater,
+            Self::GreaterEqual => BinaryOp::GreaterEqual,
+            _ => return None,
+        })
+    }
+    /// Select a primitive from syntax independently of inferred or observed types.
+    fn for_binary(operation: BinaryOp) -> Self {
+        match operation {
+            BinaryOp::Add => Self::Add,
+            BinaryOp::Subtract => Self::Subtract,
+            BinaryOp::Multiply => Self::Multiply,
+            BinaryOp::Divide => Self::Divide,
+            BinaryOp::Power => Self::Power,
+            BinaryOp::Concat => Self::Concat,
+            BinaryOp::Equal => Self::Equal,
+            BinaryOp::NotEqual => Self::NotEqual,
+            BinaryOp::Less => Self::Less,
+            BinaryOp::LessEqual => Self::LessEqual,
+            BinaryOp::Greater => Self::Greater,
+            BinaryOp::GreaterEqual => Self::GreaterEqual,
+            BinaryOp::Range | BinaryOp::Union | BinaryOp::Intersection => Self::Binary,
+        }
+    }
+}
+
+/// Fixed-width stack instruction. Control-flow targets are label-table indices.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[repr(C)]
 pub struct Instruction {
@@ -99,7 +193,7 @@ pub struct Instruction {
     pub a: u32,
     /// Second operand word; interpretation depends on the opcode.
     pub b: u32,
-    /// Third operand word, including absolute continuation targets.
+    /// Third operand word, including label IDs for control-flow instructions.
     pub c: u32,
 }
 impl Instruction {
@@ -119,6 +213,8 @@ impl Instruction {
 /// Shared instructions and literal operand bytes. Reference instructions name
 /// slots; their concrete coordinates live in each formula's [`ReferenceBindings`].
 pub struct Template {
+    /// Dense mapping from label IDs to instruction positions in this body.
+    pub labels: Vec<InstructionIndex>,
     /// Contextual aggregation projections keyed by expression entry.
     pub aggregations: Vec<aggregation::Entry>,
     /// Executable instructions in instruction-pointer order.
@@ -129,6 +225,13 @@ pub struct Template {
     /// Number of per-formula reference slots required by this template.
     pub reference_slots: u32,
 }
+impl Template {
+    /// Resolve a body-local label without changing instructions or retaining pointers into vectors.
+    pub fn resolve_label(&self, label: Label) -> Option<InstructionIndex> {
+        self.labels.get(label.0 as usize).copied()
+    }
+}
+
 /// Encoding discriminator for a formula's concrete reference binding.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ReferenceKind {
@@ -261,9 +364,15 @@ fn compile_inner(
     let mut nodes = 0;
     validate(expression, 0, &mut nodes, strict)?;
     stream(expression, 0, &mut sizes);
-    if [sizes.code, sizes.text, sizes.refs, sizes.reference_bytes]
-        .iter()
-        .any(|n| *n > u32::MAX as usize)
+    if [
+        sizes.code,
+        sizes.labels,
+        sizes.text,
+        sizes.refs,
+        sizes.reference_bytes,
+    ]
+    .iter()
+    .any(|n| *n > u32::MAX as usize)
     {
         return Err(CompileError::ResourceLimit);
     }
@@ -272,6 +381,7 @@ fn compile_inner(
             executable: Arc::new(Executable {
                 typing: crate::typing::FormulaTyping::default(),
                 template: Template {
+                    labels: Vec::with_capacity(sizes.labels),
                     aggregations: Vec::new(),
                     code: Vec::with_capacity(sizes.code),
                     operands: Vec::with_capacity(sizes.text),
@@ -286,7 +396,7 @@ fn compile_inner(
             },
         },
         error: None,
-        heads: [NONE; DEPTH * 2],
+        pending_labels: [None; DEPTH * 2],
         aggregation_roles: [false; DEPTH],
         registry,
     };
@@ -304,7 +414,14 @@ fn compile_inner(
     if let Some(error) = error.or(writer.error) {
         return Err(error);
     }
-    if writer.heads.iter().any(|h| *h != NONE)
+    if writer.pending_labels.iter().any(Option::is_some)
+        || writer.output.template.labels.len() != sizes.labels
+        || writer
+            .output
+            .template
+            .labels
+            .iter()
+            .any(|target| target.0 == NONE)
         || writer.output.template.code.len() != sizes.code
         || writer.output.template.operands.len() != sizes.text
         || writer.output.references.data.len() != sizes.reference_bytes
@@ -368,7 +485,8 @@ fn validate(e: &Expr, depth: usize, nodes: &mut usize, strict: bool) -> Result<(
 }
 
 // Borrowed high-level IR. N-ary operations remain intact until the stack sink.
-// Labels are scoped by syntax depth, so an on-stack fixed table is sufficient.
+// Unresolved source labels are scoped by syntax depth. A fixed table maps them
+// to unique body-local IDs in the final dense label vector.
 /// Temporary high-level instruction stream lowered into fixed-width executable bytecode.
 enum High<'a> {
     Enter(usize, &'a Expr),
@@ -519,10 +637,12 @@ struct Sizes {
     reference_bytes: usize,
     calls: usize,
     expressions: usize,
+    labels: usize,
 }
 impl<'ast> Sink<'ast> for Sizes {
     fn emit(&mut self, op: High<'ast>) {
         if matches!(op, High::Label(_)) {
+            self.labels += 1;
             return;
         }
         self.code += 1;
@@ -593,7 +713,7 @@ struct Writer<'registry> {
     error: Option<CompileError>,
     registry: Option<&'registry crate::extensions::ExtensionRegistry>,
     output: Compiled,
-    heads: [u32; DEPTH * 2],
+    pending_labels: [Option<Label>; DEPTH * 2],
     aggregation_roles: [bool; DEPTH],
 }
 impl Writer<'_> {
@@ -660,17 +780,19 @@ impl<'ast> Sink<'ast> for Writer<'_> {
         }
         if let High::Label(label) = op {
             let destination = self.output.template.code.len() as u32;
-            let Some(head) = self.heads.get_mut(label) else {
+            let Some(pending) = self.pending_labels.get_mut(label) else {
                 self.error = Some(CompileError::ResourceLimit);
                 return;
             };
-            let mut cursor = std::mem::replace(head, NONE);
-            while cursor != NONE {
-                let Some(instruction) = self.output.template.code.get_mut(cursor as usize) else {
+            // A zero-argument call still has a referenced continuation label.
+            if let Some(label) = pending.take() {
+                let Some(slot) = self.output.template.labels.get_mut(label.0 as usize) else {
                     self.error = Some(CompileError::InvalidReference);
                     return;
                 };
-                cursor = std::mem::replace(&mut instruction.c, destination);
+                *slot = InstructionIndex(destination);
+            } else {
+                self.error = Some(CompileError::InvalidReference);
             }
             return;
         }
@@ -684,7 +806,7 @@ impl<'ast> Sink<'ast> for Writer<'_> {
                 Instruction::new(Opcode::Error, a, b)
             }
             High::Unary(op) => Instruction::new(Opcode::Unary, unary(op), 0),
-            High::Binary(op) => Instruction::new(Opcode::Binary, binary(op), 0),
+            High::Binary(op) => Instruction::new(Opcode::for_binary(op), binary(op), 0),
             High::ArrayAllocate(rows, columns) => {
                 let mut instruction =
                     Instruction::new(Opcode::ArrayAllocate, (rows * columns) as u32, rows as u32);
@@ -724,13 +846,21 @@ impl<'ast> Sink<'ast> for Writer<'_> {
                                 crate::registry::MatrixFunction::Groupby,
                             ));
                 }
+                let opcode = if call_target
+                    == CallTarget::Builtin(crate::registry::FunctionId::Logical(
+                        crate::registry::LogicalFunction::If,
+                    )) {
+                    Opcode::Conditional
+                } else {
+                    Opcode::Invoke
+                };
                 self.output.calls.push(Call {
                     source_offset: a,
                     resolved_name: lookup.filter(|s| *s != name).map(str::to_owned),
                     target: call_target,
                 });
                 target = Some(label);
-                Instruction::new(Opcode::Invoke, index, count as u32)
+                Instruction::new(opcode, index, count as u32)
             }
             High::Argument(index, label, depth, expression) => {
                 if index == 2 && self.aggregation_roles.get(depth) == Some(&true) {
@@ -766,12 +896,26 @@ impl<'ast> Sink<'ast> for Writer<'_> {
             High::Label(_) => unreachable!(),
         };
         if let Some(label) = target {
-            let Some(head) = self.heads.get_mut(label) else {
+            let Some(pending) = self.pending_labels.get_mut(label) else {
                 self.error = Some(CompileError::ResourceLimit);
                 return;
             };
-            instruction.c = *head;
-            *head = self.output.template.code.len() as u32;
+            let label = match *pending {
+                Some(label) => label,
+                None => {
+                    let label = Label(self.output.template.labels.len() as u32);
+                    if self.output.template.labels.len() == self.output.template.labels.capacity() {
+                        self.error = Some(CompileError::ResourceLimit);
+                        return;
+                    }
+                    // SAFETY: The capacity check above proves one spare slot, and no vector
+                    // mutation occurs before this push.
+                    self.output.template.labels.push(InstructionIndex(NONE));
+                    *pending = Some(label);
+                    label
+                }
+            };
+            instruction.c = label.0;
         }
         self.output.template.code.push(instruction);
     }
@@ -820,25 +964,61 @@ mod tests {
         compile(&syntax).unwrap()
     }
     #[test]
+    fn labels_are_dense_body_local_ids_independent_of_instruction_positions() {
+        let program = compiled("IF(A1,SUM(1,2),IF(FALSE,1/0,3))");
+        assert!(!program.template.labels.is_empty());
+        assert_eq!(
+            program.template.labels.len(),
+            program.template.labels.capacity()
+        );
+        assert!(program.template.resolve_label(Label(u32::MAX)).is_none());
+        for (ip, instruction) in program.template.code.iter().enumerate() {
+            if instruction.opcode.is_call()
+                || matches!(instruction.opcode, Opcode::Jump | Opcode::Argument)
+            {
+                let position = program
+                    .template
+                    .resolve_label(Label(instruction.c))
+                    .unwrap()
+                    .index();
+                assert!(position > ip);
+                assert!(position < program.template.code.len());
+            }
+        }
+        assert!(
+            program
+                .template
+                .labels
+                .iter()
+                .enumerate()
+                .any(|(id, position)| id != position.index())
+        );
+    }
+    #[test]
     fn bytecode_lazy_calls_have_forward_blocks_and_continuations() {
         for name in ["IF", "IFERROR", "SUM", "UNKNOWN"] {
             let result = compiled(&format!("{name}(A1,IFERROR(B1,9),1/0)"));
             let code = &result.template.code;
-            let invoke = code
-                .iter()
-                .position(|i| i.opcode == Opcode::Invoke)
-                .unwrap();
+            let invoke = code.iter().position(|i| i.opcode.is_call()).unwrap();
             assert_eq!(code[invoke].b, 3);
             assert_eq!(code[invoke + 1].opcode, Opcode::Jump);
-            let done = code[invoke].c as usize;
-            assert_eq!(code[invoke + 1].c as usize, done);
+            let done = result
+                .template
+                .resolve_label(Label(code[invoke].c))
+                .unwrap()
+                .index();
+            assert_eq!(code[invoke + 1].c, code[invoke].c);
             assert_eq!(code[done].opcode, Opcode::Leave);
             let mut arg = invoke + 2;
             for index in 0..3 {
                 assert_eq!(code[arg].opcode, Opcode::Argument);
                 assert_eq!(code[arg].a, index);
                 assert_eq!(code[arg + 1].opcode, Opcode::Enter);
-                let next = code[arg].c as usize;
+                let next = result
+                    .template
+                    .resolve_label(Label(code[arg].c))
+                    .unwrap()
+                    .index();
                 assert!(next > arg);
                 assert_eq!(code[next - 1].opcode, Opcode::YieldArgument);
                 arg = next;
@@ -866,7 +1046,7 @@ mod tests {
                 .template
                 .code
                 .iter()
-                .rfind(|i| i.opcode == Opcode::Binary)
+                .rfind(|i| i.opcode.binary_operation().is_some() || i.opcode == Opcode::Binary)
                 .unwrap()
                 .a,
             binary(BinaryOp::Add)

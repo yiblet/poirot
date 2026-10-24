@@ -11,7 +11,7 @@ use std::collections::{BTreeMap, BTreeSet};
 /// Sheet index and cell address identifying a graph node.
 pub(super) type Key = (usize, CellAddress);
 /// Reads and execution properties that determine when one cached result expires.
-#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub(crate) struct Dependencies {
     /// Individual consumed cells, including absent cells.
     pub cells: Vec<Key>,
@@ -555,11 +555,13 @@ impl OrderedCauses {
         }
     }
 }
+/// Inline retained entries keyed directly by full worksheet coordinates.
+type Entries = CellMap<Cached>;
 /// Persistent overlay results with reverse edges for transitive invalidation.
 #[derive(Default)]
 pub(crate) struct Cache {
-    /// Sparse result pages, allocated only for sheets with retained results.
-    pub sheets: BTreeMap<usize, CellStore<Cached, 16, 2>>,
+    /// Live results keyed without worksheet spatial indexes.
+    pub entries: Entries,
     /// Context used by the latest evaluation.
     pub context: Option<ContextKey>,
     /// Estimated bytes charged against persistent retention limits.
@@ -634,30 +636,23 @@ impl Cache {
     }
     /// Read retained evidence, including results that must not be exposed as current.
     pub fn retained(&self, key: Key) -> Option<&Cached> {
-        self.sheets.get(&key.0)?.get(&key.1)
+        self.entries.get(&key)
     }
     /// Count only values whose validity has already been established.
     pub fn valid_len(&self) -> usize {
-        self.sheets
+        self.entries
             .values()
-            .map(|sheet| {
-                sheet
-                    .cells()
-                    .into_iter()
-                    .map(|(_, entry)| entry)
-                    .filter(|entry| entry.validity.is_clean())
-                    .count()
-            })
-            .sum()
+            .filter(|entry| entry.validity.is_clean())
+            .count()
     }
-    /// Count retained results across all sparse sheets.
+    /// Count retained results across all sheets.
     pub fn len(&self) -> usize {
-        self.sheets.values().map(|s| s.cells().len()).sum()
+        self.entries.len()
     }
     /// Remove a result and its point edges; range indices are rebuilt separately.
     pub fn remove(&mut self, key: Key) {
         self.always_dirty.remove(&key);
-        if let Some(entry) = self.sheets.get_mut(&key.0).and_then(|s| s.remove(&key.1)) {
+        if let Some(entry) = self.entries.remove(&key) {
             self.ranges_dirty |= !entry.dependencies.ranges.is_empty()
                 || !entry.dependencies.point_runs.is_empty()
                 || !entry.dependencies.spill_ranges.is_empty();
@@ -671,18 +666,12 @@ impl Cache {
                 }
             }
         }
-        if self
-            .sheets
-            .get(&key.0)
-            .is_some_and(|s| s.cells().is_empty())
-        {
-            self.sheets.remove(&key.0);
-        }
     }
     /// Replace a result and register its point edges and always-dirty status.
     pub fn insert(&mut self, key: Key, mut entry: Cached) -> Result<(), poirot_model::ModelError> {
         key.1.validate()?;
-        let version = match self.retained(key) {
+        let previous = self.retained(key);
+        let version = match previous {
             Some(old) if crate::same_result_identity(&old.value, &entry.value) => old.version,
             _ => self
                 .next_version
@@ -693,10 +682,22 @@ impl Cache {
         entry.validity = Validity::Clean;
         let retained_bytes = self
             .retained_bytes
-            .checked_sub(self.retained(key).map_or(0, Cached::retained_bytes))
+            .checked_sub(previous.map_or(0, Cached::retained_bytes))
             .and_then(|bytes| bytes.checked_add(entry.retained_bytes()))
             .ok_or_else(|| poirot_model::ModelError("cache retention size overflow".into()))?;
+        let same_dependencies = previous.is_some_and(|old| old.dependencies == entry.dependencies);
         self.next_version = self.next_version.max(version);
+        // Value edits commonly leave the consumed graph unchanged. Keep its
+        // reverse edges, range indexes, and retained entry in place.
+        if same_dependencies {
+            let retained = self
+                .entries
+                .get_mut(&key)
+                .ok_or_else(|| poirot_model::ModelError("retained result disappeared".into()))?;
+            *retained = entry;
+            self.retained_bytes = retained_bytes;
+            return Ok(());
+        }
         self.remove(key);
         self.ranges_dirty |= !entry.dependencies.ranges.is_empty()
             || !entry.dependencies.point_runs.is_empty()
@@ -708,7 +709,7 @@ impl Cache {
         for dependency in &entry.dependencies.cells {
             self.reverse.entry(*dependency).or_default().insert(key);
         }
-        self.sheets.entry(key.0).or_default().set(key.1, entry)?;
+        self.entries.insert(key, entry);
         Ok(())
     }
     /// Iterative traversal handles arbitrary chain lengths and cycles without stack recursion.
@@ -809,11 +810,7 @@ impl Cache {
                 if !seen.contains(&reader) {
                     pending.push(reader);
                 }
-                let Some(entry) = self
-                    .sheets
-                    .get_mut(&reader.0)
-                    .and_then(|sheet| sheet.get_mut(&reader.1))
-                else {
+                let Some(entry) = self.entries.get_mut(&reader) else {
                     continue;
                 };
                 let prior_bytes = entry.validity.retained_bytes();
@@ -856,11 +853,7 @@ impl Cache {
         self.lookup_prefixes.invalidate(&seen);
     }
     fn force(&mut self, key: Key) {
-        if let Some(entry) = self
-            .sheets
-            .get_mut(&key.0)
-            .and_then(|sheet| sheet.get_mut(&key.1))
-        {
+        if let Some(entry) = self.entries.get_mut(&key) {
             let prior_bytes = entry.validity.retained_bytes();
             entry.validity = Validity::Forced;
             self.retained_bytes = self
@@ -880,29 +873,23 @@ impl Cache {
             return;
         }
         let seeds = self
-            .sheets
+            .entries
             .iter()
-            .flat_map(|(sheet, cells)| {
-                cells
-                    .cells()
-                    .into_iter()
-                    .filter(|(_, entry)| {
-                        let trace = &entry.dependencies;
-                        trace.opaque
-                            || trace.volatile
-                            || self.context.as_ref().is_none_or(|previous| {
-                                !trace
-                                    .context
-                                    .changed_fields(previous.inputs, context.inputs, false, false)
-                                    .is_empty()
-                                    || (trace.formatting
-                                        && previous.formatting != context.formatting)
-                                    || (trace.number_locale
-                                        && previous.number_locale != context.number_locale)
-                            })
+            .filter(|(_, entry)| {
+                let trace = &entry.dependencies;
+                trace.opaque
+                    || trace.volatile
+                    || self.context.as_ref().is_none_or(|previous| {
+                        !trace
+                            .context
+                            .changed_fields(previous.inputs, context.inputs, false, false)
+                            .is_empty()
+                            || (trace.formatting && previous.formatting != context.formatting)
+                            || (trace.number_locale
+                                && previous.number_locale != context.number_locale)
                     })
-                    .map(move |(at, _)| (*sheet, *at))
             })
+            .map(|(key, _)| *key)
             .collect::<Vec<_>>();
         self.invalidate_context(seeds);
         self.context = Some(context);
@@ -910,22 +897,17 @@ impl Cache {
     /// Invalidate cells that consumed text policy and all their dependents.
     pub fn invalidate_text_policy(&mut self) {
         let seeds = self
-            .sheets
+            .entries
             .iter()
-            .flat_map(|(sheet, cells)| {
-                cells
-                    .cells()
-                    .into_iter()
-                    .filter(|(_, entry)| entry.dependencies.text_policy)
-                    .map(move |(at, _)| (*sheet, *at))
-            })
+            .filter(|(_, entry)| entry.dependencies.text_policy)
+            .map(|(key, _)| *key)
             .collect::<Vec<_>>();
         self.invalidate(seeds);
     }
     /// Rebuild the rectangle lookup after dependency traces have changed.
     pub fn rebuild_ranges(&mut self) {
-        self.ranges = RangeIndex::new(&self.sheets);
-        self.spill_ranges = RangeIndex::build(&self.sheets, RangePurpose::SpillGeometry);
+        self.ranges = RangeIndex::new(&self.entries);
+        self.spill_ranges = RangeIndex::build(&self.entries, RangePurpose::SpillGeometry);
         self.ranges_dirty = false;
     }
 }
@@ -967,29 +949,27 @@ impl RangeIndex {
         }
     }
 
-    fn new(sheets: &BTreeMap<usize, CellStore<Cached, 16, 2>>) -> Self {
-        Self::build(sheets, RangePurpose::Values)
+    fn new(entries: &Entries) -> Self {
+        Self::build(entries, RangePurpose::Values)
     }
-    fn build(sheets: &BTreeMap<usize, CellStore<Cached, 16, 2>>, purpose: RangePurpose) -> Self {
+    fn build(entries: &Entries, purpose: RangePurpose) -> Self {
         let mut index = Self::default();
-        for (sheet, cells) in sheets {
-            for (at, entry) in cells.cells() {
-                let (ranges, points) = if !matches!(purpose, RangePurpose::Values) {
-                    (entry.dependencies.spill_ranges.as_slice(), &[][..])
-                } else {
-                    (
-                        entry.dependencies.ranges.as_slice(),
-                        entry.dependencies.point_runs.as_slice(),
-                    )
-                };
-                for range in ranges.iter().chain(points) {
-                    index
-                        .sheets
-                        .entry(range.sheet)
-                        .or_default()
-                        .entries
-                        .push((*range, (*sheet, *at)));
-                }
+        for (&(sheet, at), entry) in entries {
+            let (ranges, points) = if !matches!(purpose, RangePurpose::Values) {
+                (entry.dependencies.spill_ranges.as_slice(), &[][..])
+            } else {
+                (
+                    entry.dependencies.ranges.as_slice(),
+                    entry.dependencies.point_runs.as_slice(),
+                )
+            };
+            for range in ranges.iter().chain(points) {
+                index
+                    .sheets
+                    .entry(range.sheet)
+                    .or_default()
+                    .entries
+                    .push((*range, (sheet, at)));
             }
         }
         for tree in index.sheets.values_mut() {
@@ -999,7 +979,8 @@ impl RangeIndex {
                 .fold((u32::MAX, 0), |(first, last), (range, _)| {
                     (first.min(range.first.col), last.max(range.last.col))
                 });
-            tree.entries.sort_by_key(|(range, _)| range.first.row);
+            tree.entries
+                .sort_unstable_by_key(|(range, _)| range.first.row);
             tree.max_end.resize(tree.entries.len() * 4, None);
             tree.build(1, 0, tree.entries.len());
         }
@@ -1150,6 +1131,62 @@ impl Cached {
 }
 
 #[cfg(test)]
+mod replacement_tests {
+    use super::*;
+
+    fn entry(value: f64, source: Key) -> Cached {
+        Cached {
+            value: Arc::new(CellValue::Number(value)),
+            version: 0,
+            validity: Validity::Clean,
+            dependencies: Box::new(Dependencies {
+                cells: vec![source],
+                ranges: vec![RangeMembership {
+                    sheet: source.0,
+                    first: source.1,
+                    last: source.1,
+                }],
+                ..Default::default()
+            }),
+        }
+    }
+
+    #[test]
+    fn unchanged_dependencies_preserve_indexes_and_update_result_versions() {
+        let target = (0, CellAddress { row: 0, col: 1 });
+        let source = (0, CellAddress { row: 0, col: 0 });
+        let other = (0, CellAddress { row: 4, col: 0 });
+        let mut cache = Cache::default();
+        cache.insert(target, entry(1., source)).unwrap();
+        cache.rebuild_ranges();
+        let old_version = cache.get(target).unwrap().version;
+        cache.insert(target, entry(2., source)).unwrap();
+        assert!(!cache.ranges_dirty);
+        assert!(cache.reverse.get(&source).unwrap().contains(&target));
+        assert!(cache.get(target).unwrap().version > old_version);
+        let version = cache.get(target).unwrap().version;
+        cache.insert(target, entry(2., source)).unwrap();
+        assert_eq!(cache.get(target).unwrap().version, version);
+        cache.insert(target, entry(3., other)).unwrap();
+        assert!(cache.ranges_dirty);
+        assert!(!cache.reverse.contains_key(&source));
+        assert!(cache.reverse.get(&other).unwrap().contains(&target));
+        let mut volatile = entry(4., other);
+        volatile.dependencies.volatile = true;
+        cache.insert(target, volatile).unwrap();
+        assert!(cache.always_dirty.contains(&target));
+        cache.insert(target, entry(4., other)).unwrap();
+        assert!(!cache.always_dirty.contains(&target));
+        cache.invalidate_values([other]);
+        assert!(cache.get(target).is_none());
+        assert_eq!(
+            cache.retained_bytes,
+            cache.retained(target).unwrap().retained_bytes()
+        );
+    }
+}
+
+#[cfg(test)]
 mod validity_accounting_tests {
     use super::*;
 
@@ -1277,7 +1314,7 @@ mod range_index_tests {
                 )
                 .unwrap();
         }
-        let mut index = RangeIndex::new(&cache.sheets);
+        let mut index = RangeIndex::new(&cache.entries);
         let mut found = Vec::new();
         // B1 lies inside global column bounds, but matches no rectangle.
         index.take_readers((0, CellAddress { row: 0, col: 1 }), &mut found);
@@ -1399,7 +1436,7 @@ mod range_index_tests {
             for row in 0..10 {
                 for col in 0..10 {
                     let mut actual = Vec::new();
-                    let mut index = RangeIndex::new(&cache.sheets);
+                    let mut index = RangeIndex::new(&cache.entries);
                     let key = (sheet, CellAddress { row, col });
                     let mut retained = Vec::new();
                     index.readers(key, &mut retained);

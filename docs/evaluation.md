@@ -111,7 +111,7 @@ let value = restored.evaluation.cell(output)?;
 
 Use `.prepared_policy(artifact::PreparedPolicy::RequireCompatible)` to require present, compatible preparation (refusing source-only snapshots as well), or `SourceOnly` to discard it deliberately. The advanced `Workbook::load_snapshot()` retains its historical compatibility-if-present strict policy. `into_artifact()` and that loader retain the advanced APIs, including incremental checkpoint attachment and custom provider management.
 
-## Public vocabulary and migration
+## Public vocabulary
 
 `Evaluation` is the direct scenario returned by `Workbook::evaluation().build()`;
 `Overlay` is the incremental scenario returned by `Workbook::overlay().build()`.
@@ -124,25 +124,7 @@ one cycle, and `EvaluationReport` represents completion with optional profiling.
 `PreparationPolicy` selects compiler preparation; it is a different concept.
 `NumberLocale` controls numeric input parsing; display formatting is separate.
 
-This pre-1.0 cleanup removes overlapping root names:
-
-| Previous root spelling | Replacement |
-| --- | --- |
-| `WorkbookEvaluation`, `WorkbookEvaluationBuilder` | `Evaluation`, `EvaluationBuilder` |
-| `WorkbookOverlay`, `WorkbookOverlayBuilder` | `Overlay`, `OverlayBuilder` |
-| `RestoredWorkbookEvaluation` | `RestoredEvaluation` |
-| `Calculation` | `Evaluation` |
-| `CalculationCycle`, `CalculationReport` | `EvaluationCycle`, `EvaluationReport` |
-| `OverlayPolicy` | `EvaluationPolicy` |
-| `NumberLocaleV2` | `NumberLocale` |
-| Direct `begin(context)` | `start_cycle(context)` |
-| Overlay `calculation(&context)` | `evaluation(&context)` |
-| `clear_cache`, `reset`, `flush` | `clear_calculated_cache`, `discard_edits`, `apply_edits_to_workbook` |
-
-Previous root `Evaluation::with_workbook` and `Overlay::with_workbook` constructors
-belong to `eval::overlay::Evaluation` and `eval::overlay::Overlay`. Those component
-APIs retain owned, borrowed and shared sources, custom extensions, legacy detailed
-reports, and snapshot attachment. `OverlayEvaluation` remains available there.
-Use `Evaluation::from_calculation` or `Overlay::from_overlay` to give those ownership
-forms the application API and file export without copying or resetting state.
-`into_calculation` and `into_overlay` explicitly return to the component API.
+The component APIs under `eval::overlay` support additional ownership forms,
+custom extensions and snapshot attachment. Use `Evaluation::from_calculation` or
+`Overlay::from_overlay` to wrap them in the application API without resetting state.
+`into_calculation` and `into_overlay` return to the component API.

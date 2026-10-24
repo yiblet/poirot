@@ -176,6 +176,15 @@ impl<T, const HEIGHT: u32, const WIDTH: u32> CellStore<T, HEIGHT, WIDTH> {
     pub fn cells(&self) -> WorksheetCells<'_, T, HEIGHT, WIDTH> {
         WorksheetCells { store: self }
     }
+
+    /// Visit stored cells in unspecified page order without traversing coordinate indexes.
+    pub fn unordered_cells(&self) -> impl Iterator<Item = (&CellAddress, &T)> {
+        self.pages
+            .values()
+            .flat_map(|page| page.slots.iter())
+            .filter_map(Option::as_ref)
+            .map(|(address, value)| (address, value))
+    }
 }
 impl<T: PartialEq, const HEIGHT: u32, const WIDTH: u32> PartialEq for CellStore<T, HEIGHT, WIDTH> {
     fn eq(&self, other: &Self) -> bool {
@@ -1003,6 +1012,25 @@ mod tests {
 #[cfg(test)]
 mod generic_layout_tests {
     use super::*;
+
+    #[test]
+    fn unordered_cells_match_ordered_membership_after_sparse_edits() {
+        let mut store = CellStore::<u32, 16, 2>::default();
+        for (row, col, value) in [(0, 0, 1), (15, 1, 2), (16, 0, 3), (900, 700, 4)] {
+            store.set(CellAddress { row, col }, value).unwrap();
+        }
+        store.remove(&CellAddress { row: 15, col: 1 });
+        store.set(CellAddress { row: 16, col: 0 }, 5).unwrap();
+        let ordered: Vec<_> = store.cells().iter().map(|(a, v)| (*a, *v)).collect();
+        let mut unordered: Vec<_> = store.unordered_cells().map(|(a, v)| (*a, *v)).collect();
+        unordered.sort_unstable();
+        assert_eq!(unordered, ordered);
+        assert_eq!(unordered.len(), 3);
+        for (address, _) in unordered {
+            store.remove(&address);
+        }
+        assert_eq!(store.unordered_cells().count(), 0);
+    }
     /// Non-cell test payload proving that storage geometry is reusable.
     #[derive(Debug, PartialEq)]
     struct Payload(u64);
