@@ -230,3 +230,37 @@ fn flush_keeps_committed_producer_classification_and_future_resets() {
         2.0.into()
     );
 }
+
+#[test]
+fn scalar_array_and_blocked_results_replace_complete_footprints() {
+    let mut book = Workbook::new();
+    book.add_sheet("S")
+        .unwrap()
+        .set_formula(at(0, "A1").address, "7")
+        .unwrap();
+    for incremental in [false, true] {
+        let mut eval = Workspace::new(&book, incremental);
+        assert_eq!(eval.cell(at(0, "A1")), 7.0.into());
+        assert_eq!(eval.cell(at(0, "B2")), CellValue::Blank);
+        eval.formula(at(0, "A1"), "{1,2;3,4}");
+        assert_eq!(eval.cell(at(0, "B2")), 4.0.into());
+        assert_eq!(eval.cell(at(0, "A1")), 1.0.into());
+        // A source value blocks the entire new array, including its anchor.
+        eval.value(at(0, "A2"), 99.);
+        assert_eq!(
+            eval.cell(at(0, "A1")),
+            CellValue::Error(poirot_model::CellError::Spill)
+        );
+        assert_eq!(eval.cell(at(0, "B2")), CellValue::Blank);
+        eval.remove(at(0, "A2"));
+        assert_eq!(eval.cell(at(0, "B2")), 4.0.into());
+        // Formula blank projection is zero, while the old footprint disappears.
+        eval.formula(at(0, "A1"), "Z1");
+        assert_eq!(eval.cell(at(0, "A1")), 0.0.into());
+        assert_eq!(eval.cell(at(0, "A2")), CellValue::Blank);
+        assert_eq!(eval.cell(at(0, "B2")), CellValue::Blank);
+        eval.reset();
+        assert_eq!(eval.cell(at(0, "A1")), 7.0.into());
+        assert_eq!(eval.cell(at(0, "B2")), CellValue::Blank);
+    }
+}

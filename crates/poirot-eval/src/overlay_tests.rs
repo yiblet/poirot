@@ -55,10 +55,28 @@ fn column_work(
     }
     let mut work = source(book.sheet(area.sheet).unwrap().cells().keys(), area, 32, 4);
     if let Some(input) = inputs.sheets.get(&area.sheet) {
-        let extra = source(input.cells().keys(), area, 16, 2);
+        let extra = poirot_model::query::QueryCounters {
+            row_seeks: 1,
+            column_seeks: 1,
+            cells_visited: input
+                .cells()
+                .keys()
+                .filter(|at| {
+                    at.col == area.first.col && (area.first.row..=area.last.row).contains(&at.row)
+                })
+                .count() as u64,
+            key_lookups: input
+                .cells()
+                .keys()
+                .filter(|at| {
+                    at.col == area.first.col && (area.first.row..=area.last.row).contains(&at.row)
+                })
+                .count() as u64,
+        };
         work.row_seeks += extra.row_seeks;
         work.column_seeks += extra.column_seeks;
         work.cells_visited += extra.cells_visited;
+        work.key_lookups += extra.key_lookups;
     }
     work
 }

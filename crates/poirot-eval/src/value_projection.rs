@@ -2,13 +2,13 @@
 use super::*;
 
 impl<'a> Session<'a> {
-    /// Publish worksheet results before memoization; ad hoc expressions use result_scalar.
+    /// Project a worksheet result with its checked footprint for later atomic admission.
     pub(super) fn worksheet_result(
         &mut self,
         sheet: usize,
         address: CellAddress,
         mut value: Value,
-    ) -> EvalResult<CellValue> {
+    ) -> EvalResult<spill_publication::ComputedCell> {
         let area_reference = match &value {
             Value::Refs(areas) | Value::SheetSpan(areas) => {
                 matches!(areas.as_slice(), [area] if area.kind == AreaKind::Area)
@@ -40,10 +40,10 @@ impl<'a> Session<'a> {
         {
             self.stage_spill(sheet, address, rows)?
         } else {
-            self.result_scalar(sheet, address, value)?
+            spill_publication::ComputedCell::scalar(self.result_scalar(sheet, address, value)?)
         };
         // TODO(coercion-non-argument): [LOW] Completed worksheet formulas expose numeric zero for a remaining blank; reads and intermediate selections preserve identity.
-        poirot_coercionv2::coerce_worksheet_formula_result(&mut result);
+        poirot_coercionv2::coerce_worksheet_formula_result(&mut result.value);
         Ok(result)
     }
 

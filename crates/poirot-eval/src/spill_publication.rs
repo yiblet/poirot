@@ -295,10 +295,20 @@ struct Completion {
     provenance: CellProvenance,
     result: Result<CellValue, EvaluationFailure>,
 }
-/// A computed formula whose scalar and array payload are not yet in ordinary caches.
+/// A completed worksheet value and its optional unpublished rectangular footprint.
+pub(super) struct ComputedCell {
+    pub(super) value: CellValue,
+    pub(super) rows: Option<ArrayView>,
+}
+impl ComputedCell {
+    /// Carry a scalar result without a generated footprint.
+    pub(super) fn scalar(value: CellValue) -> Self {
+        Self { value, rows: None }
+    }
+}
+/// A computed formula withheld from ordinary caches until ownership settles.
 struct Held {
-    value: CellValue,
-    rows: Option<ArrayView>,
+    result: ComputedCell,
     source_cached: bool,
     retained: bool,
 }
@@ -330,7 +340,7 @@ impl SpillRole {
         }
     }
 }
-impl Session<'_> {
+impl<'a> Session<'a> {
     /// Resolve one anchor to its finalized footprint without materializing referenced values.
     pub(super) fn spill_reference(&mut self, value: Value) -> EvalResult<Value> {
         let area = match value {
@@ -461,8 +471,10 @@ impl Session<'_> {
         self.runtime.preparation.held.insert(
             (sheet, restored.0),
             Held {
-                value,
-                rows: Some(ArrayView::unknown(restored.1)),
+                result: ComputedCell {
+                    value,
+                    rows: Some(ArrayView::unknown(restored.1)),
+                },
                 source_cached: true,
                 retained: true,
             },
@@ -479,13 +491,13 @@ impl Session<'_> {
         sheet: usize,
         at: CellAddress,
         rows: ArrayView,
-    ) -> EvalResult<CellValue> {
+    ) -> EvalResult<ComputedCell> {
         if !self.runtime.visiting.contains(&(sheet, at)) {
             return Err(self.spill_unsupported(sheet,at,"dynamic array publication requires a source formula cell; ad hoc probes are unsupported"));
         }
         let width = rows.first().map_or(0, Vec::len);
         if width == 0 || rows.iter().any(|row| row.len() != width) {
-            return Ok(Error(VALUE_ERROR));
+            return Ok(ComputedCell::scalar(Error(VALUE_ERROR)));
         }
         let height = rows.len();
         let last = at
@@ -497,7 +509,7 @@ impl Session<'_> {
             )
             .map(|(row, col)| CellAddress { row, col });
         if last.is_none_or(|last| last.validate().is_err()) {
-            return Ok(Error(CellError::Spill));
+            return Ok(ComputedCell::scalar(Error(CellError::Spill)));
         }
         let count = height
             .checked_mul(width)
@@ -554,7 +566,7 @@ impl Session<'_> {
                         .cell(sheet, child)
                         .is_some_and(|cell| cell.formula.is_some() || cell.value != Blank))
                 {
-                    return Ok(Error(CellError::Spill));
+                    return Ok(ComputedCell::scalar(Error(CellError::Spill)));
                 }
             }
         }
@@ -563,8 +575,10 @@ impl Session<'_> {
             .and_then(|row| row.first())
             .ok_or(EvaluationFailure::StalePlan)?
             .clone();
-        self.runtime.pending_spills.insert((sheet, at), rows);
-        Ok(first)
+        Ok(ComputedCell {
+            value: first,
+            rows: Some(rows),
+        })
     }
     /// Attribute an unsupported spill capability to its producer cell.
     pub(super) fn spill_unsupported(
@@ -584,10 +598,10 @@ impl Session<'_> {
         &mut self,
         sheet: usize,
         at: CellAddress,
-        value: &CellValue,
-    ) -> EvalResult<()> {
-        // Stage all payloads before admission; no children are visible on any failure.
-        let rows = self.runtime.pending_spills.remove(&(sheet, at));
+        result: ComputedCell,
+    ) -> EvalResult<CellValue> {
+        // Check the complete payload before admission; no children are visible on any failure.
+        let ComputedCell { value, rows } = result;
         let extent = rows
             .as_ref()
             .map(|rows| {
@@ -663,7 +677,7 @@ impl Session<'_> {
                 }
             }
         } else {
-            inspect(at, value)?;
+            inspect(at, &value)?;
         }
         let next_cells = self
             .runtime
@@ -768,7 +782,7 @@ impl Session<'_> {
                 .completed_cells
                 .saturating_add(count as u64);
         }
-        Ok(())
+        Ok(value)
     }
     /// Borrow or prepare a source formula using the existing exact-source compiler cache.
     fn source_formula(
@@ -1141,7 +1155,6 @@ impl Session<'_> {
             reads.discard_consumers(&active.consumers);
         }
         runtime.preparation.held.clear();
-        runtime.pending_spills.clear();
         runtime.blank_reads.clear();
         runtime.spill_read_ranges.clear();
         active.consumers.clear();
@@ -1275,7 +1288,10 @@ impl Session<'_> {
         let unchanged_anchor = baseline.is_some_and(|base| {
             base.formula == cell.formula && same_result_identity(&base.value, &cell.value)
         }) && !self.inputs.is_some_and(|inputs| {
-            inputs.cell(sheet, at).is_some() && !inputs.style_only.contains(&(sheet, at))
+            matches!(
+                inputs.edit(sheet, at),
+                Some(run_overlay::CellEdit::Replace(_))
+            )
         });
         self.runtime
             .budget
@@ -1284,7 +1300,7 @@ impl Session<'_> {
                 failure.set_target(EvaluationTarget { sheet, address: at });
                 failure
             })?;
-        let mut value = cell.value.clone();
+        let value = cell.value.clone();
         let mut rows = None;
         if unchanged_anchor {
             let declared = worksheet.spill_extent(at);
@@ -1348,8 +1364,10 @@ impl Session<'_> {
                         let source = worksheet.source_cell(address);
                         let effective = effective.cell(sheet, address);
                         let explicit_content = self.inputs.is_some_and(|inputs| {
-                            inputs.cell(sheet, address).is_some()
-                                && !inputs.style_only.contains(&(sheet, address))
+                            matches!(
+                                inputs.edit(sheet, address),
+                                Some(run_overlay::CellEdit::Replace(_))
+                            )
                         });
                         if address != at
                             && (explicit_content
@@ -1394,17 +1412,15 @@ impl Session<'_> {
         let staged = if let Some(saved) = rows {
             self.stage_spill(sheet, at, saved)
         } else {
-            Ok(value.clone())
+            Ok(ComputedCell::scalar(value))
         };
         self.runtime.visiting.remove(&key);
         self.runtime.consumer = previous;
-        value = staged?;
-        let rows = self.runtime.pending_spills.remove(&key);
+        let result = staged?;
         self.runtime.preparation.held.insert(
             key,
             Held {
-                value,
-                rows,
+                result,
                 source_cached: true,
                 retained: false,
             },
@@ -1481,8 +1497,7 @@ impl Session<'_> {
             self.runtime.preparation.held.insert(
                 key,
                 Held {
-                    value,
-                    rows: None,
+                    result: ComputedCell::scalar(value),
                     source_cached: true,
                     retained: true,
                 },
@@ -1553,13 +1568,11 @@ impl Session<'_> {
                 result: Err(failure),
             });
         }
-        let value = result?;
-        let rows = self.runtime.pending_spills.remove(&key);
+        let result = result?;
         self.runtime.preparation.held.insert(
             key,
             Held {
-                value,
-                rows,
+                result,
                 source_cached: false,
                 retained: false,
             },
@@ -1571,7 +1584,7 @@ impl Session<'_> {
         let Some(mut held) = self.runtime.preparation.held.remove(&(sheet, at)) else {
             return Ok(());
         };
-        if let Some(rows) = &held.rows {
+        if let Some(rows) = &held.result.rows {
             let last_row = u32::try_from(rows.len().saturating_sub(1))
                 .ok()
                 .and_then(|n| at.row.checked_add(n))
@@ -1609,15 +1622,12 @@ impl Session<'_> {
                     },
                 );
                 if active.blocked.contains(&(sheet, at)) || settled_collision {
-                    held.rows = None;
-                    held.value = Error(CellError::Spill);
+                    held.result.rows = None;
+                    held.result.value = Error(CellError::Spill);
                 }
             }
         }
-        if let Some(rows) = held.rows {
-            self.runtime.pending_spills.insert((sheet, at), rows);
-        }
-        let admission = self.admit_cell(sheet, at, &held.value);
+        let admission = self.admit_cell(sheet, at, held.result);
         if let Err(failure) = &admission {
             let _ = self.complete_cell(CellCompletion {
                 consumer: self.runtime.consumer,
@@ -1630,7 +1640,7 @@ impl Session<'_> {
                 result: Err(failure),
             });
         }
-        admission?;
+        let value = admission?;
         let last = self
             .runtime
             .preparation
@@ -1658,7 +1668,7 @@ impl Session<'_> {
                 } else {
                     CellProvenance::Evaluated
                 },
-                result: Ok(&held.value),
+                result: Ok(&value),
             })?;
         }
         if let Some(reads) = &mut self.overlay_reads {
@@ -1726,9 +1736,28 @@ impl Session<'_> {
         }
         Ok(())
     }
+    /// Settle a point read using its already resolved immutable source and ownership eligibility.
+    pub(super) fn resolve_cell_spills(
+        &mut self,
+        sheet: usize,
+        address: CellAddress,
+        source: session_execution::ResolvedSource<'a>,
+    ) -> EvalResult<()> {
+        self.settle_spills_in(
+            Area {
+                kind: AreaKind::Cell,
+                sheet,
+                r0: address.row,
+                r1: address.row,
+                c0: address.col,
+                c1: address.col,
+            },
+            Some(source),
+        )
+    }
     /// Complete a range's preparation before retaining its bounded member-read proof.
     pub(super) fn resolve_spills_in(&mut self, area: Area) -> EvalResult<()> {
-        self.settle_spills_in(area)?;
+        self.settle_spills_in(area, None)?;
         // Point reads preserve the enclosing operand. Nested private attempts may
         // complete provisional work, but cannot publish proof across rollback.
         if area.kind == AreaKind::Area
@@ -1740,7 +1769,11 @@ impl Session<'_> {
         Ok(())
     }
     /// Settle only demand intersections and their necessary dependency/priority component.
-    fn settle_spills_in(&mut self, area: Area) -> EvalResult<()> {
+    fn settle_spills_in(
+        &mut self,
+        area: Area,
+        source: Option<session_execution::ResolvedSource<'a>>,
+    ) -> EvalResult<()> {
         if self.array_result_policy != ArrayResultPolicy::DynamicSpill {
             return Ok(());
         }
@@ -1758,12 +1791,9 @@ impl Session<'_> {
                 row: area.r0,
                 col: area.c0,
             };
-            if self
-                .workbook
-                .sheet(area.sheet)
-                .is_some_and(|sheet| sheet.spill_owner(at).is_none())
-                && let Some(cell) = run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs)
-                    .cell(area.sheet, at)
+            if let Some(source) = source.or_else(|| self.resolve_source(area.sheet, at))
+                && !source.accepts_spill
+                && let Some(cell) = source.cell
                 && match cell.formula.as_deref() {
                     Some(source) => self.source_spill_shape(area.sheet, at, source).is_none(),
                     None => cell.value != Blank,
@@ -1957,7 +1987,6 @@ mod tests {
         session.compute_producer(0, anchor).unwrap();
         assert!(session.runtime.preparation.held.contains_key(&(0, anchor)));
         assert!(session.runtime.cache.is_empty());
-        assert!(session.runtime.pending_spills.is_empty());
         assert!(session.runtime.preparation.roles.is_empty());
         assert!(session.runtime.preparation.journal.is_empty());
         assert!(session.runtime.admitted.as_ref().unwrap().is_empty());

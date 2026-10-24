@@ -144,7 +144,14 @@ fn flush_failure_leaves_source_edits_and_retained_state_untouched() {
     let context = EvaluationContext::default();
     value(&mut overlay, "C1", &context);
     overlay.set_value(at("A1"), 5.).unwrap();
-    overlay.source.inputs.deleted.insert((99, at("A1").address));
+    overlay
+        .source
+        .inputs
+        .sheets
+        .entry(99)
+        .or_default()
+        .set(at("A1").address, crate::run_overlay::CellEdit::Delete)
+        .unwrap();
     let before = postcard::to_allocvec(&overlay.snapshot()).unwrap();
     assert!(overlay.flush().is_err());
     assert_eq!(postcard::to_allocvec(&overlay.snapshot()).unwrap(), before);

@@ -1,6 +1,15 @@
 //! Prepared execution, recursive cell reads, memoization, and completion lifecycle.
 use super::*;
 
+/// Borrowed authored content and incoming ownership eligibility under the current array policy.
+#[derive(Clone, Copy)]
+pub(super) struct ResolvedSource<'a> {
+    /// Authored content stays immutable while the execution publishes derived values.
+    pub(super) cell: Option<&'a poirot_model::Cell>,
+    /// Dynamic spill resolution is relevant to blank coordinates and saved children.
+    pub(super) accepts_spill: bool,
+}
+
 impl<'a> Session<'a> {
     /// Compile a reached source using the overlay's shared compiler when available.
     pub(super) fn prepare_source(&self, source: &str) -> std::sync::Arc<PreparedFormula> {
@@ -286,6 +295,25 @@ impl<'a> Session<'a> {
         self.expression_demand = previous_demand;
         result
     }
+    /// Resolve immutable source and saved ownership once for an ordinary or range read.
+    pub(super) fn resolve_source(
+        &self,
+        sheet: usize,
+        address: CellAddress,
+    ) -> Option<ResolvedSource<'a>> {
+        if address.validate().is_err() {
+            return None;
+        }
+        let worksheet = self.workbook.sheet(sheet)?;
+        let cell =
+            run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs).cell(sheet, address);
+        Some(ResolvedSource {
+            cell,
+            accepts_spill: self.array_result_policy == ArrayResultPolicy::DynamicSpill
+                && (cell.is_none_or(|cell| cell.formula.is_none() && cell.value == Blank)
+                    || worksheet.spill_owner(address).is_some()),
+        })
+    }
     /// Read an encountered range member without memoizing authored nonblank literals.
     /// Observation ports and spill-owned content retain the ordinary cell protocol.
     pub(super) fn range_cell(
@@ -305,21 +333,23 @@ impl<'a> Session<'a> {
                 .preparation
                 .roles
                 .contains_key(&(sheet, address))
-            || address.validate().is_err()
         {
             return self.cell(sheet, address);
         }
-        let Some(worksheet) = self.workbook.sheet(sheet) else {
-            return self.cell(sheet, address);
-        };
-        let cell =
-            run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs).cell(sheet, address);
-        let Some(cell) = cell.filter(|cell| {
-            cell.formula.is_none()
-                && cell.value != Blank
-                && worksheet.spill_owner(address).is_none()
+        let source = self.resolve_source(sheet, address);
+        let Some(cell) = source.and_then(|source| {
+            source.cell.filter(|cell| {
+                cell.formula.is_none()
+                    && cell.value != Blank
+                    && !source.accepts_spill
+                    && (self.array_result_policy == ArrayResultPolicy::DynamicSpill
+                        || self
+                            .workbook
+                            .sheet(sheet)
+                            .is_some_and(|worksheet| worksheet.spill_owner(address).is_none()))
+            })
         }) else {
-            return self.cell(sheet, address);
+            return self.cell_from_source(sheet, address, source);
         };
         let target = EvaluationTarget { sheet, address };
         self.runtime
@@ -354,6 +384,16 @@ impl<'a> Session<'a> {
     }
     /// Read or evaluate a cell, recording dependencies, spill effects, and completion provenance.
     pub(super) fn cell(&mut self, sheet: usize, address: CellAddress) -> EvalResult<CellValue> {
+        let source = self.resolve_source(sheet, address);
+        self.cell_from_source(sheet, address, source)
+    }
+    /// Preserve the ordinary read lifecycle around an already resolved immutable source.
+    fn cell_from_source(
+        &mut self,
+        sheet: usize,
+        address: CellAddress,
+        source: Option<ResolvedSource<'a>>,
+    ) -> EvalResult<CellValue> {
         let consumer = self.runtime.consumer;
         let mut provenance = CellProvenance::Evaluated;
         let mut completion_candidate = false;
@@ -361,8 +401,13 @@ impl<'a> Session<'a> {
         // demand must never change the dependency's value or memoized result.
         let demand = self.root_demand();
         let previous_demand = std::mem::replace(&mut self.expression_demand, demand);
-        let mut result =
-            self.cell_value(sheet, address, &mut provenance, &mut completion_candidate);
+        let mut result = self.cell_value(
+            sheet,
+            address,
+            source,
+            &mut provenance,
+            &mut completion_candidate,
+        );
         self.expression_demand = previous_demand;
         if self.array_result_policy == ArrayResultPolicy::DynamicSpill
             && matches!(result, Ok(Blank))
@@ -520,12 +565,13 @@ impl<'a> Session<'a> {
         &mut self,
         sheet: usize,
         address: CellAddress,
+        source: Option<ResolvedSource<'a>>,
         provenance: &mut CellProvenance,
         completion_candidate: &mut bool,
     ) -> EvalResult<CellValue> {
-        if address.validate().is_err() || self.workbook.sheet(sheet).is_none() {
+        let Some(source) = source else {
             return Ok(Error(Ref));
-        }
+        };
         self.runtime
             .budget
             .charge(WorkKind::CellRead, 1)
@@ -534,14 +580,7 @@ impl<'a> Session<'a> {
                 failure
             })?;
         self.read_lazy(|| DependencyRead::Cell(EvaluationTarget { sheet, address }));
-        let source =
-            run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs).cell(sheet, address);
-        let incoming = self.array_result_policy == ArrayResultPolicy::DynamicSpill
-            && (source.is_none_or(|cell| cell.formula.is_none() && cell.value == Blank)
-                || self
-                    .workbook
-                    .sheet(sheet)
-                    .is_some_and(|sheet| sheet.spill_owner(address).is_some()));
+        let incoming = source.accepts_spill;
         // A clean unowned blank certificate already includes its empty-owner
         // query guard. Owned coordinates still restore a whole footprint for
         // coherent export and spill-reference readiness. Active arbitration and
@@ -581,14 +620,7 @@ impl<'a> Session<'a> {
         } else {
             self.runtime.consumer
         };
-        let resolution = self.resolve_spills_in(Area {
-            kind: AreaKind::Cell,
-            sheet,
-            r0: address.row,
-            r1: address.row,
-            c0: address.col,
-            c1: address.col,
-        });
+        let resolution = self.resolve_cell_spills(sheet, address, source);
         if incoming && resolution.is_ok() {
             self.read_spill_membership(sheet, CellAddress { row: 0, col: 0 }, address);
             if let Some(owner) = self
@@ -698,8 +730,9 @@ impl<'a> Session<'a> {
                 value.as_ref(),
             );
         }
-        let cell =
-            run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs).cell(sheet, address);
+        // Source and inputs are immutable for this execution. Spill publication
+        // updates runtime ownership and values, never the authored source cell.
+        let cell = source.cell;
         *completion_candidate |= cell.is_some_and(|cell| cell.formula.is_some());
         // Scalar literals and absent cells cannot recurse. Dynamic spill execution
         // also uses visiting for ownership and footprint tracking, so retain its path.
@@ -733,7 +766,11 @@ impl<'a> Session<'a> {
             .replace(EvaluationTarget { sheet, address });
         let result = (|| {
             if needs_validation && let Some(value) = self.revalidate_cached((sheet, address))? {
-                self.admit_cell(sheet, address, &value)?;
+                let value = self.admit_cell(
+                    sheet,
+                    address,
+                    spill_publication::ComputedCell::scalar(value),
+                )?;
                 *provenance = CellProvenance::ExternalCache;
                 if self.runtime.budget.profiling {
                     self.runtime.run_usage.external_cache_hits =
@@ -747,17 +784,17 @@ impl<'a> Session<'a> {
                 return Ok(value);
             }
             let value = match cell {
-                None => Ok(Blank),
+                None => Ok(spill_publication::ComputedCell::scalar(Blank)),
                 Some(cell) => match &cell.formula {
                     None => {
                         if let Some(text) = cell.value.text_ref() {
                             self.runtime.budget.text(text.storage_bytes())?;
                         }
-                        Ok(match &cell.value {
+                        Ok(spill_publication::ComputedCell::scalar(match &cell.value {
                             // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
                             Number(value) => numeric_outcome::coerce_numeric_outcome(*value),
                             value => value.clone(),
-                        })
+                        }))
                     }
                     Some(formula) => {
                         self.runtime.budget.text(formula.len())?;
@@ -781,8 +818,7 @@ impl<'a> Session<'a> {
                     }
                 },
             }?;
-            self.admit_cell(sheet, address, &value)?;
-            Ok(value)
+            self.admit_cell(sheet, address, value)
         })();
         self.runtime.budget.pop_cell();
         self.runtime.consumer = previous;
@@ -833,6 +869,72 @@ fn copy_cached_value(
 #[cfg(test)]
 mod literal_cycle_tests {
     use super::*;
+
+    #[test]
+    fn source_resolution_keeps_formula_blanks_distinct_from_incoming_spill_coordinates() {
+        let mut workbook = Workbook::new();
+        let sheet = workbook.add_sheet("S").unwrap();
+        sheet.set_formula("A1".parse().unwrap(), "{1,2}").unwrap();
+        sheet
+            .set_spill_cached_value(
+                "B1".parse().unwrap(),
+                "A1".parse().unwrap(),
+                "{1,2}",
+                Number(99.),
+            )
+            .unwrap();
+        sheet.set_formula("D1".parse().unwrap(), "\"\"").unwrap();
+        sheet.set_value("E1".parse().unwrap(), Blank).unwrap();
+        sheet.set_value("F1".parse().unwrap(), 0.).unwrap();
+        let inputs = run_overlay::RunInputs::new(
+            &workbook,
+            [(0, "B1".parse().unwrap(), Number(7.))],
+            1,
+            std::sync::Arc::new(()),
+        )
+        .unwrap();
+        let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+        session.inputs = Some(&inputs);
+        session.array_result_policy = ArrayResultPolicy::DynamicSpill;
+        for (address, accepts) in [
+            ("A1", false),
+            ("B1", true),
+            ("D1", false),
+            ("E1", true),
+            ("F1", false),
+            ("G1", true),
+        ] {
+            assert_eq!(
+                session
+                    .resolve_source(0, address.parse().unwrap())
+                    .unwrap()
+                    .accepts_spill,
+                accepts,
+                "{address}"
+            );
+        }
+        assert_eq!(
+            session
+                .resolve_source(0, "B1".parse().unwrap())
+                .unwrap()
+                .cell
+                .unwrap()
+                .value,
+            Number(7.)
+        );
+        assert!(session.resolve_source(1, "A1".parse().unwrap()).is_none());
+        assert!(
+            session
+                .resolve_source(
+                    0,
+                    CellAddress {
+                        row: MAX_ROWS,
+                        col: 0
+                    }
+                )
+                .is_none()
+        );
+    }
 
     #[test]
     fn overlay_replaces_a_formula_cycle_with_a_literal() {

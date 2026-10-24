@@ -1,5 +1,6 @@
 //! Shared sparse source, parsing policies, and lazy compilation for both evaluation paths.
 use super::*;
+use crate::run_overlay::CellEdit;
 use std::borrow::Borrow;
 
 /// Runtime provider owner, excluded from serialized binding identity.
@@ -109,9 +110,6 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         Ok(())
     }
     fn remove_override(&mut self, target: EvaluationTarget) {
-        self.inputs
-            .style_only
-            .remove(&(target.sheet, target.address));
         if let Some(cells) = self.inputs.sheets.get_mut(&target.sheet) {
             cells.remove(&target.address);
             if cells.cells().is_empty() {
@@ -156,8 +154,8 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         kind: EditKind,
     ) -> Result<bool, ModelError> {
         self.validate_target(target)?;
-        let key = (target.sheet, target.address);
-        let prior_style_only = self.inputs.style_only.contains(&key);
+        let prior_edit = self.inputs.edit(target.sheet, target.address);
+        let prior_style_only = prior_edit.is_some_and(CellEdit::is_style_only);
         let saved_ownership = self.workbook().sheet(target.sheet).is_some_and(|sheet| {
             sheet.spill_owner(target.address).is_some()
                 || sheet.spill_extent(target.address).is_some()
@@ -170,10 +168,8 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         });
         let new_content_intent = kind == EditKind::Content
             && (prior_style_only
-                || (saved_ownership && self.inputs.cell(target.sheet, target.address).is_none()));
-        let style_only = kind == EditKind::Style
-            && (prior_style_only || self.inputs.cell(target.sheet, target.address).is_none())
-            && !self.inputs.deleted.contains(&key);
+                || (saved_ownership && prior_edit.and_then(CellEdit::cell).is_none()));
+        let style_only = kind == EditKind::Style && prior_edit.is_none_or(CellEdit::is_style_only);
         if self
             .source_cell(target)
             .is_some_and(|old| same_cell(old, &cell))
@@ -187,7 +183,6 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         if old_formula != cell.formula.as_deref() {
             self.spill_candidates.get_mut().remove(&target.sheet);
         }
-        self.inputs.deleted.remove(&(target.sheet, target.address));
         let baseline = self
             .workbook()
             .sheet(target.sheet)
@@ -199,12 +194,7 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
                 .sheets
                 .entry(target.sheet)
                 .or_default()
-                .set(target.address, cell)?;
-            if style_only {
-                self.inputs.style_only.insert(key);
-            } else {
-                self.inputs.style_only.remove(&key);
-            }
+                .set_cell(target.address, cell, style_only)?;
         }
         Ok(true)
     }
@@ -226,7 +216,11 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
             .sheet(target.sheet)
             .is_some_and(|s| s.source_cell(target.address).is_some())
         {
-            self.inputs.deleted.insert((target.sheet, target.address));
+            self.inputs
+                .sheets
+                .entry(target.sheet)
+                .or_default()
+                .set(target.address, CellEdit::Delete)?;
         }
         Ok(true)
     }
@@ -236,21 +230,12 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         let candidates = self.spill_candidates.get_mut();
         for (&sheet, overrides) in &self.inputs.sheets {
             let baseline = workbook.sheet(sheet);
-            if overrides.cells().into_iter().any(|(&address, cell)| {
-                cell.formula.as_deref()
+            if overrides.cells().iter().any(|(&address, edit)| {
+                edit.cell().and_then(|cell| cell.formula.as_deref())
                     != baseline
                         .and_then(|sheet| sheet.source_cell(address))
                         .and_then(|cell| cell.formula.as_deref())
             }) {
-                candidates.remove(&sheet);
-            }
-        }
-        for &(sheet, address) in &self.inputs.deleted {
-            if workbook
-                .sheet(sheet)
-                .and_then(|sheet| sheet.source_cell(address))
-                .is_some_and(|cell| cell.formula.is_some())
-            {
                 candidates.remove(&sheet);
             }
         }
@@ -263,7 +248,6 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
             .values()
             .map(|s| s.cells().len())
             .sum::<usize>()
-            + self.inputs.deleted.len()
     }
     /// Project compiler counters without exposing retained program internals.
     pub fn compiled_usage(&mut self) -> CompilationUsage {
@@ -306,30 +290,31 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
     }
     /// Export owned source mutations, independent of any evaluated result cache.
     pub fn source_changes(&self) -> Vec<WorkbookChange> {
+        // Keep deletion-before-write export order without retaining a second edit index.
         let mut changes = self
             .inputs
-            .deleted
-            .iter()
-            .map(|&(sheet, address)| WorkbookChange::RemoveCell { sheet, address })
+            .edits()
+            .filter_map(|(sheet, address, edit)| {
+                matches!(edit, CellEdit::Delete)
+                    .then_some(WorkbookChange::RemoveCell { sheet, address })
+            })
             .collect::<Vec<_>>();
-        for (&sheet, cells) in &self.inputs.sheets {
-            for (&address, cell) in cells.cells() {
-                if self.inputs.style_only.contains(&(sheet, address)) {
-                    changes.push(WorkbookChange::SetStyle {
-                        sheet,
-                        address,
-                        style: cell.style.clone(),
-                    });
-                    continue;
-                }
-                append_cell_changes(
+        for (sheet, address, edit) in self.inputs.edits() {
+            match edit {
+                CellEdit::Delete => {}
+                CellEdit::StyleOnly(cell) => changes.push(WorkbookChange::SetStyle {
+                    sheet,
+                    address,
+                    style: cell.style.clone(),
+                }),
+                CellEdit::Replace(cell) => append_cell_changes(
                     &mut changes,
                     (sheet, address),
                     self.workbook()
                         .sheet(sheet)
                         .and_then(|s| s.source_cell(address)),
                     cell,
-                );
+                ),
             }
         }
         changes
@@ -527,14 +512,20 @@ pub(super) fn source_targets(
                 .keys()
                 .filter(|at| {
                     source.source_cell(**at).is_some()
-                        && !inputs.is_some_and(|i| i.deleted.contains(&(sheet, **at)))
+                        && !inputs.is_some_and(|i| i.is_deleted(sheet, **at))
                 })
                 .map(|at| (sheet, *at)),
         );
     }
     if let Some(inputs) = inputs {
         for (&sheet, cells) in &inputs.sheets {
-            targets.extend(cells.cells().keys().map(|at| (sheet, *at)));
+            targets.extend(
+                cells
+                    .cells()
+                    .iter()
+                    .filter(|(_, edit)| edit.cell().is_some())
+                    .map(|(at, _)| (sheet, *at)),
+            );
         }
     }
     targets

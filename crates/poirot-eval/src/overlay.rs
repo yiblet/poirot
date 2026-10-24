@@ -295,24 +295,20 @@ impl<W: Borrow<Workbook> + std::borrow::BorrowMut<Workbook>> Overlay<'_, W> {
         if count == 0 {
             return Ok(0);
         }
-        let mut cells = self
-            .source
-            .inputs
-            .deleted
-            .iter()
-            .map(|&(sheet, address)| (sheet, address, None))
-            .collect::<Vec<_>>();
+        let mut cells = Vec::new();
         let mut styles = Vec::new();
-        for (&sheet, overrides) in &self.source.inputs.sheets {
-            for (&address, cell) in overrides.cells() {
-                if self.source.inputs.style_only.contains(&(sheet, address)) {
+        for (sheet, address, edit) in self.source.inputs.edits() {
+            match edit {
+                crate::run_overlay::CellEdit::Delete => cells.push((sheet, address, None)),
+                crate::run_overlay::CellEdit::StyleOnly(cell) => {
                     address.validate()?;
                     if self.source.workbook.borrow().sheet(sheet).is_none() {
                         return Err(ModelError("worksheet index out of bounds".into()));
                     }
                     styles.push((sheet, address, cell.style.clone()));
-                } else {
-                    cells.push((sheet, address, Some(cell.clone())));
+                }
+                crate::run_overlay::CellEdit::Replace(cell) => {
+                    cells.push((sheet, address, Some(cell.as_ref().clone())))
                 }
             }
         }

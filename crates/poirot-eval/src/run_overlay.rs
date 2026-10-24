@@ -1,21 +1,127 @@
 //! Immutable run assignments and borrowed effective cell/membership reads.
-use poirot_model::CellStore;
 use poirot_model::query::{QueryCounters, RangeMembership};
 use poirot_model::{Cell, CellAddress, CellValue, ModelError, Workbook};
 use std::collections::{BTreeMap, BTreeSet};
-/// One sheet's sparse authored overrides using smaller overlay pages.
-type InputCells = CellStore<Cell, 16, 2>;
-/// Borrowed coordinate-ordered view of overlay inputs within a rectangle.
-type InputRange<'a> = poirot_model::CellRange<'a, Cell, 16, 2>;
+/// One sheet's exclusive edits, kept sparse even for isolated deletions.
+#[derive(Default)]
+pub(crate) struct InputCells {
+    edits: BTreeMap<CellAddress, CellEdit>,
+    /// Derived coordinate-only column order; edit meaning lives exclusively in `edits`.
+    columns: BTreeSet<(u32, u32)>,
+}
+impl InputCells {
+    /// Validate and replace one edit without allocating a dense cell page.
+    pub(crate) fn set(
+        &mut self,
+        address: CellAddress,
+        edit: CellEdit,
+    ) -> Result<Option<CellEdit>, ModelError> {
+        address.validate()?;
+        let old = self.edits.insert(address, edit);
+        if old.is_none() {
+            self.columns.insert((address.col, address.row));
+        }
+        Ok(old)
+    }
+    /// Store content, reusing its existing allocation; report whether an edit existed.
+    pub(crate) fn set_cell(
+        &mut self,
+        address: CellAddress,
+        cell: Cell,
+        style_only: bool,
+    ) -> Result<bool, ModelError> {
+        address.validate()?;
+        match self.edits.entry(address) {
+            std::collections::btree_map::Entry::Occupied(mut entry) => {
+                let previous = std::mem::replace(entry.get_mut(), CellEdit::Delete);
+                let cell = match previous {
+                    CellEdit::Replace(mut stored) | CellEdit::StyleOnly(mut stored) => {
+                        *stored = cell;
+                        stored
+                    }
+                    // SAFETY: Cell has a fixed-size Rust layout, so this box cannot overflow its allocation size.
+                    CellEdit::Delete => Box::new(cell),
+                };
+                *entry.get_mut() = CellEdit::with_cell(cell, style_only);
+                Ok(true)
+            }
+            std::collections::btree_map::Entry::Vacant(entry) => {
+                // SAFETY: Cell has a fixed-size Rust layout, so this box cannot overflow its allocation size.
+                entry.insert(CellEdit::with_cell(Box::new(cell), style_only));
+                self.columns.insert((address.col, address.row));
+                Ok(false)
+            }
+        }
+    }
+    /// Borrow an edit at its authored coordinate.
+    pub(crate) fn get(&self, address: &CellAddress) -> Option<&CellEdit> {
+        self.edits.get(address)
+    }
+    /// Mutably borrow an existing edit.
+    pub(crate) fn get_mut(&mut self, address: &CellAddress) -> Option<&mut CellEdit> {
+        self.edits.get_mut(address)
+    }
+    /// Remove one edit, restoring baseline inheritance.
+    pub(crate) fn remove(&mut self, address: &CellAddress) -> Option<CellEdit> {
+        let old = self.edits.remove(address);
+        if old.is_some() {
+            self.columns.remove(&(address.col, address.row));
+        }
+        old
+    }
+    /// Borrow the ordered edits for sparse traversal.
+    pub(crate) fn cells(&self) -> &BTreeMap<CellAddress, CellEdit> {
+        &self.edits
+    }
+    /// Borrow a bounded edit interval; reversed bounds produce an empty cursor.
+    fn range(&self, range: std::ops::RangeInclusive<CellAddress>) -> InputRange<'_> {
+        if range.start() > range.end() {
+            // SAFETY: Equal included/excluded bounds form a valid empty interval.
+            return self.edits.range(*range.start()..*range.start());
+        }
+        // SAFETY: The guard above excludes reversed inclusive bounds.
+        self.edits.range(range)
+    }
+}
+/// Borrowed coordinate-ordered view of overlay edits within a rectangle.
+type InputRange<'a> = std::collections::btree_map::Range<'a, CellAddress, CellEdit>;
+
+/// One authored mutation; absent entries inherit baseline content and ownership.
+#[derive(Clone)]
+pub(crate) enum CellEdit {
+    /// Explicit content replacement, including an authored blank.
+    Replace(Box<Cell>),
+    /// Changed style while baseline content and saved ownership remain authoritative.
+    StyleOnly(Box<Cell>),
+    /// Hidden baseline source, distinct from an authored blank.
+    Delete,
+}
+impl CellEdit {
+    /// Attach the binary baseline-preserving style property to stored content.
+    fn with_cell(cell: Box<Cell>, style_only: bool) -> Self {
+        if style_only {
+            Self::StyleOnly(cell)
+        } else {
+            Self::Replace(cell)
+        }
+    }
+    /// Borrow content when this edit stores a cell.
+    pub(crate) fn cell(&self) -> Option<&Cell> {
+        match self {
+            Self::Replace(cell) | Self::StyleOnly(cell) => Some(cell),
+            Self::Delete => None,
+        }
+    }
+    /// Whether this edit preserves baseline content and ownership.
+    pub(crate) fn is_style_only(&self) -> bool {
+        matches!(self, Self::StyleOnly(_))
+    }
+}
 
 /// Resolved, unique assignments admitted against caller-supplied assignment limits.
 pub struct RunInputs {
-    /// Sparse authored cell overrides, using overlay-sized pages.
+    /// Exclusive source edits in sparse coordinate order.
     pub(crate) sheets: BTreeMap<usize, InputCells>,
-    /// Baseline cells hidden by deletions.
-    pub(crate) deleted: BTreeSet<(usize, CellAddress)>,
-    /// Overrides that change only style, preserving baseline content and saved ownership.
-    pub(crate) style_only: BTreeSet<(usize, CellAddress)>,
     /// Source identity token binding assignments to their shared workbook owner.
     pub(crate) source: std::sync::Arc<()>,
 }
@@ -24,8 +130,6 @@ impl RunInputs {
     pub(crate) fn empty() -> Self {
         Self {
             sheets: BTreeMap::new(),
-            deleted: BTreeSet::new(),
-            style_only: BTreeSet::new(),
             source: std::sync::Arc::new(()),
         }
     }
@@ -38,8 +142,6 @@ impl RunInputs {
     ) -> Result<Self, ModelError> {
         let mut inputs = Self {
             sheets: BTreeMap::new(),
-            deleted: BTreeSet::new(),
-            style_only: BTreeSet::new(),
             source,
         };
         let mut count = 0usize;
@@ -62,8 +164,7 @@ impl RunInputs {
                 .sheets
                 .entry(sheet)
                 .or_default()
-                .set(address, cell)?
-                .is_some()
+                .set_cell(address, cell, false)?
             {
                 return Err(ModelError("duplicate input assignment".into()));
             }
@@ -72,7 +173,24 @@ impl RunInputs {
     }
     /// Read an explicit override without falling back to the baseline.
     pub fn cell(&self, sheet: usize, address: CellAddress) -> Option<&Cell> {
+        self.edit(sheet, address)?.cell()
+    }
+    /// Read an authored edit without consulting baseline content.
+    pub(crate) fn edit(&self, sheet: usize, address: CellAddress) -> Option<&CellEdit> {
         self.sheets.get(&sheet)?.get(&address)
+    }
+    /// Whether a coordinate has an explicit deletion marker.
+    pub(crate) fn is_deleted(&self, sheet: usize, address: CellAddress) -> bool {
+        matches!(self.edit(sheet, address), Some(CellEdit::Delete))
+    }
+    /// Traverse all edits once in sheet and coordinate order.
+    pub(crate) fn edits(&self) -> impl Iterator<Item = (usize, CellAddress, &CellEdit)> {
+        self.sheets.iter().flat_map(|(&sheet, cells)| {
+            cells
+                .cells()
+                .iter()
+                .map(move |(&address, edit)| (sheet, address, edit))
+        })
     }
 }
 
@@ -89,15 +207,10 @@ impl<'a> EffectiveWorkbook<'a> {
     }
     /// Read effective authored content, respecting overrides and deletion markers.
     pub fn cell(self, sheet: usize, address: CellAddress) -> Option<&'a Cell> {
-        if self
-            .inputs
-            .is_some_and(|i| i.deleted.contains(&(sheet, address)))
-        {
-            return None;
+        match self.inputs.and_then(|inputs| inputs.edit(sheet, address)) {
+            Some(edit) => edit.cell(),
+            None => self.workbook.sheet(sheet)?.source_cell(address),
         }
-        self.inputs
-            .and_then(|inputs| inputs.cell(sheet, address))
-            .or_else(|| self.workbook.sheet(sheet)?.source_cell(address))
     }
     /// Traverse effective stored cells in row-major order within a rectangle.
     pub fn stored(self, area: RangeMembership) -> Result<EffectiveStoredCells<'a>, ModelError> {
@@ -139,7 +252,6 @@ impl<'a> EffectiveWorkbook<'a> {
             baseline,
             baseline_sheet,
             overlay,
-            deleted: self.inputs.map(|i| &i.deleted),
             area,
             reverse,
             next_row: (!contiguous).then_some(if reverse {
@@ -169,7 +281,7 @@ impl<'a> EffectiveWorkbook<'a> {
 }
 
 /// Borrowed effective cells with counters for the traversal actually performed.
-/// Column queries count source page seeks and visits, including merge prefetches;
+/// Column queries count baseline page seeks and indexed edit lookups, including prefetches;
 /// Narrow rectangles seek occupied rows; full-width rectangles open contiguous
 /// source intervals. Both visit the effective union after deletion/source filtering.
 /// Both ranges borrow their source. No retained membership index or per-read allocation.
@@ -177,14 +289,13 @@ pub struct EffectiveStoredCells<'a> {
     baseline: poirot_model::WorksheetCells<'a>,
     baseline_sheet: &'a poirot_model::Worksheet,
     overlay: Option<&'a InputCells>,
-    deleted: Option<&'a BTreeSet<(usize, CellAddress)>>,
     area: RangeMembership,
     reverse: bool,
     next_row: Option<u32>,
     base_row: Option<OverlayRange<'a>>,
     input_row: Option<OverlayRange<'a>>,
-    base_next: Option<(&'a CellAddress, &'a Cell)>,
-    input_next: Option<(&'a CellAddress, &'a Cell)>,
+    base_next: Option<(&'a CellAddress, StoredSource<'a>)>,
+    input_next: Option<(&'a CellAddress, StoredSource<'a>)>,
     column: Option<ColumnTraversal<'a>>,
     counters: QueryCounters,
 }
@@ -194,7 +305,22 @@ impl EffectiveStoredCells<'_> {
         self.counters
     }
 }
-/// Merged base/overlay cell iterator preserving source precedence.
+/// Borrowed source selected by a merge cursor before tombstone filtering.
+#[derive(Clone, Copy)]
+enum StoredSource<'a> {
+    Baseline(&'a Cell),
+    Edit(&'a CellEdit),
+}
+impl<'a> StoredSource<'a> {
+    fn cell(self) -> Option<&'a Cell> {
+        match self {
+            Self::Baseline(cell) => Some(cell),
+            Self::Edit(edit) => edit.cell(),
+        }
+    }
+}
+
+/// Merged base/overlay source iterator preserving edit precedence.
 #[derive(Clone, Copy)]
 enum OverlayCells<'a> {
     Base(poirot_model::WorksheetCells<'a>),
@@ -204,7 +330,7 @@ impl<'a> OverlayCells<'a> {
     fn range(self, range: std::ops::RangeInclusive<CellAddress>) -> OverlayRange<'a> {
         match self {
             Self::Base(c) => OverlayRange::Base(c.range(range)),
-            Self::Input(c) => OverlayRange::Input(c.cells().range(range)),
+            Self::Input(c) => OverlayRange::Input(c.range(range)),
         }
     }
 }
@@ -215,26 +341,32 @@ enum OverlayRange<'a> {
 }
 impl<'a> Iterator for OverlayRange<'a> {
     /// Borrowed effective coordinate and cell after overlay precedence.
-    type Item = (&'a CellAddress, &'a Cell);
+    type Item = (&'a CellAddress, StoredSource<'a>);
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            Self::Base(r) => r.next(),
-            Self::Input(r) => r.next(),
+            Self::Base(r) => r
+                .next()
+                .map(|(at, cell)| (at, StoredSource::Baseline(cell))),
+            Self::Input(r) => r.next().map(|(at, edit)| (at, StoredSource::Edit(edit))),
         }
     }
 }
 impl DoubleEndedIterator for OverlayRange<'_> {
     fn next_back(&mut self) -> Option<Self::Item> {
         match self {
-            Self::Base(r) => r.next_back(),
-            Self::Input(r) => r.next_back(),
+            Self::Base(r) => r
+                .next_back()
+                .map(|(at, cell)| (at, StoredSource::Baseline(cell))),
+            Self::Input(r) => r
+                .next_back()
+                .map(|(at, edit)| (at, StoredSource::Edit(edit))),
         }
     }
 }
 fn advance<'a>(
     range: &mut Option<OverlayRange<'a>>,
     reverse: bool,
-) -> Option<(&'a CellAddress, &'a Cell)> {
+) -> Option<(&'a CellAddress, StoredSource<'a>)> {
     let range = range.as_mut()?;
     if reverse {
         range.next_back()
@@ -242,12 +374,57 @@ fn advance<'a>(
         range.next()
     }
 }
+/// Column-ordered key cursor borrowing authoritative edits without scanning other columns.
+struct InputColumn<'a> {
+    range: std::collections::btree_set::Range<'a, (u32, u32)>,
+    edits: &'a InputCells,
+    counters: QueryCounters,
+}
+impl<'a> InputColumn<'a> {
+    fn new(edits: &'a InputCells, area: RangeMembership) -> Self {
+        let first = (area.first.col, area.first.row);
+        let last = (area.last.col, area.last.row);
+        let range = if first <= last {
+            // SAFETY: The branch proves ordered inclusive bounds.
+            edits.columns.range(first..=last)
+        } else {
+            // SAFETY: Equal included/excluded bounds form a valid empty interval.
+            edits.columns.range(first..first)
+        };
+        Self {
+            range,
+            edits,
+            counters: QueryCounters {
+                row_seeks: 1,
+                column_seeks: 1,
+                ..Default::default()
+            },
+        }
+    }
+    fn counters(&self) -> QueryCounters {
+        self.counters
+    }
+}
+impl<'a> Iterator for InputColumn<'a> {
+    type Item = (&'a CellAddress, &'a CellEdit);
+    fn next(&mut self) -> Option<Self::Item> {
+        for &(col, row) in self.range.by_ref() {
+            self.counters.key_lookups = self.counters.key_lookups.saturating_add(1);
+            if let Some(item) = self.edits.edits.get_key_value(&CellAddress { row, col }) {
+                self.counters.cells_visited = self.counters.cells_visited.saturating_add(1);
+                return Some(item);
+            }
+        }
+        None
+    }
+}
+
 /// Merge baseline and override column cursors without a separate accounting walk.
 struct ColumnTraversal<'a> {
     base: poirot_model::ColumnCells<'a>,
-    input: Option<poirot_model::ColumnCells<'a, Cell, 16, 2>>,
-    base_next: Option<(&'a CellAddress, &'a Cell)>,
-    input_next: Option<(&'a CellAddress, &'a Cell)>,
+    input: Option<InputColumn<'a>>,
+    base_next: Option<(&'a CellAddress, StoredSource<'a>)>,
+    input_next: Option<(&'a CellAddress, StoredSource<'a>)>,
     started: bool,
     finished: bool,
 }
@@ -259,41 +436,65 @@ impl<'a> ColumnTraversal<'a> {
     ) -> Self {
         Self {
             base: base.column(area.first.col, area.first.row, area.last.row),
-            input: input.map(|c| {
-                c.cells()
-                    .column(area.first.col, area.first.row, area.last.row)
-            }),
+            input: input.map(|cells| InputColumn::new(cells, area)),
             base_next: None,
             input_next: None,
             started: false,
             finished: false,
         }
     }
-    fn next(&mut self, counters: &mut QueryCounters) -> Option<(&'a CellAddress, &'a Cell)> {
+    fn next(
+        &mut self,
+        counters: &mut QueryCounters,
+    ) -> Option<(&'a CellAddress, StoredSource<'a>)> {
         if self.finished {
             return None;
         }
         if !self.started {
             self.started = true;
-            self.base_next = self.base.next();
-            self.input_next = self.input.as_mut().and_then(Iterator::next);
+            self.base_next = self
+                .base
+                .next()
+                .map(|(at, cell)| (at, StoredSource::Baseline(cell)));
+            self.input_next = self
+                .input
+                .as_mut()
+                .and_then(Iterator::next)
+                .map(|(at, edit)| (at, StoredSource::Edit(edit)));
         }
         let selected = match (self.base_next, self.input_next) {
             (Some(base), Some(input)) if base.0 == input.0 => {
-                self.base_next = self.base.next();
-                self.input_next = self.input.as_mut().and_then(Iterator::next);
+                self.base_next = self
+                    .base
+                    .next()
+                    .map(|(at, cell)| (at, StoredSource::Baseline(cell)));
+                self.input_next = self
+                    .input
+                    .as_mut()
+                    .and_then(Iterator::next)
+                    .map(|(at, edit)| (at, StoredSource::Edit(edit)));
                 Some(input)
             }
             (Some(base), Some(input)) if base.0 < input.0 => {
-                self.base_next = self.base.next();
+                self.base_next = self
+                    .base
+                    .next()
+                    .map(|(at, cell)| (at, StoredSource::Baseline(cell)));
                 Some(base)
             }
             (_, Some(input)) => {
-                self.input_next = self.input.as_mut().and_then(Iterator::next);
+                self.input_next = self
+                    .input
+                    .as_mut()
+                    .and_then(Iterator::next)
+                    .map(|(at, edit)| (at, StoredSource::Edit(edit)));
                 Some(input)
             }
             (Some(base), None) => {
-                self.base_next = self.base.next();
+                self.base_next = self
+                    .base
+                    .next()
+                    .map(|(at, cell)| (at, StoredSource::Baseline(cell)));
                 Some(base)
             }
             (None, None) => None,
@@ -304,6 +505,7 @@ impl<'a> ColumnTraversal<'a> {
             counters.row_seeks = counters.row_seeks.saturating_add(input.row_seeks);
             counters.column_seeks = counters.column_seeks.saturating_add(input.column_seeks);
             counters.cells_visited = counters.cells_visited.saturating_add(input.cells_visited);
+            counters.key_lookups = counters.key_lookups.saturating_add(input.key_lookups);
         }
         self.finished = selected.is_none();
         selected
@@ -316,22 +518,14 @@ impl<'a> Iterator for EffectiveStoredCells<'a> {
         if let Some(column) = &mut self.column {
             loop {
                 let item = column.next(&mut self.counters)?;
-                if !self
-                    .deleted
-                    .is_some_and(|d| d.contains(&(self.area.sheet, *item.0)))
+                let Some(cell) = item.1.cell() else { continue };
+                if matches!(item.1, StoredSource::Edit(_))
+                    || self.baseline_sheet.spill_owner(*item.0).is_none()
                 {
-                    if self.baseline_sheet.spill_owner(*item.0).is_none() {
-                        return Some(item);
-                    }
-                    if self
-                        .overlay
-                        .is_some_and(|cells| cells.get(item.0).is_some())
-                    {
-                        return Some(item);
-                    }
-                    if let Some(source) = self.baseline_sheet.source_cell(*item.0) {
-                        return Some((item.0, source));
-                    }
+                    return Some((item.0, cell));
+                }
+                if let Some(source) = self.baseline_sheet.source_cell(*item.0) {
+                    return Some((item.0, source));
                 }
             }
         }
@@ -362,18 +556,11 @@ impl<'a> Iterator for EffectiveStoredCells<'a> {
                 (None, None) => None,
             };
             if let Some(item) = selected {
-                if self
-                    .deleted
-                    .is_some_and(|d| d.contains(&(self.area.sheet, *item.0)))
+                let Some(cell) = item.1.cell() else { continue };
+                let item = if matches!(item.1, StoredSource::Edit(_))
+                    || self.baseline_sheet.spill_owner(*item.0).is_none()
                 {
-                    continue;
-                }
-                let item = if self.baseline_sheet.spill_owner(*item.0).is_none()
-                    || self
-                        .overlay
-                        .is_some_and(|cells| cells.get(item.0).is_some())
-                {
-                    item
+                    (item.0, cell)
                 } else if let Some(source) = self.baseline_sheet.source_cell(*item.0) {
                     (item.0, source)
                 } else {
@@ -441,7 +628,7 @@ impl<'a> Iterator for EffectiveStoredCells<'a> {
                 col: self.area.last.col,
             };
             let prepare_row =
-                |cells: OverlayCells<'a>, selected: Option<(&'a CellAddress, &'a Cell)>| {
+                |cells: OverlayCells<'a>, selected: Option<(&'a CellAddress, StoredSource<'a>)>| {
                     // A one-column query can use the cell that located its row.
                     // Reopening a singleton range would seek the same B-tree twice.
                     if first == last && selected.is_some_and(|(address, _)| *address == first) {
@@ -464,6 +651,68 @@ impl<'a> Iterator for EffectiveStoredCells<'a> {
 mod page_column_tests {
     use super::*;
     #[test]
+    fn repeated_content_and_style_writes_reuse_payload_allocations() {
+        let at = CellAddress { row: 3, col: 4 };
+        let mut edits = InputCells::default();
+        assert!(!edits.set_cell(at, Cell::new(1.), false).unwrap());
+        let allocations = allocation_counter::measure(|| {
+            for value in 2..=100 {
+                assert!(
+                    edits
+                        .set_cell(at, Cell::new(f64::from(value)), value % 2 == 0)
+                        .unwrap()
+                );
+            }
+        });
+        assert_eq!(allocations.count_total, 0);
+        assert_eq!(
+            edits.get(&at).unwrap().cell().unwrap().value,
+            CellValue::Number(100.)
+        );
+        assert!(edits.get(&at).unwrap().is_style_only());
+        assert_eq!(edits.columns.len(), 1);
+        let invalid = CellAddress {
+            row: poirot_model::MAX_ROWS,
+            col: 0,
+        };
+        assert!(edits.set_cell(invalid, Cell::new(0.), false).is_err());
+        assert_eq!(edits.cells().len(), 1);
+        assert_eq!(edits.columns.len(), 1);
+    }
+
+    #[test]
+    fn edit_index_tracks_coordinate_membership_across_all_state_transitions() {
+        let mut edits = InputCells::default();
+        let at = CellAddress { row: 100, col: 3 };
+        for edit in [
+            CellEdit::Replace(Box::new(Cell::new(1.))),
+            CellEdit::StyleOnly(Box::new(Cell::new(1.))),
+            CellEdit::Delete,
+        ] {
+            edits.set(at, edit).unwrap();
+            assert_eq!(edits.columns.len(), 1);
+            let area = RangeMembership::new(0, at, at).unwrap();
+            assert_eq!(InputColumn::new(&edits, area).count(), 1);
+        }
+        assert!(edits.remove(&at).is_some());
+        assert!(edits.remove(&at).is_none());
+        assert!(edits.columns.is_empty());
+        assert!(
+            edits
+                .range(at..=CellAddress { row: 0, col: 0 })
+                .next()
+                .is_none()
+        );
+        let invalid = CellAddress {
+            row: poirot_model::MAX_ROWS,
+            col: 0,
+        };
+        assert!(edits.set(invalid, CellEdit::Delete).is_err());
+        assert!(edits.cells().is_empty());
+        assert!(edits.columns.is_empty());
+    }
+
+    #[test]
     fn column_counters_include_source_prefetch_overrides_and_deleted_visits() {
         let mut book = Workbook::new();
         let sheet = book.add_sheet("S").unwrap();
@@ -485,7 +734,12 @@ mod page_column_tests {
             std::sync::Arc::new(()),
         )
         .unwrap();
-        input.deleted.insert((0, CellAddress { row: 32, col: 0 }));
+        input
+            .sheets
+            .entry(0)
+            .or_default()
+            .set(CellAddress { row: 32, col: 0 }, CellEdit::Delete)
+            .unwrap();
         let area = RangeMembership::new(
             0,
             CellAddress { row: 0, col: 0 },
@@ -496,20 +750,27 @@ mod page_column_tests {
             .stored(area)
             .unwrap();
         assert_eq!(cells.next().unwrap().1.value, CellValue::Number(2.));
-        // Merging A1 consumes both sources and prefetches A33/A17. That is
-        // two column bound seeks, four loaded pages, four physical stored visits.
+        // Merging A1 consumes both sources and prefetches A33/A17: two
+        // baseline pages, one overlay interval and four physical visits.
         let work = QueryCounters {
-            row_seeks: 4,
+            row_seeks: 3,
             column_seeks: 2,
             cells_visited: 4,
-            key_lookups: 0,
+            key_lookups: 2,
         };
         assert_eq!(cells.counters(), work);
         assert_eq!(cells.next().unwrap().1.value, CellValue::Number(3.));
         assert!(cells.next().is_none());
         assert!(cells.next().is_none());
-        // Hiding A33 and replacing A1 cannot undo physical source visits.
-        assert_eq!(cells.counters(), work);
+        // The tombstone is visited but never returned; the column index skips C41.
+        assert_eq!(
+            cells.counters(),
+            QueryCounters {
+                cells_visited: 5,
+                key_lookups: 3,
+                ..work
+            }
+        );
     }
     #[test]
     fn column_tiles_preserve_overlay_precedence_and_sparse_query_counters() {
@@ -553,7 +814,10 @@ mod page_column_tests {
                     assert_eq!(a, b);
                     // Value order agrees although column pages and worksheet row
                     // queries perform different index operations.
-                    assert_eq!(actual.counters().key_lookups, 0);
+                    assert!(
+                        actual.counters().key_lookups
+                            <= input.sheets.get(&0).unwrap().cells().len() as u64
+                    );
                     if a.is_none() {
                         break;
                     }
@@ -607,8 +871,19 @@ mod full_width_tests {
             std::sync::Arc::new(()),
         )
         .unwrap();
-        input.deleted.insert((0, address(3, 1)));
-        input.style_only.insert((0, address(2, 1)));
+        input
+            .sheets
+            .entry(0)
+            .or_default()
+            .set(address(3, 1), CellEdit::Delete)
+            .unwrap();
+        let cell = input.cell(0, address(2, 1)).unwrap().clone();
+        input
+            .sheets
+            .entry(0)
+            .or_default()
+            .set(address(2, 1), CellEdit::StyleOnly(Box::new(cell)))
+            .unwrap();
         let expected = [
             (address(0, 0), CellValue::Number(1.), None),
             (address(1, 0), CellValue::Number(20.), None),

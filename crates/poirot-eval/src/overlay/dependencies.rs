@@ -419,6 +419,13 @@ pub(crate) enum Validity {
     Causes(CellMap<u64>),
 }
 impl Validity {
+    /// Storage used by additional dirty causes, apart from the inline validity tag.
+    fn retained_bytes(&self) -> usize {
+        match self {
+            Self::Causes(causes) => causes.len().saturating_mul(64),
+            _ => 0,
+        }
+    }
     /// Whether the retained result can be published without further validation.
     pub fn is_clean(&self) -> bool {
         matches!(self, Self::Clean)
@@ -809,7 +816,7 @@ impl Cache {
                 else {
                     continue;
                 };
-                let prior_bytes = entry.retained_bytes();
+                let prior_bytes = entry.validity.retained_bytes();
                 // A spill child must resolve its owner again: the anchor's
                 // top-left scalar cannot certify the child's contents or extent.
                 if matches!(entry.dependencies.spill,
@@ -843,7 +850,7 @@ impl Cache {
                 self.retained_bytes = self
                     .retained_bytes
                     .saturating_sub(prior_bytes)
-                    .saturating_add(entry.retained_bytes());
+                    .saturating_add(entry.validity.retained_bytes());
             }
         }
         self.lookup_prefixes.invalidate(&seen);
@@ -854,12 +861,12 @@ impl Cache {
             .get_mut(&key.0)
             .and_then(|sheet| sheet.get_mut(&key.1))
         {
-            let prior_bytes = entry.retained_bytes();
+            let prior_bytes = entry.validity.retained_bytes();
             entry.validity = Validity::Forced;
             self.retained_bytes = self
                 .retained_bytes
                 .saturating_sub(prior_bytes)
-                .saturating_add(entry.retained_bytes());
+                .saturating_add(entry.validity.retained_bytes());
         }
     }
 
@@ -1129,10 +1136,7 @@ impl Cached {
     /// Estimate result and dependency storage for retention accounting.
     pub fn retained_bytes(&self) -> usize {
         224usize
-            .saturating_add(match &self.validity {
-                Validity::Causes(causes) => causes.len().saturating_mul(64),
-                _ => 0,
-            })
+            .saturating_add(self.validity.retained_bytes())
             .saturating_add(self.value.text_storage_bytes())
             .saturating_add(self.dependencies.cells.len().saturating_mul(48))
             .saturating_add(
@@ -1142,6 +1146,70 @@ impl Cached {
                     + self.dependencies.value_reads.len())
                 .saturating_mul(64),
             )
+    }
+}
+
+#[cfg(test)]
+mod validity_accounting_tests {
+    use super::*;
+
+    #[test]
+    fn dirty_storage_accounting_tracks_multiple_duplicate_and_forced_causes() {
+        let first = (0, CellAddress { row: 0, col: 0 });
+        let second = (0, CellAddress { row: 1, col: 0 });
+        let target = (0, CellAddress { row: 0, col: 1 });
+        let mut cache = Cache::default();
+        for key in [first, second] {
+            cache
+                .insert(
+                    key,
+                    Cached {
+                        value: Arc::new(1.0.into()),
+                        version: 0,
+                        validity: Validity::Clean,
+                        dependencies: Box::default(),
+                    },
+                )
+                .unwrap();
+        }
+        let reader = Cached {
+            value: Arc::new(CellValue::Text("retained result".into())),
+            version: 0,
+            validity: Validity::Clean,
+            dependencies: Box::new(Dependencies {
+                cells: vec![first, second],
+                ..Default::default()
+            }),
+        };
+        cache.insert(target, reader).unwrap();
+        let clean_bytes = cache.retained_bytes;
+        let check = |cache: &Cache| {
+            assert_eq!(
+                cache.retained_bytes,
+                [first, second, target]
+                    .into_iter()
+                    .map(|key| cache.retained(key).unwrap().retained_bytes())
+                    .sum::<usize>()
+            );
+        };
+        cache.invalidate_context([first]);
+        check(&cache);
+        assert_eq!(cache.retained_bytes, clean_bytes);
+        cache.invalidate_context([second]);
+        check(&cache);
+        assert!(cache.retained_bytes > clean_bytes);
+        let multiple_bytes = cache.retained_bytes;
+        cache.invalidate_context([first, first, second]);
+        check(&cache);
+        assert_eq!(cache.retained_bytes, multiple_bytes);
+        cache.force(target);
+        check(&cache);
+        assert_eq!(cache.retained_bytes, clean_bytes);
+        cache.force(target);
+        check(&cache);
+        cache.invalidate_context([first, second]);
+        check(&cache);
+        assert_eq!(cache.retained_bytes, clean_bytes);
     }
 }
 

@@ -406,3 +406,92 @@ fn cross_sheet_owner_context_changes_cut_off_unchanged_child_values() {
         "time changes rerun producer, unchanged child cuts off cross-sheet parent"
     );
 }
+
+#[test]
+fn repeated_session_children_keep_priority_spill_references_and_complete_exports() {
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("S").unwrap();
+    for (cell, formula) in [
+        ("A2", "SEQUENCE(1,3,10)"),
+        ("B1", "SEQUENCE(3,1,20)"),
+        ("D1", "SUM(B1#)"),
+        ("D2", "B2+B2"),
+    ] {
+        sheet.set_formula(at(cell).address, formula).unwrap();
+    }
+    let mut overlay = Overlay::with_workbook(&book)
+        .with_policy(dynamic())
+        .build()
+        .unwrap();
+    let context = EvaluationContext::default();
+    // B1 has top-left priority over the intersecting A2 producer. Its vertical
+    // sequence is 20,21,22, giving the sum 63 and the repeated-child sum 42.
+    for _ in 0..2 {
+        let mut evaluation = overlay.evaluation(&context).unwrap();
+        let outputs = evaluation
+            .outputs(&[at("B2"), at("B2"), at("D1"), at("D2"), at("B3")])
+            .unwrap();
+        for (output, expected) in outputs.iter().zip([21., 21., 63., 42., 22.]) {
+            assert_eq!(output.value, CellValue::Number(expected));
+        }
+        assert_eq!(
+            evaluation.cell(at("A2")).unwrap(),
+            CellValue::Error(poirot_model::CellError::Spill)
+        );
+        let mut exported = book.clone();
+        exported
+            .apply(evaluation.result_changes().unwrap())
+            .unwrap();
+        let sheet = exported.sheet(0).unwrap();
+        assert_eq!(
+            sheet.complete_spill_extent(at("B1").address),
+            Some(at("B3").address)
+        );
+        for (cell, expected) in [("B1", 20.), ("B2", 21.), ("B3", 22.)] {
+            assert_eq!(
+                sheet.get(at(cell).address).unwrap().value,
+                CellValue::Number(expected)
+            );
+        }
+    }
+}
+
+#[test]
+fn memoized_producer_has_no_self_ownership_notification() {
+    /// Collect public reads, including owner notifications.
+    struct Reads(std::rc::Rc<std::cell::RefCell<Vec<ReadEvent>>>);
+    impl DependencyReadSink for Reads {
+        fn read(&mut self, event: ReadEvent) {
+            self.0.borrow_mut().push(event);
+        }
+    }
+    let mut book = Workbook::new();
+    book.add_sheet("S")
+        .unwrap()
+        .set_formula(at("A1").address, "SEQUENCE(2)")
+        .unwrap();
+    let policy = EvaluationPolicy::default();
+    let plan = FormulaCompiler::new().compile_workbook(&book, &policy);
+    let configuration =
+        RunConfiguration::default().with_array_result_policy(ArrayResultPolicy::DynamicSpill);
+    let events = std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
+    let mut reads = Reads(events.clone());
+    let mut run = EvaluationRun::new_with_configuration(
+        WorkbookView::new(&book, &plan, &policy).unwrap(),
+        &configuration,
+        Default::default(),
+    )
+    .unwrap()
+    .with_dependency_sink(&mut reads);
+    assert_eq!(run.evaluate_cell(at("A1")).unwrap(), 1.0.into());
+    events.borrow_mut().clear();
+    assert_eq!(run.evaluate_cell(at("A1")).unwrap(), 1.0.into());
+    assert_eq!(
+        *events.borrow(),
+        [ReadEvent {
+            consumer: None,
+            read: DependencyRead::Cell(at("A1"))
+        }],
+        "producer reads do not report the producer as an additional owner"
+    );
+}

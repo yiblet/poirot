@@ -42,7 +42,6 @@ impl Continuation {
             admitted.clear();
         }
         self.preparation = Default::default();
-        self.pending_spills.clear();
         self.spill_read_ranges.clear();
         self.blank_reads.clear();
         self.visiting.clear();

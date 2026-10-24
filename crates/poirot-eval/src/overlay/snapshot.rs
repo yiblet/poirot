@@ -1,5 +1,6 @@
 //! Borrowed Serde view of a workbook plus its sparse overlay state.
 use super::*;
+use crate::run_overlay::CellEdit;
 use serde::{Deserialize, Serialize, ser::Error as _};
 use std::borrow::Cow;
 const VERSION: u32 = 74;
@@ -48,29 +49,27 @@ impl WorkspaceState {
             ));
         }
         let mut result = workbook.clone();
-        let changes = self
+        let deleted = self.inputs.edits().filter_map(|(sheet, address, edit)| {
+            matches!(edit, CellEdit::Delete)
+                .then_some(WorkbookChange::RemoveCell { sheet, address })
+        });
+        let writes = self
             .inputs
-            .deleted
-            .iter()
-            .map(|&(sheet, address)| WorkbookChange::RemoveCell { sheet, address })
-            .chain(self.inputs.sheets.iter().flat_map(|(&sheet, cells)| {
-                cells.cells().into_iter().map(move |(&address, cell)| {
-                    if self.inputs.style_only.contains(&(sheet, address)) {
-                        WorkbookChange::SetStyle {
-                            sheet,
-                            address,
-                            style: cell.style.clone(),
-                        }
-                    } else {
-                        WorkbookChange::SetCell {
-                            sheet,
-                            address,
-                            cell: cell.clone(),
-                        }
-                    }
-                })
-            }));
-        result.apply(changes)?;
+            .edits()
+            .filter_map(|(sheet, address, edit)| match edit {
+                CellEdit::Delete => None,
+                CellEdit::StyleOnly(cell) => Some(WorkbookChange::SetStyle {
+                    sheet,
+                    address,
+                    style: cell.style.clone(),
+                }),
+                CellEdit::Replace(cell) => Some(WorkbookChange::SetCell {
+                    sheet,
+                    address,
+                    cell: cell.as_ref().clone(),
+                }),
+            });
+        result.apply(deleted.chain(writes))?;
         Ok(result)
     }
 
@@ -199,19 +198,31 @@ impl<'a> Payload<'a> {
                 overlay.preparation,
             )
             .map_err(OverlayError::Snapshot)?,
+            // Preserve the existing wire layout while deriving its disjoint views
+            // from one runtime collection. Only serialization allocates marker sets.
             writes: overlay
                 .inputs
-                .sheets
-                .iter()
-                .flat_map(|(&sheet, cells)| {
-                    cells
-                        .cells()
-                        .into_iter()
-                        .map(move |(&at, cell)| (sheet, at, Cow::Borrowed(cell)))
+                .edits()
+                .filter_map(|(sheet, at, edit)| {
+                    edit.cell().map(|cell| (sheet, at, Cow::Borrowed(cell)))
                 })
                 .collect(),
-            deleted: Cow::Borrowed(&overlay.inputs.deleted),
-            style_only: Cow::Borrowed(&overlay.inputs.style_only),
+            deleted: Cow::Owned(
+                overlay
+                    .inputs
+                    .edits()
+                    .filter_map(|(sheet, at, edit)| {
+                        matches!(edit, CellEdit::Delete).then_some((sheet, at))
+                    })
+                    .collect(),
+            ),
+            style_only: Cow::Owned(
+                overlay
+                    .inputs
+                    .edits()
+                    .filter_map(|(sheet, at, edit)| edit.is_style_only().then_some((sheet, at)))
+                    .collect(),
+            ),
             cached: cache
                 .sheets
                 .iter()
@@ -350,8 +361,7 @@ impl<'a> Snapshot<'a> {
                 .sheets
                 .entry(sheet)
                 .or_default()
-                .set(address, cell.into_owned())?
-                .is_some()
+                .set_cell(address, cell.into_owned(), false)?
             {
                 return Err(OverlayError::Snapshot("duplicate overlay write".into()));
             }
@@ -363,6 +373,13 @@ impl<'a> Snapshot<'a> {
             if overlay.source.inputs.cell(sheet, address).is_some() {
                 return Err(OverlayError::Snapshot("write and removal overlap".into()));
             }
+            overlay
+                .source
+                .inputs
+                .sheets
+                .entry(sheet)
+                .or_default()
+                .set(address, CellEdit::Delete)?;
         }
         for &(sheet, address) in payload.style_only.as_ref() {
             let cell = overlay.source.inputs.cell(sheet, address).ok_or_else(|| {
@@ -384,9 +401,21 @@ impl<'a> Snapshot<'a> {
                     "style-only marker changes source content".into(),
                 ));
             }
+            if let Some(edit) = overlay
+                .source
+                .inputs
+                .sheets
+                .get_mut(&sheet)
+                .and_then(|cells| cells.get_mut(&address))
+            {
+                // The validation above proved each marker contains a cell.
+                let previous = std::mem::replace(edit, CellEdit::Delete);
+                *edit = match previous {
+                    CellEdit::Replace(cell) => CellEdit::StyleOnly(cell),
+                    other => other,
+                };
+            }
         }
-        overlay.source.inputs.style_only = payload.style_only.into_owned();
-        overlay.source.inputs.deleted = payload.deleted.into_owned();
         {
             let cache = overlay.cache.get_mut();
             cache.context = payload.context.map(Cow::into_owned);
