@@ -41,9 +41,7 @@ impl Continuation {
         if let Some(admitted) = &mut self.admitted {
             admitted.clear();
         }
-        self.preparation = Default::default();
-        self.spill_read_ranges.clear();
-        self.blank_reads.clear();
+        self.preparation.reset();
         self.visiting.clear();
         self.names.clear();
         self.random_streams.clear();
@@ -62,7 +60,7 @@ impl Continuation {
     pub fn values(&self) -> &crate::run::CellMemo {
         &self.cache
     }
-    /// Export one result with guarded spill ownership.
+    /// Export a result selected from the direct evaluator's successful-call set.
     pub fn change(
         &self,
         source: crate::run_overlay::EffectiveWorkbook<'_>,
@@ -70,15 +68,13 @@ impl Continuation {
         policy: crate::FormulaCacheMaterializationPolicy,
     ) -> Option<WorkbookChange> {
         let value = self.cache.get(&key)?;
+        // Direct changes selects only earlier successful-call keys. A later failed
+        // settlement rolls back its own admissions without revoking those results.
         evaluation::evaluated_change(
             source,
             key,
             value,
-            self.preparation
-                .roles
-                .get(&key)
-                .copied()
-                .unwrap_or_default(),
+            self.preparation.admitted_role(key),
             policy,
         )
     }

@@ -12,7 +12,7 @@ fn evaluate(formula: &str, budgets: EvaluationBudgets) -> EvalResult<CellValue> 
     let at = "A1".parse().unwrap();
     let expr = bound::bind(&parse_formula(formula).unwrap());
     let v = session.expr(0, at, &expr)?;
-    session.scalar(at, v)
+    session.select_legacy_scalar(at, v)
 }
 #[test]
 fn captured_unit_results_flow_through_handlers() {
@@ -114,7 +114,7 @@ fn evaluate_source(
     session.budget = BudgetMeter::new(budgets).unwrap();
     let at = "B1".parse().unwrap();
     let result = session.expr(0, at, &bound::bind(&parse_formula(formula).unwrap()))?;
-    session.scalar(at, result)
+    session.select_legacy_scalar(at, result)
 }
 #[test]
 fn documented_v2_scans_and_replacement_preserve_exact_units() {

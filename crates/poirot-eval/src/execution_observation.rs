@@ -226,7 +226,7 @@ impl Session<'_> {
                     expression,
                     crate::expression_execution::ExpressionDemand::Scalar,
                 )
-                .and_then(|v| self.scalar(at, v)),
+                .and_then(|v| self.select_legacy_scalar(at, v)),
             None => Ok(CellValue::Blank),
         };
         self.observation_end(

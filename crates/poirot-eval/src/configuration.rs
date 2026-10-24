@@ -272,3 +272,61 @@ impl ConfigurationFingerprint {
         }
     }
 }
+
+/// Borrowed execution settings shared by every internal session constructor.
+pub(crate) struct SessionConfiguration<'a> {
+    pub(super) context: EvaluationInputs,
+    pub(super) currency: Option<&'a CurrencyContext>,
+    pub(super) number_locale: &'a crate::NumberLocaleV2,
+    pub(super) text_policy: TextSemanticsPolicy,
+    pub(super) builtin_policy: BuiltinSemanticsPolicy,
+    pub(super) array_result_policy: ArrayResultPolicy,
+    pub(super) producer_policy: ProducerPolicy,
+    pub(super) regex: crate::RegexSettings,
+}
+impl<'a> SessionConfiguration<'a> {
+    /// Select default execution policies for captured inputs.
+    pub(crate) fn from_inputs(context: EvaluationInputs) -> Self {
+        Self {
+            context,
+            currency: None,
+            number_locale: &crate::NumberLocaleV2::EN_US,
+            text_policy: TextSemanticsPolicy::default(),
+            builtin_policy: BuiltinSemanticsPolicy::default(),
+            array_result_policy: ArrayResultPolicy::default(),
+            producer_policy: ProducerPolicy::default(),
+            regex: Default::default(),
+        }
+    }
+
+    /// Borrow localization and formatting from an explicit run configuration.
+    pub(crate) fn from_run_configuration(configuration: &'a RunConfiguration) -> Self {
+        Self {
+            context: configuration.context(),
+            currency: configuration.formatting().currency(),
+            number_locale: configuration.number_locale(),
+            text_policy: configuration.text_policy(),
+            builtin_policy: configuration.builtin_policy(),
+            array_result_policy: configuration.array_result_policy(),
+            producer_policy: configuration.producer_policy(),
+            regex: Default::default(),
+        }
+    }
+
+    /// Combine per-evaluation inputs with policies owned by the evaluation workspace.
+    pub(crate) fn from_overlay(
+        context: &'a crate::EvaluationContext,
+        policy: &crate::overlay::OverlayPolicy,
+    ) -> Self {
+        Self {
+            context: context.inputs(),
+            currency: context.formatting.currency(),
+            number_locale: &context.number_locale,
+            text_policy: policy.text,
+            builtin_policy: policy.builtin,
+            array_result_policy: policy.arrays,
+            producer_policy: policy.producers,
+            regex: context.regex,
+        }
+    }
+}

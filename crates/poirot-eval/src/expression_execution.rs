@@ -168,7 +168,7 @@ impl<'a> Session<'a> {
                     let mut values = Vec::with_capacity(row.len());
                     for expression in row {
                         let value = self.expr(s, at, expression)?;
-                        values.push(self.scalar(at, value)?);
+                        values.push(self.select_legacy_scalar(at, value)?);
                     }
                     result.push(values);
                 }
@@ -244,7 +244,7 @@ impl<'a> Session<'a> {
         if *op != UnaryOp::ImplicitIntersection && self.retains_array(&value) {
             return self.array_unary(s, at, operation, value);
         }
-        let value = self.scalar(at, value)?;
+        let value = self.select_legacy_scalar(at, value)?;
         // Selection above materializes references while preserving the scalar type.
         // The pinned POI numeric contract retains its text-only plus exception.
         if *op == UnaryOp::ImplicitIntersection {
@@ -311,8 +311,8 @@ impl<'a> Session<'a> {
             let right = self.operator_reference_operand(at, right)?;
             return self.array_binary(s, at, operation, left, right);
         }
-        let left = self.scalar(at, left)?;
-        let right = self.scalar(at, right)?;
+        let left = self.select_legacy_scalar(at, left)?;
+        let right = self.select_legacy_scalar(at, right)?;
         if *op == BinaryOp::Concat {
             return function_value(self.text_concat_operator(left, right));
         }
@@ -328,7 +328,7 @@ impl<'a> Session<'a> {
                 Value::Refs(_) | Value::SignedRefs(_) | Value::SheetSpan(_)
             )
         {
-            self.scalar(at, value).map(Value::Scalar)
+            self.select_legacy_scalar(at, value).map(Value::Scalar)
         } else {
             Ok(value)
         }

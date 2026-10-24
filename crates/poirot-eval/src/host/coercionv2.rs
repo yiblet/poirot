@@ -117,7 +117,7 @@ impl CallHost<'_, '_> {
         // limits concern the produced buffer, not the formatter's static bound.
         let rendered =
             poirot_coercionv2::compatibility::coercev2_render_finite_number(value, || {
-                self.charge_work(1)
+                self.charge_work(1).map_err(FunctionFailure::Operational)
             })?;
         self.check_text(rendered.len())?;
         Ok(rendered)

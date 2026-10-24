@@ -389,7 +389,7 @@ fn lookup_blanks_reach_consumers_before_formula_cell_publication() {
                 execute_configuration(&w, &Default::default(), Default::default(), |session| {
                     let at = "Z20".parse().unwrap();
                     let value = session.expr(0, at, &plan.expression())?;
-                    session.result_scalar(0, at, value)
+                    session.finish_expression(0, at, value)
                 });
             match tree {
                 EvaluationOutcome::Complete { value, .. } => {

@@ -112,15 +112,86 @@ fn context_is_captured_and_helper_estimates_abort_before_execution() {
     assert_eq!(host.remaining_work(), 0);
     assert!(matches!(
         host.charge_work(1),
-        Err(FunctionFailure::Operational(EvaluationFailure::Budget(
-            BudgetFailure {
-                kind: BudgetKind::RunWork,
-                ..
-            }
-        )))
+        Err(EvaluationFailure::Budget(BudgetFailure {
+            kind: BudgetKind::RunWork,
+            ..
+        }))
     ));
     assert_eq!(host.session.budget.usage.helper_operations, 2);
 }
+#[test]
+fn budget_capacity_checks_do_not_charge_but_admission_does() {
+    let workbook = workbook();
+    let mut session = Session::new(
+        &workbook,
+        EvaluationInputs::default(),
+        BudgetMeter::new(EvaluationBudgets {
+            run_work: 10,
+            materialized_values: 3,
+            text_bytes: 4,
+            ..EvaluationBudgets::default()
+        })
+        .unwrap(),
+    );
+    let mut host = CallHost::new(&mut session, 0, AT, &[]);
+    let values_capacity: EvalResult<()> = host.check_values_capacity(3);
+    let text_capacity: EvalResult<()> = host.check_text_capacity(4);
+    values_capacity.unwrap();
+    text_capacity.unwrap();
+    assert_eq!(host.remaining_work(), 10);
+    assert_eq!(host.session.budget.usage.materialized_values, 0);
+    assert_eq!(host.session.budget.usage.text_bytes, 0);
+
+    let values: EvalResult<()> = host.check_values(3);
+    values.unwrap();
+    assert_eq!(host.remaining_work(), 7);
+    assert_eq!(host.session.budget.usage.materialized_values, 3);
+    let text: EvalResult<()> = host.check_text(4);
+    text.unwrap();
+    assert_eq!(host.remaining_work(), 3);
+    assert_eq!(host.session.budget.usage.text_bytes, 4);
+    let work: EvalResult<()> = host.charge_work(3);
+    work.unwrap();
+    assert_eq!(host.remaining_work(), 0);
+    assert_eq!(host.session.budget.usage.helper_operations, 3);
+    host.check_values_capacity(3).unwrap();
+    host.check_text_capacity(4).unwrap();
+    assert_eq!(host.session.budget.usage.work_units, 10);
+}
+
+#[test]
+fn budget_admission_rejects_capacity_before_work_without_charging() {
+    let workbook = workbook();
+    let mut session = Session::new(
+        &workbook,
+        EvaluationInputs::default(),
+        BudgetMeter::new(EvaluationBudgets {
+            run_work: 0,
+            materialized_values: 1,
+            text_bytes: 1,
+            ..EvaluationBudgets::default()
+        })
+        .unwrap(),
+    );
+    let mut host = CallHost::new(&mut session, 0, AT, &[]);
+    for (result, expected) in [
+        (host.check_values(2), BudgetKind::Materialization),
+        (host.check_values_capacity(2), BudgetKind::Materialization),
+        (host.check_text(2), BudgetKind::TextBytes),
+        (host.check_text_capacity(2), BudgetKind::TextBytes),
+        (host.check_values(1), BudgetKind::RunWork),
+        (host.check_text(1), BudgetKind::RunWork),
+        (host.charge_work(1), BudgetKind::RunWork),
+    ] {
+        let failure = result.unwrap_err();
+        assert_eq!(failure.budget().unwrap().kind, expected);
+    }
+    assert_eq!(host.session.budget.usage.work_units, 0);
+    assert_eq!(host.session.budget.usage.materialized_values, 0);
+    assert_eq!(host.session.budget.usage.text_bytes, 0);
+    assert_eq!(host.session.budget.usage.helper_operations, 0);
+}
+
 #[test]
 fn nested_selected_missing_is_not_a_blank_reference() {
     let workbook = workbook();

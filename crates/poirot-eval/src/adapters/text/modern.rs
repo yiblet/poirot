@@ -16,7 +16,7 @@ fn failure(host: &CallHost<'_, '_>, error: modern::Error) -> FunctionFailure {
         modern::Error::InvalidGeometry => EvaluationFailure::StalePlan.into(),
     }
 }
-fn admit_text(host: &mut CallHost<'_, '_>, units: usize) -> FunctionResult<()> {
+fn admit_text(host: &mut CallHost<'_, '_>, units: usize) -> EvalResult<()> {
     let bytes = units.checked_mul(2).ok_or_else(|| host.size_overflow())?;
     host.check_text(bytes)?;
     host.check_values(units)
@@ -113,7 +113,7 @@ pub(super) fn shape_admission(
         .checked_mul(columns)
         .ok_or_else(|| host.size_overflow())?;
     host.check_values(count)?;
-    host.check_values(rows)
+    Ok(host.check_values(rows)?)
 }
 pub(super) fn output(
     host: &mut CallHost<'_, '_>,

@@ -12,10 +12,10 @@ pub(super) fn handles(function: StatisticsFunction) -> bool {
         ForecastEts | ForecastEtsConfint | ForecastEtsSeasonality | ForecastEtsStat
     )
 }
-fn failure(host: &CallHost<'_, '_>, value: Failure<FunctionFailure>) -> FunctionFailure {
+fn failure(host: &CallHost<'_, '_>, value: Failure<EvaluationFailure>) -> FunctionFailure {
     match value {
         Failure::Spreadsheet(error) => error.into(),
-        Failure::Operational(error) => error,
+        Failure::Operational(error) => error.into(),
         Failure::NonConvergence => host.unsupported(
             CapabilityId::FunctionAdapter,
             "bounded ETS optimizer did not converge",

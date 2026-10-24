@@ -449,7 +449,7 @@ mod interval_tests {
         let bound = bound::FormulaPlan::bind(&parsed).unwrap();
         let at = "Z20".parse().unwrap();
         let value = run.expr(0, at, &bound.expression())?;
-        run.scalar(at, value)
+        run.select_legacy_scalar(at, value)
     }
 
     #[test]

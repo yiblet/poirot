@@ -108,7 +108,10 @@ fn first_match_does_not_reserve_or_read_populated_unused_suffix() {
     let plan = bound::FormulaPlan::bind(&syntax).unwrap();
     let at = "Z20".parse().unwrap();
     let value = session.expr(0, at, &plan.expression()).unwrap();
-    assert_eq!(session.scalar(at, value).unwrap(), Number(42.));
+    assert_eq!(
+        session.select_legacy_scalar(at, value).unwrap(),
+        Number(42.)
+    );
     assert_eq!(session.run_usage.formula_executions, 0);
     assert_eq!(session.cache.len(), 2);
     drop(session);
@@ -146,7 +149,10 @@ fn absent_gap_has_membership_guard_and_stored_blank_formula_is_evaluated() {
     let plan = bound::FormulaPlan::bind(&syntax).unwrap();
     let at = "Z20".parse().unwrap();
     let result = session.expr(0, at, &plan.expression()).unwrap();
-    assert_eq!(session.scalar(at, result).unwrap(), Number(20.));
+    assert_eq!(
+        session.select_legacy_scalar(at, result).unwrap(),
+        Number(20.)
+    );
     assert_eq!(session.run_usage.formula_executions, 1);
     assert_eq!(session.cache.len(), 3);
     drop(session);
@@ -257,7 +263,10 @@ fn stored_formula_scalar_projection_remains_operational_and_lazy_branch_has_no_q
     let plan = bound::FormulaPlan::bind(&syntax).unwrap();
     let at = "Z20".parse().unwrap();
     let result = session.expr(0, at, &plan.expression()).unwrap();
-    assert_eq!(session.scalar(at, result).unwrap(), Number(42.));
+    assert_eq!(
+        session.select_legacy_scalar(at, result).unwrap(),
+        Number(42.)
+    );
     drop(session);
     assert!(!reads.0.iter().any(|e| matches!(
         e.read,
@@ -351,7 +360,10 @@ fn stored_random_and_error_formulas_keep_actual_effects_despite_stale_caches() {
     let plan = bound::FormulaPlan::bind(&syntax).unwrap();
     let at = "Z20".parse().unwrap();
     let result = session.expr(0, at, &plan.expression()).unwrap();
-    assert_eq!(session.scalar(at, result).unwrap(), Number(30.));
+    assert_eq!(
+        session.select_legacy_scalar(at, result).unwrap(),
+        Number(30.)
+    );
     assert_eq!(session.run_usage.formula_executions, 2);
     assert_eq!(session.cache[&(0, "A20".parse().unwrap())], Error(Div0));
     drop(session);

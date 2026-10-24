@@ -36,7 +36,9 @@ fn multinomial(host: &mut CallHost<'_, '_>) -> FunctionResult<Value> {
                 continue;
             }
             let number = host.coercev2_scalar_number(&member.value, NumericPolicy::PinnedPoi)?;
-            result.push(number, || host.charge_work(1))?;
+            result.push(number, || {
+                host.charge_work(1).map_err(FunctionFailure::from)
+            })?;
         }
     }
     Ok(Number(result.finish()).into())

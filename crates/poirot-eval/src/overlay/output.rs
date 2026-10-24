@@ -28,8 +28,9 @@ pub(super) fn all(
     }
     // Only generated spill children extend the sparse source view. Ordinary
     // dependency memo entries can be implicit blanks and vary with cache warmth.
+    let publication = session.preparation.publication()?;
     for (&key, value) in &session.cache {
-        if session.preparation.roles.contains_key(&key) {
+        if publication.contains(key) {
             values.entry(key).or_insert_with(|| value.clone());
         }
     }

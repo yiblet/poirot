@@ -31,7 +31,8 @@ pub(crate) fn project_host<Failure>(
     }
 }
 
-/// Only budget/check portals use this conversion; a cell fault here is a bug.
+/// Project legacy mixed-failure call sites that require an operational abort.
+/// Unexpected spreadsheet errors become a stale-plan failure.
 pub(crate) fn operational_only(failure: FunctionFailure) -> EvaluationFailure {
     match failure {
         FunctionFailure::Operational(error) => error,

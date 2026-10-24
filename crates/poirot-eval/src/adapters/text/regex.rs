@@ -7,26 +7,26 @@ use poirot_functions_text::regex::{self, Case, Extraction, Program};
 /// Admission bridge for independently implemented text algorithms.
 struct RegexHost<'a, 'b, 'c>(&'a mut CallHost<'b, 'c>);
 impl regex::Host for RegexHost<'_, '_, '_> {
-    /// Preserve the evaluator's spreadsheet/operational failure distinction.
-    type Failure = FunctionFailure;
+    /// Admission failures abort execution rather than becoming spreadsheet values.
+    type Failure = EvaluationFailure;
     fn execution_limits(&self) -> regex::ExecutionLimits {
         self.0.regex_settings()
     }
-    fn work(&mut self, units: usize) -> FunctionResult<()> {
+    fn work(&mut self, units: usize) -> EvalResult<()> {
         self.0.charge_work(units as u64)
     }
-    fn text(&mut self, bytes: usize) -> FunctionResult<()> {
+    fn text(&mut self, bytes: usize) -> EvalResult<()> {
         self.0.check_text(bytes)
     }
-    fn values(&mut self, count: usize) -> FunctionResult<()> {
+    fn values(&mut self, count: usize) -> EvalResult<()> {
         self.0.check_values(count)
     }
 }
-fn failure(host: &CallHost<'_, '_>, failure: regex::Failure<FunctionFailure>) -> FunctionFailure {
+fn failure(host: &CallHost<'_, '_>, failure: regex::Failure<EvaluationFailure>) -> FunctionFailure {
     match failure {
         regex::Failure::Pattern | regex::Failure::TextLimit => CellError::Value.into(),
         regex::Failure::NoMatch => CellError::NA.into(),
-        regex::Failure::Host(failure) => failure,
+        regex::Failure::Host(failure) => failure.into(),
         regex::Failure::Unsupported(detail) => {
             host.unsupported(CapabilityId::FunctionAdapter, detail)
         }

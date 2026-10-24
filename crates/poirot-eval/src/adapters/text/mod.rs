@@ -1,7 +1,7 @@
 //! Deferred POI text adapter. Number rendering uses the pinned converter;
 //! PROPER uses the helper's explicit modern Unicode policy (Java-version drift
 //! remains a documented compatibility limitation).
-use crate::adapters::failure::{operational_only, project_host};
+use crate::adapters::failure::project_host;
 use crate::adapters::text::policy::{AreaSelection, Failure, Function, Host};
 use crate::host::{CallHost, MissingPolicy, NumericPolicy, ScalarOperand};
 use crate::*;
@@ -77,22 +77,13 @@ impl Host<usize> for TextHost<'_, '_> {
     /// Host abort channel kept outside catchable spreadsheet values.
     type Operational = EvaluationFailure;
     fn check_text(&mut self, bytes: usize) -> Result<(), EvaluationFailure> {
-        self.host
-            .get_mut()
-            .check_text_capacity(bytes)
-            .map_err(operational_only)
+        self.host.get_mut().check_text_capacity(bytes)
     }
     fn check_collection(&mut self, count: usize) -> Result<(), EvaluationFailure> {
-        self.host
-            .get_mut()
-            .check_values_capacity(count)
-            .map_err(operational_only)
+        self.host.get_mut().check_values_capacity(count)
     }
     fn charge_work(&mut self, units: usize) -> Result<(), EvaluationFailure> {
-        self.host
-            .get_mut()
-            .charge_work(units as u64)
-            .map_err(operational_only)
+        self.host.get_mut().charge_work(units as u64)
     }
     fn error(&self, error: poirot_functions_text::Error) -> CellError {
         match error {
@@ -156,7 +147,10 @@ impl Host<usize> for TextHost<'_, '_> {
         let description = self.host.get_mut().describe(*index).map_err(failure)?;
         if !description.is_area {
             if selection == AreaSelection::StoredCells {
-                self.host.get_mut().check_values(1).map_err(failure)?;
+                self.host
+                    .get_mut()
+                    .check_values(1)
+                    .map_err(Failure::Operational)?;
             }
             return Ok(vec![self.single(index)?]);
         }
@@ -199,7 +193,7 @@ impl Host<usize> for TextHost<'_, '_> {
             self.host
                 .get_mut()
                 .check_values_capacity(values.len().saturating_add(1))
-                .map_err(failure)?;
+                .map_err(Failure::Operational)?;
             let scalar = self
                 .host
                 .get_mut()
@@ -209,7 +203,10 @@ impl Host<usize> for TextHost<'_, '_> {
                 return Err(Failure::Spreadsheet(error));
             }
             if selection == AreaSelection::StoredCells {
-                self.host.get_mut().charge_work(1).map_err(failure)?;
+                self.host
+                    .get_mut()
+                    .charge_work(1)
+                    .map_err(Failure::Operational)?;
             }
             values.push(scalar);
         }
@@ -384,7 +381,7 @@ mod semantics_port_tests {
         };
         let address = at.parse().unwrap();
         let value = session.expr(0, address, &bound::bind(&parse_formula(formula).unwrap()))?;
-        session.scalar(address, value)
+        session.select_legacy_scalar(address, value)
     }
     fn book() -> Workbook {
         let mut workbook = Workbook::new();
@@ -534,7 +531,7 @@ mod concat_member_tests {
         let mut session = Session::with_context(book, EvaluationInputs::default());
         let at = at.parse().unwrap();
         let value = session.expr(0, at, &expression(formula))?;
-        session.scalar(at, value)
+        session.select_legacy_scalar(at, value)
     }
     #[test]
     fn concat_traverses_argument_members_in_row_major_order() {
@@ -594,7 +591,7 @@ mod concat_member_tests {
         let value = session
             .expr(0, at, &expression("CONCAT(A1:B3,UNKNOWN_FUNCTION())"))
             .unwrap();
-        assert_eq!(session.scalar(at, value).unwrap(), Error(NA));
+        assert_eq!(session.select_legacy_scalar(at, value).unwrap(), Error(NA));
         drop(session);
         let addresses: Vec<_> = sink
             .0
@@ -639,7 +636,10 @@ mod concat_member_tests {
         let value = session
             .expr(0, at, &expression("CONCAT(A1:A3000)"))
             .unwrap();
-        assert_eq!(session.scalar(at, value).unwrap(), Text("x".repeat(3000)));
+        assert_eq!(
+            session.select_legacy_scalar(at, value).unwrap(),
+            Text("x".repeat(3000))
+        );
     }
     #[test]
     fn concat_keeps_semantic_limits_and_operational_budgets_separate() {

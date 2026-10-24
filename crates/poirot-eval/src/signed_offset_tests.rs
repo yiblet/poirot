@@ -245,7 +245,7 @@ fn traced_formula(
             .unwrap();
     let at = "P1".parse().unwrap();
     let value = session.expr(0, at, &plan.expression()).unwrap();
-    let value = session.scalar(at, value).unwrap();
+    let value = session.select_legacy_scalar(at, value).unwrap();
     drop(session);
     (value, reads.0)
 }

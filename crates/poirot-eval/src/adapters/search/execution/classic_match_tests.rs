@@ -109,7 +109,10 @@ fn approximate_match_preserves_blank_positions_lazy_failures_and_policy_dependen
         let plan = bound::FormulaPlan::bind(&syntax).unwrap();
         let at = "Z20".parse().unwrap();
         let result = session.expr(0, at, &plan.expression()).unwrap();
-        assert_eq!(session.scalar(at, result).unwrap(), Number(5.));
+        assert_eq!(
+            session.select_legacy_scalar(at, result).unwrap(),
+            Number(5.)
+        );
         drop(session);
         let cells: Vec<_> = reads
             .0
@@ -212,7 +215,10 @@ fn ascending_match_bisection_reads_only_consumed_candidates_in_original_order() 
     let plan = bound::FormulaPlan::bind(&syntax).unwrap();
     let at = "Z20".parse().unwrap();
     let result = session.expr(0, at, &plan.expression()).unwrap();
-    assert_eq!(session.scalar(at, result).unwrap(), Number(1.));
+    assert_eq!(
+        session.select_legacy_scalar(at, result).unwrap(),
+        Number(1.)
+    );
     drop(session);
     let cells: Vec<_> = reads
         .0

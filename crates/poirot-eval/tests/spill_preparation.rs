@@ -654,3 +654,27 @@ fn retained_disjoint_supplier_restores_its_complete_footprint_before_range_depen
     assert_eq!(warm.cell(at("A6")).unwrap(), 20.0.into());
     assert_eq!(warm.usage().formula_executions, 1);
 }
+
+#[test]
+fn saved_ownership_describes_file_state_while_evaluation_uses_current_geometry() {
+    let mut workbook = book(&[("A1", "SEQUENCE(2)")]);
+    let sheet = workbook.sheet_mut(0).unwrap();
+    let anchor = at("A1").address;
+    sheet
+        .set_spill_extent(anchor, at("A3").address, "SEQUENCE(2)")
+        .unwrap();
+    sheet
+        .set_spill_cached_value(at("A2").address, anchor, "SEQUENCE(2)", 99.0.into())
+        .unwrap();
+    sheet
+        .set_spill_cached_value(at("A3").address, anchor, "SEQUENCE(2)", 100.0.into())
+        .unwrap();
+    assert_eq!(sheet.spill_owner(anchor), None);
+    assert_eq!(sheet.spill_owner(at("A3").address), Some(anchor));
+    // SEQUENCE(2) produces exactly two rows. Saved geometry is not evidence that
+    // the third coordinate belongs to the currently evaluated result.
+    verify(&workbook, &[("A2", 2.0.into()), ("A3", CellValue::Blank)]);
+    let sheet = workbook.sheet(0).unwrap();
+    assert_eq!(sheet.spill_extent(anchor), Some(at("A3").address));
+    assert_eq!(sheet.spill_owner(at("A3").address), Some(anchor));
+}

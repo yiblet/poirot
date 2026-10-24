@@ -136,7 +136,7 @@ pub(super) fn execute(
                             .yield_rate(value, |work| host.charge_work(work))
                             .map_err(|error| match error {
                                 Failure::Spreadsheet(error) => spreadsheet(error),
-                                Failure::Operational(error) => error,
+                                Failure::Operational(error) => error.into(),
                                 Failure::ComputationalLimit => host.unsupported(
                                     CapabilityId::FunctionAdapter,
                                     "bond yield exceeds its numerical envelope",
@@ -172,7 +172,7 @@ pub(super) fn execute(
                     )
                     .map_err(|error| match error {
                         Failure::Spreadsheet(error) => spreadsheet(error),
-                        Failure::Operational(error) => error,
+                        Failure::Operational(error) => error.into(),
                         Failure::ComputationalLimit => host.unsupported(
                             CapabilityId::FunctionAdapter,
                             "accrued interest exceeds its quasi-coupon envelope",

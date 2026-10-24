@@ -319,7 +319,11 @@ mod tests {
             session.dependency_sink = Some(&mut reads);
             let at = "Z20".parse().unwrap();
             let value = session.expr(0, at, &selected.expression()).unwrap();
-            assert_eq!(session.scalar(at, value).unwrap(), expected, "{mode}");
+            assert_eq!(
+                session.select_legacy_scalar(at, value).unwrap(),
+                expected,
+                "{mode}"
+            );
             assert_eq!(
                 session.run_usage.formula_executions,
                 if mode == "1/0" { 1 } else { 2 }
@@ -463,7 +467,10 @@ mod tests {
         let plan = bound::FormulaPlan::bind(&syntax).unwrap();
         let at = "Z20".parse().unwrap();
         let value = session.expr(0, at, &plan.expression()).unwrap();
-        assert_eq!(session.scalar(at, value).unwrap(), Number(42.));
+        assert_eq!(
+            session.select_legacy_scalar(at, value).unwrap(),
+            Number(42.)
+        );
         assert_eq!(session.run_usage.formula_executions, 1);
         for cell in ["A2", "B2", "B3"] {
             assert!(!session.cache.contains_key(&(0, cell.parse().unwrap())));

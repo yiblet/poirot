@@ -92,7 +92,7 @@ fn admit(
     let (cells, work) =
         kernel::regression_budget(n, p, m, stats).map_err(|e| modern::failure(host, e))?;
     host.check_values(cells)?;
-    host.charge_work(work as u64)
+    Ok(host.charge_work(work as u64)?)
 }
 fn value(stat: Statistic) -> CellValue {
     match stat {

@@ -132,7 +132,10 @@ fn construction_stages_flush_both_subnormal_signs_preserve_existing_negative_zer
     let admitted = session
         .expr(0, at(1), &Expr::Number(f64::INFINITY))
         .unwrap();
-    assert_eq!(session.scalar(at(1), admitted).unwrap(), Error(Num));
+    assert_eq!(
+        session.select_legacy_scalar(at(1), admitted).unwrap(),
+        Error(Num)
+    );
     assert_eq!(
         bits(numeric_outcome::coerce_numeric_outcome(f64::from_bits(1))),
         0

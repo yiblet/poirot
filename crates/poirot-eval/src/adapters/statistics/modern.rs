@@ -76,14 +76,14 @@ fn nonconvergence(function: StatisticsFunction) -> CellError {
         Num
     }
 }
-fn failure(
+fn failure<E: Into<FunctionFailure>>(
     function: StatisticsFunction,
     host: &CallHost<'_, '_>,
-    failure: kernel::Failure<FunctionFailure>,
+    failure: kernel::Failure<E>,
 ) -> FunctionFailure {
     match failure {
         kernel::Failure::Spreadsheet(error) => error.into(),
-        kernel::Failure::Operational(error) => error,
+        kernel::Failure::Operational(error) => error.into(),
         kernel::Failure::NonConvergence => nonconvergence(function).into(),
         kernel::Failure::ComputationalLimit => host.unsupported(
             CapabilityId::FunctionAdapter,

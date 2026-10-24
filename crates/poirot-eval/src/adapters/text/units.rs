@@ -134,11 +134,11 @@ pub(crate) fn execute(
                     h.host
                         .get_mut()
                         .check_text_capacity(r.text_bytes)
-                        .map_err(failure)?;
+                        .map_err(Failure::Operational)?;
                     h.host
                         .get_mut()
                         .check_values_capacity(r.elements)
-                        .map_err(failure)?;
+                        .map_err(Failure::Operational)?;
                     h.charge_work(r.work).map_err(Failure::Operational)?;
                     output.extend_from_slice(&text);
                 }

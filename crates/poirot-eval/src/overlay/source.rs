@@ -336,20 +336,16 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         context: &'e EvaluationContext,
         runtime: crate::runtime::Storage<'e>,
     ) -> crate::Session<'e> {
-        let mut session = crate::Session::with_runtime(self.workbook(), context.inputs(), runtime);
+        let mut session = crate::Session::with_runtime(
+            self.workbook(),
+            crate::configuration::SessionConfiguration::from_overlay(context, &self.policy),
+            runtime,
+        );
         session.inputs = Some(&self.inputs);
         session.lazy_compiler = Some(&self.compiler);
         session.spill_candidates = Some(&self.spill_candidates);
         session.preparation_policy = Some(&self.preparation);
         session.extensions = self.extensions.as_ref().map(Registry::get);
-        session.currency = context.formatting.currency();
-        session.number_locale = &context.number_locale;
-        session.regex = context.regex;
-        session.text_policy = self.policy.text;
-
-        session.builtin_policy = self.policy.builtin;
-        session.array_result_policy = self.policy.arrays;
-        session.producer_policy = self.policy.producers;
         session.memo_limits = Some(context.retention);
         session.lookup_prefixes.enable();
         session

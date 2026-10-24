@@ -37,8 +37,7 @@ impl Session<'_> {
                 return Ok(err(VALUE_ERROR));
             }
             let mut host = CallHost::new(self, s, at, args);
-            host.check_values(args.len())
-                .map_err(crate::adapters::failure::operational_only)?;
+            host.check_values(args.len())?;
             let indices: poirot_functions_core::ParamVec<_> = (0..args.len()).collect();
             return match super::radix::evaluate(&mut host, name == MathFunction::Base, &indices) {
                 Ok(value) => Ok(value.into()),
@@ -74,11 +73,7 @@ impl Session<'_> {
         }
         let values = {
             let mut host = CallHost::new(self, s, at, args);
-            match host.check_values(args.len()) {
-                Ok(()) => (),
-                Err(FunctionFailure::Operational(failure)) => return Err(failure),
-                Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
-            }
+            host.check_values(args.len())?;
             let mut values = Vec::with_capacity(args.len());
             for index in 0..args.len() {
                 match host.coercev2_argument_number(

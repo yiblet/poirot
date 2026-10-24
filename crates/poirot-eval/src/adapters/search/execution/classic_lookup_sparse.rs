@@ -104,8 +104,7 @@ impl LookupReader<'_, '_> {
         let generated = self
             .session
             .preparation
-            .roles
-            .keys()
+            .admitted_cells()
             .filter(|(sheet, at)| *sheet == area.sheet && area.contains(*at))
             .map(|(_, at)| *at);
         let generated = if reverse {

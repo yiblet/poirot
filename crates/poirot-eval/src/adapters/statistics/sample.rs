@@ -151,10 +151,13 @@ fn pairs(
     }
     Ok((x, y))
 }
-fn failure(host: &CallHost<'_, '_>, failure: Failure<FunctionFailure>) -> FunctionFailure {
+fn failure<E: Into<FunctionFailure>>(
+    host: &CallHost<'_, '_>,
+    failure: Failure<E>,
+) -> FunctionFailure {
     match failure {
         Failure::Spreadsheet(error) => error.into(),
-        Failure::Operational(error) => error,
+        Failure::Operational(error) => error.into(),
         Failure::NonConvergence => Num.into(),
         Failure::ComputationalLimit => host.unsupported(
             CapabilityId::FunctionAdapter,
@@ -163,7 +166,7 @@ fn failure(host: &CallHost<'_, '_>, failure: Failure<FunctionFailure>) -> Functi
     }
 }
 /// Budget sorting, mode storage and repeated scalar computations before work starts.
-fn processing(host: &mut CallHost<'_, '_>, len: usize) -> FunctionResult<()> {
+fn processing(host: &mut CallHost<'_, '_>, len: usize) -> EvalResult<()> {
     host.check_values(len.saturating_mul(3))?;
     host.charge_work((len as u64).saturating_mul(16 + u64::from(usize::BITS - len.leading_zeros())))
 }
@@ -224,9 +227,9 @@ pub(super) fn execute(
                 return Ok(Value::Array(ArrayView::anchored(rows, Some(address))));
             }
             let value = if function == HarMean {
-                kernel::harmonic_mean(&values)
+                kernel::harmonic_mean::<EvaluationFailure>(&values)
             } else {
-                kernel::moment(
+                kernel::moment::<EvaluationFailure>(
                     &values,
                     match function {
                         Kurt => kernel::MomentKind::Kurtosis,

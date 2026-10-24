@@ -114,12 +114,12 @@ impl CallHost<'_, '_> {
             }
             Value::Missing => return Err(Ref.into()),
             Value::SelectedScalar(value, origin) if row == 0 && column == 0 => (
-                Self::copy_cell(&mut runtime.budget, value)?,
+                copy_cell(&mut runtime.budget, value)?,
                 *origin,
                 operand.missing,
             ),
             Value::Scalar(value) if row == 0 && column == 0 => (
-                Self::copy_cell(&mut runtime.budget, value)?,
+                copy_cell(&mut runtime.budget, value)?,
                 OperandOrigin::Direct,
                 operand.missing,
             ),
@@ -127,7 +127,7 @@ impl CallHost<'_, '_> {
             Value::Array(rows) => {
                 let value = rows.get(row).and_then(|row| row.get(column)).ok_or(Ref)?;
                 (
-                    Self::copy_cell(&mut runtime.budget, value)?,
+                    copy_cell(&mut runtime.budget, value)?,
                     OperandOrigin::ArrayElement,
                     operand
                         .array_missing

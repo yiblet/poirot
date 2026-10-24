@@ -9,6 +9,37 @@ them. An empty query is still a dependency, so inserting a new possible owner
 invalidates a previously blank read. Public dependency observations name that
 coordinate as the consumer; producer completion notifications keep their owner.
 
+Spill state has four separate authorities. Saved worksheet geometry describes
+stored file metadata. Candidate bounds describe where a formula might spill.
+Private admissions describe the current settlement attempt. Retained publication
+describes results from successful evaluation calls. A possible rectangle never
+establishes ownership, and saved children do not prove current evaluated geometry.
+`Worksheet::spill_owner` identifies saved children only; an evaluated producer's
+role also identifies the anchor itself, including a one-cell array.
+
+`Preparation` owns admitted roles, pending publication keys and producer self-read
+evidence. Ordinary execution borrows admitted roles and coordinates because it
+participates in settlement. Publication instead borrows a `Publication` view that
+rejects active, unfinished or failed settlement. It exposes pending keys and
+settled roles without copying values. Incremental publication acknowledges those
+keys only after the retained cache commits successfully. Failed later calls keep
+results from earlier successful calls exportable; their publication does not
+need to rerun or revive the failed settlement.
+
+Blank-point and sparse-range observations share one typed evidence owner.
+Recording, conflict diagnosis, producer completion and rollback use its single
+lifecycle. Separate physical maps avoid unused per-producer container storage.
+Sparse self-reads retain their more specific diagnostic when both observation
+kinds cover a coordinate. Attempted array geometry remains
+separate because even a losing producer needs its full footprint for invalidation.
+
+Recursive preparation stays on `Session`. `resolve_spills_in` establishes current
+settlement; `prepare_spills_in` also records the future-growth dependency guard.
+Keeping those operations distinct prevents a settled range from being mistaken
+for a complete incremental dependency. Callers continue to request values through
+the existing evaluation API; source ownership queries have no hidden evaluation
+or budget side effects.
+
 Formal result types and independent row/column bounds define possible
 rectangles on each sheet. Unknown dimensions
 extend down/right to the grid edge. A source-owned index retains these proofs

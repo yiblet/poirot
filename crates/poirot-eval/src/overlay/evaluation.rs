@@ -165,6 +165,7 @@ impl<'a> OverlayEvaluation<'a> {
         result
     }
     fn publish(&mut self) -> Result<(), EvaluationFailure> {
+        let publication = self.session.runtime.preparation.publication()?;
         let reads = self
             .session
             .overlay_reads
@@ -173,15 +174,8 @@ impl<'a> OverlayEvaluation<'a> {
         reads.flush();
         let mut fresh_results = std::mem::take(&mut reads.fresh_results);
         let mut completed = std::mem::take(&mut reads.completed);
-        let mut journal = std::mem::take(&mut self.session.runtime.preparation.journal);
-        for &key in &journal {
-            let owner = self
-                .session
-                .runtime
-                .preparation
-                .roles
-                .get(&key)
-                .and_then(|role| role.owner(key.1));
+        for &key in publication.pending_cells() {
+            let owner = publication.role(key).owner(key.1);
             if owner.is_some_and(|owner| fresh_results.contains(&(key.0, owner))) {
                 fresh_results.insert(key);
             }
@@ -201,7 +195,7 @@ impl<'a> OverlayEvaluation<'a> {
                 .traces
                 .get(&key)
                 .is_some_and(|trace| !trace.spill_ranges.is_empty())
-                && !self.session.runtime.preparation.roles.contains_key(&key)
+                && !publication.contains(key)
                 && source.is_none_or(|cell| cell.formula.is_none())
                 && source.map_or(matches!(value, CellValue::Blank), |cell| {
                     crate::same_result_identity(&cell.value, value)
@@ -220,14 +214,7 @@ impl<'a> OverlayEvaluation<'a> {
             } else {
                 Box::new(reads.traces.remove(&key).unwrap_or_default())
             };
-            dependencies.spill = self
-                .session
-                .runtime
-                .preparation
-                .roles
-                .get(&key)
-                .copied()
-                .unwrap_or_default();
+            dependencies.spill = publication.role(key);
             if let crate::spill_publication::SpillRole::Child { anchor } = dependencies.spill {
                 dependencies.cells.push((key.0, anchor));
             }
@@ -259,12 +246,13 @@ impl<'a> OverlayEvaluation<'a> {
                     .map(|(key, _)| *key),
             );
             resets.extend(
-                journal
+                publication
+                    .pending_cells()
                     .iter()
                     .filter(|key| {
                         matches!(
-                            self.session.runtime.preparation.roles.get(key),
-                            Some(crate::spill_publication::SpillRole::Anchor { .. })
+                            publication.role(**key),
+                            crate::spill_publication::SpillRole::Anchor { .. }
                         )
                     })
                     .copied(),
@@ -286,8 +274,7 @@ impl<'a> OverlayEvaluation<'a> {
         // An error still discards the local batch and poisons this evaluation.
         reads.fresh_results = fresh_results;
         reads.completed = completed;
-        journal.clear();
-        self.session.runtime.preparation.journal = journal;
+        self.session.runtime.preparation.acknowledge_publication();
 
         Ok(())
     }
@@ -352,8 +339,16 @@ mod safety_tests {
         assert!(reads.completed.is_empty());
         assert!(reads.fresh_results.capacity() > 0);
         assert!(reads.completed.capacity() > 0);
-        assert!(evaluation.session.runtime.preparation.journal.is_empty());
-        assert!(evaluation.session.runtime.preparation.journal.capacity() > 0);
+        assert!(
+            evaluation
+                .session
+                .runtime
+                .preparation
+                .publication()
+                .unwrap()
+                .pending_cells()
+                .is_empty()
+        );
         assert_eq!(evaluation.cell(target("B5")).unwrap(), CellValue::from(4.));
         let changes = evaluation.result_changes().unwrap();
         assert!(first.iter().all(|change| changes.contains(change)));
@@ -384,6 +379,52 @@ mod safety_tests {
             }
         }
     }
+    #[test]
+    fn rejected_cache_commit_keeps_pending_spill_evidence_and_publishes_nothing() {
+        let mut workbook = Workbook::new();
+        workbook
+            .add_sheet("S")
+            .unwrap()
+            .set_formula("A1".parse().unwrap(), "{1,2}")
+            .unwrap();
+        let mut overlay = Overlay::with_workbook(&workbook).build().unwrap();
+        let context = EvaluationContext::default();
+        let mut evaluation = overlay.evaluation(&context).unwrap();
+        // Constrain retained publication only; private computation remains allowed.
+        evaluation.retention.cells = 0;
+        let target = EvaluationTarget {
+            sheet: 0,
+            address: "B1".parse().unwrap(),
+        };
+        assert!(matches!(
+            evaluation.cell(target),
+            Err(EvaluationFailure::MemoRetentionLimit { .. })
+        ));
+        let publication = evaluation
+            .session
+            .runtime
+            .preparation
+            .publication()
+            .unwrap();
+        assert_eq!(publication.pending_cells().len(), 2);
+        assert_eq!(publication.generated_count(), 2);
+        assert_eq!(evaluation.cache.borrow().len(), 0);
+        assert!(evaluation.completed.is_empty());
+        assert!(evaluation.result_changes().unwrap().is_empty());
+        assert!(evaluation.cell(target).is_err());
+        assert_eq!(
+            evaluation
+                .session
+                .runtime
+                .preparation
+                .publication()
+                .unwrap()
+                .pending_cells()
+                .len(),
+            2
+        );
+    }
+
     #[test]
     fn conflicting_cache_borrow_returns_stale_plan() {
         let workbook = Workbook::new();

@@ -231,7 +231,7 @@ impl Session<'_> {
                             .values
                             .pop()
                             .ok_or(EvaluationFailure::StalePlan)?;
-                        let value = self.scalar(at, value)?.into();
+                        let value = self.select_legacy_scalar(at, value)?.into();
                         self.runtime.vm.values.push(value);
                     }
                     Opcode::Array => {

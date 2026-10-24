@@ -1,6 +1,7 @@
 //! Deferred, budgeted Session boundary for independently owned family bridges.
 //! This module does not resolve function names or select a family implementation.
 use super::*;
+use crate::budgeted_value::{copy_cell, copy_value};
 
 mod aggregation;
 pub(crate) use aggregation::Aggregators;
@@ -401,29 +402,28 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         self.capability_failure(capability, detail).into()
     }
     /// Admit collection capacity and charge materialization work.
-    pub(crate) fn check_values(&mut self, elements: usize) -> FunctionResult<()> {
-        Ok(self.session.runtime.budget.allocation(elements)?)
+    pub(crate) fn check_values(&mut self, elements: usize) -> EvalResult<()> {
+        self.session.runtime.budget.allocation(elements)
     }
     /// Admit text storage and charge processing work before copying.
-    pub(crate) fn check_text(&mut self, bytes: usize) -> FunctionResult<()> {
-        Ok(self.session.runtime.budget.text(bytes)?)
+    pub(crate) fn check_text(&mut self, bytes: usize) -> EvalResult<()> {
+        self.session.runtime.budget.text(bytes)
     }
     /// Check growing text capacity when copied bytes are charged separately.
-    pub(crate) fn check_text_capacity(&self, bytes: usize) -> FunctionResult<()> {
-        Ok(self.session.runtime.budget.check_text(bytes)?)
+    pub(crate) fn check_text_capacity(&self, bytes: usize) -> EvalResult<()> {
+        self.session.runtime.budget.check_text(bytes)
     }
     /// Check output capacity when materialization work is charged separately.
-    pub(crate) fn check_values_capacity(&self, elements: usize) -> FunctionResult<()> {
-        Ok(self.session.runtime.budget.check_allocation(elements)?)
+    pub(crate) fn check_values_capacity(&self, elements: usize) -> EvalResult<()> {
+        self.session.runtime.budget.check_allocation(elements)
     }
 
     /// Charge helper work against active run and formula limits.
-    pub(crate) fn charge_work(&mut self, units: u64) -> FunctionResult<()> {
-        Ok(self
-            .session
+    pub(crate) fn charge_work(&mut self, units: u64) -> EvalResult<()> {
+        self.session
             .runtime
             .budget
-            .charge(WorkKind::HelperOperation, units)?)
+            .charge(WorkKind::HelperOperation, units)
     }
     #[cfg(test)]
     fn remaining_work(&self) -> u64 {
@@ -502,51 +502,9 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         self.prepared_arguments += 1;
         Ok(())
     }
-    fn copy_cell(budget: &mut BudgetMeter, value: &CellValue) -> EvalResult<CellValue> {
-        if let Some(text) = value.text_ref() {
-            budget.text(text.storage_bytes())?;
-            budget.allocation(text.len_units())?;
-        }
-        Ok(value.clone())
-    }
     /// Copy one retained cell value after admitting its owned text storage.
     pub(crate) fn copy_cell_value(&mut self, value: &CellValue) -> FunctionResult<CellValue> {
-        Ok(Self::copy_cell(&mut self.session.runtime.budget, value)?)
-    }
-    /// Clone a value only after admitting its text, array, and reference storage.
-    pub(crate) fn copy_value(budget: &mut BudgetMeter, value: &Value) -> EvalResult<Value> {
-        Ok(match value {
-            Value::Missing => Value::Missing,
-            Value::Scalar(value) => Value::Scalar(Self::copy_cell(budget, value)?),
-            Value::SelectedScalar(value, origin) => {
-                Value::SelectedScalar(Self::copy_cell(budget, value)?, *origin)
-            }
-            Value::SignedRefs(areas) => {
-                budget.allocation(areas.len())?;
-                Value::SignedRefs(areas.clone())
-            }
-            Value::Refs(areas) | Value::SheetSpan(areas) => {
-                budget.allocation(areas.len())?;
-                if matches!(value, Value::SheetSpan(_)) {
-                    Value::SheetSpan(areas.clone())
-                } else {
-                    Value::Refs(areas.clone())
-                }
-            }
-            Value::Array(rows) => {
-                budget.allocation(rows.iter().map(Vec::len).sum())?;
-                Value::Array(crate::ArrayView::anchored(
-                    rows.iter()
-                        .map(|row| {
-                            row.iter()
-                                .map(|value| Self::copy_cell(budget, value))
-                                .collect()
-                        })
-                        .collect::<EvalResult<_>>()?,
-                    rows.anchor,
-                ))
-            }
-        })
+        Ok(copy_cell(&mut self.session.runtime.budget, value)?)
     }
     /// Resolve one deferred argument and inspect its channel without scalarizing it.
     pub(crate) fn kind(&mut self, index: usize) -> FunctionResult<OperandKind> {
@@ -571,7 +529,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             .budget
             .allocation(operand.array_missing.iter().map(Vec::len).sum())?;
         Ok(HostOperand {
-            value: Self::copy_value(&mut runtime.budget, &operand.value)?,
+            value: copy_value(&mut runtime.budget, &operand.value)?,
             missing: operand.missing,
             array_missing: operand.array_missing.clone(),
         })
@@ -631,14 +589,14 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         let (value, origin) = match &operand.value {
             Value::Missing => (Value::Missing, OperandOrigin::Direct),
             Value::Scalar(value) => (
-                Self::copy_cell(&mut runtime.budget, value)?.into(),
+                copy_cell(&mut runtime.budget, value)?.into(),
                 OperandOrigin::Direct,
             ),
             Value::SelectedScalar(value, origin) => {
-                (Self::copy_cell(&mut runtime.budget, value)?.into(), *origin)
+                (copy_cell(&mut runtime.budget, value)?.into(), *origin)
             }
             Value::Array(rows) => (
-                Self::copy_cell(
+                copy_cell(
                     &mut runtime.budget,
                     rows.get(row)
                         .and_then(|r| r.get(column))
@@ -681,7 +639,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             }
         };
         Ok(ScalarOperand {
-            value: self.session.scalar(self.address, value)?,
+            value: self.session.select_legacy_scalar(self.address, value)?,
             origin,
             missing: false,
         })

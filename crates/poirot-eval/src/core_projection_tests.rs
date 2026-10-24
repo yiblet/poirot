@@ -12,7 +12,7 @@ fn eval(formula: &str, literal: CellValue, budgets: EvaluationBudgets) -> EvalRe
     let at = "B1".parse().unwrap();
     let expression = crate::bound::bind(&poirot_parsing::formula::parse_formula(formula).unwrap());
     let value = session.expr(0, at, &expression)?;
-    session.scalar(at, value)
+    session.select_legacy_scalar(at, value)
 }
 #[test]
 fn malformed_scalar_projection_is_operational_and_uncatchable() {

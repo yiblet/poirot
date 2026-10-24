@@ -15,10 +15,13 @@ fn spreadsheet(error: FinancialError) -> FunctionFailure {
     }
     .into()
 }
-fn numerical(host: &CallHost<'_, '_>, error: kernel::Failure<FunctionFailure>) -> FunctionFailure {
+fn numerical<E: Into<FunctionFailure>>(
+    host: &CallHost<'_, '_>,
+    error: kernel::Failure<E>,
+) -> FunctionFailure {
     match error {
         kernel::Failure::Spreadsheet(error) => spreadsheet(error),
-        kernel::Failure::Operational(error) => error,
+        kernel::Failure::Operational(error) => error.into(),
         kernel::Failure::ComputationalLimit => host.unsupported(
             CapabilityId::FunctionAdapter,
             "financial computation exceeds its bounded work envelope",

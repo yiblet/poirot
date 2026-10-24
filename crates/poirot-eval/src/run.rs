@@ -37,6 +37,7 @@ use crate::{
     EvaluationTarget, Session, bound,
     budget::BudgetMeter,
     compiler::{CompiledWorkbook, EvaluationPolicy, PreparedFormula},
+    configuration,
 };
 #[cfg(test)]
 use poirot_model::CellAddress;
@@ -224,7 +225,12 @@ impl<'a> EvaluationRun<'a> {
         context: EvaluationInputs,
         budgets: EvaluationBudgets,
     ) -> Result<Self, EvaluationFailure> {
-        Self::new_with_registry(view, context, budgets, None)
+        Self::new_with_registry(
+            view,
+            configuration::SessionConfiguration::from_inputs(context),
+            budgets,
+            None,
+        )
     }
     /// Start a run with the registry required by the checked plan.
     pub fn new_with_extensions(
@@ -233,11 +239,16 @@ impl<'a> EvaluationRun<'a> {
         budgets: EvaluationBudgets,
         registry: &'a crate::extensions::ExtensionRegistry,
     ) -> Result<Self, EvaluationFailure> {
-        Self::new_with_registry(view, context, budgets, Some(registry))
+        Self::new_with_registry(
+            view,
+            configuration::SessionConfiguration::from_inputs(context),
+            budgets,
+            Some(registry),
+        )
     }
     fn new_with_registry(
         view: WorkbookView<'a>,
-        context: EvaluationInputs,
+        configuration: configuration::SessionConfiguration<'a>,
         budgets: EvaluationBudgets,
         registry: Option<&'a crate::extensions::ExtensionRegistry>,
     ) -> Result<Self, EvaluationFailure> {
@@ -247,7 +258,7 @@ impl<'a> EvaluationRun<'a> {
         {
             return Err(EvaluationFailure::StalePlan);
         }
-        let mut session = Session::new(view.workbook, context, meter);
+        let mut session = Session::with_configuration(view.workbook, configuration, meter);
         session.plan = Some(view.plan);
         session.extensions = registry;
         Ok(Self {
@@ -261,15 +272,12 @@ impl<'a> EvaluationRun<'a> {
         configuration: &'a crate::RunConfiguration,
         budgets: EvaluationBudgets,
     ) -> Result<Self, EvaluationFailure> {
-        let mut run = Self::new(view, configuration.context(), budgets)?;
-        run.session.currency = configuration.formatting().currency();
-        run.session.number_locale = configuration.number_locale();
-        run.session.text_policy = configuration.text_policy();
-
-        run.session.builtin_policy = configuration.builtin_policy();
-        run.session.array_result_policy = configuration.array_result_policy();
-        run.session.producer_policy = configuration.producer_policy();
-        Ok(run)
+        Self::new_with_registry(
+            view,
+            configuration::SessionConfiguration::from_run_configuration(configuration),
+            budgets,
+            None,
+        )
     }
     /// Start a configured run with its exact extension registry.
     pub fn new_with_configuration_and_extensions(
@@ -278,15 +286,12 @@ impl<'a> EvaluationRun<'a> {
         budgets: EvaluationBudgets,
         registry: &'a crate::extensions::ExtensionRegistry,
     ) -> Result<Self, EvaluationFailure> {
-        let mut run = Self::new_with_extensions(view, configuration.context(), budgets, registry)?;
-        run.session.currency = configuration.formatting().currency();
-        run.session.number_locale = configuration.number_locale();
-        run.session.text_policy = configuration.text_policy();
-
-        run.session.builtin_policy = configuration.builtin_policy();
-        run.session.array_result_policy = configuration.array_result_policy();
-        run.session.producer_policy = configuration.producer_policy();
-        Ok(run)
+        Self::new_with_registry(
+            view,
+            configuration::SessionConfiguration::from_run_configuration(configuration),
+            budgets,
+            Some(registry),
+        )
     }
     /// Set before evaluating. Retention exhaustion aborts before cloning the
     /// rejected memo value; previously completed memo entries remain available.

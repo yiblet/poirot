@@ -75,6 +75,7 @@ fn scratch(host: &mut CallHost<'_, '_>, value: &CellValue) -> FunctionResult<()>
     // Scalar numeric normalization has statically bounded scratch; only input
     // text grows with the workbook. Charge the text actually inspected.
     host.charge_work((bytes as u64).saturating_add(1))
+        .map_err(FunctionFailure::Operational)
 }
 fn row_matches(
     host: &mut CallHost<'_, '_>,

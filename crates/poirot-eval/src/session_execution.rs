@@ -62,33 +62,46 @@ impl<'a> Session<'a> {
         context: EvaluationInputs,
         budget: BudgetMeter,
     ) -> Self {
+        Self::with_configuration(
+            workbook,
+            configuration::SessionConfiguration::from_inputs(context),
+            budget,
+        )
+    }
+    /// Initialize owned execution storage with borrowed configuration settings.
+    pub(super) fn with_configuration(
+        workbook: &'a Workbook,
+        configuration: configuration::SessionConfiguration<'a>,
+        budget: BudgetMeter,
+    ) -> Self {
         Self::with_runtime(
             workbook,
-            context,
+            configuration,
+            // SAFETY: A single fixed-size Runtime has a representable allocation layout.
             runtime::Storage::Owned(Box::new(runtime::Runtime::new(budget))),
         )
     }
     /// Attach workbook ports to owned or persistently borrowed execution storage.
     pub(super) fn with_runtime(
         workbook: &'a Workbook,
-        context: EvaluationInputs,
+        configuration: configuration::SessionConfiguration<'a>,
         runtime: runtime::Storage<'a>,
     ) -> Self {
         Self {
             runtime,
             workbook,
             inputs: None,
-            context,
-            currency: None,
-            number_locale: &poirot_parsing::number::NumberLocaleV2::EN_US,
-            regex: Default::default(),
+            context: configuration.context,
+            currency: configuration.currency,
+            number_locale: configuration.number_locale,
+            regex: configuration.regex,
 
-            builtin_policy: BuiltinSemanticsPolicy::default(),
-            array_result_policy: ArrayResultPolicy::default(),
-            producer_policy: ProducerPolicy::default(),
+            builtin_policy: configuration.builtin_policy,
+            array_result_policy: configuration.array_result_policy,
+            producer_policy: configuration.producer_policy,
             expression_demand: Default::default(),
             spill_candidates: None,
-            text_policy: poirot_text::TextSemanticsPolicy::default(),
+            text_policy: configuration.text_policy,
             memo_limits: None,
             extensions: None,
             plan: None,
@@ -255,7 +268,7 @@ impl<'a> Session<'a> {
         let result = (|| {
             self.runtime.budget.text(prepared.source().len())?;
             let value = self.prepared_expression(target.sheet, target.address, prepared)?;
-            let value = self.result_scalar(target.sheet, target.address, value)?;
+            let value = self.finish_expression(target.sheet, target.address, value)?;
             Ok(value)
         })();
         self.runtime.budget.pop_cell();
@@ -289,7 +302,7 @@ impl<'a> Session<'a> {
         }
         let result = self
             .bytecode_expr(target.sheet, target.address, formula.bytecode())
-            .and_then(|v| self.result_scalar(target.sheet, target.address, v));
+            .and_then(|v| self.finish_expression(target.sheet, target.address, v));
         self.runtime.budget.pop_cell();
         self.runtime.consumer = previous;
         self.expression_demand = previous_demand;
@@ -328,11 +341,7 @@ impl<'a> Session<'a> {
             || self.builtin_invocation_observer.is_some()
             || self.execution_observer.is_some()
             || self.runtime.preparation.failed()
-            || self
-                .runtime
-                .preparation
-                .roles
-                .contains_key(&(sheet, address))
+            || self.runtime.preparation.has_admitted_role((sheet, address))
         {
             return self.cell(sheet, address);
         }
@@ -429,14 +438,11 @@ impl<'a> Session<'a> {
                     .filter(|owner| *owner != (consumer.sheet, consumer.address))
                     .chain(std::iter::once((consumer.sheet, consumer.address)))
                 {
-                    let reads = runtime.blank_reads.entry(owner).or_default();
-                    if !reads.contains(&(sheet, address)) {
-                        runtime
-                            .budget
-                            .check_allocation(reads.len().saturating_add(1))?;
-                        runtime.budget.charge(WorkKind::Materialization, 1)?;
-                        reads.insert((sheet, address));
-                    }
+                    runtime.preparation.producer_reads.record_blank(
+                        owner,
+                        (sheet, address),
+                        &mut runtime.budget,
+                    )?;
                 }
                 Ok::<_, EvaluationFailure>(())
             })();
@@ -449,11 +455,7 @@ impl<'a> Session<'a> {
             && (provenance == CellProvenance::ExternalCache
                 || completion_candidate
                 || (self.array_result_policy == ArrayResultPolicy::DynamicSpill
-                    && self
-                        .runtime
-                        .preparation
-                        .roles
-                        .contains_key(&(sheet, address))))
+                    && self.runtime.preparation.has_admitted_role((sheet, address))))
             && let Some(reads) = &mut self.overlay_reads
         {
             reads.completed.insert((sheet, address));
@@ -626,9 +628,8 @@ impl<'a> Session<'a> {
             if let Some(owner) = self
                 .runtime
                 .preparation
-                .roles
-                .get(&(sheet, address))
-                .and_then(|role| role.owner(address))
+                .admitted_role((sheet, address))
+                .owner(address)
                 && let Some(reads) = &mut self.overlay_reads
             {
                 crate::DependencyReadSink::read(
@@ -652,9 +653,8 @@ impl<'a> Session<'a> {
             && let Some(owner) = self
                 .runtime
                 .preparation
-                .roles
-                .get(&(sheet, address))
-                .and_then(|role| role.owner(address))
+                .admitted_role((sheet, address))
+                .owner(address)
         {
             sink.read(ReadEvent {
                 consumer: previous,
@@ -814,7 +814,7 @@ impl<'a> Session<'a> {
                             }
                         };
                         let value = self.prepared_expression(sheet, address, prepared)?;
-                        self.worksheet_result(sheet, address, value)
+                        self.publish_worksheet_result(sheet, address, value)
                     }
                 },
             }?;
@@ -826,8 +826,10 @@ impl<'a> Session<'a> {
         if track_visiting {
             self.runtime.visiting.remove(&(sheet, address));
         }
-        self.runtime.blank_reads.remove(&(sheet, address));
-        self.runtime.spill_read_ranges.remove(&(sheet, address));
+        self.runtime
+            .preparation
+            .producer_reads
+            .forget((sheet, address));
         result
     }
 }
@@ -987,12 +989,7 @@ mod literal_cycle_tests {
         assert_eq!(session.cell(0, b).unwrap(), Number(2.));
         assert_eq!(session.runtime.cache.get(&(0, a)), Some(&Number(1.)));
         assert_eq!(
-            session
-                .runtime
-                .preparation
-                .roles
-                .get(&(0, b))
-                .and_then(|role| role.owner(b)),
+            session.runtime.preparation.admitted_role((0, b)).owner(b),
             Some(a)
         );
         assert!(session.runtime.visiting.is_empty());

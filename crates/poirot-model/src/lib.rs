@@ -1078,7 +1078,8 @@ impl Worksheet {
             .iter()
             .map(|(address, spill)| (*address, spill.owner))
     }
-    /// Return the anchor owning a derived cached child.
+    /// Return the saved anchor owning a derived cached child, excluding anchors themselves.
+    /// This source metadata does not inspect or evaluate current formula results.
     pub fn spill_owner(&self, address: CellAddress) -> Option<CellAddress> {
         self.spill_cache.get(&address).map(|s| s.owner)
     }

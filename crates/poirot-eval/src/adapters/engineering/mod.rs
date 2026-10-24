@@ -2,7 +2,7 @@
 use crate::adapters::engineering::policy::{
     self as helper, EvaluationPort, Failure, Origin, Output, ResolvedScalar, Scalar,
 };
-use crate::adapters::failure::{operational_only, project_host};
+use crate::adapters::failure::project_host;
 use crate::host::{CallHost, MissingPolicy, NumericPolicy, OperandOrigin};
 use crate::*;
 use poirot_functions_core::Input;
@@ -52,10 +52,10 @@ impl EvaluationPort for CallHost<'_, '_> {
         Ok(ResolvedScalar { value, origin })
     }
     fn charge_work(&mut self, units: u64) -> Result<(), EvaluationFailure> {
-        CallHost::charge_work(self, units).map_err(operational_only)
+        CallHost::charge_work(self, units)
     }
     fn check_text(&mut self, bytes: usize) -> Result<(), EvaluationFailure> {
-        CallHost::check_text(self, bytes).map_err(operational_only)
+        CallHost::check_text(self, bytes)
     }
     fn coercev2_number_to_text(
         &mut self,
@@ -68,7 +68,7 @@ impl EvaluationPort for CallHost<'_, '_> {
         &mut self,
         text: &str,
     ) -> Result<Option<f64>, Failure<EvaluationFailure>> {
-        CallHost::check_text(self, text.len()).map_err(port_failure)?;
+        CallHost::check_text(self, text.len()).map_err(Failure::Operational)?;
         Ok(coercev2_engineering_decimal_text(text))
     }
     fn coercev2_number_text(&mut self, text: &str) -> Result<f64, Failure<EvaluationFailure>> {
@@ -94,8 +94,7 @@ pub(crate) fn execute(
     if !function.accepts_with_policy(arguments.len(), policy) {
         return Ok(err(VALUE_ERROR));
     }
-    host.check_values(arguments.len())
-        .map_err(operational_only)?;
+    host.check_values(arguments.len())?;
     let indexes: poirot_functions_core::ParamVec<_> = (0..arguments.len()).collect();
     match helper::evaluate_with_policy(&mut host, function, &indexes, policy) {
         Ok(Output::Number(number)) => Ok(Value::Scalar(Number(number))),

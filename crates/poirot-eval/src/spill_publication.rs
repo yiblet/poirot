@@ -179,7 +179,7 @@ impl Candidate {
             && area.c0 <= self.area.c1
     }
 }
-/// Demand-local producer settlement and committed generated ownership.
+/// Demand-local discovery, private settlement and admitted generated ownership.
 #[derive(Default)]
 pub(super) struct Preparation {
     failure: Option<EvaluationFailure>,
@@ -190,16 +190,206 @@ pub(super) struct Preparation {
     ready: Option<SettledArea>,
     held: CellMap<Held>,
     computing: CellSet,
-    /// Newly finalized or restored cells, drained by incremental publication.
-    pub journal: Vec<(usize, CellAddress)>,
-    /// Committed roles also represent private admissions during settlement.
-    pub roles: CellMap<SpillRole>,
+    /// Private producer observations with one recording and reset lifecycle.
+    pub(super) producer_reads: ProducerReadEvidence,
+    /// Newly admitted or restored cells, acknowledged after incremental publication.
+    journal: Vec<(usize, CellAddress)>,
+    /// Admissions can be provisional while a component is being settled.
+    roles: CellMap<SpillRole>,
 }
 impl Preparation {
+    /// Begin another evaluation identity while retaining empty observation buffers.
+    pub(super) fn reset(&mut self) {
+        let mut producer_reads = std::mem::take(&mut self.producer_reads);
+        producer_reads.clear();
+        *self = Self {
+            producer_reads,
+            ..Self::default()
+        };
+    }
     /// Whether an earlier spill attempt has already aborted this evaluation.
     pub(super) fn failed(&self) -> bool {
         self.failure.is_some()
     }
+    /// Read an admitted role, which may still be provisional during settlement.
+    pub(super) fn admitted_role(&self, key: (usize, CellAddress)) -> SpillRole {
+        self.roles.get(&key).copied().unwrap_or_default()
+    }
+    /// Whether this coordinate has an admitted generated role.
+    pub(super) fn has_admitted_role(&self, key: (usize, CellAddress)) -> bool {
+        self.roles.contains_key(&key)
+    }
+    /// Borrow admitted coordinates without sorting, copying or publishing them.
+    pub(super) fn admitted_cells(&self) -> impl ExactSizeIterator<Item = &(usize, CellAddress)> {
+        self.roles.keys()
+    }
+    /// Borrow publication evidence only when all private settlement has succeeded.
+    pub(super) fn publication(&self) -> EvalResult<Publication<'_>> {
+        if let Some(failure) = &self.failure {
+            return Err(failure.clone());
+        }
+        if self.settlement.running || !self.held.is_empty() || !self.computing.is_empty() {
+            return Err(EvaluationFailure::StalePlan);
+        }
+        Ok(Publication { preparation: self })
+    }
+    /// Clear pending evidence only after the borrowed batch commits successfully.
+    /// Callers must leave the journal intact when cache publication fails.
+    pub(super) fn acknowledge_publication(&mut self) {
+        self.journal.clear();
+    }
+}
+
+/// Borrowed evidence whose construction excludes failed or active private settlement.
+pub(super) struct Publication<'a> {
+    preparation: &'a Preparation,
+}
+impl Publication<'_> {
+    /// Count settled generated coordinates without visiting their values.
+    pub(super) fn generated_count(&self) -> usize {
+        self.preparation.roles.len()
+    }
+    /// Borrow settled generated children with their producers.
+    pub(super) fn children(
+        &self,
+    ) -> impl Iterator<Item = ((usize, CellAddress), CellAddress)> + '_ {
+        self.preparation
+            .roles
+            .iter()
+            .filter_map(|(&key, role)| match role {
+                SpillRole::Child { anchor } => Some((key, *anchor)),
+                _ => None,
+            })
+    }
+    /// Read a settled producer's ending coordinate.
+    pub(super) fn extent(&self, key: (usize, CellAddress)) -> Option<CellAddress> {
+        self.role(key).last()
+    }
+    /// Newly admitted or restored coordinates awaiting a successful cache commit.
+    pub(super) fn pending_cells(&self) -> &[(usize, CellAddress)] {
+        &self.preparation.journal
+    }
+    /// Read the settled role belonging to a coordinate in this evaluation.
+    pub(super) fn role(&self, key: (usize, CellAddress)) -> SpillRole {
+        self.preparation.admitted_role(key)
+    }
+    /// Whether a coordinate belongs to the settled generated footprint.
+    pub(super) fn contains(&self, key: (usize, CellAddress)) -> bool {
+        self.preparation.has_admitted_role(key)
+    }
+}
+/// Producer self-read observations with coordinated recording, diagnosis and reset.
+/// Separate physical maps avoid unused per-producer container storage.
+#[derive(Default)]
+pub(super) struct ProducerReadEvidence {
+    blank_points: CellMap<CellSet>,
+    sparse_ranges: CellMap<Vec<Area>>,
+}
+impl ProducerReadEvidence {
+    /// Record a blank observation against a producer's unpublished footprint.
+    pub(super) fn record_blank(
+        &mut self,
+        owner: (usize, CellAddress),
+        point: (usize, CellAddress),
+        budget: &mut BudgetMeter,
+    ) -> EvalResult<()> {
+        let previous = self.blank_points.get(&owner);
+        if previous.is_some_and(|reads| reads.contains(&point)) {
+            return Ok(());
+        }
+        budget.check_allocation(previous.map_or(0, CellSet::len).saturating_add(1))?;
+        budget.charge(WorkKind::Materialization, 1)?;
+        if previous.is_none() {
+            self.blank_points
+                .try_reserve(1)
+                .map_err(|_| Self::allocation_failure(owner))?;
+        }
+        // SAFETY: A missing owner reserved one map entry above; an existing owner
+        // adds no entry. Numeric coordinate hashing and equality cannot panic.
+        let reads = self.blank_points.entry(owner).or_default();
+        reads
+            .try_reserve(1)
+            .map_err(|_| Self::allocation_failure(owner))?;
+        // SAFETY: The successful reservation admits this one new coordinate.
+        reads.insert(point);
+        Ok(())
+    }
+    /// Record a sparse range observation against a producer's unpublished footprint.
+    pub(super) fn record_sparse(
+        &mut self,
+        owner: (usize, CellAddress),
+        area: Area,
+        budget: &mut BudgetMeter,
+    ) -> EvalResult<()> {
+        let previous = self.sparse_ranges.get(&owner);
+        budget.check_allocation(previous.map_or(0, Vec::len).saturating_add(1))?;
+        budget.charge(WorkKind::Materialization, 1)?;
+        if previous.is_none() {
+            self.sparse_ranges
+                .try_reserve(1)
+                .map_err(|_| Self::allocation_failure(owner))?;
+        }
+        // SAFETY: A missing owner reserved one map entry above; an existing owner
+        // adds no entry. Numeric coordinate hashing and equality cannot panic.
+        let reads = self.sparse_ranges.entry(owner).or_default();
+        reads
+            .try_reserve(1)
+            .map_err(|_| Self::allocation_failure(owner))?;
+        // SAFETY: The successful reservation provides one range slot.
+        reads.push(area);
+        Ok(())
+    }
+    /// Attribute fallible observation storage to the producer being tracked.
+    fn allocation_failure(owner: (usize, CellAddress)) -> EvaluationFailure {
+        EvaluationFailure::Resource {
+            kind: crate::ResourceFailureKind::Allocation,
+            capability: CapabilityId::FunctionAdapter,
+            source: Some(EvaluationTarget {
+                sheet: owner.0,
+                address: owner.1,
+            }),
+            detail: "producer self-read observation allocation failed".into(),
+        }
+    }
+    /// Classify a self-read while preserving sparse-footprint diagnostic priority.
+    fn self_read(
+        &self,
+        owner: (usize, CellAddress),
+        point: (usize, CellAddress),
+    ) -> Option<SelfRead> {
+        if self.sparse_ranges.get(&owner).is_some_and(|ranges| {
+            ranges
+                .iter()
+                .any(|area| area.sheet == point.0 && area.contains(point.1))
+        }) {
+            Some(SelfRead::Sparse)
+        } else if self
+            .blank_points
+            .get(&owner)
+            .is_some_and(|points| points.contains(&point))
+        {
+            Some(SelfRead::Blank)
+        } else {
+            None
+        }
+    }
+
+    /// Forget producer-local observations before recomputation or after completion.
+    pub(super) fn forget(&mut self, owner: (usize, CellAddress)) {
+        self.blank_points.remove(&owner);
+        self.sparse_ranges.remove(&owner);
+    }
+    /// Reset all private self-read observations at a settlement or evaluation boundary.
+    pub(super) fn clear(&mut self) {
+        self.blank_points.clear();
+        self.sparse_ranges.clear();
+    }
+}
+/// The observation responsible for an unpublished-footprint dependency.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SelfRead {
+    Blank,
+    Sparse,
 }
 
 /// A physical operand whose source discovery and ownership settlement both completed.
@@ -312,7 +502,7 @@ struct Held {
     source_cached: bool,
     retained: bool,
 }
-/// Legal committed spill roles shared by local and retained result publication.
+/// Spill roles used by private admissions and settled retained publication.
 #[derive(Clone, Copy, Debug, Default, serde::Serialize, serde::Deserialize)]
 pub(crate) enum SpillRole {
     /// A scalar result without a generated footprint.
@@ -332,7 +522,7 @@ impl SpillRole {
             Self::Child { anchor } => Some(anchor),
         }
     }
-    /// Return the committed extent only for a producer.
+    /// Return the admitted extent only for a producer.
     pub(crate) fn last(self) -> Option<CellAddress> {
         match self {
             Self::Anchor { last } => Some(last),
@@ -528,38 +718,28 @@ impl<'a> Session<'a> {
                     row: at.row + r as u32,
                     col: at.col + c as u32,
                 };
-                let finalized_owner = self
+                let competing_owner = self
                     .runtime
                     .preparation
                     .roles
                     .get(&(sheet, child))
                     .is_some_and(|role| role.owner(child) != Some(at));
-                if !finalized_owner {
-                    let blank = self
+                if !competing_owner
+                    && let Some(conflict) = self
                         .runtime
-                        .blank_reads
-                        .get(&(sheet, at))
-                        .is_some_and(|reads| reads.contains(&(sheet, child)));
-                    let sparse = self
-                        .runtime
-                        .spill_read_ranges
-                        .get(&(sheet, at))
-                        .is_some_and(|ranges| {
-                            ranges
-                                .iter()
-                                .any(|area| area.sheet == sheet && area.contains(child))
-                        });
-                    if blank || sparse {
-                        return Err(self.spill_unsupported(
-                            sheet,
-                            at,
-                            if sparse {
-                                "array result reads its own unpublished sparse footprint"
-                            } else {
-                                "array result reads its own unpublished footprint"
-                            },
-                        ));
-                    }
+                        .preparation
+                        .producer_reads
+                        .self_read((sheet, at), (sheet, child))
+                {
+                    return Err(self.spill_unsupported(
+                        sheet,
+                        at,
+                        if conflict == SelfRead::Sparse {
+                            "array result reads its own unpublished sparse footprint"
+                        } else {
+                            "array result reads its own unpublished footprint"
+                        },
+                    ));
                 }
                 if child != at
                     && (effective
@@ -1155,11 +1335,10 @@ impl<'a> Session<'a> {
             reads.discard_consumers(&active.consumers);
         }
         runtime.preparation.held.clear();
-        runtime.blank_reads.clear();
-        runtime.spill_read_ranges.clear();
         active.consumers.clear();
         active.footprints.clear();
         active.notifications.clear();
+        runtime.preparation.producer_reads.clear();
     }
     /// Determine losers from actual rectangles, in the explicit top-left priority order.
     fn spill_losers(&mut self) -> EvalResult<CellSet> {
@@ -1548,7 +1727,7 @@ impl<'a> Session<'a> {
         let result = (|| {
             self.runtime.budget.text(prepared.source().len())?;
             let value = self.prepared_expression(sheet, at, &prepared)?;
-            self.worksheet_result(sheet, at, value)
+            self.publish_worksheet_result(sheet, at, value)
         })();
         self.expression_demand = previous_demand;
         self.runtime.consumer = previous;
@@ -1556,8 +1735,7 @@ impl<'a> Session<'a> {
         self.runtime.preparation.computing.remove(&key);
         self.runtime.budget.pop_cell();
         self.runtime.budget.leave_depth();
-        self.runtime.blank_reads.remove(&key);
-        self.runtime.spill_read_ranges.remove(&key);
+        self.runtime.preparation.producer_reads.forget(key);
         if let Err(failure) = &result {
             // An operational failure is final; unlike a held successful payload,
             // it must retain the normal failed-cell completion notification.
@@ -1986,6 +2164,7 @@ mod tests {
         session.runtime.admitted = Some(Vec::new());
         session.compute_producer(0, anchor).unwrap();
         assert!(session.runtime.preparation.held.contains_key(&(0, anchor)));
+        assert!(session.runtime.preparation.publication().is_err());
         assert!(session.runtime.cache.is_empty());
         assert!(session.runtime.preparation.roles.is_empty());
         assert!(session.runtime.preparation.journal.is_empty());
@@ -2673,5 +2852,223 @@ mod discovery_tests {
             expanded.candidates[0].anchor,
             CellAddress { row: 0, col: 2 }
         );
+    }
+}
+
+#[cfg(test)]
+mod access_api_tests {
+    use super::*;
+
+    #[test]
+    fn publication_requires_successful_settlement_and_acknowledges_without_reallocating() {
+        let key = (0, CellAddress { row: 0, col: 0 });
+        let mut preparation = Preparation::default();
+        preparation
+            .roles
+            .insert(key, SpillRole::Anchor { last: key.1 });
+        preparation.journal.push(key);
+        let capacity = preparation.journal.capacity();
+        preparation.settlement.begin(Default::default(), 0, 0);
+        assert!(preparation.publication().is_err());
+        preparation.settlement.finish();
+        let publication = preparation.publication().unwrap();
+        assert_eq!(publication.pending_cells(), &[key]);
+        assert_eq!(publication.extent(key), Some(key.1));
+        assert_eq!(publication.role(key).owner(key.1), Some(key.1));
+        assert_eq!(publication.generated_count(), 1);
+        assert!(publication.children().next().is_none());
+        // Merely borrowing a batch, including an abandoned one, cannot consume it.
+        assert_eq!(preparation.publication().unwrap().pending_cells(), &[key]);
+        preparation.acknowledge_publication();
+        assert!(
+            preparation
+                .publication()
+                .unwrap()
+                .pending_cells()
+                .is_empty()
+        );
+        assert_eq!(preparation.journal.capacity(), capacity);
+        preparation.failure = Some(EvaluationFailure::StalePlan);
+        assert!(preparation.publication().is_err());
+        assert!(
+            matches!(preparation.admitted_role(key), SpillRole::Anchor { last } if last == key.1)
+        );
+    }
+
+    #[test]
+    fn evaluated_roles_distinguish_one_cell_error_blocked_and_child_results() {
+        let mut book = Workbook::new();
+        let sheet = book.add_sheet("S").unwrap();
+        for (address, formula) in [
+            ("A1", "{1}"),
+            ("C1", "{#N/A,2}"),
+            ("F1", "{3,4}"),
+            ("I1", "{5,6}"),
+        ] {
+            sheet
+                .set_formula(address.parse().unwrap(), formula)
+                .unwrap();
+        }
+        sheet.set_value("J1".parse().unwrap(), 99.).unwrap();
+        let mut session = Session::with_context(&book, Default::default());
+        session.array_result_policy = ArrayResultPolicy::DynamicSpill;
+        for (address, expected, extent) in [
+            ("A1", Number(1.), Some("A1")),
+            ("C1", Error(CellError::NA), Some("D1")),
+            ("G1", Number(4.), None),
+            ("I1", Error(CellError::Spill), None),
+        ] {
+            let at: CellAddress = address.parse().unwrap();
+            assert_eq!(session.cell(0, at).unwrap(), expected);
+            let publication = session.runtime.preparation.publication().unwrap();
+            assert_eq!(
+                publication.extent((0, at)),
+                extent.map(|s| s.parse().unwrap())
+            );
+        }
+        let child: CellAddress = "G1".parse().unwrap();
+        let anchor: CellAddress = "F1".parse().unwrap();
+        assert!(
+            matches!(session.runtime.preparation.admitted_role((0, child)), SpillRole::Child { anchor: owner } if owner == anchor)
+        );
+        // Evaluation does not mutate saved worksheet ownership or geometry.
+        assert_eq!(book.sheet(0).unwrap().spill_owner(child), None);
+        assert_eq!(book.sheet(0).unwrap().spill_extent(anchor), None);
+    }
+
+    #[test]
+    fn producer_observations_share_lifecycle_and_keep_sparse_diagnostic_priority() {
+        let key = (0, CellAddress { row: 0, col: 0 });
+        let point = (0, CellAddress { row: 1, col: 1 });
+        let other = (1, point.1);
+        let area = Area {
+            kind: AreaKind::Area,
+            sheet: 0,
+            r0: 1,
+            r1: 1,
+            c0: 1,
+            c1: 1,
+        };
+        let mut preparation = Preparation::default();
+        let mut budget = BudgetMeter::new(Default::default()).unwrap();
+        preparation
+            .producer_reads
+            .record_blank(key, point, &mut budget)
+            .unwrap();
+        preparation
+            .producer_reads
+            .record_blank(key, point, &mut budget)
+            .unwrap();
+        assert_eq!(preparation.producer_reads.blank_points[&key].len(), 1);
+        assert_eq!(
+            preparation.producer_reads.self_read(key, point),
+            Some(SelfRead::Blank)
+        );
+        assert_eq!(preparation.producer_reads.self_read(key, other), None);
+        preparation
+            .producer_reads
+            .record_sparse(key, area, &mut budget)
+            .unwrap();
+        assert_eq!(
+            preparation.producer_reads.self_read(key, point),
+            Some(SelfRead::Sparse)
+        );
+        preparation.producer_reads.forget(key);
+        assert_eq!(preparation.producer_reads.self_read(key, point), None);
+        preparation
+            .producer_reads
+            .record_sparse(key, area, &mut budget)
+            .unwrap();
+        preparation.producer_reads.clear();
+        assert!(preparation.producer_reads.blank_points.is_empty());
+        assert!(preparation.producer_reads.sparse_ranges.is_empty());
+    }
+
+    #[test]
+    fn preparation_reset_clears_both_observation_channels_and_reuses_their_buffers() {
+        let key = (0, CellAddress { row: 0, col: 0 });
+        let area = Area {
+            kind: AreaKind::Area,
+            sheet: 0,
+            r0: 0,
+            r1: 0,
+            c0: 0,
+            c1: 0,
+        };
+        let mut preparation = Preparation::default();
+        let mut budget = BudgetMeter::new(Default::default()).unwrap();
+        preparation
+            .producer_reads
+            .record_blank(key, key, &mut budget)
+            .unwrap();
+        preparation
+            .producer_reads
+            .record_sparse(key, area, &mut budget)
+            .unwrap();
+        let capacities = (
+            preparation.producer_reads.blank_points.capacity(),
+            preparation.producer_reads.sparse_ranges.capacity(),
+        );
+        preparation.failure = Some(EvaluationFailure::StalePlan);
+        preparation
+            .roles
+            .insert(key, SpillRole::Anchor { last: key.1 });
+        preparation.reset();
+        assert!(
+            preparation
+                .publication()
+                .unwrap()
+                .pending_cells()
+                .is_empty()
+        );
+        assert!(matches!(preparation.admitted_role(key), SpillRole::None));
+        assert!(preparation.producer_reads.blank_points.is_empty());
+        assert!(preparation.producer_reads.sparse_ranges.is_empty());
+        assert_eq!(
+            (
+                preparation.producer_reads.blank_points.capacity(),
+                preparation.producer_reads.sparse_ranges.capacity()
+            ),
+            capacities
+        );
+    }
+
+    #[test]
+    fn refused_self_read_recording_never_inserts_observations() {
+        let key = (0, CellAddress { row: 0, col: 0 });
+        let area = Area {
+            kind: AreaKind::Area,
+            sheet: 0,
+            r0: 0,
+            r1: 0,
+            c0: 0,
+            c1: 0,
+        };
+        for limits in [
+            EvaluationBudgets {
+                run_work: 0,
+                ..Default::default()
+            },
+            EvaluationBudgets {
+                materialized_values: 0,
+                ..Default::default()
+            },
+        ] {
+            let mut preparation = Preparation::default();
+            let mut budget = BudgetMeter::new(limits).unwrap();
+            assert!(
+                preparation
+                    .producer_reads
+                    .record_blank(key, key, &mut budget)
+                    .is_err()
+            );
+            assert!(
+                preparation
+                    .producer_reads
+                    .record_sparse(key, area, &mut budget)
+                    .is_err()
+            );
+            assert_eq!(preparation.producer_reads.self_read(key, key), None);
+        }
     }
 }

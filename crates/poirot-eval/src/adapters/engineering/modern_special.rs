@@ -53,7 +53,7 @@ pub(super) fn execute(
                     kernel::bessel(kind, x, order, |units| host.charge_work(units)).map_err(
                         |error| match error {
                             kernel::Failure::Number => FunctionFailure::Spreadsheet(Num),
-                            kernel::Failure::Operational(error) => error,
+                            kernel::Failure::Operational(error) => error.into(),
                             kernel::Failure::ComputationalLimit => host.unsupported(
                                 CapabilityId::FunctionAdapter,
                                 "Bessel computation exceeds the bounded order/series envelope",

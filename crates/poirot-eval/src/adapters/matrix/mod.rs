@@ -72,13 +72,13 @@ impl EvaluationPort for MatrixPort<'_, '_> {
         })
     }
     fn charge_work(&mut self, units: u64) -> Result<(), EvaluationFailure> {
-        self.host.charge_work(units).map_err(operational_only)
+        self.host.charge_work(units)
     }
     fn check_collection(&mut self, elements: usize) -> Result<(), EvaluationFailure> {
-        self.host.check_values(elements).map_err(operational_only)
+        self.host.check_values(elements)
     }
     fn check_text(&mut self, bytes: usize) -> Result<(), EvaluationFailure> {
-        self.host.check_text(bytes).map_err(operational_only)
+        self.host.check_text(bytes)
     }
     fn coercev2_number_text(&mut self, text: &str) -> Result<f64, Failure<EvaluationFailure>> {
         self.host
@@ -136,9 +136,9 @@ pub(crate) fn execute(
             .rows
             .checked_mul(shape.columns)
             .ok_or_else(|| host.size_overflow())?;
-        host.check_values(count).map_err(operational_only)?;
-        host.check_values(shape.columns).map_err(operational_only)?;
-        host.charge_work(count as u64).map_err(operational_only)?;
+        host.check_values(count)?;
+        host.check_values(shape.columns)?;
+        host.charge_work(count as u64)?;
         let mut rows = vec![Vec::with_capacity(shape.rows); shape.columns];
         for row in 0..shape.rows {
             for (col, output) in rows.iter_mut().enumerate() {
@@ -172,9 +172,7 @@ pub(crate) fn execute(
         strict_numeric_matrices,
         host: CallHost::new_array(session, sheet, address, args, array_count),
     };
-    port.host
-        .check_values(args.len())
-        .map_err(operational_only)?;
+    port.host.check_values(args.len())?;
     let indices: poirot_functions_core::ParamVec<usize> = (0..args.len()).collect();
     let result = helper::evaluate(&mut port, function, &indices);
     match result {
@@ -201,15 +199,9 @@ pub(crate) fn execute(
                 }
             };
             // Reserve both rows and values before growing the engine result.
-            port.host
-                .check_values(matrix.values().len())
-                .map_err(operational_only)?;
-            port.host
-                .check_values(matrix.rows())
-                .map_err(operational_only)?;
-            port.host
-                .charge_work(matrix.values().len() as u64)
-                .map_err(operational_only)?;
+            port.host.check_values(matrix.values().len())?;
+            port.host.check_values(matrix.rows())?;
+            port.host.charge_work(matrix.values().len() as u64)?;
             if matrix.cols() == 0 {
                 return Err(EvaluationFailure::StalePlan);
             }
@@ -254,7 +246,7 @@ mod lossless_port_tests {
         let expression =
             crate::bound::bind(&poirot_parsing::formula::parse_formula(formula).unwrap());
         let value = session.expr(0, at, &expression)?;
-        session.scalar(at, value)
+        session.select_legacy_scalar(at, value)
     }
 
     #[test]
@@ -364,9 +356,9 @@ pub(crate) fn sequence(
     let Some(cells) = rows.checked_mul(columns) else {
         return Err(host.size_overflow());
     };
-    host.check_values(cells).map_err(operational_only)?;
-    host.check_values(rows).map_err(operational_only)?;
-    host.charge_work(cells as u64).map_err(operational_only)?;
+    host.check_values(cells)?;
+    host.check_values(rows)?;
+    host.charge_work(cells as u64)?;
     match poirot_functions_matrix::sequence(
         rows,
         columns,

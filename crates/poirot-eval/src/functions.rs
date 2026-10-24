@@ -18,7 +18,7 @@ impl Session<'_> {
                         expression,
                         expression_execution::ExpressionDemand::Scalar,
                     )?;
-                    self.scalar(at, value)
+                    self.select_legacy_scalar(at, value)
                 }
                 None => Ok(Blank),
             };
@@ -128,12 +128,11 @@ impl Session<'_> {
                 .copied()
                 .chain(std::iter::once((consumer.sheet, consumer.address)))
             {
-                let ranges = runtime.spill_read_ranges.entry(owner).or_default();
-                runtime
-                    .budget
-                    .check_allocation(ranges.len().saturating_add(1))?;
-                runtime.budget.charge(WorkKind::Materialization, 1)?;
-                ranges.push(area);
+                runtime.preparation.producer_reads.record_sparse(
+                    owner,
+                    area,
+                    &mut runtime.budget,
+                )?;
             }
         }
         self.read(DependencyRead::SparseMembership {
@@ -196,10 +195,10 @@ impl Session<'_> {
         // Effective stored coordinates are already unique and row-major. Only
         // merging generated spill cells can disturb that order or add duplicates.
         if self.array_result_policy == ArrayResultPolicy::DynamicSpill
-            && !runtime.preparation.roles.is_empty()
+            && runtime.preparation.admitted_cells().len() != 0
         {
             let mut seen: HashSet<_> = addresses.iter().copied().collect();
-            for &(sheet, address) in runtime.preparation.roles.keys() {
+            for &(sheet, address) in runtime.preparation.admitted_cells() {
                 runtime.budget.charge(WorkKind::SparseScan, 1)?;
                 if sheet == area.sheet && area.contains(address) && !seen.contains(&address) {
                     runtime.budget.check_allocation(

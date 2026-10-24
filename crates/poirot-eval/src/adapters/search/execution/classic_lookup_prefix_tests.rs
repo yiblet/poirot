@@ -10,7 +10,7 @@ fn evaluate(session: &mut Session<'_>, formula: &str) -> CellValue {
     let bound = bound::FormulaPlan::bind(&parsed).unwrap();
     let at = "Z20".parse().unwrap();
     let value = session.expr(0, at, &bound.expression()).unwrap();
-    session.scalar(at, value).unwrap()
+    session.select_legacy_scalar(at, value).unwrap()
 }
 fn session(workbook: &Workbook) -> Session<'_> {
     let mut session = Session::with_context(workbook, EvaluationInputs::default());

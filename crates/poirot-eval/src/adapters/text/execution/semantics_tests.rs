@@ -29,7 +29,7 @@ fn evaluate_with_budgets(
         "A1".parse().unwrap(),
         &bound::bind(&parse_formula(formula).unwrap()),
     )?;
-    session.scalar("A1".parse().unwrap(), value)
+    session.select_legacy_scalar("A1".parse().unwrap(), value)
 }
 #[test]
 fn formulas_select_units_without_normalizing_text() {

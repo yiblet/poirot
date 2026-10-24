@@ -60,6 +60,7 @@ use std::collections::HashSet;
 use std::time::SystemTime;
 #[cfg(test)]
 use std::time::{Duration, UNIX_EPOCH};
+mod budgeted_value;
 mod clock;
 mod coordinate_hash;
 use coordinate_hash::{CellMap, CellSet};
@@ -339,14 +340,11 @@ fn execute_configuration<T>(
         }
     };
     let plan = FormulaCompiler::new().compile_workbook(workbook, &EvaluationPolicy::default());
-    let mut session = Session::new(workbook, configuration.context(), meter);
-    session.currency = configuration.formatting().currency();
-    session.number_locale = configuration.number_locale();
-    session.text_policy = configuration.text_policy();
-
-    session.builtin_policy = configuration.builtin_policy();
-    session.array_result_policy = configuration.array_result_policy();
-    session.producer_policy = configuration.producer_policy();
+    let mut session = Session::with_configuration(
+        workbook,
+        configuration::SessionConfiguration::from_run_configuration(configuration),
+        meter,
+    );
     session.plan = Some(&plan);
     let mut run = EvaluationRun {
         session,

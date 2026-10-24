@@ -64,7 +64,7 @@ impl Session<'_> {
         self.rectangular_values(at, shape, |session, row, column| {
             let value = session.rectangular_element(&value, shape, row, column)?;
             let result = session.unary_value(sheet, at, operation, Value::Scalar(value))?;
-            session.scalar(at, result)
+            session.select_legacy_scalar(at, result)
         })
     }
 
@@ -100,7 +100,7 @@ impl Session<'_> {
                 Value::Scalar(left),
                 Value::Scalar(right),
             )?;
-            session.scalar(at, result)
+            session.select_legacy_scalar(at, result)
         })
     }
 

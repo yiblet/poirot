@@ -122,7 +122,7 @@ impl Session<'_> {
         at: CellAddress,
         value: Value,
     ) -> EvalResult<Result<usize, CellError>> {
-        let value = self.scalar(at, value)?;
+        let value = self.select_legacy_scalar(at, value)?;
         Ok(semantic(self.coercev2_scalar_number(&value))?.and_then(coercev2_index_ordinal))
     }
     fn index(&mut self, s: usize, at: CellAddress, args: ArgumentsRef<'_>) -> EvalResult<Value> {
@@ -194,7 +194,7 @@ impl Session<'_> {
                 if !args.get(3).is_some_and(|argument| argument.is_missing())
                     && !matches!(value, Value::Missing) =>
             {
-                let value = self.scalar(at, value)?;
+                let value = self.select_legacy_scalar(at, value)?;
                 match semantic(self.coercev2_scalar_number(&value))? {
                     Ok(number) => Some(number),
                     Err(error) => return Ok(err(error)),

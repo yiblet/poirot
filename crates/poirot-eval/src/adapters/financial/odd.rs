@@ -17,10 +17,13 @@ fn spreadsheet(error: FinancialError) -> FunctionFailure {
     }
     .into()
 }
-fn failure(host: &CallHost<'_, '_>, error: Failure<FunctionFailure>) -> FunctionFailure {
+fn failure<E: Into<FunctionFailure>>(
+    host: &CallHost<'_, '_>,
+    error: Failure<E>,
+) -> FunctionFailure {
     match error {
         Failure::Spreadsheet(e) => spreadsheet(e),
-        Failure::Operational(e) => e,
+        Failure::Operational(e) => e.into(),
         Failure::ComputationalLimit => host.unsupported(
             CapabilityId::FunctionAdapter,
             "irregular financial calculation exceeds its work envelope",

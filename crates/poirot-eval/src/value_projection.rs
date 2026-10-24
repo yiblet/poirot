@@ -3,7 +3,7 @@ use super::*;
 
 impl<'a> Session<'a> {
     /// Project a worksheet result with its checked footprint for later atomic admission.
-    pub(super) fn worksheet_result(
+    pub(super) fn publish_worksheet_result(
         &mut self,
         sheet: usize,
         address: CellAddress,
@@ -40,15 +40,15 @@ impl<'a> Session<'a> {
         {
             self.stage_spill(sheet, address, rows)?
         } else {
-            spill_publication::ComputedCell::scalar(self.result_scalar(sheet, address, value)?)
+            spill_publication::ComputedCell::scalar(self.finish_expression(sheet, address, value)?)
         };
         // TODO(coercion-non-argument): [LOW] Completed worksheet formulas expose numeric zero for a remaining blank; reads and intermediate selections preserve identity.
         poirot_coercionv2::coerce_worksheet_formula_result(&mut result.value);
         Ok(result)
     }
 
-    /// Project an ad hoc expression result without publishing worksheet spills.
-    pub(super) fn result_scalar(
+    /// Finish an ad hoc expression, rejecting Missing without publishing worksheet spills.
+    pub(super) fn finish_expression(
         &mut self,
         sheet: usize,
         address: CellAddress,
@@ -63,12 +63,16 @@ impl<'a> Session<'a> {
                 detail: "pinned MissingArgEval final result throws a source exception".into(),
             });
         }
-        self.scalar(address, value)
+        self.select_legacy_scalar(address, value)
     }
     // Accepted legacy scalar consumers retain their blank-compatible behavior;
     // new helper ports inspect Missing identity before requesting this conversion.
-    /// Apply legacy scalar selection, dereferencing only the selected reference cell.
-    pub(super) fn scalar(&mut self, at: CellAddress, value: Value) -> EvalResult<CellValue> {
+    /// Select a legacy scalar, converting omissions to blanks and intersecting references implicitly.
+    pub(super) fn select_legacy_scalar(
+        &mut self,
+        at: CellAddress,
+        value: Value,
+    ) -> EvalResult<CellValue> {
         match value {
             // TODO(coercion-non-argument): [MEDIUM] Generic scalar projection drops omission identity rather than leaving the consumer to choose a default.
             Value::Missing => Ok(coerce_legacy_missing_blank()),
@@ -86,7 +90,7 @@ impl<'a> Session<'a> {
                     self.cell(first.sheet, at)
                 } else {
                     self.budget.allocation(1)?;
-                    self.scalar(at, Value::Refs(ReferenceAreas::One(*first)))
+                    self.select_legacy_scalar(at, Value::Refs(ReferenceAreas::One(*first)))
                 }
             }
             Value::SignedRefs(areas) => {

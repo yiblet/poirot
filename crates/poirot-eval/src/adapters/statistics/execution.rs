@@ -157,7 +157,7 @@ impl Session<'_> {
                 continue;
             }
             if name == AggregateFunction::Statistics(StatisticsFunction::CountBlank) {
-                return Ok(match self.scalar(at, v)? {
+                return Ok(match self.select_legacy_scalar(at, v)? {
                     Error(error) => err(error),
                     _ => err(VALUE_ERROR),
                 });

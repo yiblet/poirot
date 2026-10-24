@@ -1,5 +1,5 @@
 //! Financial adapters over actual deferred Session operands.
-use crate::adapters::failure::{operational_only, project_host};
+use crate::adapters::failure::project_host;
 use crate::adapters::financial::policy::{
     self as helper, CurrencyContext, EvaluationPort, Failure, Scalar,
 };
@@ -63,13 +63,13 @@ impl EvaluationPort for CallHost<'_, '_> {
         Ok((scalar(self, value).map_err(failure)?, origin))
     }
     fn charge_work(&mut self, units: u64) -> Result<(), EvaluationFailure> {
-        CallHost::charge_work(self, units).map_err(operational_only)
+        CallHost::charge_work(self, units)
     }
     fn check_collection(&mut self, elements: usize) -> Result<(), EvaluationFailure> {
-        self.check_values(elements).map_err(operational_only)
+        self.check_values(elements)
     }
     fn check_text(&mut self, bytes: usize) -> Result<(), EvaluationFailure> {
-        CallHost::check_text(self, bytes).map_err(operational_only)
+        CallHost::check_text(self, bytes)
     }
     fn coercev2_text_number(&mut self, text: &str) -> Result<f64, Failure<EvaluationFailure>> {
         self.coercev2_number_text(text, NumericPolicy::PinnedPoi)
@@ -99,12 +99,7 @@ pub(crate) fn execute(
         return Ok(err(VALUE_ERROR));
     }
     let mut host = CallHost::new(session, sheet, address, arguments);
-    if let Err(error) = host.check_values(arguments.len()) {
-        return match error {
-            FunctionFailure::Spreadsheet(error) => Ok(err(error)),
-            FunctionFailure::Operational(error) => Err(error),
-        };
-    }
+    host.check_values(arguments.len())?;
     let indices: poirot_functions_core::ParamVec<_> = (0..arguments.len()).collect();
     match helper::evaluate_with_policy(&mut host, function, &indices, policy) {
         Ok(helper::Output::Number(value)) => Ok(Number(value).into()),

@@ -32,7 +32,7 @@ impl Session<'_> {
                     if self.retains_array(&value) {
                         return self.array_if(s, at, args, value);
                     }
-                    self.scalar(at, value)?
+                    self.select_legacy_scalar(at, value)?
                 } else {
                     self.argument(s, at, args, 0)?
                 };
@@ -63,7 +63,7 @@ impl Session<'_> {
                     args.get(0).ok_or(EvaluationFailure::StalePlan)?,
                     0,
                 )?;
-                let check = self.scalar(at, value.clone())?;
+                let check = self.select_legacy_scalar(at, value.clone())?;
                 let caught = match check {
                     Error(error) if function == IfError || error == NA => Some(error),
                     _ => None,
@@ -97,7 +97,7 @@ impl Session<'_> {
                     if self.retains_array(&value) {
                         return self.array_choose(s, at, args, value);
                     }
-                    self.scalar(at, value)?
+                    self.select_legacy_scalar(at, value)?
                 } else {
                     self.argument(s, at, args, 0)?
                 };

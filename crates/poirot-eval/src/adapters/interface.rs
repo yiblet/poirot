@@ -126,7 +126,8 @@ impl<'call, 'workbook> CallContext<'call, 'workbook> {
     /// Select a scalar at the current caller coordinates, resolving reference or
     /// array values only when this projection is requested.
     pub fn scalar(&mut self, value: FunctionValue) -> Result<CellValue, EvaluationFailure> {
-        self.session.scalar(self.target.address, value.0)
+        self.session
+            .select_legacy_scalar(self.target.address, value.0)
     }
 }
 
@@ -156,8 +157,8 @@ impl Input for FunctionInput<'_, '_, '_> {
                 value
             });
         }
-        crate::host::CallHost::copy_value(
-            &mut self.context.session.budget,
+        crate::budgeted_value::copy_value(
+            &mut self.context.session.runtime.budget,
             // SAFETY: If value is None this function assigns Some before reaching this access; no intervening code clears it.
             self.value.as_ref().unwrap(),
         )
@@ -320,10 +321,13 @@ impl crate::EvaluationRun<'_> {
         })()
         .and_then(|value| {
             self.session
-                .result_scalar(target.sheet, target.address, value)
+                .finish_expression(target.sheet, target.address, value)
         });
         self.session.budget.pop_cell();
         self.session.consumer = previous;
         result
     }
 }
+
+#[cfg(test)]
+mod deferred_tests;

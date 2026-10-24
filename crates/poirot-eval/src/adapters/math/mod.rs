@@ -56,13 +56,13 @@ impl EvaluationPort for CallHost<'_, '_> {
         self.random_draw(Some(interval)).map_err(port_failure)
     }
     fn charge_work(&mut self, units: u64) -> Result<(), EvaluationFailure> {
-        CallHost::charge_work(self, units).map_err(operational_only)
+        CallHost::charge_work(self, units)
     }
     fn check_collection(&mut self, elements: usize) -> Result<(), EvaluationFailure> {
-        self.check_values(elements).map_err(operational_only)
+        self.check_values(elements)
     }
     fn check_text(&mut self, bytes: usize) -> Result<(), EvaluationFailure> {
-        CallHost::check_text(self, bytes).map_err(operational_only)
+        CallHost::check_text(self, bytes)
     }
     fn coercev2_text_number(&mut self, text: &str) -> Result<f64, Failure<EvaluationFailure>> {
         self.coercev2_number_text(text, NumericPolicy::PinnedPoi)
@@ -89,13 +89,12 @@ pub(crate) fn execute(
         helper::SemanticsPolicy::PinnedPoi
     };
     let mut host = CallHost::new(session, sheet, address, arguments);
-    host.check_values(arguments.len())
-        .map_err(operational_only)?;
-    CallHost::charge_work(&mut host, arguments.len() as u64).map_err(operational_only)?;
+    host.check_values(arguments.len())?;
+    CallHost::charge_work(&mut host, arguments.len() as u64)?;
     let indices: poirot_functions_core::ParamVec<_> = (0..arguments.len()).collect();
     match helper::evaluate_with_policy(&mut host, function, &indices, policy) {
         Ok(number) => {
-            host.check_values(1).map_err(operational_only)?;
+            host.check_values(1)?;
             Ok(numeric_outcome::coerce_numeric_outcome(number).into())
         }
         Err(Failure::Spreadsheet(error)) => Ok(err(error)),

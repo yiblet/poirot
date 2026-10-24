@@ -297,12 +297,14 @@ fn publication_changes(
     policy: FormulaCacheMaterializationPolicy,
 ) -> crate::EvalResult<Vec<poirot_model::WorkbookChange>> {
     use poirot_model::WorkbookChange;
+    let runtime = &mut *session.runtime;
+    let publication = runtime.preparation.publication()?;
     let count = updates
         .len()
         .checked_mul(2)
-        .and_then(|n| n.checked_add(session.runtime.preparation.roles.len()))
+        .and_then(|n| n.checked_add(publication.generated_count()))
         .ok_or(crate::EvaluationFailure::StalePlan)?;
-    session.runtime.budget.allocation(count)?;
+    runtime.budget.allocation(count)?;
     let mut changes = Vec::with_capacity(count);
     for update in updates {
         changes.push(WorkbookChange::ClearSpillCache {
@@ -316,15 +318,9 @@ fn publication_changes(
             .and_then(|sheet| sheet.source_cell(update.target.address))
             .and_then(|cell| cell.formula.as_deref())
             .ok_or(crate::EvaluationFailure::StalePlan)?;
-        session.runtime.budget.text(formula.len())?;
+        runtime.budget.text(formula.len())?;
         let value = policy.coerce_stored_value(update.value.clone());
-        if let Some(last) = session
-            .runtime
-            .preparation
-            .roles
-            .get(&(update.target.sheet, update.target.address))
-            .and_then(|role| role.last())
-        {
+        if let Some(last) = publication.extent((update.target.sheet, update.target.address)) {
             changes.push(WorkbookChange::SetSpillAnchorCachedValue {
                 sheet: update.target.sheet,
                 anchor: update.target.address,
@@ -341,16 +337,7 @@ fn publication_changes(
             });
         }
     }
-    let mut children: Vec<_> = session
-        .runtime
-        .preparation
-        .roles
-        .iter()
-        .filter_map(|(key, role)| match role {
-            crate::spill_publication::SpillRole::Child { anchor } => Some((*key, *anchor)),
-            _ => None,
-        })
-        .collect();
+    let mut children: Vec<_> = publication.children().collect();
     children.sort_unstable();
     for ((sheet, address), anchor) in children {
         let formula = workbook
@@ -358,7 +345,6 @@ fn publication_changes(
             .and_then(|sheet| sheet.source_cell(anchor))
             .and_then(|cell| cell.formula.as_deref())
             .ok_or(crate::EvaluationFailure::StalePlan)?;
-        let runtime = &mut *session.runtime;
         let value = runtime
             .cache
             .get(&(sheet, address))
