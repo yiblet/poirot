@@ -1060,3 +1060,110 @@ mod generic_layout_tests {
         verify::<31, 3>();
     }
 }
+
+#[cfg(test)]
+mod page_contract_tests {
+    use super::*;
+
+    fn check_all_slots<const H: u32, const W: u32>() {
+        let mut store = CellStore::<u64, H, W>::default();
+        let mut reference = BTreeMap::new();
+        let count = H * W;
+        for index in 0..count {
+            // These tested dimensions are coprime with 73, visiting each slot once.
+            let slot = index * 73 % count;
+            let address = CellAddress {
+                row: H * 2 + slot % H,
+                col: W * 3 + slot / H,
+            };
+            assert_eq!(
+                store.set(address, u64::from(slot)).unwrap(),
+                reference.insert(address, u64::from(slot))
+            );
+        }
+        assert_eq!(
+            store.cells().iter().collect::<Vec<_>>(),
+            reference.iter().collect::<Vec<_>>()
+        );
+        for (address, value) in &reference {
+            assert_eq!(store.get(address), Some(value));
+            let (borrowed, stored) = store.cells().range(*address..=*address).next().unwrap();
+            assert_eq!(borrowed, address);
+            assert_eq!(stored, value);
+        }
+        for col in W * 3..W * 4 {
+            let expected: Vec<_> = reference.iter().filter(|(a, _)| a.col == col).collect();
+            assert_eq!(
+                store
+                    .cells()
+                    .column(col, H * 2, H * 3 - 1)
+                    .collect::<Vec<_>>(),
+                expected
+            );
+        }
+        let removed: Vec<_> = reference.keys().step_by(2).copied().collect();
+        for address in removed {
+            assert_eq!(store.remove(&address), reference.remove(&address));
+        }
+        assert_eq!(
+            store.cells().iter().rev().collect::<Vec<_>>(),
+            reference.iter().rev().collect::<Vec<_>>()
+        );
+        for (address, value) in &reference {
+            assert_eq!(store.get(address), Some(value));
+        }
+    }
+
+    #[test]
+    fn all_page_slots_survive_out_of_order_insertion_and_alternating_removal() {
+        check_all_slots::<1, 1>();
+        check_all_slots::<16, 2>();
+        check_all_slots::<31, 3>();
+        check_all_slots::<32, 4>();
+        check_all_slots::<65, 4>();
+    }
+
+    #[test]
+    fn shared_queries_keep_borrowed_keys_and_support_concurrent_readers() {
+        let mut store = CellStore::<u32, 31, 3>::default();
+        for row in [0, 30, 31, 63, 64, 128] {
+            for col in [0, 2, 3, 8] {
+                store.set(CellAddress { row, col }, row + col).unwrap();
+            }
+        }
+        let expected: Vec<_> = store.cells().iter().map(|(a, v)| (*a, *v)).collect();
+        std::thread::scope(|scope| {
+            for _ in 0..4 {
+                let store = &store;
+                let expected = &expected;
+                scope.spawn(move || {
+                    for _ in 0..8 {
+                        assert_eq!(
+                            store
+                                .cells()
+                                .iter()
+                                .map(|(a, v)| (*a, *v))
+                                .collect::<Vec<_>>(),
+                            *expected
+                        );
+                        for col in [0, 2, 3, 8] {
+                            let actual: Vec<_> = store
+                                .cells()
+                                .column(col, 0, 128)
+                                .map(|(a, v)| (*a, *v))
+                                .collect();
+                            assert_eq!(
+                                actual,
+                                expected
+                                    .iter()
+                                    .copied()
+                                    .filter(|(a, _)| a.col == col)
+                                    .collect::<Vec<_>>()
+                            );
+                        }
+                    }
+                });
+            }
+        });
+    }
+}
