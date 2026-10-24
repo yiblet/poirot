@@ -1,5 +1,5 @@
 //! Public saved-source recovery and XLSX engineering execution contracts.
-use poirot::{CellValue, EvaluationContext, Overlay, Workbook, artifact};
+use poirot::{CellValue, EvaluationContext, Workbook, artifact, eval::overlay::Overlay};
 #[test]
 fn incompatible_special_preparation_preserves_formulas_and_overlay_edits() {
     let mut book = Workbook::new();
@@ -42,7 +42,7 @@ fn incompatible_special_preparation_preserves_formulas_and_overlay_edits() {
         workbook.sheet(0).unwrap().get(input.address).unwrap().value,
         64.0.into()
     );
-    let mut direct = poirot::Evaluation::with_workbook(workbook)
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)
         .build(EvaluationContext::default())
         .unwrap();
     assert_eq!(direct.cell(output).unwrap(), 1.0.into());
@@ -60,7 +60,7 @@ fn stored_engineering_names_execute_after_xlsx_roundtrip() {
     }
     let bytes = poirot::io::write_xlsx_to_buffer(&book).unwrap();
     let book = poirot::io::read_workbook_bytes(&bytes).unwrap();
-    let mut direct = poirot::Evaluation::with_workbook(book)
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(book)
         .build(EvaluationContext::default())
         .unwrap();
     for (cell, expected) in [

@@ -109,12 +109,12 @@ impl Workbook {
         LoadBuilder::default()
     }
     /// Configure selected-output calculation with one captured default context.
-    pub fn evaluation(&self) -> crate::WorkbookEvaluationBuilder<'_> {
-        crate::WorkbookEvaluationBuilder::new(self)
+    pub fn evaluation(&self) -> crate::EvaluationBuilder<'_> {
+        crate::EvaluationBuilder::new(self)
     }
     /// Configure incremental scenarios that preserve unaffected results across edits.
-    pub fn overlay(&self) -> crate::WorkbookOverlayBuilder<'_> {
-        crate::WorkbookOverlayBuilder::new(self)
+    pub fn overlay(&self) -> crate::OverlayBuilder<'_> {
+        crate::OverlayBuilder::new(self)
     }
     /// Configure usable snapshot restoration with compatible reuse or default source recovery.
     /// Advanced artifact loading remains available through `load_snapshot`.
@@ -152,7 +152,7 @@ impl Workbook {
         &mut self,
         context: crate::EvaluationContext,
     ) -> Result<(), CalculationError> {
-        self.recalculate_with_policy(context, crate::OverlayPolicy::default())
+        self.recalculate_with_policy(context, crate::EvaluationPolicy::default())
     }
     /// Recalculate using explicit producer, array, and compatibility policies.
     /// Caller-trusted producers consume saved results and reject incomplete saved arrays.
@@ -160,10 +160,10 @@ impl Workbook {
     pub fn recalculate_with_policy(
         &mut self,
         context: crate::EvaluationContext,
-        policy: crate::OverlayPolicy,
+        policy: crate::EvaluationPolicy,
     ) -> Result<(), CalculationError> {
         let changes = {
-            let mut evaluation = crate::Evaluation::with_workbook(&self.model)
+            let mut evaluation = crate::eval::overlay::Evaluation::with_workbook(&self.model)
                 .with_policy(policy)
                 .build_calculation(context)
                 .map_err(CalculationError::Preparation)?;

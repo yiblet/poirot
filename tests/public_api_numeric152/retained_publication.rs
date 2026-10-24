@@ -1,5 +1,5 @@
 use super::*;
-use poirot::{EvaluationContext, Overlay};
+use poirot::{EvaluationContext, eval::overlay::Overlay};
 use std::sync::Arc;
 
 #[test]

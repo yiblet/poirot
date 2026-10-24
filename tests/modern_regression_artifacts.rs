@@ -1,5 +1,5 @@
 //! Actual XLSX execution and prepared-state recovery of modern regression arrays.
-use poirot::{CellValue, EvaluationContext, Overlay, Workbook, artifact};
+use poirot::{CellValue, EvaluationContext, Workbook, artifact, eval::overlay::Overlay};
 fn near(v: CellValue, e: f64) {
     let CellValue::Number(a) = v else {
         panic!("{v:?}")
@@ -19,7 +19,7 @@ fn regression_arrays_execute_after_actual_xlsx_roundtrip() {
     }
     let bytes = poirot::io::write_xlsx_to_buffer(&b).unwrap();
     let reopened = poirot::io::read_workbook_bytes(&bytes).unwrap();
-    let mut direct = poirot::Evaluation::with_workbook(reopened)
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(reopened)
         .build(EvaluationContext::default())
         .unwrap();
     for (c, e) in [
@@ -72,7 +72,7 @@ fn incompatible_regression_preparation_recovers_source_and_overlay_edits() {
         panic!()
     };
     assert_eq!(status, artifact::PreparedStatus::DiscardedIncompatible);
-    let mut direct = poirot::Evaluation::with_workbook(workbook)
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)
         .build(EvaluationContext::default())
         .unwrap();
     near(direct.cell(output).unwrap(), 48.);

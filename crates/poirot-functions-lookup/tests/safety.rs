@@ -15,16 +15,16 @@ fn array(values: Vec<Scalar>) -> Value {
     Value::Array(Array::new(values.len(), 1, values).unwrap())
 }
 fn reference(row: u32, height: u32, width: u32) -> Value {
-    Value::Reference(Reference {
-        kind: ReferenceKind::Area,
-        workbook: Some("book".into()),
-        first_sheet: 0,
-        last_sheet: 0,
-        first_row: row,
-        last_row: row + height - 1,
-        first_col: 0,
-        last_col: width - 1,
-    })
+    Value::Reference(
+        Reference::new(
+            ReferenceKind::Area,
+            Some("book".into()),
+            0..=0,
+            row..=row + height - 1,
+            0..=width - 1,
+        )
+        .unwrap(),
+    )
 }
 /// Test host that rejects unsafe access or excessive lookup work.
 struct Guard {

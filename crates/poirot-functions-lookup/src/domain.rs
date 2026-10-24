@@ -76,25 +76,35 @@ pub struct BudgetRequest {
 pub use poirot_coercionv2::lookup::{Error, Scalar};
 /// Inclusive workbook/sheet/row/column bounds for a logical lookup reference.
 /// Coordinates and sheet indices are zero-based; cell versus area identity is retained
-/// even for a one-cell rectangle. Validate before using its dimensions.
+/// even for a one-cell rectangle. Geometry is validated at construction.
+///
+/// ```compile_fail
+/// use poirot_functions_lookup::{Reference, ReferenceKind};
+/// let mut reference = Reference::new(ReferenceKind::Area, None, 0..=0, 0..=0, 0..=0).unwrap();
+/// reference.last_row = u32::MAX;
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Reference {
     /// Cell or area provenance used by source-specific selection rules.
-    pub kind: ReferenceKind,
+    kind: ReferenceKind,
     /// Optional external workbook qualifier retained for host resolution.
-    pub workbook: Option<String>,
+    workbook: Option<String>,
     /// Zero-based first sheet index, inclusive.
-    pub first_sheet: u32,
+    first_sheet: u32,
     /// Zero-based last sheet index, inclusive.
-    pub last_sheet: u32,
-    /// First row endpoint, inclusive; signed references preserve off-grid coordinates.
-    pub first_row: u32,
+    last_sheet: u32,
+    /// First row endpoint, inclusive.
+    first_row: u32,
     /// Last row endpoint, inclusive.
-    pub last_row: u32,
-    /// First column endpoint, inclusive; signed references preserve off-grid coordinates.
-    pub first_col: u32,
+    last_row: u32,
+    /// First column endpoint, inclusive.
+    first_col: u32,
     /// Last column endpoint, inclusive.
-    pub last_col: u32,
+    last_col: u32,
+    /// Validated nonzero row extent.
+    rows: std::num::NonZeroU32,
+    /// Validated nonzero column extent.
+    cols: std::num::NonZeroU32,
 }
 /// Preserve cell-versus-area provenance even for a one-cell rectangle.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -105,32 +115,102 @@ pub enum ReferenceKind {
     Area,
 }
 impl Reference {
-    /// Return inclusive row extent; call only after validating the reference.
+    /// Construct ordered sheet and worksheet bounds, rejecting reversed or off-grid geometry.
+    pub fn new(
+        kind: ReferenceKind,
+        workbook: Option<String>,
+        sheets: std::ops::RangeInclusive<u32>,
+        rows: std::ops::RangeInclusive<u32>,
+        cols: std::ops::RangeInclusive<u32>,
+    ) -> Result<Self, Failure> {
+        if sheets.is_empty()
+            || rows.is_empty()
+            || cols.is_empty()
+            || *rows.end() >= 1_048_576
+            || *cols.end() >= 16_384
+        {
+            return Err(Error::Ref.into());
+        }
+        let height = rows
+            .end()
+            .checked_sub(*rows.start())
+            .and_then(|n| n.checked_add(1))
+            .and_then(std::num::NonZeroU32::new)
+            .ok_or(Error::Ref)?;
+        let width = cols
+            .end()
+            .checked_sub(*cols.start())
+            .and_then(|n| n.checked_add(1))
+            .and_then(std::num::NonZeroU32::new)
+            .ok_or(Error::Ref)?;
+        Ok(Self {
+            kind,
+            workbook,
+            rows: height,
+            cols: width,
+            first_sheet: *sheets.start(),
+            last_sheet: *sheets.end(),
+            first_row: *rows.start(),
+            last_row: *rows.end(),
+            first_col: *cols.start(),
+            last_col: *cols.end(),
+        })
+    }
+    /// Return the nonzero inclusive row extent.
     pub fn height(&self) -> usize {
-        (self.last_row - self.first_row + 1) as usize
+        self.rows.get() as usize
     }
-    /// Return inclusive column extent; call only after validating the reference.
+    /// Return the nonzero inclusive column extent.
     pub fn width(&self) -> usize {
-        (self.last_col - self.first_col + 1) as usize
+        self.cols.get() as usize
     }
-    /// Check ordered sheet/coordinate bounds against worksheet limits.
-    pub fn valid(&self) -> bool {
-        self.first_sheet <= self.last_sheet
-            && self.first_row <= self.last_row
-            && self.first_col <= self.last_col
-            && self.last_row < 1_048_576
-            && self.last_col < 16_384
+    /// Return the cell or area provenance.
+    pub fn kind(&self) -> ReferenceKind {
+        self.kind
+    }
+    /// Return the optional external workbook qualifier.
+    pub fn workbook(&self) -> Option<&str> {
+        self.workbook.as_deref()
+    }
+    /// Return first sheet.
+    pub fn first_sheet(&self) -> u32 {
+        self.first_sheet
+    }
+    /// Return last sheet.
+    pub fn last_sheet(&self) -> u32 {
+        self.last_sheet
+    }
+    /// Return first row.
+    pub fn first_row(&self) -> u32 {
+        self.first_row
+    }
+    /// Return last row.
+    pub fn last_row(&self) -> u32 {
+        self.last_row
+    }
+    /// Return first col.
+    pub fn first_col(&self) -> u32 {
+        self.first_col
+    }
+    /// Return last col.
+    pub fn last_col(&self) -> u32 {
+        self.last_col
     }
 }
 /// Owned, nonempty row-major lookup operands with validated rectangular dimensions.
+///
+/// ```compile_fail
+/// use poirot_functions_lookup::Array;
+/// let array = Array { rows: 2, cols: 2, values: vec![] };
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Array {
     /// Nonzero logical row count.
-    pub rows: usize,
+    rows: usize,
     /// Nonzero logical column count.
-    pub cols: usize,
+    cols: usize,
     /// Flattened row-major scalar storage.
-    pub values: Vec<Scalar>,
+    values: Vec<Scalar>,
 }
 impl Array {
     /// Reject empty, overflowing, or inconsistent rectangular storage.
@@ -140,13 +220,37 @@ impl Array {
         }
         Ok(Self { rows, cols, values })
     }
-    fn get(&self, row: usize, col: usize) -> Result<Scalar, Failure> {
+    /// Return the validated row count.
+    pub fn rows(&self) -> usize {
+        self.rows
+    }
+    /// Return the validated column count.
+    pub fn cols(&self) -> usize {
+        self.cols
+    }
+    /// Borrow row-major values without permitting shape changes.
+    pub fn values(&self) -> &[Scalar] {
+        &self.values
+    }
+    /// Mutate members while retaining the rectangular storage length.
+    pub fn values_mut(&mut self) -> &mut [Scalar] {
+        &mut self.values
+    }
+    /// Consume the array into its row-major values.
+    pub fn into_values(self) -> Vec<Scalar> {
+        self.values
+    }
+    /// Read one member, rejecting coordinates outside the rectangle.
+    pub(super) fn get(&self, row: usize, col: usize) -> Result<&Scalar, Failure> {
         if row >= self.rows || col >= self.cols {
             return Err(Error::Ref.into());
         }
+        let index = row
+            .checked_mul(self.cols)
+            .and_then(|n| n.checked_add(col))
+            .ok_or(Failure::Spreadsheet(Error::Value))?;
         self.values
-            .get(row * self.cols + col)
-            .cloned()
+            .get(index)
             .ok_or(Failure::Spreadsheet(Error::Value))
     }
 }
@@ -157,7 +261,7 @@ pub enum Value {
     Scalar(Scalar),
     /// Materialized member whose original source still controls argument admission.
     SelectedScalar(Scalar, poirot_coercionv2::Origin),
-    /// Validated-on-use unsigned worksheet reference.
+    /// Validated unsigned worksheet reference.
     Reference(Reference),
     /// Pinned-source reference retaining signed endpoints.
     SignedReference(SignedReference),
@@ -169,48 +273,8 @@ pub enum Value {
     Array(Array),
 }
 
-/// A reference admitted at an existing reference-validation boundary.
-pub(super) struct CheckedReference<'a>(&'a Reference);
-impl<'a> CheckedReference<'a> {
-    /// Admit an ordinary reference only when its public DTO is valid.
-    pub(super) fn new(reference: &'a Reference) -> Option<Self> {
-        reference.valid().then_some(Self(reference))
-    }
-    /// Borrow the reference whose geometry has been admitted.
-    pub(super) fn reference(&self) -> &'a Reference {
-        self.0
-    }
-    /// Return the admitted row extent.
-    pub(super) fn height(&self) -> usize {
-        self.0.height()
-    }
-    /// Return the admitted column extent.
-    pub(super) fn width(&self) -> usize {
-        self.0.width()
-    }
-}
-/// A borrowed array admitted without changing the raw public DTO.
-pub(super) struct CheckedArray<'a>(&'a Array);
-impl<'a> CheckedArray<'a> {
-    /// Validate public array geometry before indexing its storage.
-    pub(super) fn new(array: &'a Array) -> Option<Self> {
-        (array.rows > 0
-            && array.cols > 0
-            && array.rows.checked_mul(array.cols) == Some(array.values.len()))
-        .then_some(Self(array))
-    }
-    /// Borrow the admitted array DTO.
-    pub(super) fn array(&self) -> &'a Array {
-        self.0
-    }
-    /// Read a checked array coordinate with spreadsheet error reporting.
-    pub(super) fn get(&self, row: usize, col: usize) -> Result<Scalar, Failure> {
-        self.0.get(row, col)
-    }
-}
-
 /// A logical POI area whose original signed endpoints may extend below the grid.
-/// Identity metadata has the same layout as an ordinary unsigned Reference.
+/// Identity metadata follows ordinary references; signed geometry is validated separately.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SignedReference {
     /// Cell or area provenance used by source-specific selection rules.

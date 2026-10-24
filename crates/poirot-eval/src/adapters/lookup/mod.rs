@@ -117,39 +117,35 @@ impl Port<'_, '_> {
                     .ok_or(helper::Failure::Spreadsheet(helper::Error::Ref))?;
                 // SAFETY: The single-reference branches check refs.len() == 1; the area branch requires first() to succeed before reading last(), and neither vector is shortened before access.
                 let last = areas.last().unwrap();
-                helper::Value::Reference(helper::Reference {
-                    kind: match first.kind {
+                helper::Value::Reference(helper::Reference::new(
+                    match first.kind {
                         AreaKind::Cell => helper::ReferenceKind::Cell,
                         AreaKind::Area => helper::ReferenceKind::Area,
                     },
-                    workbook: None,
-                    first_sheet: first.sheet as u32,
-                    last_sheet: last.sheet as u32,
-                    first_row: first.r0,
-                    last_row: first.r1,
-                    first_col: first.c0,
-                    last_col: first.c1,
-                })
+                    None,
+                    first.sheet as u32..=last.sheet as u32,
+                    first.r0..=first.r1,
+                    first.c0..=first.c1,
+                )?)
             }
             Value::Refs(areas) => {
                 let result = self.session.budget.allocation(areas.len());
                 self.operational(result)?;
                 let refs: Vec<_> = areas
                     .into_iter()
-                    .map(|a| helper::Reference {
-                        kind: match a.kind {
-                            AreaKind::Cell => helper::ReferenceKind::Cell,
-                            AreaKind::Area => helper::ReferenceKind::Area,
-                        },
-                        workbook: None,
-                        first_sheet: a.sheet as u32,
-                        last_sheet: a.sheet as u32,
-                        first_row: a.r0,
-                        last_row: a.r1,
-                        first_col: a.c0,
-                        last_col: a.c1,
+                    .map(|a| {
+                        helper::Reference::new(
+                            match a.kind {
+                                AreaKind::Cell => helper::ReferenceKind::Cell,
+                                AreaKind::Area => helper::ReferenceKind::Area,
+                            },
+                            None,
+                            a.sheet as u32..=a.sheet as u32,
+                            a.r0..=a.r1,
+                            a.c0..=a.c1,
+                        )
                     })
-                    .collect();
+                    .collect::<Result<Vec<_>, _>>()?;
                 if refs.len() == 1 {
                     // SAFETY: The single-reference branches check refs.len() == 1; the area branch requires first() to succeed before reading last(), and neither vector is shortened before access.
                     helper::Value::Reference(refs.into_iter().next().unwrap())
@@ -202,11 +198,12 @@ impl Port<'_, '_> {
                 },
             ),
             helper::Value::Array(a) => {
-                self.session.budget.allocation(a.values.len())?;
-                let mut values = a.values.into_iter();
-                let mut rows = Vec::with_capacity(a.rows);
-                for _ in 0..a.rows {
-                    rows.push(values.by_ref().take(a.cols).map(scalar).collect());
+                self.session.budget.allocation(a.values().len())?;
+                let (row_count, columns) = (a.rows(), a.cols());
+                let mut values = a.into_values().into_iter();
+                let mut rows = Vec::with_capacity(row_count);
+                for _ in 0..row_count {
+                    rows.push(values.by_ref().take(columns).map(scalar).collect());
                 }
                 Value::Array(crate::ArrayView::unknown(rows))
             }
@@ -243,7 +240,7 @@ impl Port<'_, '_> {
         self.session.budget.allocation(refs.len())?;
         if refs
             .iter()
-            .any(|r| r.workbook.is_some() || r.first_sheet != r.last_sheet || !r.valid())
+            .any(|r| r.workbook().is_some() || r.first_sheet() != r.last_sheet())
         {
             return Err(self
                 .unsupported("lookup reference output requires unavailable external/3D identity"));
@@ -251,15 +248,15 @@ impl Port<'_, '_> {
         Ok(Value::Refs(
             refs.into_iter()
                 .map(|r| Area {
-                    kind: match r.kind {
+                    kind: match r.kind() {
                         helper::ReferenceKind::Cell => AreaKind::Cell,
                         helper::ReferenceKind::Area => AreaKind::Area,
                     },
-                    sheet: r.first_sheet as usize,
-                    r0: r.first_row,
-                    r1: r.last_row,
-                    c0: r.first_col,
-                    c1: r.last_col,
+                    sheet: r.first_sheet() as usize,
+                    r0: r.first_row(),
+                    r1: r.last_row(),
+                    c0: r.first_col(),
+                    c1: r.last_col(),
                 })
                 .collect(),
         ))
@@ -306,7 +303,7 @@ impl helper::Workbook for Port<'_, '_> {
             let missing = expression.visit_array_missing(|index, missing| {
                 if missing {
                     let value = array
-                        .values
+                        .values_mut()
                         .get_mut(index)
                         .ok_or(EvaluationFailure::StalePlan)?;
                     *value = helper::Scalar::Missing;
@@ -334,7 +331,7 @@ impl helper::Workbook for Port<'_, '_> {
         row: u32,
         col: u32,
     ) -> Result<helper::Scalar, helper::Failure> {
-        if reference.workbook.is_some() {
+        if reference.workbook().is_some() {
             return Err(helper::Failure::Unsupported(
                 helper::Unsupported::DynamicReference,
             ));

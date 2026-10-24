@@ -1,8 +1,8 @@
 //! Public opt-in quota, cycle, cache-admission, and profiling contracts.
 use poirot::eval::{BudgetKind, EvaluationBudgets, ResourceFailureKind};
 use poirot::{
-    CellValue, Evaluation, EvaluationContext, EvaluationFailure, EvaluationLimits, Overlay,
-    Workbook,
+    CellValue, EvaluationContext, EvaluationFailure, EvaluationLimits, Workbook,
+    eval::overlay::Evaluation, eval::overlay::Overlay,
 };
 
 fn book() -> Workbook {

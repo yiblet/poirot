@@ -1,5 +1,5 @@
 //! Durable complex source/edit recovery and executable XLSX round trips.
-use poirot::{CellValue, EvaluationContext, Overlay, Workbook, artifact};
+use poirot::{CellValue, EvaluationContext, Workbook, artifact, eval::overlay::Overlay};
 #[test]
 fn old_complex_preparation_recovers_authored_source_and_edits() {
     let mut book = Workbook::new();
@@ -42,7 +42,7 @@ fn old_complex_preparation_recovers_authored_source_and_edits() {
         workbook.sheet(0).unwrap().get(input.address).unwrap().value,
         CellValue::Text("2j".into())
     );
-    let mut direct = poirot::Evaluation::with_workbook(workbook)
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)
         .build(context)
         .unwrap();
     assert_eq!(direct.cell(output).unwrap(), "3+6j".into());
@@ -73,7 +73,7 @@ fn xlsx_roundtrip_executes_complex_profiles_and_spills() {
     }
     let bytes = poirot::io::write_xlsx_to_buffer(&book).unwrap();
     let reopened = poirot::io::read_workbook_bytes(&bytes).unwrap();
-    let mut evaluation = poirot::Evaluation::with_workbook(reopened)
+    let mut evaluation = poirot::eval::overlay::Evaluation::with_workbook(reopened)
         .build(EvaluationContext::default())
         .unwrap();
     for (cell, expected) in [

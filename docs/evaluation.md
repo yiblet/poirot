@@ -91,7 +91,7 @@ Export follows the existing `Workbook` file compatibility contract, including sp
 | `apply_edits_to_workbook()` on an owned or exclusively borrowed advanced overlay | Applied, no longer pending | Kept in overlay | Authored changes applied atomically |
 | `save_xlsx()` | Kept | Kept | Unchanged |
 
-Applying edits does not write calculated formula results into the baseline or save a file. Shared immutable baselines cannot be mutated through this operation. Clearing results or discarding edits preserves direct cycle work and any prior operational failure; only `start_cycle` resets them. Legacy `clear_cache`, `reset`, `begin` and `flush` keep their existing meanings.
+Applying edits does not write calculated formula results into the baseline or save a file. Shared immutable baselines cannot be mutated through this operation. Clearing results or discarding edits preserves direct cycle work and any prior operational failure; only `start_cycle` resets them. The lower-level `eval::overlay` APIs retain their legacy lifecycle spellings.
 
 ## Restore native state
 
@@ -111,8 +111,38 @@ let value = restored.evaluation.cell(output)?;
 
 Use `.prepared_policy(artifact::PreparedPolicy::RequireCompatible)` to require present, compatible preparation (refusing source-only snapshots as well), or `SourceOnly` to discard it deliberately. The advanced `Workbook::load_snapshot()` retains its historical compatibility-if-present strict policy. `into_artifact()` and that loader retain the advanced APIs, including incremental checkpoint attachment and custom provider management.
 
-## Existing names and lower-level ownership
+## Public vocabulary and migration
 
-`EvaluationPolicy` now names the spreadsheet policy used by both direct and incremental workflows. `OverlayPolicy` remains its compatibility spelling. The distinct compiler policy keeps `eval::EvaluationPolicy`; `PreparationPolicy` explicitly names that concept at the crate root. `NumberLocale` aliases `NumberLocaleV2` for numeric input parsing; display formatting has separate settings.
+`Evaluation` is the direct scenario returned by `Workbook::evaluation().build()`;
+`Overlay` is the incremental scenario returned by `Workbook::overlay().build()`.
+Their builders are `EvaluationBuilder` and `OverlayBuilder`. Both expose explicit
+methods for editing, calculating, inspecting state and exporting. Neither forwards
+arbitrary engine methods through `Deref`. `EvaluationCycle` borrows an overlay for
+one cycle, and `EvaluationReport` represents completion with optional profiling.
 
-The workbook builders borrow their source and do not clone it. Existing `Evaluation::with_workbook`, `Overlay::with_workbook` and ordinary `Calculation` APIs still support model workbooks, owned workbooks and shared handles. They retain their existing reporting contracts. `WorkbookEvaluation::from_calculation` and `WorkbookOverlay::from_overlay` add file export to those ownership forms without copying or resetting their state.
+`EvaluationPolicy` selects the spreadsheet semantics shared by both modes.
+`PreparationPolicy` selects compiler preparation; it is a different concept.
+`NumberLocale` controls numeric input parsing; display formatting is separate.
+
+This pre-1.0 cleanup removes overlapping root names:
+
+| Previous root spelling | Replacement |
+| --- | --- |
+| `WorkbookEvaluation`, `WorkbookEvaluationBuilder` | `Evaluation`, `EvaluationBuilder` |
+| `WorkbookOverlay`, `WorkbookOverlayBuilder` | `Overlay`, `OverlayBuilder` |
+| `RestoredWorkbookEvaluation` | `RestoredEvaluation` |
+| `Calculation` | `Evaluation` |
+| `CalculationCycle`, `CalculationReport` | `EvaluationCycle`, `EvaluationReport` |
+| `OverlayPolicy` | `EvaluationPolicy` |
+| `NumberLocaleV2` | `NumberLocale` |
+| Direct `begin(context)` | `start_cycle(context)` |
+| Overlay `calculation(&context)` | `evaluation(&context)` |
+| `clear_cache`, `reset`, `flush` | `clear_calculated_cache`, `discard_edits`, `apply_edits_to_workbook` |
+
+Previous root `Evaluation::with_workbook` and `Overlay::with_workbook` constructors
+belong to `eval::overlay::Evaluation` and `eval::overlay::Overlay`. Those component
+APIs retain owned, borrowed and shared sources, custom extensions, legacy detailed
+reports, and snapshot attachment. `OverlayEvaluation` remains available there.
+Use `Evaluation::from_calculation` or `Overlay::from_overlay` to give those ownership
+forms the application API and file export without copying or resetting state.
+`into_calculation` and `into_overlay` explicitly return to the component API.

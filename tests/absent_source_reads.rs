@@ -1,7 +1,7 @@
 //! Reading an implicit blank must not author a cell during result publication.
 use poirot::{
-    CellStyle, CellValue, Evaluation, EvaluationContext, EvaluationTarget, Overlay, Workbook,
-    WorkbookChange,
+    CellStyle, CellValue, EvaluationContext, EvaluationTarget, Workbook, WorkbookChange,
+    eval::overlay::Evaluation, eval::overlay::Overlay,
 };
 
 fn at(cell: &str) -> EvaluationTarget {
@@ -125,12 +125,12 @@ source_read_test!(
     |source| Evaluation::with_workbook(source)
         .build(EvaluationContext::default())
         .unwrap(),
-    |runtime: &mut Evaluation<'_>, target| runtime.cell(target)
+    |runtime: &mut Evaluation<'_, &'_ Workbook>, target| runtime.cell(target)
 );
 source_read_test!(
     overlay_reads_preserve_source_presence,
     |source| Overlay::with_workbook(source).build().unwrap(),
-    |runtime: &mut Overlay<'_>, target| runtime
+    |runtime: &mut Overlay<'_, &'_ Workbook>, target| runtime
         .evaluation(&EvaluationContext::default())
         .unwrap()
         .cell(target)
@@ -198,7 +198,7 @@ fn absent_reads_and_retained_results_survive_snapshot_without_authoring_cells() 
 fn blank_spill_children_publish_zero_without_authoring_the_blank_input() {
     let source = book();
     let context = EvaluationContext::default();
-    let policy = poirot::OverlayPolicy {
+    let policy = poirot::eval::overlay::OverlayPolicy {
         builtin: poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation,
         arrays: poirot::eval::ArrayResultPolicy::DynamicSpill,
         ..Default::default()

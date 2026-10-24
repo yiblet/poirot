@@ -6,8 +6,8 @@ fn target(address: &str) -> eval::EvaluationTarget {
         address: address.parse().unwrap(),
     }
 }
-fn policy() -> poirot::OverlayPolicy {
-    poirot::OverlayPolicy {
+fn policy() -> poirot::eval::overlay::OverlayPolicy {
+    poirot::eval::overlay::OverlayPolicy {
         builtin: eval::BuiltinSemanticsPolicy::ExcelDocumentation,
         arrays: eval::ArrayResultPolicy::DynamicSpill,
         ..Default::default()
@@ -35,7 +35,7 @@ struct SpillCase<'a> {
 }
 fn context(w: &model::Workbook) -> SpillCase<'_> {
     SpillCase {
-        overlay: poirot::Overlay::with_workbook(w)
+        overlay: poirot::eval::overlay::Overlay::with_workbook(w)
             .with_policy(policy())
             .build()
             .unwrap(),
@@ -90,7 +90,10 @@ impl SpillCase<'_> {
         self.results.clear();
         self.overlay.set_value(at, value)
     }
-    fn set_policy(&mut self, policy: poirot::OverlayPolicy) -> Result<(), poirot::OverlayError> {
+    fn set_policy(
+        &mut self,
+        policy: poirot::eval::overlay::OverlayPolicy,
+    ) -> Result<(), poirot::OverlayError> {
         self.results.clear();
         self.overlay.set_policy(policy)
     }
@@ -217,7 +220,7 @@ fn edits_shrink_and_policy_changes_clear_old_children() {
     assert_eq!(value(&ctx, "D1"), CellValue::Number(8.));
     ctx.set_input(target("A1"), CellValue::Boolean(true))
         .unwrap();
-    ctx.set_policy(poirot::OverlayPolicy {
+    ctx.set_policy(poirot::eval::overlay::OverlayPolicy {
         arrays: eval::ArrayResultPolicy::ScalarIntersection,
         ..Default::default()
     })
@@ -665,7 +668,7 @@ fn exhausted_non_singleton_axes_use_poi_value_errors_and_at_stays_scalar() {
     }
     let w = model(&[("D1", "{1,2}+1")]);
     let mut ctx = context(&w);
-    ctx.set_policy(poirot::OverlayPolicy {
+    ctx.set_policy(poirot::eval::overlay::OverlayPolicy {
         arrays: eval::ArrayResultPolicy::ScalarIntersection,
         ..Default::default()
     })
@@ -705,7 +708,8 @@ fn operator_snapshot_reuses_bytecode_and_retains_blank_input_dependencies() {
     complete(&mut ctx, &["H1"]);
     let bytes = postcard::to_allocvec(&ctx.overlay.snapshot()).unwrap();
     let snapshot = postcard::from_bytes(&bytes).unwrap();
-    let (restored_workbook, restored_state) = poirot::Overlay::from_snapshot(snapshot).unwrap();
+    let (restored_workbook, restored_state) =
+        poirot::eval::overlay::Overlay::from_snapshot(snapshot).unwrap();
     let mut restored = restored_state.attach(&restored_workbook).unwrap();
     let config = poirot::EvaluationContext::default();
     assert_eq!(
@@ -798,7 +802,7 @@ fn bounded_conditional_operator_shapes_shrink_and_scalar_calls_do_not_claim_chil
 #[test]
 fn captured_random_operator_producers_reuse_and_refresh_when_seed_changes() {
     let w = model(&[("D1", "{1,2}+RAND()"), ("H1", "E1+1"), ("H2", "21")]);
-    let mut overlay = poirot::Overlay::with_workbook(&w)
+    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(&w)
         .with_policy(policy())
         .build()
         .unwrap();
@@ -930,7 +934,7 @@ fn authored_scalar_blockers_survive_reads_and_become_spill_children_after_remova
         } else {
             sheet.set_value("B2".parse().unwrap(), 42.).unwrap();
         }
-        let mut direct = poirot::Evaluation::with_workbook(&w)
+        let mut direct = poirot::eval::overlay::Evaluation::with_workbook(&w)
             .with_policy(policy())
             .build(Default::default())
             .unwrap();

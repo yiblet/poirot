@@ -1,7 +1,7 @@
 //! Historical euro conversion from factual fixed rates and documented Excel rules.
 //! Rates: Bank of Greece, irrevocable euro conversion rates, read 2026-10-22:
-//! https://www.bankofgreece.gr/en/main-tasks/markets/exchange-rates/irrevocable-euro-conversion-rates
-//! Precision: https://support.microsoft.com/en-us/excel/functions/euroconvert-function
+//! <https://www.bankofgreece.gr/en/main-tasks/markets/exchange-rates/irrevocable-euro-conversion-rates>
+//! Precision: <https://support.microsoft.com/en-us/excel/functions/euroconvert-function>
 //! Constants were independently transcribed; no upstream code or algorithm was reused.
 use super::{FinancialError, Result, checked};
 

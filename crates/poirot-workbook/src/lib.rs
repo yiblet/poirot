@@ -64,10 +64,7 @@ pub use scenario::*;
 /// Source-checked translation of references within existing formulas.
 pub mod translation_edit;
 
-pub use eval::overlay::{
-    CalculationCycle, CalculationReport, CompilationUsage, EvaluationBuilder, EvaluationContext,
-    OverlayBuilder, OverlayEdits, OverlayError, OverlayEvaluation, OverlayPolicy,
-};
+pub use eval::overlay::{CompilationUsage, EvaluationContext, OverlayEdits, OverlayError};
 pub use model::WorkbookChange;
 pub use public::{
     CalculationError, LoadBuilder, SavePlan, Workbook, WorkbookError, XlsxSaveBuilder,
@@ -78,10 +75,7 @@ pub use eval::overlay::snapshot::WorkspaceState;
 pub use eval::{CellEvaluation, EvaluationFailure, EvaluationTarget, ProducerPolicy};
 pub use model::snapshot::Snapshot as WorkbookSnapshot;
 
-/// Incremental scenarios borrowing a public workbook by default.
-pub type Overlay<'a, W = &'a Workbook> = eval::overlay::Overlay<'a, W>;
-/// Direct evaluations borrowing a public workbook by default.
-pub type Evaluation<'a, W = &'a Workbook> = eval::overlay::Evaluation<'a, W>;
-
-/// Ordinary direct scenarios borrowing a public workbook by default, with optional profiling.
-pub type Calculation<'a, W = &'a Workbook> = eval::overlay::Calculation<'a, W>;
+/// Completion of an evaluation with optional profiling counters.
+pub type EvaluationReport<T> = eval::overlay::CalculationReport<T>;
+/// A selected-output cycle borrowing an incremental overlay.
+pub type EvaluationCycle<'a> = eval::overlay::CalculationCycle<'a>;

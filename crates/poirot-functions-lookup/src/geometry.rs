@@ -1,4 +1,4 @@
-use crate::domain::CheckedReference;
+use crate::Reference;
 use crate::{Context, Error, Failure};
 /// One signed OFFSET axis request, validated before constructing a reference.
 pub(super) struct OffsetAxis {
@@ -63,19 +63,15 @@ pub(super) struct CellSelection {
     pub(super) col: u32,
 }
 /// Ordinary scalar intersection has stricter vector selection than SINGLE.
-pub(super) fn scalar_selection(
-    checked: &CheckedReference<'_>,
-    context: Context,
-) -> Result<CellSelection, Failure> {
-    let r = checked.reference();
-    let (row, col) = if checked.height() == 1 && checked.width() == 1 {
-        (r.first_row, r.first_col)
-    } else if checked.width() == 1 && (r.first_row..=r.last_row).contains(&context.row) {
-        (context.row, r.first_col)
-    } else if checked.height() == 1 && (r.first_col..=r.last_col).contains(&context.col) {
-        (r.first_row, context.col)
-    } else if (r.first_row..=r.last_row).contains(&context.row)
-        && (r.first_col..=r.last_col).contains(&context.col)
+pub(super) fn scalar_selection(r: &Reference, context: Context) -> Result<CellSelection, Failure> {
+    let (row, col) = if r.height() == 1 && r.width() == 1 {
+        (r.first_row(), r.first_col())
+    } else if r.width() == 1 && (r.first_row()..=r.last_row()).contains(&context.row) {
+        (context.row, r.first_col())
+    } else if r.height() == 1 && (r.first_col()..=r.last_col()).contains(&context.col) {
+        (r.first_row(), context.col)
+    } else if (r.first_row()..=r.last_row()).contains(&context.row)
+        && (r.first_col()..=r.last_col()).contains(&context.col)
     {
         (context.row, context.col)
     } else {
@@ -83,22 +79,21 @@ pub(super) fn scalar_selection(
     };
 
     Ok(CellSelection {
-        sheet: r.first_sheet,
+        sheet: r.first_sheet(),
         row,
         col,
     })
 }
 /// SINGLE also admits the projection of either contained coordinate.
-pub(super) fn single_selection(checked: &CheckedReference<'_>, c: Context) -> Option<(u32, u32)> {
-    let r = checked.reference();
-    let contains_row = (r.first_row..=r.last_row).contains(&c.row);
-    let contains_col = (r.first_col..=r.last_col).contains(&c.col);
+pub(super) fn single_selection(r: &Reference, c: Context) -> Option<(u32, u32)> {
+    let contains_row = (r.first_row()..=r.last_row()).contains(&c.row);
+    let contains_col = (r.first_col()..=r.last_col()).contains(&c.col);
     if contains_row && contains_col {
         Some((c.row, c.col))
     } else if contains_row {
-        Some((c.row, r.first_col))
+        Some((c.row, r.first_col()))
     } else if contains_col {
-        Some((r.first_row, c.col))
+        Some((r.first_row(), c.col))
     } else {
         None
     }

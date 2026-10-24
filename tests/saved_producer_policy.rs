@@ -1,5 +1,7 @@
 //! Original public-facade contracts with explicit caller-provided saved results.
-use poirot::{CellValue, EvaluationContext, OverlayPolicy, ProducerPolicy, Workbook};
+use poirot::{
+    CellValue, EvaluationContext, ProducerPolicy, Workbook, eval::overlay::OverlayPolicy,
+};
 #[test]
 fn workbook_policy_controls_recalculation_and_xlsx_keeps_saved_values() {
     let mut book = Workbook::new();

@@ -16,7 +16,7 @@ fn numeric_refusal<'a>(
 fn save_plans_refuse_raw_nonfinite_cache_and_accept_explicit_materialization() {
     let mut source = book();
     set_formula(&mut source, 0, 0, "NORMSINV(1E-300)");
-    let mut overlay = poirot::Overlay::with_workbook(source.model())
+    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(source.model())
         .with_policy(policy(M::PreserveComputed))
         .build()
         .unwrap();
@@ -67,7 +67,7 @@ fn nan_save_roundtrip_preserves_raw_computation_and_writes_num_errors() {
         "NORMDIST(\"1.7976931348623157e308\",\"-1.7976931348623157e308\",\"1.7976931348623157e308\",TRUE)",
     );
     set_formula(&mut source, 0, 1, "IFERROR(A1,42)");
-    let mut overlay = poirot::Overlay::with_workbook(source.model())
+    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(source.model())
         .with_policy(policy(M::PreserveComputed))
         .build()
         .unwrap();

@@ -129,6 +129,11 @@ cargo run --example public_workbook -- input.xlsx output.xlsx
 Browse the API and task guide with `cargo doc -p poirot --no-deps --open`.
 See [Contributing](CONTRIBUTING.md) to work on Poirot.
 
+The application API uses `Evaluation` for direct scenarios and `Overlay` for
+incremental scenarios. Both provide explicit editing, evaluation, reporting and
+export methods. See the [evaluation guide](docs/evaluation.md#public-vocabulary-and-migration)
+for lifecycle details and migration from the earlier overlapping names.
+
 ## Acknowledgements
 
 - [Calamine](https://github.com/tafia/calamine) provides streaming XLSX decoding and shared-formula translation.

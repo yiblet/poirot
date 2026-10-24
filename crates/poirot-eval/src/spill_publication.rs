@@ -1,5 +1,17 @@
-//! Rectangular array publication and shared atomic memo admission.
+//! Dynamic array ownership and atomic result publication.
+//!
+//! `discovery::Sources` reads authored cells and shape bounds without executing
+//! formulas. `settlement::Engine` owns component selection, retries and rollback
+//! through an explicit execution port. `admission::Admission` publishes memoized
+//! results using only storage and resource capabilities. This module owns their
+//! shared preparation state and the Session entry points; `execution` attaches
+//! recursive formula execution without giving the engine evaluator-wide access.
 use super::*;
+
+mod admission;
+mod discovery;
+mod execution;
+mod settlement;
 
 /// Worksheet source-inspection proofs and possible rectangles under one preparation identity.
 pub(super) type CandidateIndex = std::collections::BTreeMap<usize, Discovery>;
@@ -198,6 +210,45 @@ pub(super) struct Preparation {
     roles: CellMap<SpillRole>,
 }
 impl Preparation {
+    /// Queue private-settlement observations or deliver them using only completion ports.
+    pub(super) fn complete_cell(
+        &mut self,
+        budget: &mut BudgetMeter,
+        consumer: Option<EvaluationTarget>,
+        observer: &mut Option<&mut dyn CellObserver>,
+        completion: CellCompletion<'_>,
+    ) -> EvalResult<()> {
+        if observer.is_none() {
+            return Ok(());
+        }
+        if let Some(active) = self.settlement.active_mut() {
+            budget.allocation(1)?;
+            if let Ok(value) = completion.result {
+                budget.text(value.text_storage_bytes())?;
+            }
+            active
+                .notifications
+                .try_reserve(1)
+                .map_err(|_| EvaluationFailure::Resource {
+                    kind: crate::ResourceFailureKind::Allocation,
+                    capability: CapabilityId::FunctionAdapter,
+                    source: consumer,
+                    detail: "spill notification allocation failed".into(),
+                })?;
+            // SAFETY: The successful reservation above provides one completion slot.
+            active.notifications.push(Completion {
+                consumer: completion.consumer,
+                target: completion.target,
+                provenance: completion.provenance,
+                result: completion.result.cloned().map_err(Clone::clone),
+            });
+            return Ok(());
+        }
+        if let Some(observer) = observer {
+            observer.completed(completion)?;
+        }
+        Ok(())
+    }
     /// Begin another evaluation identity while retaining empty observation buffers.
     pub(super) fn reset(&mut self) {
         let mut producer_reads = std::mem::take(&mut self.producer_reads);
@@ -232,6 +283,65 @@ impl Preparation {
             return Err(EvaluationFailure::StalePlan);
         }
         Ok(Publication { preparation: self })
+    }
+    /// Determine losers from actual rectangles, in the explicit top-left priority order.
+    fn losers(
+        &self,
+        budget: &mut BudgetMeter,
+        consumer: Option<EvaluationTarget>,
+    ) -> EvalResult<CellSet> {
+        let Some(active) = self.settlement.active() else {
+            return Ok(CellSet::default());
+        };
+        let capacity = active.selected.len();
+        budget.check_allocation(capacity)?;
+        let mut accepted = Vec::new();
+        accepted
+            .try_reserve(capacity)
+            .map_err(|_| EvaluationFailure::Resource {
+                kind: crate::ResourceFailureKind::Allocation,
+                capability: CapabilityId::FunctionAdapter,
+                source: consumer,
+                detail: "spill arbitration allocation failed".into(),
+            })?;
+        let mut blocked = CellSet::default();
+        for key in &active.selected {
+            let Some(attempted) = active.footprints.get(key).copied() else {
+                continue;
+            };
+            let area = attempted.area;
+            budget.charge(
+                WorkKind::ReferencePair,
+                (accepted.len() as u64).saturating_add(1),
+            )?;
+            if attempted.settled_collision
+                || accepted.iter().any(|other: &Area| {
+                    Candidate {
+                        anchor: CellAddress {
+                            row: area.r0,
+                            col: area.c0,
+                        },
+                        area,
+                    }
+                    .intersects(*other)
+                })
+            {
+                blocked
+                    .try_reserve(1)
+                    .map_err(|_| EvaluationFailure::Resource {
+                        kind: crate::ResourceFailureKind::Allocation,
+                        capability: CapabilityId::FunctionAdapter,
+                        source: consumer,
+                        detail: "spill blocked-owner allocation failed".into(),
+                    })?;
+                // SAFETY: One slot was reserved locally; coordinate hashing is integer-only.
+                blocked.insert(*key);
+            } else {
+                // SAFETY: Capacity reserves every selected producer, and each selected key is processed once.
+                accepted.push(area);
+            }
+        }
+        Ok(blocked)
     }
     /// Clear pending evidence only after the borrowed batch commits successfully.
     /// Callers must leave the journal intact when cache publication fails.
@@ -767,202 +877,27 @@ impl<'a> Session<'a> {
         address: CellAddress,
         detail: &str,
     ) -> EvaluationFailure {
-        EvaluationFailure::UnsupportedCapability {
-            capability: CapabilityId::FunctionAdapter,
-            source: Some(EvaluationTarget { sheet, address }),
-            detail: detail.into(),
-        }
+        settlement::unsupported(sheet, address, detail)
     }
-    /// Admit a completed cell and all staged spill children before making them visible.
+    /// Admit a complete result through a port with no workbook or execution access.
     pub(super) fn admit_cell(
         &mut self,
         sheet: usize,
         at: CellAddress,
         result: ComputedCell,
     ) -> EvalResult<CellValue> {
-        // Check the complete payload before admission; no children are visible on any failure.
-        let ComputedCell { value, rows } = result;
-        let extent = rows
-            .as_ref()
-            .map(|rows| {
-                let height = u32::try_from(rows.len()).map_err(|_| EvaluationFailure::StalePlan)?;
-                let width = rows.first().map_or(0, Vec::len);
-                if height == 0 || width == 0 || rows.iter().any(|row| row.len() != width) {
-                    return Err(EvaluationFailure::StalePlan);
-                }
-                let width = u32::try_from(width).map_err(|_| EvaluationFailure::StalePlan)?;
-                let last = CellAddress {
-                    row: at
-                        .row
-                        .checked_add(height - 1)
-                        .ok_or(EvaluationFailure::StalePlan)?,
-                    col: at
-                        .col
-                        .checked_add(width - 1)
-                        .ok_or(EvaluationFailure::StalePlan)?,
-                };
-                last.validate().map_err(|_| EvaluationFailure::StalePlan)?;
-                Ok(last)
-            })
-            .transpose()?;
-        let count = rows.as_ref().map_or(Ok(1), |rows| {
-            rows.iter().try_fold(0usize, |count, row| {
-                count
-                    .checked_add(row.len())
-                    .ok_or(EvaluationFailure::StalePlan)
-            })
-        })?;
-        self.runtime
-            .budget
-            .check_allocation(self.runtime.cache.len().saturating_add(count))?;
-        self.runtime
-            .budget
-            .charge(WorkKind::Materialization, count as u64)?;
-        let mut requested = run::MemoRetentionUsage::default();
-        let mut replaced = run::MemoRetentionUsage::default();
-        let mut overflow = false;
-        let mut inspect = |address: CellAddress, value: &CellValue| -> EvalResult<()> {
-            let payload = value.text_ref().map_or(0, |text| text.storage_bytes());
-            if payload != 0 {
-                self.runtime.budget.text(payload)?;
-            }
-            requested.cells = requested.cells.saturating_add(1);
-            let bytes = requested
-                .bytes
-                .checked_add(128)
-                .and_then(|n| n.checked_add(payload));
-            overflow |= bytes.is_none();
-            requested.bytes = bytes.unwrap_or(usize::MAX);
-            if let Some(old) = self.runtime.cache.get(&(sheet, address)) {
-                replaced.cells += 1;
-                replaced.bytes = replaced
-                    .bytes
-                    .saturating_add(128)
-                    .saturating_add(old.text_ref().map_or(0, |text| text.storage_bytes()));
-            }
-            Ok(())
-        };
-        if let Some(rows) = &rows {
-            for (r, row) in rows.iter().enumerate() {
-                for (c, value) in row.iter().enumerate() {
-                    inspect(
-                        // SAFETY: The local extent validation proves all rectangular
-                        // row/column offsets and their additions fit u32 and the grid.
-                        CellAddress {
-                            row: at.row + r as u32,
-                            col: at.col + c as u32,
-                        },
-                        value,
-                    )?;
-                }
-            }
-        } else {
-            inspect(at, &value)?;
+        let runtime = &mut *self.runtime;
+        admission::Admission {
+            budget: &mut runtime.budget,
+            cache: &mut runtime.cache,
+            preparation: &mut runtime.preparation,
+            admitted: &mut runtime.admitted,
+            memo_usage: &mut runtime.memo_usage,
+            consumer: runtime.consumer,
+            limits: self.memo_limits,
+            journal: self.overlay_reads.is_some(),
         }
-        let next_cells = self
-            .runtime
-            .memo_usage
-            .cells
-            .saturating_sub(replaced.cells)
-            .checked_add(requested.cells);
-        let next_bytes = self
-            .runtime
-            .memo_usage
-            .bytes
-            .saturating_sub(replaced.bytes)
-            .checked_add(requested.bytes);
-        overflow |= next_cells.is_none() || next_bytes.is_none();
-        let next = run::MemoRetentionUsage {
-            cells: next_cells.unwrap_or(usize::MAX),
-            bytes: next_bytes.unwrap_or(usize::MAX),
-        };
-        if let Some(limits) = self.memo_limits
-            && (overflow || next.cells > limits.cells || next.bytes > limits.bytes)
-        {
-            return Err(EvaluationFailure::MemoRetentionLimit {
-                limits,
-                consumed: self.runtime.memo_usage,
-                requested,
-                source: Some(EvaluationTarget { sheet, address: at }),
-            });
-        }
-        if rows.is_some() {
-            self.runtime
-                .budget
-                .check_allocation(self.runtime.preparation.roles.len().saturating_add(count))?;
-            self.runtime
-                .preparation
-                .roles
-                .try_reserve(count)
-                .map_err(|_| EvaluationFailure::Resource {
-                    kind: crate::ResourceFailureKind::Allocation,
-                    capability: CapabilityId::FunctionAdapter,
-                    source: self.runtime.consumer,
-                    detail: "spill role allocation failed".into(),
-                })?;
-            if self.overlay_reads.is_some() {
-                self.runtime.budget.check_allocation(
-                    self.runtime.preparation.journal.len().saturating_add(count),
-                )?;
-                self.runtime
-                    .preparation
-                    .journal
-                    .try_reserve(count)
-                    .map_err(|_| EvaluationFailure::Resource {
-                        kind: crate::ResourceFailureKind::Allocation,
-                        capability: CapabilityId::FunctionAdapter,
-                        source: self.runtime.consumer,
-                        detail: "spill journal allocation failed".into(),
-                    })?;
-            }
-        }
-        self.runtime.memo_usage = next;
-        if let Some(rows) = rows {
-            let last = extent.ok_or(EvaluationFailure::StalePlan)?;
-            for (r, row) in rows.into_iter().enumerate() {
-                for (c, value) in row.into_iter().enumerate() {
-                    // SAFETY: The local extent validation bounds these enumeration
-                    // offsets by the checked last coordinate before any admission.
-                    let child = CellAddress {
-                        row: at.row + r as u32,
-                        col: at.col + c as u32,
-                    };
-                    self.journal_spill_admission((sheet, child))?;
-                    self.runtime.cache.insert((sheet, child), value);
-                    if let Some(admitted) = &mut self.runtime.admitted {
-                        admitted.push((sheet, child));
-                    }
-                    self.runtime.preparation.roles.insert(
-                        (sheet, child),
-                        if child == at {
-                            SpillRole::Anchor { last }
-                        } else {
-                            SpillRole::Child { anchor: at }
-                        },
-                    );
-                    if self.overlay_reads.is_some() {
-                        // SAFETY: count is the checked sum of all row lengths and
-                        // the journal reserved count slots before this rectangular loop.
-                        self.runtime.preparation.journal.push((sheet, child));
-                    }
-                }
-            }
-        } else {
-            self.journal_spill_admission((sheet, at))?;
-            self.runtime.cache.insert((sheet, at), value.clone());
-            if let Some(admitted) = &mut self.runtime.admitted {
-                admitted.push((sheet, at));
-            }
-        }
-        if self.runtime.budget.profiling {
-            self.runtime.budget.usage.completed_cells = self
-                .runtime
-                .budget
-                .usage
-                .completed_cells
-                .saturating_add(count as u64);
-        }
-        Ok(value)
+        .admit(sheet, at, result)
     }
     /// Borrow or prepare a source formula using the existing exact-source compiler cache.
     fn source_formula(
@@ -980,23 +915,15 @@ impl<'a> Session<'a> {
             .cloned()
             .or_else(|| Some(self.prepare_source(source)))
     }
-    /// Use formal source geometry; preparation failures cannot supply an exclusion proof.
+    /// Read formal source geometry without evaluating the producer.
     fn source_spill_shape(
         &self,
         sheet: usize,
         at: CellAddress,
         source: &str,
     ) -> Option<poirot_model::ShapeBounds> {
-        if let Some(prepared) = self
-            .plan
-            .and_then(|plan| plan.formula(EvaluationTarget { sheet, address: at }))
-            .filter(|prepared| prepared.source() == source)
-        {
-            return prepared.spill_shape();
-        }
-        self.with_source_compiler(|compiler, policy| {
-            compiler.spill_shape(source, policy, self.extensions)
-        })
+        self.source_preparation()
+            .spill_shape(self.plan, sheet, at, source)
     }
     /// Borrow the authoritative index only for this nonrecursive inspection.
     fn with_discovery<R>(
@@ -1020,197 +947,21 @@ impl<'a> Session<'a> {
             .map(inspect)
             .ok_or(EvaluationFailure::StalePlan)
     }
-    /// Inspect only new origin-prefix strips and publish completeness atomically.
+    /// Discover source candidates without granting formula execution or observer access.
     fn discover_candidates(&mut self, sheet: usize, last: CellAddress) -> EvalResult<()> {
-        last.validate().map_err(|_| EvaluationFailure::StalePlan)?;
-        let consumer = self.runtime.consumer;
-        let plan =
-            |index: &CandidateIndex, budget: &mut BudgetMeter| -> EvalResult<Option<Expansion>> {
-                if let Some(discovery) = index.get(&sheet) {
-                    discovery.expansion(sheet, last, budget, consumer)
-                } else {
-                    let mut expansion =
-                        Discovery::default().expansion(sheet, last, budget, consumer)?;
-                    if let Some(expansion) = &mut expansion {
-                        expansion.legacy = None;
-                    }
-                    Ok(expansion)
-                }
-            };
-        let expansion = if let Some(shared) = self.spill_candidates {
-            let index = shared
-                .try_borrow()
-                .map_err(|_| EvaluationFailure::StalePlan)?;
-            plan(&index, &mut self.runtime.budget)?
-        } else {
-            {
-                let runtime = &mut *self.runtime;
-                plan(&runtime.preparation.candidates, &mut runtime.budget)?
-            }
-        };
-        let Some(Expansion {
-            strips,
-            removed_columns,
-            frontier_size,
-            candidate_count,
-            legacy,
-        }) = expansion
-        else {
-            return Ok(());
-        };
-        let legacy = if let Some(legacy) = legacy {
-            legacy
-        } else {
-            let mut unique = std::collections::HashSet::new();
-            if let Some(worksheet) = self.workbook.sheet(sheet) {
-                for (_, owner) in worksheet.spill_children() {
-                    self.runtime.budget.charge(WorkKind::SparseScan, 1)?;
-                    if worksheet.spill_extent(owner).is_none() && !unique.contains(&owner) {
-                        self.runtime
-                            .budget
-                            .check_allocation(unique.len().saturating_add(1))?;
-                        unique
-                            .try_reserve(1)
-                            .map_err(|_| EvaluationFailure::Resource {
-                                kind: crate::ResourceFailureKind::Allocation,
-                                capability: CapabilityId::FunctionAdapter,
-                                source: self.runtime.consumer,
-                                detail: "legacy spill owner allocation failed".into(),
-                            })?;
-                        // SAFETY: The successful reservation above provides one owner slot.
-                        unique.insert(owner);
-                    }
-                }
-            }
-            let mut owners = Vec::new();
-            owners
-                .try_reserve(unique.len())
-                .map_err(|_| EvaluationFailure::Resource {
-                    kind: crate::ResourceFailureKind::Allocation,
-                    capability: CapabilityId::FunctionAdapter,
-                    source: self.runtime.consumer,
-                    detail: "legacy spill owner ordering allocation failed".into(),
-                })?;
-            for owner in unique {
-                // SAFETY: Reservation above covers every unique owner, moved exactly once.
-                owners.push(owner);
-            }
-            owners.sort_unstable();
-            std::sync::Arc::from(owners)
-        };
-        let effective = run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs);
-        let mut added = Vec::new();
-        for membership in strips {
-            for (&at, cell) in effective
-                .stored(membership)
-                .map_err(|_| EvaluationFailure::StalePlan)?
-            {
-                self.runtime.budget.charge(WorkKind::SparseScan, 1)?;
-                if let Some(source) = cell.formula.as_deref()
-                    && let Some(shape) = self.source_spill_shape(sheet, at, source)
-                {
-                    self.runtime
-                        .budget
-                        .check_allocation(added.len().saturating_add(1))?;
-                    added
-                        .try_reserve(1)
-                        .map_err(|_| EvaluationFailure::Resource {
-                            kind: crate::ResourceFailureKind::Allocation,
-                            capability: CapabilityId::FunctionAdapter,
-                            source: self.runtime.consumer,
-                            detail: "spill candidate allocation failed".into(),
-                        })?;
-                    let mut candidate = Candidate::new(sheet, at, shape);
-                    // Saved geometry is independent of current computed shape.
-                    if let Some(worksheet) = self.workbook.sheet(sheet)
-                        && let Some(last) = worksheet.spill_extent(at)
-                    {
-                        candidate.area.r1 = candidate.area.r1.max(last.row);
-                        candidate.area.c1 = candidate.area.c1.max(last.col);
-                    }
-                    if legacy.binary_search(&at).is_ok() {
-                        candidate = Candidate::new(sheet, at, poirot_model::ShapeBounds::UNKNOWN);
-                    }
-                    // SAFETY: The successful reservation above provides one candidate slot.
-                    added.push(candidate);
-                }
-            }
+        let source_preparation = self.source_preparation();
+        let runtime = &mut *self.runtime;
+        discovery::Sources {
+            workbook: self.workbook,
+            inputs: self.inputs,
+            plan: self.plan,
+            source_preparation,
+            shared: self.spill_candidates,
+            local: &mut runtime.preparation.candidates,
+            budget: &mut runtime.budget,
+            consumer: runtime.consumer,
         }
-        self.runtime
-            .budget
-            .check_allocation(added.len().saturating_add(candidate_count))?;
-        added.sort_unstable_by_key(|c| c.anchor);
-        self.runtime.budget.check_allocation(frontier_size)?;
-        let consumer = self.runtime.consumer;
-        let commit = |index: &mut CandidateIndex| -> EvalResult<()> {
-            let update = |discovery: &mut Discovery| -> EvalResult<()> {
-                discovery.candidates.try_reserve(added.len()).map_err(|_| {
-                    EvaluationFailure::Resource {
-                        kind: crate::ResourceFailureKind::Allocation,
-                        capability: CapabilityId::FunctionAdapter,
-                        source: consumer,
-                        detail: "spill candidate append allocation failed".into(),
-                    }
-                })?;
-                // The successful candidate reservation admits this complete count.
-                let summary_len = discovery.candidates.len().saturating_add(added.len());
-                let summary_additional = summary_len.saturating_sub(discovery.ending_rows.len());
-                discovery
-                    .ending_rows
-                    .try_reserve(summary_additional)
-                    .map_err(|_| EvaluationFailure::Resource {
-                        kind: crate::ResourceFailureKind::Allocation,
-                        capability: CapabilityId::FunctionAdapter,
-                        source: consumer,
-                        detail: "spill candidate row summary allocation failed".into(),
-                    })?;
-                let interleaved = discovery
-                    .candidates
-                    .last()
-                    .zip(added.first())
-                    .is_some_and(|(old, new)| old.anchor > new.anchor);
-                // SAFETY: The successful reservation admits every staged candidate.
-                discovery.candidates.extend_from_slice(&added);
-                if interleaved {
-                    discovery.candidates.sort_unstable_by_key(|c| c.anchor);
-                    discovery.ending_rows.clear();
-                }
-                let mut ending_row = discovery.ending_rows.last().copied().unwrap_or(0);
-                for candidate in discovery
-                    .candidates
-                    .iter()
-                    .skip(discovery.ending_rows.len())
-                {
-                    ending_row = ending_row.max(candidate.area.r1);
-                    // SAFETY: The reservation covers the final candidate count.
-                    // Iteration pushes at most that many entries; clear retains capacity.
-                    discovery.ending_rows.push(ending_row);
-                }
-                discovery.legacy = legacy;
-                // Coverage changes only after all scanned candidates are safely retained.
-                for column in removed_columns {
-                    discovery.inspected.remove(&column);
-                }
-                discovery.inspected.insert(last.col, last.row);
-                Ok(())
-            };
-            if let Some(discovery) = index.get_mut(&sheet) {
-                update(discovery)
-            } else {
-                let mut discovery = Discovery::default();
-                update(&mut discovery)?;
-                index.insert(sheet, discovery);
-                Ok(())
-            }
-        };
-        if let Some(shared) = self.spill_candidates {
-            let mut index = shared
-                .try_borrow_mut()
-                .map_err(|_| EvaluationFailure::StalePlan)?;
-            commit(&mut index)
-        } else {
-            commit(&mut self.runtime.preparation.candidates)
-        }
+        .discover(sheet, last)
     }
     #[cfg(test)]
     /// Inspect the full source domain for existing candidate-geometry unit tests.
@@ -1223,95 +974,6 @@ impl<'a> Session<'a> {
             },
         )?;
         self.with_discovery(sheet, |p| p.candidates.clone())
-    }
-    /// Journal only this attempt's writes; settled cells cannot be replaced speculatively.
-    fn journal_spill_admission(&mut self, key: (usize, CellAddress)) -> EvalResult<()> {
-        let runtime = &mut *self.runtime;
-        if let Some(active) = runtime.preparation.settlement.active_mut() {
-            if runtime.cache.contains_key(&key) && !active.admitted.contains(&key) {
-                return Err(EvaluationFailure::StalePlan);
-            }
-            active.admitted.insert(key);
-            active.consumers.insert(key);
-        }
-        Ok(())
-    }
-    /// Queue known direct owners or earlier competitors without recursive work.
-    fn select_known(
-        &mut self,
-        area: Area,
-        competitor: Option<Candidate>,
-        pending: &mut Vec<Candidate>,
-    ) -> EvalResult<()> {
-        let runtime = &mut *self.runtime;
-        let Preparation {
-            candidates,
-            settled,
-            settlement,
-            ..
-        } = &mut runtime.preparation;
-        let mut active = settlement.active_mut();
-        let budget = &mut runtime.budget;
-        let consumer = runtime.consumer;
-        let mut select = |index: &CandidateIndex| -> EvalResult<()> {
-            let discovery = index.get(&area.sheet).ok_or(EvaluationFailure::StalePlan)?;
-            for candidate in discovery
-                .possible_in(area, competitor.map(|c| c.anchor))
-                .iter()
-                .copied()
-            {
-                if !candidate.intersects(area) {
-                    continue;
-                }
-                let key = (area.sheet, candidate.anchor);
-                if settled.contains(&key)
-                    || active.as_ref().is_none_or(|a| a.selected.contains(&key))
-                {
-                    continue;
-                }
-                budget.allocation(1)?;
-                pending
-                    .try_reserve(1)
-                    .map_err(|_| EvaluationFailure::Resource {
-                        kind: crate::ResourceFailureKind::Allocation,
-                        capability: CapabilityId::FunctionAdapter,
-                        source: consumer,
-                        detail: "spill frontier allocation failed".into(),
-                    })?;
-                if let Some(active) = active.as_mut() {
-                    active.selected.insert(key);
-                }
-                // SAFETY: The successful reservation above provides one queue slot.
-                pending.push(candidate);
-            }
-            Ok(())
-        };
-        if let Some(shared) = self.spill_candidates {
-            let index = shared
-                .try_borrow()
-                .map_err(|_| EvaluationFailure::StalePlan)?;
-            select(&index)
-        } else {
-            select(candidates)
-        }
-    }
-    /// Include relevant producers and earlier possible competitors, without reserving cells.
-    fn select_spills(&mut self, area: Area) -> EvalResult<()> {
-        // resolve_spills_in inspected the direct-demand prefix before selection.
-        let mut pending = Vec::new();
-        self.select_known(area, None, &mut pending)?;
-        while let Some(candidate) = pending.pop() {
-            // Earlier priority bounds the anchor row independently of spill height.
-            self.discover_candidates(
-                area.sheet,
-                CellAddress {
-                    row: candidate.anchor.row,
-                    col: candidate.area.c1,
-                },
-            )?;
-            self.select_known(candidate.area, Some(candidate), &mut pending)?;
-        }
-        Ok(())
     }
     /// Discard this attempt's admissions and rewind only newly entered cell streams.
     fn rollback_spills(&mut self) {
@@ -1339,53 +1001,6 @@ impl<'a> Session<'a> {
         active.footprints.clear();
         active.notifications.clear();
         runtime.preparation.producer_reads.clear();
-    }
-    /// Determine losers from actual rectangles, in the explicit top-left priority order.
-    fn spill_losers(&mut self) -> EvalResult<CellSet> {
-        let runtime = &mut *self.runtime;
-        let Some(active) = runtime.preparation.settlement.active() else {
-            return Ok(CellSet::default());
-        };
-        let capacity = active.selected.len();
-        runtime.budget.check_allocation(capacity)?;
-        let mut accepted = Vec::new();
-        accepted
-            .try_reserve(capacity)
-            .map_err(|_| EvaluationFailure::Resource {
-                kind: crate::ResourceFailureKind::Allocation,
-                capability: CapabilityId::FunctionAdapter,
-                source: runtime.consumer,
-                detail: "spill arbitration allocation failed".into(),
-            })?;
-        let mut blocked = CellSet::default();
-        for key in &active.selected {
-            let Some(attempted) = active.footprints.get(key).copied() else {
-                continue;
-            };
-            let area = attempted.area;
-            runtime.budget.charge(
-                WorkKind::ReferencePair,
-                (accepted.len() as u64).saturating_add(1),
-            )?;
-            if attempted.settled_collision
-                || accepted.iter().any(|other: &Area| {
-                    Candidate {
-                        anchor: CellAddress {
-                            row: area.r0,
-                            col: area.c0,
-                        },
-                        area,
-                    }
-                    .intersects(*other)
-                })
-            {
-                blocked.insert(*key);
-            } else {
-                // SAFETY: Capacity reserves every selected producer, and each selected key is processed once.
-                accepted.push(area);
-            }
-        }
-        Ok(blocked)
     }
     /// Actual external contracts, rather than conservative static effects, govern safe retries.
     pub(super) fn record_spill_effect(&mut self, read: &DependencyRead) {
@@ -1419,39 +1034,15 @@ impl<'a> Session<'a> {
             }
         }
     }
-    /// Queue cell results during private settlement, or notify directly outside it.
+    /// Deliver completion through the preparation state without exposing other session services.
     pub(super) fn complete_cell(&mut self, completion: CellCompletion<'_>) -> EvalResult<()> {
         let runtime = &mut *self.runtime;
-        if self.cell_observer.is_none() {
-            return Ok(());
-        }
-        if let Some(active) = runtime.preparation.settlement.active_mut() {
-            runtime.budget.allocation(1)?;
-            if let Ok(value) = completion.result {
-                runtime.budget.text(value.text_storage_bytes())?;
-            }
-            active
-                .notifications
-                .try_reserve(1)
-                .map_err(|_| EvaluationFailure::Resource {
-                    kind: crate::ResourceFailureKind::Allocation,
-                    capability: CapabilityId::FunctionAdapter,
-                    source: runtime.consumer,
-                    detail: "spill notification allocation failed".into(),
-                })?;
-            // SAFETY: The successful reservation above provides one completion slot.
-            active.notifications.push(Completion {
-                consumer: completion.consumer,
-                target: completion.target,
-                provenance: completion.provenance,
-                result: completion.result.cloned().map_err(Clone::clone),
-            });
-            return Ok(());
-        }
-        if let Some(observer) = &mut self.cell_observer {
-            observer.completed(completion)?;
-        }
-        Ok(())
+        runtime.preparation.complete_cell(
+            &mut runtime.budget,
+            runtime.consumer,
+            &mut self.cell_observer,
+            completion,
+        )
     }
     /// Restore caller-trusted source values without evaluating the producer expression.
     fn restore_saved_producer(&mut self, sheet: usize, at: CellAddress) -> EvalResult<()> {
@@ -1946,204 +1537,13 @@ impl<'a> Session<'a> {
         }
         Ok(())
     }
-    /// Settle only demand intersections and their necessary dependency/priority component.
+    /// Attach the recursive evaluator adapter to the spill settlement engine.
     fn settle_spills_in(
         &mut self,
         area: Area,
         source: Option<session_execution::ResolvedSource<'a>>,
     ) -> EvalResult<()> {
-        if self.array_result_policy != ArrayResultPolicy::DynamicSpill {
-            return Ok(());
-        }
-        if let Some(failure) = &self.runtime.preparation.failure {
-            return Err(failure.clone());
-        }
-        if self.ready_area(area) {
-            return Ok(());
-        }
-        // Authored nonblank values and nonspilling formulas block every other
-        // producer. Their point values therefore need no origin-prefix search.
-        // Derived saved children still require ownership reconciliation.
-        if area.kind == AreaKind::Cell {
-            let at = CellAddress {
-                row: area.r0,
-                col: area.c0,
-            };
-            if let Some(source) = source.or_else(|| self.resolve_source(area.sheet, at))
-                && !source.accepts_spill
-                && let Some(cell) = source.cell
-                && match cell.formula.as_deref() {
-                    Some(source) => self.source_spill_shape(area.sheet, at, source).is_none(),
-                    None => cell.value != Blank,
-                }
-            {
-                return Ok(());
-            }
-        }
-        match self.discover_candidates(
-            area.sheet,
-            CellAddress {
-                row: area.r1,
-                col: area.c1,
-            },
-        ) {
-            Ok(()) => (),
-            Err(failure) => {
-                self.runtime.preparation.failure = Some(failure.clone());
-                return Err(failure);
-            }
-        };
-        if self.with_discovery(area.sheet, |p| {
-            p.possible_in(area, None).iter().all(|c| {
-                !c.intersects(area)
-                    || self
-                        .runtime
-                        .preparation
-                        .settled
-                        .contains(&(area.sheet, c.anchor))
-            })
-        })? {
-            return Ok(());
-        }
-        let outer = self.runtime.preparation.settlement.active().is_none();
-        if outer {
-            let runtime = &mut *self.runtime;
-            runtime.preparation.settlement.begin(
-                runtime.memo_usage,
-                runtime.preparation.journal.len(),
-                runtime.admitted.as_ref().map_or(0, Vec::len),
-            );
-        }
-        let selection = self.select_spills(area);
-        let result = selection.and_then(|()| if !outer {
-            (|| {
-                let mut cursor = None;
-                loop {
-                    let next = self.with_discovery(area.sheet, |p| {
-                        let first = cursor
-                            .map_or(0, |at| p.candidates.partition_point(|c| c.anchor <= at));
-                        p.candidates
-                            .get(first..)
-                            .and_then(|rest| rest.iter().find(|c| c.intersects(area)))
-                            .copied()
-                    })?;
-                    let Some(c) = next else {
-                        break;
-                    };
-                    cursor = Some(c.anchor);
-                    // No candidate-index borrow survives recursive computation.
-                    if !self.runtime.preparation.computing.contains(&(area.sheet, c.anchor)) {
-                        self.compute_producer(area.sheet, c.anchor)?;
-                        self.finalize_producer(area.sheet, c.anchor)?;
-                    }
-                }
-                Ok(())
-            })()
-        } else {
-            (|| {
-                let initial_selected = self.runtime.preparation.settlement.active().map_or(0, |active| active.selected.len());
-                let mut seen: Vec<(usize, CellSet)> = Vec::new();
-                loop {
-                    // Dependencies may enlarge the selected set while one producer runs.
-                    loop {
-                        let next = self.runtime.preparation.settlement.active().and_then(|a| {
-                            a.selected
-                                .iter()
-                                .copied()
-                                .find(|key| !self.runtime.cache.contains_key(key))
-                        });
-                        let Some((sheet, at)) = next else {
-                            break;
-                        };
-                        self.compute_producer(sheet, at)?;
-                        self.finalize_producer(sheet, at)?;
-                    }
-                    let blocked = self.spill_losers()?;
-                    let active = self.runtime.preparation
-                        .settlement
-                        .active()
-                        .ok_or(EvaluationFailure::StalePlan)?;
-                    if blocked == active.blocked {
-                        break;
-                    }
-                    if active.non_repeatable {
-                        return Err(self.spill_unsupported(area.sheet,CellAddress {row:area.r0,col:area.c0},"spill settlement would replay an actually consumed opaque or volatile provider"));
-                    }
-                    // Selection only grows, so its count identifies its exact set
-                    // within this component. A changed closure is a different state.
-                    let selected = active.selected.len();
-                    if (selected == initial_selected && blocked.is_empty())
-                        || seen.iter().any(|(size, previous)| *size == selected && *previous == blocked) {
-                        return Err(self.spill_unsupported(
-                            area.sheet,
-                            CellAddress {
-                                row: area.r0,
-                                col: area.c0,
-                            },
-                            "spill ownership component does not settle",
-                        ));
-                    }
-                    self.runtime.budget.allocation(blocked.len().saturating_add(1))?;
-                    seen.try_reserve(1)
-                        .map_err(|_| EvaluationFailure::Resource { kind: crate::ResourceFailureKind::Allocation,
-                            capability: CapabilityId::FunctionAdapter,
-                            source: self.runtime.consumer,
-                            detail: "spill settlement history allocation failed".into(),
-                        })?;
-                    // SAFETY: The successful reservation above provides one history slot.
-                    seen.push((selected, blocked.clone()));
-                    self.rollback_spills();
-                    if let Some(active) = self.runtime.preparation.settlement.active_mut() {
-                        active.blocked = blocked;
-                    }
-                }
-                let notifications = self.runtime.preparation
-                    .settlement
-                    .active_mut()
-                    .map(|a| std::mem::take(&mut a.notifications))
-                    .unwrap_or_default();
-                for notification in notifications {
-                    if let Some(observer) = &mut self.cell_observer {
-                        observer.completed(CellCompletion {
-                            consumer: notification.consumer,
-                            target: notification.target,
-                            provenance: notification.provenance,
-                            result: notification.result.as_ref(),
-                        })?;
-                    }
-                }
-                Ok(())
-            })()
-        });
-        if outer {
-            if let Err(failure) = &result {
-                if let Some(active) = self.runtime.preparation.settlement.active_mut() {
-                    for notification in active.notifications.drain(..).filter(|n| n.result.is_err())
-                    {
-                        if let Some(observer) = &mut self.cell_observer {
-                            let _ = observer.completed(CellCompletion {
-                                consumer: notification.consumer,
-                                target: notification.target,
-                                provenance: notification.provenance,
-                                result: notification.result.as_ref(),
-                            });
-                        }
-                    }
-                }
-                self.rollback_spills();
-                self.runtime.preparation.failure = Some(failure.clone());
-            } else {
-                let runtime = &mut *self.runtime;
-                if let Some(active) = runtime.preparation.settlement.active() {
-                    runtime
-                        .preparation
-                        .settled
-                        .extend(active.selected.iter().copied());
-                }
-            }
-            self.runtime.preparation.settlement.finish();
-        }
-        result
+        settlement::Engine::new(self).settle(area, source)
     }
 }
 

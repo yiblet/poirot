@@ -1,5 +1,5 @@
 //! Exercise the primary workbook -> overlay -> evaluation -> changes workflow.
-use poirot::{CellValue, EvaluationContext, Overlay, Workbook, eval};
+use poirot::{CellValue, EvaluationContext, Workbook, eval, eval::overlay::Overlay};
 fn at(reference: &str) -> eval::EvaluationTarget {
     eval::EvaluationTarget {
         sheet: 0,
@@ -207,7 +207,7 @@ fn flushed_sources_export_materialized_formula_and_spill_caches_to_xlsx() {
         .set_value(at("A1").address, 2.)
         .unwrap();
     let mut overlay = Overlay::with_workbook(model)
-        .with_policy(poirot::OverlayPolicy {
+        .with_policy(poirot::eval::overlay::OverlayPolicy {
             builtin: eval::BuiltinSemanticsPolicy::ExcelDocumentation,
             arrays: eval::ArrayResultPolicy::DynamicSpill,
             ..Default::default()

@@ -151,7 +151,7 @@ pub(super) fn search(
                         }
                     }
                     if let Value::Reference(r) = &return_argument {
-                        if r.kind == ReferenceKind::Area && r.width() > 1 {
+                        if r.kind() == ReferenceKind::Area && r.width() > 1 {
                             charge(
                                 w,
                                 Work::QueryReturn,
@@ -171,26 +171,28 @@ pub(super) fn search(
                 return Ok(num(index as f64 + 1.0));
             }
             match &args.get(2, c, w)? {
-                Value::Reference(r) if r.kind == ReferenceKind::Area => {
-                    let mut result = r.clone();
-                    if column {
-                        result.first_row = r
-                            .first_row
-                            .checked_add(index as u32)
-                            .ok_or(Failure::Spreadsheet(Error::Ref))?;
-                        result.last_row = result.first_row;
+                Value::Reference(r) if r.kind() == ReferenceKind::Area => {
+                    let row = r.first_row().checked_add(index as u32).ok_or(Error::Ref)?;
+                    let col = r.first_col().checked_add(index as u32).ok_or(Error::Ref)?;
+                    let rows = if column {
+                        row..=row
                     } else {
-                        result.first_col = r
-                            .first_col
-                            .checked_add(index as u32)
-                            .ok_or(Failure::Spreadsheet(Error::Ref))?;
-                        result.last_col = result.first_col;
-                    }
-                    if !result.valid() {
-                        return Err(Error::Ref.into());
-                    }
-                    Ok(Value::Reference(result))
+                        r.first_row()..=r.last_row()
+                    };
+                    let cols = if column {
+                        r.first_col()..=r.last_col()
+                    } else {
+                        col..=col
+                    };
+                    Ok(Value::Reference(crate::Reference::new(
+                        r.kind(),
+                        r.workbook().map(str::to_owned),
+                        r.first_sheet()..=r.last_sheet(),
+                        rows,
+                        cols,
+                    )?))
                 }
+
                 Value::SignedReference(r) if r.kind == ReferenceKind::Area => {
                     let mut result = r.clone();
                     if column {

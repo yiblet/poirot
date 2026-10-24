@@ -84,7 +84,7 @@ fn overlay_export_keeps_edits_and_warm_results() {
     let output = overlay.target("'Model inputs'!B1").unwrap();
     overlay.set_value(input, 7.).unwrap();
     assert_eq!(
-        overlay.calculation(&context).unwrap().cell(output).unwrap(),
+        overlay.evaluation(&context).unwrap().cell(output).unwrap(),
         CellValue::Number(14.)
     );
     let count = overlay.cached_cells();
@@ -104,7 +104,7 @@ fn overlay_export_keeps_edits_and_warm_results() {
     );
     assert_eq!(saved(&exported, "B1"), CellValue::Number(14.));
     assert_eq!(overlay.cached_cells(), count);
-    let mut warm = overlay.calculation_with_profiling(&context, true).unwrap();
+    let mut warm = overlay.evaluation_with_profiling(&context, true).unwrap();
     assert_eq!(warm.cell(output).unwrap(), CellValue::Number(14.));
     assert_eq!(warm.finish().execution.unwrap().formula_executions, 0);
     overlay.clear_calculated_cache();
@@ -112,7 +112,7 @@ fn overlay_export_keeps_edits_and_warm_results() {
     overlay.discard_edits();
     assert_eq!(overlay.edited_cells(), 0);
     assert_eq!(
-        overlay.calculation(&context).unwrap().cell(output).unwrap(),
+        overlay.evaluation(&context).unwrap().cell(output).unwrap(),
         CellValue::Number(6.)
     );
 }
@@ -129,7 +129,7 @@ fn export_shrinking_spills_cleans_owned_children_and_remains_usable() {
     let anchor = overlay.target("'Model inputs'!E1").unwrap();
     overlay.set_formula(anchor, "SEQUENCE(1)").unwrap();
     let context = EvaluationContext::default();
-    overlay.calculation(&context).unwrap().cell(anchor).unwrap();
+    overlay.evaluation(&context).unwrap().cell(anchor).unwrap();
     let exported = Workbook::from_bytes(&overlay.save_xlsx().to_buffer().unwrap()).unwrap();
     assert_eq!(saved(&exported, "E1"), CellValue::Number(1.));
     for address in ["E2", "E3"] {
@@ -141,7 +141,7 @@ fn export_shrinking_spills_cleans_owned_children_and_remains_usable() {
     }
     assert_eq!(saved(&book, "E3"), CellValue::Number(3.));
     overlay.set_formula(anchor, "SEQUENCE(2)").unwrap();
-    overlay.calculation(&context).unwrap().cell(anchor).unwrap();
+    overlay.evaluation(&context).unwrap().cell(anchor).unwrap();
     let exported = Workbook::from_bytes(&overlay.save_xlsx().to_buffer().unwrap()).unwrap();
     assert_eq!(saved(&exported, "E2"), CellValue::Number(2.));
 }
@@ -322,15 +322,17 @@ fn staged_export_changes_fail_atomically_and_owned_edit_application_is_explicit(
             .is_err()
     );
     assert_eq!(saved(&book, "A1"), CellValue::Number(3.));
-    let mut overlay = poirot::Overlay::with_workbook(book.clone())
-        .build()
-        .unwrap();
+    let mut overlay = poirot::Overlay::from_overlay(
+        poirot::eval::overlay::Overlay::with_workbook(book.clone())
+            .build()
+            .unwrap(),
+    );
     let input = overlay.target("'Model inputs'!A1").unwrap();
     let output = overlay.target("'Model inputs'!B1").unwrap();
     overlay.set_value(input, 11.).unwrap();
     let context = EvaluationContext::default();
     assert_eq!(
-        overlay.calculation(&context).unwrap().cell(output).unwrap(),
+        overlay.evaluation(&context).unwrap().cell(output).unwrap(),
         CellValue::Number(22.)
     );
     assert_eq!(overlay.apply_edits_to_workbook().unwrap(), 1);
@@ -384,15 +386,17 @@ fn export_captures_state_now_without_recalculation_or_cycle_reset() {
 #[test]
 fn wrappers_preserve_owned_and_shared_advanced_modes() {
     let book = std::sync::Arc::new(book().into_model());
-    let direct = poirot::Evaluation::with_workbook(std::sync::Arc::clone(&book))
+    let direct = poirot::eval::overlay::Evaluation::with_workbook(std::sync::Arc::clone(&book))
         .build_calculation(EvaluationContext::default())
         .unwrap();
-    let mut direct = poirot::WorkbookEvaluation::from_calculation(direct);
+    let mut direct = poirot::Evaluation::from_calculation(direct);
     let output = direct.target("'Model inputs'!B1").unwrap();
     assert_eq!(direct.cell(output).unwrap(), CellValue::Number(6.));
     assert!(!direct.save_xlsx().to_buffer().unwrap().is_empty());
-    let overlay = poirot::Overlay::with_workbook(book).build().unwrap();
-    let mut overlay = poirot::WorkbookOverlay::from_overlay(overlay);
+    let overlay = poirot::eval::overlay::Overlay::with_workbook(book)
+        .build()
+        .unwrap();
+    let mut overlay = poirot::Overlay::from_overlay(overlay);
     assert!(!overlay.save_xlsx().to_buffer().unwrap().is_empty());
     assert!(
         overlay
@@ -421,4 +425,41 @@ fn discarding_direct_edits_restores_baseline_saved_spill_children_for_export() {
     assert_eq!(saved(&exported, "E3"), CellValue::Number(3.));
     let original_export = Workbook::from_bytes(&book.save_xlsx().to_buffer().unwrap()).unwrap();
     assert_eq!(exported, original_export);
+}
+
+#[test]
+fn canonical_types_cover_direct_and_incremental_scenarios() {
+    // Arithmetic expectations: B1 = A1 * 2, C1 = A1 * 3.
+    let book = book();
+    let builder: poirot::EvaluationBuilder<'_> = book.evaluation();
+    let mut direct: poirot::Evaluation<'_> = builder.profiling(true).build().unwrap();
+    let input = direct.target("'Model inputs'!A1").unwrap();
+    let twice = direct.target("'Model inputs'!B1").unwrap();
+    let triple = direct.target("'Model inputs'!C1").unwrap();
+    direct.set_value(input, 4.).unwrap();
+    let values = direct.outputs(&[triple, twice]).unwrap();
+    assert_eq!(values[0].value, CellValue::Number(12.));
+    assert_eq!(values[1].value, CellValue::Number(8.));
+    let exported = Workbook::from_bytes(&direct.save_xlsx().to_buffer().unwrap()).unwrap();
+    assert_eq!(saved(&exported, "B1"), CellValue::Number(8.));
+    let report: poirot::EvaluationReport<()> = direct.finish();
+    assert!(report.result.is_ok());
+    assert!(report.execution.is_some());
+
+    let builder: poirot::OverlayBuilder<'_> = book.overlay();
+    let mut overlay: poirot::Overlay<'_> = builder.build().unwrap();
+    overlay.edit(|edits| edits.set_value(input, 5.)).unwrap();
+    let context = EvaluationContext::default();
+    let mut cycle: poirot::EvaluationCycle<'_> =
+        overlay.evaluation_with_profiling(&context, true).unwrap();
+    let values = cycle.outputs(&[twice, triple]).unwrap();
+    assert_eq!(values[0].value, CellValue::Number(10.));
+    assert_eq!(values[1].value, CellValue::Number(15.));
+    let report: poirot::EvaluationReport<()> = cycle.finish();
+    assert!(report.result.is_ok());
+    assert!(report.execution.is_some());
+    let exported = Workbook::from_bytes(&overlay.save_xlsx().to_buffer().unwrap()).unwrap();
+    assert_eq!(saved(&exported, "B1"), CellValue::Number(10.));
+    assert_eq!(saved(&book, "A1"), CellValue::Number(3.));
+    assert_eq!(saved(&book, "B1"), CellValue::Number(900.));
 }

@@ -1,5 +1,5 @@
 //! Source recovery and actual XLSX execution of all 21 modern sample functions.
-use poirot::{CellValue, EvaluationContext, Overlay, Workbook, artifact};
+use poirot::{CellValue, EvaluationContext, Workbook, artifact, eval::overlay::Overlay};
 fn cases() -> [(&'static str, f64); 21] {
     [
         ("CHISQ.TEST({3,1;1,3},{2,2;2,2})", 0.15729920705028513),
@@ -42,7 +42,7 @@ fn all_modern_sample_names_execute_after_actual_xlsx_roundtrip() {
     }
     let bytes = poirot::io::write_xlsx_to_buffer(&book).unwrap();
     let reopened = poirot::io::read_workbook_bytes(&bytes).unwrap();
-    let mut direct = poirot::Evaluation::with_workbook(reopened)
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(reopened)
         .build(EvaluationContext::default())
         .unwrap();
     for (i, (_, expected)) in cases().iter().enumerate() {
@@ -104,7 +104,7 @@ fn incompatible_modern_sample_preparation_preserves_formulas_and_overlay_edits()
         workbook.sheet(0).unwrap().get(input.address).unwrap().value,
         7.00.into()
     );
-    let mut direct = poirot::Evaluation::with_workbook(workbook)
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)
         .build(EvaluationContext::default())
         .unwrap();
     assert_eq!(direct.cell(output).unwrap(), 1.0.into());

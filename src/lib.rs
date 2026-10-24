@@ -150,9 +150,9 @@
 //! # }
 //! ```
 //!
-//! Creating an evaluation does not calculate any cells. [`Calculation::cell`]
+//! Creating an evaluation does not calculate any cells. [`Evaluation::cell`]
 //! calculates the requested cell and the dependencies needed to obtain its value.
-//! Use [`Calculation::outputs`] for several outputs or [`Calculation::all`] for all
+//! Use [`Evaluation::outputs`] for several outputs or [`Evaluation::all`] for all
 //! occupied cells and any spill cells produced by formulas.
 //!
 //! Each input edit clears the evaluation's calculated results. For repeated
@@ -161,8 +161,8 @@
 //! select its outputs through [`Overlay::evaluation`]. Both leave the original
 //! workbook unchanged unless you explicitly apply their changes.
 //!
-//! Export a scenario with [`WorkbookEvaluation::save_xlsx`] or
-//! [`WorkbookOverlay::save_xlsx`]. Export captures edits and valid results without
+//! Export a scenario with [`Evaluation::save_xlsx`] or
+//! [`Overlay::save_xlsx`]. Export captures edits and valid results without
 //! calculation, baseline mutation or loss of warm state. Untouched saved formula
 //! values may be stale. See the
 //! [evaluation guide](https://github.com/yiblet/poirot/blob/master/docs/evaluation.md)
@@ -216,9 +216,7 @@ pub mod artifact;
 
 pub use poirot_eval as eval;
 
-pub use poirot_eval::{
-    EvaluationLimits, NumberLocaleV2, ProducerPolicy, RegexSettings, ResourceFailureKind,
-};
+pub use poirot_eval::{EvaluationLimits, ProducerPolicy, RegexSettings, ResourceFailureKind};
 pub use poirot_format as format;
 pub use poirot_io as io;
 pub use poirot_model as model;
@@ -232,17 +230,11 @@ pub use poirot_model::{
     WorkbookChange, Worksheet,
 };
 pub use poirot_workbook::{
-    Calculation, CalculationCycle, CalculationError, CalculationReport, CellEvaluation,
-    CompilationUsage, Evaluation, EvaluationBuilder, EvaluationContext, EvaluationFailure,
-    EvaluationTarget, LoadBuilder, Overlay, OverlayBuilder, OverlayEdits, OverlayError,
-    OverlayEvaluation, OverlayPolicy, OverlaySnapshot, SavePlan, Workbook, WorkbookError,
-    WorkbookSnapshot, WorkspaceState, XlsxSaveBuilder, edit, translation_edit,
-};
-
-// Workbook-owned convenience APIs; legacy evaluator constructors remain available.
-pub use poirot_workbook::{
-    EvaluationPolicy, NumberLocale, PreparationPolicy, RestoredWorkbook,
-    RestoredWorkbookEvaluation, ScenarioSaveError, ScenarioXlsxSaveBuilder, WorkbookEvaluation,
-    WorkbookEvaluationBuilder, WorkbookOverlay, WorkbookOverlayBuilder,
-    WorkbookSnapshotLoadBuilder,
+    CalculationError, CellEvaluation, CompilationUsage, Evaluation, EvaluationBuilder,
+    EvaluationContext, EvaluationCycle, EvaluationFailure, EvaluationPolicy, EvaluationReport,
+    EvaluationTarget, LoadBuilder, NumberLocale, Overlay, OverlayBuilder, OverlayEdits,
+    OverlayError, OverlaySnapshot, PreparationPolicy, RestoredEvaluation, RestoredWorkbook,
+    SavePlan, ScenarioSaveError, ScenarioXlsxSaveBuilder, Workbook, WorkbookError,
+    WorkbookSnapshot, WorkbookSnapshotLoadBuilder, WorkspaceState, XlsxSaveBuilder, edit,
+    translation_edit,
 };

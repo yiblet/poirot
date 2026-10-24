@@ -1,6 +1,6 @@
 //! Grouping orchestration over pure membership/layout and shared aggregate kernels.
-//! Contracts: https://support.microsoft.com/en-us/excel/functions/groupby-function
-//! https://support.microsoft.com/en-us/excel/functions/percentof-function
+//! Contracts: <https://support.microsoft.com/en-us/excel/functions/groupby-function>
+//! <https://support.microsoft.com/en-us/excel/functions/percentof-function>
 use super::modern::failure;
 use super::selection::compare;
 use super::*;

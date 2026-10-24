@@ -1,5 +1,5 @@
 //! Evaluator revision rejection retains authored utility formulas and edits.
-use poirot::{CellValue, EvaluationContext, Overlay, Workbook, artifact};
+use poirot::{CellValue, EvaluationContext, Workbook, artifact, eval::overlay::Overlay};
 #[test]
 fn old_preparation_recovers_utility_source_and_recalculates() {
     let mut book = Workbook::new();
@@ -39,7 +39,7 @@ fn old_preparation_recovers_utility_source_and_recalculates() {
         workbook.sheet(0).unwrap().get(input.address).unwrap().value,
         CellValue::Number(3.)
     );
-    let mut direct = poirot::Evaluation::with_workbook(workbook)
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)
         .build(context)
         .unwrap();
     assert_eq!(direct.cell(output).unwrap(), 20.0.into());
@@ -66,7 +66,7 @@ fn utility_xlsx_roundtrip_executes_prefixed_functions_and_spills() {
     s.set_formula("G1".parse().unwrap(), "ACOT(1)").unwrap();
     let bytes = poirot::io::write_xlsx_to_buffer(&b).unwrap();
     let reopened = poirot::io::read_workbook_bytes(&bytes).unwrap();
-    let mut e = poirot::Evaluation::with_workbook(reopened)
+    let mut e = poirot::eval::overlay::Evaluation::with_workbook(reopened)
         .build(EvaluationContext::default())
         .unwrap();
     for (cell, n) in [

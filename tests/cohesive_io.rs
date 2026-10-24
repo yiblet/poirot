@@ -1,7 +1,8 @@
 //! Common workbook persistence paths share builders and preserve source provenance.
 use poirot::{
-    CellValue, Evaluation, EvaluationContext, FileFormat, FileMetadata, ImportDiagnostic,
-    ImportDiagnosticKind, Overlay, OverlayPolicy, Workbook, artifact, io,
+    CellValue, EvaluationContext, FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind,
+    Workbook, artifact, eval::overlay::Evaluation, eval::overlay::Overlay,
+    eval::overlay::OverlayPolicy, io,
 };
 use std::{
     path::PathBuf,

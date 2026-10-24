@@ -1,5 +1,5 @@
 //! ETS execution through actual XLSX and prepared-state recovery.
-use poirot::{CellValue, EvaluationContext, Overlay, Workbook, artifact};
+use poirot::{CellValue, EvaluationContext, Workbook, artifact, eval::overlay::Overlay};
 fn near(v: CellValue, e: f64) {
     let CellValue::Number(a) = v else {
         panic!("{v:?}")
@@ -20,7 +20,7 @@ fn ets_executes_after_actual_xlsx_roundtrip() {
     }
     let bytes = poirot::io::write_xlsx_to_buffer(&b).unwrap();
     let reopened = poirot::io::read_workbook_bytes(&bytes).unwrap();
-    let mut direct = poirot::Evaluation::with_workbook(reopened)
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(reopened)
         .build(EvaluationContext::default())
         .unwrap();
     for (c, e) in [("A1", 4.0), ("B1", 0.0), ("C1", 0.0), ("D1", 1.0)] {
@@ -65,7 +65,7 @@ fn incompatible_ets_preparation_recovers_source_and_overlay_edits() {
         panic!()
     };
     assert_eq!(status, artifact::PreparedStatus::DiscardedIncompatible);
-    let mut direct = poirot::Evaluation::with_workbook(workbook)
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)
         .build(EvaluationContext::default())
         .unwrap();
     near(direct.cell(output).unwrap(), 9.);

@@ -3,8 +3,8 @@ use crate::{Error, Failure, Scalar, Value, Work, Workbook};
 /// Borrowed array or reference backing for a logical lookup table.
 enum Source<'a> {
     Signed(&'a crate::SignedReference),
-    Reference(crate::domain::CheckedReference<'a>),
-    Array(crate::domain::CheckedArray<'a>),
+    Reference(&'a crate::Reference),
+    Array(&'a crate::Array),
 }
 /// Validated table geometry with lazy host reads for referenced members.
 pub(super) struct Table<'a> {
@@ -18,24 +18,14 @@ impl<'a> Table<'a> {
     /// Validate an operand's geometry before exposing table access.
     pub(super) fn new(value: &'a Value) -> Result<Self, Failure> {
         let (source, rows, cols) = match value {
-            Value::Reference(r) => {
-                let checked = crate::domain::CheckedReference::new(r)
-                    .ok_or(Failure::Spreadsheet(Error::Value))?;
-                let (rows, cols) = (checked.height(), checked.width());
-                (Source::Reference(checked), rows, cols)
-            }
+            Value::Reference(r) => (Source::Reference(r), r.height(), r.width()),
             Value::SignedReference(r) if r.valid() => {
                 if r.source_height() <= 0 || r.source_width() <= 0 {
                     return Err(Failure::Unsupported(crate::Unsupported::SourceDimension));
                 }
                 (Source::Signed(r), r.height(), r.width())
             }
-            Value::Array(a) => {
-                let checked = crate::domain::CheckedArray::new(a)
-                    .ok_or(Failure::Spreadsheet(Error::Value))?;
-                let (rows, cols) = (checked.array().rows, checked.array().cols);
-                (Source::Array(checked), rows, cols)
-            }
+            Value::Array(a) => (Source::Array(a), a.rows(), a.cols()),
             Value::Scalar(Scalar::Error(e)) | Value::SelectedScalar(Scalar::Error(e), _) => {
                 return Err((*e).into())
             }
@@ -71,26 +61,22 @@ impl<'a> Table<'a> {
                     w,
                 )
             }
-            Source::Array(checked) => {
-                let a = checked.array();
-                if row >= a.rows || col >= a.cols {
-                    return Err(Error::Ref.into());
-                }
-                if let Some(Scalar::Text(text)) = a.values.get(row * a.cols + col) {
+            Source::Array(a) => {
+                let value = a.get(row, col)?;
+                if let Scalar::Text(text) = value {
                     charge(w, Work::VectorCopy, text.len())?;
                 }
-                checked.get(row, col)
+                Ok(value.clone())
             }
-            Source::Reference(checked) => {
-                let r = checked.reference();
+            Source::Reference(r) => {
                 if row >= self.rows || col >= self.cols {
                     return Err(Error::Ref.into());
                 }
                 w.cell(
                     r,
-                    r.first_sheet,
-                    r.first_row + row as u32,
-                    r.first_col + col as u32,
+                    r.first_sheet(),
+                    r.first_row().checked_add(row as u32).ok_or(Error::Ref)?,
+                    r.first_col().checked_add(col as u32).ok_or(Error::Ref)?,
                 )
             }
         }

@@ -1,7 +1,7 @@
 //! Optional lookup operands preserve absence independently of blank values.
 use poirot::{
-    CellError, CellValue, Evaluation, EvaluationContext, Overlay, OverlayPolicy, Workbook,
-    eval::BuiltinSemanticsPolicy,
+    CellError, CellValue, EvaluationContext, Workbook, eval::BuiltinSemanticsPolicy,
+    eval::overlay::Evaluation, eval::overlay::Overlay, eval::overlay::OverlayPolicy,
 };
 
 #[test]

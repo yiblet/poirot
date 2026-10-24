@@ -1,7 +1,7 @@
 //! PCRE2-backed spreadsheet text operations. Microsoft specifies the PCRE2 flavor:
-//! https://support.microsoft.com/en-us/excel/functions/regexextract-function
-//! https://support.microsoft.com/en-us/excel/functions/regexreplace-function
-//! https://support.microsoft.com/en-us/excel/functions/regextest-function
+//! <https://support.microsoft.com/en-us/excel/functions/regexextract-function>
+//! <https://support.microsoft.com/en-us/excel/functions/regexreplace-function>
+//! <https://support.microsoft.com/en-us/excel/functions/regextest-function>
 //! The implementation and tests are independently authored. Global matching
 //! follows PCRE2's documented empty-match iteration rule (see Cursor below); no
 //! upstream source or tests were copied. Provenance is in LICENSES/PCRE2.md.

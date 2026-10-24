@@ -1,11 +1,12 @@
 //! Export repeated scenarios without committing edits or discarding warm calculations.
-use poirot::{EvaluationContext, Overlay, Workbook, WorkbookOverlay};
+use poirot::{EvaluationContext, Overlay, Workbook};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut book = Workbook::new();
     book.add_sheet("S")?.set_formula("B1".parse()?, "A1*2")?;
     // Owned advanced construction permits explicitly applying authored edits.
-    let mut overlay = WorkbookOverlay::from_overlay(Overlay::with_workbook(book).build()?);
+    let mut overlay =
+        Overlay::from_overlay(poirot::eval::overlay::Overlay::with_workbook(book).build()?);
     let input = overlay.target("S!A1")?;
     let output = overlay.target("S!B1")?;
     let context = EvaluationContext::default();

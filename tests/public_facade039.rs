@@ -90,7 +90,7 @@ fn target(reference: &str) -> poirot::eval::EvaluationTarget {
 #[test]
 fn overlay_recursively_invalidates_and_applies_owned_cached_changes() {
     let book = formula_book(&[("B1", "A1+1"), ("C1", "B1+1"), ("D1", "8")]);
-    let mut overlay = poirot::Overlay::with_workbook(book.model())
+    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(book.model())
         .build()
         .unwrap();
     let context = poirot::EvaluationContext::default();
@@ -115,7 +115,7 @@ fn overlay_recursively_invalidates_and_applies_owned_cached_changes() {
 fn captured_random_cells_reuse_until_the_seed_changes() {
     let book = formula_book(&[("A1", "RAND()"), ("B1", "A1+1"), ("C1", "8")]);
     let mut context = poirot::EvaluationContext::default();
-    let mut overlay = poirot::Overlay::with_workbook(book.model())
+    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(book.model())
         .build()
         .unwrap();
     overlay.evaluation(&context).unwrap().all().unwrap();
@@ -133,8 +133,8 @@ fn captured_random_cells_reuse_until_the_seed_changes() {
 #[test]
 fn formatting_context_and_text_policy_invalidate_actual_consumers() {
     let book = formula_book(&[("A1", "DOLLAR(1,2)"), ("B1", r#"LEN("😀")"#), ("C1", "8")]);
-    let mut overlay = poirot::Overlay::with_workbook(book.model())
-        .with_policy(poirot::OverlayPolicy {
+    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(book.model())
+        .with_policy(poirot::eval::overlay::OverlayPolicy {
             text: poirot::eval::TextSemanticsPolicy {
                 source: poirot::eval::TextSourceVersion::Poi7321209,
             },
@@ -183,7 +183,7 @@ fn formatting_context_and_text_policy_invalidate_actual_consumers() {
 fn budget_failure_preserves_source_and_previously_completed_cache() {
     let book = formula_book(&[("A1", "1+2")]);
     let before = book.model().clone();
-    let mut overlay = poirot::Overlay::with_workbook(book.model())
+    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(book.model())
         .build()
         .unwrap();
     overlay
@@ -216,7 +216,7 @@ fn empty_rows_and_defined_names_flow_through_overlay_evaluation() {
     sheet.set_value("A1".parse().unwrap(), 4.).unwrap();
     sheet.set_formula("B1".parse().unwrap(), "Rate*A1").unwrap();
     book.model_mut().define_name("Rate", "2", None).unwrap();
-    let mut overlay = poirot::Overlay::with_workbook(book.model())
+    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(book.model())
         .build()
         .unwrap();
     assert_eq!(

@@ -1,8 +1,8 @@
 //! Modern selection adapters; pure kernels own permutation and duplicate grouping.
-//! Contracts: https://support.microsoft.com/en-us/excel/functions/filter-function
-//! https://support.microsoft.com/en-us/excel/functions/sort-function
-//! https://support.microsoft.com/en-us/excel/functions/sortby-function
-//! https://support.microsoft.com/en-us/excel/functions/unique-function
+//! Contracts: <https://support.microsoft.com/en-us/excel/functions/filter-function>
+//! <https://support.microsoft.com/en-us/excel/functions/sort-function>
+//! <https://support.microsoft.com/en-us/excel/functions/sortby-function>
+//! <https://support.microsoft.com/en-us/excel/functions/unique-function>
 use super::modern::{Members, failure, matrix, publish};
 use super::*;
 use crate::host::MissingPolicy;

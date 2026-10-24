@@ -545,6 +545,7 @@ mod expression_execution;
 use executable::{ArgumentsRef, ExecutableRef};
 mod namespace_resolution;
 mod session_execution;
+mod source_preparation;
 mod value_projection;
 mod wildcard_engine;
 use wildcard_engine::wildcard;

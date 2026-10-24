@@ -61,14 +61,14 @@ pub(super) fn preflight_value(
             charge(w, work, s.len())?
         }
         Value::Reference(r) => {
-            if let Some(name) = &r.workbook {
+            if let Some(name) = r.workbook() {
                 charge(w, work, name.len())?;
             }
         }
         Value::Union(refs) => {
             charge(w, work, refs.len())?;
             for r in refs {
-                if let Some(name) = &r.workbook {
+                if let Some(name) = r.workbook() {
                     charge(w, work, name.len())?;
                 }
             }
@@ -87,8 +87,8 @@ pub(super) fn preflight_value(
             }
         }
         Value::Array(a) => {
-            charge(w, work, a.values.len())?;
-            for scalar in &a.values {
+            charge(w, work, a.values().len())?;
+            for scalar in a.values() {
                 if let Scalar::Text(s) = scalar {
                     charge(w, work, s.len())?;
                 }
@@ -108,9 +108,7 @@ pub(super) fn scalar(
     let result = match value {
         Value::Scalar(v) | Value::SelectedScalar(v, _) => v.clone(),
         Value::Reference(r) => {
-            let checked =
-                crate::domain::CheckedReference::new(r).ok_or(Failure::Spreadsheet(Error::Ref))?;
-            let selection = crate::geometry::scalar_selection(&checked, context)?;
+            let selection = crate::geometry::scalar_selection(r, context)?;
             workbook.cell(r, selection.sheet, selection.row, selection.col)?
         }
         Value::SignedReference(r) => {

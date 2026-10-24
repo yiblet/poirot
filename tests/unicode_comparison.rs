@@ -1,5 +1,8 @@
 //! Standard simple folding is shared by public comparison and search consumers.
-use poirot::{CellError, CellValue, Evaluation, EvaluationContext, Overlay, Workbook};
+use poirot::{
+    CellError, CellValue, EvaluationContext, Workbook, eval::overlay::Evaluation,
+    eval::overlay::Overlay,
+};
 
 #[test]
 fn simple_folding_is_consistent_across_public_value_comparisons() {

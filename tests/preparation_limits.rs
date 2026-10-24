@@ -4,7 +4,7 @@ use poirot::eval::{
     EvaluationTarget,
 };
 use poirot::parsing::formula::{self, FormulaParsePolicy, ParseErrorKind};
-use poirot::{CellValue, EvaluationContext, Overlay, Workbook};
+use poirot::{CellValue, EvaluationContext, Workbook, eval::overlay::Overlay};
 fn target(address: &str) -> EvaluationTarget {
     EvaluationTarget {
         sheet: 0,
@@ -91,11 +91,11 @@ fn scalar_policy_preparation_refusals_abort_iferror_but_lazy_sources_remain_unus
     let context = EvaluationContext::default();
     // Scalar intersection preserves demand-driven preparation. Dynamic spilling
     // must eagerly resolve formulas whose resource failure leaves their type unknown.
-    let policy = poirot::OverlayPolicy {
+    let policy = poirot::eval::overlay::OverlayPolicy {
         arrays: eval::ArrayResultPolicy::ScalarIntersection,
         ..Default::default()
     };
-    let mut direct = poirot::Evaluation::with_workbook(book.model())
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(book.model())
         .with_policy(policy.clone())
         .build(context.clone())
         .unwrap();

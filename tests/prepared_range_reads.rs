@@ -4,8 +4,9 @@ use poirot::eval::{
     EvaluationPolicy, EvaluationRun, WorkbookView,
 };
 use poirot::{
-    CellError, CellValue, Evaluation, EvaluationContext, EvaluationFailure, EvaluationLimits,
-    EvaluationTarget, Overlay, OverlayPolicy, ProducerPolicy, Workbook,
+    CellError, CellValue, EvaluationContext, EvaluationFailure, EvaluationLimits, EvaluationTarget,
+    ProducerPolicy, Workbook, eval::overlay::Evaluation, eval::overlay::Overlay,
+    eval::overlay::OverlayPolicy,
 };
 
 fn target(address: &str) -> EvaluationTarget {

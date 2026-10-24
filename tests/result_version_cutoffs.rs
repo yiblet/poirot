@@ -1,6 +1,7 @@
 //! Incremental reuse follows observable values without publishing stale evidence.
 use poirot::{
-    CellStyle, CellValue, EvaluationContext, EvaluationTarget, Overlay, Workbook, WorkbookChange,
+    CellStyle, CellValue, EvaluationContext, EvaluationTarget, Workbook, WorkbookChange,
+    eval::overlay::Overlay,
 };
 use std::time::{Duration, UNIX_EPOCH};
 

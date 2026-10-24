@@ -1,5 +1,7 @@
 //! Independently authored database criteria checks for blank alternative rows.
-use poirot::{CellValue, Evaluation, EvaluationContext, Overlay, Workbook};
+use poirot::{
+    CellValue, EvaluationContext, Workbook, eval::overlay::Evaluation, eval::overlay::Overlay,
+};
 
 /// Build a three-record database with direct and named criteria formulas.
 fn database() -> Workbook {

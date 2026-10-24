@@ -1,6 +1,6 @@
 //! Independently derived Cartesian complex arithmetic for spreadsheet functions.
-//! Principal branches follow https://dlmf.nist.gov/4.2; trigonometric identities
-//! follow https://dlmf.nist.gov/4.21. No external implementation was reused.
+//! Principal branches follow <https://dlmf.nist.gov/4.2>; trigonometric identities
+//! follow <https://dlmf.nist.gov/4.21>. No external implementation was reused.
 use poirot_coercionv2::{complex::ComplexNumber, CellError};
 use std::f64::consts::{LN_10, LN_2, PI};
 

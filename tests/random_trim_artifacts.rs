@@ -1,5 +1,8 @@
 //! Saved evaluator compatibility is independent of authored workbook source.
-use poirot::{CellValue, EvaluationContext, Overlay, OverlayPolicy, Workbook, artifact};
+use poirot::{
+    CellValue, EvaluationContext, Workbook, artifact, eval::overlay::Overlay,
+    eval::overlay::OverlayPolicy,
+};
 #[test]
 fn previous_random_trim_preparation_recovers_authored_source_and_edits() {
     let mut book = Workbook::new();
@@ -40,7 +43,7 @@ fn previous_random_trim_preparation_recovers_authored_source_and_edits() {
         workbook.sheet(0).unwrap().get(input.address).unwrap().value,
         CellValue::Number(11.0)
     );
-    let mut direct = poirot::Evaluation::with_workbook(workbook)
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)
         .with_policy(OverlayPolicy::default())
         .build(context.clone())
         .unwrap();

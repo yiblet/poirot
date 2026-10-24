@@ -1,9 +1,9 @@
 //! Original UTF-16 algorithms for the Microsoft modern text contracts.
-//! https://support.microsoft.com/en-us/excel/functions/textsplit-function
-//! https://support.microsoft.com/en-us/excel/functions/textbefore-function
-//! https://support.microsoft.com/en-us/excel/functions/textafter-function
-//! https://support.microsoft.com/en-us/excel/functions/arraytotext-function
-//! https://support.microsoft.com/en-us/excel/functions/valuetotext-function
+//! <https://support.microsoft.com/en-us/excel/functions/textsplit-function>
+//! <https://support.microsoft.com/en-us/excel/functions/textbefore-function>
+//! <https://support.microsoft.com/en-us/excel/functions/textafter-function>
+//! <https://support.microsoft.com/en-us/excel/functions/arraytotext-function>
+//! <https://support.microsoft.com/en-us/excel/functions/valuetotext-function>
 use std::ops::Range;
 
 /// Formula-domain failures and checked allocation/geometry refusal.

@@ -3,7 +3,7 @@ use poirot::eval::{
     self, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
     EvaluationTarget,
 };
-use poirot::{CellValue, EvaluationContext, Overlay, Workbook};
+use poirot::{CellValue, EvaluationContext, Workbook, eval::overlay::Overlay};
 
 fn target(address: &str) -> EvaluationTarget {
     EvaluationTarget {
@@ -294,7 +294,7 @@ fn direct_work_is_cumulative_until_begin_and_overlay_borrows_start_fresh() {
         },
         ..Default::default()
     };
-    let mut direct = poirot::Evaluation::with_workbook(book.model())
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(book.model())
         .build(context.clone())
         .unwrap();
     let mut exhausted = false;

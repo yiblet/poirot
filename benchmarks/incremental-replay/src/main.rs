@@ -71,7 +71,7 @@ fn target(key: Key) -> EvaluationTarget {
     }
 }
 fn scenario(book: &Workbook, value: &Value) -> Result<Scenario> {
-    let resolver = Overlay::with_workbook(book).build()?;
+    let resolver = book.overlay().build()?;
     let mut inputs = BTreeMap::new();
     for mapping in object(value, "inputs")?.values() {
         let at = resolver.target(string(mapping, "cell")?)?;
@@ -185,7 +185,7 @@ fn signature(values: &[poirot::CellEvaluation]) -> Result<String> {
 }
 fn replay(book: &Workbook, scenarios: &[Scenario], mode: Mode) -> Result<Vec<Observation>> {
     let initial_setup = Instant::now();
-    let mut overlay = Overlay::with_workbook(book).build()?;
+    let mut overlay = book.overlay().build()?;
     let initial_setup_ms = milliseconds(initial_setup);
     let mut previous = BTreeMap::new();
     let mut observations = Vec::new();
@@ -194,8 +194,8 @@ fn replay(book: &Workbook, scenarios: &[Scenario], mode: Mode) -> Result<Vec<Obs
         if !observations.is_empty() {
             match mode {
                 Mode::Persistent => {}
-                Mode::Reset => overlay.reset(),
-                Mode::Fresh => overlay = Overlay::with_workbook(book).build()?,
+                Mode::Reset => overlay.discard_edits(),
+                Mode::Fresh => overlay = book.overlay().build()?,
             }
         }
         let setup_ms = milliseconds(began)
@@ -221,13 +221,17 @@ fn replay(book: &Workbook, scenarios: &[Scenario], mode: Mode) -> Result<Vec<Obs
         previous = request.inputs.clone();
         let edit_ms = milliseconds(began);
         let began = Instant::now();
-        let mut cycle = overlay.evaluation(&request.context)?;
+        let mut cycle = overlay.evaluation_with_profiling(&request.context, true)?;
         let values = cycle
             .outputs(&request.outputs)
             .map_err(|error| format!("request index {}: {error}", observations.len()))?;
         let evaluation_ms = milliseconds(began);
-        let formulas = cycle.usage().formula_executions;
-        drop(cycle);
+        let report = cycle.finish();
+        report.result?;
+        let formulas = report
+            .execution
+            .ok_or("profiling cycle returned no execution counters")?
+            .formula_executions;
         if let Some(expected) = &request.expected
             && !values.iter().map(|cell| &cell.value).eq(expected.iter())
         {

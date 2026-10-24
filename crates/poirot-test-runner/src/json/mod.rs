@@ -5,9 +5,11 @@ pub mod specs;
 pub use cli::{Cli, OutputFormat};
 
 use poirot::{
-    CellEvaluation, CellStyle, CellValue, Evaluation, EvaluationContext, EvaluationTarget, Overlay,
-    Workbook, WorkbookChange,
+    CellEvaluation, CellStyle, CellValue, EvaluationContext, EvaluationTarget, Workbook,
+    WorkbookChange,
 };
+// The authored-style interpreter exercises component APIs unavailable on a value-only scenario.
+use poirot::eval::overlay::{Evaluation, Overlay, OverlayPolicy};
 use schema::{Action, Content, Scenario, Suite};
 use serde::Serialize;
 use std::collections::BTreeSet;
@@ -73,7 +75,7 @@ impl<'a> Session<'a> {
         builtin: poirot::eval::BuiltinSemanticsPolicy,
         arrays: poirot::eval::ArrayResultPolicy,
     ) -> Result<Self, String> {
-        let policy = poirot::OverlayPolicy {
+        let policy = OverlayPolicy {
             builtin,
             arrays,
             ..Default::default()

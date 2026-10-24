@@ -15,6 +15,9 @@ Read the [compatibility guide](docs/compatibility.md) for current scope and know
 gaps. Keep intentional deviations explicit and preserve default compatibility
 behavior.
 
+Read the [architecture guide](docs/architecture.md) for the component boundaries
+and a staged walkthrough of an ordinary cell calculation.
+
 ## Getting started
 
 Open an issue to discuss larger changes before starting. For bugs, include a small

@@ -1,5 +1,5 @@
 //! Legacy spelling preservation and evaluation through XLSX and saved artifacts.
-use poirot::{CellValue, EvaluationContext, Overlay, Workbook, artifact};
+use poirot::{CellValue, EvaluationContext, Workbook, artifact, eval::overlay::Overlay};
 fn near(v: CellValue, e: f64) {
     let CellValue::Number(a) = v else {
         panic!("{v:?}")
@@ -62,7 +62,7 @@ fn all_legacy_names_survive_actual_xlsx_spelling_and_execution_roundtrip() {
             Some(formula)
         );
     }
-    let mut direct = poirot::Evaluation::with_workbook(reopened)
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(reopened)
         .build(EvaluationContext::default())
         .unwrap();
     for (i, (_, e)) in cases().into_iter().enumerate() {
@@ -114,7 +114,7 @@ fn legacy_prepared_and_cold_artifacts_recover_all_contracts() {
     else {
         panic!()
     };
-    let mut direct = poirot::Evaluation::with_workbook(workbook)
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)
         .build(EvaluationContext::default())
         .unwrap();
     for (i, (_, e)) in cases().into_iter().enumerate() {
@@ -139,7 +139,7 @@ fn legacy_prepared_and_cold_artifacts_recover_all_contracts() {
     else {
         panic!()
     };
-    let mut direct = poirot::Evaluation::with_workbook(workbook)
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)
         .build(EvaluationContext::default())
         .unwrap();
     let t = direct.target("S!A1").unwrap();

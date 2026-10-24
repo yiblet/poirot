@@ -5,7 +5,7 @@ use poirot_parsing::formula::{Expr, FormulaPrinter, UnaryOp, parse_formula};
 /// Encode modern function names and postfix spill syntax for XLSX storage.
 /// Format evidence: rust_xlsxwriter 0.101.0 Formula documentation, section
 /// "The Spilled Range Operator #" and its future-function table:
-/// https://docs.rs/rust_xlsxwriter/0.101.0/rust_xlsxwriter/struct.Formula.html
+/// <https://docs.rs/rust_xlsxwriter/0.101.0/rust_xlsxwriter/struct.Formula.html>
 /// This is writer-author format documentation, not Microsoft normative proof.
 /// No upstream implementation or tests were copied or adapted.
 pub(crate) fn stored_formula(source: &str) -> Result<String, IoError> {
@@ -20,10 +20,10 @@ pub(crate) fn stored_formula(source: &str) -> Result<String, IoError> {
 }
 /// Assign XLSX storage names independently of the evaluator's support catalog.
 /// MS-XLSX §2.2.3 lists the future-function spellings, retrieved 2026-10-21:
-/// https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/5d1b6d44-6fc1-4ecd-8fef-0b27406cc2bf
+/// <https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/5d1b6d44-6fc1-4ecd-8fef-0b27406cc2bf>
 /// ARRAYTOTEXT, VALUETOTEXT and XMATCH supplement that table from the public
 /// rust_xlsxwriter 0.101.0 Formula documentation's future-function table:
-/// https://docs.rs/rust_xlsxwriter/0.101.0/rust_xlsxwriter/struct.Formula.html
+/// <https://docs.rs/rust_xlsxwriter/0.101.0/rust_xlsxwriter/struct.Formula.html>
 /// Only format names were used; no upstream implementation or tests reused.
 /// REGEXTEST/EXTRACT/REPLACE and TRIMRANGE postdate those tables and use `_xlfn.`
 /// future-function convention; native Excel storage verification is still pending.

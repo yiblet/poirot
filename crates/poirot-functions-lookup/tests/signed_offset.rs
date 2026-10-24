@@ -18,8 +18,8 @@ impl Workbook for Book {
         Ok(n.to_string())
     }
     fn cell(&mut self, r: &Reference, _: u32, row: u32, col: u32) -> Result<Scalar, Failure> {
-        assert!((r.first_row..=r.last_row).contains(&row));
-        assert!((r.first_col..=r.last_col).contains(&col));
+        assert!((r.first_row()..=r.last_row()).contains(&row));
+        assert!((r.first_col()..=r.last_col()).contains(&col));
         self.reads.push((row, col));
         Ok(Scalar::Number((row * 10 + col) as f64))
     }
@@ -55,16 +55,16 @@ fn n(n: f64) -> Value {
     Value::Scalar(Scalar::Number(n))
 }
 fn base() -> Value {
-    Value::Reference(Reference {
-        kind: ReferenceKind::Cell,
-        workbook: Some("book".into()),
-        first_sheet: 2,
-        last_sheet: 2,
-        first_row: 2,
-        last_row: 2,
-        first_col: 1,
-        last_col: 1,
-    })
+    Value::Reference(
+        Reference::new(
+            ReferenceKind::Cell,
+            Some("book".into()),
+            2..=2,
+            2..=2,
+            1..=1,
+        )
+        .unwrap(),
+    )
 }
 fn signed(w: &mut Book) -> Value {
     evaluate(
@@ -101,10 +101,10 @@ fn signed_offset_preserves_original_endpoints_grid_projection_and_identity_witho
         panic!("nested reference is now in grid");
     };
     assert_eq!(
-        (r.first_row, r.last_row, r.first_col, r.last_col),
+        (r.first_row(), r.last_row(), r.first_col(), r.last_col()),
         (1, 2, 0, 1)
     );
-    assert_eq!(r.workbook.as_deref(), Some("book"));
+    assert_eq!(r.workbook(), Some("book"));
     assert!(w.reads.is_empty());
 }
 #[test]
@@ -149,16 +149,32 @@ fn source_low_bounds_reject_but_short_narrowing_retains_logical_reference() {
 }
 
 #[test]
-fn signed_reference_dto_keeps_unsigned_reference_layout() {
+fn signed_reference_retains_ordinary_identity_without_sharing_validation() {
+    let Value::Reference(reference) = base() else {
+        unreachable!()
+    };
+    let signed = SignedReference {
+        kind: reference.kind(),
+        workbook: reference.workbook().map(str::to_owned),
+        first_sheet: reference.first_sheet(),
+        last_sheet: reference.last_sheet(),
+        first_row: reference.first_row() as i32,
+        last_row: reference.last_row() as i32,
+        first_col: reference.first_col() as i32,
+        last_col: reference.last_col() as i32,
+    };
+    assert_eq!(signed.kind, reference.kind());
+    assert_eq!(signed.workbook.as_deref(), reference.workbook());
     assert_eq!(
-        std::mem::size_of::<SignedReference>(),
-        std::mem::size_of::<Reference>()
+        (signed.first_sheet, signed.last_sheet),
+        (reference.first_sheet(), reference.last_sheet())
     );
     assert_eq!(
-        std::mem::align_of::<SignedReference>(),
-        std::mem::align_of::<Reference>()
+        (signed.height(), signed.width()),
+        (reference.height(), reference.width())
     );
 }
+
 #[test]
 fn public_extreme_base_wrapped_endpoints_default_shape_and_blank_reads() {
     let mut w = Book::default();

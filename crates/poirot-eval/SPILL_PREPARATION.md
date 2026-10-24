@@ -33,12 +33,35 @@ Sparse self-reads retain their more specific diagnostic when both observation
 kinds cover a coordinate. Attempted array geometry remains
 separate because even a losing producer needs its full footprint for invalidation.
 
-Recursive preparation stays on `Session`. `resolve_spills_in` establishes current
+Preparation has three bounded capabilities in `src/spill_publication/`:
+
+- `discovery.rs::Sources` reads immutable effective workbook cells, saved geometry
+  and formal shape bounds. It receives candidate storage and a budget, without
+  formula execution, result caches or observers. `Selection` uses the inspected
+  geometry to grow the ownership component without executing producers.
+- `settlement.rs::Engine` owns dependency traversal, component retries, completion
+  ordering, rollback decisions and the transition to settled membership. Its
+  `Execution` port exposes private preparation state and explicit operations;
+  it cannot reach arbitrary `Session` fields or evaluator configuration.
+- `admission.rs::Admission` checks a complete result and publishes its values,
+  roles and rollback journal. It borrows only memo/publication storage, resource
+  metering and retention limits, without source or formula access.
+
+`execution.rs` implements the settlement port for `Session`. Producer computation
+can recurse into dependency evaluation; callbacks therefore borrow preparation
+state or candidate indexes only for each operation, never across computation or
+completion delivery. Observer handles and their fallible delivery stay in the
+adapter. `source_preparation.rs::SourcePreparation` supplies the same exact-source
+compiler, preparation policy and extension shape contracts to discovery and to
+reached formulas, including the existing local compiler fallback.
+
+`Session::resolve_spills_in` attaches that adapter and establishes current
 settlement; `prepare_spills_in` also records the future-growth dependency guard.
 Keeping those operations distinct prevents a settled range from being mistaken
 for a complete incremental dependency. Callers continue to request values through
 the existing evaluation API; source ownership queries have no hidden evaluation
-or budget side effects.
+or budget side effects. Scripted-port tests exercise retries and operational
+rollback without constructing a workbook or `Session`.
 
 Formal result types and independent row/column bounds define possible
 rectangles on each sheet. Unknown dimensions

@@ -1,5 +1,8 @@
 //! Excel worksheet publication consumes a blank; nested expressions retain it.
-use poirot::{CellValue, Evaluation, EvaluationContext, EvaluationTarget, Overlay, Workbook};
+use poirot::{
+    CellValue, EvaluationContext, EvaluationTarget, Workbook, eval::overlay::Evaluation,
+    eval::overlay::Overlay,
+};
 
 fn at(address: &str) -> EvaluationTarget {
     EvaluationTarget {
@@ -135,12 +138,12 @@ publication_test!(
     |source| Evaluation::with_workbook(source)
         .build(EvaluationContext::default())
         .unwrap(),
-    |runtime: &mut Evaluation<'_>, target| runtime.cell(target).unwrap()
+    |runtime: &mut Evaluation<'_, &'_ Workbook>, target| runtime.cell(target).unwrap()
 );
 publication_test!(
     overlay_formula_results_publish_after_expression_evaluation,
     |source| Overlay::with_workbook(source).build().unwrap(),
-    |runtime: &mut Overlay<'_>, target| runtime
+    |runtime: &mut Overlay<'_, &'_ Workbook>, target| runtime
         .evaluation(&EvaluationContext::default())
         .unwrap()
         .cell(target)

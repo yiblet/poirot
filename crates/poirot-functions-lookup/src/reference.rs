@@ -115,7 +115,7 @@ pub(super) fn sheet(
         Some(args.get(0, c, w)?)
     } {
         None => c.sheet,
-        Some(Value::Reference(r)) => r.first_sheet,
+        Some(Value::Reference(r)) => r.first_sheet(),
         Some(Value::SignedReference(r)) => r.first_sheet,
         Some(Value::Scalar(Scalar::Text(name)) | Value::SelectedScalar(Scalar::Text(name), _)) => w
             .sheet_index(&name)?
@@ -161,18 +161,16 @@ pub(super) fn single(
             continue;
         }
         if let Value::Reference(r) = value {
-            if r.kind != ReferenceKind::Area {
+            if r.kind() != ReferenceKind::Area {
                 continue;
             }
-            let checked =
-                crate::domain::CheckedReference::new(&r).ok_or(Failure::Spreadsheet(Error::Ref))?;
-            let coordinates = crate::geometry::single_selection(&checked, c);
+            let coordinates = crate::geometry::single_selection(&r, c);
             if let Some((row, col)) = coordinates {
                 if found.is_some() {
                     return Err(Error::Value.into());
                 }
                 found = Some(Value::SelectedScalar(
-                    w.cell(&r, r.first_sheet, row, col)?,
+                    w.cell(&r, r.first_sheet(), row, col)?,
                     poirot_coercionv2::Origin::Reference,
                 ));
             }
@@ -196,21 +194,17 @@ pub(super) fn offset(
     let base_argument = args.get(0, c, w)?;
     let (workbook, first_sheet, last_sheet, start_row, start_col, base_height, base_width) =
         match &base_argument {
-            Value::Reference(r) => {
-                let checked = crate::domain::CheckedReference::new(r)
-                    .ok_or(Failure::Spreadsheet(Error::Value))?;
-                (
-                    &r.workbook,
-                    r.first_sheet,
-                    r.last_sheet,
-                    r.first_row as i32,
-                    r.first_col as i32,
-                    checked.height() as i32,
-                    checked.width() as i32,
-                )
-            }
+            Value::Reference(r) => (
+                r.workbook(),
+                r.first_sheet(),
+                r.last_sheet(),
+                r.first_row() as i32,
+                r.first_col() as i32,
+                r.height() as i32,
+                r.width() as i32,
+            ),
             Value::SignedReference(r) if r.valid() => (
-                &r.workbook,
+                r.workbook.as_deref(),
                 r.first_sheet,
                 r.last_sheet,
                 r.first_row,
@@ -282,7 +276,7 @@ pub(super) fn offset(
     {
         return Ok(Value::SignedReference(crate::SignedReference {
             kind: ReferenceKind::Area,
-            workbook: workbook.clone(),
+            workbook: workbook.map(str::to_owned),
             first_sheet,
             last_sheet,
             first_row: rows.first,
@@ -291,16 +285,13 @@ pub(super) fn offset(
             last_col: cols.last,
         }));
     }
-    Ok(Value::Reference(Reference {
-        kind: ReferenceKind::Area,
-        first_row: rows.first as u32,
-        last_row: rows.last as u32,
-        first_col: cols.first as u32,
-        last_col: cols.last as u32,
-        workbook: workbook.clone(),
-        first_sheet,
-        last_sheet,
-    }))
+    Ok(Value::Reference(Reference::new(
+        ReferenceKind::Area,
+        workbook.map(str::to_owned),
+        first_sheet..=last_sheet,
+        rows.first as u32..=rows.last as u32,
+        cols.first as u32..=cols.last as u32,
+    )?))
 }
 /// Parse and resolve a computed reference through the host.
 pub(super) fn indirect(

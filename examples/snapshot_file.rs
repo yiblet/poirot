@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         randomness_seed: 42,
         ..Default::default()
     };
-    let policy = poirot::OverlayPolicy {
+    let policy = poirot::EvaluationPolicy {
         builtin: poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation,
         ..Default::default()
     };
@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     prepared.save_snapshot().write_file(&snapshot_path)?;
     drop(prepared);
 
-    let poirot::RestoredWorkbookEvaluation {
+    let poirot::RestoredEvaluation {
         mut evaluation,
         prepared_status,
     } = Workbook::restore_snapshot()

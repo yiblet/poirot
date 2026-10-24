@@ -160,6 +160,20 @@ impl BudgetMeter {
     pub fn push_cell(&mut self, target: EvaluationTarget) {
         self.frames.push((target, 0));
     }
+    /// Start a cell frame after reserving its storage without panicking on allocation failure.
+    pub fn try_push_cell(&mut self, target: EvaluationTarget) -> EvalResult<()> {
+        self.frames
+            .try_reserve(1)
+            .map_err(|_| EvaluationFailure::Resource {
+                kind: crate::ResourceFailureKind::Allocation,
+                capability: crate::CapabilityId::FunctionAdapter,
+                source: Some(target),
+                detail: "cell budget frame allocation failed".into(),
+            })?;
+        // SAFETY: The successful reservation provides one frame slot.
+        self.frames.push((target, 0));
+        Ok(())
+    }
     /// Restore the enclosing formula's direct-work frame.
     pub fn pop_cell(&mut self) {
         self.frames.pop();

@@ -50,16 +50,16 @@ fn book() -> Book {
     }
 }
 fn area(sheet: u32, fr: u32, lr: u32, fc: u32, lc: u32) -> Value {
-    Value::Reference(Reference {
-        kind: ReferenceKind::Area,
-        workbook: Some("source.xlsx".into()),
-        first_sheet: sheet,
-        last_sheet: sheet,
-        first_row: fr,
-        last_row: lr,
-        first_col: fc,
-        last_col: lc,
-    })
+    Value::Reference(
+        Reference::new(
+            ReferenceKind::Area,
+            Some("source.xlsx".into()),
+            sheet..=sheet,
+            fr..=lr,
+            fc..=lc,
+        )
+        .unwrap(),
+    )
 }
 fn n(n: f64) -> Value {
     Value::Scalar(Scalar::Number(n))
@@ -264,10 +264,17 @@ fn single_intersects_areas_and_rejects_ambiguity() {
         run(ReferenceFunction::Single, &[n(5.)]),
         Err(Error::Value.into())
     );
-    let Value::Reference(mut r) = area(2, 3, 3, 4, 4) else {
+    let Value::Reference(r) = area(2, 3, 3, 4, 4) else {
         unreachable!()
     };
-    r.kind = ReferenceKind::Cell;
+    let r = Reference::new(
+        ReferenceKind::Cell,
+        r.workbook().map(str::to_owned),
+        r.first_sheet()..=r.last_sheet(),
+        r.first_row()..=r.last_row(),
+        r.first_col()..=r.last_col(),
+    )
+    .unwrap();
     assert_eq!(
         run(ReferenceFunction::Single, &[Value::Reference(r)]),
         Err(Error::Value.into())
@@ -516,21 +523,16 @@ fn xlookup_not_found_row_and_xmatch_first_row_of_rectangle() {
     );
 }
 #[test]
-fn malformed_array_rejected_without_index_panic() {
-    let invalid = Value::Array(Array {
-        rows: 2,
-        cols: 2,
-        values: vec![],
-    });
-    assert_eq!(
-        evaluate(
-            Function::Search(Search::XMatch),
-            &[n(2.), invalid],
-            C,
-            &mut book()
-        ),
-        Err(Error::Value.into())
-    );
+fn malformed_array_rejected_at_construction() {
+    for (rows, cols, values) in [
+        (0, 1, vec![]),
+        (1, 0, vec![]),
+        (2, 2, vec![]),
+        (usize::MAX, 2, vec![]),
+        (1, 1, vec![Scalar::Blank; 2]),
+    ] {
+        assert_eq!(Array::new(rows, cols, values), Err(Error::Value.into()));
+    }
 }
 
 #[test]

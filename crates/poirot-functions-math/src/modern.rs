@@ -1,5 +1,5 @@
 //! Independently written mathematical identities for documented Excel utilities.
-//! Contracts: https://support.microsoft.com/en-us/excel/functions/acot-function
+//! Contracts: <https://support.microsoft.com/en-us/excel/functions/acot-function>
 //! and the corresponding ACOTH/COT/COTH/CSC/CSCH/SEC/SECH function pages.
 use super::{MathResult, finite};
 use poirot_functions_core::CellError;

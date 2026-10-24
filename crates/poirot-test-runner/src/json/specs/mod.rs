@@ -1,5 +1,7 @@
 //! Source-backed Excel specification tables in the combined JSON corpus.
-use poirot::{EvaluationContext, Overlay, OverlayPolicy, eval, model};
+// Specifications retain owned model snapshots and exercise engine policy updates directly.
+use poirot::eval::overlay::{Evaluation, Overlay, OverlayPolicy};
+use poirot::{EvaluationContext, eval, model};
 use schema::{Cell, Currency, EvidenceKind, Name, Scalar, SettingsUpdate, TextPolicy};
 
 mod schema;
@@ -227,7 +229,7 @@ pub(crate) fn observe(case: &Case) -> Result<Observation, String> {
             .map(|(target, _)| *target)
             .collect();
         let context = settings.execution_context();
-        let mut direct = poirot::Evaluation::with_workbook(&model)
+        let mut direct = Evaluation::with_workbook(&model)
             .with_policy(settings.policy())
             .build(context.clone())
             .map_err(|e| e.to_string())?;

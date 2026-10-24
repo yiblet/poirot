@@ -43,8 +43,8 @@ fn target(row: u32, col: u32) -> eval::EvaluationTarget {
         address: at(row, col),
     }
 }
-fn policy(materialization: M) -> poirot::OverlayPolicy {
-    poirot::OverlayPolicy {
+fn policy(materialization: M) -> poirot::eval::overlay::OverlayPolicy {
+    poirot::eval::overlay::OverlayPolicy {
         materialization,
         ..Default::default()
     }

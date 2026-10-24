@@ -38,12 +38,12 @@ fn default_direct_overlay_and_low_level_runs_accept_text_beyond_the_old_cap() {
         .unwrap();
     sheet.set_formula(target("B1").address, "LEN(A1)").unwrap();
     let expected = CellValue::Number(LENGTH as f64);
-    let mut direct = poirot::Evaluation::with_workbook(book.model())
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(book.model())
         .build(Default::default())
         .unwrap();
     assert_eq!(direct.cell(target("B1")).unwrap(), expected);
     assert_eq!(direct.cell(target("B1")).unwrap(), expected);
-    let mut overlay = poirot::Overlay::with_workbook(book.model())
+    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(book.model())
         .build()
         .unwrap();
     let context = EvaluationContext::default();

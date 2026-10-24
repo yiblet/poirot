@@ -1,6 +1,8 @@
 //! Measure direct scenario and incremental Poirot evaluation using the common protocol.
 use benchmark_common::{Address, Case, Edit, Engine, Error, Input};
-use poirot::{CellAddress, CellValue, Evaluation, EvaluationContext, EvaluationTarget, Overlay};
+// Engine scenarios own their models and expose execution reports for benchmark diagnostics.
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::{CellAddress, CellValue, EvaluationContext, EvaluationTarget};
 
 /// A native scenario mode selected once outside measurement.
 #[derive(Clone, Copy)]
