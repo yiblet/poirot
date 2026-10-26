@@ -1,5 +1,8 @@
 //! Legacy spelling preservation and evaluation through XLSX and saved artifacts.
-use poirot::{CellValue, EvaluationContext, Workbook, artifact, eval::overlay::Overlay};
+use poirot::calculation::EvaluationContext;
+use poirot::eval::artifact;
+use poirot::eval::overlay::Overlay;
+use poirot::{CellValue, Workbook};
 fn near(v: CellValue, e: f64) {
     let CellValue::Number(a) = v else {
         panic!("{v:?}")
@@ -48,8 +51,8 @@ fn book() -> Workbook {
 #[test]
 fn all_legacy_names_survive_actual_xlsx_spelling_and_execution_roundtrip() {
     let b = book();
-    let bytes = poirot::io::write_xlsx_to_buffer(&b).unwrap();
-    let reopened = poirot::io::read_workbook_bytes(&bytes).unwrap();
+    let bytes = b.save_xlsx().to_buffer().unwrap();
+    let reopened = poirot_io::read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
     for (i, (formula, _)) in cases().into_iter().enumerate() {
         assert_eq!(
             reopened
@@ -85,7 +88,9 @@ fn legacy_prepared_and_cold_artifacts_recover_all_contracts() {
         );
     }
     let bytes = overlay.save_snapshot().to_buffer().unwrap();
-    let restored = Workbook::load_snapshot().from_bytes(&bytes).unwrap();
+    let restored = poirot::eval::artifact::SnapshotLoadBuilder::default()
+        .from_bytes(&bytes)
+        .unwrap();
     assert_eq!(restored.prepared_status, artifact::PreparedStatus::Restored);
     let artifact::RestoredCheckpoint::Prepared(mut prepared) = restored.into_checkpoint().unwrap()
     else {
@@ -102,7 +107,7 @@ fn legacy_prepared_and_cold_artifacts_recover_all_contracts() {
             e,
         );
     }
-    let restored = Workbook::load_snapshot()
+    let restored = poirot::eval::artifact::SnapshotLoadBuilder::default()
         .prepared_policy(artifact::PreparedPolicy::SourceOnly)
         .from_bytes(&bytes)
         .unwrap();
@@ -125,12 +130,14 @@ fn legacy_prepared_and_cold_artifacts_recover_all_contracts() {
     let previous = poirot::eval::overlay::snapshot::COMPATIBILITY_REVISION - 1;
     old[16..24].copy_from_slice(&previous.to_le_bytes());
     assert!(
-        Workbook::load_snapshot()
+        poirot::eval::artifact::SnapshotLoadBuilder::default()
             .prepared_policy(artifact::PreparedPolicy::RequireCompatible)
             .from_bytes(&old)
             .is_err()
     );
-    let restored = Workbook::load_snapshot().from_bytes(&old).unwrap();
+    let restored = poirot::eval::artifact::SnapshotLoadBuilder::default()
+        .from_bytes(&old)
+        .unwrap();
     assert_eq!(
         restored.prepared_status,
         artifact::PreparedStatus::DiscardedIncompatible

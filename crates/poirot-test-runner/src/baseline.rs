@@ -6,6 +6,8 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, path::Path};
 
+/// Prior observation for one stable case ID, together with its source binding and review reason.
+/// The runner compares new observations against it without changing authored expected values.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Entry {
@@ -19,6 +21,9 @@ pub struct Entry {
     pub fods: Option<FodsBinding>,
 }
 
+/// Recorded observations keyed by stable case ID for detecting regressions and changed gaps.
+/// Its wire format groups identical failures and records passing IDs compactly.
+/// Authored expectations remain in fixtures; this baseline records observed behavior.
 #[derive(Clone, Debug)]
 pub struct Baseline {
     pub schema_version: u8,
@@ -28,6 +33,8 @@ pub struct Baseline {
 
 // Schema 2 stores passing IDs only and groups identical nonpassing observations.
 // Source bindings are reconstructed from the hash-checked corpus, not repeated here.
+/// Compact wire group for cases sharing the same nonpassing observation and reason.
+/// Grouping avoids repeating identical diagnostic data for each case in the baseline file.
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct SparseGroup {
@@ -36,6 +43,8 @@ struct SparseGroup {
     cases: Vec<String>,
 }
 
+/// Schema-2 baseline transport decoded into a complete per-case observation map.
+/// Passing IDs and grouped nonpassing cases are expanded with duplicate-ID and outcome checks.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct StoredBaseline {
@@ -202,7 +211,10 @@ pub fn compare(previous: Option<&Observation>, current: &Observation) -> Change 
 }
 
 /// Produce an explicit candidate from a complete report. Partial runs cannot erase history.
-pub fn candidate(report: &crate::runner::RunReport, reason: &str) -> Result<Baseline, Error> {
+pub fn candidate(
+    report: &crate::runner::EvaluationReport,
+    reason: &str,
+) -> Result<Baseline, Error> {
     if !report.header.complete_inventory
         || !report.header.selection.unrestricted()
         || report.summary.selected == 0

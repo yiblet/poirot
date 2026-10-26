@@ -30,7 +30,7 @@
 //!
 //! [`Workbook::open`] detects XLSX or XLS from the file contents.
 //! [`Workbook::from_bytes`] reads the same formats from memory. Use
-//! [`XlsxSaveBuilder::to_buffer`] when you need bytes instead of a file. Saves
+//! [`files::XlsxSaveBuilder::to_buffer`] when you need bytes instead of a file. Saves
 //! produce XLSX; legacy XLS is supported as input only.
 //!
 //! Calamine streams XLSX input; rxls handles XLS input and XLSX authoring. Saves encode the modeled calculation
@@ -39,14 +39,13 @@
 //!
 //! Imported shared formulas become complete, independent [`Cell::formula`] strings.
 //! Replacing the original anchor leaves followers independent. Optional manually
-//! supplied [`SharedFormula`] provenance is verified before saving shared records.
+//! supplied [`cells::SharedFormula`] provenance is verified before saving shared records.
 //! Executable template reuse belongs to the compiler and does not depend on file
-//! provenance. Legacy [`RetainedXlsx`] snapshot data does not select a preservation
-//! mode; XLSX saves always author a fresh package.
+//! provenance. XLSX saves always author a fresh modeled package.
 //!
 //! The main workbook operations are:
 //!
-//! - [`sheet_by_name_mut`](model::Workbook::sheet_by_name_mut) gives access to a
+//! - [`sheet_by_name_mut`](Workbook::sheet_by_name_mut) gives access to a
 //!   sheet for editing.
 //! - [`Workbook::stored_cell`] reads a stored cell, including its value and formula.
 //! - [`Workbook::recalculate`] updates calculated values after input changes.
@@ -70,6 +69,12 @@
 //! let energy = book.stored_cell("Energy", "C1".parse()?).ok_or("missing energy result")?;
 //! assert_eq!(energy.value, CellValue::Number(300.));
 //! let bytes = book.save_xlsx().to_buffer()?;
+//! let mut loaded = Workbook::from_bytes(&bytes)?;
+//! loaded.sheet_by_name_mut("Energy").ok_or("missing Energy")?
+//!     .set_value("A1".parse()?, 24.)?;
+//! loaded.recalculate()?;
+//! assert_eq!(loaded.stored_cell("Energy", "C1".parse()?).ok_or("missing result")?.value,
+//!     CellValue::Number(600.));
 //! # Ok(())
 //! # }
 //! ```
@@ -82,7 +87,7 @@
 //! | Use case | API | Calculation state |
 //! | --- | --- | --- |
 //! | Edit and save a workbook | [`Workbook::recalculate`] | Updates stored formula results. |
-//! | Query a cell or formula text directly | [direct cell evaluation](poirot_eval::run_cell), [direct formula evaluation](poirot_eval::run_formula) | Runs against workbook data. |
+//! | Query a cell or formula text directly | [direct cell evaluation](crate::eval::run_cell), [direct formula evaluation](crate::eval::run_formula) | Runs against workbook data. |
 //! | Compare scenarios | [`Workbook::evaluation`] | Calculates requested dependencies; edits clear results. |
 //! | Repeatedly change a model | [`Workbook::overlay`] | Retains edits and reuses unaffected results. |
 //!
@@ -107,13 +112,13 @@
 //! # Import warnings
 //!
 //! Loading can change or omit unsupported file content. The workbook keeps these
-//! warnings in [`FileMetadata::import_warnings`]. Review them before relying on a
+//! warnings in [`files::FileMetadata::import_warnings`]. Review them before relying on a
 //! saved copy:
 //!
 //! ```
 //! # use poirot::Workbook;
 //! # let book = Workbook::new();
-//! if let Some(metadata) = &book.file_metadata {
+//! if let Some(metadata) = &book.model().file_metadata {
 //!     for warning in &metadata.import_warnings {
 //!         eprintln!("{warning}");
 //!     }
@@ -123,7 +128,7 @@
 //! # Example: compare operating hours without changing the workbook
 //!
 //! To compare energy use for 12 and 24 operating hours without editing the original,
-//! use an [`Evaluation`]. Set temporary operating hours and ask for energy use:
+//! use a [`calculation::Evaluation`]. Set temporary operating hours and ask for energy use:
 //!
 //! ```
 //! use poirot::{CellValue, Workbook};
@@ -144,31 +149,33 @@
 //!     energies.push(evaluation.cell(energy)?);
 //! }
 //! assert_eq!(energies, [CellValue::Number(300.), CellValue::Number(600.)]);
-//! assert_eq!(book.cell("Energy", "A1".parse()?).ok_or("missing operating hours")?.value,
+//! assert_eq!(book.stored_cell("Energy", "A1".parse()?).ok_or("missing operating hours")?.value,
 //!     CellValue::Number(12.));
 //! # Ok(())
 //! # }
 //! ```
 //!
-//! Creating an evaluation does not calculate any cells. [`Evaluation::cell`]
+//! Creating an evaluation does not calculate any cells. [`calculation::Evaluation::cell`]
 //! calculates the requested cell and the dependencies needed to obtain its value.
-//! Use [`Evaluation::outputs`] for several outputs or [`Evaluation::all`] for all
+//! Use [`calculation::Evaluation::outputs`] for several outputs or [`calculation::Evaluation::all`] for all
 //! occupied cells and any spill cells produced by formulas.
 //!
 //! Each input edit clears the evaluation's calculated results. For repeated
-//! scenarios in a larger model, [`Overlay`] can keep results whose dependencies
+//! scenarios in a larger model, [`calculation::Overlay`] can keep results whose dependencies
 //! have not changed. It maintains dependency information between calculations;
-//! select its outputs through [`Overlay::evaluation`]. Both leave the original
-//! workbook unchanged unless you explicitly apply their changes.
+//! select its outputs through [`calculation::Overlay::evaluation`]. Borrowed scenarios
+//! leave the original workbook unchanged. For an owned overlay,
+//! [`calculation::Overlay::apply_edits_to_workbook`] applies authored edits while
+//! retaining warm calculations; it does not publish calculated results.
 //!
-//! Export a scenario with [`Evaluation::save_xlsx`] or
-//! [`Overlay::save_xlsx`]. Export captures edits and valid results without
+//! Export a scenario with [`calculation::Evaluation::save_xlsx`] or
+//! [`calculation::Overlay::save_xlsx`]. Export captures edits and valid results without
 //! calculation, baseline mutation or loss of warm state. Untouched saved formula
 //! values may be stale. See the
 //! [evaluation guide](https://github.com/yiblet/poirot/blob/master/docs/evaluation.md)
 //! for cycle boundaries, lifecycle operations and snapshot recovery.
 //!
-//! [`EvaluationContext`] supplies time, randomness, and calculation limits.
+//! [`calculation::EvaluationContext`] supplies time, randomness, and calculation limits.
 //! For repeatable results from functions such as `NOW()` or `RAND()`, supply the
 //! same clock and seed. The same settings can be used with
 //! [`Workbook::recalculate_with_context`].
@@ -182,22 +189,18 @@
 //! # Other APIs
 //!
 //! [`Workbook`] handles the usual load, edit, calculate, and save workflow. Use
-//! the component modules when you need one part of that workflow on its own:
+//! the six consumer domains for more focused jobs:
 //!
-//! - [`model`] stores workbook data without file handling or calculation. Use it
-//!   when another part of your application owns those operations.
-//! - [`io`] reads XLS and XLSX and writes XLSX using the data model directly.
-//!   [`Workbook`] already uses this adapter.
-//! - [`parsing`] lets you inspect a formula as an expression tree without running
-//!   it. [`mod@format`] renders cell values as display text, such as `12.50` for
-//!   the number `12.5` with format `0.00`.
-//! - [`eval`] exposes the compiler and custom-function interfaces for embedding
-//!   the calculation engine. Register custom functions through
-//!   [the extension registry](poirot_eval::extensions); registrations cannot override existing builtins.
-//! - [`edit`] updates formula references when changing workbook structure.
-//!   [`translation_edit`] adjusts references within existing formulas.
-//! - [`artifact`] saves native Poirot snapshots for restoring workbook or
-//!   calculation state. Use XLSX saves for files opened in Excel.
+//! - [`cells`] supplies shared-formula provenance and lossless Excel text.
+//! - [`styles`] inspects presentation and renders values with number formats.
+//! - [`calculation`] configures direct and incremental scenarios and their limits.
+//! - [`files`] configures imports and Excel exports and exposes diagnostics.
+//! - [`editing`] plans structural changes and formula-reference translation.
+//! - [`snapshots`] saves native state and restores source with visible preparation status.
+//!
+//! Advanced integrations depend directly on `poirot::model`, `poirot_io`,
+//! `poirot_parsing`, `poirot_functions::format`, or `poirot::eval`. Use [`Workbook::model`]
+//! and [`Workbook::into_model`] when crossing into those component APIs.
 //!
 //! # Project direction
 //!
@@ -212,32 +215,134 @@
 //! choices. Contributors are welcome, including AI-written PRs; see
 //! [Contributing](https://github.com/yiblet/poirot/blob/master/CONTRIBUTING.md).
 
-pub mod artifact;
-
-pub use poirot_eval as eval;
-
-pub use poirot_eval::{EvaluationLimits, ProducerPolicy, RegexSettings, ResourceFailureKind};
-pub use poirot_format as format;
-pub use poirot_io as io;
-pub use poirot_model as model;
-pub use poirot_parsing as parsing;
-pub use poirot_workbook as workbook;
-
-pub use poirot_model::{
-    Alignment, BorderLine, BorderSide, Borders, Cell, CellAddress, CellError, CellStyle, CellValue,
-    ColorSource, DateSystem, ExcelText, FileFormat, FileMetadata, FontFamily, FontScheme, FontSize,
-    FontStyle, HorizontalAlignment, ImportDiagnostic, ImportDiagnosticKind, IndexedColor,
-    ModelError, PatternFill, PatternType, ReadingOrder, RetainedXlsx, RotationDegrees,
-    SharedFormula, SharedFormulaId, SheetPresentation, SheetVisibility, StyleColor, StyleContext,
-    TextRef, TextRotation, TextUnits, TextUnitsError, ThemeColor, Tint, Underline,
-    VerticalAlignment, VisualStyle, WorkbookChange, Worksheet,
+pub use crate::model::{
+    Cell, CellAddress, CellError, CellValue, DateSystem, ModelError, Worksheet,
 };
-pub use poirot_workbook::{
-    CalculationError, CellEvaluation, CompilationUsage, Evaluation, EvaluationBuilder,
-    EvaluationContext, EvaluationCycle, EvaluationFailure, EvaluationPolicy, EvaluationReport,
-    EvaluationTarget, LoadBuilder, NumberLocale, Overlay, OverlayBuilder, OverlayEdits,
-    OverlayError, OverlaySnapshot, PreparationPolicy, RestoredEvaluation, RestoredWorkbook,
-    SavePlan, ScenarioSaveError, ScenarioXlsxSaveBuilder, Workbook, WorkbookError,
-    WorkbookSnapshot, WorkbookSnapshotLoadBuilder, WorkspaceState, XlsxSaveBuilder, edit,
-    translation_edit,
-};
+pub use crate::workflow::Workbook;
+
+/// Text storage, text units, and shared-formula provenance.
+///
+/// ```
+/// use poirot::{CellAddress, cells::{SharedFormula, SharedFormulaId}};
+/// let origin: CellAddress = "B2".parse()?;
+/// let provenance = SharedFormula { group: SharedFormulaId(1), origin };
+/// assert!(provenance.is_anchor(origin));
+/// # Ok::<(), poirot::ModelError>(())
+/// ```
+pub mod cells {
+    pub use crate::model::{
+        ExcelText, SharedFormula, SharedFormulaId, TextRef, TextUnits, TextUnitsError,
+    };
+}
+
+/// Cell presentation and display formatting.
+///
+/// ```
+/// use poirot::{CellValue, styles::{compile_format, render_value, FormatCompilePolicy, FormatRenderContext}};
+/// let plan = compile_format("0.00", FormatCompilePolicy::default())?;
+/// let display = render_value(&CellValue::Number(12.5), &plan, FormatRenderContext::default())?;
+/// assert_eq!(display.text, "12.50");
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+pub mod styles {
+    pub use crate::model::{
+        Alignment, BorderLine, BorderSide, Borders, CellStyle, ColorSource, FontFamily, FontScheme,
+        FontSize, FontStyle, HorizontalAlignment, IndexedColor, PatternFill, PatternType,
+        ReadingOrder, RotationDegrees, SheetPresentation, SheetVisibility, StyleColor,
+        StyleContext, TextRotation, ThemeColor, Tint, Underline, VerticalAlignment, VisualStyle,
+    };
+    pub use poirot_functions::format::{
+        FormatCompileError, FormatCompilePolicy, FormatError, FormatErrorKind, FormatLocale,
+        FormatPlan, FormatRenderContext, FormattedValue, compile_format, render_value,
+    };
+}
+
+/// Direct and incremental calculation, semantics, contexts, and resource limits.
+///
+/// ```
+/// use poirot::{Workbook, CellValue, calculation::EvaluationContext};
+/// let mut book = Workbook::new();
+/// let sheet = book.add_sheet("Data")?;
+/// sheet.set_value("A1".parse()?, 2.)?;
+/// sheet.set_formula("B1".parse()?, "A1*3")?;
+/// let mut scenario = book.into_overlay().build()?;
+/// let output = scenario.target("Data!B1")?;
+/// let context = EvaluationContext::default();
+/// assert_eq!(scenario.evaluation(&context)?.cell(output)?, CellValue::Number(6.));
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+pub mod calculation {
+    pub use crate::eval::random::RandomAccess;
+    pub use crate::eval::run::{MemoRetentionLimits, MemoRetentionUsage};
+    pub use crate::eval::{
+        ArrayResultPolicy, BudgetFailure, BudgetKind, BuiltinSemanticsPolicy, CapabilityId,
+        CurrencyContext, DateOrder, EvaluationLimits, EvaluationUsage, FormattingConfiguration,
+        FormulaCacheMaterializationPolicy, KnownSourceException, Localization, ProducerPolicy,
+        RegexSettings, ResourceFailureKind, TextSemanticsPolicy,
+    };
+    pub use crate::workflow::{
+        CalculationError, CellEvaluation, CompilationUsage, Evaluation, EvaluationBuilder,
+        EvaluationContext, EvaluationCycle, EvaluationFailure, EvaluationPolicy, EvaluationReport,
+        EvaluationTarget, NumberLocale, Overlay, OverlayBuilder, OverlayEdits, OverlayError,
+        PreparationPolicy,
+    };
+    pub use poirot_parsing::formula::FormulaParsePolicy;
+}
+
+/// Excel loading, export, source metadata, and import diagnostics.
+///
+/// ```
+/// use poirot::{Workbook, files::ReadOptions};
+/// let mut book = Workbook::new();
+/// book.add_sheet("Data")?.set_value("A1".parse()?, 42.)?;
+/// let bytes = book.save_xlsx().to_buffer()?;
+/// let loaded = Workbook::load().options(ReadOptions::default()).from_bytes(&bytes)?;
+/// assert!(loaded.stored_cell("Data", "A1".parse()?).is_some());
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+pub mod files {
+    pub use crate::model::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
+    pub use crate::workflow::{
+        LoadBuilder, SavePlan, ScenarioSaveError, ScenarioXlsxSaveBuilder, WorkbookError,
+        XlsxSaveBuilder,
+    };
+    pub use poirot_io::opc::OpcImportPolicy;
+    pub use poirot_io::{IoError, ReadOptions, ResourceBudget, WriteOptions};
+}
+
+/// Structural edits and source-checked formula reference translations.
+///
+/// ```
+/// use poirot::{Workbook, editing::{EditPlanner, EditPolicy}};
+/// let mut book = Workbook::new();
+/// book.add_sheet("Data")?.set_formula("A1".parse()?, "Data!B1")?;
+/// let plan = EditPlanner::rename_sheet(book.model(), 0, "Inputs", EditPolicy::default())?;
+/// book.model_mut().apply_rename_sheet_plan(&plan)?;
+/// assert!(book.sheet_by_name("Inputs").is_some());
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+pub mod editing {
+    pub use crate::model::{
+        EditOutcome, FormulaReplacement, FormulaSource, RenameSheetPlan, WorkbookChange,
+    };
+    pub use crate::workflow::edit::{
+        EditError, EditPlanner, EditPolicy, FormulaSpellingPolicy, SavedCachePolicy,
+    };
+    pub use crate::workflow::translation_edit::{
+        FormulaTranslationEditPlan, TranslationCachePolicy, TranslationRequest,
+    };
+    pub use poirot_parsing::formula::{FormulaLocation, TranslationPlan, TranslationPolicy};
+}
+
+/// Native source and calculation-state persistence with explicit recovery policies.
+#[path = "artifact.rs"]
+pub mod snapshots;
+
+/// Formula compilation and evaluation.
+pub mod eval;
+/// Editable source storage and workbook queries.
+pub mod model;
+/// Workbook editing and calculation workflows.
+mod workflow;
+
+mod file_adapter;

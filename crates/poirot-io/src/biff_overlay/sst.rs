@@ -1,6 +1,6 @@
 //! Lossless SST/CONTINUE units from original BIFF records.
+use crate::ExcelText;
 use crate::biff_preflight::{PreflightError, Record, ResourceBudget};
-use poirot_model::ExcelText;
 fn check(resource: &'static str, requested: u64, limit: u64) -> Result<(), PreflightError> {
     if requested > limit {
         Err(PreflightError::Resource {

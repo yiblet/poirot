@@ -1,7 +1,9 @@
 //! Source-backed Excel specification tables in the combined JSON corpus.
 // Specifications retain owned model snapshots and exercise engine policy updates directly.
-use poirot::eval::overlay::{Evaluation, Overlay, OverlayPolicy};
-use poirot::{EvaluationContext, eval, model};
+use poirot::calculation::EvaluationContext;
+use poirot::eval;
+use poirot::eval::overlay::{Evaluation, EvaluationPolicy, Overlay};
+use poirot::model;
 use schema::{Cell, Currency, EvidenceKind, Name, Scalar, SettingsUpdate, TextPolicy};
 
 mod schema;
@@ -61,12 +63,12 @@ impl Settings {
             ..Default::default()
         }
     }
-    fn policy(&self) -> OverlayPolicy {
+    fn policy(&self) -> EvaluationPolicy {
         let source = match self.text_policy {
             TextPolicy::ExcelV1 => eval::TextSourceVersion::Poi7321209OpenJdk21Unicode15,
             TextPolicy::ExcelV2 => eval::TextSourceVersion::ExcelCompatibilityV2Documented,
         };
-        OverlayPolicy {
+        EvaluationPolicy {
             builtin: eval::BuiltinSemanticsPolicy::ExcelDocumentation,
             arrays: self.array_result_policy.execution(),
             text: eval::TextSemanticsPolicy { source },
@@ -153,6 +155,9 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Vec<Case>, String> {
     Ok(cases)
 }
 
+/// Collected assertion results from executing an Excel specification case across its steps and modes.
+/// Failed checks and mode-level execution errors are kept separately so the unified
+/// runner can distinguish mismatches from blocked execution.
 pub(crate) struct Observation {
     pub checks: Vec<serde_json::Value>,
     pub failures: Vec<serde_json::Value>,

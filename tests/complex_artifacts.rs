@@ -1,5 +1,8 @@
 //! Durable complex source/edit recovery and executable XLSX round trips.
-use poirot::{CellValue, EvaluationContext, Workbook, artifact, eval::overlay::Overlay};
+use poirot::calculation::EvaluationContext;
+use poirot::eval::artifact;
+use poirot::eval::overlay::Overlay;
+use poirot::{CellValue, Workbook};
 #[test]
 fn old_complex_preparation_recovers_authored_source_and_edits() {
     let mut book = Workbook::new();
@@ -24,16 +27,17 @@ fn old_complex_preparation_recovers_authored_source_and_edits() {
     let previous = poirot::eval::overlay::snapshot::COMPATIBILITY_REVISION - 1;
     bytes[16..24].copy_from_slice(&previous.to_le_bytes());
     assert!(
-        Workbook::load_snapshot()
+        poirot::eval::artifact::SnapshotLoadBuilder::default()
             .prepared_policy(artifact::PreparedPolicy::RequireCompatible)
             .from_bytes(&bytes)
             .is_err()
     );
-    let artifact::RestoredCheckpoint::Source { workbook, status } = Workbook::load_snapshot()
-        .from_bytes(&bytes)
-        .unwrap()
-        .into_checkpoint()
-        .unwrap()
+    let artifact::RestoredCheckpoint::Source { workbook, status } =
+        poirot::eval::artifact::SnapshotLoadBuilder::default()
+            .from_bytes(&bytes)
+            .unwrap()
+            .into_checkpoint()
+            .unwrap()
     else {
         panic!("old prepared cache accepted")
     };
@@ -48,12 +52,13 @@ fn old_complex_preparation_recovers_authored_source_and_edits() {
     assert_eq!(direct.cell(output).unwrap(), "3+6j".into());
     let child = direct.target("S!D2").unwrap();
     assert_eq!(direct.cell(child).unwrap(), "-2j".into());
-    let artifact::RestoredCheckpoint::Source { status, .. } = Workbook::load_snapshot()
-        .prepared_policy(artifact::PreparedPolicy::SourceOnly)
-        .from_bytes(&bytes)
-        .unwrap()
-        .into_checkpoint()
-        .unwrap()
+    let artifact::RestoredCheckpoint::Source { status, .. } =
+        poirot::eval::artifact::SnapshotLoadBuilder::default()
+            .prepared_policy(artifact::PreparedPolicy::SourceOnly)
+            .from_bytes(&bytes)
+            .unwrap()
+            .into_checkpoint()
+            .unwrap()
     else {
         panic!("source-only reused cache")
     };
@@ -71,8 +76,8 @@ fn xlsx_roundtrip_executes_complex_profiles_and_spills() {
     ] {
         sheet.set_formula(cell.parse().unwrap(), formula).unwrap();
     }
-    let bytes = poirot::io::write_xlsx_to_buffer(&book).unwrap();
-    let reopened = poirot::io::read_workbook_bytes(&bytes).unwrap();
+    let bytes = book.save_xlsx().to_buffer().unwrap();
+    let reopened = poirot_io::read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
     let mut evaluation = poirot::eval::overlay::Evaluation::with_workbook(reopened)
         .build(EvaluationContext::default())
         .unwrap();

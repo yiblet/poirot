@@ -12,6 +12,8 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+/// Temporary authored JSON corpus and baseline used to exercise unified discovery,
+/// execution, saved reports, and baseline transitions through public runner APIs.
 struct Fixture {
     root: PathBuf,
     options: Options,
@@ -73,11 +75,11 @@ impl Fixture {
         std::fs::write(self.root.join("json/suite.json"), suite.to_string()).unwrap();
     }
 
-    fn run(&self) -> runner::RunReport {
+    fn run(&self) -> runner::EvaluationReport {
         runner::run(&self.options, &mut Vec::new(), Format::Json, false, false).unwrap()
     }
 
-    fn accept(&self, report: &runner::RunReport) {
+    fn accept(&self, report: &runner::EvaluationReport) {
         let mut baseline = Baseline::load(&self.options.baseline).unwrap();
         for result in &report.cases {
             baseline.cases.insert(
@@ -286,6 +288,8 @@ fn comparison_never_calls_a_blocker_or_skip_a_pass() {
 
 #[test]
 fn output_write_errors_propagate_without_a_successful_report() {
+    /// Writer that always fails, used to verify that report-output errors propagate
+    /// instead of returning a successful run report.
     struct Broken;
     impl std::io::Write for Broken {
         fn write(&mut self, _: &[u8]) -> std::io::Result<usize> {

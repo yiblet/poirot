@@ -1,6 +1,6 @@
 //! SpreadsheetML escape codec. XML entity decoding precedes this codec.
 //! Work with UTF16 units; decoding is one pass, never recursive.
-use poirot_model::ExcelText;
+use crate::ExcelText;
 
 fn escape_at(units: &[u16], at: usize) -> Option<u16> {
     let s = units.get(at..at.checked_add(7)?)?;

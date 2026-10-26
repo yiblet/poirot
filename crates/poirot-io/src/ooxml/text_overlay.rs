@@ -5,7 +5,8 @@ use super::{
     xml::{attr, events, text, xml},
 };
 use crate::IoError;
-use poirot_model::{Cell, CellAddress, CellValue, ExcelText};
+use crate::data::SheetSink;
+use crate::{Cell, CellAddress, CellValue, ExcelText};
 use quick_xml::{Reader, events::Event};
 
 fn rich(reader: &mut Reader<&[u8]>, end: &str) -> Result<ExcelText, IoError> {
@@ -48,9 +49,9 @@ pub(crate) fn shared_strings(bytes: Option<&[u8]>) -> Result<Vec<ExcelText>, IoE
 pub(crate) fn apply_sheet_text(
     bytes: &[u8],
     shared: &[ExcelText],
-    sheet: &mut poirot_model::Worksheet,
-    styles: &[poirot_model::CellStyle],
-    warnings: &mut Vec<poirot_model::ImportDiagnostic>,
+    sheet: &mut impl SheetSink,
+    styles: &[crate::CellStyle],
+    warnings: &mut Vec<crate::ImportDiagnostic>,
 ) -> Result<bool, IoError> {
     let mut needs_spills = false;
     let mut range_styles = false;
@@ -88,7 +89,7 @@ pub(crate) fn apply_sheet_text(
                 if matches!(attr(&e, "hidden")?.as_deref(), Some("1" | "true")) {
                     sheet.set_row_visibility(
                         row,
-                        poirot_model::RowVisibility {
+                        crate::RowVisibility {
                             manually_hidden: true,
                             filtered_out: false,
                         },
@@ -175,7 +176,7 @@ pub(crate) fn apply_sheet_text(
                 }
                 if let Some(cell) = sheet.get_mut(address) {
                     cell.style = if styles.is_empty() && style == 0 {
-                        poirot_model::CellStyle::default()
+                        crate::CellStyle::default()
                     } else {
                         styles
                             .get(style)
@@ -189,8 +190,8 @@ pub(crate) fn apply_sheet_text(
         }
     }
     if range_styles {
-        warnings.push(poirot_model::ImportDiagnostic {
-            kind: poirot_model::ImportDiagnosticKind::RepresentationLoss,
+        warnings.push(crate::ImportDiagnostic {
+            kind: crate::ImportDiagnosticKind::RepresentationLoss,
             detail: "XLSX row/column style inheritance is omitted".into(),
         });
     }
@@ -200,11 +201,12 @@ pub(crate) fn apply_sheet_text(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data::{SheetSource, WorkbookSink};
+    use crate::test_support::Workbook;
     use crate::{
         ooxml::{package::Package, xml::part},
         opc::OpcReadPlan,
     };
-    use poirot_model::Workbook;
 
     /// Apply original package text for this module's recovery fixture.
     fn apply_text(

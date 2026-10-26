@@ -1,12 +1,12 @@
-//! Export repeated scenarios without committing edits or discarding warm calculations.
-use poirot::{EvaluationContext, Overlay, Workbook};
+//! Apply scenario inputs while retaining warm calculations, then export their results.
+use poirot::Workbook;
+use poirot::calculation::EvaluationContext;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut book = Workbook::new();
     book.add_sheet("S")?.set_formula("B1".parse()?, "A1*2")?;
-    // Owned advanced construction permits explicitly applying authored edits.
-    let mut overlay =
-        Overlay::from_overlay(poirot::eval::overlay::Overlay::with_workbook(book).build()?);
+    // Moving the source permits explicitly applying authored edits.
+    let mut overlay = book.into_overlay().build()?;
     let input = overlay.target("S!A1")?;
     let output = overlay.target("S!B1")?;
     let context = EvaluationContext::default();

@@ -1,7 +1,8 @@
 //! Borrowed workbook metadata projection and XML execution.
 use super::xml::{events, write_event, xml};
+use crate::DateSystem;
 use crate::IoError;
-use poirot_model::{DateSystem, Workbook};
+use crate::data::WorkbookSource;
 use quick_xml::{
     Writer,
     events::{BytesEnd, BytesStart, BytesText, Event},
@@ -9,19 +10,22 @@ use quick_xml::{
 use std::io::Write;
 
 /// Borrowed backend workbook XML plus canonical source metadata to restore.
-pub(super) struct WorkbookPatch<'a> {
+pub(super) struct WorkbookPatch<'a, B: WorkbookSource> {
     /// Original backend-generated workbook XML.
     pub(super) bytes: &'a [u8],
     /// Canonical source supplying names and workbook metadata.
-    pub(super) workbook: &'a Workbook,
+    pub(super) workbook: &'a B,
 }
 
-fn write_names<W: Write>(writer: &mut Writer<W>, workbook: &Workbook) -> Result<(), IoError> {
-    if workbook.named_ranges.is_empty() {
+fn write_names<W: Write>(
+    writer: &mut Writer<W>,
+    workbook: &impl WorkbookSource,
+) -> Result<(), IoError> {
+    if workbook.named_ranges().is_empty() {
         return Ok(());
     }
     write_event(writer, Event::Start(BytesStart::new("definedNames")))?;
-    for name in &workbook.named_ranges {
+    for name in workbook.named_ranges() {
         let mut start = BytesStart::new("definedName");
         start.push_attribute(("name", name.name.as_str()));
         let scope = name.sheet_scope.map(|i| i.to_string());
@@ -34,7 +38,7 @@ fn write_names<W: Write>(writer: &mut Writer<W>, workbook: &Workbook) -> Result<
     }
     write_event(writer, Event::End(BytesEnd::new("definedNames")))
 }
-impl WorkbookPatch<'_> {
+impl<B: WorkbookSource> WorkbookPatch<'_, B> {
     /// Rewrite workbook XML with the canonical metadata selected for export.
     pub(super) fn execute<W: Write>(&self, output: W) -> Result<W, IoError> {
         let Self { bytes, workbook } = *self;
@@ -54,7 +58,7 @@ impl WorkbookPatch<'_> {
                     }
                     start.push_attribute((
                         "date1904",
-                        if workbook.date_system == DateSystem::Excel1904 {
+                        if workbook.date_system() == DateSystem::Excel1904 {
                             "1"
                         } else {
                             "0"

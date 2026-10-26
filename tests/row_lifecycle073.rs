@@ -1,7 +1,5 @@
-use poirot::{
-    io,
-    model::{CellAddress, CellValue, MAX_ROWS, Workbook},
-};
+use poirot::model::{CellAddress, CellValue, MAX_ROWS, Workbook};
+use poirot_io as io;
 
 fn source(last: u32) -> Workbook {
     let mut workbook = Workbook::new();
@@ -37,12 +35,15 @@ fn assert_rows(workbook: &Workbook, last: u32) {
 fn actual_xlsx_roundtrip_retains_empty_sparse_rows() {
     let workbook = source(MAX_ROWS - 1);
     let bytes = io::write_xlsx_to_buffer(&workbook).unwrap();
-    assert_rows(&io::read_workbook_bytes(&bytes).unwrap(), MAX_ROWS - 1);
+    assert_rows(
+        &io::read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap(),
+        MAX_ROWS - 1,
+    );
     let mut empty = Workbook::new();
     empty.add_sheet("Empty").unwrap().create_row(44).unwrap();
     let bytes = io::write_xlsx_to_buffer(&empty).unwrap();
     assert!(
-        io::read_workbook_bytes(&bytes)
+        io::read_workbook_bytes::<poirot::model::Workbook>(&bytes)
             .unwrap()
             .sheet(0)
             .unwrap()

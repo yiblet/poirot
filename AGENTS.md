@@ -14,6 +14,17 @@ writing Excel workbooks.
   booleans for genuinely binary properties, and newtypes where distinct values
   should not be interchangeable.
 
+## API design
+
+Keep APIs small and purposeful: every public or internal entry point adds ongoing
+maintenance cost. When replacing or refactoring an API, consolidate equivalent
+entry points and remove obsolete wrappers, helpers, aliases, and dead APIs,
+updating callers, documentation, and tests together. Poirot is pre-1.0: breaking
+API changes are acceptable when they simplify or improve the library. Do not
+retain redundant compatibility layers solely for historical use. Preserve distinct
+behaviors and use cases when they have a deliberate justification, rather than
+reducing the surface mechanically.
+
 ## Documentation and tests
 
 - Every public function and method, and every type declaration (including private

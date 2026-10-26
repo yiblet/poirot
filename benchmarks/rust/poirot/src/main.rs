@@ -2,7 +2,8 @@
 use benchmark_common::{Address, Case, Edit, Engine, Error, Input};
 // Engine scenarios own their models and expose execution reports for benchmark diagnostics.
 use poirot::eval::overlay::{Evaluation, Overlay};
-use poirot::{CellAddress, CellValue, EvaluationContext, EvaluationTarget};
+use poirot::{CellAddress, CellValue};
+use poirot::calculation::{EvaluationContext, EvaluationTarget};
 
 /// A native scenario mode selected once outside measurement.
 #[derive(Clone, Copy)]
@@ -112,7 +113,7 @@ impl Engine for Model {
                         a.sheet,
                         a.address,
                         &configuration,
-                        context.budgets,
+                        context.limits.into(),
                     ) {
                         poirot::eval::EvaluationOutcome::Complete { value, .. } => number(value),
                         poirot::eval::EvaluationOutcome::Aborted { failure: error, .. } => {

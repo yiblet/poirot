@@ -49,6 +49,8 @@ fn files(path: &Path, out: &mut Vec<PathBuf>) -> Result<(), Box<dyn std::error::
     Ok(())
 }
 
+/// Counts scenario statuses across selected JSON files for the command-line run summary.
+/// Known gaps and unexpected passes remain separate from ordinary passes and failures.
 #[derive(Default, Serialize)]
 struct Summary {
     scenarios: usize,

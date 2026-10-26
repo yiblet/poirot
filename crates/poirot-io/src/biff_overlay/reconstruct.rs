@@ -3,7 +3,7 @@ use super::formula::{addins::AddIns, formula_with_addins};
 use super::text::{cached_text, take, text, units, word};
 use super::{Formula, PreflightError, ResourceBudget, Result};
 use crate::biff_preflight::Record;
-use poirot_model::{CellAddress, ExcelText, NamedRange};
+use crate::{CellAddress, ExcelText, NamedRange};
 
 fn charge(total: &mut u64, bytes: usize, limit: u64, resource: &'static str) -> Result<()> {
     *total = total

@@ -4,7 +4,7 @@ use crate::fods::{
     gaps::GapKind,
     report::{CaseFailure, FailureKind},
 };
-use poirot_eval::{
+use poirot::eval::{
     CellCompletion, CellObserver, CompiledWorkbook, DependencyRead, DependencyReadSink,
     EvaluationFailure, PreparedFormula, ReadEvent,
 };
@@ -20,7 +20,7 @@ pub(crate) struct Trace {
     missing_name: Option<String>,
     syntax: Option<String>,
     external_sheet: Option<String>,
-    matrix_cell: Option<poirot_eval::EvaluationTarget>,
+    matrix_cell: Option<poirot::eval::EvaluationTarget>,
     omitted_functions: bool,
 }
 
@@ -98,7 +98,7 @@ pub(crate) struct Reads<'a> {
     /// Fixture identity attached to diagnostic evidence.
     pub entry: &'a FixtureEntry,
     /// Canonical fixture workbook used for source-name resolution.
-    pub book: &'a poirot_model::Workbook,
+    pub book: &'a poirot::model::Workbook,
     /// Omitted source tables whose values must never become local inputs.
     pub omissions: &'a [crate::fods::xml::model::Omission],
 }
@@ -117,8 +117,8 @@ impl DependencyReadSink for Reads<'_> {
                 if self.omissions.iter().any(|omission| {
                     omission.kind == crate::fods::xml::model::OmissionKind::ExternalLinkedTable
                         && omission.sheet.as_deref().is_some_and(|sheet| {
-                            poirot_model::identifiers::compare(sheet, &name)
-                                == poirot_model::identifiers::IdentifierComparison::Equal
+                            poirot::model::identifiers::compare(sheet, &name)
+                                == poirot::model::identifiers::IdentifierComparison::Equal
                         })
                 }) {
                     trace.external_sheet.get_or_insert_with(|| detail(&name));
@@ -172,7 +172,7 @@ impl DependencyReadSink for Reads<'_> {
 /// Cell-completion observer retaining fixture execution diagnostics.
 pub(crate) struct Cells<'a> {
     /// Source CSE anchors and continuations requiring unavailable matrix context.
-    pub matrix_cells: &'a std::collections::BTreeSet<(usize, poirot_model::CellAddress)>,
+    pub matrix_cells: &'a std::collections::BTreeSet<(usize, poirot::model::CellAddress)>,
     /// Shared trace receiving cell completion/failure evidence.
     pub trace: &'a RefCell<Trace>,
     /// Prepared source index used to identify completed formulas.
@@ -223,8 +223,8 @@ impl CellObserver for Cells<'_> {
 fn intentional_unknown_provider(
     entry: &FixtureEntry,
     plan: &CompiledWorkbook,
-    book: &poirot_model::Workbook,
-    consumer: Option<poirot_eval::EvaluationTarget>,
+    book: &poirot::model::Workbook,
+    consumer: Option<poirot::eval::EvaluationTarget>,
     name: &str,
 ) -> bool {
     let Some(target) = consumer else {

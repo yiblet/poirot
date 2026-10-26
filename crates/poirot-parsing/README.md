@@ -17,4 +17,4 @@ fn main() -> Result<(), poirot_parsing::formula::ParseError> {
 
 The formula module also prints expressions and translates references for edits.
 Other modules parse criteria, numbers, dates, and date/time inputs. Formula
-calculation lives in [poirot-eval](https://docs.rs/poirot-eval).
+calculation lives in [poirot::eval](https://docs.rs/poirot/latest/poirot/eval).

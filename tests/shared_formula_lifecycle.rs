@@ -1,6 +1,7 @@
 //! Shared source formulas remain independent through calculation and persistence.
 //! Original fixture: ECMA-376 Part 1 §18.3.1.40 defines shared relative offsets.
-use poirot::{CellAddress, CellValue, Workbook, eval};
+use poirot::eval;
+use poirot::{CellAddress, CellValue, Workbook};
 use std::{
     io::{Cursor, Read, Write},
     sync::Arc,
@@ -36,11 +37,11 @@ fn imported_group() -> Workbook {
 fn imported_shared_sources_reuse_executables_with_distinct_reference_bindings() {
     let book = imported_group();
     let mut compiler = eval::FormulaCompiler::default();
-    let policy = eval::EvaluationPolicy::default();
+    let policy = eval::PreparationPolicy::default();
     let formulas: Vec<_> = ["B1", "B2", "B3"]
         .into_iter()
         .map(|address| {
-            let cell = book.cell("Inputs", at(address)).unwrap();
+            let cell = book.stored_cell("Inputs", at(address)).unwrap();
             assert!(cell.shared_formula.is_none());
             compiler.compile_formula(cell.formula.as_deref().unwrap(), &policy)
         })
@@ -64,18 +65,20 @@ fn imported_shared_sources_reuse_executables_with_distinct_reference_bindings() 
 fn replacing_original_anchor_survives_calculation_snapshot_and_fresh_save() {
     let mut book = imported_group();
     for (address, formula) in [("B1", "A1+1"), ("B2", "A2+1"), ("B3", "A3+1")] {
-        let cell = book.cell("Inputs", at(address)).unwrap();
+        let cell = book.stored_cell("Inputs", at(address)).unwrap();
         assert_eq!(cell.formula.as_deref(), Some(formula));
         assert_eq!(cell.value, CellValue::Number(-1.));
     }
     book.recalculate().unwrap();
     for (address, value) in [("B1", 11.), ("B2", 21.), ("B3", 31.)] {
         assert_eq!(
-            book.cell("Inputs", at(address)).unwrap().value,
+            book.stored_cell("Inputs", at(address)).unwrap().value,
             CellValue::Number(value)
         );
         assert_eq!(
-            book.cell("Inputs", at(address)).unwrap().shared_formula,
+            book.stored_cell("Inputs", at(address))
+                .unwrap()
+                .shared_formula,
             None
         );
     }
@@ -84,9 +87,14 @@ fn replacing_original_anchor_survives_calculation_snapshot_and_fresh_save() {
     sheet.set_value(at("A2"), 40.).unwrap();
     book.recalculate().unwrap();
     let snapshot = book.save_snapshot().to_buffer().unwrap();
-    let restored = Workbook::from_snapshot_bytes(&snapshot).unwrap();
+    let restored = Workbook::from_model(
+        Workbook::restore_snapshot()
+            .from_bytes(&snapshot)
+            .unwrap()
+            .into_artifact()
+            .workbook,
+    );
     assert_eq!(restored, book);
-    assert!(restored.retained_xlsx.is_none());
     let bytes = restored.save_xlsx().to_buffer().unwrap();
     let mut reopened = Workbook::from_bytes(&bytes).unwrap();
     for candidate in [&restored, &reopened] {
@@ -95,13 +103,13 @@ fn replacing_original_anchor_survives_calculation_snapshot_and_fresh_save() {
             ("B2", 41., Some("A2+1")),
             ("B3", 31., Some("A3+1")),
         ] {
-            let cell = candidate.cell("Inputs", at(address)).unwrap();
+            let cell = candidate.stored_cell("Inputs", at(address)).unwrap();
             assert_eq!(cell.value, CellValue::Number(value));
             assert_eq!(cell.formula.as_deref(), formula);
         }
         assert!(
             candidate
-                .cell("Inputs", at("B1"))
+                .stored_cell("Inputs", at("B1"))
                 .unwrap()
                 .shared_formula
                 .is_none()
@@ -109,21 +117,21 @@ fn replacing_original_anchor_survives_calculation_snapshot_and_fresh_save() {
     }
     assert!(
         reopened
-            .cell("Inputs", at("B2"))
+            .stored_cell("Inputs", at("B2"))
             .unwrap()
             .shared_formula
             .is_none()
     );
     assert!(
         reopened
-            .cell("Inputs", at("B3"))
+            .stored_cell("Inputs", at("B3"))
             .unwrap()
             .shared_formula
             .is_none()
     );
     reopened.recalculate().unwrap();
     assert_eq!(
-        reopened.cell("Inputs", at("B2")).unwrap().value,
+        reopened.stored_cell("Inputs", at("B2")).unwrap().value,
         CellValue::Number(41.)
     );
 }

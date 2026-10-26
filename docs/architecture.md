@@ -8,17 +8,57 @@ explicitly applies or exports results.
 
 | Component | Responsibility |
 | --- | --- |
-| `src/lib.rs`, `poirot-workbook` | Public workbook, evaluation, overlay and file workflows |
-| `poirot-model` | Cells, worksheets, stored results and atomic workbook changes |
-| `poirot-parsing` | Formula syntax |
-| `poirot-io` | File decoding and encoding |
-| `poirot-eval` | Compilation, execution, dependency tracking and caching |
-| `poirot-coercionv2` | Spreadsheet argument coercion |
-| `poirot-functions-*` | Function algorithms independent of workbook and evaluator state |
+| `poirot`: `src/lib.rs`, `src/workflow/` | Public workbook, evaluation, overlay and file workflows |
+| `poirot`: `src/model/` | Sparse worksheets, stored results and atomic changes |
+| `poirot`: `src/eval/` | Compilation, execution, dependency tracking and caching |
+| `poirot-parsing` | Formula syntax independent of workbook state |
+| `poirot-functions` | Pure function algorithms, scalar values, argument coercion and display formatting |
+| `poirot-io` | File records, XLS/XLSX decoding and XLSX encoding |
 
-Evaluator adapters resolve references, collect dependencies and coerce arguments
-before invoking the function crates. `tools/test_function_architecture.py` checks
-that those crates stay independent of the evaluator.
+Evaluator adapters resolve references and collect dependencies before calling pure
+function modules. `tools/test_function_architecture.py` checks package dependencies
+and keeps algorithm and codec modules independent of workbook implementations.
+
+File codecs import directly into a `WorkbookSink` and export through borrowed
+`WorkbookSource` views. `src/file_adapter.rs` implements these contracts over the
+sparse model; crossing the boundary does not clone the workbook. IO owns file
+records such as cell contents, styles and diagnostics. Functions own canonical
+scalar values and calendar semantics, reused where they have identical meaning.
+
+## From stored cells to calculated outputs
+
+A worksheet is a sparse collection of source records, not a dense matrix of values.
+For example, `A1 = 3` and `B1 = A1*2` produce two stored `Cell` records. The first
+holds a literal input; the second holds formula text and a saved result that may
+still be blank or stale. An unstored `C1` has no record at all. A stored blank can
+still carry formatting, so absence and a blank value are separate facts.
+
+| Type | Role |
+| --- | --- |
+| `CellAddress` | Worksheet-local row and column. `EvaluationTarget` adds a resolved sheet index for calculation. |
+| `Cell` | Source record: literal or formula, saved value, style and optional shared-formula provenance. |
+| `CellValue` | Typed scalar used for both inputs and results: blank, number, text, boolean or spreadsheet error. |
+| `CellError` | A formula-visible error such as `#DIV/0!`; operational failures use Rust errors instead. |
+| `CellStyle` | Presentation retained independently of the value; formatting a number does not turn it into text. |
+| `CellEvaluation` | A calculated output paired with its target and optional source formatting, without changing the source record. |
+
+`Worksheet` stores records in `CellStore<Cell>`. Its `WorksheetCells` view and
+`CellIter` traverse stored coordinates in row-major order, skipping absence but
+including explicit blanks. `CellRange` selects an interval in that address order,
+not a rectangle. `ColumnCells` and `OccupiedRows` narrow traversal without expanding
+missing coordinates. `CellRead` gives worksheets and generic stores the same
+borrowed sparse-read interface; it supplies no calculation.
+
+For rectangular model queries, `query::WorkbookView` applies a `QueryPlan` of
+`RangeMembership` areas. Membership includes absent coordinates; `StoredCells`
+and `StoredCellsReverse` visit only records that exist. These reads expose saved
+results, not freshly calculated values. Formula cells with blank saved results
+remain formulas when `BlankCounts` distinguishes them from explicit blank inputs.
+
+Formula syntax keeps a separate identity: `CellReference` retains an optional sheet
+name and `$` anchors for copy translation; `CellCoordinates` is the parser's decoded
+token form. Evaluation resolves references against a workbook before reading cells.
+Neither syntax type owns a stored cell or a calculated result.
 
 ## Follow a calculation
 
@@ -26,7 +66,7 @@ that those crates stay independent of the evaluator.
 `book.overlay().build()?.evaluation(&context)?.cell(target)` uses the same execution
 engine with dependency tracking and a cache retained across edits.
 
-Both enter `Session::cell` in `crates/poirot-eval/src/session_execution.rs`:
+Both enter `Session::cell` in `src/eval/session_execution.rs`:
 
 1. Resolve the effective source, including scenario edits.
 2. Record the read and reuse a valid cached result if available.

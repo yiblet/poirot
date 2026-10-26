@@ -1,13 +1,14 @@
 use model::{CellError, CellValue};
-use poirot::{eval, model};
+use poirot::eval;
+use poirot::model;
 fn target(address: &str) -> eval::EvaluationTarget {
     eval::EvaluationTarget {
         sheet: 0,
         address: address.parse().unwrap(),
     }
 }
-fn policy() -> poirot::eval::overlay::OverlayPolicy {
-    poirot::eval::overlay::OverlayPolicy {
+fn policy() -> poirot::eval::overlay::EvaluationPolicy {
+    poirot::eval::overlay::EvaluationPolicy {
         builtin: eval::BuiltinSemanticsPolicy::ExcelDocumentation,
         arrays: eval::ArrayResultPolicy::DynamicSpill,
         ..Default::default()
@@ -30,7 +31,7 @@ fn source(model: model::Workbook) -> Result<model::Workbook, std::convert::Infal
 /// Public overlay harness that retains the latest evaluation's observable values.
 struct SpillCase<'a> {
     overlay: poirot::eval::overlay::Overlay<'a>,
-    context: poirot::EvaluationContext,
+    context: poirot::calculation::EvaluationContext,
     results: std::collections::BTreeMap<(usize, model::CellAddress), CellValue>,
 }
 fn context(w: &model::Workbook) -> SpillCase<'_> {
@@ -47,7 +48,7 @@ impl SpillCase<'_> {
     fn run(
         &mut self,
         targets: &[eval::EvaluationTarget],
-    ) -> Result<eval::RunReport<usize>, poirot::OverlayError> {
+    ) -> Result<eval::RunReport<usize>, poirot::calculation::OverlayError> {
         self.results.clear();
         let mut evaluation = self.overlay.evaluation(&self.context)?;
         let outputs = evaluation.outputs(targets);
@@ -92,13 +93,13 @@ impl SpillCase<'_> {
     }
     fn set_policy(
         &mut self,
-        policy: poirot::eval::overlay::OverlayPolicy,
-    ) -> Result<(), poirot::OverlayError> {
+        policy: poirot::eval::overlay::EvaluationPolicy,
+    ) -> Result<(), poirot::calculation::OverlayError> {
         self.results.clear();
         self.overlay.set_policy(policy)
     }
     fn set_budgets(&mut self, budgets: eval::EvaluationBudgets) {
-        self.context.budgets = budgets;
+        self.context.limits = budgets.into();
     }
     fn set_retention_limits(&mut self, limits: eval::run::MemoRetentionLimits) {
         self.context.retention = limits;
@@ -220,7 +221,7 @@ fn edits_shrink_and_policy_changes_clear_old_children() {
     assert_eq!(value(&ctx, "D1"), CellValue::Number(8.));
     ctx.set_input(target("A1"), CellValue::Boolean(true))
         .unwrap();
-    ctx.set_policy(poirot::eval::overlay::OverlayPolicy {
+    ctx.set_policy(poirot::eval::overlay::EvaluationPolicy {
         arrays: eval::ArrayResultPolicy::ScalarIntersection,
         ..Default::default()
     })
@@ -668,7 +669,7 @@ fn exhausted_non_singleton_axes_use_poi_value_errors_and_at_stays_scalar() {
     }
     let w = model(&[("D1", "{1,2}+1")]);
     let mut ctx = context(&w);
-    ctx.set_policy(poirot::eval::overlay::OverlayPolicy {
+    ctx.set_policy(poirot::eval::overlay::EvaluationPolicy {
         arrays: eval::ArrayResultPolicy::ScalarIntersection,
         ..Default::default()
     })
@@ -711,7 +712,7 @@ fn operator_snapshot_reuses_bytecode_and_retains_blank_input_dependencies() {
     let (restored_workbook, restored_state) =
         poirot::eval::overlay::Overlay::from_snapshot(snapshot).unwrap();
     let mut restored = restored_state.attach(&restored_workbook).unwrap();
-    let config = poirot::EvaluationContext::default();
+    let config = poirot::calculation::EvaluationContext::default();
     assert_eq!(
         restored
             .evaluation(&config)
@@ -806,7 +807,7 @@ fn captured_random_operator_producers_reuse_and_refresh_when_seed_changes() {
         .with_policy(policy())
         .build()
         .unwrap();
-    let mut config = poirot::EvaluationContext::default();
+    let mut config = poirot::calculation::EvaluationContext::default();
     for iteration in 0..3 {
         if iteration == 2 {
             config.randomness_seed = config.randomness_seed.wrapping_add(1);

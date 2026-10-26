@@ -3,6 +3,9 @@ use crate::model::{CaseMetadata, Source};
 use clap::Args;
 use serde::{Deserialize, Serialize};
 
+/// Case selector shared by discovery, execution, and saved-result inspection.
+/// Different filter kinds are combined with AND; repeated values within a kind are
+/// combined with OR, and an empty kind imposes no restriction.
 #[derive(Clone, Debug, Default, Args, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Selection {

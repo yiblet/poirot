@@ -32,7 +32,8 @@ pub struct Address {
     pub col: u32,
 }
 
-/// One authored input or formula.
+/// One cell populated before a benchmark engine's initial calculation.
+/// The shared workload representation lets each engine receive the same literals and formulas.
 #[derive(Deserialize)]
 pub struct Cell {
     /// Cell location.

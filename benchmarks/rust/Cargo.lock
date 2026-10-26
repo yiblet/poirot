@@ -642,50 +642,11 @@ checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 name = "poirot"
 version = "0.1.0"
 dependencies = [
- "poirot-eval",
- "poirot-format",
- "poirot-io",
- "poirot-model",
- "poirot-parsing",
- "poirot-workbook",
-]
-
-[[package]]
-name = "poirot-coercionv2"
-version = "0.1.0"
-dependencies = [
- "nom",
- "poirot-functions-core",
- "poirot-numeric",
- "poirot-parsing",
- "regex",
- "serde",
-]
-
-[[package]]
-name = "poirot-eval"
-version = "0.1.0"
-dependencies = [
  "foldhash",
  "nom",
- "poirot-coercionv2",
- "poirot-format",
- "poirot-functions-core",
- "poirot-functions-criteria",
- "poirot-functions-database",
- "poirot-functions-dates",
- "poirot-functions-engineering",
- "poirot-functions-financial",
- "poirot-functions-logical",
- "poirot-functions-lookup",
- "poirot-functions-math",
- "poirot-functions-matrix",
- "poirot-functions-statistics",
- "poirot-functions-text",
- "poirot-model",
- "poirot-numeric",
+ "poirot-functions",
+ "poirot-io",
  "poirot-parsing",
- "poirot-text",
  "postcard",
  "rand_chacha 0.10.0",
  "rand_core 0.10.1",
@@ -694,120 +655,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "poirot-format"
+name = "poirot-functions"
 version = "0.1.0"
 dependencies = [
+ "bigdecimal",
+ "libm",
  "nom",
- "poirot-model",
-]
-
-[[package]]
-name = "poirot-functions-core"
-version = "0.1.0"
-dependencies = [
+ "num-bigint",
+ "pcre2",
+ "poirot-parsing",
+ "regex",
  "serde",
  "smallvec",
-]
-
-[[package]]
-name = "poirot-functions-criteria"
-version = "0.1.0"
-dependencies = [
- "poirot-coercionv2",
- "poirot-parsing",
- "poirot-text",
-]
-
-[[package]]
-name = "poirot-functions-database"
-version = "0.1.0"
-dependencies = [
- "poirot-coercionv2",
- "poirot-functions-core",
- "poirot-functions-criteria",
- "poirot-numeric",
- "poirot-parsing",
- "poirot-text",
-]
-
-[[package]]
-name = "poirot-functions-dates"
-version = "0.1.0"
-dependencies = [
- "poirot-coercionv2",
- "poirot-functions-core",
-]
-
-[[package]]
-name = "poirot-functions-engineering"
-version = "0.1.0"
-dependencies = [
- "libm",
- "poirot-coercionv2",
-]
-
-[[package]]
-name = "poirot-functions-financial"
-version = "0.1.0"
-dependencies = [
- "poirot-coercionv2",
- "poirot-functions-math",
- "poirot-numeric",
-]
-
-[[package]]
-name = "poirot-functions-logical"
-version = "0.1.0"
-dependencies = [
- "poirot-coercionv2",
- "poirot-functions-core",
-]
-
-[[package]]
-name = "poirot-functions-lookup"
-version = "0.1.0"
-dependencies = [
- "poirot-coercionv2",
- "poirot-text",
-]
-
-[[package]]
-name = "poirot-functions-math"
-version = "0.1.0"
-dependencies = [
- "bigdecimal",
- "poirot-coercionv2",
- "poirot-functions-core",
- "poirot-numeric",
-]
-
-[[package]]
-name = "poirot-functions-matrix"
-version = "0.1.0"
-dependencies = [
- "poirot-coercionv2",
- "poirot-functions-core",
-]
-
-[[package]]
-name = "poirot-functions-statistics"
-version = "0.1.0"
-dependencies = [
- "bigdecimal",
- "libm",
- "poirot-coercionv2",
- "poirot-functions-core",
- "poirot-numeric",
  "statrs 0.19.1",
-]
-
-[[package]]
-name = "poirot-functions-text"
-version = "0.1.0"
-dependencies = [
- "pcre2",
- "poirot-coercionv2",
- "poirot-numeric",
  "unicode-general-category",
 ]
 
@@ -817,29 +677,13 @@ version = "0.1.0"
 dependencies = [
  "calamine",
  "cfb",
- "poirot-model",
+ "poirot-functions",
  "poirot-parsing",
  "quick-xml 0.42.0",
  "rxls",
- "zip 9.0.5",
-]
-
-[[package]]
-name = "poirot-model"
-version = "0.1.0"
-dependencies = [
- "foldhash",
- "poirot-functions-core",
  "serde",
  "serde_bytes",
-]
-
-[[package]]
-name = "poirot-numeric"
-version = "0.1.0"
-dependencies = [
- "num-bigint",
- "poirot-functions-core",
+ "zip 9.0.5",
 ]
 
 [[package]]
@@ -858,23 +702,6 @@ dependencies = [
  "benchmark-common",
  "poirot",
  "serde_json",
-]
-
-[[package]]
-name = "poirot-text"
-version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "poirot-workbook"
-version = "0.1.0"
-dependencies = [
- "poirot-eval",
- "poirot-io",
- "poirot-model",
- "poirot-parsing",
 ]
 
 [[package]]

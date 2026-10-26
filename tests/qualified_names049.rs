@@ -1,7 +1,6 @@
-use poirot::{
-    eval, io,
-    model::{CellAddress, CellError, CellValue, Workbook},
-};
+use poirot::eval;
+use poirot::model::{CellAddress, CellError, CellValue, Workbook};
+use poirot_io as io;
 
 #[test]
 fn xlsx_imported_qualified_names_recalculate_selected_scope_in_caller_context() {
@@ -43,7 +42,7 @@ fn xlsx_imported_qualified_names_recalculate_selected_scope_in_caller_context() 
             .unwrap();
     }
     let bytes = io::write_xlsx_to_buffer(&workbook).unwrap();
-    let mut imported = io::read_workbook_bytes(&bytes).unwrap();
+    let mut imported = io::read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
     assert_eq!(imported.named_ranges, workbook.named_ranges);
     match eval::run_recalculation(&mut imported, Default::default(), Default::default()) {
         eval::EvaluationOutcome::Complete { .. } => (),

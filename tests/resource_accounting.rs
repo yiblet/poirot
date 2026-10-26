@@ -1,9 +1,11 @@
 //! Public resource contracts for bounded scalars and sparse reference consumers.
+use poirot::calculation::EvaluationContext;
+use poirot::eval::overlay::Overlay;
 use poirot::eval::{
-    self, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
+    self as eval, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
     EvaluationTarget,
 };
-use poirot::{CellValue, EvaluationContext, Workbook, eval::overlay::Overlay};
+use poirot::{CellValue, Workbook};
 
 fn target(address: &str) -> EvaluationTarget {
     EvaluationTarget {
@@ -291,10 +293,11 @@ fn direct_work_is_cumulative_until_begin_and_overlay_borrows_start_fresh() {
         .work_units
         * 2;
     let context = EvaluationContext {
-        budgets: EvaluationBudgets {
+        limits: (EvaluationBudgets {
             run_work: limit,
             ..Default::default()
-        },
+        })
+        .into(),
         ..Default::default()
     };
     let mut direct = poirot::eval::overlay::Evaluation::with_workbook(book.model())

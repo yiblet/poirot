@@ -1,4 +1,10 @@
 //! Locale-parametric numeric syntax. Calendar interpretation is a host continuation.
+//!
+//! ```
+//! use poirot_parsing::number::{FormattedNumber, NumberLocale, parse_formatted_number};
+//! let locale = NumberLocale::new(",", Some("."), Some("EUR"), "%", ":").unwrap();
+//! assert_eq!(parse_formatted_number("1.234,5", &locale), FormattedNumber::Number(Ok(1234.5)));
+//! ```
 /// A recognized numeric spelling whose value cannot be represented.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct NumberError;
@@ -22,16 +28,28 @@ use nom::{
 };
 use std::borrow::Cow;
 
-/// Explicit numeric tokens; these never consult the process locale.
+/// Validated literal separators and affixes for locale-dependent numeric input parsing.
+/// The profile is supplied explicitly and never consults the process locale.
+///
+/// ```
+/// use poirot_parsing::number::{FormattedNumber, NumberLocale, parse_formatted_number};
+/// let locale = NumberLocale::new(",", Some("."), Some("EUR"), "%", ":")
+///     .ok_or("invalid locale")?;
+/// assert_eq!(parse_formatted_number("1.234,5", &locale), FormattedNumber::Number(Ok(1234.5)));
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(try_from = "LocaleDataV2")]
-pub struct NumberLocaleV2 {
+pub struct NumberLocale {
     decimal: Cow<'static, str>,
     grouping: Option<Cow<'static, str>>,
     currency: Option<Cow<'static, str>>,
     percent: Cow<'static, str>,
     time: Cow<'static, str>,
 }
+/// Unvalidated numeric-locale data used only during deserialization.
+/// Conversion through `NumberLocale::new` rejects ambiguous or invalid tokens before
+/// they can reach the numeric grammar.
 #[derive(serde::Deserialize)]
 struct LocaleDataV2 {
     decimal: String,
@@ -40,7 +58,7 @@ struct LocaleDataV2 {
     percent: String,
     time: String,
 }
-impl TryFrom<LocaleDataV2> for NumberLocaleV2 {
+impl TryFrom<LocaleDataV2> for NumberLocale {
     type Error = &'static str;
     fn try_from(data: LocaleDataV2) -> Result<Self, Self::Error> {
         Self::new(
@@ -53,7 +71,7 @@ impl TryFrom<LocaleDataV2> for NumberLocaleV2 {
         .ok_or("numeric locale tokens are empty, overlap, or contain numeric syntax")
     }
 }
-impl NumberLocaleV2 {
+impl NumberLocale {
     /// Fixed US-English input profile; independent of display formatting.
     pub const EN_US: Self = Self {
         decimal: Cow::Borrowed("."),
@@ -112,12 +130,14 @@ impl NumberLocaleV2 {
         })
     }
 }
-impl Default for NumberLocaleV2 {
+impl Default for NumberLocale {
     fn default() -> Self {
         Self::EN_US
     }
 }
 
+/// Borrowed decimal components before locale separators are normalized for floating-point parsing.
+/// Keeping source slices avoids building a normalized string for grammar alternatives that fail.
 #[derive(Clone, Copy, Debug)]
 struct DecimalV2<'a> {
     integer: &'a str,
@@ -127,7 +147,7 @@ struct DecimalV2<'a> {
 fn parse_space(input: &str) -> IResult<&str, &str> {
     nom::bytes::complete::take_while(|c| c == ' ')(input)
 }
-fn parse_integer<'a>(input: &'a str, locale: &NumberLocaleV2) -> IResult<&'a str, &'a str> {
+fn parse_integer<'a>(input: &'a str, locale: &NumberLocale) -> IResult<&'a str, &'a str> {
     if let Some(group) = &locale.grouping {
         recognize(pair(
             digit1,
@@ -138,7 +158,7 @@ fn parse_integer<'a>(input: &'a str, locale: &NumberLocaleV2) -> IResult<&'a str
         digit1(input)
     }
 }
-fn parse_decimal<'a>(input: &'a str, locale: &NumberLocaleV2) -> IResult<&'a str, DecimalV2<'a>> {
+fn parse_decimal<'a>(input: &'a str, locale: &NumberLocale) -> IResult<&'a str, DecimalV2<'a>> {
     let (input, (integer, fraction)) = alt((
         |input| {
             let (input, integer) = parse_integer(input, locale)?;
@@ -163,12 +183,14 @@ fn parse_decimal<'a>(input: &'a str, locale: &NumberLocaleV2) -> IResult<&'a str
         },
     ))
 }
+/// Decimal syntax with signs, parentheses, and currency placement reduced to one sign.
+/// The same representation feeds numeric conversion for ordinary, currency, and percent input.
 #[derive(Clone, Copy, Debug)]
 struct SignedDecimalV2<'a> {
     negative: bool,
     decimal: DecimalV2<'a>,
 }
-fn parse_currency<'a>(input: &'a str, locale: &NumberLocaleV2) -> IResult<&'a str, &'a str> {
+fn parse_currency<'a>(input: &'a str, locale: &NumberLocale) -> IResult<&'a str, &'a str> {
     let Some(currency) = locale.currency.as_deref() else {
         return Err(nom::Err::Error(nom::error::Error::new(
             input,
@@ -185,7 +207,7 @@ enum DecimalFamilyV2 {
 }
 fn parse_signed_decimal<'a>(
     input: &'a str,
-    locale: &NumberLocaleV2,
+    locale: &NumberLocale,
     family: DecimalFamilyV2,
 ) -> IResult<&'a str, SignedDecimalV2<'a>> {
     let currency = family == DecimalFamilyV2::Currency;
@@ -254,7 +276,7 @@ fn parse_signed_decimal<'a>(
 }
 fn parse_decimal_value(
     syntax: SignedDecimalV2<'_>,
-    locale: &NumberLocaleV2,
+    locale: &NumberLocale,
 ) -> Result<f64, NumberError> {
     let capacity = syntax
         .decimal
@@ -332,11 +354,13 @@ fn parse_time_field(input: &str) -> IResult<&str, u32> {
     })?;
     Ok((rest, value))
 }
+/// Parsed elapsed-time amount awaiting fractional-second conversion to a day serial.
+/// The fractional spelling stays borrowed so its precision is retained until numeric conversion.
 struct ElapsedV2<'a> {
     seconds: f64,
     fraction: Option<&'a str>,
 }
-fn parse_elapsed<'a>(input: &'a str, locale: &NumberLocaleV2) -> IResult<&'a str, ElapsedV2<'a>> {
+fn parse_elapsed<'a>(input: &'a str, locale: &NumberLocale) -> IResult<&'a str, ElapsedV2<'a>> {
     let spaced_field = |input| delimited(parse_space, parse_time_field, parse_space).parse(input);
     let (input, first) = spaced_field(input)?;
     let (input, _) = tag(locale.time.as_ref()).parse(input)?;
@@ -400,7 +424,7 @@ fn parse_fraction_seconds(digits: &str) -> Result<f64, NumberError> {
     normalized.push_str(digits);
     normalized.parse::<f64>().map_err(|_| NumberError)
 }
-fn parse_elapsed_candidate<'a>(input: &'a str, locale: &NumberLocaleV2) -> IResult<&'a str, ()> {
+fn parse_elapsed_candidate<'a>(input: &'a str, locale: &NumberLocale) -> IResult<&'a str, ()> {
     // Complete numeric time candidates belong to the elapsed family. Calendar
     // parsing may still handle AM/PM and dates, but must not undo this family's
     // field bounds or leading-zero rejection after a failed attempt.
@@ -421,7 +445,7 @@ fn parse_elapsed_candidate<'a>(input: &'a str, locale: &NumberLocaleV2) -> IResu
 /// Parse complete numeric text under explicit locale tokens.
 /// A no-match leaves calendar fallback to the consumer. The caller must admit
 /// normalization storage and bounded scanner work before calling this parser.
-pub fn parse_formatted_number(text: &str, locale: &NumberLocaleV2) -> FormattedNumber {
+pub fn parse_formatted_number(text: &str, locale: &NumberLocale) -> FormattedNumber {
     // Deterministic reservation for the bounded alternatives, normalization
     // and final floating-point parse. The alternatives never recurse or collect.
     let text = text.trim_matches(|c: char| c <= '\u{20}');

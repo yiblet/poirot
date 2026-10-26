@@ -1,6 +1,7 @@
 //! Verified serialization of manually supplied shared-formula provenance.
 use crate::IoError;
-use poirot_model::{Cell, CellAddress, SharedFormulaId, Worksheet};
+use crate::data::SheetSource;
+use crate::{Cell, CellAddress, SharedFormulaId};
 use poirot_parsing::formula::{FormulaLocation, TranslationPlan, TranslationPolicy};
 use std::collections::BTreeMap;
 
@@ -28,7 +29,7 @@ pub(super) struct SharedExport {
 }
 impl SharedExport {
     /// Verify authoritative sources and disjoint geometry once before both write passes.
-    pub(super) fn new(sheet: &Worksheet) -> Result<Self, IoError> {
+    pub(super) fn new(sheet: &impl SheetSource) -> Result<Self, IoError> {
         let spills = super::spill::bounds(sheet)?;
         let mut groups =
             BTreeMap::<(SharedFormulaId, CellAddress), Vec<(CellAddress, &Cell)>>::new();

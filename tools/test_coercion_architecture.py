@@ -136,11 +136,10 @@ def searchable_v2_source(source):
 class CoercionArchitectureTests(unittest.TestCase):
     def test_type_changes_live_in_named_coercion_helpers(self):
         failures = []
-        crates = [ROOT / 'crates' / 'poirot-eval', ROOT / 'crates' / 'poirot-coercionv2',
-                  *sorted((ROOT / 'crates').glob('poirot-functions-*'))]
+        crates = [ROOT / 'src/eval', ROOT / 'crates/poirot-functions/src']
         for crate in crates:
-            for path in sorted((crate / 'src').rglob('*.rs')):
-                if any('test' in part for part in path.relative_to(crate / 'src').parts):
+            for path in sorted(crate.rglob('*.rs')):
+                if any('test' in part for part in path.relative_to(crate).parts):
                     continue
                 for line, name, reason in violations(path.read_text()):
                     failures.append(f'{path.relative_to(ROOT)}:{line}: {name}: {reason}')
@@ -148,7 +147,7 @@ class CoercionArchitectureTests(unittest.TestCase):
 
     def test_remaining_legacy_conversion_declarations_are_audited(self):
         failures = []
-        for path in (ROOT / 'crates').rglob('*.rs'):
+        for path in [*(ROOT / 'crates/poirot-functions/src').rglob('*.rs'), *(ROOT / 'src/eval').rglob('*.rs')]:
             if 'test' in path.name:
                 continue
             source = path.read_text()
@@ -163,10 +162,9 @@ class CoercionArchitectureTests(unittest.TestCase):
 
     def test_migrated_argument_helpers_do_not_keep_inline_conversions(self):
         failures = []
-        for crate in [ROOT / 'crates' / 'poirot-eval',
-                      *sorted((ROOT / 'crates').glob('poirot-functions-*'))]:
-            for path in (crate / 'src').rglob('*.rs'):
-                if 'test' in path.name:
+        for crate in [ROOT / 'src/eval', ROOT / 'crates/poirot-functions/src']:
+            for path in crate.rglob('*.rs'):
+                if 'test' in path.name or 'coercion' in path.relative_to(crate).parts:
                     continue
                 code = production_code(path.read_text())
                 spans = list(function_spans(code))
@@ -181,7 +179,7 @@ class CoercionArchitectureTests(unittest.TestCase):
 
     def test_non_argument_todos_have_risk_ratings(self):
         todos = []
-        for path in (ROOT / 'crates').rglob('*.rs'):
+        for path in [*(ROOT / 'crates/poirot-functions/src').rglob('*.rs'), *(ROOT / 'src/eval').rglob('*.rs')]:
             for line in path.read_text().splitlines():
                 if '// TODO(coercion-non-argument):' in line:
                     todos.append(line)
@@ -214,12 +212,12 @@ class CoercionArchitectureTests(unittest.TestCase):
         self.assertRegex(searchable_v2_source(audited + '\nfn use_other() { coerce_argument() }'), pattern)
 
     def test_v2_crate_keeps_conversion_names_searchable(self):
-        crate = ROOT / 'crates' / 'poirot-coercionv2'
-        for path in [crate / 'Cargo.toml', *crate.rglob('*.rs')]:
+        crate = ROOT / 'crates/poirot-functions/src/coercion'
+        for path in crate.rglob('*.rs'):
             source = path.read_text()
             if path.suffix == '.rs':
                 source = searchable_v2_source(source)
-            self.assertNotRegex(source, r'(?i)\b(?:coercion|coerce)(?!v2)', str(path))
+            self.assertNotRegex(production_code(source), r'\bcoerce_(?!v2)\w+', str(path))
 
 
 if __name__ == '__main__':

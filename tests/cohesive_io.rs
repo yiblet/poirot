@@ -1,9 +1,12 @@
 //! Common workbook persistence paths share builders and preserve source provenance.
-use poirot::{
-    CellValue, EvaluationContext, FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind,
-    Workbook, artifact, eval::overlay::Evaluation, eval::overlay::Overlay,
-    eval::overlay::OverlayPolicy, io,
-};
+use poirot::calculation::EvaluationContext;
+use poirot::eval::artifact;
+use poirot::eval::overlay::Evaluation;
+use poirot::eval::overlay::EvaluationPolicy;
+use poirot::eval::overlay::Overlay;
+use poirot::files::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
+use poirot::{CellValue, Workbook};
+use poirot_io as io;
 use std::{
     path::PathBuf,
     sync::atomic::{AtomicUsize, Ordering},
@@ -57,11 +60,11 @@ fn context() -> EvaluationContext {
 #[test]
 fn new_and_cloned_workbooks_keep_the_public_type_and_optional_metadata() {
     let mut book = workbook();
-    assert!(book.file_metadata.is_none());
-    book.file_metadata = Some(metadata());
+    assert!(book.model().file_metadata.is_none());
+    book.model_mut().file_metadata = Some(metadata());
     let cloned: Workbook = book.clone();
     assert_eq!(cloned, book);
-    assert_eq!(cloned.file_metadata, Some(metadata()));
+    assert_eq!(cloned.model().file_metadata, Some(metadata()));
     assert!(!cloned.save_xlsx().to_buffer().unwrap().is_empty());
 }
 
@@ -93,7 +96,7 @@ fn spreadsheet_file_and_buffer_paths_share_format_detection_and_options() {
             .from_bytes(&bytes)
             .unwrap();
         assert_eq!(from_file, from_bytes);
-        let metadata = from_file.file_metadata.as_ref().unwrap();
+        let metadata = from_file.model().file_metadata.as_ref().unwrap();
         assert_eq!(metadata.format, format);
         assert!(
             metadata
@@ -130,22 +133,42 @@ fn spreadsheet_file_and_buffer_paths_share_format_detection_and_options() {
 fn source_snapshots_preserve_typed_metadata_and_never_recalculate() {
     let dir = TestDirectory::new();
     let mut book = workbook();
-    book.file_metadata = Some(metadata());
+    book.model_mut().file_metadata = Some(metadata());
     let bytes = book.save_snapshot().to_buffer().unwrap();
     let path = dir.0.join("source.poirot");
     book.save_snapshot().write_file(&path).unwrap();
-    assert_eq!(Workbook::from_snapshot_bytes(&bytes).unwrap(), book);
-    assert_eq!(Workbook::open_snapshot(&path).unwrap(), book);
-    let restored = Workbook::load_snapshot().from_bytes(&bytes).unwrap();
+    assert_eq!(
+        Workbook::from_model(
+            Workbook::restore_snapshot()
+                .from_bytes(&bytes)
+                .unwrap()
+                .into_artifact()
+                .workbook
+        ),
+        book
+    );
+    assert_eq!(
+        Workbook::from_model(
+            Workbook::restore_snapshot()
+                .open(&path)
+                .unwrap()
+                .into_artifact()
+                .workbook
+        ),
+        book
+    );
+    let restored = poirot::eval::artifact::SnapshotLoadBuilder::default()
+        .from_bytes(&bytes)
+        .unwrap();
     assert_eq!(restored.prepared_status, artifact::PreparedStatus::Absent);
     assert!(restored.workspace.is_none());
-    assert_eq!(restored.workbook.file_metadata, book.file_metadata);
+    assert_eq!(restored.workbook.file_metadata, book.model().file_metadata);
     let limits = artifact::SnapshotLimits {
         max_file_bytes: 1,
         ..Default::default()
     };
     assert!(
-        Workbook::load_snapshot()
+        poirot::eval::artifact::SnapshotLoadBuilder::default()
             .limits(limits)
             .open(&path)
             .is_err()
@@ -164,8 +187,8 @@ fn source_snapshots_preserve_typed_metadata_and_never_recalculate() {
 fn overlay_checkpoints_restore_warm_state_without_detached_attachment() {
     let dir = TestDirectory::new();
     let mut book = workbook();
-    book.file_metadata = Some(metadata());
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    book.model_mut().file_metadata = Some(metadata());
+    let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
     let input = overlay.target("Inputs!A1").unwrap();
     let output = overlay.target("Inputs!B1").unwrap();
     overlay.set_value(input, 30.).unwrap();
@@ -178,8 +201,12 @@ fn overlay_checkpoints_restore_warm_state_without_detached_attachment() {
     let path = dir.0.join("checkpoint.poirot");
     overlay.save_snapshot().write_file(&path).unwrap();
     for restored in [
-        Workbook::load_snapshot().from_bytes(&bytes).unwrap(),
-        Workbook::load_snapshot().open(path).unwrap(),
+        poirot::eval::artifact::SnapshotLoadBuilder::default()
+            .from_bytes(&bytes)
+            .unwrap(),
+        poirot::eval::artifact::SnapshotLoadBuilder::default()
+            .open(path)
+            .unwrap(),
     ] {
         assert_eq!(restored.prepared_status, artifact::PreparedStatus::Restored);
         assert_eq!(restored.workbook.file_metadata, Some(metadata()));
@@ -197,19 +224,21 @@ fn overlay_checkpoints_restore_warm_state_without_detached_attachment() {
 #[test]
 fn incompatible_checkpoints_recover_edits_with_an_explicit_typed_outcome() {
     let mut book = workbook();
-    book.file_metadata = Some(metadata());
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    book.model_mut().file_metadata = Some(metadata());
+    let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
     let input = overlay.target("Inputs!A1").unwrap();
     overlay.set_value(input, 30.).unwrap();
     let mut bytes = overlay.save_snapshot().to_buffer().unwrap();
     bytes[16..24].copy_from_slice(&u64::MAX.to_le_bytes());
     assert!(
-        Workbook::load_snapshot()
+        poirot::eval::artifact::SnapshotLoadBuilder::default()
             .prepared_policy(artifact::PreparedPolicy::RequireCompatible)
             .from_bytes(&bytes)
             .is_err()
     );
-    let restored = Workbook::load_snapshot().from_bytes(&bytes).unwrap();
+    let restored = poirot::eval::artifact::SnapshotLoadBuilder::default()
+        .from_bytes(&bytes)
+        .unwrap();
     let artifact::RestoredCheckpoint::Source { workbook, status } =
         restored.into_checkpoint().unwrap()
     else {
@@ -222,7 +251,7 @@ fn incompatible_checkpoints_recover_edits_with_an_explicit_typed_outcome() {
         CellValue::Number(30.)
     );
     let mut evaluation = Evaluation::with_workbook(workbook)
-        .with_policy(OverlayPolicy::default())
+        .with_policy(EvaluationPolicy::default())
         .build(context())
         .unwrap();
     let output = evaluation.target("Inputs!B1").unwrap();
@@ -232,15 +261,17 @@ fn incompatible_checkpoints_recover_edits_with_an_explicit_typed_outcome() {
 #[test]
 fn direct_restore_reports_preparation_status_and_accepts_explicit_recovery_policy() {
     let book = workbook();
-    let mut evaluation = Evaluation::with_workbook(&book).build(context()).unwrap();
+    let mut evaluation = Evaluation::with_workbook(book.model())
+        .build(context())
+        .unwrap();
     let input = evaluation.target("Inputs!A1").unwrap();
     evaluation.set_value(input, 30.).unwrap();
     evaluation.compile_all();
     let bytes = evaluation.save_snapshot().to_buffer().unwrap();
-    let mut restored = Workbook::load_snapshot()
+    let mut restored = poirot::eval::artifact::SnapshotLoadBuilder::default()
         .from_bytes(&bytes)
         .unwrap()
-        .into_evaluation(context(), OverlayPolicy::default())
+        .into_evaluation(context(), EvaluationPolicy::default())
         .unwrap();
     assert_eq!(restored.prepared_status, artifact::PreparedStatus::Restored);
     let output = restored.evaluation.target("Inputs!B1").unwrap();
@@ -248,11 +279,11 @@ fn direct_restore_reports_preparation_status_and_accepts_explicit_recovery_polic
         restored.evaluation.cell(output).unwrap(),
         CellValue::Number(60.)
     );
-    let mut recovered = Workbook::load_snapshot()
+    let mut recovered = poirot::eval::artifact::SnapshotLoadBuilder::default()
         .prepared_policy(artifact::PreparedPolicy::SourceOnly)
         .from_bytes(&bytes)
         .unwrap()
-        .into_evaluation(context(), OverlayPolicy::default())
+        .into_evaluation(context(), EvaluationPolicy::default())
         .unwrap();
     assert_eq!(
         recovered.prepared_status,
@@ -267,14 +298,14 @@ fn direct_restore_reports_preparation_status_and_accepts_explicit_recovery_polic
 #[test]
 fn metadata_changes_do_not_invalidate_prepared_source_identity() {
     let book = workbook();
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
     let output = overlay.target("Inputs!B1").unwrap();
     let context = context();
     overlay.evaluation(&context).unwrap().cell(output).unwrap();
     let (_, state) = Overlay::from_snapshot(overlay.snapshot()).unwrap();
     let mut changed = book.clone();
-    changed.file_metadata = Some(metadata());
-    assert!(book.snapshot().matches(changed.model()));
+    changed.model_mut().file_metadata = Some(metadata());
+    assert!(book.model().snapshot().matches(changed.model()));
     let mut attached = state.attach(changed).unwrap();
     let mut evaluation = attached.evaluation(&context).unwrap();
     assert_eq!(evaluation.cell(output).unwrap(), CellValue::Number(42.));
@@ -339,7 +370,7 @@ fn load_options_replace_all_fields_and_later_setters_override_their_field() {
             .options(io::ReadOptions::default())
             .xls_budget(small)
             .from_bytes(bytes),
-        Err(poirot::WorkbookError::ImportOrXlsx(
+        Err(poirot::files::WorkbookError::ImportOrXlsx(
             io::IoError::BiffPreflight(io::PreflightError::Resource { .. })
         ))
     ));
@@ -350,11 +381,11 @@ fn loading_a_missing_file_preserves_the_filesystem_error_and_source() {
     let directory = TestDirectory::new();
     let path = directory.0.join("missing.xlsx");
     assert!(matches!(
-        io::read_workbook(&path),
+        io::read_workbook::<poirot::model::Workbook>(&path),
         Err(io::IoError::File(error)) if error.kind() == std::io::ErrorKind::NotFound
     ));
     let error = Workbook::open(path).unwrap_err();
-    assert!(matches!(&error, poirot::WorkbookError::File(source)
+    assert!(matches!(&error, poirot::files::WorkbookError::File(source)
         if source.kind() == std::io::ErrorKind::NotFound));
     let source = std::error::Error::source(&error)
         .unwrap()

@@ -5,7 +5,7 @@ use crate::fods::{
     report::{CaseFailure, FailureKind, NameDiagnostic, NameDisposition},
     xml::model::{FodsWorkbook, FormulaCase, InputValue, Omission},
 };
-use poirot_model::{CellAddress, CellValue, Workbook};
+use poirot::model::{CellAddress, CellValue, Workbook};
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
     num::NonZeroUsize,
@@ -44,7 +44,7 @@ pub struct FixturePlan {
     /// Canonical source or explicit unsupported-context preparation result.
     pub workbook: WorkbookPreparation,
     /// Immutable compiled formula index for the prepared workbook.
-    pub evaluation_plan: Option<poirot_eval::CompiledWorkbook>,
+    pub evaluation_plan: Option<poirot::eval::CompiledWorkbook>,
     /// Source-ordered checks with joined baseline expectations.
     pub cases: Vec<PlannedCase>,
     /// Native calculation settings retained for execution context.
@@ -179,8 +179,8 @@ pub(crate) fn prepare_fixture(
     };
     let evaluation_plan = match &book {
         WorkbookPreparation::Ready(book) => Some(
-            poirot_eval::FormulaCompiler::default()
-                .compile_workbook(book, &poirot_eval::EvaluationPolicy::default()),
+            poirot::eval::FormulaCompiler::default()
+                .compile_workbook(book, &poirot::eval::PreparationPolicy::default()),
         ),
         WorkbookPreparation::Unsupported(_) => None,
     };
@@ -209,10 +209,10 @@ pub(crate) fn prepare_fixture(
             .sheets
             .get(source.sheet)
             .is_none_or(|sheet| sheet.name != source.sheet_name)
-            || source.row >= poirot_model::MAX_ROWS
-            || source.col >= poirot_model::MAX_COLUMNS
-            || source.correct_row >= poirot_model::MAX_ROWS
-            || source.correct_col >= poirot_model::MAX_COLUMNS
+            || source.row >= poirot::model::MAX_ROWS
+            || source.col >= poirot::model::MAX_COLUMNS
+            || source.correct_row >= poirot::model::MAX_ROWS
+            || source.correct_col >= poirot::model::MAX_COLUMNS
         {
             return Err(Error::InvalidPlan(format!(
                 "invalid sheet or coordinates in case {}",

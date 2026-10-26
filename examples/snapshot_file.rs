@@ -1,6 +1,7 @@
 //! Save a generated model as a native snapshot, restore it, and export calculated XLSX.
 //! Run with MODEL.poirot OUTPUT.xlsx; both files are created by this example.
-use poirot::{CellValue, EvaluationContext, Workbook};
+use poirot::calculation::EvaluationContext;
+use poirot::{CellValue, Workbook};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args_os().skip(1);
@@ -23,8 +24,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         randomness_seed: 42,
         ..Default::default()
     };
-    let policy = poirot::EvaluationPolicy {
-        builtin: poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation,
+    let policy = poirot::calculation::EvaluationPolicy {
+        builtin: poirot::calculation::BuiltinSemanticsPolicy::ExcelDocumentation,
         ..Default::default()
     };
     let mut prepared = book
@@ -37,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     prepared.save_snapshot().write_file(&snapshot_path)?;
     drop(prepared);
 
-    let poirot::RestoredEvaluation {
+    let poirot::snapshots::RestoredEvaluation {
         mut evaluation,
         prepared_status,
     } = Workbook::restore_snapshot()

@@ -1,7 +1,7 @@
 //! BIFF token reconstruction and reference rendering.
 use super::text::{take, text, word};
 use super::{PreflightError, ResourceBudget, Result};
-use poirot_model::NamedRange;
+use crate::NamedRange;
 
 /// BIFF external-name bookkeeping used to reconstruct add-in function spellings.
 pub(super) mod addins;

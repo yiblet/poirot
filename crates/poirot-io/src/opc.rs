@@ -1,6 +1,16 @@
 //! Pure checked OPC identity planning. ZIP execution lives in the OOXML adapter.
+//!
+//! ```rust
+//! use poirot_io::opc::resolve_target;
+//!
+//! // Relationship targets are resolved relative to the part that owns the link.
+//! assert_eq!(resolve_target("xl/workbook.xml", "worksheets/sheet1.xml")?,
+//!            "xl/worksheets/sheet1.xml");
+//! assert!(resolve_target("xl/workbook.xml", "../../outside.xml").is_err());
+//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! ```
 use crate::IoError;
-use poirot_model::{ImportDiagnostic, ImportDiagnosticKind};
+use crate::{ImportDiagnostic, ImportDiagnosticKind};
 use quick_xml::{events::Event, name::ResolveResult, reader::NsReader};
 use std::collections::{BTreeMap, BTreeSet};
 const REL: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/";
@@ -414,12 +424,12 @@ impl PackageInventory {
                     })?;
                     let mut duplicate_name = false;
                     for previous in &names {
-                        match poirot_model::identifiers::compare(previous, &name) {
-                            poirot_model::identifiers::IdentifierComparison::Equal => duplicate_name = true,
-                            poirot_model::identifiers::IdentifierComparison::UnsupportedMapping => warnings.push(ImportDiagnostic { kind: ImportDiagnosticKind::IdentifierIdentity, detail: format!(
+                        match crate::identifiers::compare(previous, &name) {
+                            crate::identifiers::IdentifierComparison::Equal => duplicate_name = true,
+                            crate::identifiers::IdentifierComparison::UnsupportedMapping => warnings.push(ImportDiagnostic { kind: ImportDiagnosticKind::IdentifierIdentity, detail: format!(
                                 "identifier comparison unsupported: sheet {previous:?} versus {name:?}; preserving raw identities"
                             ) }),
-                            poirot_model::identifiers::IdentifierComparison::Different => {},
+                            crate::identifiers::IdentifierComparison::Different => {},
                         }
                     }
                     names.push(name.clone());

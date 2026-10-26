@@ -1,7 +1,8 @@
 //! Small source workbook and number-format metadata recovery.
 use super::xml::{attr, events, text, xml};
 use crate::IoError;
-use poirot_model::{ImportDiagnostic, ImportDiagnosticKind, NamedRange, Workbook};
+use crate::data::{SheetSink, SheetSource, WorkbookSink};
+use crate::{ImportDiagnostic, ImportDiagnosticKind, NamedRange};
 use quick_xml::events::Event;
 pub(super) fn builtin(id: u32) -> Option<&'static str> {
     Some(match id {
@@ -40,7 +41,7 @@ pub(super) fn builtin(id: u32) -> Option<&'static str> {
 pub(crate) fn apply_workbook_metadata(
     bytes: &[u8],
     plan: &crate::opc::OpcReadPlan,
-    workbook: &mut Workbook,
+    workbook: &mut impl WorkbookSink<Sheet: SheetSink>,
     warnings: &mut Vec<ImportDiagnostic>,
 ) -> Result<(), IoError> {
     // Read workbook sheet states independently of the cell backend.
@@ -52,9 +53,9 @@ pub(crate) fn apply_workbook_metadata(
                     continue;
                 };
                 let visibility = match attr(&e, "state")?.as_deref() {
-                    None | Some("visible") => poirot_model::SheetVisibility::Visible,
-                    Some("hidden") => poirot_model::SheetVisibility::Hidden,
-                    Some("veryHidden") => poirot_model::SheetVisibility::VeryHidden,
+                    None | Some("visible") => crate::SheetVisibility::Visible,
+                    Some("hidden") => crate::SheetVisibility::Hidden,
+                    Some("veryHidden") => crate::SheetVisibility::VeryHidden,
                     Some(_) => return Err(IoError::Read("invalid worksheet visibility".into())),
                 };
                 if let Some(sheet) = workbook.sheet_by_name_mut(&name) {
@@ -118,7 +119,7 @@ pub(crate) fn apply_workbook_metadata(
                     }
                     None => None,
                 };
-                workbook.named_ranges.push(NamedRange {
+                workbook.named_ranges_mut().push(NamedRange {
                     name,
                     formula: formula.trim_start_matches('=').into(),
                     sheet_scope: scope,

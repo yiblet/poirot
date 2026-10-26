@@ -1,8 +1,9 @@
 //! Bounded file ingress and ordered XLSX/BIFF backend import execution.
+use crate::data::{SheetSink, SheetSource, WorkbookSink};
 use crate::decoded_cells::{fidelity_warnings, identifier_warnings, value};
+use crate::{Cell, CellAddress, DateSystem};
+use crate::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
 use crate::{IoError, PreflightError, ReadOptions, biff_overlay, biff_preflight, ooxml};
-use poirot_model::{Cell, CellAddress, DateSystem, Workbook};
-use poirot_model::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
 use std::{fs, path::Path};
 
 fn read_bytes(path: &Path, options: ReadOptions) -> Result<Vec<u8>, IoError> {
@@ -34,25 +35,27 @@ fn read_bytes(path: &Path, options: ReadOptions) -> Result<Vec<u8>, IoError> {
 }
 
 /// Read an XLS or XLSX file, retaining import warnings in its file metadata.
-pub fn read_workbook(path: impl AsRef<Path>) -> Result<Workbook, IoError> {
-    read_workbook_with_options(path, ReadOptions::default())
+pub fn read_workbook<W: WorkbookSink<Sheet: SheetSink>>(
+    path: impl AsRef<Path>,
+) -> Result<W, IoError> {
+    read_workbook_with_options::<W>(path, ReadOptions::default())
 }
 /// Read a file by signature using the supplied import policies and limits.
-pub fn read_workbook_with_options(
+pub fn read_workbook_with_options<W: WorkbookSink<Sheet: SheetSink>>(
     path: impl AsRef<Path>,
     options: ReadOptions,
-) -> Result<Workbook, IoError> {
-    read_workbook_bytes_with_options(&read_bytes(path.as_ref(), options)?, options)
+) -> Result<W, IoError> {
+    read_workbook_bytes_with_options::<W>(&read_bytes(path.as_ref(), options)?, options)
 }
 /// Decode XLS or XLSX bytes, retaining import warnings in its file metadata.
-pub fn read_workbook_bytes(bytes: &[u8]) -> Result<Workbook, IoError> {
-    read_workbook_bytes_with_options(bytes, ReadOptions::default())
+pub fn read_workbook_bytes<W: WorkbookSink<Sheet: SheetSink>>(bytes: &[u8]) -> Result<W, IoError> {
+    read_workbook_bytes_with_options::<W>(bytes, ReadOptions::default())
 }
 /// Decode bytes by signature using the supplied import policies and limits.
-pub fn read_workbook_bytes_with_options(
+pub fn read_workbook_bytes_with_options<W: WorkbookSink<Sheet: SheetSink>>(
     bytes: &[u8],
     options: ReadOptions,
-) -> Result<Workbook, IoError> {
+) -> Result<W, IoError> {
     if bytes.len() as u64 > options.max_input_bytes {
         return Err(IoError::quota(
             crate::IoResource::InputBytes,
@@ -73,7 +76,10 @@ pub fn read_workbook_bytes_with_options(
     }
 }
 
-fn read_xlsx(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
+fn read_xlsx<W: WorkbookSink<Sheet: SheetSink>>(
+    bytes: &[u8],
+    options: ReadOptions,
+) -> Result<W, IoError> {
     let mut package = ooxml::ImportPackage::new(bytes, options)?;
     let plan = package.plan(options.xlsx_policy)?;
     let mut warnings = fidelity_warnings(FileFormat::Xlsx);
@@ -94,15 +100,15 @@ fn read_xlsx(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
     } else {
         None
     };
-    let mut workbook = match decode_xlsx(adapted.as_deref().unwrap_or(bytes), &plan) {
+    let mut workbook = match decode_xlsx::<W>(adapted.as_deref().unwrap_or(bytes), &plan) {
         Err(XlsxDecodeError::NeedsAdapter) if adapted.is_none() => {
             let adapted = ooxml::backend_package(&mut package, &plan)?;
-            decode_xlsx(&adapted, &plan).map_err(XlsxDecodeError::into_io)?
+            decode_xlsx::<W>(&adapted, &plan).map_err(XlsxDecodeError::into_io)?
         }
         result => result.map_err(XlsxDecodeError::into_io)?,
     };
     drop(adapted);
-    workbook.style_context = styles.context;
+    workbook.set_style_context(styles.context);
     ooxml::apply_workbook_metadata(
         &package.read(&plan.workbook_part)?,
         &plan,
@@ -127,7 +133,7 @@ fn read_xlsx(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
         }
     }
     identifier_warnings(&workbook, &mut warnings);
-    workbook.file_metadata = Some(FileMetadata {
+    workbook.set_file_metadata(FileMetadata {
         format: FileFormat::Xlsx,
         import_warnings: warnings,
     });
@@ -153,13 +159,16 @@ impl From<IoError> for XlsxDecodeError {
         Self::Input(error)
     }
 }
-impl From<poirot_model::ModelError> for XlsxDecodeError {
-    fn from(error: poirot_model::ModelError) -> Self {
+impl From<crate::ModelError> for XlsxDecodeError {
+    fn from(error: crate::ModelError) -> Self {
         Self::Input(error.into())
     }
 }
 /// Stream decoded cells directly into Poirot without allocating a second workbook.
-fn decode_xlsx(bytes: &[u8], plan: &crate::opc::OpcReadPlan) -> Result<Workbook, XlsxDecodeError> {
+fn decode_xlsx<W: WorkbookSink<Sheet: SheetSink>>(
+    bytes: &[u8],
+    plan: &crate::opc::OpcReadPlan,
+) -> Result<W, XlsxDecodeError> {
     use calamine::{Reader, Xlsx, XlsxFormulaMetadata};
     let backend_error = |error: calamine::XlsxError| match &error {
         calamine::XlsxError::CellError(value) if matches!(value.as_str(), "#SPILL!" | "#CALC!") => {
@@ -169,12 +178,12 @@ fn decode_xlsx(bytes: &[u8], plan: &crate::opc::OpcReadPlan) -> Result<Workbook,
         _ => XlsxDecodeError::Input(IoError::Read(error.to_string())),
     };
     let mut reader = Xlsx::new(std::io::Cursor::new(bytes)).map_err(backend_error)?;
-    let mut workbook = Workbook::new();
-    workbook.date_system = if reader.has_1904_epoch() {
+    let mut workbook = W::default();
+    workbook.set_date_system(if reader.has_1904_epoch() {
         DateSystem::Excel1904
     } else {
         DateSystem::Excel1900
-    };
+    });
     if reader
         .sheet_names()
         .iter()
@@ -236,7 +245,10 @@ fn decode_xlsx(bytes: &[u8], plan: &crate::opc::OpcReadPlan) -> Result<Workbook,
     Ok(workbook)
 }
 
-fn read_xls(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
+fn read_xls<W: WorkbookSink<Sheet: SheetSink>>(
+    bytes: &[u8],
+    options: ReadOptions,
+) -> Result<W, IoError> {
     let budget = options.xls_budget;
     let row_plan = biff_preflight::inspect_xls(bytes, budget)?;
     let overlay = biff_overlay::Overlay::read(bytes, budget)?;
@@ -246,12 +258,12 @@ fn read_xls(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
             "backend text allocation budget exceeded".into(),
         ));
     }
-    let mut workbook = Workbook::new();
-    workbook.date_system = if reader.date1904 {
+    let mut workbook = W::default();
+    workbook.set_date_system(if reader.date1904 {
         DateSystem::Excel1904
     } else {
         DateSystem::Excel1900
-    };
+    });
     let mut identity_warnings = Vec::new();
     let mut identity_comparisons = 0u64;
     for (index, decoded) in std::mem::take(&mut reader.sheets).into_iter().enumerate() {
@@ -271,7 +283,7 @@ fn read_xls(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
                 }
                 .into());
             }
-            if let Err(error) = poirot_model::identifiers::checked_matches(existing.name(), &name) {
+            if let Err(error) = crate::identifiers::checked_matches(existing.name(), &name) {
                 identity_warnings.push(ImportDiagnostic {
                     kind: ImportDiagnosticKind::IdentifierIdentity,
                     detail: error.to_string(),
@@ -316,7 +328,7 @@ fn read_xls(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
     });
     for (name, formula) in reader.defined_names() {
         // Keep backend-supported names without revalidating Excel's name grammar.
-        workbook.named_ranges.push(poirot_model::NamedRange {
+        workbook.named_ranges_mut().push(crate::NamedRange {
             name: name.clone(),
             formula: formula.trim_start_matches('=').into(),
             sheet_scope: None,
@@ -324,9 +336,9 @@ fn read_xls(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
     }
     drop(reader);
     overlay.apply(&mut workbook)?;
-    for (index, name) in workbook.named_ranges.iter().enumerate() {
+    for (index, name) in workbook.named_ranges().iter().enumerate() {
         // SAFETY: index comes from enumerating the same named_ranges vector, which is not mutated during this loop.
-        for existing in &workbook.named_ranges[..index] {
+        for existing in &workbook.named_ranges()[..index] {
             identity_comparisons += 1;
             if identity_comparisons > budget.max_records as u64 {
                 return Err(PreflightError::Resource {
@@ -339,9 +351,7 @@ fn read_xls(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
             if existing.sheet_scope != name.sheet_scope {
                 continue;
             }
-            if let Err(error) =
-                poirot_model::identifiers::checked_matches(&existing.name, &name.name)
-            {
+            if let Err(error) = crate::identifiers::checked_matches(&existing.name, &name.name) {
                 warnings.push(ImportDiagnostic {
                     kind: ImportDiagnosticKind::IdentifierIdentity,
                     detail: error.to_string(),
@@ -349,7 +359,7 @@ fn read_xls(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
             }
         }
     }
-    workbook.file_metadata = Some(FileMetadata {
+    workbook.set_file_metadata(FileMetadata {
         format: FileFormat::Xls,
         import_warnings: warnings,
     });

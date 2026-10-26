@@ -2,14 +2,15 @@
 //! spill blockers after reopening. Walk stored children, never expand a declared range.
 use super::xml::{attr, events, text, xml};
 use crate::IoError;
-use poirot_model::{Cell, CellAddress, CellStyle, CellValue, Workbook};
+use crate::data::{SheetSink, SheetSource, WorkbookSink, WorkbookSource};
+use crate::{Cell, CellAddress, CellStyle, CellValue};
 use quick_xml::events::Event;
 use std::collections::BTreeMap;
 
 /// Preserve declared source extents, falling back to sparse child bounds for legacy
 /// manually attached caches. The export validator rejects authored holes.
 pub(crate) fn bounds(
-    sheet: &poirot_model::Worksheet,
+    sheet: &impl SheetSource,
 ) -> Result<BTreeMap<CellAddress, CellAddress>, IoError> {
     let mut ranges: BTreeMap<_, _> = sheet.spill_extents().collect();
     for (address, _) in sheet.cells() {
@@ -82,14 +83,12 @@ pub(super) fn validate_disjoint_ranges(
 }
 /// Refuse to claim unrelated authored content or another anchor's caches inside
 /// a declared XLSX array rectangle. Each disjoint range uses a sparse stored query.
-pub(crate) fn validate_spills(workbook: &Workbook) -> Result<(), IoError> {
-    let view = poirot_model::query::WorkbookView::new(workbook);
-    for (index, sheet) in workbook.sheets().iter().enumerate() {
+pub(crate) fn validate_spills(workbook: &impl WorkbookSource) -> Result<(), IoError> {
+    for sheet in workbook.sheets() {
         let mut ranges = bounds(sheet)?.into_iter().collect::<Vec<_>>();
         validate_disjoint_ranges(&mut ranges)?;
         for (anchor, last) in ranges {
-            let area = poirot_model::query::RangeMembership::new(index, anchor, last)?;
-            for (address, cell) in view.stored(area)? {
+            for (address, cell) in sheet.stored_range(anchor, last) {
                 if *address == anchor || sheet.spill_owner(*address) == Some(anchor) {
                     continue;
                 }
@@ -112,7 +111,7 @@ pub(crate) fn validate_spills(workbook: &Workbook) -> Result<(), IoError> {
 pub(crate) fn apply_sheet_spills(
     bytes: &[u8],
     name: &str,
-    workbook: &mut Workbook,
+    workbook: &mut impl WorkbookSink<Sheet: SheetSink>,
 ) -> Result<(), IoError> {
     let sheet = workbook
         .sheet_by_name_mut(name)
@@ -169,7 +168,7 @@ pub(crate) fn apply_sheet_spills(
             Event::Start(e) if error_cell && e.local_name().as_ref() == "v" => {
                 let raw = text(&mut reader, e.name())?;
                 if matches!(raw.as_str(), "#SPILL!" | "#CALC!") {
-                    let value = raw.parse::<poirot_model::CellError>().map_err(xml)?;
+                    let value = raw.parse::<crate::CellError>().map_err(xml)?;
                     let cell = address
                         .and_then(|at| sheet.get_mut(at))
                         .ok_or_else(|| IoError::Read("missing modern error cell".into()))?;
@@ -182,20 +181,26 @@ pub(crate) fn apply_sheet_spills(
     }
     validate_disjoint_ranges(&mut arrays)?;
     let sheet_index = workbook
-        .sheet_index_by_name(name)
+        .sheets()
+        .iter()
+        .position(|sheet| sheet.name() == name)
         .ok_or_else(|| IoError::Read("missing array worksheet".into()))?;
     let mut replacements = Vec::new();
     let mut publication = Vec::new();
     for (anchor, last) in arrays {
         let formula = workbook
-            .sheet(sheet_index)
+            .sheets()
+            .get(sheet_index)
             .and_then(|s| s.get(anchor))
             .and_then(|c| c.formula.clone())
             .ok_or_else(|| IoError::Read("array cache has no formula anchor".into()))?;
-        let view = poirot_model::query::WorkbookView::new(workbook);
-        let area = poirot_model::query::RangeMembership::new(sheet_index, anchor, last)?;
         let mut children = Vec::new();
-        for (at, child) in view.stored(area)? {
+        for (at, child) in workbook
+            .sheets()
+            .get(sheet_index)
+            .ok_or_else(|| IoError::Read("missing array worksheet".into()))?
+            .stored_range(anchor, last)
+        {
             if *at == anchor {
                 continue;
             }
@@ -237,6 +242,8 @@ pub(crate) fn apply_sheet_spills(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data::{SheetSource, WorkbookSink};
+    use crate::test_support::Workbook;
     use crate::{
         ooxml::{package::Package, xml::part},
         opc::OpcReadPlan,

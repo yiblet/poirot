@@ -1,0 +1,490 @@
+use poirot::eval::{execution_observation::*, execution_retention::*, *};
+use poirot::model::{CellAddress, CellError, CellValue, Workbook};
+const AT: CellAddress = CellAddress { row: 0, col: 0 };
+fn limits() -> RetentionLimits {
+    RetentionLimits {
+        events: 1000,
+        scalar_values: 1000,
+        text_bytes: 10000,
+    }
+}
+fn evaluate(
+    formula: &str,
+    trace: Option<&mut BoundedExecutionTrace>,
+    budgets: EvaluationBudgets,
+) -> RunReport<CellValue> {
+    let mut workbook = Workbook::new();
+    workbook.add_sheet("Sheet1").unwrap();
+    let policy = PreparationPolicy::default();
+    let mut compiler = FormulaCompiler::new();
+    let plan = compiler.compile_workbook(&workbook, &policy);
+    let prepared = compiler.compile_formula(formula, &policy);
+    let run = EvaluationRun::new(
+        WorkbookView::new(&workbook, &plan, &policy).unwrap(),
+        EvaluationInputs::default(),
+        budgets,
+    )
+    .unwrap();
+    let mut run = match trace {
+        Some(trace) => run.with_execution_observer(trace),
+        None => run,
+    };
+    let result = run.evaluate_formula(
+        EvaluationTarget {
+            sheet: 0,
+            address: AT,
+        },
+        &prepared,
+    );
+    run.finish(result)
+}
+fn value(report: RunReport<CellValue>) -> CellValue {
+    match report.outcome {
+        EvaluationOutcome::Complete { value, .. } => value,
+        other => panic!("{other:?}"),
+    }
+}
+#[test]
+fn actual_lookup_na_and_nested_selected_fallback_ids() {
+    let mut trace = BoundedExecutionTrace::new(limits());
+    assert_eq!(
+        value(evaluate(
+            "IFERROR(IFNA(VLOOKUP(9,{1,2},2,FALSE),7),RAND())",
+            Some(&mut trace),
+            EvaluationBudgets::default()
+        )),
+        CellValue::Number(7.)
+    );
+    let events = trace.events();
+    let operations: Vec<_> = events
+        .iter()
+        .filter_map(|e| match e {
+            RetainedEvent::Begin(op) => Some(*op),
+            _ => None,
+        })
+        .collect();
+    assert!(operations.windows(2).all(|w| w[0].id.0 < w[1].id.0));
+    for op in &operations {
+        if let Some(parent) = op.parent {
+            assert!(
+                operations
+                    .iter()
+                    .any(|p| p.id == parent && p.id.0 < op.id.0)
+            );
+        }
+    }
+    let decisions: Vec<_> = events
+        .iter()
+        .filter_map(|e| match e {
+            RetainedEvent::MaskDecision {
+                handler,
+                source_argument,
+                caught,
+                selected_fallback_operation,
+                ..
+            } => Some((
+                *handler,
+                *source_argument,
+                *caught,
+                *selected_fallback_operation,
+            )),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(decisions.len(), 2);
+    let caught = decisions
+        .iter()
+        .find(|d| d.2 == Some(CellError::NA))
+        .unwrap();
+    let fallback = operations
+        .iter()
+        .find(|op| Some(op.id) == caught.3)
+        .unwrap();
+    assert_eq!(fallback.parent, Some(caught.0));
+    assert!(matches!(
+        fallback.kind,
+        OperationKind::Argument { ordinal: 1, .. }
+    ));
+    assert!(events.iter().any(|e| matches!(e, RetainedEvent::Complete { operation, result: Ok(RetainedValue::Scalar(CellValue::Error(CellError::NA))) } if operation.id == caught.1)));
+    assert!(!operations.iter().any(|op| matches!(
+        op.kind,
+        OperationKind::Expression {
+            handler: Some(registry::FunctionId::Math(registry::MathFunction::Rand))
+        }
+    )));
+}
+#[test]
+fn ifna_preserves_value_and_never_runs_fallback() {
+    let mut trace = BoundedExecutionTrace::new(limits());
+    assert_eq!(
+        value(evaluate(
+            "IFNA(#VALUE!,RAND())",
+            Some(&mut trace),
+            EvaluationBudgets::default()
+        )),
+        CellValue::Error(CellError::Value)
+    );
+    assert!(trace.events().iter().any(|e| matches!(
+        e,
+        RetainedEvent::MaskDecision {
+            caught: None,
+            selected_fallback_operation: None,
+            ..
+        }
+    )));
+    assert!(!trace.events().iter().any(|e| matches!(
+        e,
+        RetainedEvent::Begin(Operation {
+            kind: OperationKind::Argument { ordinal: 1, .. },
+            ..
+        })
+    )));
+}
+#[test]
+fn event_value_and_text_caps_leave_partial_without_masking_operational_failure() {
+    for limits in [
+        RetentionLimits {
+            events: 1,
+            ..limits()
+        },
+        RetentionLimits {
+            scalar_values: 0,
+            ..limits()
+        },
+        RetentionLimits {
+            text_bytes: 0,
+            ..limits()
+        },
+    ] {
+        let mut trace = BoundedExecutionTrace::new(limits);
+        let report = evaluate(
+            "IFERROR(\"payload\",7)",
+            Some(&mut trace),
+            EvaluationBudgets::default(),
+        );
+        assert!(matches!(
+            report.outcome,
+            EvaluationOutcome::Aborted {
+                failure: EvaluationFailure::ResourceLimit { .. },
+                ..
+            }
+        ));
+        assert!(trace.is_partial());
+        assert!(!trace.events().iter().any(|e| matches!(
+            e,
+            RetainedEvent::MaskDecision {
+                caught: Some(_),
+                ..
+            }
+        )));
+    }
+    let mut trace = BoundedExecutionTrace::new(limits());
+    let report = evaluate(
+        "IFERROR(REPT(\"x\",100),7)",
+        Some(&mut trace),
+        EvaluationBudgets {
+            text_bytes: 30,
+            ..EvaluationBudgets::default()
+        },
+    );
+    assert!(matches!(
+        report.outcome,
+        EvaluationOutcome::Aborted {
+            failure: EvaluationFailure::Budget(_),
+            ..
+        }
+    ));
+    assert!(trace.is_partial());
+    assert!(!trace.events().iter().any(|e| matches!(
+        e,
+        RetainedEvent::MaskDecision {
+            caught: Some(_),
+            ..
+        }
+    )));
+}
+#[test]
+fn observation_preserves_output_usage_rng_and_lazy_execution() {
+    for formula in [
+        "IF(TRUE,RAND(),NOW())",
+        "IFERROR(1,RAND())",
+        "IFERROR(IFNA(#N/A,RAND()),NOW())",
+        "SUM(IFERROR({2,3},RAND()))",
+        "SUM(IFNA(#N/A,{2,3}))",
+        "NOT(#REF!,RAND())",
+        "POWER(RAND(),2)",
+        "IFERROR(POWER(0,0),RAND())",
+        "POWER(RAND())",
+    ] {
+        let without = evaluate(formula, None, EvaluationBudgets::default());
+        let mut trace = BoundedExecutionTrace::new(limits());
+        let with = evaluate(formula, Some(&mut trace), EvaluationBudgets::default());
+        assert_eq!(without.execution, with.execution);
+        match (without.outcome, with.outcome) {
+            (
+                EvaluationOutcome::Complete {
+                    value: a,
+                    usage: au,
+                },
+                EvaluationOutcome::Complete {
+                    value: b,
+                    usage: bu,
+                },
+            ) => {
+                assert_eq!(a, b);
+                assert_eq!(au, bu);
+            }
+            other => panic!("{other:?}"),
+        }
+    }
+}
+#[test]
+fn callback_failure_is_operational_and_trace_frame_is_cleaned_for_next_probe() {
+    /// Refuses a controlled callback to test operational failure and frame cleanup.
+    struct Observer {
+        begins: Vec<Operation>,
+        fail_once: bool,
+    }
+    impl ExecutionObserver for Observer {
+        fn observe(&mut self, event: ExecutionEvent<'_>) -> Result<(), EvaluationFailure> {
+            if let ExecutionEvent::Begin(operation) = event {
+                self.begins.push(operation);
+            }
+            if matches!(
+                event,
+                ExecutionEvent::MaskDecision {
+                    caught: Some(_),
+                    ..
+                }
+            ) && self.fail_once
+            {
+                self.fail_once = false;
+                return Err(EvaluationFailure::UnsupportedCapability {
+                    capability: CapabilityId::FunctionAdapter,
+                    source: None,
+                    detail: "observer fidelity refusal".into(),
+                });
+            }
+            Ok(())
+        }
+    }
+    let mut workbook = Workbook::new();
+    workbook.add_sheet("Sheet1").unwrap();
+    let policy = PreparationPolicy::default();
+    let mut compiler = FormulaCompiler::new();
+    let plan = compiler.compile_workbook(&workbook, &policy);
+    let prepared = compiler.compile_formula("IFERROR(#N/A,RAND())", &policy);
+    let second = compiler.compile_formula("7", &policy);
+    let mut observer = Observer {
+        begins: Vec::new(),
+        fail_once: true,
+    };
+    let mut run = EvaluationRun::new(
+        WorkbookView::new(&workbook, &plan, &policy).unwrap(),
+        EvaluationInputs::default(),
+        EvaluationBudgets::default(),
+    )
+    .unwrap()
+    .with_execution_observer(&mut observer);
+    let target = EvaluationTarget {
+        sheet: 0,
+        address: AT,
+    };
+    assert!(matches!(
+        run.evaluate_formula(target, &prepared),
+        Err(EvaluationFailure::UnsupportedCapability { .. })
+    ));
+    assert!(matches!(
+        run.evaluate_formula(target, &second),
+        Err(EvaluationFailure::UnsupportedCapability { .. })
+    ));
+    let report = run.finish(Ok(()));
+    assert!(matches!(report.outcome, EvaluationOutcome::Aborted { .. }));
+    assert!(report.outcome.usage().random_accesses.is_empty());
+    // Starting a new cycle is the explicit recovery boundary; no trace frame leaks.
+    let mut run = EvaluationRun::new(
+        WorkbookView::new(&workbook, &plan, &policy).unwrap(),
+        EvaluationInputs::default(),
+        EvaluationBudgets::default(),
+    )
+    .unwrap()
+    .with_execution_observer(&mut observer);
+    assert_eq!(
+        run.evaluate_formula(target, &second).unwrap(),
+        CellValue::Number(7.)
+    );
+    let _ = run.finish(Ok(()));
+    assert_eq!(observer.begins.last().unwrap().parent, None);
+}
+#[test]
+fn read_events_match_with_observation_enabled_and_disabled() {
+    #[derive(Default)]
+    /// Collects reads for comparison with execution observation enabled or disabled.
+    struct Reads(Vec<ReadEvent>);
+    impl DependencyReadSink for Reads {
+        fn read(&mut self, event: ReadEvent) {
+            self.0.push(event);
+        }
+    }
+    for formula in [
+        "IF(TRUE,B1,C1)",
+        "IFERROR(B1,C1)",
+        "IFNA(B1,C1)",
+        "IFERROR(#REF!,B1)",
+        "IFNA(#N/A,B1)",
+    ] {
+        let mut workbook = Workbook::new();
+        workbook.add_sheet("Sheet1").unwrap();
+        workbook
+            .sheet_mut(0)
+            .unwrap()
+            .set_formula(AT, formula)
+            .unwrap();
+        let policy = PreparationPolicy::default();
+        let plan = FormulaCompiler::new().compile_workbook(&workbook, &policy);
+        let target = EvaluationTarget {
+            sheet: 0,
+            address: AT,
+        };
+        let mut without_reads = Reads::default();
+        let mut without = EvaluationRun::new(
+            WorkbookView::new(&workbook, &plan, &policy).unwrap(),
+            EvaluationInputs::default(),
+            EvaluationBudgets::default(),
+        )
+        .unwrap()
+        .with_dependency_sink(&mut without_reads);
+        let a = without.evaluate_cell(target);
+        let a = without.finish(a);
+        let mut with_reads = Reads::default();
+        let mut trace = BoundedExecutionTrace::new(limits());
+        let mut with = EvaluationRun::new(
+            WorkbookView::new(&workbook, &plan, &policy).unwrap(),
+            EvaluationInputs::default(),
+            EvaluationBudgets::default(),
+        )
+        .unwrap()
+        .with_dependency_sink(&mut with_reads)
+        .with_execution_observer(&mut trace);
+        let b = with.evaluate_cell(target);
+        let b = with.finish(b);
+        assert_eq!(a.outcome, b.outcome);
+        assert_eq!(a.execution, b.execution);
+        assert_eq!(without_reads.0, with_reads.0);
+        assert!(
+            !with_reads
+                .0
+                .iter()
+                .any(|e| matches!(e.read, DependencyRead::Cell(t) if t.address.col == 2))
+        );
+        assert!(
+            with_reads
+                .0
+                .iter()
+                .any(|e| matches!(e.read, DependencyRead::Cell(t) if t.address.col == 1))
+        );
+    }
+}
+
+#[test]
+fn scalar_mask_decision_retains_the_array_source_operation() {
+    let mut trace = BoundedExecutionTrace::new(limits());
+    assert_eq!(
+        value(evaluate(
+            "SUM(IFERROR({2,3},RAND()))",
+            Some(&mut trace),
+            EvaluationBudgets::default()
+        )),
+        CellValue::Number(5.)
+    );
+    let source = trace
+        .events()
+        .iter()
+        .find_map(|event| match event {
+            RetainedEvent::MaskDecision {
+                source_argument,
+                checked: CellValue::Number(2.),
+                caught: None,
+                selected_fallback_operation: None,
+                ..
+            } => Some(*source_argument),
+            _ => None,
+        })
+        .unwrap();
+    assert!(trace.events().iter().any(|event| matches!(
+        event,
+        RetainedEvent::Complete { operation, result: Ok(RetainedValue::Array { rows: 1, values: 2 }) }
+            if operation.id == source
+    )));
+}
+
+#[test]
+fn classic_math_observes_eager_admission_in_source_order() {
+    use registry::{FunctionId, MathFunction};
+    for (formula, expected) in [
+        (
+            "POWER(ABS(-2),SIGN(3))",
+            vec![MathFunction::Power, MathFunction::Abs, MathFunction::Sign],
+        ),
+        // Ordinary math admits all supplied source geometry before coercing
+        // individual members; admission therefore observes this RAND source.
+        (
+            "POWER(\"bad\",RAND())",
+            vec![MathFunction::Power, MathFunction::Rand],
+        ),
+        ("POWER(RAND())", vec![MathFunction::Power]),
+    ] {
+        let mut trace = BoundedExecutionTrace::new(limits());
+        let result = value(evaluate(
+            formula,
+            Some(&mut trace),
+            EvaluationBudgets::default(),
+        ));
+        if formula == "POWER(\"bad\",RAND())" {
+            assert_eq!(result, CellValue::Error(CellError::Value));
+        }
+        let functions: Vec<_> = trace
+            .events()
+            .iter()
+            .filter_map(|event| match event {
+                RetainedEvent::Begin(Operation {
+                    kind:
+                        OperationKind::Expression {
+                            handler: Some(FunctionId::Math(function)),
+                        },
+                    ..
+                }) => Some(*function),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(functions, expected, "{formula}");
+    }
+}
+
+#[test]
+fn member_recovery_retains_observed_array_source_and_selected_fallback_identity() {
+    let mut trace = BoundedExecutionTrace::new(limits());
+    assert_eq!(
+        value(evaluate(
+            "SUM(IFERROR({#N/A,2},{7,8}))",
+            Some(&mut trace),
+            Default::default()
+        )),
+        CellValue::Number(9.)
+    );
+    let (source, fallback) = trace
+        .events()
+        .iter()
+        .find_map(|event| match event {
+            RetainedEvent::MaskDecision {
+                source_argument,
+                caught: Some(CellError::NA),
+                selected_fallback_operation: Some(fallback),
+                ..
+            } => Some((*source_argument, *fallback)),
+            _ => None,
+        })
+        .unwrap();
+    assert!(trace.events().iter().any(|event| matches!(event, RetainedEvent::Complete {operation, result: Ok(RetainedValue::Array { rows: 1, values: 2 })} if operation.id == source)));
+    assert!(trace.events().iter().any(|event| matches!(event, RetainedEvent::Begin(operation) if operation.id == fallback && matches!(operation.kind, OperationKind::Argument {ordinal:1, ..}))));
+}

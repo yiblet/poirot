@@ -1,5 +1,8 @@
 //! Public saved-source recovery and XLSX odd_financial execution contracts.
-use poirot::{CellValue, EvaluationContext, Workbook, artifact, eval::overlay::Overlay};
+use poirot::calculation::EvaluationContext;
+use poirot::eval::artifact;
+use poirot::eval::overlay::Overlay;
+use poirot::{CellValue, Workbook};
 #[test]
 fn incompatible_odd_financial_preparation_preserves_formulas_and_overlay_edits() {
     let mut book = Workbook::new();
@@ -24,16 +27,17 @@ fn incompatible_odd_financial_preparation_preserves_formulas_and_overlay_edits()
     let previous = poirot::eval::overlay::snapshot::COMPATIBILITY_REVISION - 1;
     bytes[16..24].copy_from_slice(&previous.to_le_bytes());
     assert!(
-        Workbook::load_snapshot()
+        poirot::eval::artifact::SnapshotLoadBuilder::default()
             .prepared_policy(artifact::PreparedPolicy::RequireCompatible)
             .from_bytes(&bytes)
             .is_err()
     );
-    let artifact::RestoredCheckpoint::Source { workbook, status } = Workbook::load_snapshot()
-        .from_bytes(&bytes)
-        .unwrap()
-        .into_checkpoint()
-        .unwrap()
+    let artifact::RestoredCheckpoint::Source { workbook, status } =
+        poirot::eval::artifact::SnapshotLoadBuilder::default()
+            .from_bytes(&bytes)
+            .unwrap()
+            .into_checkpoint()
+            .unwrap()
     else {
         panic!()
     };
@@ -46,12 +50,13 @@ fn incompatible_odd_financial_preparation_preserves_formulas_and_overlay_edits()
         .build(EvaluationContext::default())
         .unwrap();
     assert_eq!(direct.cell(output).unwrap(), 200.0.into());
-    let artifact::RestoredCheckpoint::Source { workbook, status } = Workbook::load_snapshot()
-        .prepared_policy(artifact::PreparedPolicy::SourceOnly)
-        .from_bytes(&bytes)
-        .unwrap()
-        .into_checkpoint()
-        .unwrap()
+    let artifact::RestoredCheckpoint::Source { workbook, status } =
+        poirot::eval::artifact::SnapshotLoadBuilder::default()
+            .prepared_policy(artifact::PreparedPolicy::SourceOnly)
+            .from_bytes(&bytes)
+            .unwrap()
+            .into_checkpoint()
+            .unwrap()
     else {
         panic!("source-only reused prepared results")
     };
@@ -78,8 +83,8 @@ fn stored_odd_financial_names_execute_after_xlsx_roundtrip() {
     ] {
         sheet.set_formula(cell.parse().unwrap(), formula).unwrap();
     }
-    let bytes = poirot::io::write_xlsx_to_buffer(&book).unwrap();
-    let book = poirot::io::read_workbook_bytes(&bytes).unwrap();
+    let bytes = book.save_xlsx().to_buffer().unwrap();
+    let book = poirot_io::read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
     let mut direct = poirot::eval::overlay::Evaluation::with_workbook(book)
         .build(EvaluationContext::default())
         .unwrap();

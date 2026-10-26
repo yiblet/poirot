@@ -1,5 +1,5 @@
 //! Exact retained native observations exercised through actual evaluator dispatch.
-use poirot::eval::{self, EvaluationInputs, EvaluationOutcome};
+use poirot::eval::{self as eval, EvaluationInputs, EvaluationOutcome};
 use poirot::model::{CellError, CellValue, Workbook};
 fn value(formula: &str) -> CellValue {
     let mut w = Workbook::new();

@@ -1,16 +1,16 @@
-use poirot::{CellValue, Workbook, io};
+use poirot::{CellValue, Workbook};
+use poirot_io as io;
 
 #[test]
 fn saved_typed_formula_evidence_and_import_losses_remain_discoverable() {
     let mut book = Workbook::new();
-    let sheet = book.model_mut().add_sheet("Data").unwrap();
+    let sheet = book.add_sheet("Data").unwrap();
     sheet
         .set_formula_with_cached_value("A1".parse().unwrap(), "1=1", CellValue::Boolean(true))
         .unwrap();
     let bytes = book.save_xlsx().to_buffer().unwrap();
     let reopened = Workbook::load().from_bytes(&bytes).unwrap();
     let cell = reopened
-        .model()
         .sheet(0)
         .unwrap()
         .get("A1".parse().unwrap())
@@ -19,6 +19,7 @@ fn saved_typed_formula_evidence_and_import_losses_remain_discoverable() {
     assert!(cell.formula.is_some());
     assert!(
         !reopened
+            .model()
             .file_metadata
             .as_ref()
             .unwrap()
@@ -27,6 +28,7 @@ fn saved_typed_formula_evidence_and_import_losses_remain_discoverable() {
             .is_empty()
     );
     let warnings = reopened
+        .model()
         .file_metadata
         .as_ref()
         .unwrap()
@@ -43,8 +45,7 @@ fn saved_typed_formula_evidence_and_import_losses_remain_discoverable() {
 fn pure_planning_preserves_source_and_budget_failure_has_typed_cause() {
     use std::error::Error;
     let mut book = Workbook::new();
-    book.model_mut()
-        .add_sheet("Data")
+    book.add_sheet("Data")
         .unwrap()
         .set_value("A1".parse().unwrap(), "payload")
         .unwrap();
@@ -69,7 +70,7 @@ fn pure_planning_preserves_source_and_budget_failure_has_typed_cause() {
 
 fn formula_book(formulas: &[(&str, &str)]) -> Workbook {
     let mut book = Workbook::new();
-    let sheet = book.model_mut().add_sheet("Data").unwrap();
+    let sheet = book.add_sheet("Data").unwrap();
     for (address, formula) in formulas {
         sheet
             .set_formula_with_cached_value(
@@ -93,7 +94,7 @@ fn overlay_recursively_invalidates_and_applies_owned_cached_changes() {
     let mut overlay = poirot::eval::overlay::Overlay::with_workbook(book.model())
         .build()
         .unwrap();
-    let context = poirot::EvaluationContext::default();
+    let context = poirot::calculation::EvaluationContext::default();
     overlay.set_value(target("A1"), 1.).unwrap();
     overlay.evaluation(&context).unwrap().all().unwrap();
     assert_eq!(
@@ -114,7 +115,7 @@ fn overlay_recursively_invalidates_and_applies_owned_cached_changes() {
 #[test]
 fn captured_random_cells_reuse_until_the_seed_changes() {
     let book = formula_book(&[("A1", "RAND()"), ("B1", "A1+1"), ("C1", "8")]);
-    let mut context = poirot::EvaluationContext::default();
+    let mut context = poirot::calculation::EvaluationContext::default();
     let mut overlay = poirot::eval::overlay::Overlay::with_workbook(book.model())
         .build()
         .unwrap();
@@ -134,7 +135,7 @@ fn captured_random_cells_reuse_until_the_seed_changes() {
 fn formatting_context_and_text_policy_invalidate_actual_consumers() {
     let book = formula_book(&[("A1", "DOLLAR(1,2)"), ("B1", r#"LEN("😀")"#), ("C1", "8")]);
     let mut overlay = poirot::eval::overlay::Overlay::with_workbook(book.model())
-        .with_policy(poirot::eval::overlay::OverlayPolicy {
+        .with_policy(poirot::eval::overlay::EvaluationPolicy {
             text: poirot::eval::TextSemanticsPolicy {
                 source: poirot::eval::TextSourceVersion::Poi7321209,
             },
@@ -142,7 +143,7 @@ fn formatting_context_and_text_policy_invalidate_actual_consumers() {
         })
         .build()
         .unwrap();
-    let mut context = poirot::EvaluationContext::default();
+    let mut context = poirot::calculation::EvaluationContext::default();
     let mut currency = poirot::eval::CurrencyContext {
         decimal_separator: ".".into(),
         grouping_separator: ",".into(),
@@ -187,15 +188,16 @@ fn budget_failure_preserves_source_and_previously_completed_cache() {
         .build()
         .unwrap();
     overlay
-        .evaluation(&poirot::EvaluationContext::default())
+        .evaluation(&poirot::calculation::EvaluationContext::default())
         .unwrap()
         .all()
         .unwrap();
-    let context = poirot::EvaluationContext {
-        budgets: poirot::eval::EvaluationBudgets {
+    let context = poirot::calculation::EvaluationContext {
+        limits: (poirot::eval::EvaluationBudgets {
             run_work: 0,
             ..Default::default()
-        },
+        })
+        .into(),
         ..Default::default()
     };
     let mut evaluation = overlay.evaluation(&context).unwrap();
@@ -211,7 +213,7 @@ fn budget_failure_preserves_source_and_previously_completed_cache() {
 #[test]
 fn empty_rows_and_defined_names_flow_through_overlay_evaluation() {
     let mut book = Workbook::new();
-    let sheet = book.model_mut().add_sheet("Data").unwrap();
+    let sheet = book.add_sheet("Data").unwrap();
     sheet.create_row(5).unwrap();
     sheet.set_value("A1".parse().unwrap(), 4.).unwrap();
     sheet.set_formula("B1".parse().unwrap(), "Rate*A1").unwrap();
@@ -221,13 +223,13 @@ fn empty_rows_and_defined_names_flow_through_overlay_evaluation() {
         .unwrap();
     assert_eq!(
         overlay
-            .evaluation(&poirot::EvaluationContext::default())
+            .evaluation(&poirot::calculation::EvaluationContext::default())
             .unwrap()
             .cell(target("B1"))
             .unwrap(),
         CellValue::Number(8.)
     );
-    assert!(book.model().sheet(0).unwrap().row(5).is_some());
+    assert!(book.sheet(0).unwrap().row(5).is_some());
 }
 
 #[test]

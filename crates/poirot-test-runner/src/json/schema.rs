@@ -1,6 +1,10 @@
-use poirot::{CellValue, ExcelText};
+use poirot::CellValue;
+use poirot::cells::ExcelText;
 use serde::{Deserialize, Serialize};
 
+/// Authored JSON test suite with a common starting workbook and explicit evaluation policies.
+/// Each scenario starts independently from that workbook and runs through both
+/// normal and incremental-overlay evaluation.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Suite {
@@ -18,6 +22,8 @@ pub struct Suite {
     pub scenarios: Vec<Scenario>,
 }
 
+/// Initial worksheet names and sparse authored cells used to construct a fresh
+/// workbook for each scenario execution.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct WorkbookDefinition {
@@ -26,6 +32,8 @@ pub struct WorkbookDefinition {
     pub cells: Vec<InitialCell>,
 }
 
+/// One cell written into the scenario's starting workbook before actions execute.
+/// Content is a typed literal or an explicitly wrapped formula, with an optional display format.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct InitialCell {
@@ -34,6 +42,8 @@ pub struct InitialCell {
     pub number_format: Option<String>,
 }
 
+/// An ordered edit-and-check sequence run from a fresh copy of the suite workbook.
+/// Its evidence records why the authored expectations are valid independently of Poirot output.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Scenario {
@@ -73,12 +83,16 @@ pub enum Content {
     Value(Scalar),
 }
 
+/// Explicit formula wrapper that distinguishes formula source from an ordinary text literal
+/// when decoding authored cell content.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Formula {
     pub formula: String,
 }
 
+/// Reviewed annotation accepting one exact incorrect result as a known compatibility gap.
+/// A different result still fails, and reaching the authored expectation marks the annotation stale.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct KnownGap {

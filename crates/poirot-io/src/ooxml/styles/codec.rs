@@ -1,7 +1,7 @@
 //! Shared checked lexical mappings for ordinary SpreadsheetML style records.
 use super::super::xml::attr;
 use crate::IoError;
-use poirot_model::*;
+use crate::*;
 use quick_xml::events::BytesStart;
 
 /// Exact OOXML token mapping for a supported named choice.

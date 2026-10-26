@@ -2,7 +2,7 @@
 use super::codec::*;
 use crate::IoError;
 use crate::ooxml::xml::{attr, xml};
-use poirot_model::*;
+use crate::*;
 use quick_xml::{
     NsReader,
     events::{BytesStart, Event},
@@ -12,12 +12,16 @@ use std::{
     sync::Arc,
 };
 
-/// Resolved shared cell styles and workbook color context.
+/// Styles resolved from OOXML component tables, paired with their workbook color context.
+/// The cell-style vector preserves XF order so worksheet style indices select the
+/// correct shared presentation.
 pub(crate) struct ImportedStyles {
     pub(crate) cells: Vec<CellStyle>,
     pub(crate) context: StyleContext,
 }
-/// Unresolved component references checked before materializing visual payloads.
+/// Unresolved OOXML cell-format record holding indices into the style component tables.
+/// References are checked before constructing shared visual styles, allowing invalid
+/// style metadata to fail without inventing presentation values.
 #[derive(Default)]
 struct Xf {
     font: usize,

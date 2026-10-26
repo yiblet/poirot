@@ -1,7 +1,8 @@
 //! Pure decoded-value conversion and import fidelity diagnostics.
 use crate::IoError;
-use poirot_model::{CellError, CellValue, Workbook};
-use poirot_model::{ImportDiagnostic, ImportDiagnosticKind};
+use crate::data::{SheetSource, WorkbookSource};
+use crate::{CellError, CellValue};
+use crate::{ImportDiagnostic, ImportDiagnosticKind};
 
 /// Project a backend cell into canonical values with explicit fidelity handling.
 pub(super) fn value(data: &rxls::Cell) -> Result<CellValue, IoError> {
@@ -15,8 +16,11 @@ pub(super) fn value(data: &rxls::Cell) -> Result<CellValue, IoError> {
 }
 
 /// Report identifier spellings outside supported comparison fidelity.
-pub(super) fn identifier_warnings(workbook: &Workbook, warnings: &mut Vec<ImportDiagnostic>) {
-    use poirot_model::identifiers::{IdentifierComparison, compare};
+pub(super) fn identifier_warnings(
+    workbook: &impl WorkbookSource,
+    warnings: &mut Vec<ImportDiagnostic>,
+) {
+    use crate::identifiers::{IdentifierComparison, compare};
     for (index, sheet) in workbook.sheets().iter().enumerate() {
         // SAFETY: index comes from enumerating the same unchanged collection, so its prefix is in bounds.
         for previous in &workbook.sheets()[..index] {
@@ -25,9 +29,9 @@ pub(super) fn identifier_warnings(workbook: &Workbook, warnings: &mut Vec<Import
             }
         }
     }
-    for (index, name) in workbook.named_ranges.iter().enumerate() {
+    for (index, name) in workbook.named_ranges().iter().enumerate() {
         // SAFETY: index comes from enumerating the same unchanged collection, so its prefix is in bounds.
-        for previous in &workbook.named_ranges[..index] {
+        for previous in &workbook.named_ranges()[..index] {
             if previous.sheet_scope == name.sheet_scope {
                 match compare(&previous.name, &name.name) {
                     IdentifierComparison::Different => {},
@@ -38,12 +42,12 @@ pub(super) fn identifier_warnings(workbook: &Workbook, warnings: &mut Vec<Import
     }
 }
 /// Collect source features whose decoding cannot preserve full fidelity.
-pub(super) fn fidelity_warnings(format: poirot_model::FileFormat) -> Vec<ImportDiagnostic> {
+pub(super) fn fidelity_warnings(format: crate::FileFormat) -> Vec<ImportDiagnostic> {
     let detail = match format {
-        poirot_model::FileFormat::Xlsx => {
+        crate::FileFormat::Xlsx => {
             "XLSX charts, macros, drawings, conditional formats, validations, links, merge layout and opaque records are not preserved; ordinary cell styles retain the supported typed subset"
         }
-        poirot_model::FileFormat::Xls => {
+        crate::FileFormat::Xls => {
             "XLS charts, macros, drawings, rich styles, validations, links, merge layout and opaque records are not preserved"
         }
     };

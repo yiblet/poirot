@@ -1,7 +1,8 @@
 //! Sparse row and typed cell-cache projection into streaming worksheet XML.
 use super::xml::{attr, element, events, write_event, xml};
 use crate::IoError;
-use poirot_model::{CellAddress, CellValue, Worksheet};
+use crate::data::SheetSource;
+use crate::{CellAddress, CellValue};
 use quick_xml::{
     Writer,
     events::{BytesEnd, BytesStart, BytesText, Event},
@@ -9,11 +10,11 @@ use quick_xml::{
 use std::{collections::BTreeMap, io::Write};
 
 /// Borrowed worksheet XML and canonical cells used to restore typed saved values.
-pub(super) struct SheetPatch<'a> {
+pub(super) struct SheetPatch<'a, S: SheetSource> {
     /// Original backend-generated worksheet XML.
     pub(super) bytes: &'a [u8],
     /// Canonical source sheet supplying formulas, caches, and metadata.
-    pub(super) sheet: &'a Worksheet,
+    pub(super) sheet: &'a S,
     /// Canonical source style identities registered by the fresh writer.
     pub(super) styles: &'a super::StyleExport<'a>,
     /// Shared-source equivalence proof reused for sizing and actual serialization.
@@ -68,27 +69,30 @@ fn style_map(bytes: &[u8], key: &str) -> Result<BTreeMap<CellAddress, String>, I
 }
 fn write_cells<W: Write>(
     writer: &mut Writer<W>,
-    sheet: &Worksheet,
+    sheet: &impl SheetSource,
     styles: &super::StyleExport<'_>,
     metadata: &BTreeMap<CellAddress, String>,
     shared: &super::shared::SharedExport,
 ) -> Result<(), IoError> {
     let spills = super::spill::bounds(sheet)?;
     for index in sheet.row_indices() {
+        CellAddress::new(index, 0)?;
         let mut start = BytesStart::new("row");
-        let number = (index + 1).to_string();
+        let number = index
+            .checked_add(1)
+            .ok_or_else(|| IoError::Unsupported("row index overflow".into()))?
+            .to_string();
         start.push_attribute(("r", number.as_str()));
         write_event(writer, Event::Start(start))?;
-        for (column, cell) in sheet
-            .row(index)
-            .ok_or_else(|| crate::IoError::Unsupported("missing source row".into()))?
-            .cells()
-        {
-            let address = &CellAddress {
+        for (address, cell) in sheet.stored_range(
+            CellAddress { row: index, col: 0 },
+            CellAddress {
                 row: index,
-                col: column,
-            };
+                col: crate::MAX_COLUMNS - 1,
+            },
+        ) {
             let mut start = BytesStart::new("c");
+            address.validate()?;
             let reference = address.to_string();
             start.push_attribute(("r", reference.as_str()));
             let style = styles.id(&cell.style)?;
@@ -163,7 +167,7 @@ fn write_cells<W: Write>(
     }
     Ok(())
 }
-impl SheetPatch<'_> {
+impl<S: SheetSource> SheetPatch<'_, S> {
     /// Rewrite worksheet XML using canonical cell types and saved results.
     pub(super) fn execute<W: Write>(&self, output: W) -> Result<W, IoError> {
         let Self {
@@ -189,5 +193,26 @@ impl SheetPatch<'_> {
             }
         }
         Ok(writer.into_inner())
+    }
+}
+
+#[cfg(test)]
+mod custom_row_tests {
+    use super::*;
+    use crate::test_support::Worksheet;
+
+    #[test]
+    fn worksheet_encoder_rejects_invalid_custom_rows_without_a_plan() {
+        for row in [crate::MAX_ROWS, u32::MAX] {
+            let mut source = Worksheet::new("Data").unwrap();
+            source.rows.insert(row);
+            let context = crate::StyleContext::default();
+            let styles = super::super::StyleExport::new(&context).unwrap();
+            let shared = super::super::shared::SharedExport::new(&source).unwrap();
+            let mut writer = Writer::new(Vec::new());
+            let result = write_cells(&mut writer, &source, &styles, &BTreeMap::new(), &shared);
+            assert!(matches!(result, Err(IoError::Model(_))), "row={row}");
+            assert!(writer.into_inner().is_empty());
+        }
     }
 }

@@ -1,8 +1,9 @@
 //! Standard simple folding is shared by public comparison and search consumers.
-use poirot::{
-    CellError, CellValue, EvaluationContext, Workbook, eval::overlay::Evaluation,
-    eval::overlay::Overlay,
-};
+use poirot::calculation::EvaluationContext;
+use poirot::eval::overlay::Evaluation;
+use poirot::eval::overlay::Overlay;
+use poirot::model::Workbook;
+use poirot::{CellError, CellValue};
 
 #[test]
 fn simple_folding_is_consistent_across_public_value_comparisons() {
@@ -143,10 +144,11 @@ fn explicit_comparison_limits_remain_operational() {
         .set_formula("C1".parse().unwrap(), "IFERROR(A1=B1,7)")
         .unwrap();
     let context = EvaluationContext {
-        budgets: poirot::eval::EvaluationBudgets {
+        limits: (poirot::eval::EvaluationBudgets {
             text_bytes: 2,
             ..Default::default()
-        },
+        })
+        .into(),
         ..Default::default()
     };
     let mut direct = Evaluation::with_workbook(&book)

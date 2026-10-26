@@ -1,7 +1,8 @@
 //! Immutable source inspection and borrowed XLSX export plans.
+use crate::CellValue;
+use crate::data::{SheetSource, WorkbookSource};
 use crate::export_execution::serialize_xlsx;
 use crate::{IoError, WriteOptions};
-use poirot_model::{CellValue, Workbook};
 
 /// Container produced by the XLSX export adapter.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -16,7 +17,8 @@ pub enum TypedCachePolicy {
     /// Preserve saved formula result types rather than recalculating them.
     Preserve,
 }
-/// Features represented by this adapter; this does not promise opaque fidelity.
+/// Summary of source features covered by the XLSX exporter's modeled representation.
+/// It reports the supported export surface without claiming preservation of opaque workbook content.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ExportFeatures {
     /// Whether the source contains formula cells.
@@ -34,21 +36,33 @@ pub struct ExportFeatures {
 /// Source bytes count UTF-8 payloads for scalar text and two bytes per unit for raw UTF16 text, eight bytes per scalar and 24 bytes per
 /// present row (a bounded row-record charge), not XML size or
 /// peak memory. Exact ZIP expansion/output budgets are checked during execution.
+///
+/// ```rust
+/// use poirot_io::{IoError, WriteOptions, plan_xlsx_export};
+/// use poirot_io::data::WorkbookSource;
+///
+/// fn export<W: WorkbookSource>(book: &W) -> Result<Vec<u8>, IoError> {
+///     let plan = plan_xlsx_export(book, WriteOptions::default())?;
+///     // Planning borrows the original source, preventing stale snapshots.
+///     assert!(std::ptr::eq(plan.source(), book));
+///     plan.execute()
+/// }
+/// ```
 #[derive(Debug)]
-pub struct ExportPlan<'a> {
-    workbook: &'a Workbook,
+pub struct ExportPlan<'a, W: WorkbookSource> {
+    workbook: &'a W,
     options: WriteOptions,
     source_bytes: u64,
     cell_count: usize,
     row_count: usize,
 }
-impl<'a> ExportPlan<'a> {
+impl<'a, W: WorkbookSource> ExportPlan<'a, W> {
     /// Return output resource settings captured during planning.
     pub fn options(&self) -> WriteOptions {
         self.options
     }
     /// Borrow the immutable workbook validated by this plan.
-    pub fn source(&self) -> &'a Workbook {
+    pub fn source(&self) -> &'a W {
         self.workbook
     }
     /// Return the planned source-size accounting.
@@ -68,7 +82,7 @@ impl<'a> ExportPlan<'a> {
         ExportFormat::Xlsx
     }
     /// Return the numeric fidelity contract checked during planning.
-    pub fn numeric_representation_policy(&self) -> poirot_model::FiniteNumericRepresentationPolicy {
+    pub fn numeric_representation_policy(&self) -> crate::FiniteNumericRepresentationPolicy {
         crate::numeric_representation::POLICY
     }
     /// Return how saved formula values will be encoded.
@@ -91,10 +105,10 @@ impl<'a> ExportPlan<'a> {
     }
 }
 /// Validate source features and resource claims before XLSX serialization.
-pub fn plan_xlsx_export(
-    workbook: &Workbook,
+pub fn plan_xlsx_export<W: WorkbookSource>(
+    workbook: &W,
     options: WriteOptions,
-) -> Result<ExportPlan<'_>, IoError> {
+) -> Result<ExportPlan<'_, W>, IoError> {
     if workbook.sheets().is_empty() {
         return Err(IoError::Unsupported(
             "cannot export workbook without worksheets".into(),
@@ -118,14 +132,15 @@ pub fn plan_xlsx_export(
     };
     charge(
         workbook
-            .style_context
+            .style_context()
             .retained_bytes()
             .ok_or_else(|| IoError::Limit("style context size overflow".into()))?,
     )?;
     for sheet in workbook.sheets() {
         let mut sheet_text_bytes = 0u64;
         charge(sheet.name().len())?;
-        for _ in sheet.row_indices() {
+        for row in sheet.row_indices() {
+            crate::CellAddress::new(row, 0)?;
             row_count = row_count
                 .checked_add(1)
                 .ok_or_else(|| IoError::Limit("export row count overflow".into()))?;
@@ -177,7 +192,7 @@ pub fn plan_xlsx_export(
             crate::numeric_representation::check(sheet.name(), *address, cell)?;
         }
     }
-    for name in &workbook.named_ranges {
+    for name in workbook.named_ranges() {
         charge(name.name.len())?;
         charge(name.formula.len())?;
     }
@@ -188,4 +203,55 @@ pub fn plan_xlsx_export(
         cell_count,
         row_count,
     })
+}
+
+#[cfg(test)]
+mod custom_row_tests {
+    use super::*;
+    use crate::data::WorkbookSink;
+    use crate::test_support::Workbook;
+    use std::io::Read;
+
+    #[test]
+    fn custom_source_rows_outside_excel_grid_are_rejected_before_encoding() {
+        for row in [crate::MAX_ROWS, u32::MAX] {
+            let mut source = Workbook::new();
+            source.add_sheet("Data").unwrap().rows.insert(row);
+            assert!(
+                matches!(
+                    plan_xlsx_export(&source, WriteOptions::default()),
+                    Err(IoError::Model(_))
+                ),
+                "row={row}"
+            );
+            assert!(
+                matches!(crate::write_xlsx_to_buffer(&source), Err(IoError::Model(_))),
+                "row={row}"
+            );
+        }
+    }
+
+    #[test]
+    fn custom_source_last_excel_row_remains_a_sparse_explicit_record() {
+        let mut source = Workbook::new();
+        source
+            .add_sheet("Data")
+            .unwrap()
+            .rows
+            .insert(crate::MAX_ROWS - 1);
+        let plan = plan_xlsx_export(&source, WriteOptions::default()).unwrap();
+        assert_eq!(plan.row_count(), 1);
+        assert_eq!(plan.cell_count(), 0);
+        let bytes = plan.execute().unwrap();
+        let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
+        let mut worksheet = String::new();
+        archive
+            .by_name("xl/worksheets/sheet1.xml")
+            .unwrap()
+            .read_to_string(&mut worksheet)
+            .unwrap();
+        // Excel's final row has one-based number1048576; source coordinates are zero-based.
+        assert!(worksheet.contains("<row r=\"1048576\">"));
+        assert_eq!(source.sheet_mut(0).unwrap().rows.len(), 1);
+    }
 }

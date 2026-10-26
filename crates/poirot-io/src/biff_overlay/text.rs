@@ -1,7 +1,7 @@
 //! Inline Unicode and stateful STRING/CONTINUE decoding.
 use super::{PreflightError, ResourceBudget, Result};
+use crate::ExcelText;
 use crate::biff_preflight::Record;
-use poirot_model::ExcelText;
 
 /// Read a checked byte slice and advance the BIFF payload cursor.
 pub(super) fn take<'a>(b: &mut &'a [u8], n: usize) -> Result<&'a [u8]> {

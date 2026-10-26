@@ -1,5 +1,8 @@
 //! Exercise the primary workbook -> overlay -> evaluation -> changes workflow.
-use poirot::{CellValue, EvaluationContext, Workbook, eval, eval::overlay::Overlay};
+use poirot::calculation::EvaluationContext;
+use poirot::eval;
+use poirot::eval::overlay::Overlay;
+use poirot::{CellValue, Workbook};
 fn at(reference: &str) -> eval::EvaluationTarget {
     eval::EvaluationTarget {
         sheet: 0,
@@ -16,7 +19,7 @@ fn overlay_edits_evaluate_and_apply_without_mutating_the_borrowed_source() {
         .unwrap();
     let context = EvaluationContext::default();
     let changes = {
-        let mut overlay = Overlay::with_workbook(&model).build().unwrap();
+        let mut overlay = Overlay::with_workbook(model.model()).build().unwrap();
         for (input, expected) in [(21., 42.), (24., 48.), (21., 42.)] {
             overlay.set_value(at("A1"), input).unwrap();
             assert_eq!(
@@ -34,16 +37,11 @@ fn overlay_edits_evaluate_and_apply_without_mutating_the_borrowed_source() {
         );
         overlay.changes()
     };
-    model.apply(changes).unwrap();
+    model.model_mut().apply(changes).unwrap();
     let book = model;
     let bytes = book.save_xlsx().to_buffer().unwrap();
     let reopened = Workbook::from_bytes(&bytes).unwrap();
-    let cell = reopened
-        .model()
-        .sheet(0)
-        .unwrap()
-        .get(at("B1").address)
-        .unwrap();
+    let cell = reopened.sheet(0).unwrap().get(at("B1").address).unwrap();
     assert_eq!(cell.value, CellValue::Number(42.));
     assert_eq!(cell.formula.as_deref(), Some("A1*2"));
 }
@@ -62,7 +60,8 @@ fn default_file_and_byte_imports_retain_the_same_model_and_warnings() {
 
 #[test]
 fn evaluated_formats_preserve_precision_text_and_overlay_edits_through_xlsx() {
-    use poirot::{CellStyle, format};
+    use poirot::styles::CellStyle;
+    use poirot_functions::format;
     let mut model = Workbook::new();
     let sheet = model.add_sheet("Inputs").unwrap();
     let number = 1234.567890123456;
@@ -73,7 +72,7 @@ fn evaluated_formats_preserve_precision_text_and_overlay_edits_through_xlsx() {
         .unwrap();
     let context = EvaluationContext::default();
     let changes = {
-        let mut overlay = Overlay::with_workbook(&model).build().unwrap();
+        let mut overlay = Overlay::with_workbook(model.model()).build().unwrap();
         for cell in ["A1", "B1", "C1"] {
             overlay
                 .set_style(
@@ -118,17 +117,12 @@ fn evaluated_formats_preserve_precision_text_and_overlay_edits_through_xlsx() {
         );
         overlay.changes()
     };
-    model.apply(changes).unwrap();
+    model.model_mut().apply(changes).unwrap();
     let book = model;
     let bytes = book.save_xlsx().to_buffer().unwrap();
     let reopened = Workbook::from_bytes(&bytes).unwrap();
     for cell in ["A1", "B1"] {
-        let stored = reopened
-            .model()
-            .sheet(0)
-            .unwrap()
-            .get(at(cell).address)
-            .unwrap();
+        let stored = reopened.sheet(0).unwrap().get(at(cell).address).unwrap();
         assert_eq!(stored.value, CellValue::Number(number));
         assert_eq!(stored.style.number_format.as_deref(), Some("$#,##0.00"));
     }
@@ -149,7 +143,7 @@ fn lookup_blank_consumers_survive_overlay_reset_materialization_and_xlsx() {
     }
     let context = EvaluationContext::default();
     let changes = {
-        let mut overlay = Overlay::with_workbook(&model).build().unwrap();
+        let mut overlay = Overlay::with_workbook(model.model()).build().unwrap();
         for input in [None, Some(0.), Some(0.02), None] {
             overlay.reset();
             if let Some(value) = input {
@@ -176,7 +170,7 @@ fn lookup_blank_consumers_survive_overlay_reset_materialization_and_xlsx() {
         }
         overlay.changes()
     };
-    model.apply(changes).unwrap();
+    model.model_mut().apply(changes).unwrap();
     let bytes = model.save_xlsx().to_buffer().unwrap();
     let reopened = Workbook::from_bytes(&bytes).unwrap();
     for (cell, expected) in [
@@ -187,7 +181,6 @@ fn lookup_blank_consumers_survive_overlay_reset_materialization_and_xlsx() {
     ] {
         assert_eq!(
             reopened
-                .model()
                 .sheet(0)
                 .unwrap()
                 .get(at(cell).address)
@@ -207,8 +200,8 @@ fn flushed_sources_export_materialized_formula_and_spill_caches_to_xlsx() {
         .unwrap()
         .set_value(at("A1").address, 2.)
         .unwrap();
-    let mut overlay = Overlay::with_workbook(model)
-        .with_policy(poirot::eval::overlay::OverlayPolicy {
+    let mut overlay = Overlay::with_workbook(model.into_model())
+        .with_policy(poirot::eval::overlay::EvaluationPolicy {
             builtin: eval::BuiltinSemanticsPolicy::ExcelDocumentation,
             arrays: eval::ArrayResultPolicy::DynamicSpill,
             ..Default::default()
@@ -224,7 +217,7 @@ fn flushed_sources_export_materialized_formula_and_spill_caches_to_xlsx() {
     saved.apply(overlay.changes()).unwrap();
     let bytes = Workbook::from_model(saved).save_xlsx().to_buffer().unwrap();
     let reopened = Workbook::from_bytes(&bytes).unwrap();
-    let sheet = reopened.model().sheet(0).unwrap();
+    let sheet = reopened.sheet(0).unwrap();
     assert_eq!(
         sheet.get(at("B1").address).unwrap().formula.as_deref(),
         Some("A1*3")
@@ -243,7 +236,8 @@ fn flushed_sources_export_materialized_formula_and_spill_caches_to_xlsx() {
 
 #[test]
 fn text_placeholder_styles_preserve_values_through_xlsx() {
-    use poirot::{CellStyle, format};
+    use poirot::styles::CellStyle;
+    use poirot_functions::format;
     // Microsoft documents @ substitution and Text-format numeric visibility:
     // https://support.microsoft.com/en-us/excel/review-guidelines-for-customizing-a-number-format
     // https://support.microsoft.com/en-us/excel/get-started/available-number-formats-in-excel
@@ -266,7 +260,7 @@ fn text_placeholder_styles_preserve_values_through_xlsx() {
         Workbook::from_bytes(&model.save_xlsx().to_buffer().unwrap()).unwrap(),
     ] {
         let context = EvaluationContext::default();
-        let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+        let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
         let outputs = overlay
             .evaluation(&context)
             .unwrap()
@@ -306,7 +300,8 @@ fn text_placeholder_styles_preserve_values_through_xlsx() {
 
 #[test]
 fn integer_mask_text_and_styles_preserve_numbers_through_xlsx() {
-    use poirot::{CellStyle, format};
+    use poirot::styles::CellStyle;
+    use poirot_functions::format;
     // Microsoft documents digit separators for stored numbers and TEXT results:
     // https://support.microsoft.com/en-us/excel/keeping-leading-zeros-and-large-numbers
     // Independent inputs below partition decimal digits from the right.
@@ -333,7 +328,7 @@ fn integer_mask_text_and_styles_preserve_numbers_through_xlsx() {
         Workbook::from_bytes(&model.save_xlsx().to_buffer().unwrap()).unwrap(),
     ] {
         let context = EvaluationContext::default();
-        let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+        let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
         for (input, result, value, pattern, expected) in rows {
             let outputs = overlay
                 .evaluation(&context)

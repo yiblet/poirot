@@ -310,6 +310,7 @@ impl ResourceBudget {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data::SheetSource;
     fn record(id: u16, data: &[u8]) -> Vec<u8> {
         let mut b = Vec::new();
         b.extend(id.to_le_bytes());
@@ -370,12 +371,12 @@ mod tests {
         let bytes = importable_compound(cells);
         let plan = inspect_xls(&bytes, ResourceBudget::default()).unwrap();
         assert_eq!(plan.sheets, 1);
-        let imported = crate::read_workbook_bytes(&bytes).unwrap();
+        let imported = crate::read_workbook_bytes::<crate::test_support::Workbook>(&bytes).unwrap();
         let sheet = imported.sheet(0).unwrap();
-        assert_eq!(sheet.cells().into_iter().count(), 2);
+        assert_eq!(sheet.cells().count(), 2);
         assert!(
             sheet
-                .get(poirot_model::CellAddress::new(65535, 255).unwrap())
+                .get(crate::CellAddress::new(65535, 255).unwrap())
                 .is_some()
         );
     }
@@ -388,8 +389,8 @@ mod tests {
         cells.extend(number(0, 0));
         let bytes = importable_compound(cells);
         assert!(inspect_xls(&bytes, ResourceBudget::default()).is_ok());
-        let imported = crate::read_workbook_bytes(&bytes).unwrap();
-        assert_eq!(imported.sheet(0).unwrap().cells().into_iter().count(), 1);
+        let imported = crate::read_workbook_bytes::<crate::test_support::Workbook>(&bytes).unwrap();
+        assert_eq!(imported.sheet(0).unwrap().cells().count(), 1);
     }
     #[test]
     fn record_resource_budgets_are_configurable() {

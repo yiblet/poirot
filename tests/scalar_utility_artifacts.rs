@@ -1,5 +1,8 @@
 //! Evaluator revision rejection retains authored utility formulas and edits.
-use poirot::{CellValue, EvaluationContext, Workbook, artifact, eval::overlay::Overlay};
+use poirot::calculation::EvaluationContext;
+use poirot::eval::artifact;
+use poirot::eval::overlay::Overlay;
+use poirot::{CellValue, Workbook};
 #[test]
 fn old_preparation_recovers_utility_source_and_recalculates() {
     let mut book = Workbook::new();
@@ -21,16 +24,17 @@ fn old_preparation_recovers_utility_source_and_recalculates() {
     let previous = poirot::eval::overlay::snapshot::COMPATIBILITY_REVISION - 1;
     bytes[16..24].copy_from_slice(&previous.to_le_bytes());
     assert!(
-        Workbook::load_snapshot()
+        poirot::eval::artifact::SnapshotLoadBuilder::default()
             .prepared_policy(artifact::PreparedPolicy::RequireCompatible)
             .from_bytes(&bytes)
             .is_err()
     );
-    let artifact::RestoredCheckpoint::Source { workbook, status } = Workbook::load_snapshot()
-        .from_bytes(&bytes)
-        .unwrap()
-        .into_checkpoint()
-        .unwrap()
+    let artifact::RestoredCheckpoint::Source { workbook, status } =
+        poirot::eval::artifact::SnapshotLoadBuilder::default()
+            .from_bytes(&bytes)
+            .unwrap()
+            .into_checkpoint()
+            .unwrap()
     else {
         panic!("old evaluator state accepted")
     };
@@ -45,12 +49,13 @@ fn old_preparation_recovers_utility_source_and_recalculates() {
     assert_eq!(direct.cell(output).unwrap(), 20.0.into());
     let child = direct.target("S!C3").unwrap();
     assert_eq!(direct.cell(child).unwrap(), 1.0.into());
-    let artifact::RestoredCheckpoint::Source { status, .. } = Workbook::load_snapshot()
-        .prepared_policy(artifact::PreparedPolicy::SourceOnly)
-        .from_bytes(&bytes)
-        .unwrap()
-        .into_checkpoint()
-        .unwrap()
+    let artifact::RestoredCheckpoint::Source { status, .. } =
+        poirot::eval::artifact::SnapshotLoadBuilder::default()
+            .prepared_policy(artifact::PreparedPolicy::SourceOnly)
+            .from_bytes(&bytes)
+            .unwrap()
+            .into_checkpoint()
+            .unwrap()
     else {
         panic!("source-only reused preparation")
     };
@@ -64,8 +69,8 @@ fn utility_xlsx_roundtrip_executes_prefixed_functions_and_spills() {
     s.set_formula("D1".parse().unwrap(), "NETWORKDAYS.INTL(45292,45298)")
         .unwrap();
     s.set_formula("G1".parse().unwrap(), "ACOT(1)").unwrap();
-    let bytes = poirot::io::write_xlsx_to_buffer(&b).unwrap();
-    let reopened = poirot::io::read_workbook_bytes(&bytes).unwrap();
+    let bytes = b.save_xlsx().to_buffer().unwrap();
+    let reopened = poirot_io::read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
     let mut e = poirot::eval::overlay::Evaluation::with_workbook(reopened)
         .build(EvaluationContext::default())
         .unwrap();

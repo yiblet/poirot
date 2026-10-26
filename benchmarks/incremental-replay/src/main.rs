@@ -1,6 +1,7 @@
 //! Replay independent scenarios with persistent, reset, or fresh overlays.
 //! Input/output contents stay private; stdout contains only timings, counts and hashes.
-use poirot::{CellValue, EvaluationContext, EvaluationTarget, Overlay, Workbook};
+use poirot::{CellValue, Workbook};
+use poirot::calculation::{EvaluationContext, EvaluationTarget, Overlay};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -86,7 +87,7 @@ fn scenario(book: &Workbook, value: &Value) -> Result<Scenario> {
             Input::Literal(CellValue::Blank)
         } else {
             let text = string(mapping, "string")?;
-            let parsed = poirot::parsing::java_number::parse_java_number(text)
+            let parsed = poirot_parsing::java_number::parse_java_number(text)
                 .map(CellValue::Number)
                 .unwrap_or_else(|| CellValue::Text(text.into()));
             if resolver
@@ -162,7 +163,7 @@ fn restore(overlay: &mut Overlay<'_>, book: &Workbook, key: Key) -> Result<()> {
     }
     Ok(())
 }
-fn signature(values: &[poirot::CellEvaluation]) -> Result<String> {
+fn signature(values: &[poirot::calculation::CellEvaluation]) -> Result<String> {
     let encoded = values
         .iter()
         .map(|cell| match &cell.value {
@@ -278,7 +279,7 @@ fn main() -> Result<()> {
         (book, scenarios, 0., milliseconds(load))
     } else {
         let bytes = std::fs::read(input)?;
-        let options = poirot::io::ReadOptions {
+        let options = poirot::files::ReadOptions {
             max_input_bytes: u64::MAX,
             max_zip_entry_bytes: u64::MAX,
             max_zip_total_bytes: u64::MAX,

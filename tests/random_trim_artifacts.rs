@@ -1,8 +1,9 @@
 //! Saved evaluator compatibility is independent of authored workbook source.
-use poirot::{
-    CellValue, EvaluationContext, Workbook, artifact, eval::overlay::Overlay,
-    eval::overlay::OverlayPolicy,
-};
+use poirot::calculation::EvaluationContext;
+use poirot::eval::artifact;
+use poirot::eval::overlay::EvaluationPolicy;
+use poirot::eval::overlay::Overlay;
+use poirot::{CellValue, Workbook};
 #[test]
 fn previous_random_trim_preparation_recovers_authored_source_and_edits() {
     let mut book = Workbook::new();
@@ -27,12 +28,14 @@ fn previous_random_trim_preparation_recovers_authored_source_and_edits() {
     let previous = poirot::eval::overlay::snapshot::COMPATIBILITY_REVISION - 1;
     bytes[16..24].copy_from_slice(&previous.to_le_bytes());
     assert!(
-        Workbook::load_snapshot()
+        poirot::eval::artifact::SnapshotLoadBuilder::default()
             .prepared_policy(artifact::PreparedPolicy::RequireCompatible)
             .from_bytes(&bytes)
             .is_err()
     );
-    let restored = Workbook::load_snapshot().from_bytes(&bytes).unwrap();
+    let restored = poirot::eval::artifact::SnapshotLoadBuilder::default()
+        .from_bytes(&bytes)
+        .unwrap();
     let artifact::RestoredCheckpoint::Source { workbook, status } =
         restored.into_checkpoint().unwrap()
     else {
@@ -44,7 +47,7 @@ fn previous_random_trim_preparation_recovers_authored_source_and_edits() {
         CellValue::Number(11.0)
     );
     let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)
-        .with_policy(OverlayPolicy::default())
+        .with_policy(EvaluationPolicy::default())
         .build(context.clone())
         .unwrap();
     assert_eq!(direct.cell(trimmed).unwrap(), 11.0.into());
@@ -52,7 +55,7 @@ fn previous_random_trim_preparation_recovers_authored_source_and_edits() {
     assert!(
         matches!(direct.cell(random).unwrap(), CellValue::Number(n) if (0.0..1.0).contains(&n))
     );
-    let recovered = Workbook::load_snapshot()
+    let recovered = poirot::eval::artifact::SnapshotLoadBuilder::default()
         .prepared_policy(artifact::PreparedPolicy::SourceOnly)
         .from_bytes(&bytes)
         .unwrap();

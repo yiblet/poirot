@@ -4,9 +4,9 @@ use crate::fods::{
     corpus::BaselineStatus,
     gaps::{self, GapKind},
     plan::{FixturePlan, PlannedCase, RunPlan, WorkbookPreparation},
-    report::{CaseFailure, CaseResult, CaseStatus, FailureKind, RunReport, RunSummary},
+    report::{CaseFailure, CaseResult, CaseStatus, EvaluationReport, FailureKind, RunSummary},
 };
-use poirot_model::{CellAddress, CellValue, Workbook};
+use poirot::model::{CellAddress, CellValue, Workbook};
 use rayon::prelude::*;
 
 fn failure(kind: FailureKind, message: impl Into<String>) -> CaseFailure {
@@ -26,19 +26,19 @@ fn failure(kind: FailureKind, message: impl Into<String>) -> CaseFailure {
     }
 }
 
-fn aborted(abort: poirot_eval::EvaluationFailure) -> CaseFailure {
+fn aborted(abort: poirot::eval::EvaluationFailure) -> CaseFailure {
     let mut reason = failure(
         FailureKind::EvaluationAbort,
         format!("evaluation aborted: {abort:?}"),
     );
     reason.gap_type = match abort {
-        poirot_eval::EvaluationFailure::Budget(_)
-        | poirot_eval::EvaluationFailure::ResourceLimit { .. }
-        | poirot_eval::EvaluationFailure::MemoRetentionLimit { .. } => GapKind::ResourceLimit,
-        poirot_eval::EvaluationFailure::UnsupportedCapability { .. } => {
+        poirot::eval::EvaluationFailure::Budget(_)
+        | poirot::eval::EvaluationFailure::ResourceLimit { .. }
+        | poirot::eval::EvaluationFailure::MemoRetentionLimit { .. } => GapKind::ResourceLimit,
+        poirot::eval::EvaluationFailure::UnsupportedCapability { .. } => {
             GapKind::UnsupportedCapability
         }
-        poirot_eval::EvaluationFailure::KnownSourceException { .. } => GapKind::SourceException,
+        poirot::eval::EvaluationFailure::KnownSourceException { .. } => GapKind::SourceException,
         _ => GapKind::HarnessError,
     };
     reason
@@ -46,9 +46,9 @@ fn aborted(abort: poirot_eval::EvaluationFailure) -> CaseFailure {
 
 // Native non-CSE Calc formulas use implicit intersection, not dynamic worksheet spills.
 // https://help.libreoffice.org/latest/en-US/text/scalc/01/04060107.html
-fn native_configuration() -> poirot_eval::RunConfiguration {
-    poirot_eval::RunConfiguration::default()
-        .with_array_result_policy(poirot_eval::ArrayResultPolicy::ScalarIntersection)
+fn native_configuration() -> poirot::eval::RunConfiguration {
+    poirot::eval::RunConfiguration::default()
+        .with_array_result_policy(poirot::eval::ArrayResultPolicy::ScalarIntersection)
 }
 
 fn evaluate(
@@ -57,16 +57,16 @@ fn evaluate(
     at: CellAddress,
     formula: &str,
 ) -> Result<CellValue, CaseFailure> {
-    match poirot_eval::run_formula_with_configuration(
+    match poirot::eval::run_formula_with_configuration(
         book,
         sheet,
         at,
         formula,
         &native_configuration(),
-        poirot_eval::EvaluationBudgets::default(),
+        poirot::eval::EvaluationBudgets::default(),
     ) {
-        poirot_eval::EvaluationOutcome::Complete { value, .. } => Ok(value),
-        poirot_eval::EvaluationOutcome::Aborted { failure: abort, .. } => Err(aborted(abort)),
+        poirot::eval::EvaluationOutcome::Complete { value, .. } => Ok(value),
+        poirot::eval::EvaluationOutcome::Aborted { failure: abort, .. } => Err(aborted(abort)),
     }
 }
 
@@ -79,7 +79,7 @@ pub(crate) struct CheckObservation {
 
 fn check(
     book: &Workbook,
-    prepared: &poirot_eval::CompiledWorkbook,
+    prepared: &poirot::eval::CompiledWorkbook,
     entry: &crate::fods::corpus::FixtureEntry,
     plan: &PlannedCase,
     omissions: &[crate::fods::xml::model::Omission],
@@ -106,17 +106,17 @@ fn check(
         plan: prepared,
     };
     let view =
-        poirot_eval::WorkbookView::new(book, prepared, prepared.policy()).map_err(aborted)?;
+        poirot::eval::WorkbookView::new(book, prepared, prepared.policy()).map_err(aborted)?;
     let configuration = native_configuration();
-    let mut run = poirot_eval::EvaluationRun::new_with_configuration(
+    let mut run = poirot::eval::EvaluationRun::new_with_configuration(
         view,
         &configuration,
-        poirot_eval::EvaluationBudgets::default(),
+        poirot::eval::EvaluationBudgets::default(),
     )
     .map_err(aborted)?
     .with_dependency_sink(&mut reads)
     .with_cell_observer(&mut cells);
-    let target = |row, col| poirot_eval::EvaluationTarget {
+    let target = |row, col| poirot::eval::EvaluationTarget {
         sheet: case.sheet,
         address: CellAddress { row, col },
     };
@@ -124,33 +124,33 @@ fn check(
         .evaluate_cell(target(case.row, case.col))
         .map_err(aborted)?;
     if borrow_failed.get() {
-        return Err(aborted(poirot_eval::EvaluationFailure::StalePlan));
+        return Err(aborted(poirot::eval::EvaluationFailure::StalePlan));
     }
     if let Some(reason) = trace
         .try_borrow()
-        .map_err(|_| aborted(poirot_eval::EvaluationFailure::StalePlan))?
+        .map_err(|_| aborted(poirot::eval::EvaluationFailure::StalePlan))?
         .failure("actual")
     {
         return Err(reason);
     }
     let actual_unresolved_name = trace
         .try_borrow()
-        .map_err(|_| aborted(poirot_eval::EvaluationFailure::StalePlan))?
+        .map_err(|_| aborted(poirot::eval::EvaluationFailure::StalePlan))?
         .unresolved_name()
         .map(str::to_owned);
     *trace
         .try_borrow_mut()
-        .map_err(|_| aborted(poirot_eval::EvaluationFailure::StalePlan))? =
+        .map_err(|_| aborted(poirot::eval::EvaluationFailure::StalePlan))? =
         crate::fods::execution_trace::Trace::default();
     let correct = run
         .evaluate_cell(target(case.correct_row, case.correct_col))
         .map_err(aborted)?;
     if borrow_failed.get() {
-        return Err(aborted(poirot_eval::EvaluationFailure::StalePlan));
+        return Err(aborted(poirot::eval::EvaluationFailure::StalePlan));
     }
     if let Some(reason) = trace
         .try_borrow()
-        .map_err(|_| aborted(poirot_eval::EvaluationFailure::StalePlan))?
+        .map_err(|_| aborted(poirot::eval::EvaluationFailure::StalePlan))?
         .failure("Correct")
     {
         return Err(reason);
@@ -206,7 +206,7 @@ fn check(
         }
         if let Some(name) = trace
             .try_borrow()
-            .map_err(|_| aborted(poirot_eval::EvaluationFailure::StalePlan))?
+            .map_err(|_| aborted(poirot::eval::EvaluationFailure::StalePlan))?
             .unresolved_name()
         {
             reason.gap_type = GapKind::NameResolution;
@@ -286,7 +286,7 @@ pub(crate) fn fixture_observations(
 }
 
 /// Evaluate a prepared fixture plan in bounded parallel workers and assemble ordered case results.
-pub fn execute(plan: &RunPlan) -> Result<RunReport, Error> {
+pub fn execute(plan: &RunPlan) -> Result<EvaluationReport, Error> {
     execute_with_observer(plan, &|_| Ok(()))
 }
 
@@ -295,7 +295,7 @@ pub fn execute(plan: &RunPlan) -> Result<RunReport, Error> {
 pub fn execute_with_observer(
     plan: &RunPlan,
     observer: &(impl Fn(&CaseResult) -> Result<(), Error> + Sync),
-) -> Result<RunReport, Error> {
+) -> Result<EvaluationReport, Error> {
     let pool = rayon::ThreadPoolBuilder::new()
         .num_threads(plan.jobs.get())
         .stack_size(16 * 1024 * 1024)
@@ -336,5 +336,5 @@ pub fn execute_with_observer(
             CaseStatus::HarnessError => summary.harness_errors += 1,
         }
     }
-    Ok(RunReport { summary, cases })
+    Ok(EvaluationReport { summary, cases })
 }

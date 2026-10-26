@@ -6,6 +6,9 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeSet, path::Path};
 
+/// An explicit exemption from executing one exact stable case ID.
+/// A nonempty reason and optional tracking reference make skips visible separately
+/// from executed known failures.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SkipRule {
@@ -14,6 +17,8 @@ pub struct SkipRule {
     pub tracking: Option<String>,
 }
 
+/// Loaded skip rules matched against the discovered case inventory.
+/// Loading rejects duplicate, unexplained, or stale rules for the selected sources.
 #[derive(Default, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Skips {

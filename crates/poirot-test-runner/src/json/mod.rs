@@ -4,12 +4,12 @@ pub mod schema;
 pub mod specs;
 pub use cli::{Cli, OutputFormat};
 
-use poirot::{
-    CellEvaluation, CellStyle, CellValue, EvaluationContext, EvaluationTarget, Workbook,
-    WorkbookChange,
-};
+use poirot::calculation::{CellEvaluation, EvaluationContext, EvaluationTarget};
+use poirot::editing::WorkbookChange;
+use poirot::styles::CellStyle;
+use poirot::{CellValue, Workbook};
 // The authored-style interpreter exercises component APIs unavailable on a value-only scenario.
-use poirot::eval::overlay::{Evaluation, Overlay, OverlayPolicy};
+use poirot::eval::overlay::{Evaluation, EvaluationPolicy, Overlay};
 use schema::{Action, Content, Scenario, Suite};
 use serde::Serialize;
 use std::collections::BTreeSet;
@@ -24,6 +24,9 @@ pub enum Status {
     HarnessError,
 }
 
+/// Result of one authored check action, retaining typed expected and actual values.
+/// Its status distinguishes passing expectations, exact documented gaps, stale gaps,
+/// and new mismatches for reporting and cross-mode comparison.
 #[derive(Debug, PartialEq, Serialize)]
 pub struct CheckResult {
     pub action: usize,
@@ -34,6 +37,9 @@ pub struct CheckResult {
     pub detail: String,
 }
 
+/// Checks and ordered source changes observed while running a scenario in one evaluation mode.
+/// An execution error is retained alongside completed checks so partial progress
+/// remains inspectable when the scenario fails.
 #[derive(Debug, Serialize)]
 pub struct ModeResult {
     pub mode: &'static str,
@@ -44,6 +50,9 @@ pub struct ModeResult {
     pub error: Option<String>,
 }
 
+/// Paired normal and incremental-overlay executions of the same authored scenario.
+/// The final status accounts for assertion outcomes and agreement of typed outputs
+/// and ordered change lists across both modes.
 #[derive(Debug, Serialize)]
 pub struct ScenarioResult {
     pub name: String,
@@ -63,7 +72,7 @@ impl ScenarioResult {
     }
 }
 
-// The same action interpreter drives both public APIs.
+/// An authored-style interpreter shared by direct and incremental component modes.
 enum Session<'a> {
     Normal(Box<Evaluation<'a, &'a poirot::model::Workbook>>),
     Overlay(Box<Overlay<'a, &'a poirot::model::Workbook>>),
@@ -75,7 +84,7 @@ impl<'a> Session<'a> {
         builtin: poirot::eval::BuiltinSemanticsPolicy,
         arrays: poirot::eval::ArrayResultPolicy,
     ) -> Result<Self, String> {
-        let policy = OverlayPolicy {
+        let policy = EvaluationPolicy {
             builtin,
             arrays,
             ..Default::default()
@@ -256,7 +265,7 @@ fn workbook(suite: &Suite) -> Result<Workbook, String> {
         }
         session.changes()
     };
-    book.apply(changes).map_err(|e| e.to_string())?;
+    book.model_mut().apply(changes).map_err(|e| e.to_string())?;
     Ok(book)
 }
 
@@ -310,13 +319,13 @@ fn run_mode(
                             .as_ref()
                             .is_none_or(|s| Some(s.as_str()) == actual_format);
                         let rendered = if display.is_some() {
-                            let plan = poirot::format::compile_format(
+                            let plan = poirot::styles::compile_format(
                                 actual_format.unwrap_or("General"),
                                 Default::default(),
                             )
                             .map_err(|e| format!("{e:?}"))?;
                             Some(
-                                poirot::format::render_value(
+                                poirot::styles::render_value(
                                     &output.value,
                                     &plan,
                                     Default::default(),

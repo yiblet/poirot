@@ -5,15 +5,17 @@ use crate::ooxml::{
     package::Package,
     xml::{events, write_event, xml},
 };
+use crate::*;
 use crate::{IoError, WriteOptions};
-use poirot_model::*;
 use quick_xml::{
     Writer,
     events::{BytesEnd, BytesStart, Event},
 };
 use std::{collections::HashMap, io::Write};
 
-/// Borrowed source style identities; no coordinate map or lossy backend conversion.
+/// Interned source cell styles used to assign worksheet XF IDs and emit the canonical stylesheet.
+/// Entry zero is reserved for the workbook default, and source styles remain borrowed
+/// through sizing and serialization.
 pub(crate) struct StyleExport<'a> {
     styles: Vec<&'a CellStyle>,
     ids: HashMap<&'a CellStyle, usize>,

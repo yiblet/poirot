@@ -11,7 +11,7 @@ publish = false
 unsafe_code = "forbid"
 
 [dependencies]
-poirot-model = { path = "../../crates/poirot-model" }
+poirot = { version = "0.1.0", path = "../.." }
 allocation-counter = "=0.8.1"
 serde_json = "=1.0.154"
 

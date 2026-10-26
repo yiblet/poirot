@@ -1,5 +1,6 @@
 use super::*;
-use poirot::{EvaluationContext, eval::overlay::Overlay};
+use poirot::calculation::EvaluationContext;
+use poirot::eval::overlay::Overlay;
 use std::sync::Arc;
 
 #[test]
@@ -22,7 +23,7 @@ fn failed_batches_and_invalid_policies_preserve_previous_successful_outputs() {
     let raw = overlay.cached_value(targets[0]).unwrap();
     let committed = overlay.changes();
     let mut limited = context.clone();
-    limited.budgets.run_work = 0;
+    limited.limits = limited.limits.max_work(0);
     assert!(matches!(
         overlay.evaluation(&limited).unwrap().outputs(&targets),
         Err(eval::EvaluationFailure::Budget(_))
@@ -36,7 +37,7 @@ fn failed_batches_and_invalid_policies_preserve_previous_successful_outputs() {
     limited.retention.cells = 0;
     assert!(matches!(
         overlay.evaluation(&limited),
-        Err(poirot::OverlayError::Evaluation(
+        Err(poirot::calculation::OverlayError::Evaluation(
             eval::EvaluationFailure::MemoRetentionLimit { .. }
         ))
     ));

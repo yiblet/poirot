@@ -2,7 +2,7 @@
 use crate::{
     Error, invalid,
     model::*,
-    runner::{Header, RunReport, Summary},
+    runner::{EvaluationReport, Header, Summary},
 };
 use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
@@ -225,7 +225,11 @@ pub fn suite(
     Ok(())
 }
 
-pub fn finish(output: &mut impl Write, format: Format, report: &RunReport) -> Result<(), Error> {
+pub fn finish(
+    output: &mut impl Write,
+    format: Format,
+    report: &EvaluationReport,
+) -> Result<(), Error> {
     if format == Format::Json {
         for id in &report.removed {
             json(output, &Record::Removed { id: id.clone() })?;
@@ -273,7 +277,7 @@ pub fn finish(output: &mut impl Write, format: Format, report: &RunReport) -> Re
     Ok(())
 }
 
-pub fn read(path: &Path) -> Result<RunReport, Error> {
+pub fn read(path: &Path) -> Result<EvaluationReport, Error> {
     let mut header = None;
     let mut cases = Vec::new();
     let mut removed = Vec::new();
@@ -344,7 +348,7 @@ pub fn read(path: &Path) -> Result<RunReport, Error> {
             "report is missing selected cases or has invalid removals",
         ));
     }
-    let mut report = RunReport {
+    let mut report = EvaluationReport {
         header,
         cases,
         removed,
@@ -358,7 +362,7 @@ pub fn read(path: &Path) -> Result<RunReport, Error> {
 }
 
 /// Standalone viewer: all source content is data, rendered only with textContent.
-pub fn html(report: &RunReport) -> Result<String, Error> {
+pub fn html(report: &EvaluationReport) -> Result<String, Error> {
     let data = serde_json::to_string(report)?
         .replace('<', "\\u003c")
         .replace('\u{2028}', "\\u2028")

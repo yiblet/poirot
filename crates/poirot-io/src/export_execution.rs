@@ -1,29 +1,30 @@
 //! XLSX serializer execution and write-after-success filesystem egress.
+use crate::CellValue;
+use crate::data::{SheetSource, WorkbookSource};
 use crate::{IoError, WriteOptions, ooxml, plan_xlsx_export};
-use poirot_model::{CellValue, Workbook};
 use rxls::Format;
 use std::{fs, path::Path};
 
 /// Writes XLSX with explicit writer budgets; no recalculation is performed.
 pub fn write_xlsx_to_buffer_with_options(
-    workbook: &Workbook,
+    workbook: &impl WorkbookSource,
     options: WriteOptions,
 ) -> Result<Vec<u8>, IoError> {
     plan_xlsx_export(workbook, options)?.execute()
 }
 /// Uses the documented [`WriteOptions::default`] compatibility policy.
-pub fn write_xlsx_to_buffer(workbook: &Workbook) -> Result<Vec<u8>, IoError> {
+pub fn write_xlsx_to_buffer(workbook: &impl WorkbookSource) -> Result<Vec<u8>, IoError> {
     write_xlsx_to_buffer_with_options(workbook, WriteOptions::default())
 }
 /// Encode an immutable source workbook into an admitted in-memory XLSX package.
 pub(super) fn serialize_xlsx(
-    workbook: &Workbook,
+    workbook: &impl WorkbookSource,
     options: WriteOptions,
 ) -> Result<Vec<u8>, IoError> {
     if !workbook
         .sheets()
         .iter()
-        .any(|s| s.presentation().visibility == poirot_model::SheetVisibility::Visible)
+        .any(|s| s.presentation().visibility == crate::SheetVisibility::Visible)
     {
         return Err(IoError::Unsupported(
             "cannot export workbook without a visible worksheet".into(),
@@ -32,9 +33,9 @@ pub(super) fn serialize_xlsx(
     serialize_fresh(workbook, options)
 }
 
-/// Author a canonical package without consulting retained source.
+/// Author a canonical package from the modeled workbook data.
 pub(crate) fn serialize_fresh(
-    workbook: &Workbook,
+    workbook: &impl WorkbookSource,
     options: WriteOptions,
 ) -> Result<Vec<u8>, IoError> {
     if workbook.sheets().is_empty() {
@@ -45,20 +46,20 @@ pub(crate) fn serialize_fresh(
     let active = workbook
         .sheets()
         .iter()
-        .position(|s| s.presentation().visibility == poirot_model::SheetVisibility::Visible)
+        .position(|s| s.presentation().visibility == crate::SheetVisibility::Visible)
         .ok_or_else(|| {
             IoError::Unsupported("cannot export workbook without a visible worksheet".into())
         })?;
-    let mut styles = ooxml::StyleExport::new(&workbook.style_context)?;
+    let mut styles = ooxml::StyleExport::new(workbook.style_context())?;
     let mut writer = rxls::Workbook::new();
     writer.set_active_sheet(active);
-    writer.date1904 = workbook.date_system == poirot_model::DateSystem::Excel1904;
+    writer.date1904 = workbook.date_system() == crate::DateSystem::Excel1904;
     for sheet in workbook.sheets() {
         let out = writer.add_sheet(sheet.name());
         match sheet.presentation().visibility {
-            poirot_model::SheetVisibility::Visible => {}
-            poirot_model::SheetVisibility::Hidden => out.hide(),
-            poirot_model::SheetVisibility::VeryHidden => out.hide_very(),
+            crate::SheetVisibility::Visible => {}
+            crate::SheetVisibility::Hidden => out.hide(),
+            crate::SheetVisibility::VeryHidden => out.hide_very(),
         }
         if let Some([r, g, b]) = sheet.presentation().tab_color {
             out.set_tab_color(rxls::Color::rgb(r, g, b));
@@ -92,14 +93,14 @@ pub(crate) fn serialize_fresh(
     ooxml::patch_export(&generated, workbook, options, &styles)
 }
 /// Plan and serialize XLSX before writing the completed bytes to a file.
-pub fn write_xlsx(workbook: &Workbook, path: impl AsRef<Path>) -> Result<(), IoError> {
+pub fn write_xlsx(workbook: &impl WorkbookSource, path: impl AsRef<Path>) -> Result<(), IoError> {
     fs::write(path, write_xlsx_to_buffer(workbook)?)?;
     Ok(())
 }
 
 /// Writes the destination only after serialization and all budget checks succeed.
 pub fn write_xlsx_with_options(
-    workbook: &Workbook,
+    workbook: &impl WorkbookSource,
     path: impl AsRef<Path>,
     options: WriteOptions,
 ) -> Result<(), IoError> {

@@ -1,8 +1,9 @@
 //! Sample and population moments follow their equations at large source offsets.
-use poirot::{
-    CellError, CellValue, EvaluationContext, Workbook, eval::overlay::Evaluation,
-    eval::overlay::Overlay,
-};
+use poirot::calculation::EvaluationContext;
+use poirot::eval::overlay::Evaluation;
+use poirot::eval::overlay::Overlay;
+use poirot::model::Workbook;
+use poirot::{CellError, CellValue};
 
 #[test]
 fn variance_and_standard_deviation_share_stable_reduction_across_public_workflows() {

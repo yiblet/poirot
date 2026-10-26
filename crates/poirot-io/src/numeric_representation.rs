@@ -1,6 +1,6 @@
 //! Pure finite-only XLSX admission, shared by plan and serializer defenses.
 use crate::IoError;
-use poirot_model::{
+use crate::{
     Cell, CellAddress, CellValue, FiniteNumericRepresentationPolicy, NumericFileFormat,
     NumericLocation,
 };

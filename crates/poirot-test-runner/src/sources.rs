@@ -14,6 +14,9 @@ pub(crate) trait TestSuite: Send + Sync {
     fn run(&self, selected: &BTreeSet<String>) -> Result<Vec<CaseResult>, Error>;
 }
 
+/// One extracted native FODS fixture exposed through the unified test-suite interface.
+/// It prepares selected source checks with their pinned baseline and translates native
+/// execution diagnostics into comparable runner observations.
 pub(crate) struct FodsSuite {
     cases: Vec<CaseMetadata>,
     source: crate::fods::xml::model::FodsWorkbook,
@@ -145,6 +148,9 @@ pub(crate) fn fods(root: &Path) -> Result<Vec<Box<dyn TestSuite>>, Error> {
         .collect()
 }
 
+/// An authored JSON scenario suite exposed through the unified runner.
+/// Selected scenarios retain their normal-versus-overlay checks while their results
+/// are converted into the shared observation and baseline-comparison model.
 struct JsonSuite {
     cases: Vec<CaseMetadata>,
     suite: crate::json::schema::Suite,
@@ -206,6 +212,8 @@ impl TestSuite for JsonSuite {
     }
 }
 
+/// One evidence-backed Excel specification case exposed as a unified runner suite.
+/// Its step assertions become mismatch observations, while execution errors are reported as blockers.
 struct ExcelSpecSuite {
     cases: Vec<CaseMetadata>,
     case: crate::json::specs::Case,

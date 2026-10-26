@@ -1,13 +1,13 @@
 //! Prospective actual-handler resource regressions; central139 owns execution.
 use poirot::eval::{
-    self, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
+    self as eval, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
 };
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 
 const AT: CellAddress = CellAddress { row: 0, col: 0 };
 
 fn run(book: &Workbook, formula: &str, work: u64) -> EvaluationOutcome<CellValue> {
-    let expression = poirot::parsing::formula::parse_formula(formula).unwrap();
+    let expression = poirot_parsing::formula::parse_formula(formula).unwrap();
     let plan = eval::bound::FormulaPlan::bind(&expression).unwrap();
     eval::run_plan(
         book,

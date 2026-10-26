@@ -40,7 +40,7 @@ fn package(parts: BTreeMap<String, Vec<u8>>) -> Vec<u8> {
 fn fixture(rows: &str) -> Vec<u8> {
     let mut workbook = Workbook::new();
     workbook.add_sheet("Data").unwrap();
-    let mut parts = parts(&poirot::io::write_xlsx_to_buffer(workbook.model()).unwrap());
+    let mut parts = parts(&poirot_io::write_xlsx_to_buffer(workbook.model()).unwrap());
     parts.insert("xl/worksheets/sheet1.xml".into(), format!(r#"<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:probe="urn:poirot:io-trial"><sheetData>{rows}</sheetData><extLst><ext uri="urn:poirot:io-trial"><probe:payload preserved="yes">opaque &amp; untouched</probe:payload></ext></extLst></worksheet>"#).into_bytes());
     let types = String::from_utf8(parts.remove("[Content_Types].xml").unwrap()).unwrap();
     parts.insert("[Content_Types].xml".into(), types.replace("</Types>", r#"<Override PartName="/custom/trial.bin" ContentType="application/octet-stream"/></Types>"#).into_bytes());

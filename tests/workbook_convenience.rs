@@ -1,5 +1,7 @@
 //! Public workflow contracts; arithmetic expectations follow multiplication and SEQUENCE semantics.
-use poirot::{CellValue, EvaluationContext, EvaluationPolicy, Workbook, artifact};
+use poirot::calculation::{EvaluationContext, EvaluationPolicy};
+use poirot::eval::artifact;
+use poirot::{CellValue, Workbook};
 
 fn book() -> Workbook {
     let mut book = Workbook::new();
@@ -241,7 +243,7 @@ fn builder_precedence_profiling_and_new_cycle_are_explicit() {
     };
     let mut evaluation = book
         .evaluation()
-        .limits(poirot::EvaluationLimits::default().max_work(0))
+        .limits(poirot::calculation::EvaluationLimits::default().max_work(0))
         .context(context.clone())
         .profiling(true)
         .build()
@@ -260,7 +262,7 @@ fn builder_precedence_profiling_and_new_cycle_are_explicit() {
     let mut refused = book
         .evaluation()
         .context(context.clone())
-        .limits(poirot::EvaluationLimits::default().max_work(0))
+        .limits(poirot::calculation::EvaluationLimits::default().max_work(0))
         .build()
         .unwrap();
     assert!(refused.cell(output).is_err());
@@ -285,7 +287,7 @@ fn export_validation_failure_does_not_touch_destination_or_scenario() {
         std::process::id()
     ));
     std::fs::write(&path, b"keep destination").unwrap();
-    let options = poirot::io::WriteOptions {
+    let options = poirot_io::WriteOptions {
         max_output_bytes: 0,
         ..Default::default()
     };
@@ -308,12 +310,12 @@ fn staged_export_changes_fail_atomically_and_owned_edit_application_is_explicit(
     assert!(
         book.model()
             .with_changes([
-                poirot::WorkbookChange::SetValue {
+                poirot::editing::WorkbookChange::SetValue {
                     sheet: 0,
                     address,
                     value: CellValue::Number(100.)
                 },
-                poirot::WorkbookChange::SetValue {
+                poirot::editing::WorkbookChange::SetValue {
                     sheet: 100,
                     address,
                     value: CellValue::Number(200.)
@@ -322,7 +324,7 @@ fn staged_export_changes_fail_atomically_and_owned_edit_application_is_explicit(
             .is_err()
     );
     assert_eq!(saved(&book, "A1"), CellValue::Number(3.));
-    let mut overlay = poirot::Overlay::from_overlay(
+    let mut overlay = poirot::calculation::Overlay::from_overlay(
         poirot::eval::overlay::Overlay::with_workbook(book.clone())
             .build()
             .unwrap(),
@@ -389,14 +391,14 @@ fn wrappers_preserve_owned_and_shared_advanced_modes() {
     let direct = poirot::eval::overlay::Evaluation::with_workbook(std::sync::Arc::clone(&book))
         .build_calculation(EvaluationContext::default())
         .unwrap();
-    let mut direct = poirot::Evaluation::from_calculation(direct);
+    let mut direct = poirot::calculation::Evaluation::from_calculation(direct);
     let output = direct.target("'Model inputs'!B1").unwrap();
     assert_eq!(direct.cell(output).unwrap(), CellValue::Number(6.));
     assert!(!direct.save_xlsx().to_buffer().unwrap().is_empty());
     let overlay = poirot::eval::overlay::Overlay::with_workbook(book)
         .build()
         .unwrap();
-    let mut overlay = poirot::Overlay::from_overlay(overlay);
+    let mut overlay = poirot::calculation::Overlay::from_overlay(overlay);
     assert!(!overlay.save_xlsx().to_buffer().unwrap().is_empty());
     assert!(
         overlay
@@ -431,8 +433,8 @@ fn discarding_direct_edits_restores_baseline_saved_spill_children_for_export() {
 fn canonical_types_cover_direct_and_incremental_scenarios() {
     // Arithmetic expectations: B1 = A1 * 2, C1 = A1 * 3.
     let book = book();
-    let builder: poirot::EvaluationBuilder<'_> = book.evaluation();
-    let mut direct: poirot::Evaluation<'_> = builder.profiling(true).build().unwrap();
+    let builder: poirot::calculation::EvaluationBuilder<'_> = book.evaluation();
+    let mut direct: poirot::calculation::Evaluation<'_> = builder.profiling(true).build().unwrap();
     let input = direct.target("'Model inputs'!A1").unwrap();
     let twice = direct.target("'Model inputs'!B1").unwrap();
     let triple = direct.target("'Model inputs'!C1").unwrap();
@@ -442,20 +444,20 @@ fn canonical_types_cover_direct_and_incremental_scenarios() {
     assert_eq!(values[1].value, CellValue::Number(8.));
     let exported = Workbook::from_bytes(&direct.save_xlsx().to_buffer().unwrap()).unwrap();
     assert_eq!(saved(&exported, "B1"), CellValue::Number(8.));
-    let report: poirot::EvaluationReport<()> = direct.finish();
+    let report: poirot::calculation::EvaluationReport<()> = direct.finish();
     assert!(report.result.is_ok());
     assert!(report.execution.is_some());
 
-    let builder: poirot::OverlayBuilder<'_> = book.overlay();
-    let mut overlay: poirot::Overlay<'_> = builder.build().unwrap();
+    let builder: poirot::calculation::OverlayBuilder<'_> = book.overlay();
+    let mut overlay: poirot::calculation::Overlay<'_> = builder.build().unwrap();
     overlay.edit(|edits| edits.set_value(input, 5.)).unwrap();
     let context = EvaluationContext::default();
-    let mut cycle: poirot::EvaluationCycle<'_> =
+    let mut cycle: poirot::calculation::EvaluationCycle<'_> =
         overlay.evaluation_with_profiling(&context, true).unwrap();
     let values = cycle.outputs(&[twice, triple]).unwrap();
     assert_eq!(values[0].value, CellValue::Number(10.));
     assert_eq!(values[1].value, CellValue::Number(15.));
-    let report: poirot::EvaluationReport<()> = cycle.finish();
+    let report: poirot::calculation::EvaluationReport<()> = cycle.finish();
     assert!(report.result.is_ok());
     assert!(report.execution.is_some());
     let exported = Workbook::from_bytes(&overlay.save_xlsx().to_buffer().unwrap()).unwrap();

@@ -46,7 +46,9 @@ pub struct FunctionInvocation {
     /// Number of argument slots, including omitted arguments.
     pub argument_count: usize,
 }
-/// A parsed formula with its original text and source spans.
+/// Accepted formula syntax kept with its original spelling, parse policy, and source metadata.
+/// Binding and translation can inspect the semantic expression while diagnostics and
+/// call-site inspection retain locations in the original text.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParsedFormula {
     /// Original formula source used by spans and diagnostics.

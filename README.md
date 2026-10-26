@@ -11,12 +11,20 @@ generate the spreadsheets, or when fast recalculation matters. Workbooks with
 straightforward formulas under your control are a particularly good fit: you can
 validate the model across the input cases your application needs.
 
-[Run the speed benchmarks](benchmarks/README.md) to compare calculation modes
+[Run the speed benchmarks](https://github.com/yiblet/poirot/blob/master/benchmarks/README.md) to compare calculation modes
 with IronCalc and HyperFormula using the same workloads in separate containers.
 
 ## Quick start
 
-Poirot requires Rust 1.90 or newer. Add the Git dependency to `Cargo.toml`:
+Poirot requires Rust 1.90 or newer. Version 0.1.0 is being prepared for
+publication. Once published, add it to `Cargo.toml`:
+
+```toml
+[dependencies]
+poirot = "0.1.0"
+```
+
+Until then, use the Git dependency:
 
 ```toml
 [dependencies]
@@ -56,7 +64,7 @@ Choose how much calculation state to keep:
 | Workflow | API | What it does |
 | --- | --- | --- |
 | Edit a workbook and save current results | `Workbook::recalculate` | Calculates the workbook and updates stored values. |
-| Query individual cells or formula text | `eval::run_cell`, `eval::run_formula` | Runs a direct calculation against workbook data. |
+| Query individual cells or formula text | `poirot::eval::run_cell`, `poirot::eval::run_formula` | Runs a direct calculation against workbook data. |
 | Compare scenarios without changing the original | `book.evaluation().build()` | Calculates requested outputs and their dependencies; input edits clear calculated results. |
 | Repeatedly edit a larger model | `book.overlay().build()` | Retains edits, compiled formulas, and intermediate results; reuses computations unaffected by changes. |
 
@@ -70,9 +78,10 @@ preserves edits and warm state, and does not calculate untouched formulas; their
 saved results may still be stale. See [evaluation and export](docs/evaluation.md)
 for modes, cycle boundaries, lifecycle operations and snapshot recovery.
 
-The component crates also let you use parsing, workbook storage, formatting, or
-function algorithms independently. Custom functions can be registered through
-`eval::extensions`; existing built-in functions keep their implementations.
+The component crates let you use formula parsing, file codecs, or pure function
+algorithms and display formatting independently. Register custom functions through
+[`poirot::eval::extensions`](src/eval/extensions.rs); existing built-in functions
+keep their implementations.
 
 ## Excel compatibility
 
@@ -109,9 +118,9 @@ include evidence for expected behavior, and follow [Contributing](CONTRIBUTING.m
 Imported shared formulas become independent, complete formula strings; replacing
 an original anchor leaves its former followers independent. The compiler reuses
 executable templates without retaining the original shared encoding. Optional
-manually supplied group provenance is checked before export. Native snapshot
-source version 5 can also carry legacy opaque source bytes, but XLSX I/O neither
-retains original packages nor uses those bytes when saving.
+manually supplied group provenance is checked before export. Native snapshots
+use source schema 8 and reject older source versions. XLSX saves author fresh
+packages from modeled content.
 
 ## Examples
 
@@ -132,6 +141,8 @@ cargo run --example public_workbook -- input.xlsx output.xlsx
 ```
 
 Browse the API and task guide with `cargo doc -p poirot --no-deps --open`.
+After publication, the [API reference](https://docs.rs/poirot/0.1.0/poirot/)
+will also be available on docs.rs.
 See [Contributing](CONTRIBUTING.md) to work on Poirot.
 
 The application API uses `Evaluation` for direct scenarios and `Overlay` for

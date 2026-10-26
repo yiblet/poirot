@@ -18,6 +18,8 @@ use std::{
     path::PathBuf,
 };
 
+/// Inputs and execution policy for discovering and running the unified workbook test corpora.
+/// The same selection drives discovery and execution; strict mode also fails retained known gaps and skips.
 #[derive(Debug)]
 pub struct Options {
     pub fods_corpus: PathBuf,
@@ -44,6 +46,9 @@ impl Default for Options {
     }
 }
 
+/// Run provenance retained with saved results so reports and baseline candidates
+/// can verify the source revision, baseline identity, and discovered inventory.
+/// The completeness flag distinguishes a full default-corpus run from a partial selection.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Header {
@@ -58,6 +63,8 @@ pub struct Header {
     pub inventory: Vec<CaseMetadata>,
 }
 
+/// Aggregate execution outcomes and baseline changes used to decide whether a run succeeds.
+/// Success requires selected cases, no removed tests, and no case failing the run's strictness policy.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Summary {
@@ -68,15 +75,18 @@ pub struct Summary {
     pub successful: bool,
 }
 
+/// Saved unified run containing provenance, per-case observations, and the aggregate decision.
+/// Removed baseline IDs remain explicit so a partial or changed inventory cannot
+/// silently erase test history when proposing a new baseline.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct RunReport {
+pub struct EvaluationReport {
     pub header: Header,
     pub cases: Vec<CaseResult>,
     pub removed: Vec<String>,
     pub summary: Summary,
 }
 
-impl RunReport {
+impl EvaluationReport {
     pub fn summarize(&mut self) {
         let mut summary = Summary {
             selected: self.cases.len(),
@@ -133,7 +143,7 @@ pub fn run(
     format: Format,
     verbose: bool,
     quiet: bool,
-) -> Result<RunReport, Error> {
+) -> Result<EvaluationReport, Error> {
     let baseline = Baseline::load(&options.baseline)?;
     let suites = discover(options)?;
     let inventory: Vec<_> = suites
@@ -180,7 +190,7 @@ pub fn run(
         complete_inventory,
         inventory,
     };
-    let mut report = RunReport {
+    let mut report = EvaluationReport {
         header,
         cases: Vec::new(),
         removed,

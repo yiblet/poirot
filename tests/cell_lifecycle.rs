@@ -1,6 +1,8 @@
 //! Public lifecycle regressions across direct and incremental evaluation.
 //! Expectations use hand arithmetic and the root API's documented division-by-zero contract.
-use poirot::{CellError, CellValue, EvaluationContext, Workbook, eval};
+use poirot::calculation::EvaluationContext;
+use poirot::eval;
+use poirot::{CellError, CellValue, Workbook};
 
 /// Build a dependency diamond with lazy error handling and deliberately stale saved results.
 fn workbook() -> Workbook {
@@ -78,10 +80,11 @@ fn aborted_output_batch_publishes_no_dependencies_and_next_cycle_recovers() {
     let output = overlay.target("Model!D1").unwrap();
     let oversized = overlay.target("Model!F1").unwrap();
     let limited = EvaluationContext {
-        budgets: eval::EvaluationBudgets {
+        limits: (eval::EvaluationBudgets {
             text_bytes: 32,
             ..Default::default()
-        },
+        })
+        .into(),
         ..Default::default()
     };
     {
@@ -106,10 +109,11 @@ fn aborted_output_batch_publishes_no_dependencies_and_next_cycle_recovers() {
 fn direct_dependency_depth_failure_restores_the_next_cycle() {
     let book = workbook();
     let limited = EvaluationContext {
-        budgets: eval::EvaluationBudgets {
+        limits: (eval::EvaluationBudgets {
             depth: 1,
             ..Default::default()
-        },
+        })
+        .into(),
         ..Default::default()
     };
     let mut direct = book.evaluation().context(limited).build().unwrap();

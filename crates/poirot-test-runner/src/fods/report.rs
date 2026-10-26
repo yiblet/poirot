@@ -139,14 +139,14 @@ pub struct RunSummary {
 
 /// Deterministically ordered case results and their aggregate summary.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct RunReport {
+pub struct EvaluationReport {
     /// Aggregated run counts and diagnostic categories.
     pub summary: RunSummary,
     /// Case outcomes retained in source order.
     pub cases: Vec<CaseResult>,
 }
 
-impl RunReport {
+impl EvaluationReport {
     /// Whether the report satisfies its regression/strictness success contract.
     pub fn successful(&self, strict: bool) -> bool {
         self.summary.regressions == 0
@@ -241,7 +241,7 @@ pub fn render_case(
 
 /// Render the final typed run summary.
 pub fn render_summary(
-    report: &RunReport,
+    report: &EvaluationReport,
     output: &mut impl std::io::Write,
     format: crate::fods::cli::OutputFormat,
     strict: bool,
@@ -272,7 +272,7 @@ pub fn render_summary(
 
 /// Render an already collected report in stable source order.
 pub fn render(
-    report: &RunReport,
+    report: &EvaluationReport,
     output: &mut impl std::io::Write,
     format: crate::fods::cli::OutputFormat,
     strict: bool,

@@ -1,5 +1,5 @@
 use poirot::eval::{
-    self, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
+    self as eval, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
 };
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 
@@ -114,7 +114,7 @@ fn operational_limits_cannot_be_caught_by_iferror() {
         ),
     ] {
         let plan = eval::bound::FormulaPlan::bind(
-            &poirot::parsing::formula::parse_formula(formula).unwrap(),
+            &poirot_parsing::formula::parse_formula(formula).unwrap(),
         )
         .unwrap();
         assert!(
@@ -150,7 +150,7 @@ fn indexed_reference_traversal_stops_before_later_operational_failure() {
         )
         .unwrap();
     let plan = eval::bound::FormulaPlan::bind(
-        &poirot::parsing::formula::parse_formula("AVERAGEA(A1:A2)").unwrap(),
+        &poirot_parsing::formula::parse_formula("AVERAGEA(A1:A2)").unwrap(),
     )
     .unwrap();
     let outcome = eval::run_plan(

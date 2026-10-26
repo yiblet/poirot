@@ -1,5 +1,21 @@
 # Calculate and export scenarios
 
+`Workbook` owns the editable source: cells, formula text, saved results and styles.
+`Evaluation` and `Overlay` keep scenario inputs and live calculation results beside
+that source. A computed `CellValue` is not automatically written into a stored
+`Cell`. Bulk output calls return `CellEvaluation` records carrying each target,
+value and optional source formatting. The [architecture guide](architecture.md#from-stored-cells-to-calculated-outputs)
+connects these types to sparse worksheet storage.
+
+| Workspace | Lifetime of calculated results | Entry point |
+| --- | --- | --- |
+| `Evaluation` | Reused within a direct cycle; edits or a new cycle clear them | `book.evaluation().build()` |
+| `Overlay` | Validated and reused across edits and cycles using dependency evidence | `book.overlay().build()` |
+
+Both builders borrow the workbook without copying it. Their workspaces keep edits
+local, and exports capture effective state. `book.recalculate()` instead writes
+calculated results into the source workbook.
+
 Use direct evaluation when you need selected outputs and do not need to retain unaffected results after edits. The workbook remains unchanged:
 
 ```rust
@@ -21,14 +37,15 @@ let bytes = evaluation.save_xlsx().to_buffer()?;
 
 The builder captures one default context when built. `.context(context)` replaces clock, seed, locale and limits; a later `.limits(limits)` overrides only quotas. `.policy(policy)` selects shared spreadsheet semantics. `.profiling(true)` enables detailed reports, available through `finish()`; otherwise report counters are `None`. No cell is evaluated during construction.
 
-Resolve string targets once for repeated reads. Resolution accepts quoted sheet names such as `'Annual summary'!B12`. A missing sheet is an error; a valid unstored coordinate calculates as blank. Targets bind to the source workbook's sheet topology and are not guaranteed to survive structural edits. Worksheet errors such as `#DIV/0!` are calculated values; operational refusals are Rust errors.
+Resolve string targets once for repeated reads. Resolution accepts quoted sheet names such as `'Annual summary'!B12`. A missing sheet is an error; an unstored coordinate on an existing sheet is a valid target. It calculates as blank when no source, scenario edit or spill supplies a value. Targets bind to the source workbook's sheet topology and are not guaranteed to survive structural edits. Worksheet errors such as `#DIV/0!` are calculated values; operational refusals are Rust errors.
 
-Use `book.stored_cell(sheet, address)` to inspect authored formulas, style and saved values without calculation. Saved values may be stale. Like the compatibility method `book.cell`, this returns `None` for either a missing sheet or an unstored cell. Resolve `book.sheet_by_name(name)` first when you need to distinguish those cases.
+Use `book.stored_cell(sheet, address)` to inspect authored formulas, style and saved values without calculation. Saved values may be stale. It returns `None` for either a missing sheet or an unstored cell. Resolve `book.sheet_by_name(name)` first when you need to distinguish those cases.
 
 ## Retain unaffected results with an overlay
 
 ```rust
-# use poirot::{Workbook, EvaluationContext};
+# use poirot::{Workbook};
+use poirot::calculation::EvaluationContext;
 # fn main() -> Result<(), Box<dyn std::error::Error>> {
 # let mut book = Workbook::new();
 # book.add_sheet("Energy")?.set_formula("B1".parse()?, "A1*25")?;
@@ -92,15 +109,16 @@ Export follows the existing `Workbook` file compatibility contract, including sp
 | `discard_edits()` | Discarded | Cleared | Unchanged |
 | Direct `start_cycle(context)` | Kept | Cleared; work and failure reset | Unchanged |
 | Overlay `evaluation(&context)` | Kept | Valid results reused; work reset | Unchanged |
-| `apply_edits_to_workbook()` on an owned or exclusively borrowed advanced overlay | Applied, no longer pending | Kept in overlay | Authored changes applied atomically |
+| `apply_edits_to_workbook()` on an owned or exclusively borrowed overlay | Applied, no longer pending | Kept in overlay | Authored changes applied atomically |
 | `save_xlsx()` | Kept | Kept | Unchanged |
 
-Applying edits does not write calculated formula results into the baseline or save a file. Shared immutable baselines cannot be mutated through this operation. Clearing results or discarding edits preserves direct cycle work and any prior operational failure; only `start_cycle` resets them. The lower-level `eval::overlay` APIs retain their legacy lifecycle spellings.
+Applying edits does not write calculated formula results into the baseline or save a file. Shared immutable baselines cannot be mutated through this operation. Clearing results or discarding edits preserves direct cycle work and any prior operational failure; only `start_cycle` resets them. The lower-level `poirot::eval::overlay` APIs expose engine lifecycle operations directly.
 
 ## Restore native state
 
-```rust
-# use poirot::{Workbook, EvaluationContext};
+```no_run
+# use poirot::Workbook;
+use poirot::calculation::EvaluationContext;
 # fn main() -> Result<(), Box<dyn std::error::Error>> {
 let restored = Workbook::restore_snapshot().open("model.poirot")?;
 let mut restored = restored.into_evaluation(EvaluationContext::default())?;
@@ -113,7 +131,7 @@ let value = restored.evaluation.cell(output)?;
 
 `prepared_status` distinguishes reused preparation, absent preparation, incompatible preparation discarded during recovery, and explicit source-only recovery. Compatible saved spreadsheet policies take precedence. When preparation is absent or discarded, default `EvaluationPolicy` semantics apply; `into_evaluation_with_policy(context, fallback)` overrides only that recovery fallback. The context always starts a new direct cycle; direct result caches are not restored as warm incremental state.
 
-Use `.prepared_policy(artifact::PreparedPolicy::RequireCompatible)` to require present, compatible preparation (refusing source-only snapshots as well), or `SourceOnly` to discard it deliberately. The advanced `Workbook::load_snapshot()` retains its historical compatibility-if-present strict policy. `into_artifact()` and that loader retain the advanced APIs, including incremental checkpoint attachment and custom provider management.
+Use `.prepared_policy(poirot::snapshots::PreparedPolicy::RequireCompatible)` to require present, compatible preparation (refusing source-only snapshots as well), or `SourceOnly` to discard it deliberately. Component decoding enforces the same strict requirement. `into_artifact()` exposes incremental checkpoint attachment and custom provider management through `poirot::eval::artifact`.
 
 ## Public vocabulary
 
@@ -128,7 +146,15 @@ one cycle, and `EvaluationReport` represents completion with optional profiling.
 `PreparationPolicy` selects compiler preparation; it is a different concept.
 `NumberLocale` controls numeric input parsing; display formatting is separate.
 
-The component APIs under `eval::overlay` support additional ownership forms,
+The component APIs under `poirot::eval::overlay` support additional ownership forms,
 custom extensions and snapshot attachment. Use `Evaluation::from_calculation` or
 `Overlay::from_overlay` to wrap them in the application API without resetting state.
 `into_calculation` and `into_overlay` return to the component API.
+
+
+Consuming builders (`book.into_evaluation()` and `book.into_overlay()`) move the
+model into the engine without copying it. `into_workbook()` recovers that original
+baseline and discards pending edits and computed results. On an owned overlay,
+call `apply_edits_to_workbook()` first to preserve authored edits; call
+`recalculate()` on the recovered workbook when you need stored computed values.
+The persistent flush preserves warm compiled programs and valid scenario results.

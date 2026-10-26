@@ -48,17 +48,24 @@ readme = "README.md"
 include = ["/src/**", "/examples/**", "/README.md", "/CONTRIBUTING.md", "/docs/compatibility.md", "/docs/resources.md", "/docs/evaluation.md", "/docs/architecture.md", "/LICENSES/**"]
 
 [dependencies]
-poirot-workbook = { version = "0.1.0", path = "crates/poirot-workbook" }
-poirot-model = { version = "0.1.0", path = "crates/poirot-model" }
 poirot-parsing = { version = "0.1.0", path = "crates/poirot-parsing" }
-poirot-eval = { version = "0.1.0", path = "crates/poirot-eval" }
 poirot-io = { version = "0.1.0", path = "crates/poirot-io" }
-poirot-format = { version = "0.1.0", path = "crates/poirot-format" }
+foldhash = "0.2.0"
+serde = { workspace = true }
+serde_bytes = "0.11.19"
+nom = { workspace = true }
+rand_chacha = "0.10.0"
+rand_core = "0.10.1"
+postcard = { workspace = true }
+poirot-functions = { version = "0.1.0", path = "crates/poirot-functions" }
 
 [dev-dependencies]
-postcard.workspace = true
-rxls.workspace = true
-zip.workspace = true
+cfb.workspace = true
+calamine.workspace = true
+quick-xml.workspace = true
+rxls = { workspace = true }
+zip = { workspace = true }
+allocation-counter = { workspace = true }
 
 [lints]
 workspace = true

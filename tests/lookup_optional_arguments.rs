@@ -1,8 +1,11 @@
 //! Optional lookup operands preserve absence independently of blank values.
-use poirot::{
-    CellError, CellValue, EvaluationContext, Workbook, eval::BuiltinSemanticsPolicy,
-    eval::overlay::Evaluation, eval::overlay::Overlay, eval::overlay::OverlayPolicy,
-};
+use poirot::calculation::EvaluationContext;
+use poirot::eval::BuiltinSemanticsPolicy;
+use poirot::eval::overlay::Evaluation;
+use poirot::eval::overlay::EvaluationPolicy;
+use poirot::eval::overlay::Overlay;
+use poirot::model::Workbook;
+use poirot::{CellError, CellValue};
 
 #[test]
 fn lookup_optional_modes_and_fallbacks_preserve_public_argument_channels() {
@@ -26,7 +29,7 @@ fn lookup_optional_modes_and_fallbacks_preserve_public_argument_channels() {
         BuiltinSemanticsPolicy::ExcelDocumentation,
         BuiltinSemanticsPolicy::PinnedPoi,
     ] {
-        let policy = OverlayPolicy {
+        let policy = EvaluationPolicy {
             builtin,
             ..Default::default()
         };

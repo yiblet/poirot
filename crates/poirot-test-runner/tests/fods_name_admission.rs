@@ -276,7 +276,7 @@ fn definitions_are_inspected_transitively_and_valid_names_keep_their_contract() 
 }
 #[test]
 fn quarantine_does_not_weaken_public_model_name_validation() {
-    let mut book = poirot_model::Workbook::new();
+    let mut book = poirot::model::Workbook::new();
     assert!(book.define_name("GQ17", "123", None).is_err());
     assert!(book.define_name("factor", "6", None).is_ok());
 }

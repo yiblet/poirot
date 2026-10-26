@@ -1,8 +1,9 @@
 //! Excel worksheet publication consumes a blank; nested expressions retain it.
-use poirot::{
-    CellValue, EvaluationContext, EvaluationTarget, Workbook, eval::overlay::Evaluation,
-    eval::overlay::Overlay,
-};
+use poirot::CellValue;
+use poirot::calculation::{EvaluationContext, EvaluationTarget};
+use poirot::eval::overlay::Evaluation;
+use poirot::eval::overlay::Overlay;
+use poirot::model::Workbook;
 
 fn at(address: &str) -> EvaluationTarget {
     EvaluationTarget {

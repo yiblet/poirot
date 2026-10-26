@@ -9,6 +9,8 @@ use crate::{
 use clap::{Args, Parser, Subcommand};
 use std::{collections::BTreeMap, io::Write, num::NonZeroUsize, path::PathBuf};
 
+/// Command-line entry point for unified discovery, execution, and saved-result tools.
+/// With no subcommand it executes a run using the flattened run arguments.
 #[derive(Debug, Parser)]
 #[command(
     name = "poirot-test-runner",
@@ -54,6 +56,8 @@ pub enum Command {
     },
 }
 
+/// Corpus roots, baseline path, and case selection shared by the run and list commands.
+/// Converting these arguments to runner options keeps discovery consistent across both commands.
 #[derive(Debug, Args)]
 pub struct Inputs {
     #[command(flatten)]
@@ -79,6 +83,8 @@ impl Inputs {
     }
 }
 
+/// Command-line controls for executing selected cases and presenting their results.
+/// They extend shared discovery inputs with worker count, skip rules, strictness, and output choices.
 #[derive(Debug, Args)]
 pub struct RunArgs {
     #[command(flatten)]
@@ -98,6 +104,8 @@ pub struct RunArgs {
     pub quiet: bool,
 }
 
+/// Command-line controls for previewing the selected test inventory without evaluation.
+/// The detailed form includes individual stable case IDs for later execution or inspection.
 #[derive(Debug, Args)]
 pub struct ListArgs {
     #[command(flatten)]

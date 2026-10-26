@@ -75,30 +75,30 @@ fn explicit_typing_resolves_lookup_fallback_branch_sum_and_max_without_global_co
         ),
     ] {
         assert_eq!(
-            match poirot_eval::run_formula(
-                &legacy,
+            match poirot::eval::run_formula(
+                legacy.model(),
                 0,
                 at,
                 formula,
                 Default::default(),
                 Default::default()
             ) {
-                poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
+                poirot::eval::EvaluationOutcome::Complete { value, .. } => value,
                 outcome => panic!("evaluation aborted: {outcome:?}"),
             },
             before,
             "legacy {formula}"
         );
         assert_eq!(
-            match poirot_eval::run_formula(
-                &numeric,
+            match poirot::eval::run_formula(
+                numeric.model(),
                 0,
                 at,
                 formula,
                 Default::default(),
                 Default::default()
             ) {
-                poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
+                poirot::eval::EvaluationOutcome::Complete { value, .. } => value,
                 outcome => panic!("evaluation aborted: {outcome:?}"),
             },
             after,

@@ -1,8 +1,10 @@
 //! Reading an implicit blank must not author a cell during result publication.
-use poirot::{
-    CellStyle, CellValue, EvaluationContext, EvaluationTarget, Workbook, WorkbookChange,
-    eval::overlay::Evaluation, eval::overlay::Overlay,
-};
+use poirot::calculation::{EvaluationContext, EvaluationTarget};
+use poirot::editing::WorkbookChange;
+use poirot::eval::overlay::Evaluation;
+use poirot::eval::overlay::Overlay;
+use poirot::styles::CellStyle;
+use poirot::{CellValue, Workbook};
 
 fn at(cell: &str) -> EvaluationTarget {
     EvaluationTarget {
@@ -27,7 +29,7 @@ macro_rules! source_read_test {
             let source = book();
             let read = $read;
             {
-            let mut runtime = ($construct)(&source);
+            let mut runtime = ($construct)(source.model());
             // An omitted CONCAT member contributes empty text without creating
             // the adjacent absent cell.
             runtime.set_formula(at("Z100"), "CONCAT(,A2,\"\",\"x\")").unwrap();
@@ -40,10 +42,10 @@ macro_rules! source_read_test {
                 WorkbookChange::SetCachedValue { address, .. } if *address == at("Z100").address
             )));
             let mut applied = source.clone();
-            applied.apply(changes).unwrap();
+            applied.model_mut().apply(changes).unwrap();
             assert!(applied.sheet(0).unwrap().get(at("A2").address).is_none());
             }
-            let mut runtime = ($construct)(&source);
+            let mut runtime = ($construct)(source.model());
             // Explicit empty text and referenced blanks remain distinct from omission.
             // These valid scalar, range, and selector reads must preserve absence.
             for (formula, expected) in [
@@ -62,7 +64,7 @@ macro_rules! source_read_test {
                     WorkbookChange::SetValue { address, .. } if *address == at("A2").address
                 )), "{formula}: {changes:?}");
                 let mut applied = source.clone();
-                applied.apply(changes).unwrap();
+                applied.model_mut().apply(changes).unwrap();
                 assert!(applied.sheet(0).unwrap().get(at("A2").address).is_none());
             }
             // Authored blank/style edits must still create real cells and invalidate reads.
@@ -78,7 +80,7 @@ macro_rules! source_read_test {
                 if *address == at("A2").address
             )));
             let mut applied = source.clone();
-            applied.apply(changes).unwrap();
+            applied.model_mut().apply(changes).unwrap();
             let cell = applied.sheet(0).unwrap().get(at("A2").address).unwrap();
             assert_eq!(cell.value, CellValue::Blank);
             assert_eq!(cell.style.number_format.as_deref(), Some("0.00"));
@@ -86,7 +88,7 @@ macro_rules! source_read_test {
             runtime.remove_cell(at("A2")).unwrap();
             assert_eq!(read(&mut runtime, at("Z100")).unwrap(), CellValue::Boolean(true));
             let mut applied = source.clone();
-            applied.apply(runtime.changes()).unwrap();
+            applied.model_mut().apply(runtime.changes()).unwrap();
             assert!(applied.sheet(0).unwrap().get(at("A2").address).is_none());
             // Removing baseline content likewise preserves a real RemoveCell change.
             runtime.remove_cell(at("A1")).unwrap();
@@ -96,7 +98,7 @@ macro_rules! source_read_test {
                 WorkbookChange::RemoveCell { address, .. } if *address == at("A1").address
             )));
             let mut applied = source.clone();
-            applied.apply(changes).unwrap();
+            applied.model_mut().apply(changes).unwrap();
             assert!(applied.sheet(0).unwrap().get(at("A1").address).is_none());
             // Worksheet publication replaces a stale cache with zero and retains the formula.
             runtime.set_formula(at("Z100"), "IF(TRUE,,)").unwrap();
@@ -108,12 +110,12 @@ macro_rules! source_read_test {
                 if *address == at("Z100").address
             )));
             let mut applied = source.clone();
-            applied.apply(changes).unwrap();
+            applied.model_mut().apply(changes).unwrap();
             let bytes = applied
                 .save_xlsx().to_buffer().unwrap();
             let reopened = Workbook::from_bytes(&bytes).unwrap();
-            assert!(reopened.model().sheet(0).unwrap().get(at("A2").address).is_none());
-            let cell = reopened.model().sheet(0).unwrap().get(at("Z100").address).unwrap();
+            assert!(reopened.sheet(0).unwrap().get(at("A2").address).is_none());
+            let cell = reopened.sheet(0).unwrap().get(at("Z100").address).unwrap();
             assert_eq!(cell.formula.as_deref(), Some("IF(TRUE,,)"));
             assert_eq!(cell.value, CellValue::Number(0.));
         }
@@ -125,12 +127,12 @@ source_read_test!(
     |source| Evaluation::with_workbook(source)
         .build(EvaluationContext::default())
         .unwrap(),
-    |runtime: &mut Evaluation<'_, &'_ Workbook>, target| runtime.cell(target)
+    |runtime: &mut Evaluation<'_, &'_ poirot::model::Workbook>, target| runtime.cell(target)
 );
 source_read_test!(
     overlay_reads_preserve_source_presence,
     |source| Overlay::with_workbook(source).build().unwrap(),
-    |runtime: &mut Overlay<'_, &'_ Workbook>, target| runtime
+    |runtime: &mut Overlay<'_, &'_ poirot::model::Workbook>, target| runtime
         .evaluation(&EvaluationContext::default())
         .unwrap()
         .cell(target)
@@ -140,10 +142,10 @@ source_read_test!(
 fn absent_reads_and_retained_results_survive_snapshot_without_authoring_cells() {
     let source = book();
     let context = EvaluationContext::default();
-    let mut direct = Evaluation::with_workbook(&source)
+    let mut direct = Evaluation::with_workbook(source.model())
         .build(context.clone())
         .unwrap();
-    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
+    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
     let formula = "CONCAT(A2,\"\",\"x\")";
     direct.set_formula(at("Z100"), formula).unwrap();
     overlay.set_formula(at("Z100"), formula).unwrap();
@@ -198,16 +200,16 @@ fn absent_reads_and_retained_results_survive_snapshot_without_authoring_cells() 
 fn blank_spill_children_publish_zero_without_authoring_the_blank_input() {
     let source = book();
     let context = EvaluationContext::default();
-    let policy = poirot::eval::overlay::OverlayPolicy {
+    let policy = poirot::eval::overlay::EvaluationPolicy {
         builtin: poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation,
         arrays: poirot::eval::ArrayResultPolicy::DynamicSpill,
         ..Default::default()
     };
-    let mut direct = Evaluation::with_workbook(&source)
+    let mut direct = Evaluation::with_workbook(source.model())
         .with_policy(policy.clone())
         .build(context.clone())
         .unwrap();
-    let mut overlay = Overlay::with_workbook(&source)
+    let mut overlay = Overlay::with_workbook(source.model())
         .with_policy(policy)
         .build()
         .unwrap();
@@ -241,6 +243,6 @@ fn blank_spill_children_publish_zero_without_authoring_the_blank_input() {
         if *address == at("AA100").address
     )));
     let mut applied = source.clone();
-    applied.apply(changes).unwrap();
+    applied.model_mut().apply(changes).unwrap();
     assert!(applied.sheet(0).unwrap().get(at("A2").address).is_none());
 }

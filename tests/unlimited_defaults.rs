@@ -1,9 +1,10 @@
 //! Defaults disable runtime policy caps while explicit limits remain enforceable.
+use poirot::calculation::EvaluationContext;
 use poirot::eval::{
-    self, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
+    self as eval, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
     EvaluationTarget, run::MemoRetentionLimits,
 };
-use poirot::{CellValue, EvaluationContext, Workbook};
+use poirot::{CellValue, Workbook};
 fn target(address: &str) -> EvaluationTarget {
     EvaluationTarget {
         sheet: 0,
@@ -26,7 +27,7 @@ fn runtime_and_retention_defaults_are_unlimited_but_depth_remains_structural() {
             bytes: usize::MAX
         }
     );
-    assert_eq!(EvaluationContext::default().budgets, budgets);
+    assert_eq!(EvaluationContext::default().limits, budgets.into());
 }
 #[test]
 fn default_direct_overlay_and_low_level_runs_accept_text_beyond_the_old_cap() {
@@ -68,10 +69,11 @@ fn default_direct_overlay_and_low_level_runs_accept_text_beyond_the_old_cap() {
     );
     // Cached values do not waive newly configured capacities.
     let limited = EvaluationContext {
-        budgets: EvaluationBudgets {
+        limits: (EvaluationBudgets {
             text_bytes: LENGTH - 1,
             ..Default::default()
-        },
+        })
+        .into(),
         ..context.clone()
     };
     assert!(matches!(
@@ -94,7 +96,7 @@ fn default_direct_overlay_and_low_level_runs_accept_text_beyond_the_old_cap() {
     ));
     assert!(matches!(
         overlay.evaluation(&limited),
-        Err(poirot::OverlayError::Evaluation(
+        Err(poirot::calculation::OverlayError::Evaluation(
             EvaluationFailure::MemoRetentionLimit { .. }
         ))
     ));

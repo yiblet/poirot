@@ -1,6 +1,6 @@
 //! File errors and options shared by workbook readers and writers.
+use crate::ModelError;
 use crate::{PreflightError, opc};
-use poirot_model::ModelError;
 use std::fmt;
 
 /// Caller-controlled import resource, measured independently of heap usage.
@@ -57,7 +57,7 @@ pub enum IoError {
     /// Requested file feature or representation is unsupported.
     Unsupported(String),
     /// Numeric representation would violate the selected fidelity policy.
-    NumericFidelity(poirot_model::NumericFidelityRefusal),
+    NumericFidelity(crate::NumericFidelityRefusal),
 }
 impl IoError {
     /// Describe a real rejected source claim without inventing backend consumption.
@@ -143,6 +143,15 @@ impl From<rxls::WriteError> for IoError {
 /// ZIP limits apply only to XLSX. [`Self::xls_budget`] controls XLS decoding.
 /// Defaults impose no application quotas; integer maxima retain their historical
 /// unlimited meaning for direct field users. Named setters replace only one field.
+///
+/// ```rust
+/// use poirot_io::ReadOptions;
+/// let options = ReadOptions::default().max_input_bytes(1_000_000).max_zip_entries(100);
+/// assert_eq!(options.max_input_bytes, 1_000_000);
+/// assert_eq!(options.max_zip_entries, 100);
+/// // Named setters replace one quota and preserve the other selected policies.
+/// assert_eq!(options.max_input_bytes(0).max_zip_entries, 100);
+/// ```
 #[derive(Debug, Clone, Copy)]
 pub struct ReadOptions {
     /// Maximum input bytes, from a file or buffer (unlimited by default).
@@ -175,6 +184,17 @@ impl Default for ReadOptions {
 /// Package sizes are checked after the backend constructs the workbook and ZIP,
 /// so these limits do not bound peak memory use. [`Self::max_source_bytes`] can
 /// reject oversized source data before serializer cell structures are built.
+///
+/// ```rust
+/// use poirot_io::{IoError, WriteOptions, plan_xlsx_export};
+/// use poirot_io::data::WorkbookSource;
+///
+/// fn limited_export<W: WorkbookSource>(book: &W) -> Result<Vec<u8>, IoError> {
+///     let options = WriteOptions { max_source_bytes: 1_000_000, ..WriteOptions::default() };
+///     // Source quotas are checked before constructing serializer cell structures.
+///     plan_xlsx_export(book, options)?.execute()
+/// }
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct WriteOptions {
     /// Maximum final compressed XLSX package bytes (default 32 MiB).

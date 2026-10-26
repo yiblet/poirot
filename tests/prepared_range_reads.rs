@@ -1,13 +1,15 @@
 //! Prepared range reads preserve worksheet semantics and operational boundaries.
+use poirot::calculation::{
+    EvaluationContext, EvaluationFailure, EvaluationLimits, EvaluationTarget, ProducerPolicy,
+};
+use poirot::eval::overlay::Evaluation;
+use poirot::eval::overlay::EvaluationPolicy;
+use poirot::eval::overlay::Overlay;
 use poirot::eval::{
-    self, CellCompletion, CellObserver, EvaluationBudgets, EvaluationInputs, EvaluationOutcome,
-    EvaluationPolicy, EvaluationRun, WorkbookView,
+    self as eval, CellCompletion, CellObserver, EvaluationBudgets, EvaluationInputs,
+    EvaluationOutcome, EvaluationRun, PreparationPolicy, WorkbookView,
 };
-use poirot::{
-    CellError, CellValue, EvaluationContext, EvaluationFailure, EvaluationLimits, EvaluationTarget,
-    ProducerPolicy, Workbook, eval::overlay::Evaluation, eval::overlay::Overlay,
-    eval::overlay::OverlayPolicy,
-};
+use poirot::{CellError, CellValue, Workbook};
 
 fn target(address: &str) -> EvaluationTarget {
     EvaluationTarget {
@@ -38,7 +40,7 @@ fn book() -> Workbook {
 fn range_consumers_keep_reference_coercion_and_overlay_dependencies() {
     let book = book();
     let context = EvaluationContext::default();
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
     let outputs = [target("D1"), target("D2"), target("D3")];
     assert_eq!(
         overlay
@@ -95,14 +97,14 @@ fn literal_scans_retain_results_instead_of_copying_source_into_the_memo() {
             .max_logical_memo_bytes(128),
         ..Default::default()
     };
-    let mut direct = Evaluation::with_workbook(&book)
+    let mut direct = Evaluation::with_workbook(book.model())
         .build_calculation(context.clone())
         .unwrap();
     assert_eq!(direct.cell(target("D1")).unwrap(), CellValue::Number(3.));
     assert_eq!(direct.retained_usage().cells, 1);
     assert_eq!(direct.retained_usage().bytes, 128);
     assert!(direct.values().all(|(key, _)| key != target("A1")));
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
     let mut overlay_context = context.clone();
     overlay_context.retention = overlay_context.retention.without_logical_memo_bytes_limit();
     let mut cycle = overlay.calculation(&overlay_context).unwrap();
@@ -127,7 +129,7 @@ fn text_refusal_is_attributed_to_the_member_and_publication_is_atomic() {
     let context =
         EvaluationContext::default().limits(EvaluationLimits::default().max_text_bytes(30));
     for address in ["D1", "D2", "D3"] {
-        let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+        let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
         let error = overlay
             .calculation(&context)
             .unwrap()
@@ -156,7 +158,7 @@ fn numeric_admission_and_each_member_read_remain_bounded() {
         .unwrap()
         .set_value("B2".parse().unwrap(), -0.)
         .unwrap();
-    let mut direct = Evaluation::with_workbook(&book)
+    let mut direct = Evaluation::with_workbook(book.model())
         .build_calculation(EvaluationContext::default())
         .unwrap();
     assert_eq!(direct.cell(target("D1")).unwrap(), CellValue::Number(2.));
@@ -168,7 +170,7 @@ fn numeric_admission_and_each_member_read_remain_bounded() {
         .unwrap()
         .set_value("A1".parse().unwrap(), f64::INFINITY)
         .unwrap();
-    let mut direct = Evaluation::with_workbook(&book)
+    let mut direct = Evaluation::with_workbook(book.model())
         .build_calculation(EvaluationContext::default())
         .unwrap();
     assert_eq!(
@@ -225,7 +227,7 @@ impl CellObserver for Completions {
 #[test]
 fn observer_ports_receive_every_consumed_literal_read() {
     let book = book();
-    let policy = EvaluationPolicy::default();
+    let policy = PreparationPolicy::default();
     let plan = eval::FormulaCompiler::new().compile_workbook(book.model(), &policy);
     let view = WorkbookView::new(book.model(), &plan, &policy).unwrap();
     let mut observer = Completions::default();
@@ -275,8 +277,8 @@ fn saved_and_dynamic_spill_members_keep_ownership_and_formula_semantics() {
         (ProducerPolicy::Compute, 3.),
         (ProducerPolicy::TrustSaved, 30.),
     ] {
-        let mut overlay = Overlay::with_workbook(&book)
-            .with_policy(OverlayPolicy {
+        let mut overlay = Overlay::with_workbook(book.model())
+            .with_policy(EvaluationPolicy {
                 producers: policy,
                 ..Default::default()
             })
@@ -332,7 +334,7 @@ fn depth_and_retention_refusals_do_not_publish_partial_range_results() {
             ..Default::default()
         },
     ] {
-        let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+        let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
         assert!(
             overlay
                 .calculation(&context)
@@ -341,7 +343,7 @@ fn depth_and_retention_refusals_do_not_publish_partial_range_results() {
                 .is_err()
         );
         assert_eq!(overlay.cached_cells(), 0);
-        let mut direct = Evaluation::with_workbook(&book)
+        let mut direct = Evaluation::with_workbook(book.model())
             .build_calculation(context)
             .unwrap();
         assert!(direct.cell(target("D1")).is_err());
@@ -364,7 +366,7 @@ impl eval::CachedCellReader for ExternalValue {
 #[test]
 fn external_readers_still_override_authored_range_members() {
     let book = book();
-    let policy = EvaluationPolicy::default();
+    let policy = PreparationPolicy::default();
     let plan = eval::FormulaCompiler::new().compile_workbook(book.model(), &policy);
     let view = WorkbookView::new(book.model(), &plan, &policy).unwrap();
     let mut reader = ExternalValue;

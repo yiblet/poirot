@@ -2,10 +2,9 @@
 //! https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/3c420ebb-6ef1-4b0d-959d-76e88c841c3e
 //! Original cases: cell reads, SUM and relative copy expectations derive from the
 //! explicit input values and A1 offsets; no upstream fixture or algorithm reused.
-use poirot::{
-    CellAddress, CellValue, Workbook, eval,
-    parsing::formula::{FormulaLocation, TranslationPlan, TranslationPolicy},
-};
+use poirot::eval;
+use poirot::{CellAddress, CellValue, Workbook};
+use poirot_parsing::formula::{FormulaLocation, TranslationPlan, TranslationPolicy};
 use std::sync::Arc;
 
 fn at(source: &str) -> CellAddress {
@@ -55,7 +54,7 @@ fn numeric_sheet_references_translate_evaluate_and_round_trip() {
             .into_iter()
             .zip(formulas)
         {
-            let cell = candidate.cell("Results", at(address)).unwrap();
+            let cell = candidate.stored_cell("Results", at(address)).unwrap();
             assert_eq!(cell.value, CellValue::Number(expected));
             assert_eq!(cell.formula.as_deref(), Some(formula));
         }
@@ -68,7 +67,7 @@ fn numeric_sheet_references_translate_evaluate_and_round_trip() {
     reopened.recalculate().unwrap();
     for (address, expected) in [("B1", 13.), ("B2", 9.), ("C1", 1048.)] {
         assert_eq!(
-            reopened.cell("Results", at(address)).unwrap().value,
+            reopened.stored_cell("Results", at(address)).unwrap().value,
             CellValue::Number(expected)
         );
     }
@@ -77,7 +76,7 @@ fn numeric_sheet_references_translate_evaluate_and_round_trip() {
 #[test]
 fn compiler_reuses_numeric_qualifiers_without_erasing_sheet_identity() {
     let mut compiler = eval::FormulaCompiler::default();
-    let policy = eval::EvaluationPolicy::default();
+    let policy = eval::PreparationPolicy::default();
     let compiled: Vec<_> = [
         "SUM(2024!A1)",
         "SUM(2024!A2)",

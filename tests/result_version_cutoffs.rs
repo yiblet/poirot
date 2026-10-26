@@ -1,8 +1,9 @@
 //! Incremental reuse follows observable values without publishing stale evidence.
-use poirot::{
-    CellStyle, CellValue, EvaluationContext, EvaluationTarget, Workbook, WorkbookChange,
-    eval::overlay::Overlay,
-};
+use poirot::calculation::{EvaluationContext, EvaluationTarget};
+use poirot::editing::WorkbookChange;
+use poirot::eval::overlay::Overlay;
+use poirot::styles::CellStyle;
+use poirot::{CellValue, Workbook};
 use std::time::{Duration, UNIX_EPOCH};
 
 fn at(address: &str) -> EvaluationTarget {
@@ -290,7 +291,7 @@ fn failed_batches_do_not_publish_successful_revalidations() {
         .unwrap();
     overlay.set_value(at("A1"), 1.2).unwrap();
     let mut limited = context.clone();
-    limited.budgets.text_bytes = 30;
+    limited.limits = limited.limits.max_text_bytes(30);
     assert!(
         overlay
             .evaluation(&limited)
@@ -431,7 +432,7 @@ fn dirty_storage_and_validation_obey_retention_and_depth_limits() {
     assert!(overlay.evaluation(&limited).is_err());
     assert_eq!(overlay.retained_usage(), dirty_usage);
     limited.retention.cells = usize::MAX;
-    limited.budgets.depth = 1;
+    limited.limits = limited.limits.max_depth(1);
     assert!(
         overlay
             .evaluation(&limited)
@@ -565,7 +566,7 @@ fn changed_condition_does_not_speculatively_evaluate_the_old_branch() {
     overlay.set_value(at("A2"), 1_000.).unwrap();
     overlay.set_value(at("A1"), 0.).unwrap();
     let mut limited = context.clone();
-    limited.budgets.text_bytes = 100;
+    limited.limits = limited.limits.max_text_bytes(100);
     let mut next = overlay.evaluation(&limited).unwrap();
     assert_eq!(next.cell(at("F1")).unwrap(), CellValue::Text("skip".into()));
     assert_eq!(next.usage().formula_executions, 2);
@@ -592,7 +593,7 @@ fn eager_error_order_precedes_a_later_dependency_refusal() {
         .set_value(at("A1"), CellValue::Error(poirot::CellError::Div0))
         .unwrap();
     let mut limited = context.clone();
-    limited.budgets.text_bytes = 100;
+    limited.limits = limited.limits.max_text_bytes(100);
     let mut next = overlay.evaluation(&limited).unwrap();
     assert_eq!(
         next.cell(at("F1")).unwrap(),

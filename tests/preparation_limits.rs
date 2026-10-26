@@ -1,10 +1,12 @@
 //! Scalar-policy preparation limits remain operational failures only when reached.
+use poirot::calculation::EvaluationContext;
+use poirot::eval::overlay::Overlay;
 use poirot::eval::{
-    self, CapabilityId, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
-    EvaluationTarget,
+    self as eval, CapabilityId, EvaluationBudgets, EvaluationFailure, EvaluationInputs,
+    EvaluationOutcome, EvaluationTarget,
 };
-use poirot::parsing::formula::{self, FormulaParsePolicy, ParseErrorKind};
-use poirot::{CellValue, EvaluationContext, Workbook, eval::overlay::Overlay};
+use poirot::{CellValue, Workbook};
+use poirot_parsing::formula::{self, FormulaParsePolicy, ParseErrorKind};
 fn target(address: &str) -> EvaluationTarget {
     EvaluationTarget {
         sheet: 0,
@@ -91,7 +93,7 @@ fn scalar_policy_preparation_refusals_abort_iferror_but_lazy_sources_remain_unus
     let context = EvaluationContext::default();
     // Scalar intersection preserves demand-driven preparation. Dynamic spilling
     // must eagerly resolve formulas whose resource failure leaves their type unknown.
-    let policy = poirot::eval::overlay::OverlayPolicy {
+    let policy = poirot::eval::overlay::EvaluationPolicy {
         arrays: eval::ArrayResultPolicy::ScalarIntersection,
         ..Default::default()
     };

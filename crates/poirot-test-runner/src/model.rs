@@ -27,6 +27,9 @@ pub struct FodsBinding {
     pub cell: String,
 }
 
+/// Source-independent identity and evidence for a discovered test case.
+/// Selection, reports, and baseline binding use this metadata without needing to
+/// interpret the fixture's native execution format.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CaseMetadata {
@@ -53,6 +56,9 @@ pub enum Outcome {
     HarnessError,
 }
 
+/// Comparable facts from one execution, independent of its historical baseline status.
+/// A category and stable diagnostic fingerprint distinguish changed failures even
+/// when their broad outcome stays the same.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Observation {
@@ -89,6 +95,9 @@ pub enum Change {
     ChangedSkip,
 }
 
+/// One executed or explicitly skipped case joined to its prior observation and change classification.
+/// Native result details remain available for inspection while the shared observation
+/// drives baseline comparison and run success.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CaseResult {

@@ -3,7 +3,9 @@ use eval::{
     EvaluationOutcome, FormulaCacheMaterializationPolicy as M, MaterializedScalarSummary as S,
     RunConfiguration,
 };
-use poirot::{CellAddress, CellError, CellValue, Workbook, eval, model};
+use poirot::eval;
+use poirot::model;
+use poirot::{CellAddress, CellError, CellValue, Workbook};
 fn at(row: u32, col: u32) -> CellAddress {
     CellAddress { row, col }
 }
@@ -12,24 +14,17 @@ fn config(m: M) -> RunConfiguration {
 }
 fn book() -> Workbook {
     let mut b = Workbook::new();
-    b.model_mut().add_sheet("S").unwrap();
+    b.add_sheet("S").unwrap();
     b
 }
 fn set_formula(b: &mut Workbook, row: u32, col: u32, f: &str) {
-    b.model_mut()
-        .sheet_mut(0)
+    b.sheet_mut(0)
         .unwrap()
         .set_formula(at(row, col), f)
         .unwrap();
 }
 fn get(b: &Workbook, row: u32, col: u32) -> CellValue {
-    b.model()
-        .sheet(0)
-        .unwrap()
-        .get(at(row, col))
-        .unwrap()
-        .value
-        .clone()
+    b.sheet(0).unwrap().get(at(row, col)).unwrap().value.clone()
 }
 fn bits(v: CellValue) -> u64 {
     match v {
@@ -43,8 +38,8 @@ fn target(row: u32, col: u32) -> eval::EvaluationTarget {
         address: at(row, col),
     }
 }
-fn policy(materialization: M) -> poirot::eval::overlay::OverlayPolicy {
-    poirot::eval::overlay::OverlayPolicy {
+fn policy(materialization: M) -> poirot::eval::overlay::EvaluationPolicy {
+    poirot::eval::overlay::EvaluationPolicy {
         materialization,
         ..Default::default()
     }
@@ -78,7 +73,6 @@ fn finite_errors_and_caught_results_survive_formula_cache_save_roundtrip() {
     assert_eq!(get(&reopened, 0, 1), CellValue::Number(42.));
     assert!(
         reopened
-            .model()
             .sheet(0)
             .unwrap()
             .get(at(0, 0))

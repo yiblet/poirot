@@ -7,12 +7,13 @@
 //! <https://support.microsoft.com/en-us/excel/functions/acosh-function> and
 //! <https://support.microsoft.com/en-us/excel/functions/atanh-function>.
 //! Retrieved 2026-10-25. No upstream code, tests, or data reused.
+use poirot::CellError;
+use poirot::calculation::{EvaluationContext, EvaluationTarget};
 use poirot::eval::{
     ArrayResultPolicy, EvaluationBudgets, EvaluationFailure, EvaluationOutcome, RunConfiguration,
     run_formula_with_configuration,
 };
 use poirot::model::{CellValue, Workbook};
-use poirot::{CellError, EvaluationContext, EvaluationTarget};
 
 /// Evaluate a formula at a fixed row using the public configuration boundary.
 fn run(

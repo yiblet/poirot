@@ -1,6 +1,6 @@
 //! Evidence-based categories for failed checks; these never change the oracle.
 use crate::fods::xml::model::{FormulaCase, InputValue};
-use poirot_model::CellValue;
+use poirot::model::CellValue;
 use poirot_parsing::formula::Expr;
 use serde::{Deserialize, Serialize};
 
@@ -77,7 +77,7 @@ pub fn missing_functions(expression: &Expr) -> Vec<String> {
     fn visit(expression: &Expr, missing: &mut std::collections::BTreeSet<String>) {
         match expression {
             Expr::Function { name, args } => {
-                if poirot_eval::registry::resolve_function(name).is_none() {
+                if poirot::eval::registry::resolve_function(name).is_none() {
                     missing.insert(name.to_string());
                 }
                 for argument in args {
@@ -106,7 +106,7 @@ pub fn missing_functions(expression: &Expr) -> Vec<String> {
 /// Missing calls in unexecuted branches are not evidence of this failure.
 pub fn missing_root_function(expression: &Expr) -> Vec<String> {
     match expression {
-        Expr::Function { name, .. } if poirot_eval::registry::resolve_function(name).is_none() => {
+        Expr::Function { name, .. } if poirot::eval::registry::resolve_function(name).is_none() => {
             vec![name.to_string()]
         }
         _ => Vec::new(),

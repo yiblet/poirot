@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn actual_nonincremental_publication_retains_raw_receipts_and_mutates_only_formula_caches() {
     let mut b = book();
-    let s = b.model_mut().sheet_mut(0).unwrap();
+    let s = b.sheet_mut(0).unwrap();
     s.set_value(at(0, 0), CellValue::Number(f64::INFINITY))
         .unwrap();
     s.set_value(

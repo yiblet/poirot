@@ -1,0 +1,27 @@
+[package]
+name = "poirot-functions"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+description = "Workbook-independent spreadsheet functions, coercion, and display formatting"
+include = ["/src/**", "/README.md", "/LICENSES/**"]
+
+[dependencies]
+statrs = { workspace = true }
+libm = { workspace = true }
+bigdecimal = { workspace = true }
+poirot-parsing = { version = "0.1.0", path = "../poirot-parsing" }
+smallvec = { workspace = true }
+serde = { workspace = true }
+unicode-general-category = "1.1.0"
+pcre2 = { workspace = true }
+nom = { workspace = true }
+regex = { workspace = true }
+num-bigint = { workspace = true }
+
+
+[lints]
+workspace = true

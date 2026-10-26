@@ -2,9 +2,10 @@
 
 Loading and ordinary calculation need no application quotas. Set limits when your application needs them:
 
-```rust
-use poirot::{EvaluationLimits, Workbook};
-use poirot::io::ReadOptions;
+```no_run
+use poirot::Workbook;
+use poirot::calculation::EvaluationLimits;
+use poirot::files::ReadOptions;
 
 let options = ReadOptions::default().max_input_bytes(256 * 1024 * 1024);
 let book = Workbook::load().options(options).open("model.xlsx")?;
@@ -39,9 +40,14 @@ These counts are not a process memory limit. Multiple collections coexist. Memo 
 
 Several output reads share one cycle. Direct `Evaluation::start_cycle(context)` resets work and a previous refusal, preserves edits and compilation, and clears calculated values. Clearing the cache or editing a cell does not replenish work. An overlay's `evaluation(&context)` starts an explicit cycle; valid retained results survive it. Changing only quotas does not invalidate semantic caches. A refused cycle stays refused until a new cycle begins. Retention follows the state, independently of the cycle; Poirot refuses a tighter retention quota instead of promising automatic eviction.
 
-`Workbook::evaluation().build()`, `Overlay::evaluation`, and workbook recalculation omit detailed profiling. Finite work quotas still enable the accounting required for enforcement. Select `.profiling(true)` on the direct builder or `Overlay::evaluation_with_profiling(&context, true)` to collect category and execution counters. `EvaluationReport::usage` and `execution` are `None` when profiling was not requested. The component `eval::overlay` APIs retain their existing detailed reporting contracts.
+`Workbook::evaluation().build()`, `Overlay::evaluation`, and workbook recalculation omit detailed profiling. Finite work quotas still enable the accounting required for enforcement. Select `.profiling(true)` on the direct builder or `Overlay::evaluation_with_profiling(&context, true)` to collect category and execution counters. `EvaluationReport::usage` and `execution` are `None` when profiling was not requested. The component `poirot::eval::overlay` APIs retain their existing detailed reporting contracts.
 
-`EvaluationBudgets` remains supported: integer maxima translate to absent optional quotas; its depth default maps to the engine's normal 128-frame ceiling. `EvaluationContext::limits` records the optional configuration and updates the legacy fields. Direct legacy budget edits take precedence if their values differ. The explicit optional representation retains a caller's maximum-valued work quota. Existing public numeric loading and retention fields retain their historical maximum-integer sentinel interpretation. `EvaluationContext` now includes optional quota identity and native regex settings; full struct literals must initialize these fields, or use `..Default::default()`. New code should use named setters and inspectors.
+`EvaluationContext::limits` is the sole calculation quota configuration. The
+lower-level engine functions still accept `poirot::eval::EvaluationBudgets` where
+an explicit integer representation is needed; convert from `EvaluationLimits`
+with `Into`. Context fields use the optional limits directly, including explicit
+maximum-valued quotas. Use `..Default::default()` when constructing a context
+with selected overrides.
 
 The pure modern-text algorithm error `Limit` is now split into `SizeOverflow`, `AllocationFailure`, and `InvalidGeometry`; applications that match this component error must update those matches. Matrix algorithm errors likewise distinguish overflow and allocation from their existing explicit budget refusal.
 

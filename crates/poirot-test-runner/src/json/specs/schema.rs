@@ -1,4 +1,5 @@
-use poirot::{eval, model};
+use poirot::eval;
+use poirot::model;
 use serde::{Deserialize, Deserializer, de::Error};
 
 /// Strictly decoded Excel specification fixture with source evidence and interleaved evaluation steps.
@@ -201,7 +202,8 @@ pub(crate) enum Expected {
     /// Assert the complete rectangular footprint beginning at the target.
     Array(Array),
 }
-/// Explicitly tagged row-major expected footprint.
+/// Tagged rectangular expected output used to check a formula's published array footprint.
+/// Rows are retained in display order and validated as nonempty and rectangular before comparison.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Array {

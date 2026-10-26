@@ -52,3 +52,33 @@ Use only permissively licensed material compatible with Poirot’s MIT license.
 If you adapt code, tests, data, or algorithms, credit the project and record its
 source URL, revision, and license. Preserve required notices. If the terms or
 provenance are unclear, leave the material out and raise the question in your PR.
+
+## Preparing a release
+
+Release the four production crates together: `poirot-parsing`, `poirot-functions`,
+`poirot-io`, and `poirot`. The test runner and authored specifications stay
+unpublished. Keep package versions and internal dependency requirements aligned.
+Use Rust 1.90 or newer and Python 3.11 or newer for the release tools.
+
+After the workspace checks above, run:
+
+```sh
+cargo +1.90.0 check --workspace --all-features --locked
+python3 tools/test_package_contents.py
+python3 tools/test_release.py
+python3 tools/verify_release.py --offline
+python3 tools/verify_release.py --order --offline
+```
+
+The verification command packages the publishable dependency closure, checks legal
+records and README links, then builds all targets, doctests and API documentation
+from the normalized archives in a temporary workspace. Local patches point only
+to those extracted archives, so unpublished siblings can be verified together.
+It writes the current release archives under `target/release-artifacts/package/`.
+The final command prints dependency-first publication order.
+
+Offline verification requires dependencies already cached by Cargo. Omit
+`--offline` to let Cargo fetch missing dependencies, or add `--allow-dirty` while
+reviewing uncommitted changes. Run again from a clean checkout before release.
+This does not upload anything or check crates.io name availability, ownership or
+registry acceptance. Those checks and publication are a separate release step.

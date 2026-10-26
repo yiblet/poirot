@@ -1,8 +1,13 @@
 //! Bounded BIFF8 fidelity overlay. Layout references: pinned Apache POI
 //! StringPtg, NameRecord, AreaPtg, Ref3DPtg and StringRecord serializers.
 //! Unknown token families remain backend-owned and produce a fidelity warning.
+//!
+//! The overlay is an internal import stage with no standalone public operations.
+//! Use [`crate::read_workbook_bytes`] with [`crate::ReadOptions`] to import XLS;
+//! fidelity omissions are reported through the returned workbook metadata.
 use crate::biff_preflight::{PreflightError, ResourceBudget, records, workbook_stream};
-use poirot_model::{Cell, CellAddress, CellValue, ExcelText, NamedRange, Workbook};
+use crate::data::{SheetSink, SheetSource, WorkbookSink};
+use crate::{Cell, CellAddress, CellValue, ExcelText, NamedRange};
 
 mod formula;
 mod reconstruct;
@@ -22,7 +27,7 @@ struct Formula {
 pub(crate) struct Overlay {
     /// Source sheet names in workbook order.
     pub sheet_names: Vec<String>,
-    visibility: Vec<poirot_model::SheetVisibility>,
+    visibility: Vec<crate::SheetVisibility>,
     names: Vec<NamedRange>,
     formulas: Vec<Formula>,
     caches: Vec<(usize, CellAddress, ExcelText)>,
@@ -53,9 +58,9 @@ impl Overlay {
             .take_while(|r| r.id != 0xa)
             .filter(|r| r.id == 0x85)
             .map(|r| match r.data.get(4).map(|v| v & 3) {
-                Some(0) => Ok(poirot_model::SheetVisibility::Visible),
-                Some(1) => Ok(poirot_model::SheetVisibility::Hidden),
-                Some(2) => Ok(poirot_model::SheetVisibility::VeryHidden),
+                Some(0) => Ok(crate::SheetVisibility::Visible),
+                Some(1) => Ok(crate::SheetVisibility::Hidden),
+                Some(2) => Ok(crate::SheetVisibility::VeryHidden),
                 _ => Err(PreflightError::Malformed(
                     "invalid BIFF worksheet visibility",
                 )),
@@ -78,8 +83,8 @@ impl Overlay {
     /// Restore reconstructed formulas, names, and exact cached text into the decoded model.
     pub fn apply(
         self,
-        workbook: &mut Workbook,
-    ) -> std::result::Result<(), poirot_model::ModelError> {
+        workbook: &mut impl WorkbookSink<Sheet: SheetSink>,
+    ) -> std::result::Result<(), crate::ModelError> {
         for (index, visibility) in self.visibility.into_iter().enumerate() {
             if let Some(sheet) = workbook.sheet_mut(index) {
                 let mut p = sheet.presentation();
@@ -105,7 +110,7 @@ impl Overlay {
             }
         }
         if !self.names.is_empty() {
-            workbook.named_ranges = self.names;
+            *workbook.named_ranges_mut() = self.names;
         }
         Ok(())
     }
@@ -115,6 +120,7 @@ impl Overlay {
 mod tests {
     use super::formula::formula;
     use super::*;
+    use crate::data::{SheetSource, WorkbookSource};
     use std::io::{Cursor, Write};
     fn record(stream: &mut Vec<u8>, id: u16, data: &[u8]) {
         stream.extend(id.to_le_bytes());
@@ -163,9 +169,9 @@ mod tests {
     #[test]
     fn independent_boundsheet_flags_preserve_hidden_and_very_hidden() {
         for (flag, expected) in [
-            (0, poirot_model::SheetVisibility::Visible),
-            (1, poirot_model::SheetVisibility::Hidden),
-            (2, poirot_model::SheetVisibility::VeryHidden),
+            (0, crate::SheetVisibility::Visible),
+            (1, crate::SheetVisibility::Hidden),
+            (2, crate::SheetVisibility::VeryHidden),
         ] {
             let original = compound(&[0x1e, 1, 0], None);
             let mut c = cfb::CompoundFile::open(Cursor::new(original)).unwrap();
@@ -180,7 +186,10 @@ mod tests {
                 .unwrap()
                 .write_all(&bytes)
                 .unwrap();
-            let report = crate::read_workbook_bytes(&c.into_inner().into_inner()).unwrap();
+            let report = crate::read_workbook_bytes::<crate::test_support::Workbook>(
+                &c.into_inner().into_inner(),
+            )
+            .unwrap();
             assert_eq!(report.sheet(0).unwrap().presentation().visibility, expected);
             assert!(
                 report
@@ -251,7 +260,7 @@ mod tests {
         assert_eq!(&sheet_records[1].data[6..], &[2, 1, 0xc3, 3, 0x41, 0]);
         assert_eq!(&names[0].data[14..19], &[1, 0x0d, 0x54, 0xf0, 0x79]);
         assert_eq!(&names[1].data[8..10], &[2, 0]);
-        let report = crate::read_workbook_bytes(&bytes).unwrap();
+        let report = crate::read_workbook_bytes::<crate::test_support::Workbook>(&bytes).unwrap();
         assert_eq!(report.named_ranges.len(), 2);
         assert_eq!(report.sheet(0).unwrap().name(), "ΣA");
         assert_eq!(report.sheet(1).unwrap().name(), "σA");
@@ -289,7 +298,7 @@ mod tests {
             .write_all(&stream)
             .unwrap();
         let bytes = c.into_inner().into_inner();
-        let report = crate::read_workbook_bytes(&bytes).unwrap();
+        let report = crate::read_workbook_bytes::<crate::test_support::Workbook>(&bytes).unwrap();
         assert_eq!(report.sheet(0).unwrap().name(), "A/?B");
     }
     #[test]
@@ -303,7 +312,7 @@ mod tests {
                     .windows(6)
                     .any(|b| b == [0x17, 3, 0, b'x', b'y', b'z'])
         }));
-        let report = crate::read_workbook_bytes(bytes).unwrap();
+        let report = crate::read_workbook_bytes::<crate::test_support::Workbook>(bytes).unwrap();
         let cell = report
             .sheet(0)
             .unwrap()
@@ -314,7 +323,7 @@ mod tests {
     #[test]
     fn independent_poi_unicode_name_fixture_actual_import() {
         let bytes = include_bytes!("../tests/fixtures/poi-unicodeNameRecord.xls");
-        let report = crate::read_workbook_bytes(bytes).unwrap();
+        let report = crate::read_workbook_bytes::<crate::test_support::Workbook>(bytes).unwrap();
         assert!(!report.sheets().is_empty());
     }
     #[test]
@@ -326,7 +335,7 @@ mod tests {
         let rs = records(&original, ResourceBudget::default()).unwrap();
         let source = rs.iter().find(|r| r.id == 6).unwrap();
         assert_eq!(&source.data[22..], &tokens);
-        let report = crate::read_workbook_bytes(&bytes).unwrap();
+        let report = crate::read_workbook_bytes::<crate::test_support::Workbook>(&bytes).unwrap();
         let cell = report
             .sheet(0)
             .unwrap()
@@ -382,7 +391,7 @@ mod tests {
             .write_all(&stream)
             .unwrap();
         let bytes = c.into_inner().into_inner();
-        let report = crate::read_workbook_bytes(&bytes).unwrap();
+        let report = crate::read_workbook_bytes::<crate::test_support::Workbook>(&bytes).unwrap();
         for (column, units) in [(0, vec![0xd83d]), (1, vec![0xd83d, 0xde00])] {
             let cell = report
                 .sheet(0)
@@ -403,7 +412,7 @@ mod tests {
     fn original_cached_string_lone_unit_survives_backend_projection() {
         let bytes = compound(&[0x1e, 1, 0], Some((&[2, 0, 1, 0x3d, 0xd8], &[1, 65, 0])));
         let original = workbook_stream(&bytes, ResourceBudget::default()).unwrap();
-        let report = crate::read_workbook_bytes(&bytes).unwrap();
+        let report = crate::read_workbook_bytes::<crate::test_support::Workbook>(&bytes).unwrap();
         let value = &report
             .sheet(0)
             .unwrap()
@@ -423,7 +432,7 @@ mod tests {
             ..ResourceBudget::default()
         };
         assert!(matches!(
-            crate::read_workbook_bytes_with_options(
+            crate::read_workbook_bytes_with_options::<crate::test_support::Workbook>(
                 &bytes,
                 crate::ReadOptions {
                     xls_budget: budget,
@@ -441,7 +450,7 @@ mod tests {
             &[0x1e, 1, 0],
             Some((&[4, 0, 0, b'a'], &[1, 0x3d, 0xd8, 0, 0xde, 0xe9, 0])),
         );
-        let report = crate::read_workbook_bytes(&bytes).unwrap();
+        let report = crate::read_workbook_bytes::<crate::test_support::Workbook>(&bytes).unwrap();
         let cell = report
             .sheet(0)
             .unwrap()
@@ -470,7 +479,7 @@ mod tests {
         let rs = records(&source, ResourceBudget::default()).unwrap();
         assert_eq!(rs.iter().find(|r| r.id == 0x207).unwrap().data, &first);
         assert_eq!(rs.iter().find(|r| r.id == 0x3c).unwrap().data, &next);
-        let report = crate::read_workbook_bytes(&bytes).unwrap();
+        let report = crate::read_workbook_bytes::<crate::test_support::Workbook>(&bytes).unwrap();
         assert_eq!(
             report
                 .sheet(0)
@@ -507,13 +516,13 @@ mod tests {
     fn truncated_tokens_and_string_continuations_are_typed_errors() {
         for token in [&[0x17, 2, 1, 0x3d][..], &[0x25, 0, 0][..], &[3][..]] {
             assert!(matches!(
-                crate::read_workbook_bytes(&compound(token, None)),
+                crate::read_workbook_bytes::<crate::test_support::Workbook>(&compound(token, None)),
                 Err(crate::IoError::BiffPreflight(PreflightError::Malformed(_)))
             ));
         }
         let bytes = compound(&[0x1e, 1, 0], Some((&[4, 0, 1, 0x3d, 0xd8], &[1, 0, 0xde])));
         assert!(matches!(
-            crate::read_workbook_bytes(&bytes),
+            crate::read_workbook_bytes::<crate::test_support::Workbook>(&bytes),
             Err(crate::IoError::BiffPreflight(PreflightError::Malformed(_)))
         ));
     }

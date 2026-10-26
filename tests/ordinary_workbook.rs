@@ -1,9 +1,9 @@
 //! Ordinary workbook edits and calculation need no evaluator workspace or change batch.
-use poirot::{
-    CalculationError, Cell, CellAddress, CellError, CellStyle, CellValue, EvaluationContext,
-    FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind, ModelError, Workbook,
-    Worksheet, eval,
-};
+use poirot::calculation::{CalculationError, EvaluationContext};
+use poirot::eval;
+use poirot::files::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
+use poirot::styles::CellStyle;
+use poirot::{Cell, CellAddress, CellError, CellValue, ModelError, Workbook, Worksheet};
 use std::error::Error;
 
 fn at(address: &str) -> CellAddress {
@@ -80,7 +80,7 @@ fn recalculation_preserves_metadata_and_cell_styles() {
             detail: "external link omitted".into(),
         }],
     };
-    book.file_metadata = Some(metadata.clone());
+    book.model_mut().file_metadata = Some(metadata.clone());
     book.sheet_mut(0)
         .unwrap()
         .get_mut(at("B1"))
@@ -88,7 +88,7 @@ fn recalculation_preserves_metadata_and_cell_styles() {
         .style
         .number_format = Some("0.00".into());
     book.recalculate().unwrap();
-    assert_eq!(book.file_metadata, Some(metadata));
+    assert_eq!(book.model().file_metadata, Some(metadata));
     assert_eq!(
         book.sheet(0)
             .unwrap()
@@ -122,10 +122,11 @@ fn operational_abort_does_not_publish_earlier_results() {
         .unwrap();
     let before = book.clone();
     let context = EvaluationContext {
-        budgets: eval::EvaluationBudgets {
+        limits: (eval::EvaluationBudgets {
             text_bytes: 8,
             ..Default::default()
-        },
+        })
+        .into(),
         ..Default::default()
     };
     let error = book.recalculate_with_context(context).unwrap_err();
@@ -143,10 +144,11 @@ fn invalid_calculation_settings_do_not_mutate_the_workbook() {
     let mut book = inputs();
     let before = book.clone();
     let context = EvaluationContext {
-        budgets: eval::EvaluationBudgets {
+        limits: (eval::EvaluationBudgets {
             depth: 129,
             ..Default::default()
-        },
+        })
+        .into(),
         ..Default::default()
     };
     let error = book.recalculate_with_context(context).unwrap_err();
@@ -254,7 +256,9 @@ fn rename_updates_quoted_references_and_defined_names() {
         .unwrap()
         .set_formula(at("A1"), "'Old data'!A1*2")
         .unwrap();
-    book.define_name("Input", "'Old data'!A1", None).unwrap();
+    book.model_mut()
+        .define_name("Input", "'Old data'!A1", None)
+        .unwrap();
     book.sheet_mut(1)
         .unwrap()
         .set_formula(at("B1"), "Input+1")
@@ -272,7 +276,7 @@ fn rename_updates_quoted_references_and_defined_names() {
         Some("'New''s data'!A1*2")
     );
     assert_eq!(
-        book.defined_name("Input", 1).unwrap().formula,
+        book.model().defined_name("Input", 1).unwrap().formula,
         "'New''s data'!A1"
     );
     book.recalculate().unwrap();
@@ -306,22 +310,26 @@ fn named_cell_read_distinguishes_missing_cells_and_stored_blanks() {
     sheet.set_value(at("B1"), 25.).unwrap();
 
     assert_eq!(
-        book.cell("Customer's quote", at("A1")).unwrap().value,
+        book.stored_cell("Customer's quote", at("A1"))
+            .unwrap()
+            .value,
         CellValue::Blank
     );
     assert_eq!(
-        book.cell("CUSTOMER'S QUOTE", at("B1")).unwrap().value,
+        book.stored_cell("CUSTOMER'S QUOTE", at("B1"))
+            .unwrap()
+            .value,
         CellValue::Number(25.)
     );
-    assert!(book.cell("Customer's quote", at("C1")).is_none());
-    assert!(book.cell("Missing", at("A1")).is_none());
+    assert!(book.stored_cell("Customer's quote", at("C1")).is_none());
+    assert!(book.stored_cell("Missing", at("A1")).is_none());
 }
 
 #[test]
 fn named_cell_read_returns_stored_formula_results_until_recalculation() {
     let mut book = inputs();
     assert_eq!(
-        book.cell("Inputs", at("B1")).unwrap().value,
+        book.stored_cell("Inputs", at("B1")).unwrap().value,
         CellValue::Number(-1.)
     );
     book.recalculate().unwrap();
@@ -331,12 +339,12 @@ fn named_cell_read_returns_stored_formula_results_until_recalculation() {
         .unwrap();
     // Reading does not evaluate: the previous 21 * 2 result remains until calculation.
     assert_eq!(
-        book.cell("Inputs", at("B1")).unwrap().value,
+        book.stored_cell("Inputs", at("B1")).unwrap().value,
         CellValue::Number(42.)
     );
     book.recalculate().unwrap();
     assert_eq!(
-        book.cell("Inputs", at("B1")).unwrap().value,
+        book.stored_cell("Inputs", at("B1")).unwrap().value,
         CellValue::Number(48.)
     );
 }

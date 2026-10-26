@@ -25,26 +25,25 @@ There is no separate original shared-group validation or reconstruction pass.
 Fresh authoring uses `rxls::Workbook::to_xlsx_checked`; XML projection restores
 canonical saved values, typed caches and array metadata without recalculation.
 
-This crate converts workbook files to and from the shared data model. Imports
+This crate owns file records and codecs. Implement `data::WorkbookSink` for direct
+streaming import and `data::WorkbookSource` for borrowed export; Poirot implements
+both for its sparse model. Imports
 retain saved formula results and record unsupported or altered content in workbook
 metadata. Writing preserves saved results; it does not calculate formulas.
 
 ```rust
-use poirot_io::{read_workbook_bytes, write_xlsx_to_buffer};
-use poirot_model::Workbook;
+use poirot_io::{IoError, read_workbook_bytes, write_xlsx_to_buffer};
+use poirot_io::data::{SheetSink, WorkbookSink};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut book = Workbook::new();
-    book.add_sheet("Data")?.set_value("A1".parse()?, 42.)?;
-    let bytes = write_xlsx_to_buffer(&book)?;
-    let restored = read_workbook_bytes(&bytes)?;
-    assert_eq!(restored.sheets().len(), 1);
-    Ok(())
+// The caller supplies storage; import writes directly into that storage type.
+fn roundtrip<W: WorkbookSink<Sheet: SheetSink>>(book: &W) -> Result<W, IoError> {
+    let bytes = write_xlsx_to_buffer(book)?;
+    read_workbook_bytes(&bytes)
 }
 ```
 
 `read_workbook` reads a file; `read_workbook_bytes` reads an in-memory buffer.
-Both detect XLS or XLSX from the contents and return the same workbook type.
+Both detect XLS or XLSX from the contents and construct the caller-selected sink.
 `ReadOptions` configures import policies and limits.
 
 XLS is supported as input only; saves produce XLSX.
@@ -55,9 +54,7 @@ Saves always author a fresh XLSX package from the modeled values, formulas, cach
 results, date system, names and supported cell styles. See the
 [compatibility guide](https://github.com/yiblet/poirot/blob/master/docs/compatibility.md)
 for preservation limits. Original shared encoding and unknown formula attributes
-are not preserved. Supported structural edits do not encounter a retained-package gate.
-Legacy `Workbook::retained_xlsx` bytes can still pass through native snapshots,
-but imports leave that field empty and exports ignore it.
+are not preserved.
 
 The remaining adapter work has a specific purpose:
 

@@ -1,4 +1,5 @@
 //! Bounded OOXML adapter facade and ordered export patch coordination.
+use crate::data::{SheetSource, WorkbookSource};
 mod backend;
 mod budget;
 pub(crate) use backend::{backend_package, needs_backend_adapter};
@@ -25,7 +26,6 @@ pub(crate) use package::ImportPackage;
 use crate::{IoError, ReadOptions};
 use budget::{SizeCounter, next_total};
 use package::read_package_with_options;
-use poirot_model::Workbook;
 use workbook::WorkbookPatch;
 use worksheet::SheetPatch;
 use xml::part;
@@ -33,7 +33,7 @@ use xml::part;
 /// Restore canonical source metadata and typed caches into backend-generated OOXML.
 pub(crate) fn patch_export(
     bytes: &[u8],
-    workbook: &Workbook,
+    workbook: &impl WorkbookSource,
     options: crate::WriteOptions,
     styles: &StyleExport<'_>,
 ) -> Result<Vec<u8>, IoError> {
@@ -92,18 +92,18 @@ pub(crate) fn patch_export(
         .ok_or_else(|| IoError::Read("generated package has no styles part".into()))?;
     let original = part(&package, path)?;
     let size = styles
-        .execute(SizeCounter::default(), &workbook.style_context)?
+        .execute(SizeCounter::default(), workbook.style_context())?
         .0;
     patched_total = next_total(size, original.len() as u64, patched_total, options)?;
     package.insert(
         path.clone(),
-        styles.execute(Vec::new(), &workbook.style_context)?,
+        styles.execute(Vec::new(), workbook.style_context())?,
     );
     styles::write::install_theme(
         &mut package,
         &plan.workbook_part,
         plan.theme_part.as_deref(),
-        &workbook.style_context,
+        workbook.style_context(),
         options,
         &mut patched_total,
     )?;

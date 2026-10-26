@@ -1,5 +1,5 @@
 //! Safe storage diagnostics separating first-use work, warmed access and clone lifetimes.
-use poirot_model::{Cell, CellAddress, CellStore, CellValue};
+use poirot::model::{Cell, CellAddress, CellStore, CellValue};
 use serde_json::{Map, Value, json};
 use std::{hint::black_box, time::Instant};
 

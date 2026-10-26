@@ -17,7 +17,7 @@ fn gcd_reduces_complete_literal_and_computed_arrays_at_every_caller() {
         ] {
             assert!(
                 matches!(
-                    poirot_eval::run_formula(
+                    poirot::eval::run_formula(
                         &workbook,
                         0,
                         address.parse().unwrap(),
@@ -25,7 +25,7 @@ fn gcd_reduces_complete_literal_and_computed_arrays_at_every_caller() {
                         Default::default(),
                         Default::default()
                     ),
-                    poirot_eval::EvaluationOutcome::Complete {
+                    poirot::eval::EvaluationOutcome::Complete {
                         value: CellValue::Number(2.),
                         ..
                     }
@@ -45,7 +45,7 @@ fn explicit_reference_intersection_selects_the_callers_member_before_gcd() {
     }
     for (formula, expected) in [("GCD(A1:B2)", 2.), ("GCD(@A1:A2)", 6.)] {
         assert!(
-            matches!(poirot_eval::run_formula(&workbook,0,"B2".parse().unwrap(),formula,Default::default(),Default::default()),poirot_eval::EvaluationOutcome::Complete {value:CellValue::Number(n),..} if n==expected),
+            matches!(poirot::eval::run_formula(&workbook,0,"B2".parse().unwrap(),formula,Default::default(),Default::default()),poirot::eval::EvaluationOutcome::Complete {value:CellValue::Number(n),..} if n==expected),
             "{formula}"
         );
     }

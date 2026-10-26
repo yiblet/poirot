@@ -1,7 +1,7 @@
 //! Original public-facade contracts with explicit caller-provided saved results.
-use poirot::{
-    CellValue, EvaluationContext, ProducerPolicy, Workbook, eval::overlay::OverlayPolicy,
-};
+use poirot::calculation::{EvaluationContext, ProducerPolicy};
+use poirot::eval::overlay::EvaluationPolicy;
+use poirot::{CellValue, Workbook};
 #[test]
 fn workbook_policy_controls_recalculation_and_xlsx_keeps_saved_values() {
     let mut book = Workbook::new();
@@ -23,25 +23,28 @@ fn workbook_policy_controls_recalculation_and_xlsx_keeps_saved_values() {
     sheet
         .set_formula("D1".parse().unwrap(), "SUM(A1#)")
         .unwrap();
-    let policy = OverlayPolicy {
+    let policy = EvaluationPolicy {
         producers: ProducerPolicy::TrustSaved,
         ..Default::default()
     };
     book.recalculate_with_policy(EvaluationContext::default(), policy)
         .unwrap();
     assert_eq!(
-        book.cell("S", "D1".parse().unwrap()).unwrap().value,
+        book.stored_cell("S", "D1".parse().unwrap()).unwrap().value,
         CellValue::Number(30.0)
     );
     let bytes = book.save_xlsx().to_buffer().unwrap();
     let reopened = Workbook::from_bytes(&bytes).unwrap();
     assert_eq!(
-        reopened.cell("S", "B1".parse().unwrap()).unwrap().value,
+        reopened
+            .stored_cell("S", "B1".parse().unwrap())
+            .unwrap()
+            .value,
         CellValue::Number(20.0)
     );
     book.recalculate().unwrap();
     assert_eq!(
-        book.cell("S", "D1".parse().unwrap()).unwrap().value,
+        book.stored_cell("S", "D1".parse().unwrap()).unwrap().value,
         CellValue::Number(3.0)
     );
 }
@@ -58,7 +61,7 @@ fn incomplete_saved_array_aborts_workbook_cache_publication_atomically() {
     sheet
         .set_formula_with_cached_value("D1".parse().unwrap(), "1+2", 99.0.into())
         .unwrap();
-    let policy = OverlayPolicy {
+    let policy = EvaluationPolicy {
         producers: ProducerPolicy::TrustSaved,
         ..Default::default()
     };
@@ -67,11 +70,11 @@ fn incomplete_saved_array_aborts_workbook_cache_publication_atomically() {
             .is_err()
     );
     assert_eq!(
-        book.cell("S", "A1".parse().unwrap()).unwrap().value,
+        book.stored_cell("S", "A1".parse().unwrap()).unwrap().value,
         CellValue::Number(10.0)
     );
     assert_eq!(
-        book.cell("S", "D1".parse().unwrap()).unwrap().value,
+        book.stored_cell("S", "D1".parse().unwrap()).unwrap().value,
         CellValue::Number(99.0)
     );
 }

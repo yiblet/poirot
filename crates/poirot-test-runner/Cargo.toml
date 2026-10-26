@@ -12,9 +12,7 @@ readme = "README.md"
 
 [dependencies]
 poirot = { version = "0.1.0", path = "../.." }
-poirot-model = { version = "0.1.0", path = "../poirot-model" }
 poirot-parsing = { version = "0.1.0", path = "../poirot-parsing" }
-poirot-eval = { version = "0.1.0", path = "../poirot-eval" }
 rayon.workspace = true
 roxmltree.workspace = true
 regex.workspace = true

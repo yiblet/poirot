@@ -1,8 +1,10 @@
 //! Public style workflows use handwritten OOXML and independently specified properties.
-use poirot::{
-    CellStyle, CellValue, ColorSource, EvaluationContext, FontStyle, HorizontalAlignment,
-    StyleColor, VisualStyle, Workbook, eval::EvaluationTarget,
+use poirot::calculation::EvaluationContext;
+use poirot::eval::EvaluationTarget;
+use poirot::styles::{
+    CellStyle, ColorSource, FontStyle, HorizontalAlignment, StyleColor, VisualStyle,
 };
+use poirot::{CellValue, Workbook};
 use std::{
     io::{Cursor, Read, Write},
     sync::Arc,
@@ -78,7 +80,7 @@ fn imported_styles_reach_evaluation_and_survive_edits_reset_flush_and_snapshots(
     assert!(font.bold);
     assert_eq!(
         font.color.unwrap().source,
-        ColorSource::Theme(poirot::ThemeColor::Accent1)
+        ColorSource::Theme(poirot::styles::ThemeColor::Accent1)
     );
     assert_eq!(
         visual.alignment.as_ref().unwrap().horizontal,
@@ -97,10 +99,19 @@ fn imported_styles_reach_evaluation_and_survive_edits_reset_flush_and_snapshots(
             .unwrap()
     ));
     let source = book.save_snapshot().to_buffer().unwrap();
-    assert_eq!(Workbook::from_snapshot_bytes(&source).unwrap(), book);
+    assert_eq!(
+        Workbook::from_model(
+            Workbook::restore_snapshot()
+                .from_bytes(&source)
+                .unwrap()
+                .into_artifact()
+                .workbook
+        ),
+        book
+    );
 
     let context = EvaluationContext::default();
-    let mut overlay = poirot::Overlay::from_overlay(
+    let mut overlay = poirot::calculation::Overlay::from_overlay(
         poirot::eval::overlay::Overlay::with_workbook(book.model().clone())
             .build()
             .unwrap(),
