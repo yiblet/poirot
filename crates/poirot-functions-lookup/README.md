@@ -6,8 +6,15 @@ Use `evaluate` with a selected function and its arguments. Implement the
 `Workbook` trait to supply cell reads and workbook metadata. Results retain
 references when the spreadsheet function returns one.
 
-Lower-level helpers cover `MATCH`, `XMATCH`, approximate search, `INDEX`, and
-parsing dynamic references. The caller evaluates arguments and controls limits.
+Lower-level helpers cover `MATCH`, `XMATCH`, approximate search, `INDEX`, `ADDRESS` text, and parsing dynamic references. The caller evaluates arguments and controls limits. `address_text` formats one-based
+coordinates with typed absolute-axis and A1/R1C1 notation choices.
+`intersection_offsets` selects the unique one-based point of a singleton or
+vector reference; the evaluator owns scalar/array selection and publication.
+`offset_extent` translates one axis with checked arithmetic and modern worksheet
+bounds. The evaluator prepares OFFSET controls and publishes its reference;
+OFFSET is no longer part of the workbook-backed `evaluate` helper API. Negative
+sizes normalize toward the displaced cell as a compatibility policy whose native
+Excel behavior is unverified.
 
 Construct ordinary references with `Reference::new(kind, workbook, sheets, rows,
 cols)`, using inclusive zero-based ranges. The constructor rejects reversed and

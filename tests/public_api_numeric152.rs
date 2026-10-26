@@ -58,5 +58,32 @@ fn output(overlay: &mut poirot::eval::overlay::Overlay<'_>, source: &Workbook) -
 mod publication_receipts;
 #[path = "public_api_numeric152/retained_publication.rs"]
 mod retained_publication;
-#[path = "public_api_numeric152/save_fidelity.rs"]
-mod save_fidelity;
+
+#[test]
+fn finite_errors_and_caught_results_survive_formula_cache_save_roundtrip() {
+    let mut source = book();
+    set_formula(&mut source, 0, 0, "SQRT(-1)");
+    set_formula(&mut source, 0, 1, "IFERROR(A1,42)");
+    assert!(matches!(
+        eval::run_recalculation_with_configuration(
+            source.model_mut(),
+            &RunConfiguration::default(),
+            Default::default()
+        ),
+        EvaluationOutcome::Complete { .. }
+    ));
+    let bytes = source.save_xlsx().to_buffer().unwrap();
+    let reopened = Workbook::from_bytes(&bytes).unwrap();
+    assert_eq!(get(&reopened, 0, 0), CellValue::Error(CellError::Num));
+    assert_eq!(get(&reopened, 0, 1), CellValue::Number(42.));
+    assert!(
+        reopened
+            .model()
+            .sheet(0)
+            .unwrap()
+            .get(at(0, 0))
+            .unwrap()
+            .formula
+            .is_some()
+    );
+}

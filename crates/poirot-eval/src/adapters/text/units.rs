@@ -1,186 +1,25 @@
-//! Deferred UTF-16 consumers. Every vector/output copy follows admission.
+//! Lossless text kernels use shared typed broadcast and collection traversal.
 use super::*;
+use crate::adapters::elementwise::{
+    self, Broadcast, Kernel, MemberContext, Variadic, WholeCollection, collections, text as shared,
+};
 use poirot_functions_text::{java_case, units};
-use poirot_model::ExcelText;
 
-fn unsupported(h: &TextHost<'_, '_>, detail: impl std::fmt::Debug) -> TextFailure {
-    h.source_fault(&format!("lossless UTF-16 text: {detail:?}"))
-}
-fn plan<T>(h: &TextHost<'_, '_>, result: Result<T, units::PlanFailure>) -> Result<T, TextFailure> {
-    result.map_err(|e| match e {
-        units::PlanFailure::Value => Failure::Spreadsheet(VALUE_ERROR),
-        other => unsupported(h, other),
-    })
-}
-fn reserve(h: &mut TextHost<'_, '_>, r: units::Reservation) -> Result<(), TextFailure> {
-    h.check_text(r.text_bytes).map_err(Failure::Operational)?;
-    h.check_collection(r.elements)
-        .map_err(Failure::Operational)?;
-    h.charge_work(r.work).map_err(Failure::Operational)
-}
-fn rendered(h: &mut TextHost<'_, '_>, s: &ScalarOperand) -> Result<Vec<u16>, TextFailure> {
-    if s.missing {
-        let excel = h
-            .host
-            .try_borrow()
-            .map_err(|_| Failure::Operational(EvaluationFailure::StalePlan))?
-            .builtin_semantics_policy()
-            == BuiltinSemanticsPolicy::ExcelDocumentation;
-        return if excel {
-            Ok(Vec::new())
-        } else {
-            Err(h.source_fault("POI string coercion rejects MissingArgEval"))
-        };
-    }
-    h.host
-        .get_mut()
-        .coercev2_text_units(&s.value)
-        .map_err(failure)
-}
-fn coercev2_text_integer(h: &mut TextHost<'_, '_>, index: usize) -> Result<i32, TextFailure> {
-    let s = h.single(&index)?;
-    h.coercev2_text_integer(&s)
-}
-fn value(output: Vec<u16>) -> CellValue {
-    // Do not allocate an implicit UTF8 projection through From<ExcelText>.
-    CellValue::TextUtf16(ExcelText::from_units(output))
-}
-fn copied(h: &mut TextHost<'_, '_>, units: &[u16]) -> Result<CellValue, TextFailure> {
-    let r = plan(h, units::Reservation::units(units.len(), units.len()))?;
-    reserve(h, r)?;
-    Ok(value(units.to_vec()))
-}
-/// Execute text operations in Excel UTF-16 units without lossy scalar conversion.
-pub(crate) fn execute(
-    session: &mut Session<'_>,
-    sheet: usize,
-    address: CellAddress,
+/// Scalar text algorithm selected independently from shared member traversal.
+struct TextKernel {
     name: TextFunction,
-    arguments: ArgumentsRef<'_>,
-    full_case: bool,
-) -> EvalResult<Value> {
-    session.read(DependencyRead::BuiltinPolicy);
-    let excel = session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation;
-    let paired = session.text_policy.source == TextSourceVersion::ExcelCompatibilityV2Documented;
-    let mut h = TextHost {
-        host: RefCell::new(CallHost::new(session, sheet, address, arguments)),
-        pending: RefCell::new(None),
-    };
-    let n = arguments.len();
-    let valid = match name {
-        TextFunction::Len
-        | TextFunction::Lower
-        | TextFunction::Upper
-        | TextFunction::Code
-        | TextFunction::Proper => n == 1,
-        TextFunction::Left | TextFunction::Right => (1..=2).contains(&n),
-        TextFunction::Mid => n == 3,
-        TextFunction::Replace => n == 4,
-        TextFunction::Find | TextFunction::Search => (2..=3).contains(&n),
-        TextFunction::Rept => n == 2,
-        TextFunction::Concat | TextFunction::Concatenate => true,
-        _ => false,
-    };
-    if !valid {
-        return Ok(err(VALUE_ERROR));
-    }
-    let result = (|| -> Result<CellValue, TextFailure> {
-        if matches!(name, TextFunction::Concat | TextFunction::Concatenate) {
-            let mut output: Vec<u16> = Vec::new();
-            let mut total = 0usize;
-            for index in 0..n {
-                let description = if name == TextFunction::Concat {
-                    Some(h.host.get_mut().describe(index).map_err(failure)?)
-                } else {
-                    None
-                };
-                let (rows, columns) = description
-                    .as_ref()
-                    .filter(|d| d.is_area)
-                    .map_or((1, 1), |d| (d.rows, d.columns));
-                let positions = if description.as_ref().is_some_and(|d| d.is_area) {
-                    h.host.get_mut().stored_positions(index).map_err(failure)?
-                } else {
-                    None
-                };
-                let dense_len = if positions.is_some() {
-                    0
-                } else {
-                    rows.checked_mul(columns)
-                        .ok_or_else(|| unsupported(&h, units::PlanFailure::SizeOverflow))?
-                };
-                if columns == 0 {
-                    return Err(Failure::Spreadsheet(VALUE_ERROR));
-                }
-                let positions = positions
-                    .into_iter()
-                    .flatten()
-                    .chain((0..dense_len).map(|offset| (offset / columns, offset % columns)));
-                for (row, column) in positions {
-                    h.charge_work(1).map_err(Failure::Operational)?;
-                    let scalar = if description.as_ref().is_some_and(|d| d.is_area) {
-                        h.host
-                            .get_mut()
-                            .read_cell(index, row, column)
-                            .map_err(failure)?
-                    } else {
-                        h.single(&index)?
-                    };
-                    let text = rendered(&mut h, &scalar)?;
-                    total = total
-                        .checked_add(text.len())
-                        .ok_or_else(|| unsupported(&h, units::PlanFailure::SizeOverflow))?;
-                    let r = plan(&h, units::Reservation::units(total, text.len()))?;
-                    h.host
-                        .get_mut()
-                        .check_text_capacity(r.text_bytes)
-                        .map_err(Failure::Operational)?;
-                    h.host
-                        .get_mut()
-                        .check_values_capacity(r.elements)
-                        .map_err(Failure::Operational)?;
-                    h.charge_work(r.work).map_err(Failure::Operational)?;
-                    output.extend_from_slice(&text);
-                }
-            }
-            return Ok(value(output));
-        }
-        let first = h.single(&0)?;
-        if name == TextFunction::Code {
-            if first.missing {
-                return Err(h.source_fault("POI string coercion rejects MissingArgEval"));
-            }
-            let first_unit = if let Some(text) = first.value.text_ref() {
-                h.charge_work(1).map_err(Failure::Operational)?;
-                text.units().next()
-            } else {
-                rendered(&mut h, &first)?.first().copied()
-            };
-            let code = first_unit.ok_or(Failure::Spreadsheet(VALUE_ERROR))?;
-            if excel {
-                if code > 127 {
-                    return Err(h.source_fault(
-                        "Excel CODE requires an explicit non-ASCII platform code page",
-                    ));
-                }
-                return Ok(Number(f64::from(code)));
-            }
-            let bytes = if code >= 10000 {
-                5
-            } else if code >= 1000 {
-                4
-            } else if code >= 100 {
-                3
-            } else if code >= 10 {
-                2
-            } else {
-                1
-            };
-            h.check_text(bytes).map_err(Failure::Operational)?;
-            h.charge_work(bytes).map_err(Failure::Operational)?;
-            return Ok(Text(code.to_string()));
-        }
-        let text = rendered(&mut h, &first)?;
+    paired: bool,
+}
+impl Kernel for TextKernel {
+    type Signature = Variadic<Broadcast>;
+    fn apply(
+        &self,
+        context: &mut MemberContext<'_, '_, '_>,
+        arguments: &Self::Signature,
+    ) -> FunctionResult<CellValue> {
+        let name = self.name;
+        let paired = self.paired;
+        let text = arguments.text_units(context, 0)?;
         let indexed = matches!(
             name,
             TextFunction::Len
@@ -190,12 +29,6 @@ pub(crate) fn execute(
                 | TextFunction::Replace
         );
         let length = if paired && indexed {
-            // Length and up to two boundary scans; no offset vector allocation.
-            let work = text
-                .len()
-                .checked_mul(3)
-                .ok_or_else(|| unsupported(&h, units::PlanFailure::SizeOverflow))?;
-            h.charge_work(work).map_err(Failure::Operational)?;
             units::paired_length(&text)
         } else {
             text.len()
@@ -209,141 +42,95 @@ pub(crate) fn execute(
         };
         match name {
             TextFunction::Len => Ok(Number(length as f64)),
-            TextFunction::Proper => {
-                let r = plan(&h, units::case_reservation(text.len()))?;
-                reserve(&mut h, r)?;
-                Ok(value(units::proper(
-                    &text,
-                    if excel {
-                        units::ProperUnits::UnicodeScalars
-                    } else {
-                        units::ProperUnits::JavaChars
-                    },
-                )))
+            TextFunction::Code => {
+                let code = text.first().copied().ok_or(VALUE_ERROR)?;
+                if code > 127 {
+                    return Err(context.host.unsupported(
+                        CapabilityId::FunctionAdapter,
+                        "Excel CODE requires an explicit non-ASCII platform code page",
+                    ));
+                }
+                Ok(Number(f64::from(code)))
             }
-            TextFunction::Left | TextFunction::Right => {
-                let count = if n == 2 {
-                    coercev2_text_integer(&mut h, 1)?
+            TextFunction::Proper | TextFunction::Lower | TextFunction::Upper => {
+                let reservation = shared::plan(context.host, units::case_reservation(text.len()))?;
+                shared::reserve(context.host, reservation)?;
+                Ok(shared::value(if name == TextFunction::Proper {
+                    units::proper(&text, units::ProperUnits::UnicodeScalars)
                 } else {
-                    1
-                };
-                let range = plan(
-                    &h,
-                    if name == TextFunction::Left {
-                        units::left(length, count)
-                    } else {
-                        units::right(length, count)
-                    },
-                )?;
-                copied(
-                    &mut h,
-                    text.get(offsets(range))
-                        .ok_or(Failure::Spreadsheet(VALUE_ERROR))?,
-                )
+                    units::case(&text, name == TextFunction::Upper)
+                }))
             }
-            TextFunction::Mid => {
-                let start = coercev2_text_integer(&mut h, 1)?;
-                let count = coercev2_text_integer(&mut h, 2)?;
-                let range = plan(
-                    &h,
-                    if paired {
-                        units::paired_mid(length, start, count)
-                    } else {
-                        units::mid(length, start, count)
+            TextFunction::Left | TextFunction::Right | TextFunction::Mid => {
+                let (start, count) = if name == TextFunction::Mid {
+                    (
+                        arguments.text_integer(context, 1, None)?,
+                        arguments.text_integer(context, 2, None)?,
+                    )
+                } else {
+                    (0, arguments.text_integer(context, 1, Some(1))?)
+                };
+                let range = shared::plan(
+                    context.host,
+                    match name {
+                        TextFunction::Left => units::left(length, count),
+                        TextFunction::Right => units::right(length, count),
+                        _ => units::paired_mid(length, start, count),
                     },
                 )?;
-                copied(
-                    &mut h,
-                    text.get(offsets(range))
-                        .ok_or(Failure::Spreadsheet(VALUE_ERROR))?,
-                )
+                shared::copied(context.host, text.get(offsets(range)).ok_or(VALUE_ERROR)?)
             }
             TextFunction::Replace => {
-                let start = coercev2_text_integer(&mut h, 1)?;
-                let count = coercev2_text_integer(&mut h, 2)?;
-                let removed = offsets(plan(&h, units::replace(length, start, count))?);
-                let replacement = h.single(&3)?;
-                let replacement = rendered(&mut h, &replacement)?;
+                let start = arguments.text_integer(context, 1, None)?;
+                let count = arguments.text_integer(context, 2, None)?;
+                let removed = offsets(shared::plan(
+                    context.host,
+                    units::replace(length, start, count),
+                )?);
+                let replacement = arguments.text_units(context, 3)?;
                 let size = text
                     .len()
                     .checked_sub(removed.len())
                     .and_then(|n| n.checked_add(replacement.len()))
-                    .ok_or_else(|| unsupported(&h, units::PlanFailure::SizeOverflow))?;
-                let reservation = plan(&h, units::Reservation::units(size, size))?;
-                reserve(&mut h, reservation)?;
-                let mut output = Vec::with_capacity(size);
-                output.extend_from_slice(
-                    text.get(..removed.start)
-                        .ok_or(Failure::Spreadsheet(VALUE_ERROR))?,
-                );
+                    .ok_or_else(|| context.host.size_overflow())?;
+                let reservation =
+                    shared::plan(context.host, units::Reservation::units(size, size))?;
+                shared::reserve(context.host, reservation)?;
+                let mut output = Vec::new();
+                output
+                    .try_reserve_exact(size)
+                    .map_err(|_| context.host.allocation_failure())?;
+                // SAFETY: size is the checked sum of retained prefixes, replacement, and suffix.
+                output.extend_from_slice(text.get(..removed.start).ok_or(VALUE_ERROR)?);
+                // SAFETY: the local size reservation includes every replacement unit.
                 output.extend_from_slice(&replacement);
-                output.extend_from_slice(
-                    text.get(removed.end..)
-                        .ok_or(Failure::Spreadsheet(VALUE_ERROR))?,
-                );
-                Ok(value(output))
-            }
-            TextFunction::Lower | TextFunction::Upper => {
-                if !full_case && text.iter().any(|u| *u > 127) {
-                    return Err(
-                        h.source_fault("non-ASCII casing requires Poi7321209OpenJdk21Unicode15")
-                    );
-                }
-                let r = plan(&h, units::case_reservation(text.len()))?;
-                reserve(&mut h, r)?;
-                let direction = if name == TextFunction::Lower {
-                    java_case::Direction::Lower
-                } else {
-                    java_case::Direction::Upper
-                };
-                let output = if excel {
-                    units::case(&text, name == TextFunction::Upper)
-                } else {
-                    java_case::convert(&text, direction).map_err(|e| unsupported(&h, e))?
-                };
-                Ok(value(output))
+                // SAFETY: the local size reservation includes the complete retained suffix.
+                output.extend_from_slice(text.get(removed.end..).ok_or(VALUE_ERROR)?);
+                Ok(shared::value(output))
             }
             TextFunction::Find | TextFunction::Search => {
-                let second = h.single(&1)?;
-                let hay = rendered(&mut h, &second)?;
-                let start = if n == 3 {
-                    coercev2_text_integer(&mut h, 2)?
-                } else {
-                    1
-                };
+                let hay = arguments.text_units(context, 1)?;
+                let start = arguments.text_integer(context, 2, Some(1))?;
                 let hay_length = if paired {
                     units::paired_length(&hay)
                 } else {
                     hay.len()
                 };
-                let start = if excel {
-                    poirot_coercionv2::compatibility::coercev2_text_search_start(
-                        f64::from(start),
-                        hay_length,
-                    )
-                    .map_err(Failure::Spreadsheet)?
-                } else {
-                    plan(&h, units::find_start(start))?
-                };
-                let position = if name == TextFunction::Search && excel {
-                    let r = plan(&h, units::wildcard_reservation(hay.len(), text.len()))?;
-                    reserve(&mut h, r)?;
+                let start = poirot_coercionv2::compatibility::coercev2_text_search_start(
+                    f64::from(start),
+                    hay_length,
+                )?;
+                let position = if name == TextFunction::Search {
+                    let reservation = shared::plan(
+                        context.host,
+                        units::wildcard_reservation(hay.len(), text.len()),
+                    )?;
+                    shared::reserve(context.host, reservation)?;
                     units::search(&hay, &text, start, paired)
-                } else if name == TextFunction::Search {
-                    if !full_case && hay.iter().chain(&text).any(|u| *u > 127) {
-                        return Err(h.source_fault(
-                            "non-ASCII SEARCH requires Poi7321209OpenJdk21Unicode15",
-                        ));
-                    }
-                    let r = plan(&h, units::search_reservation(hay.len(), text.len()))?;
-                    reserve(&mut h, r)?;
-                    java_case::search(&hay, &text, start).map_err(|e| unsupported(&h, e))?
                 } else {
-                    let work = hay
-                        .len()
-                        .checked_mul(text.len())
-                        .ok_or_else(|| unsupported(&h, units::PlanFailure::SizeOverflow))?;
-                    h.charge_work(work).map_err(Failure::Operational)?;
+                    context
+                        .host
+                        .charge_work(hay.len().saturating_mul(text.len()) as u64)?;
                     let offset = if paired {
                         units::paired_offset(&hay, start)
                     } else {
@@ -357,68 +144,87 @@ pub(crate) fn execute(
                         }
                     })
                 };
-                Ok(Number(
-                    position.ok_or(Failure::Spreadsheet(VALUE_ERROR))? as f64 + 1.,
-                ))
+                Ok(Number(position.ok_or(VALUE_ERROR)? as f64 + 1.))
             }
             TextFunction::Rept => {
-                // REPT masks only semantic errors in its second argument.
-                let second = h.single(&1).map_err(|e| match e {
-                    Failure::Spreadsheet(_) => Failure::Spreadsheet(VALUE_ERROR),
-                    other => other,
-                })?;
-                if second.missing {
-                    return Err(h.source_fault("REPT numeric MissingArgEval"));
+                let count = arguments.text_integer(context, 1, Some(0))?;
+                let (count, mut reservation) =
+                    shared::plan(context.host, units::rept(text.len(), f64::from(count)))?;
+                if text.is_empty() {
+                    reservation.work = 0;
                 }
-                let count = match &second.value {
-                    Text(t) => h
-                        .host
-                        .get_mut()
-                        .coercev2_number_text(t, NumericPolicy::PinnedPoi)
-                        .map_err(failure),
-                    v => h
-                        .host
-                        .get_mut()
-                        .coercev2_scalar_number(v, NumericPolicy::PinnedPoi)
-                        .map_err(failure),
-                }
-                .map_err(|e| match e {
-                    Failure::Spreadsheet(_) => Failure::Spreadsheet(VALUE_ERROR),
-                    other => other,
-                })?;
-                if excel {
-                    poirot_coercionv2::compatibility::coercev2_text_integer_number(
-                        count,
-                        poirot_coercionv2::compatibility::TextIntegerPolicy::Checked,
-                    )
-                    .map_err(Failure::Spreadsheet)?;
-                }
-                let (count, mut r) = plan(&h, units::rept(text.len(), count))?;
-                if excel && text.is_empty() {
-                    r.work = 0;
-                }
-                reserve(&mut h, r)?;
-                let mut output = Vec::with_capacity(r.elements);
-                // Empty repeats can skip source loop after accounting its work.
+                shared::reserve(context.host, reservation)?;
+                let mut output = Vec::new();
+                output
+                    .try_reserve_exact(reservation.elements)
+                    .map_err(|_| context.host.allocation_failure())?;
                 if !text.is_empty() {
                     for _ in 0..count {
+                        output
+                            .try_reserve(text.len())
+                            .map_err(|_| context.host.allocation_failure())?;
+                        // SAFETY: the complete source slice was reserved immediately above.
                         output.extend_from_slice(&text);
                     }
                 }
-                Ok(value(output))
+                Ok(shared::value(output))
             }
-            _ => Err(Failure::Spreadsheet(VALUE_ERROR)),
+            _ => Err(VALUE_ERROR.into()),
         }
-    })();
-    match result {
-        Ok(v) => Ok(v.into()),
-        Err(Failure::Spreadsheet(e)) => Ok(err(e)),
-        Err(Failure::Operational(e)) => Err(e),
-        Err(other) => Err(h.host.get_mut().capability_failure(
-            CapabilityId::FunctionAdapter,
-            format!("lossless text: {other:?}"),
-        )),
     }
+}
+/// Collection concatenation shares checked traversal and text assembly.
+struct ConcatKernel;
+impl collections::CollectionKernel for ConcatKernel {
+    type Signature = Variadic<WholeCollection>;
+    fn apply(
+        &self,
+        host: &mut CallHost<'_, '_>,
+        arguments: &Self::Signature,
+        _address: CellAddress,
+    ) -> FunctionResult<Value> {
+        let output = collections::fold(
+            host,
+            arguments.iter(),
+            Vec::<u16>::new(),
+            |host, output, operand| {
+                let text = shared::units(host, &operand)?;
+                let size = output
+                    .len()
+                    .checked_add(text.len())
+                    .ok_or_else(|| host.size_overflow())?;
+                let reservation = shared::plan(host, units::Reservation::units(size, text.len()))?;
+                shared::reserve(host, reservation)?;
+                output
+                    .try_reserve(text.len())
+                    .map_err(|_| host.allocation_failure())?;
+                // SAFETY: text.len() additional slots were reserved immediately above.
+                output.extend_from_slice(&text);
+                Ok(())
+            },
+        )?;
+        Ok(shared::value(output).into())
+    }
+}
+/// Execute text operations using typed roles and current Excel UTF-16 semantics.
+pub(crate) fn execute(
+    mut host: CallHost<'_, '_>,
+    name: TextFunction,
+    length: usize,
+) -> EvalResult<Value> {
+    host.selection_builtin_policy();
+    if !FunctionId::Text(name).descriptor().arity.accepts(length) {
+        return Ok(err(VALUE_ERROR));
+    }
+    let address = host.target().address;
+    let result = if name == TextFunction::Concat {
+        collections::execute(&mut host, address, ConcatKernel)
+    } else {
+        let paired =
+            host.text_policy_snapshot().source == TextSourceVersion::ExcelCompatibilityV2Documented;
+        elementwise::execute(&mut host, address, TextKernel { name, paired })
+    };
+    super::finish(result)
 }
 
 #[cfg(test)]

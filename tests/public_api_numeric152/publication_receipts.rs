@@ -62,7 +62,7 @@ fn actual_nonincremental_publication_retains_raw_receipts_and_mutates_only_formu
 #[test]
 fn receipt_allocation_is_admitted_after_computation_and_before_any_write() {
     let mut b = book();
-    set_formula(&mut b, 0, 0, "NORMSINV(1E-300)");
+    set_formula(&mut b, 0, 0, "1+1");
     let before = b.model().clone();
     let cfg = config(M::PinnedPoiCellSetter);
     let work = match eval::run_recalculation_with_configuration(
@@ -93,5 +93,5 @@ fn receipt_allocation_is_admitted_after_computation_and_before_any_write() {
         eval::run_recalculation_with_configuration(b.model_mut(), &cfg, budget),
         EvaluationOutcome::Complete { .. }
     ));
-    assert_eq!(get(&b, 0, 0), CellValue::Error(CellError::Div0));
+    assert_eq!(get(&b, 0, 0), CellValue::Number(2.));
 }

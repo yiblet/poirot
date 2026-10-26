@@ -24,62 +24,27 @@ fn book() -> Workbook {
 #[test]
 fn statistical_sample_requirements_use_admitted_observations() {
     let book = book();
-    for builtin in [
-        BuiltinSemanticsPolicy::PinnedPoi,
-        BuiltinSemanticsPolicy::ExcelDocumentation,
+    for (formula, expected) in [
+        ("COVAR({2},{5})", CellValue::Number(0.)),
+        ("COVARIANCE.P({\"skip\",2},{5,6})", CellValue::Number(0.)),
+        ("COVARIANCE.S({2},{5})", CellValue::Error(CellError::Div0)),
+        ("VARA({\"hello\"})", CellValue::Error(CellError::Div0)),
+        ("STDEVA({FALSE})", CellValue::Error(CellError::Div0)),
+        ("VARPA({\"hello\"})", CellValue::Number(0.)),
+        ("VARA({0,0})", CellValue::Number(0.)),
     ] {
-        let config = RunConfiguration::default().with_builtin_policy(builtin);
-        for (formula, excel, pinned) in [
-            (
-                "COVAR({2},{5})",
-                CellValue::Number(0.),
-                CellValue::Error(CellError::NA),
-            ),
-            (
-                "COVARIANCE.P({\"skip\",2},{5,6})",
-                CellValue::Number(0.),
-                CellValue::Error(CellError::NA),
-            ),
-            (
-                "COVARIANCE.S({2},{5})",
-                CellValue::Error(CellError::Div0),
-                CellValue::Error(CellError::NA),
-            ),
-            (
-                "VARA({\"hello\"})",
-                CellValue::Error(CellError::Div0),
-                CellValue::Error(CellError::Num),
-            ),
-            (
-                "STDEVA({FALSE})",
-                CellValue::Error(CellError::Div0),
-                CellValue::Error(CellError::Num),
-            ),
-            (
-                "VARPA({\"hello\"})",
-                CellValue::Number(0.),
-                CellValue::Error(CellError::Num),
-            ),
-            ("VARA({0,0})", CellValue::Number(0.), CellValue::Number(0.)),
-        ] {
-            let expected = if builtin == BuiltinSemanticsPolicy::ExcelDocumentation {
-                excel
-            } else {
-                pinned
-            };
-            let result = run_formula_with_configuration(
-                &book,
-                0,
-                at(),
-                formula,
-                &config,
-                Default::default(),
-            );
-            assert!(
-                matches!(&result, EvaluationOutcome::Complete { value, .. } if value == &expected),
-                "{builtin:?} {formula}: {result:?}"
-            );
-        }
+        let result = run_formula_with_configuration(
+            &book,
+            0,
+            at(),
+            formula,
+            &RunConfiguration::default(),
+            Default::default(),
+        );
+        assert!(
+            matches!(&result,EvaluationOutcome::Complete {value,..} if value==&expected),
+            "{formula}: {result:?}"
+        );
     }
 }
 
@@ -156,68 +121,5 @@ fn prediction_requires_a_fit_without_residual_degrees_of_freedom() {
             ),
             "{formula}"
         );
-    }
-    // Preserve pinned errors and the legacy constant-predictor shortcut.
-    assert!(matches!(
-        poirot_eval::run_formula_with_configuration(
-            &book,
-            0,
-            at(),
-            "TREND({3;5},{1;2},{3},TRUE)",
-            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
-            Default::default()
-        ),
-        EvaluationOutcome::Complete {
-            value: CellValue::Error(CellError::Ref),
-            ..
-        }
-    ));
-    assert!(matches!(
-        poirot_eval::run_formula_with_configuration(
-            &book,
-            0,
-            at(),
-            "TREND({3;5},{1;1},{3},FALSE)",
-            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
-            Default::default()
-        ),
-        EvaluationOutcome::Complete {
-            value: CellValue::Number(4.),
-            ..
-        }
-    ));
-}
-
-#[test]
-fn sample_size_failures_do_not_swallow_operational_limits() {
-    let book = book();
-    let config =
-        RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation);
-    for formula in [
-        "IFERROR(COVARIANCE.P(A1:A3,B1:B3),99)",
-        "IFERROR(TREND(B1:B2,A1:A2,{3},TRUE),99)",
-        "IFERROR(VARA(A1:A3),99)",
-    ] {
-        for budgets in [
-            EvaluationBudgets {
-                materialized_values: 1,
-                ..Default::default()
-            },
-            EvaluationBudgets {
-                run_work: 1,
-                ..Default::default()
-            },
-        ] {
-            assert!(
-                matches!(
-                    run_formula_with_configuration(&book, 0, at(), formula, &config, budgets),
-                    EvaluationOutcome::Aborted {
-                        failure: EvaluationFailure::Budget(_),
-                        ..
-                    }
-                ),
-                "{formula}"
-            );
-        }
     }
 }

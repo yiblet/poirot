@@ -246,77 +246,99 @@ fn operational_limits_and_laziness_preserve_the_error_boundary() {
     assert_eq!(call(&b, "IF(FALSE,BESSELI(1,100001),7)"), 7.0.into());
 }
 #[test]
-fn pinned_besselj_execution_and_new_function_availability_are_preserved() {
-    let b = book();
-    let configuration =
-        RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
-    for f in ["BESSELI(1,1)", "ERF(1)", "ERFC.PRECISE(1)", "GESTEP(1)"] {
-        assert_eq!(
-            value(run_formula_with_configuration(
-                &b,
-                0,
-                at("Z100").address,
-                f,
-                &configuration,
-                Default::default()
-            )),
-            CellValue::Error(CellError::Name)
-        );
+fn typed_engineering_kernels_broadcast_former_scalar_helpers() {
+    // Excel's documented coefficient extraction and radix decoding apply to each
+    // array member. DELTA compares numbers and BESSELJ(0,0) = 1 by its series.
+    let mut workbook = book();
+    for (address, formula) in [
+        ("A1", "BIN2DEC({10;11})"),
+        ("D1", "IMREAL({\"2+3i\";\"4+5j\"})"),
+        ("G1", "COMPLEX({1;2},-1)"),
+        ("J1", "DELTA({1;2},1)"),
+        ("M1", "BESSELJ({0;0},{0,1})"),
+    ] {
+        workbook
+            .sheet_mut(0)
+            .unwrap()
+            .set_formula(at(address).address, formula)
+            .unwrap();
     }
-    for f in ["BESSELJ(-1,1)", "BESSELJ(10001,0)"] {
-        assert_eq!(
-            value(run_formula_with_configuration(
-                &b,
-                0,
-                at("Z100").address,
-                f,
-                &configuration,
-                Default::default()
-            )),
-            CellValue::Error(CellError::Num)
-        );
+    let mut evaluation = Evaluation::with_workbook(&workbook)
+        .build(EvaluationContext::default())
+        .unwrap();
+    for (address, expected) in [
+        ("A1", CellValue::Number(2.0)),
+        ("A2", CellValue::Number(3.0)),
+        ("D1", CellValue::Number(2.0)),
+        ("D2", CellValue::Number(4.0)),
+        ("G1", CellValue::Text("1-i".into())),
+        ("G2", CellValue::Text("2-i".into())),
+        ("J1", CellValue::Number(1.0)),
+        ("J2", CellValue::Number(0.0)),
+        ("M2", CellValue::Number(1.0)),
+        ("N2", CellValue::Number(0.0)),
+    ] {
+        assert_eq!(evaluation.cell(at(address)).unwrap(), expected, "{address}");
     }
-    near(
-        value(run_formula_with_configuration(
-            &b,
-            0,
-            at("Z100").address,
-            "BESSELJ(1.9,2)",
-            &configuration,
-            Default::default(),
-        )),
-        0.3299257276923872,
+}
+
+#[test]
+fn modern_negative_radix_values_validate_supplied_places() {
+    // Microsoft documents nonnumeric places as VALUE even though negative
+    // numbers ignore a successfully coerced numeric width.
+    // https://support.microsoft.com/en-us/excel/functions/bin2hex-function
+    // https://support.microsoft.com/en-au/excel/functions/dec2bin-function
+    let workbook = book();
+    for formula in ["DEC2BIN(-1,\"bad\")", "BIN2HEX(\"1111111111\",\"bad\")"] {
+        assert_eq!(call(&workbook, formula), CellValue::Error(CellError::Value));
+    }
+    assert_eq!(
+        call(&workbook, "DEC2BIN(-1,1)"),
+        CellValue::Text("1111111111".into())
+    );
+    assert_eq!(
+        call(&workbook, "BIN2HEX(\"1111111111\",1)"),
+        CellValue::Text("FFFFFFFFFF".into())
     );
 }
+
 #[test]
-fn pinned_scalar_besselj_discovery_is_explicit_under_dynamic_publication() {
-    let mut b = book();
-    b.sheet_mut(0)
-        .unwrap()
-        .set_formula(at("D1").address, "BESSELJ({1;2},RAND())")
-        .unwrap();
-    let policy = EvaluationPolicy::default();
-    let mut compiler = FormulaCompiler::new();
-    let plan = compiler.compile_workbook(&b, &policy);
-    for arrays in [
-        ArrayResultPolicy::ScalarIntersection,
-        ArrayResultPolicy::DynamicSpill,
+fn lifted_engineering_helpers_publish_child_first_spills_in_both_evaluators() {
+    let mut workbook = book();
+    for (address, formula) in [
+        ("A1", "BIN2DEC({10;11})"),
+        ("D1", "COMPLEX({1;2},-1)"),
+        ("G1", "DEC2HEX({15;16})"),
+        ("J1", "DELTA({0;1})"),
     ] {
-        let configuration = RunConfiguration::default()
-            .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
-            .with_array_result_policy(arrays);
-        let mut run = EvaluationRun::new_with_configuration(
-            WorkbookView::new(&b, &plan, &policy).unwrap(),
-            &configuration,
-            Default::default(),
-        )
+        workbook
+            .sheet_mut(0)
+            .unwrap()
+            .set_formula(at(address).address, formula)
+            .unwrap();
+    }
+    let mut direct = Evaluation::with_workbook(&workbook)
+        .build(Default::default())
         .unwrap();
-        assert_eq!(run.evaluate_cell(at("D2")).unwrap(), CellValue::Blank);
-        let finished = run.finish_retaining_cells(Ok(()));
-        assert_eq!(finished.report.execution.formula_executions, 0);
-        let EvaluationOutcome::Complete { usage, .. } = finished.report.outcome else {
-            panic!()
-        };
-        assert!(usage.random_accesses.is_empty());
+    let mut overlay = Overlay::with_workbook(&workbook).build().unwrap();
+    let context = EvaluationContext::default();
+    // Read spill children before their anchors, including both number and text.
+    // DELTA defaults its omitted second number to zero:
+    // https://support.microsoft.com/en-us/excel/functions/delta-function
+    for (address, expected) in [
+        ("A2", CellValue::Number(3.0)),
+        ("D2", CellValue::Text("2-i".into())),
+        ("G2", CellValue::Text("10".into())),
+        ("J2", CellValue::Number(0.0)),
+    ] {
+        assert_eq!(direct.cell(at(address)).unwrap(), expected);
+        assert_eq!(
+            overlay
+                .evaluation(&context)
+                .unwrap()
+                .cell(at(address))
+                .unwrap(),
+            expected
+        );
     }
 }

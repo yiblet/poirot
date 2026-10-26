@@ -66,20 +66,6 @@ fn visibility_flags_are_independent_and_filtered_errors_never_evaluate() {
         value(&w, "SUBTOTAL(109,A1:A3)"),
         CellValue::Error(poirot_model::CellError::Div0)
     );
-    assert!(matches!(
-        run_formula_with_configuration(
-            &w,
-            0,
-            target("Z1").address,
-            "SUBTOTAL(9,A1:A3)",
-            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
-            Default::default()
-        ),
-        EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::UnsupportedCapability { .. },
-            ..
-        }
-    ));
 }
 #[derive(Default)]
 /// Records subtotal metadata reads separately from evaluated cell values.

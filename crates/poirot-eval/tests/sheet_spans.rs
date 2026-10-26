@@ -144,22 +144,11 @@ fn referenced_coercion_and_error_precedence_remain_sheet_then_row_then_column() 
     );
 }
 #[test]
-fn scalar_ref_span_selects_first_sheet_and_native_endpoint_failures_stay_operational() {
+fn native_endpoint_failures_stay_operational() {
     let book = book(&["Sheet1", "Sheet2", "Sheet3"]);
-    assert_eq!(
-        match poirot_eval::run_formula(
-            &book,
-            0,
-            AT,
-            "FACT(Sheet1:Sheet3!A1)",
-            Default::default(),
-            Default::default()
-        ) {
-            poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
-            outcome => panic!("evaluation aborted: {outcome:?}"),
-        },
-        CellValue::Number(1.)
-    );
+    // Microsoft limits 3-D references to supported collection consumers;
+    // scalar FACT's former first-sheet selection is no longer a contract.
+    // https://support.microsoft.com/en-us/excel/overview-of-formulas-in-excel-for-the-web
     for formula in [
         "SUM(Sheet1:Missing!A1)",
         "IFERROR(SUM(Sheet1:Missing!A1),99)",

@@ -81,3 +81,45 @@ fn signed_source_geometry_remains_independent_of_ordinary_validation() {
     );
     assert_eq!((reference.height(), reference.width()), (4, 0));
 }
+
+#[test]
+fn offset_axes_follow_documented_modern_grid_without_short_narrowing() {
+    use poirot_functions_lookup::offset_extent;
+    // Microsoft OFFSET: D3 displaced three rows and minus two columns is B6.
+    // https://support.microsoft.com/en-us/excel/functions/offset-function
+    assert_eq!(offset_extent(2, 3, 1, 1_048_576), Ok((5, 5)));
+    assert_eq!(offset_extent(3, -2, 1, 16_384), Ok((1, 1)));
+    for displacement in [32_767, 32_768, 65_535, 65_536, 1_048_575] {
+        assert_eq!(
+            offset_extent(0, displacement, 1, 1_048_576),
+            Ok((displacement as u32, displacement as u32))
+        );
+    }
+    assert_eq!(
+        offset_extent(0, 0, 1_048_576, 1_048_576),
+        Ok((0, 1_048_575))
+    );
+    assert_eq!(offset_extent(0, 16_383, 1, 16_384), Ok((16_383, 16_383)));
+    for (start, delta, length, limit) in [
+        (0, -1, 1, 1_048_576),
+        (0, 1_048_576, 1, 1_048_576),
+        (1_048_575, 0, 2, 1_048_576),
+        (0, 16_384, 1, 16_384),
+        (0, 0, 0, 1_048_576),
+        (0, i64::MAX, 2, 1_048_576),
+        (1, i64::MAX, 1, 1_048_576),
+        (0, i64::MIN, -2, 1_048_576),
+    ] {
+        assert_eq!(offset_extent(start, delta, length, limit), Err(Error::Ref));
+    }
+}
+
+#[test]
+fn negative_offset_extents_normalize_without_original_endpoint_quirks() {
+    // Retained compatibility policy: native Excel's negative-size behavior is unverified.
+    use poirot_functions_lookup::offset_extent;
+    assert_eq!(offset_extent(4, 0, -2, 1_048_576), Ok((3, 4)));
+    assert_eq!(offset_extent(3, 0, -2, 16_384), Ok((2, 3)));
+    assert_eq!(offset_extent(0, 0, -2, 1_048_576), Err(Error::Ref));
+    assert_eq!(offset_extent(4, 0, i64::MIN, 1_048_576), Err(Error::Ref));
+}

@@ -1,5 +1,12 @@
 //! Modern scalar finance lifting with explicitly consumed schedule/date collections.
-use crate::adapters::{elementwise::Lift, failure::operational_only};
+use crate::adapters::{
+    elementwise::{
+        self, Broadcast, Kernel, MemberContext, NumericParameter as P, NumericSignature, Optional,
+        Variadic, WholeCollection,
+        collections::{self, Admission},
+    },
+    failure::operational_only,
+};
 use crate::host::CallHost;
 use crate::*;
 use poirot_functions_financial::{
@@ -7,7 +14,7 @@ use poirot_functions_financial::{
     modern::{self as kernel, DatedFlow, LoanComponent},
 };
 
-fn spreadsheet(error: FinancialError) -> FunctionFailure {
+pub(super) fn spreadsheet(error: FinancialError) -> FunctionFailure {
     match error {
         FinancialError::Num => Num,
         FinancialError::DivZero => Div0,
@@ -28,81 +35,253 @@ fn numerical<E: Into<FunctionFailure>>(
         ),
     }
 }
-fn schedule(host: &mut CallHost<'_, '_>) -> FunctionResult<Vec<f64>> {
-    let count = host.collection_len(1)?;
-    host.check_values(count)?;
-    let mut values = Vec::new();
-    values
-        .try_reserve_exact(count)
-        .map_err(|_| host.allocation_failure())?;
-    for offset in 0..count {
-        host.charge_work(1)?;
-        let operand = host.collection_cell(1, offset)?;
-        if operand.missing {
-            return Err(VALUE_ERROR.into());
-        }
-        let value = match operand.value {
-            Number(n) => n,
-            Blank => 0.0,
-            Error(e) => return Err(e.into()),
-            _ => return Err(VALUE_ERROR.into()),
-        };
-        // SAFETY: count members were reserved locally; the loop pushes exactly count.
-        values.push(value);
-    }
-    Ok(values)
-}
-fn dated_flows(host: &mut CallHost<'_, '_>, first: usize) -> FunctionResult<Vec<DatedFlow>> {
-    let count = host.collection_len(first)?;
-    let date_index = first.checked_add(1).ok_or(VALUE_ERROR)?;
-    if count == 0 || host.collection_len(date_index)? != count {
+/// Prepare paired dated flows with checked shared traversal and calendar services.
+fn dated_flows(
+    host: &mut CallHost<'_, '_>,
+    values: &WholeCollection,
+    dates: &WholeCollection,
+) -> FunctionResult<Vec<DatedFlow>> {
+    if values.len(host)? == 0 {
         return Err(Num.into());
     }
-    host.check_values(count)?;
-    let mut values = Vec::new();
-    values
-        .try_reserve_exact(count)
-        .map_err(|_| host.allocation_failure())?;
-    let mut anchor = None;
-    for offset in 0..count {
-        host.charge_work(1)?;
-        let operand = host.collection_cell(first, offset)?;
-        if operand.missing {
-            return Err(VALUE_ERROR.into());
-        }
-        let value = match operand.value {
-            Number(n) => n,
-            Blank => 0.0,
-            Error(e) => return Err(e.into()),
-            _ => return Err(VALUE_ERROR.into()),
-        };
-        let operand = host.collection_cell(date_index, offset)?;
-        if operand.missing {
-            return Err(VALUE_ERROR.into());
-        }
-        let date = match operand.value {
-            Number(n) if n.is_finite() && n >= 0.0 => host
-                .coercev2_calendar_date(&Number(n.trunc()))
-                .map_err(|e| match e {
-                    FunctionFailure::Spreadsheet(_) => FunctionFailure::Spreadsheet(VALUE_ERROR),
-                    e => e,
-                })?
-                .trunc(),
-            Error(e) => return Err(e.into()),
-            _ => return Err(VALUE_ERROR.into()),
-        };
-        let first_date = *anchor.get_or_insert(date);
-        if date < first_date {
-            return Err(Num.into());
-        }
-        // SAFETY: count members were reserved locally; this loop pushes count.
-        values.push(DatedFlow {
-            value,
-            days: date - first_date,
-        });
-    }
-    Ok(values)
+    collections::zip_fold(
+        host,
+        values,
+        dates,
+        Num,
+        (Vec::new(), None),
+        |_host, _state, operand| {
+            if operand.missing {
+                return Err(VALUE_ERROR.into());
+            }
+            match operand.value {
+                Number(value) => Ok(value),
+                Blank => Ok(0.0),
+                Error(error) => Err(error.into()),
+                _ => Err(VALUE_ERROR.into()),
+            }
+        },
+        |host, state, value, operand| {
+            if operand.missing {
+                return Err(VALUE_ERROR.into());
+            }
+            let date = match operand.value {
+                Number(number) if number.is_finite() && number >= 0.0 => host
+                    .coercev2_calendar_date(&Number(number.trunc()))
+                    .map_err(|error| match error {
+                        FunctionFailure::Spreadsheet(_) => {
+                            FunctionFailure::Spreadsheet(VALUE_ERROR)
+                        }
+                        other => other,
+                    })?
+                    .trunc(),
+                Error(error) => return Err(error.into()),
+                _ => return Err(VALUE_ERROR.into()),
+            };
+            let first = *state.1.get_or_insert(date);
+            if date < first {
+                return Err(Num.into());
+            }
+            let len = state
+                .0
+                .len()
+                .checked_add(1)
+                .ok_or_else(|| host.size_overflow())?;
+            host.check_values(len)?;
+            state
+                .0
+                .try_reserve(1)
+                .map_err(|_| host.allocation_failure())?;
+            // SAFETY: one additional slot was reserved immediately above.
+            state.0.push(DatedFlow {
+                value,
+                days: date - first,
+            });
+            Ok(())
+        },
+    )
+    .map(|state| state.0)
 }
+
+/// A principal broadcast over a whole interest-rate schedule.
+struct ScheduleFinance {
+    values: Vec<f64>,
+}
+impl Kernel for ScheduleFinance {
+    type Signature = (Broadcast, WholeCollection);
+    fn prepare(
+        &mut self,
+        host: &mut CallHost<'_, '_>,
+        arguments: &Self::Signature,
+    ) -> FunctionResult<()> {
+        self.values = collections::collect(host, [arguments.1], Admission::BlankZero)?;
+        Ok(())
+    }
+    fn apply(
+        &self,
+        context: &mut MemberContext<'_, '_, '_>,
+        arguments: &Self::Signature,
+    ) -> FunctionResult<CellValue> {
+        let values =
+            NumericSignature::new(&[P::required()]).numbers_roles(context, [Some(arguments.0)])?;
+        context
+            .host
+            .charge_work((self.values.len() as u64).saturating_mul(2))?;
+        kernel::fvschedule(values.get(0)?, &self.values)
+            .map(Number)
+            .map_err(spreadsheet)
+    }
+}
+/// Discount-rate members paired with a fixed dated-flow sample.
+struct PresentFinance {
+    flows: Vec<DatedFlow>,
+}
+impl Kernel for PresentFinance {
+    type Signature = (Broadcast, WholeCollection, WholeCollection);
+    fn prepare(
+        &mut self,
+        host: &mut CallHost<'_, '_>,
+        arguments: &Self::Signature,
+    ) -> FunctionResult<()> {
+        self.flows = dated_flows(host, &arguments.1, &arguments.2)?;
+        Ok(())
+    }
+    fn apply(
+        &self,
+        context: &mut MemberContext<'_, '_, '_>,
+        arguments: &Self::Signature,
+    ) -> FunctionResult<CellValue> {
+        let values =
+            NumericSignature::new(&[P::required()]).numbers_roles(context, [Some(arguments.0)])?;
+        context
+            .host
+            .charge_work((self.flows.len() as u64).saturating_mul(3))?;
+        kernel::xnpv(values.get(0)?, &self.flows)
+            .map(Number)
+            .map_err(spreadsheet)
+    }
+}
+/// Guess members paired with a fixed dated-flow sample.
+struct ReturnFinance {
+    flows: Vec<DatedFlow>,
+}
+impl Kernel for ReturnFinance {
+    type Signature = (WholeCollection, WholeCollection, Optional<Broadcast>);
+    fn prepare(
+        &mut self,
+        host: &mut CallHost<'_, '_>,
+        arguments: &Self::Signature,
+    ) -> FunctionResult<()> {
+        self.flows = dated_flows(host, &arguments.0, &arguments.1)?;
+        Ok(())
+    }
+    fn apply(
+        &self,
+        context: &mut MemberContext<'_, '_, '_>,
+        arguments: &Self::Signature,
+    ) -> FunctionResult<CellValue> {
+        let values =
+            NumericSignature::new(&[P::constant(0.1)]).numbers_roles(context, [arguments.2.0])?;
+        kernel::xirr(&self.flows, values.get(0)?, |work| {
+            context.host.charge_work(work)
+        })
+        .map(Number)
+        .map_err(|error| numerical(context.host, error))
+    }
+}
+
+/// Scalar financial arithmetic with a declarative numeric admission table.
+struct NumericFinance(FinancialFunction);
+impl Kernel for NumericFinance {
+    type Signature = Variadic<Broadcast>;
+    fn apply(
+        &self,
+        context: &mut MemberContext<'_, '_, '_>,
+        arguments: &Self::Signature,
+    ) -> FunctionResult<CellValue> {
+        use FinancialFunction::*;
+        let function = self.0;
+        let parameters: &[P] = match function {
+            Effect | Nominal => &[P::required(); 2],
+            Pduration | Rri | Sln => &[P::required(); 3],
+            Syd | Ispmt => &[P::required(); 4],
+            Db => &[
+                P::required(),
+                P::required(),
+                P::required(),
+                P::required(),
+                P::constant(12.0),
+            ],
+            Ddb => &[
+                P::required(),
+                P::required(),
+                P::required(),
+                P::required(),
+                P::constant(2.0),
+            ],
+            Cumipmt | Cumprinc => &[P::required(); 6],
+            Vdb => &[
+                P::required(),
+                P::required(),
+                P::required(),
+                P::required(),
+                P::required(),
+                P::constant(2.0),
+                P::boolean_default(false),
+            ],
+            _ => return Err(VALUE_ERROR.into()),
+        };
+        let values = arguments.numbers(context, parameters)?;
+        let host = &mut *context.host;
+        let n = |index| values.get(index);
+        let value = match function {
+            Effect => kernel::effect(n(0)?, n(1)?).map_err(spreadsheet)?,
+            Nominal => kernel::nominal(n(0)?, n(1)?).map_err(spreadsheet)?,
+            Pduration => kernel::pduration(n(0)?, n(1)?, n(2)?).map_err(spreadsheet)?,
+            Rri => kernel::rri(n(0)?, n(1)?, n(2)?).map_err(spreadsheet)?,
+            Sln => kernel::sln(n(0)?, n(1)?, n(2)?).map_err(spreadsheet)?,
+            Syd => kernel::syd(n(0)?, n(1)?, n(2)?, n(3)?).map_err(spreadsheet)?,
+            Ispmt => kernel::ispmt(n(0)?, n(1)?, n(2)?, n(3)?).map_err(spreadsheet)?,
+            Db => kernel::db(n(0)?, n(1)?, n(2)?, n(3)?, n(4)?).map_err(spreadsheet)?,
+            Ddb => kernel::ddb(n(0)?, n(1)?, n(2)?, n(3)?, n(4)?).map_err(spreadsheet)?,
+            Cumipmt | Cumprinc => kernel::cumulative(
+                if function == Cumipmt {
+                    LoanComponent::Interest
+                } else {
+                    LoanComponent::Principal
+                },
+                n(0)?,
+                n(1)?,
+                n(2)?,
+                n(3)?,
+                n(4)?,
+                n(5)?,
+            )
+            .map_err(spreadsheet)?,
+            Vdb => {
+                let (cost, salvage, life, start, end, factor) =
+                    (n(0)?, n(1)?, n(2)?, n(3)?, n(4)?, n(5)?);
+                let no_switch = n(6)? != 0.0;
+                kernel::vdb(
+                    kernel::Asset {
+                        cost,
+                        salvage,
+                        life,
+                    },
+                    start,
+                    end,
+                    factor,
+                    no_switch,
+                    |work| host.charge_work(work),
+                )
+                .map_err(|error| numerical(host, error))?
+            }
+            _ => return Err(VALUE_ERROR.into()),
+        };
+        Ok(Number(value))
+    }
+}
+
 /// Evaluate documented financial functions without changing pinned helper behavior.
 pub(super) fn execute(
     session: &mut Session<'_>,
@@ -119,130 +298,18 @@ pub(super) fn execute(
         return Ok(err(VALUE_ERROR));
     }
     let mut host = CallHost::new_array(session, sheet, address, args, args.len());
-    let result = (|| {
-        use FinancialFunction::*;
-        let lift = match function {
-            Fvschedule | Xnpv => Lift::new(&mut host, 1)?,
-            Xirr => Lift::new_at(&mut host, 2, usize::from(args.len() == 3))?,
-            _ => Lift::new(&mut host, args.len())?,
-        };
-        let schedule = if function == Fvschedule {
-            Some(schedule(&mut host)?)
-        } else {
-            None
-        };
-        let flows = if matches!(function, Xirr | Xnpv) {
-            Some(dated_flows(&mut host, usize::from(function == Xnpv))?)
-        } else {
-            None
-        };
-        lift.evaluate(&mut host, address, |host, row, column| {
-            let mut n = |index, default| lift.number(host, index, row, column, default);
-            let value = match function {
-                Effect => kernel::effect(n(0, None)?, n(1, None)?).map_err(spreadsheet)?,
-                Nominal => kernel::nominal(n(0, None)?, n(1, None)?).map_err(spreadsheet)?,
-                Pduration => {
-                    kernel::pduration(n(0, None)?, n(1, None)?, n(2, None)?).map_err(spreadsheet)?
-                }
-                Rri => kernel::rri(n(0, None)?, n(1, None)?, n(2, None)?).map_err(spreadsheet)?,
-                Sln => kernel::sln(n(0, None)?, n(1, None)?, n(2, None)?).map_err(spreadsheet)?,
-                Syd => kernel::syd(n(0, None)?, n(1, None)?, n(2, None)?, n(3, None)?)
-                    .map_err(spreadsheet)?,
-                Ispmt => kernel::ispmt(n(0, None)?, n(1, None)?, n(2, None)?, n(3, None)?)
-                    .map_err(spreadsheet)?,
-                Db => kernel::db(
-                    n(0, None)?,
-                    n(1, None)?,
-                    n(2, None)?,
-                    n(3, None)?,
-                    n(4, Some(12.0))?,
-                )
-                .map_err(spreadsheet)?,
-                Ddb => kernel::ddb(
-                    n(0, None)?,
-                    n(1, None)?,
-                    n(2, None)?,
-                    n(3, None)?,
-                    n(4, Some(2.0))?,
-                )
-                .map_err(spreadsheet)?,
-                Cumipmt | Cumprinc => kernel::cumulative(
-                    if function == Cumipmt {
-                        LoanComponent::Interest
-                    } else {
-                        LoanComponent::Principal
-                    },
-                    n(0, None)?,
-                    n(1, None)?,
-                    n(2, None)?,
-                    n(3, None)?,
-                    n(4, None)?,
-                    n(5, None)?,
-                )
-                .map_err(spreadsheet)?,
-                Vdb => {
-                    let (cost, salvage, life, start, end, factor) = (
-                        n(0, None)?,
-                        n(1, None)?,
-                        n(2, None)?,
-                        n(3, None)?,
-                        n(4, None)?,
-                        n(5, Some(2.0))?,
-                    );
-                    let no_switch = if args.len() < 7 {
-                        false
-                    } else {
-                        let operand = lift.member(host, 6, row, column)?;
-                        !operand.missing
-                            && core_projection::coercev2_operand_boolean(&operand.value)?
-                    };
-                    kernel::vdb(
-                        kernel::Asset {
-                            cost,
-                            salvage,
-                            life,
-                        },
-                        start,
-                        end,
-                        factor,
-                        no_switch,
-                        |work| host.charge_work(work),
-                    )
-                    .map_err(|error| numerical(host, error))?
-                }
-                Fvschedule => {
-                    let principal = n(0, None)?;
-                    let schedule = schedule.as_ref().ok_or(VALUE_ERROR)?;
-                    host.charge_work(
-                        (schedule.len() as u64)
-                            .checked_mul(2)
-                            .ok_or_else(|| host.size_overflow())?,
-                    )?;
-                    kernel::fvschedule(principal, schedule).map_err(spreadsheet)?
-                }
-                Xnpv => {
-                    let rate = n(0, None)?;
-                    let flows = flows.as_ref().ok_or(VALUE_ERROR)?;
-                    host.charge_work(
-                        (flows.len() as u64)
-                            .checked_mul(3)
-                            .ok_or_else(|| host.size_overflow())?,
-                    )?;
-                    kernel::xnpv(rate, flows).map_err(spreadsheet)?
-                }
-                Xirr => {
-                    let guess = n(0, Some(0.1))?;
-                    kernel::xirr(flows.as_ref().ok_or(VALUE_ERROR)?, guess, |work| {
-                        host.charge_work(work)
-                    })
-                    .map_err(|error| numerical(host, error))?
-                }
-                _ => return Err(VALUE_ERROR.into()),
-            };
-            // All numerical kernels reject nonfinite results before publication.
-            Ok(Number(value))
-        })
-    })();
+    let result = match function {
+        FinancialFunction::Fvschedule => {
+            elementwise::execute(&mut host, address, ScheduleFinance { values: Vec::new() })
+        }
+        FinancialFunction::Xnpv => {
+            elementwise::execute(&mut host, address, PresentFinance { flows: Vec::new() })
+        }
+        FinancialFunction::Xirr => {
+            elementwise::execute(&mut host, address, ReturnFinance { flows: Vec::new() })
+        }
+        _ => elementwise::execute(&mut host, address, NumericFinance(function)),
+    };
     match result {
         Ok(value) => Ok(value),
         Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),

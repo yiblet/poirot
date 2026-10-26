@@ -117,7 +117,7 @@ pub fn normal_inverse(probability: f64, mean: f64, stdev: f64) -> Result {
     )
 }
 
-/// Compute Poisson mass or cumulative probability.
+/// Compute Poisson mass or cumulative probability, including a zero-mean distribution.
 pub fn poisson(number: f64, mean: f64, cumulative: bool) -> Result {
     unmetered(poisson_metered(number, mean, cumulative, &mut |_| Ok(())))
 }
@@ -130,14 +130,14 @@ pub fn poisson_metered<O, M: FnMut(u64) -> std::result::Result<(), O>>(
     meter: &mut M,
 ) -> KernelResult<O> {
     finite(&[number, mean]).map_err(KernelFailure::Spreadsheet)?;
-    if number == 0.0 && mean == 0.0 {
-        return Ok(1.0);
-    }
-    if number < 0.0 || mean <= 0.0 {
+    if number < 0.0 || mean < 0.0 {
         return Err(KernelFailure::Spreadsheet(CellError::Num));
     }
     // POI coerceDoubleToInt clamps to Java's signed integer range.
     let count = number.trunc().min(i32::MAX as f64) as u64;
+    if mean == 0.0 {
+        return Ok(if cumulative || count == 0 { 1.0 } else { 0.0 });
+    }
     checked(if cumulative {
         if count == i32::MAX as u64 {
             1.0

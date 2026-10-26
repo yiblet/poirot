@@ -1,4 +1,4 @@
-//! Classic lookup host adapter: admission, bounded reads and result projection.
+//! Evaluator-owned classic lookup reader, sparse traversal, and prefix reuse.
 use crate::*;
 use std::cmp::Ordering;
 #[path = "execution/classic_lookup_compare.rs"]
@@ -12,7 +12,8 @@ mod selection;
 #[path = "execution/classic_lookup_sparse.rs"]
 mod sparse;
 use comparison::lookup_compare;
-use plan::{LookupTable, LookupVector};
+pub(crate) use plan::LookupTable;
+use plan::LookupVector;
 /// Bounded exact-lookup prefixes, retained across successful overlay evaluations.
 pub(crate) use prefix::Prefixes as LookupPrefixes;
 #[cfg(test)]
@@ -20,7 +21,8 @@ use selection::select_index;
 use selection::select_with_reader;
 
 impl Session<'_> {
-    fn lookup_read(
+    /// Read one checked lookup-vector member through evaluator-owned storage.
+    pub(crate) fn lookup_read(
         &mut self,
         table: &LookupTable,
         vector: LookupVector,
@@ -64,87 +66,17 @@ impl Session<'_> {
             }
         }
     }
-    /// Execute a lookup handler while preserving source operand and candidate read order.
-    pub(crate) fn search_function(
+    /// Select a classic lookup position using the existing cache or checked reader.
+    pub(crate) fn classic_lookup_index(
         &mut self,
-        s: usize,
-        at: CellAddress,
-        name: SearchFunction,
-        args: ArgumentsRef<'_>,
-    ) -> EvalResult<Value> {
-        if let Some(function) = name.helper() {
-            return adapters::lookup::execute(self, s, at, function, args);
-        }
-        let is_match = name == SearchFunction::Match;
-        if !FunctionId::Search(name)
-            .descriptor()
-            .arity
-            .accepts(args.len())
-        {
-            return Ok(err(VALUE_ERROR));
-        }
-        // Match.java resolves match_type before resolving the key/range.
-        let match_mode = if is_match && args.len() == 3 {
-            let value = self.argument(s, at, args, 2)?;
-            if value == Blank {
-                SearchMode::Ascending
-            } else {
-                match semantic(self.coercev2_scalar_number(&value))? {
-                    Ok(n) => SearchMode::from_number(n),
-                    Err(_) => return Ok(err(Ref)),
-                }
-            }
-        } else {
-            SearchMode::Ascending
-        };
-        let key = self.argument(s, at, args, 0)?;
-        if let Error(e) = key {
-            return Ok(err(e));
-        }
-        let table_value = self.expr(s, at, args.get(1).ok_or(EvaluationFailure::StalePlan)?)?;
-        if is_match
-            && let Value::Scalar(value) | Value::SelectedScalar(value, _) = &table_value
-            && value.text_ref().is_some()
-        {
-            let parsed = semantic(self.coercev2_scalar_number(value))?;
-            return Ok(err(if parsed.is_ok() { NA } else { VALUE_ERROR }));
-        }
-        let table = match LookupTable::admit(table_value, is_match) {
-            Ok(t) => t,
-            Err(e) => return Ok(err(e)),
-        };
-        let (height, width) = table.shape();
-        if height == 0 || width == 0 {
-            return Ok(err(NA));
-        }
-        let axis = if is_match {
-            if height != 1 && width != 1 {
-                return Ok(err(NA));
-            }
-            if width == 1 {
-                SearchAxis::Vertical
-            } else {
-                SearchAxis::Horizontal
-            }
-        } else if name == SearchFunction::VLookup {
-            SearchAxis::Vertical
-        } else {
-            SearchAxis::Horizontal
-        };
-        let mode = if is_match {
-            match_mode
-        } else if args.len() == 4 {
-            match coercev2_logical_boolean(&self.argument(s, at, args, 3)?) {
-                Ok(true) => SearchMode::Ascending,
-                Ok(false) => SearchMode::Exact,
-                Err(e) => return Ok(err(e)),
-            }
-        } else {
-            SearchMode::Ascending
-        };
-        let vector = table
-            .vector(axis, 0)
-            .map_err(|_| EvaluationFailure::StalePlan)?;
+        table: &LookupTable,
+        axis: SearchAxis,
+        key: &CellValue,
+        mode: SearchMode,
+        kind: host::ClassicLookupKind,
+    ) -> FunctionResult<Option<usize>> {
+        let vector = table.vector(axis, 0)?;
+        let is_match = kind == host::ClassicLookupKind::Match;
         // Wildcard comparison is a predicate, not a total order suitable for bisection.
         let pattern_match = is_match
             && key
@@ -157,7 +89,7 @@ impl Session<'_> {
         if is_match && mode != SearchMode::Exact {
             self.read(DependencyRead::BuiltinPolicy);
         }
-        let found = if excel_match {
+        if excel_match {
             poirot_functions_lookup::classic_match_index(
                 vector.len,
                 if mode == SearchMode::Ascending {
@@ -167,9 +99,9 @@ impl Session<'_> {
                 },
                 &mut sparse::LookupReader {
                     session: self,
-                    table: &table,
+                    table,
                     vector,
-                    key: &key,
+                    key,
                     mode,
                     is_match,
                     forward: None,
@@ -182,51 +114,23 @@ impl Session<'_> {
                 }
             })
         } else {
-            prefix::select(self, &table, vector, &key, mode, is_match).unwrap_or_else(|| {
+            prefix::select(self, table, vector, key, mode, is_match).unwrap_or_else(|| {
                 select_with_reader(
                     vector.len,
                     mode,
                     !is_match,
                     &mut sparse::LookupReader {
                         session: self,
-                        table: &table,
+                        table,
                         vector,
-                        key: &key,
+                        key,
                         mode,
                         is_match,
                         forward: None,
                     },
                 )
             })
-        };
-        let index = match found {
-            Ok(Some(i)) => i,
-            Ok(None) => return Ok(err(NA)),
-            Err(FunctionFailure::Spreadsheet(e)) => return Ok(err(e)),
-            Err(FunctionFailure::Operational(e)) => return Err(e),
-        };
-        if is_match {
-            return Ok(Number((index + 1) as f64).into());
         }
-        // Vlookup.java/Hlookup.java defer the result index until selection succeeds.
-        let value = self.argument(s, at, args, 2)?;
-        let result_index = match semantic(self.coercev2_scalar_number(&value))? {
-            Ok(n) if n.floor() >= 1. => n.floor() as usize - 1,
-            Ok(_) => return Ok(err(VALUE_ERROR)),
-            Err(_) => return Ok(err(Ref)),
-        };
-        let result = match table.vector(axis, result_index) {
-            Ok(v) => v,
-            Err(e) => return Ok(err(e)),
-        };
-        let origin = match &table {
-            LookupTable::Array(_) => host::OperandOrigin::ArrayElement,
-            _ => host::OperandOrigin::ReferencedCell,
-        };
-        Ok(Value::SelectedScalar(
-            self.lookup_read(&table, result, index)?,
-            origin,
-        ))
     }
 }
 /// Exact matching or approximate matching against an ordered vector.
@@ -240,7 +144,7 @@ pub enum SearchMode {
     Descending,
 }
 impl SearchMode {
-    fn from_number(value: f64) -> Self {
+    pub(super) fn from_number(value: f64) -> Self {
         if value == 0. {
             Self::Exact
         } else if value > 0. {

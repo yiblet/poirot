@@ -345,3 +345,70 @@ fn modern_text_registration_preserves_the_explicit_pinned_registry() {
         );
     }
 }
+
+#[test]
+fn scalar_text_kernels_spill_child_first_with_optional_argument_arrays() {
+    // Microsoft function reference defines LEN's character count, LEFT's optional
+    // count, EXACT's Boolean comparison, and NUMBERVALUE's explicit separators.
+    // https://support.microsoft.com/en-us/office/text-functions-reference-cccd86ad-547d-4ea9-a065-7bb697c2a56e
+    let mut b = book();
+    let sheet = b.sheet_mut(0).unwrap();
+    for (cell, expression) in [
+        ("A1", "LEN({\"a\";\"abcd\"})"),
+        ("D1", "LEFT(\"abcd\",{1,3})"),
+        ("G1", "EXACT({\"a\";\"A\"},\"a\")"),
+        ("J1", "NUMBERVALUE({\"1.5\";\"2.5\"},\".\",\",\")"),
+        ("M1", "CHAR({65,66})"),
+        ("P1", "SUBSTITUTE({\"a-a\";\"b-b\"},\"-\",\"/\")"),
+        ("S1", "CONCATENATE({\"a\";\"b\"},{1,2})"),
+    ] {
+        sheet.set_formula(at(cell).address, expression).unwrap();
+    }
+    let mut direct = Evaluation::with_workbook(&b)
+        .build(Default::default())
+        .unwrap();
+    let mut overlay = Overlay::with_workbook(&b).build().unwrap();
+    let context = EvaluationContext::default();
+    for (cell, expected) in [
+        ("A2", CellValue::Number(4.0)),
+        ("E1", CellValue::Text("abc".into())),
+        ("G2", CellValue::Boolean(false)),
+        ("J2", CellValue::Number(2.5)),
+        ("N1", CellValue::Text("B".into())),
+        ("P2", CellValue::Text("b/b".into())),
+        ("T2", CellValue::Text("b2".into())),
+    ] {
+        assert_eq!(direct.cell(at(cell)).unwrap(), expected, "direct {cell}");
+        assert_eq!(
+            overlay
+                .evaluation(&context)
+                .unwrap()
+                .cell(at(cell))
+                .unwrap(),
+            expected,
+            "overlay {cell}"
+        );
+    }
+}
+
+#[test]
+fn textjoin_cycles_the_complete_delimiter_sequence_between_accepted_texts() {
+    // Independently authored values exercise the repeating range-delimiter rule
+    // in Microsoft TEXTJOIN example 3, retrieved 2026-10-25:
+    // https://support.microsoft.com/en-gb/excel/functions/textjoin-function
+    // The source's city/address fixture data is not reused.
+    for (expression, expected) in [
+        (
+            r#"TEXTJOIN({",",";"},TRUE,{"a","b";"c","d";"e","f"})"#,
+            "a,b;c,d;e,f",
+        ),
+        (r#"TEXTJOIN({"|","/"},TRUE,{"","a","","b","c"})"#, "a|b/c"),
+        (r#"TEXTJOIN("|",FALSE,{"","a",""})"#, "|a|"),
+    ] {
+        assert_eq!(
+            formula(expression),
+            CellValue::Text(expected.into()),
+            "{expression}"
+        );
+    }
+}

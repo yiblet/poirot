@@ -31,25 +31,8 @@ fn bits(value: CellValue) -> u64 {
     }
 }
 #[test]
-fn configured_all_inverse_spellings_consume_raw_source_result_contract() {
-    let mut w = book();
-    w.sheet_mut(0).unwrap().set_value(at(0), 1e-300).unwrap();
-    for formula in [
-        "NORMSINV(1E-300)",
-        "NORM.S.INV(1E-300)",
-        "NORMINV(1E-300,0,1)",
-        "NORM.INV(1E-300,0,1)",
-        "NORMSINV(A1)",
-        "NORM.S.INV(A1)",
-        "NORMINV(A1,0,1)",
-        "NORM.INV(A1,0,1)",
-    ] {
-        assert_eq!(
-            bits(complete(run(&w, formula))),
-            f64::NEG_INFINITY.to_bits(),
-            "{formula}"
-        );
-    }
+fn inverse_spellings_validate_probability_boundaries() {
+    let w = book();
     {
         for f in [
             "NORMSINV(0)",
@@ -61,31 +44,6 @@ fn configured_all_inverse_spellings_consume_raw_source_result_contract() {
         }
         assert_eq!(bits(complete(run(&w, "NORMSINV(0.5)"))), 0.0f64.to_bits());
     }
-}
-#[test]
-fn actual_consumers_distinguish_cell_errors_source_numbers_and_source_exceptions() {
-    let mut w = book();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_formula(at(0), "NORMSINV(1E-300)")
-        .unwrap();
-    for f in ["A1", "IFERROR(A1,42)", "IFERROR(NORMSINV(1E-300),42)"] {
-        assert_eq!(bits(complete(run(&w, f))), f64::NEG_INFINITY.to_bits());
-    }
-    assert_eq!(complete(run(&w, "ISNUMBER(A1)")), Boolean(true));
-    for f in ["SUM(A1)", "SUM(NORMSINV(1E-300))", "ABS(A1)"] {
-        assert_eq!(complete(run(&w, f)), Error(Num));
-    }
-    assert_eq!(complete(run(&w, "IFERROR(SUM(A1),42)")), Number(42.0));
-    assert_eq!(complete(run(&w, "SUM(A1,#DIV/0!)")), Error(Div0));
-    for f in ["A1<0", "IFERROR(A1<0,42)"] {
-        assert!(
-            matches!(run(&w,f),EvaluationOutcome::Aborted {failure:EvaluationFailure::KnownSourceException {
-            exception: KnownSourceException::SpecialDoubleComparison { argument:0,bits },.. },.. } if bits.bits()==f64::NEG_INFINITY.to_bits())
-        );
-    }
-    assert_eq!(complete(run(&w, "A1<\"text\"")), Boolean(true));
-    assert_eq!(complete(run(&w, "\"text\">A1")), Boolean(true));
 }
 #[test]
 fn construction_stages_flush_both_subnormal_signs_preserve_existing_negative_zero() {
@@ -145,54 +103,6 @@ fn construction_stages_flush_both_subnormal_signs_preserve_existing_negative_zer
         .set_value(at(0), Number(f64::INFINITY))
         .unwrap();
     assert_eq!(bits(complete(run(&w, "A1"))), f64::INFINITY.to_bits());
-}
-#[test]
-fn configured_source_constructor_exception_is_explicit() {
-    let w = book();
-    assert!(matches!(
-        run(&w, "IFERROR(POISSON(1,0,FALSE),42)"),
-        EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::KnownSourceException {
-                exception: KnownSourceException::PoissonMeanZeroConstructor,
-                ..
-            },
-            ..
-        }
-    ));
-}
-#[test]
-fn retained_overlay_reuses_source_infinity() {
-    use crate::overlay::{EvaluationContext, Overlay, OverlayPolicy};
-    let mut w = book();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_formula(at(0), "NORMSINV(1E-300)")
-        .unwrap();
-    w.sheet_mut(0).unwrap().set_formula(at(1), "2+3").unwrap();
-    let mut overlay = Overlay::with_workbook(&w)
-        .with_policy(OverlayPolicy {
-            ..Default::default()
-        })
-        .build()
-        .unwrap();
-    let target = overlay.target("S!A1").unwrap();
-    let context = EvaluationContext::default();
-    assert_eq!(
-        bits(overlay.evaluation(&context).unwrap().cell(target).unwrap()),
-        f64::NEG_INFINITY.to_bits()
-    );
-    let raw = overlay.cached_value(target).unwrap();
-    let mut evaluation = overlay.evaluation(&context).unwrap();
-    assert_eq!(
-        bits(evaluation.cell(target).unwrap()),
-        f64::NEG_INFINITY.to_bits()
-    );
-    assert_eq!(evaluation.usage().formula_executions, 0);
-    drop(evaluation);
-    assert!(std::sync::Arc::ptr_eq(
-        &raw,
-        &overlay.cached_value(target).unwrap()
-    ));
 }
 #[test]
 fn retained_overlay_normalization_keeps_raw_source_dependency_identity() {

@@ -233,27 +233,24 @@ pub fn dollar_fr(number: f64, fraction: f64) -> Result<f64> {
     fraction_convert(number, fraction, false)
 }
 
-/// Source-compatible MIRR: POI advances the period index for nonzero cash flows only.
+/// Modified internal rate of return for ordered periodic cash flows, including zero periods.
+/// Microsoft requires both payment and receipt signs and retains zero-valued periods:
+/// <https://support.microsoft.com/en-us/excel/functions/mirr-function>.
 pub fn mirr(flows: &[f64], finance_rate: f64, reinvest_rate: f64) -> Result<f64> {
     finite(flows)?;
     finite(&[finance_rate, reinvest_rate])?;
-    if flows.iter().all(|&v| v < 0.0) {
-        return Ok(-1.0);
-    }
-    if flows.iter().all(|&v| v > 0.0) {
+    if !flows.iter().any(|&value| value < 0.0) || !flows.iter().any(|&value| value > 0.0) {
         return Err(FinancialError::DivZero);
     }
     let years = flows.len() as f64 - 1.0;
     let mut present = 0.0;
     let mut future = 0.0;
-    let mut index = 0.0;
-    for &flow in flows {
+    // Retain the existing attributed POI arithmetic, with documented Excel period indexing.
+    for (index, &flow) in flows.iter().enumerate() {
         if flow > 0.0 {
-            future += flow * (1.0 + reinvest_rate).powf(years - index);
-            index += 1.0;
+            future += flow * (1.0 + reinvest_rate).powf(years - index as f64);
         } else if flow < 0.0 {
-            present += flow / (1.0 + finance_rate).powf(index);
-            index += 1.0;
+            present += flow / (1.0 + finance_rate).powf(index as f64);
         }
     }
     checked(if future != 0.0 && present != 0.0 {
@@ -748,11 +745,27 @@ mod tests {
         assert_eq!(rate(1.0, 0.0, 0.0, 0.0, 0.0, 0.1), Err(FinancialError::Num));
     }
     #[test]
-    fn mirr_pinned_edge_behavior() {
+    fn mirr_retains_zero_periods_and_requires_payments_and_receipts() {
         near(mirr(&[-100.0, 121.0], 0.1, 0.1), 0.21);
-        near(mirr(&[-10.0, -20.0], 0.1, 0.1), -1.0);
-        assert_eq!(mirr(&[10.0, 20.0], 0.1, 0.1), Err(FinancialError::DivZero));
-        near(mirr(&[0.0, 0.0], 0.1, 0.1), 0.0);
+        near(mirr(&[-100.0, 0.0, 121.0], 0.2, 0.3), 0.1);
+        near(
+            mirr(&[-100.0, 121.0, 0.0], 0.2, 0.3),
+            (121.0_f64 * 1.3 / 100.0).sqrt() - 1.0,
+        );
+        near(
+            mirr(&[0.0, -100.0, 121.0], 0.2, 0.3),
+            (121.0_f64 * 1.2 / 100.0).sqrt() - 1.0,
+        );
+        for flows in [
+            &[][..],
+            &[-10.0, -20.0],
+            &[10.0, 20.0],
+            &[0.0, 0.0],
+            &[-10.0, 0.0],
+            &[0.0, 10.0],
+        ] {
+            assert_eq!(mirr(flows, 0.1, 0.1), Err(FinancialError::DivZero));
+        }
     }
     #[test]
     fn decimal_rounding_and_context() {

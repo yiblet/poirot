@@ -1,8 +1,13 @@
 //! Deferred, budgeted Session boundary for independently owned family bridges.
 //! This module does not resolve function names or select a family implementation.
 use super::*;
+use crate::array_operator::Shape;
 use crate::budgeted_value::{copy_cell, copy_value};
+use crate::selection::Selection;
 
+mod calendar;
+mod lookup;
+pub(crate) use lookup::{ClassicLookupKind, LookupTable};
 mod aggregation;
 pub(crate) use aggregation::Aggregators;
 mod coercionv2;
@@ -10,6 +15,7 @@ mod numeric_policy;
 mod operand;
 mod readers;
 mod resolution;
+mod services;
 mod subtotal;
 #[cfg(test)]
 mod tests;
@@ -32,11 +38,6 @@ enum ArgumentDemand {
     Inherited(expression_execution::ExpressionDemand),
     ArrayPrefix(usize),
     ArraySlots(&'static [usize]),
-    SelectedResults {
-        first: usize,
-        default: Option<usize>,
-        inherited: expression_execution::ExpressionDemand,
-    },
 }
 impl ArgumentDemand {
     fn at(self, index: usize) -> expression_execution::ExpressionDemand {
@@ -45,17 +46,6 @@ impl ArgumentDemand {
             Self::Inherited(demand) => demand,
             Self::ArrayPrefix(count) if index < count => ExpressionDemand::Array,
             Self::ArraySlots(slots) if slots.contains(&index) => ExpressionDemand::Array,
-            Self::SelectedResults {
-                first,
-                default,
-                inherited,
-            } if default == Some(index)
-                || index
-                    .checked_sub(first)
-                    .is_some_and(|offset| offset.is_multiple_of(2)) =>
-            {
-                inherited
-            }
             _ => ExpressionDemand::Scalar,
         }
     }
@@ -78,6 +68,22 @@ struct ScalarInput<'input, 'call, 'workbook> {
     index: usize,
     missing: MissingPolicy,
 }
+/// Checked member reader supplied during rectangular output construction.
+pub(crate) struct SelectedReader<'read, 'workbook> {
+    session: &'read mut Session<'workbook>,
+}
+impl SelectedReader<'_, '_> {
+    /// Read one selected branch member without evaluating unchosen coordinates.
+    pub(crate) fn member(
+        &mut self,
+        value: &Value,
+        shape: Shape,
+        row: usize,
+        column: usize,
+    ) -> EvalResult<CellValue> {
+        self.session.rectangular_element(value, shape, row, column)
+    }
+}
 impl poirot_functions_core::Input for ScalarInput<'_, '_, '_> {
     /// Selected scalar operand retaining its argument provenance.
     type Value = ScalarOperand;
@@ -89,6 +95,88 @@ impl poirot_functions_core::Input for ScalarInput<'_, '_, '_> {
 }
 
 impl<'call, 'workbook> CallHost<'call, 'workbook> {
+    /// Resolve selected rectangular branches through the evaluator's checked selection path.
+    pub(crate) fn selected_array_results(
+        &mut self,
+        selected: Vec<Selection>,
+        output: Shape,
+        result_ordinals: impl Iterator<Item = usize>,
+    ) -> EvalResult<Value> {
+        self.session.selected_array_results(
+            self.sheet,
+            self.address,
+            self.arguments,
+            selected,
+            output,
+            result_ordinals,
+        )
+    }
+    /// Evaluate one scalar argument with the caller's pinned scalar observation policy.
+    pub(crate) fn scalar_argument(&mut self, index: usize) -> EvalResult<CellValue> {
+        self.session
+            .argument(self.sheet, self.address, self.arguments, index)
+    }
+    /// Transfer one selected argument with its observation identity and original value channel.
+    /// Callers retain the returned value and invoke this once per selected ordinal.
+    pub(crate) fn selected_argument(
+        &mut self,
+        index: usize,
+    ) -> EvalResult<(Option<execution_observation::OperationId>, Value)> {
+        let expression = self
+            .arguments
+            .get(index)
+            .ok_or(EvaluationFailure::StalePlan)?;
+        self.session
+            .observed_value_argument(self.sheet, self.address, expression, index)
+    }
+    /// Inspect whether a selected expression is syntactically omitted without forcing it.
+    pub(crate) fn selected_is_missing(&self, index: usize) -> bool {
+        self.arguments
+            .get(index)
+            .is_some_and(|arg| arg.is_missing())
+    }
+    /// Read the compatibility policy and record the invocation's dependency on it.
+    pub(crate) fn selection_builtin_policy(&mut self) -> BuiltinSemanticsPolicy {
+        self.session.read(DependencyRead::BuiltinPolicy);
+        self.session.builtin_policy
+    }
+    /// Inspect whether a selected value retains array selection semantics.
+    pub(crate) fn retains_selected_array(&self, value: &Value) -> bool {
+        self.session.retains_array(value)
+    }
+    /// Scalarize an already selected value with legacy reference intersection.
+    pub(crate) fn select_legacy_scalar(&mut self, value: Value) -> EvalResult<CellValue> {
+        self.session.select_legacy_scalar(self.address, value)
+    }
+    /// Coerce a selected scalar with the evaluator's exact text and locale charges.
+    pub(crate) fn selected_number(&mut self, value: &CellValue) -> FunctionResult<f64> {
+        self.session.coercev2_scalar_number(value)
+    }
+    /// Inspect rectangular shape without dereferencing selected reference members.
+    pub(crate) fn selected_shape(&self, value: &Value) -> Option<Shape> {
+        Shape::inspect(value)
+    }
+    /// Read one selected rectangular member using the evaluator's broadcast policy.
+    pub(crate) fn selected_member(
+        &mut self,
+        value: &Value,
+        shape: Shape,
+        row: usize,
+        column: usize,
+    ) -> EvalResult<CellValue> {
+        self.session.rectangular_element(value, shape, row, column)
+    }
+    /// Construct a selected rectangle with existing output admission and lazy member reads.
+    pub(crate) fn selected_array(
+        &mut self,
+        shape: Shape,
+        mut member: impl FnMut(&mut SelectedReader<'_, '_>, usize, usize) -> EvalResult<CellValue>,
+    ) -> EvalResult<Value> {
+        self.session
+            .rectangular_values(self.address, shape, |session, row, column| {
+                member(&mut SelectedReader { session }, row, column)
+            })
+    }
     /// Admit wildcard token/character storage; matching steps are charged separately.
     pub(crate) fn admit_wildcard(&mut self, pattern: &str, input: &str) -> FunctionResult<()> {
         if poirot_functions_criteria::has_wildcards(pattern) {
@@ -158,12 +246,64 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         host.argument_demand = ArgumentDemand::Inherited(demand);
         host
     }
-    /// Inspect whether an evaluated argument retains its rectangular value channel.
-    pub(crate) fn retains_array(&mut self, index: usize) -> FunctionResult<bool> {
-        self.prepare(index)?;
-        Ok(self
-            .session
-            .retains_array(&self.operand(index).ok_or(VALUE_ERROR)?.value))
+    /// Evaluate and observe one selector probe, transferring arrays without reevaluation.
+    /// Scalar probes retain the host's omission and implicit-intersection policies.
+    pub(crate) fn probe_argument(&mut self, index: usize) -> EvalResult<Value> {
+        let expression = self
+            .arguments
+            .get(index)
+            .ok_or(EvaluationFailure::StalePlan)?;
+        let observation = if self.session.execution_observer.is_some() {
+            Some(self.session.observation_begin(
+                EvaluationTarget {
+                    sheet: self.sheet,
+                    address: self.address,
+                },
+                execution_observation::OperationKind::Argument {
+                    ordinal: index,
+                    origin: expression.origin(),
+                },
+            )?)
+        } else {
+            None
+        };
+        let result: EvalResult<Value> = (|| {
+            if let Err(error) = semantic(self.prepare(index))? {
+                return Ok(err(error));
+            }
+            if self.session.retains_array(
+                &self
+                    .operand(index)
+                    .ok_or(EvaluationFailure::StalePlan)?
+                    .value,
+            ) {
+                let slot = self
+                    .argument_base
+                    .checked_add(index)
+                    .ok_or(EvaluationFailure::StalePlan)?;
+                return self
+                    .session
+                    .runtime
+                    .vm
+                    .operands
+                    .get_mut(slot)
+                    .and_then(Option::take)
+                    .map(HostOperand::into_value)
+                    .ok_or(EvaluationFailure::StalePlan);
+            }
+            match semantic(self.scalar_data(index, MissingPolicy::Blank))? {
+                Ok(scalar) => Ok(scalar.value.into()),
+                Err(error) => Ok(err(error)),
+            }
+        })();
+        if let Some((operation, previous)) = observation {
+            self.session.observation_end(
+                operation,
+                previous,
+                result.as_ref().map(execution_observation::observed_value),
+            )?;
+        }
+        result
     }
     /// Matrix consumers request array expression execution before any operand inspection.
     pub(crate) fn new_array(
@@ -187,24 +327,6 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
     ) -> Self {
         let mut host = Self::new(session, sheet, address, arguments);
         host.argument_demand = ArgumentDemand::ArraySlots(slots);
-        host
-    }
-    /// Selection results inherit the caller's demand; tests and keys remain scalar.
-    pub(crate) fn new_selecting(
-        session: &'call mut Session<'workbook>,
-        sheet: usize,
-        address: CellAddress,
-        arguments: impl Into<ArgumentsRef<'call>>,
-        first: usize,
-        default: Option<usize>,
-    ) -> Self {
-        let inherited = session.expression_demand;
-        let mut host = Self::new(session, sheet, address, arguments);
-        host.argument_demand = ArgumentDemand::SelectedResults {
-            first,
-            default,
-            inherited,
-        };
         host
     }
     /// Return the run's builtin compatibility contract.
@@ -534,6 +656,30 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             array_missing: operand.array_missing.clone(),
         })
     }
+    /// Fold an eager aggregate operand with checked batch admission and no member storage.
+    pub(crate) fn fold_aggregate_operand<T>(
+        &mut self,
+        operand: HostOperand,
+        state: T,
+        reserve_storage: impl FnMut(&mut T, usize) -> Result<(), std::collections::TryReserveError>,
+        consume: impl FnMut(&mut T, ScalarOperand) -> EvalResult<()>,
+    ) -> EvalResult<T> {
+        self.session
+            .fold_items(operand, state, reserve_storage, consume)
+    }
+    /// Visit a sheet span in sheet order, stopping after the first consumer break.
+    pub(crate) fn fold_ordered_sheet_span<T>(
+        &mut self,
+        operand: HostOperand,
+        state: T,
+        consume: impl FnMut(&mut T, ScalarOperand) -> EvalResult<std::ops::ControlFlow<()>>,
+    ) -> EvalResult<T> {
+        let (value, _, _) = operand.into_parts();
+        let Value::SheetSpan(areas) = value else {
+            return Err(EvaluationFailure::StalePlan);
+        };
+        self.session.fold_ordered_sheet_span(areas, state, consume)
+    }
     /// Implicit intersection is performed only on this request. Errors stay data here.
     pub(crate) fn scalar_data(
         &mut self,
@@ -644,19 +790,6 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             missing: false,
         })
     }
-    /// Project one scalar and promote spreadsheet errors into function failures.
-    pub(crate) fn scalar(
-        &mut self,
-        index: usize,
-        policy: MissingPolicy,
-    ) -> FunctionResult<CellValue> {
-        let value = self.scalar_data(index, policy)?.value;
-        if let Error(error) = value {
-            Err(error.into())
-        } else {
-            Ok(value)
-        }
-    }
     /// Reject a helper's unattributed internal resource exhaustion operationally.
     pub(crate) fn budget_exceeded(&self) -> EvaluationFailure {
         self.resource_failure(
@@ -667,7 +800,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
     /// Record formatting consumption and copy explicitly configured currency settings.
     pub(crate) fn currency_context(
         &mut self,
-    ) -> FunctionResult<crate::adapters::financial::policy::CurrencyContext> {
+    ) -> FunctionResult<crate::configuration::CurrencyContext> {
         self.session.read(DependencyRead::Formatting);
         let context = self.session.currency.ok_or_else(|| {
             self.unsupported(

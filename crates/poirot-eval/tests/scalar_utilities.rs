@@ -137,6 +137,50 @@ fn numeric_lifting_broadcasts_and_retains_member_errors() {
     assert!(out.usage().random_accesses.is_empty());
     near(&b, "IF(FALSE,ACOT(RAND()),7)", 7.);
 }
+
+#[test]
+fn typed_math_execution_preserves_ordered_errors_and_resource_aborts() {
+    let mut b = book();
+    b.sheet_mut(0)
+        .unwrap()
+        .set_value(at("A1").address, 2.)
+        .unwrap();
+    for formula in [
+        "ISO.CEILING(3.1)",
+        "ISO.CEILING(3.1,)",
+        "ISO.CEILING(3.1,2)",
+        "ISO.CEILING(3.1,A1)",
+    ] {
+        assert_eq!(call(&b, formula), CellValue::Number(4.), "{formula}");
+    }
+    assert_eq!(call(&b, "ISO.CEILING(3.1,B1)"), CellValue::Number(0.));
+    assert_eq!(
+        call(&b, "INDEX(ISO.CEILING({1.1;2.1},{2,#VALUE!}),1,1)"),
+        CellValue::Number(2.)
+    );
+    assert_eq!(
+        call(&b, "INDEX(ISO.CEILING({1.1;2.1},{2,#VALUE!}),2,2)"),
+        CellValue::Error(CellError::Value)
+    );
+    assert_eq!(
+        call(&b, "ISO.CEILING(1.1,\"bad\")"),
+        CellValue::Error(CellError::Value)
+    );
+    assert!(matches!(
+        run_formula(
+            &b,
+            0,
+            at("Z100").address,
+            "IFERROR(SUM(ACOT(SEQUENCE(100))),99)",
+            Default::default(),
+            EvaluationBudgets {
+                materialized_values: 20,
+                ..Default::default()
+            }
+        ),
+        EvaluationOutcome::Aborted { .. }
+    ));
+}
 #[test]
 fn multinomial_reduces_collections_without_factorial_overflow() {
     let mut b = book();
@@ -269,7 +313,7 @@ fn networkdays_masks_sign_holidays_and_fractional_dates() {
     near(&b, "NETWORKDAYS.INTL(59,61,\"0000000\")", 3.);
 }
 #[test]
-fn fixed_euro_rates_rounding_triangulation_and_scalar_contract() {
+fn fixed_euro_rates_rounding_and_triangulation() {
     let b = book();
     for (formula, n) in [
         ("EUROCONVERT(1.2,\"DEM\",\"EUR\")", 0.61),
@@ -287,7 +331,6 @@ fn fixed_euro_rates_rounding_triangulation_and_scalar_contract() {
         "EUROCONVERT(1,\"USD\",\"EUR\")",
         "EUROCONVERT(1,\"DEM\",\"EUR\",TRUE,2)",
         "EUROCONVERT(1,\"DEM\",\"EUR\",TRUE,3.5)",
-        "EUROCONVERT({1,2},\"DEM\",\"EUR\")",
     ] {
         assert_eq!(call(&b, formula), CellValue::Error(CellError::Value));
     }
@@ -521,4 +564,222 @@ fn documented_argument_limits_and_error_consumption() {
         budgets,
     );
     assert!(matches!(out, EvaluationOutcome::Aborted { .. }));
+}
+
+#[test]
+fn documented_abs_spills_and_explicit_intersection_retains_scalar_policy() {
+    // Independently authored controls from Microsoft's dynamic-array and @ contracts:
+    // https://support.microsoft.com/en-us/excel/dynamic-array-formulas-and-spilled-array-behavior
+    // https://support.microsoft.com/en-us/excel/implicit-intersection-operator
+    // https://support.microsoft.com/en-us/office/abs-function-3420200f-5628-4e8c-99da-c99d7c87713c
+    // Retrieved 2026-10-25; no upstream code, data or tests reused.
+    let mut b = book();
+    let s = b.sheet_mut(0).unwrap();
+    for (cell, number) in [("A1", -2.), ("A2", -3.), ("A3", -5.)] {
+        s.set_value(at(cell).address, number).unwrap();
+    }
+    s.set_formula(at("C2").address, "ABS(A1:A3)").unwrap();
+    s.set_formula(at("E2").address, "ABS(@A1:A3)").unwrap();
+    let mut direct = Evaluation::with_workbook(&b)
+        .build(Default::default())
+        .unwrap();
+    let mut overlay = Overlay::with_workbook(&b).build().unwrap();
+    let context = EvaluationContext::default();
+    let mut incremental = overlay.evaluation(&context).unwrap();
+    // Child-first access exercises inferred spill-candidate metadata.
+    for (cell, expected) in [("C4", 5.), ("C3", 3.), ("C2", 2.), ("E2", 3.)] {
+        assert_eq!(
+            direct.cell(at(cell)).unwrap(),
+            CellValue::Number(expected),
+            "direct {cell}"
+        );
+        assert_eq!(
+            incremental.cell(at(cell)).unwrap(),
+            CellValue::Number(expected),
+            "overlay {cell}"
+        );
+    }
+    assert_eq!(direct.cell(at("E3")).unwrap(), CellValue::Blank);
+    let configuration =
+        RunConfiguration::default().with_array_result_policy(ArrayResultPolicy::ScalarIntersection);
+    let expected = 2.;
+    assert_eq!(
+        value(run_formula_with_configuration(
+            &b,
+            0,
+            at("G2").address,
+            "ABS(A1:A3)",
+            &configuration,
+            Default::default()
+        )),
+        CellValue::Number(expected)
+    );
+    for (formula, expected) in [
+        ("SUM(ABS({-2;3;-5}))", CellValue::Number(10.)),
+        ("ABS({-7})", CellValue::Number(7.)),
+        ("ABS()", CellValue::Error(CellError::Value)),
+        (
+            "ABS(1,UNKNOWN_FUNCTION())",
+            CellValue::Error(CellError::Value),
+        ),
+        ("ABS(\"bad\")", CellValue::Error(CellError::Value)),
+        (
+            "INDEX(ABS({-2;#N/A;-5}),2,1)",
+            CellValue::Error(CellError::NA),
+        ),
+    ] {
+        assert_eq!(call(&b, formula), expected, "{formula}");
+    }
+    assert!(matches!(
+        run_formula(
+            &b,
+            0,
+            at("Z100").address,
+            "IFERROR(SUM(ABS(SEQUENCE(100))),99)",
+            Default::default(),
+            EvaluationBudgets {
+                materialized_values: 20,
+                ..Default::default()
+            }
+        ),
+        EvaluationOutcome::Aborted {
+            failure: EvaluationFailure::Budget(_),
+            ..
+        }
+    ));
+}
+
+#[test]
+fn typed_business_days_broadcast_masks_but_reduce_optional_holidays() {
+    // Independently authored Monday 2024-01-01 through Sunday 2024-01-07 controls:
+    // Microsoft documents inclusive endpoints, weekend codes and excluded holidays.
+    // https://support.microsoft.com/en-us/excel/functions/networkdays-intl-function
+    // Mismatch padding and collection-first error precedence are existing Poirot controls.
+    let b = book();
+    for (formula, expected) in [
+        (
+            "INDEX(NETWORKDAYS.INTL({45292;45293},45298,{1,11},{45293;45295;45293}),1,1)",
+            CellValue::Number(3.),
+        ),
+        (
+            "INDEX(NETWORKDAYS.INTL({45292;45293},45298,{1,11},{45293;45295;45293}),1,2)",
+            CellValue::Number(4.),
+        ),
+        (
+            "INDEX(NETWORKDAYS.INTL({45292;45293},45298,{1,11},{45293;45295;45293}),2,1)",
+            CellValue::Number(2.),
+        ),
+        (
+            "INDEX(NETWORKDAYS.INTL({45292;45293},45298,{1,11},{45293;45295;45293}),2,2)",
+            CellValue::Number(3.),
+        ),
+        ("NETWORKDAYS.INTL(45292,45298,)", CellValue::Number(5.)),
+        ("NETWORKDAYS.INTL(45292,45298,,)", CellValue::Number(5.)),
+        (
+            "ROWS(NETWORKDAYS.INTL(45292,45298,1,{45293;45295;45293}))",
+            CellValue::Number(1.),
+        ),
+        (
+            "INDEX(NETWORKDAYS.INTL({45292;45293;45294},{45298;45299}),3,1)",
+            CellValue::Error(CellError::NA),
+        ),
+        // Isolated date errors independently corroborated in LibreOffice 26.2.6.3.
+        (
+            "NETWORKDAYS.INTL(1/0,45298)",
+            CellValue::Error(CellError::Div0),
+        ),
+        (
+            "NETWORKDAYS.INTL(45292,NA())",
+            CellValue::Error(CellError::NA),
+        ),
+        (
+            "INDEX(NETWORKDAYS.INTL({45292;45293},45298,{1,\"bad\"}),2,2)",
+            CellValue::Error(CellError::Value),
+        ),
+    ] {
+        assert_eq!(call(&b, formula), expected, "{formula}");
+    }
+}
+
+#[test]
+fn documented_sign_spills_and_explicit_intersection_retains_scalar_policy() {
+    // Independently authored controls from Microsoft's dynamic-array and @ contracts:
+    // https://support.microsoft.com/en-us/excel/dynamic-array-formulas-and-spilled-array-behavior
+    // https://support.microsoft.com/en-us/excel/implicit-intersection-operator
+    // https://support.microsoft.com/en-gb/excel/functions/sign-function
+    // Retrieved 2026-10-25; no upstream code, data or tests reused.
+    let mut b = book();
+    let s = b.sheet_mut(0).unwrap();
+    for (cell, number) in [("A1", -2.), ("A2", 0.), ("A3", 5.)] {
+        s.set_value(at(cell).address, number).unwrap();
+    }
+    s.set_formula(at("C2").address, "SIGN(A1:A3)").unwrap();
+    s.set_formula(at("E2").address, "SIGN(@A1:A3)").unwrap();
+    let mut direct = Evaluation::with_workbook(&b)
+        .build(Default::default())
+        .unwrap();
+    let mut overlay = Overlay::with_workbook(&b).build().unwrap();
+    let context = EvaluationContext::default();
+    let mut incremental = overlay.evaluation(&context).unwrap();
+    // Child-first access exercises inferred spill-candidate metadata.
+    for (cell, expected) in [("C4", 1.), ("C3", 0.), ("C2", -1.), ("E2", 0.)] {
+        assert_eq!(
+            direct.cell(at(cell)).unwrap(),
+            CellValue::Number(expected),
+            "direct {cell}"
+        );
+        assert_eq!(
+            incremental.cell(at(cell)).unwrap(),
+            CellValue::Number(expected),
+            "overlay {cell}"
+        );
+    }
+    assert_eq!(direct.cell(at("E3")).unwrap(), CellValue::Blank);
+    let configuration =
+        RunConfiguration::default().with_array_result_policy(ArrayResultPolicy::ScalarIntersection);
+    let expected = -1.;
+    assert_eq!(
+        value(run_formula_with_configuration(
+            &b,
+            0,
+            at("G2").address,
+            "SIGN(A1:A3)",
+            &configuration,
+            Default::default()
+        )),
+        CellValue::Number(expected)
+    );
+    for (formula, expected) in [
+        ("SUM(SIGN({-2;3;-5}))", CellValue::Number(-1.)),
+        ("SIGN({-7})", CellValue::Number(-1.)),
+        ("SIGN()", CellValue::Error(CellError::Value)),
+        (
+            "SIGN(1,UNKNOWN_FUNCTION())",
+            CellValue::Error(CellError::Value),
+        ),
+        ("SIGN(\"bad\")", CellValue::Error(CellError::Value)),
+        (
+            "INDEX(SIGN({-2;#N/A;-5}),2,1)",
+            CellValue::Error(CellError::NA),
+        ),
+    ] {
+        assert_eq!(call(&b, formula), expected, "{formula}");
+    }
+    assert!(matches!(
+        run_formula(
+            &b,
+            0,
+            at("Z100").address,
+            "IFERROR(SUM(SIGN(SEQUENCE(100))),99)",
+            Default::default(),
+            EvaluationBudgets {
+                materialized_values: 20,
+                ..Default::default()
+            }
+        ),
+        EvaluationOutcome::Aborted {
+            failure: EvaluationFailure::Budget(_),
+            ..
+        }
+    ));
 }

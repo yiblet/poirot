@@ -19,14 +19,9 @@ fn execute(formula: &str) -> EvaluationOutcome<CellValue> {
 
 #[test]
 fn selected_missing_retains_source_exception_boundaries() {
-    // Pinned OperandResolver numeric Missing throws; it is not a spreadsheet error.
-    // HSSFFormulaEvaluator also rejects a final MissingArgEval result.
-    for formula in [
-        "IFS(TRUE,)",
-        "ISEVEN(IFS(TRUE,))",
-        "IFERROR(ISEVEN(IFS(TRUE,)),42)",
-        "IFERROR(IFS(TRUE,),42)",
-    ] {
+    // A selected omitted result still lacks worksheet publication support.
+    // Preserve this known operational gap rather than claiming native Excel behavior.
+    for formula in ["IFS(TRUE,)", "IFERROR(IFS(TRUE,),42)"] {
         assert!(
             matches!(
                 execute(formula),

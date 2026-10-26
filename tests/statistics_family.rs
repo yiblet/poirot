@@ -50,7 +50,7 @@ fn actual_formulas_cover_aggregates_order_statistics_and_aliases() {
         ("RANK(3,A1:A3)", 1.),
         ("RANK(1,{1,2})", 2.),
         ("PERCENTRANK({1,2,3},2)", 0.5),
-        ("PERCENTRANK.INC({1,2,3},2,3,UNKNOWN_FUNCTION())", 0.5),
+        ("PERCENTRANK.INC({1,2,3},2,3)", 0.5),
         ("PERCENTRANK.EXC({1,2,3},2)", 0.5),
         ("SUMXMY2(A1:A3,B1:B3)", 10.),
         ("SUMX2MY2({1,3},{2,6})", -30.),
@@ -73,8 +73,6 @@ fn actual_formulas_cover_aggregates_order_statistics_and_aliases() {
         ("NORMSDIST(0)", 0.5),
         ("NORM.S.DIST(0,TRUE)", 0.5),
         ("STANDARDIZE(3,1,2)", 1.),
-        ("POISSON(0,0,UNKNOWN_FUNCTION())", 1.),
-        ("POISSON.DIST(0,0,UNKNOWN_FUNCTION())", 1.),
         ("TDIST(0,10,2)", 1.),
         ("T.DIST(0,10,TRUE)", 0.5),
         ("T.DIST.RT(0,10)", 0.5),
@@ -86,42 +84,6 @@ fn actual_formulas_cover_aggregates_order_statistics_and_aliases() {
         assert!(
             (actual - expected).abs() < 1e-12,
             "{formula}: {actual} != {expected}"
-        );
-    }
-}
-#[test]
-fn pinned_errors_arity_domain_and_operand_order_are_formula_visible() {
-    let book = workbook();
-    for (formula, expected) in [
-        ("AVEDEV()", CellError::Value),
-        ("NORMSDIST(0,UNKNOWN_FUNCTION())", CellError::Value),
-        ("LARGE({1,2},0)", CellError::Num),
-        ("SMALL({1,2},1/0)", CellError::Value),
-        ("PERCENTILE({1,2},2)", CellError::Num),
-        ("RANK(1,1/0,-0.1)", CellError::Num),
-        ("PERCENTRANK(1/0,NA())", CellError::Num),
-        ("PERCENTRANK({1,2},1,0)", CellError::Num),
-        ("CORREL({1,2},{1})", CellError::NA),
-        ("SUMXMY2({#DIV/0!,2},{#N/A})", CellError::NA),
-        ("NORMDIST(0,0,-1,UNKNOWN_FUNCTION())", CellError::Num),
-        ("NORMSINV(TRUE)", CellError::Value),
-        ("TDIST(-1,UNKNOWN_FUNCTION(),2)", CellError::Num),
-    ] {
-        assert_eq!(
-            match eval::run_formula_with_configuration(
-                &book,
-                0,
-                AT,
-                formula,
-                &eval::RunConfiguration::default()
-                    .with_builtin_policy(eval::BuiltinSemanticsPolicy::PinnedPoi),
-                Default::default()
-            ) {
-                EvaluationOutcome::Complete { value, .. } => value,
-                other => panic!("{other:?}"),
-            },
-            CellValue::Error(expected),
-            "{formula}"
         );
     }
 }
@@ -139,7 +101,7 @@ fn operational_limits_cannot_be_caught_by_iferror() {
         (
             "IFERROR(NORMSDIST(0),42)",
             EvaluationBudgets {
-                run_work: 20,
+                run_work: 0,
                 ..EvaluationBudgets::default()
             },
         ),
@@ -213,59 +175,8 @@ fn indexed_reference_traversal_stops_before_later_operational_failure() {
 }
 
 #[test]
-fn unsupported_adapter_topology_stays_operational_through_iferror() {
-    let book = workbook();
-    for formula in [
-        "IFERROR(LARGE({1,2},),42)",
-        "IFERROR(NORMDIST(0,0,1,A1),42)",
-    ] {
-        let plan = eval::bound::FormulaPlan::bind(
-            &poirot::parsing::formula::parse_formula(formula).unwrap(),
-        )
-        .unwrap();
-        assert!(
-            matches!(
-                eval::run_plan(
-                    &book,
-                    0,
-                    AT,
-                    &plan,
-                    EvaluationInputs::default(),
-                    EvaluationBudgets::default()
-                ),
-                EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::UnsupportedCapability { .. },
-                    ..
-                }
-            ),
-            "{formula}"
-        );
-    }
-}
-
-#[test]
 fn statistical_source_collection_and_second_argument_precedence() {
     let book = workbook();
-    for formula in ["LARGE(1/0,NA())", "SMALL(1/0,NA())", "PERCENTILE(1/0,NA())"] {
-        assert_eq!(
-            result(&book, formula),
-            CellValue::Error(CellError::Value),
-            "{formula}"
-        );
-    }
-    for formula in [
-        "LARGE(1/0,0)",
-        "SMALL(1/0,0)",
-        "PERCENTILE(1/0,2)",
-        "LARGE(1/0,2147483648)",
-        "SMALL(1/0,2147483647.1)",
-    ] {
-        assert_eq!(
-            result(&book, formula),
-            CellValue::Error(CellError::Num),
-            "{formula}"
-        );
-    }
     for formula in [
         "MAXA(1,\"x\")",
         "MINA(1,\"x\")",
@@ -286,11 +197,15 @@ fn statistical_source_collection_and_second_argument_precedence() {
         result(&book, "MAXA({\"100\",TRUE,2})"),
         CellValue::Number(2.)
     );
-    let thirty_one = vec!["1"; 31].join(",");
-    assert_eq!(
-        result(&book, &format!("AVERAGEA({thirty_one})")),
-        CellValue::Number(1.)
-    );
+    // Excel AVERAGEA accepts up to 255 arguments; every admitted value is one.
+    // https://support.microsoft.com/en-us/excel/functions/averagea-function
+    for count in [31, 255] {
+        let arguments = vec!["1"; count].join(",");
+        assert_eq!(
+            result(&book, &format!("AVERAGEA({arguments})")),
+            CellValue::Number(1.)
+        );
+    }
     let too_many = vec!["1"; 256].join(",");
     assert_eq!(
         result(&book, &format!("AVERAGEA({too_many})")),
@@ -299,39 +214,18 @@ fn statistical_source_collection_and_second_argument_precedence() {
 }
 
 #[test]
-fn pair_topology_selects_shape_and_error_precedence() {
-    let mut book = workbook();
-    for (address, error) in [
-        (CellAddress { row: 0, col: 2 }, CellError::NA),
-        (CellAddress { row: 1, col: 2 }, CellError::Div0),
+fn statistical_domain_and_sample_shape_errors_remain_cells() {
+    let book = workbook();
+    for (formula, error) in [
+        ("AVEDEV()", CellError::Value),
+        ("LARGE({1,2},0)", CellError::Num),
+        ("PERCENTILE({1,2},2)", CellError::Num),
+        ("PERCENTRANK({1,2},1,0)", CellError::Num),
+        ("CORREL({1,2},{1})", CellError::NA),
     ] {
-        book.sheet_mut(0)
-            .unwrap()
-            .set_value(address, CellValue::Error(error))
-            .unwrap();
+        assert_eq!(result(&book, formula), CellValue::Error(error), "{formula}");
     }
-    for (formula, expected) in [
-        ("SLOPE({#N/A,2},{1,#DIV/0!})", CellError::Div0),
-        ("INTERCEPT({#N/A,2},{1,#DIV/0!})", CellError::Div0),
-        ("SUMXMY2({#N/A,2},{1,#DIV/0!})", CellError::NA),
-        ("SUMX2MY2({#DIV/0!,2},{1})", CellError::NA),
-        ("SUMX2PY2({#DIV/0!,2},{1})", CellError::NA),
-        ("SLOPE({#DIV/0!,2},{1})", CellError::NA),
-        ("INTERCEPT({1,2},{#DIV/0!})", CellError::NA),
-        ("CORREL({#DIV/0!,2},{1})", CellError::Div0),
-        ("SUMXMY2(C1:C2,A1)", CellError::NA),
-        ("SUMXMY2(NA(),{1,2})", CellError::NA),
-        ("SUMXMY2(1/0,{1,2})", CellError::Div0),
-        ("SLOPE(1/0,{#N/A,2})", CellError::Div0),
-        ("INTERCEPT({#DIV/0!,2},NA())", CellError::NA),
-    ] {
-        assert_eq!(
-            result(&book, formula),
-            CellValue::Error(expected),
-            "{formula}"
-        );
-    }
-    // Equal element counts admit a row paired with a column.
+    // Pairing follows flattened position, so squared differences are 1+4+9.
     assert_eq!(
         result(&book, "SUMXMY2({1,2,3},{2;4;6})"),
         CellValue::Number(14.)

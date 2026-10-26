@@ -9,6 +9,584 @@ fn expression(formula: &str) -> Expr {
     bound::bind(&poirot_parsing::formula::parse_formula(formula).unwrap())
 }
 #[test]
+fn one_shot_aggregate_arguments_do_not_accumulate_vm_slots() {
+    let workbook = workbook();
+    let arguments = [
+        expression("1"),
+        expression("2"),
+        expression("3"),
+        expression("4"),
+    ];
+    let mut session = Session::new(
+        &workbook,
+        EvaluationInputs::default(),
+        BudgetMeter::new(EvaluationBudgets {
+            materialized_values: 1,
+            ..EvaluationBudgets::default()
+        })
+        .unwrap(),
+    );
+    let mut host = CallHost::new_inheriting(&mut session, 0, AT, &arguments);
+    let mut values = Vec::new();
+    for index in 0..arguments.len() {
+        values.push(host.aggregate_argument_once(index).unwrap().into_value());
+    }
+    assert!(values.into_iter().zip([1., 2., 3., 4.]).all(
+        |(value, expected)| matches!(value, Value::Scalar(Number(number)) if number == expected)
+    ));
+    assert_eq!(host.argument_slots, 0);
+    assert_eq!(host.session.budget.usage.materialized_values, 0);
+    assert!(matches!(
+        host.aggregate_argument_once(4),
+        Err(FunctionFailure::Spreadsheet(CellError::Value))
+    ));
+}
+
+#[test]
+fn one_shot_blank_references_keep_median_budget_one_contract() {
+    let workbook = workbook();
+    let arguments = [expression("A1"), expression("A2"), expression("A3")];
+    let budgets = EvaluationBudgets {
+        materialized_values: 1,
+        ..EvaluationBudgets::default()
+    };
+    let mut session = Session::new(
+        &workbook,
+        EvaluationInputs::default(),
+        BudgetMeter::new(budgets).unwrap(),
+    );
+    let mut host = CallHost::new_inheriting(&mut session, 0, AT, &arguments);
+    for index in 0..arguments.len() {
+        let operand = host.aggregate_argument_once(index).unwrap();
+        assert!(matches!(operand.value(), Value::Refs(_)));
+    }
+    assert_eq!(host.argument_slots, 0);
+    // Each reference charges one descriptor; the collection limit of one is
+    // checked separately from cumulative usage across all three arguments.
+    assert_eq!(host.session.budget.usage.materialized_values, 3);
+}
+
+#[test]
+fn selection_buffer_and_sparse_countblank_preserve_limits_and_logical_area() {
+    let mut workbook = workbook();
+    workbook
+        .sheet_mut(0)
+        .unwrap()
+        .set_value("A1".parse().unwrap(), 3.)
+        .unwrap();
+    let arguments = [expression("A1:A3")];
+    let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+    let mut host = CallHost::new(&mut session, 0, AT, &arguments);
+    let value = host.aggregate_argument_once(0).unwrap().into_value();
+    assert_eq!(host.countblank_references(&value).unwrap(), Some(2));
+    assert_eq!(host.session.budget.usage.cell_reads, 1);
+    assert_eq!(
+        host.countblank_references(&Value::Scalar(Number(1.)))
+            .unwrap(),
+        None
+    );
+    let selected = host
+        .selection_buffer(2, Selection::Pending, "selection allocation failed")
+        .unwrap();
+    assert_eq!(selected.len(), 2);
+    assert!(
+        selected
+            .iter()
+            .all(|slot| matches!(slot, Selection::Pending))
+    );
+    let before = host.session.budget.usage.helper_operations;
+    host.charge_selection_work(3).unwrap();
+    assert_eq!(host.session.budget.usage.helper_operations - before, 3);
+
+    let mut limited = Session::new(
+        &workbook,
+        EvaluationInputs::default(),
+        BudgetMeter::new(EvaluationBudgets {
+            materialized_values: 1,
+            ..EvaluationBudgets::default()
+        })
+        .unwrap(),
+    );
+    let mut host = CallHost::new(&mut limited, 0, AT, &[]);
+    assert!(matches!(
+        host.selection_buffer(2, Selection::Pending, "selection allocation failed"),
+        Err(EvaluationFailure::Budget(_))
+    ));
+}
+#[test]
+fn aggregate_fold_retains_origin_omission_and_batch_usage() {
+    let workbook = workbook();
+    let arguments = [expression("{1,2,3}")];
+    let mut baseline = Session::with_context(&workbook, EvaluationInputs::default());
+    let mut expected = Vec::new();
+    let operand = HostOperand {
+        value: Value::Array(ArrayView::unknown(vec![vec![
+            Number(1.),
+            Blank,
+            Number(3.),
+        ]])),
+        missing: false,
+        array_missing: vec![vec![false, true, false]],
+    };
+    baseline
+        .fold_items(
+            operand,
+            (),
+            |_, _| Ok(()),
+            |_, member| {
+                expected.push((member.value, member.origin, member.missing));
+                Ok(())
+            },
+        )
+        .unwrap();
+    let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+    let mut host = CallHost::new(&mut session, 0, AT, &arguments);
+    let operand = HostOperand {
+        value: Value::Array(ArrayView::unknown(vec![vec![
+            Number(1.),
+            Blank,
+            Number(3.),
+        ]])),
+        missing: false,
+        array_missing: vec![vec![false, true, false]],
+    };
+    let mut actual = Vec::new();
+    host.fold_aggregate_operand(
+        operand,
+        (),
+        |_, _| Ok(()),
+        |_, member| {
+            actual.push((member.value, member.origin, member.missing));
+            Ok(())
+        },
+    )
+    .unwrap();
+    assert_eq!(actual, expected);
+    assert_eq!(actual.len(), 3);
+    assert_eq!(actual[1], (Blank, OperandOrigin::ArrayElement, true));
+    assert_eq!(host.session.budget.usage, baseline.budget.usage);
+    assert!(
+        actual
+            .iter()
+            .all(|(_, origin, _)| *origin == OperandOrigin::ArrayElement)
+    );
+}
+
+#[test]
+fn ordered_sheet_span_stops_before_later_cell_read() {
+    let mut workbook = workbook();
+    workbook.add_sheet("Sheet2").unwrap();
+    workbook
+        .sheet_mut(0)
+        .unwrap()
+        .set_value("A1".parse().unwrap(), 7.)
+        .unwrap();
+    workbook
+        .sheet_mut(1)
+        .unwrap()
+        .set_formula("A1".parse().unwrap(), "2")
+        .unwrap();
+    let arguments = [expression("Sheet1:Sheet2!A1")];
+    let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+    let mut host = CallHost::new(&mut session, 0, AT, &arguments);
+    let operand = host.argument(0).unwrap();
+    let values = host
+        .fold_ordered_sheet_span(operand, Vec::new(), |values, member| {
+            values.push((member.value, member.origin, member.missing));
+            Ok(std::ops::ControlFlow::Break(()))
+        })
+        .unwrap();
+    assert_eq!(
+        values,
+        vec![(Number(7.), OperandOrigin::ReferencedCell, false)]
+    );
+    assert_eq!(host.session.budget.usage.cell_reads, 1);
+}
+#[test]
+fn eager_aggregate_fold_reads_after_first_semantic_error() {
+    use crate::execution_observation::{ExecutionEvent, ExecutionObserver};
+    /// Reject the later formula body after the first member produced a spreadsheet error.
+    struct FailLater;
+    impl ExecutionObserver for FailLater {
+        fn observe(&mut self, event: ExecutionEvent<'_>) -> EvalResult<()> {
+            if let ExecutionEvent::Begin(operation) = event
+                && operation.target.address == (CellAddress { row: 0, col: 1 })
+            {
+                return Err(EvaluationFailure::StalePlan);
+            }
+            Ok(())
+        }
+    }
+    let mut workbook = workbook();
+    workbook
+        .sheet_mut(0)
+        .unwrap()
+        .set_formula("A1".parse().unwrap(), "1/0")
+        .unwrap();
+    workbook
+        .sheet_mut(0)
+        .unwrap()
+        .set_formula("B1".parse().unwrap(), "2")
+        .unwrap();
+    let arguments = [expression("A1:B1")];
+    let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+    let mut observer = FailLater;
+    session.execution_observer = Some(&mut observer);
+    let mut host = CallHost::new(&mut session, 0, AT, &arguments);
+    let operand = host.argument(0).unwrap();
+    let mut first_error = None;
+    let result = host.fold_aggregate_operand(
+        operand,
+        (),
+        |_, _| Ok(()),
+        |_, member| {
+            if first_error.is_none() && matches!(member.value, Error(_)) {
+                first_error = Some(member.value);
+            }
+            Ok(())
+        },
+    );
+    assert!(first_error.is_some());
+    assert!(
+        matches!(result, Err(EvaluationFailure::StalePlan)),
+        "{result:?}"
+    );
+}
+#[test]
+fn selected_transfer_matches_session_observation_and_budget() {
+    use crate::execution_observation::{ExecutionEvent, ExecutionObserver, OperationKind};
+    struct Events(Vec<(bool, usize)>);
+    impl ExecutionObserver for Events {
+        fn observe(&mut self, event: ExecutionEvent<'_>) -> EvalResult<()> {
+            match event {
+                ExecutionEvent::Begin(operation) => {
+                    if let OperationKind::Argument { ordinal, .. } = operation.kind {
+                        self.0.push((true, ordinal));
+                    }
+                }
+                ExecutionEvent::Complete { operation, .. } => {
+                    if let OperationKind::Argument { ordinal, .. } = operation.kind {
+                        self.0.push((false, ordinal));
+                    }
+                }
+                ExecutionEvent::MaskDecision { .. } => {}
+            }
+            Ok(())
+        }
+    }
+    let workbook = workbook();
+    let arguments = [expression("{1,2}")];
+    let mut baseline_events = Events(Vec::new());
+    let mut baseline = Session::with_context(&workbook, EvaluationInputs::default());
+    baseline.execution_observer = Some(&mut baseline_events);
+    let (expected_id, expected) = baseline
+        .observed_value_argument(0, AT, (&arguments[0]).into(), 0)
+        .unwrap();
+    let expected_shape = Shape::inspect(&expected).unwrap();
+    let expected_usage = baseline.budget.usage.clone();
+    let mut host_events = Events(Vec::new());
+    let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+    session.execution_observer = Some(&mut host_events);
+    let mut host = CallHost::new(&mut session, 0, AT, &arguments);
+    let (actual_id, actual) = host.selected_argument(0).unwrap();
+    assert_eq!(actual_id, expected_id);
+    assert_eq!(
+        host.selected_shape(&actual).unwrap().columns,
+        expected_shape.columns
+    );
+    assert_eq!(host.session.budget.usage, expected_usage);
+    drop(host);
+    assert_eq!(host_events.0, baseline_events.0);
+    assert_eq!(host_events.0, vec![(true, 0), (false, 0)]);
+}
+
+#[test]
+fn selected_results_bridge_matches_session_for_choose_ifs_and_switch_controls() {
+    use crate::execution_observation::{ExecutionEvent, ExecutionObserver, OperationKind};
+    /// Argument events collected without changing selected branch evaluation.
+    struct Events(Vec<(bool, usize)>);
+    impl ExecutionObserver for Events {
+        fn observe(&mut self, event: ExecutionEvent<'_>) -> EvalResult<()> {
+            match event {
+                ExecutionEvent::Begin(operation) => {
+                    if let OperationKind::Argument { ordinal, .. } = operation.kind {
+                        self.0.push((true, ordinal));
+                    }
+                }
+                ExecutionEvent::Complete { operation, .. } => {
+                    if let OperationKind::Argument { ordinal, .. } = operation.kind {
+                        self.0.push((false, ordinal));
+                    }
+                }
+                ExecutionEvent::MaskDecision { .. } => {}
+            }
+            Ok(())
+        }
+    }
+
+    let mut workbook = workbook();
+    for (address, value) in [("B1", 7.), ("C1", 8.), ("D1", 9.)] {
+        workbook
+            .sheet_mut(0)
+            .unwrap()
+            .set_value(address.parse().unwrap(), value)
+            .unwrap();
+    }
+    let cases = [
+        (
+            "CHOOSE",
+            vec!["1", "B1:C1", "D1", "UNKNOWN_FUNCTION()"],
+            vec![Selection::Branch(1), Selection::Branch(2)],
+            vec![1, 2, 3],
+            vec![Number(7.), Number(9.)],
+            vec![(true, 1), (false, 1), (true, 2), (false, 2)],
+        ),
+        (
+            "IFS",
+            vec!["TRUE", "B1:C1", "FALSE", "UNKNOWN_FUNCTION()"],
+            vec![Selection::Branch(1), Selection::Pending],
+            vec![1, 3],
+            vec![Number(7.), Error(NA)],
+            vec![(true, 1), (false, 1)],
+        ),
+        (
+            "SWITCH",
+            vec!["1", "1", "B1:C1", "2", "UNKNOWN_FUNCTION()", "D1"],
+            vec![Selection::Branch(2), Selection::Branch(5)],
+            vec![2, 4, 5],
+            vec![Number(7.), Number(9.)],
+            vec![(true, 2), (false, 2), (true, 5), (false, 5)],
+        ),
+    ];
+    for (name, formulas, selected, ordinals, expected_values, expected_events) in cases {
+        let arguments: Vec<_> = formulas.into_iter().map(expression).collect();
+        let shape = Shape {
+            rows: 1,
+            columns: 2,
+        };
+        let mut baseline_events = Events(Vec::new());
+        let mut baseline = Session::with_context(&workbook, EvaluationInputs::default());
+        baseline.execution_observer = Some(&mut baseline_events);
+        let expected = baseline
+            .selected_array_results(
+                0,
+                AT,
+                (&arguments).into(),
+                selected.clone(),
+                shape,
+                ordinals.iter().copied(),
+            )
+            .unwrap();
+        let expected_usage = baseline.budget.usage.clone();
+
+        let mut host_events = Events(Vec::new());
+        let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+        session.execution_observer = Some(&mut host_events);
+        let mut host = CallHost::new(&mut session, 0, AT, &arguments);
+        let actual = host
+            .selected_array_results(selected, shape, ordinals.into_iter())
+            .unwrap();
+        let (Value::Array(actual), Value::Array(expected)) = (actual, expected) else {
+            panic!("{name} should produce arrays");
+        };
+        assert_eq!(actual.values, expected.values, "{name}");
+        assert_eq!(actual.values, vec![expected_values], "{name}");
+        assert_eq!(host.session.budget.usage, expected_usage, "{name}");
+        drop(host);
+        assert_eq!(host_events.0, baseline_events.0, "{name}");
+        assert_eq!(host_events.0, expected_events, "{name}");
+    }
+}
+
+#[test]
+fn selected_results_bridge_preserves_resource_failure_and_usage() {
+    let workbook = workbook();
+    let arguments = [expression("1"), expression("{7,8,9}"), expression("2")];
+    let shape = Shape {
+        rows: 1,
+        columns: 1,
+    };
+    let limits = EvaluationBudgets {
+        materialized_values: 2,
+        ..Default::default()
+    };
+    let mut baseline = Session::with_context(&workbook, EvaluationInputs::default());
+    baseline.budget = BudgetMeter::new(limits).unwrap();
+    let expected = baseline.selected_array_results(
+        0,
+        AT,
+        (&arguments).into(),
+        vec![Selection::Branch(1)],
+        shape,
+        1..2,
+    );
+    let expected_usage = baseline.budget.usage.clone();
+    let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+    session.budget = BudgetMeter::new(limits).unwrap();
+    let mut host = CallHost::new(&mut session, 0, AT, &arguments);
+    let actual = host.selected_array_results(vec![Selection::Branch(1)], shape, 1..2);
+    assert!(matches!(expected, Err(EvaluationFailure::Budget(_))));
+    match (actual, expected) {
+        (Err(actual), Err(expected)) => assert_eq!(actual, expected),
+        _ => panic!("selected result resource failure differs"),
+    }
+    assert_eq!(host.session.budget.usage, expected_usage);
+}
+
+#[test]
+fn selected_member_and_array_preserve_reference_laziness_and_usage() {
+    let mut workbook = workbook();
+    workbook
+        .sheet_mut(0)
+        .unwrap()
+        .set_value("B1".parse().unwrap(), 7.)
+        .unwrap();
+    workbook
+        .sheet_mut(0)
+        .unwrap()
+        .set_value("C1".parse().unwrap(), 8.)
+        .unwrap();
+    let arguments = [expression("B1:C1"), expression("UNKNOWN_FUNCTION()")];
+    let mut baseline = Session::with_context(&workbook, EvaluationInputs::default());
+    let (_, expected) = baseline
+        .observed_value_argument(0, AT, (&arguments[0]).into(), 0)
+        .unwrap();
+    let shape = Shape::inspect(&expected).unwrap();
+    let expected_array = baseline
+        .rectangular_values(AT, shape, |session, row, column| {
+            if column == 0 {
+                Ok(Number(11.))
+            } else {
+                session.rectangular_element(&expected, shape, row, column)
+            }
+        })
+        .unwrap();
+    let expected_usage = baseline.budget.usage.clone();
+    let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+    let mut host = CallHost::new(&mut session, 0, AT, &arguments);
+    let (_, value) = host.selected_argument(0).unwrap();
+    assert_eq!(host.session.budget.usage.cell_reads, 0);
+    let output = host
+        .selected_array(shape, |reader, row, column| {
+            if column == 0 {
+                Ok(Number(11.))
+            } else {
+                reader.member(&value, shape, row, column)
+            }
+        })
+        .unwrap();
+    let (Value::Array(actual), Value::Array(expected)) = (output, expected_array) else {
+        panic!("expected arrays")
+    };
+    assert_eq!(actual.values, expected.values);
+    assert_eq!(host.session.budget.usage, expected_usage);
+    assert_eq!(
+        host.selected_member(&value, shape, 0, 0).unwrap(),
+        Number(7.)
+    );
+}
+
+#[test]
+fn selected_transfer_emits_failure_completion_and_scalar_forwarder_keeps_policy() {
+    use crate::execution_observation::{ExecutionEvent, ExecutionObserver, OperationKind};
+    struct Events(Vec<bool>);
+    impl ExecutionObserver for Events {
+        fn observe(&mut self, event: ExecutionEvent<'_>) -> EvalResult<()> {
+            match event {
+                ExecutionEvent::Begin(operation)
+                    if matches!(operation.kind, OperationKind::Argument { ordinal: 0, .. }) =>
+                {
+                    self.0.push(true);
+                }
+                ExecutionEvent::Complete { operation, result }
+                    if matches!(operation.kind, OperationKind::Argument { ordinal: 0, .. }) =>
+                {
+                    assert!(result.is_err());
+                    self.0.push(false);
+                }
+                _ => {}
+            }
+            Ok(())
+        }
+    }
+    let workbook = workbook();
+    let arguments = [expression("1+1")];
+    let mut events = Events(Vec::new());
+    let mut session = Session::new(
+        &workbook,
+        EvaluationInputs::default(),
+        BudgetMeter::new(EvaluationBudgets {
+            run_work: 0,
+            ..EvaluationBudgets::default()
+        })
+        .unwrap(),
+    );
+    session.execution_observer = Some(&mut events);
+    let mut host = CallHost::new(&mut session, 0, AT, &arguments);
+    assert!(matches!(
+        host.selected_argument(0),
+        Err(EvaluationFailure::Budget(_))
+    ));
+    drop(host);
+    assert_eq!(events.0, [true, false]);
+
+    let mut baseline = Session::with_context(&workbook, EvaluationInputs::default());
+    let expected = baseline.argument(0, AT, (&arguments).into(), 0).unwrap();
+    let expected_usage = baseline.budget.usage.clone();
+    let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+    let mut host = CallHost::new(&mut session, 0, AT, &arguments);
+    assert_eq!(host.scalar_argument(0).unwrap(), expected);
+    assert_eq!(host.session.budget.usage, expected_usage);
+}
+#[test]
+fn selected_policy_omission_projection_and_choose_number_match_session() {
+    use crate::run::{DependencyRead, DependencyReadSink, ReadEvent};
+    #[derive(Default)]
+    /// Records dependencies consumed by the selected invocation.
+    struct Reads(Vec<DependencyRead>);
+    impl DependencyReadSink for Reads {
+        fn read(&mut self, event: ReadEvent) {
+            self.0.push(event.read);
+        }
+    }
+    let workbook = workbook();
+    let arguments = [
+        Expr::Missing,
+        expression("{1,2}"),
+        expression("UNKNOWN_FUNCTION()"),
+    ];
+    let number = Text("2".into());
+    let mut baseline_reads = Reads::default();
+    let mut baseline = Session::with_context(&workbook, EvaluationInputs::default());
+    baseline.dependency_sink = Some(&mut baseline_reads);
+    baseline.read(DependencyRead::BuiltinPolicy);
+    let expected_policy = baseline.builtin_policy;
+    let (_, expected_value) = baseline
+        .observed_value_argument(0, AT, (&arguments[1]).into(), 1)
+        .unwrap();
+    let expected_array = baseline.retains_array(&expected_value);
+    let expected_scalar = baseline.select_legacy_scalar(AT, expected_value).unwrap();
+    let expected_number = baseline.coercev2_scalar_number(&number).unwrap();
+    let expected_usage = baseline.budget.usage.clone();
+
+    let mut host_reads = Reads::default();
+    let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+    session.dependency_sink = Some(&mut host_reads);
+    let mut host = CallHost::new(&mut session, 0, AT, &arguments);
+    assert!(host.selected_is_missing(0));
+    assert!(!host.selected_is_missing(1));
+    assert!(!host.selected_is_missing(3));
+    assert_eq!(host.selection_builtin_policy(), expected_policy);
+    let (_, value) = host.selected_argument(1).unwrap();
+    assert_eq!(host.retains_selected_array(&value), expected_array);
+    assert_eq!(host.select_legacy_scalar(value).unwrap(), expected_scalar);
+    assert_eq!(host.selected_number(&number).unwrap(), expected_number);
+    assert_eq!(host.session.budget.usage, expected_usage);
+    drop(host);
+    assert_eq!(host_reads.0, baseline_reads.0);
+    assert!(host_reads.0.contains(&DependencyRead::BuiltinPolicy));
+}
+#[test]
 fn demand_memoization_preserves_references_without_reading_cells() {
     let mut workbook = workbook();
     workbook
@@ -25,10 +603,10 @@ fn demand_memoization_preserves_references_without_reading_cells() {
     assert_eq!(host.session.budget.usage.expressions, expression_count);
     assert_eq!(host.session.budget.usage.cell_reads, 0);
     assert_eq!(host.prepared_arguments, 1);
-    assert!(matches!(
-        host.scalar(0, MissingPolicy::Reject),
-        Err(FunctionFailure::Spreadsheet(CellError::Div0))
-    ));
+    assert_eq!(
+        host.scalar_data(0, MissingPolicy::Reject).unwrap().value,
+        Error(CellError::Div0)
+    );
     assert_eq!(host.prepared_arguments, 1);
 }
 #[test]
@@ -46,11 +624,17 @@ fn missing_and_blank_and_array_missing_are_distinct() {
     let mut host = CallHost::new(&mut session, 0, AT, &arguments);
     assert_eq!(host.kind(0).unwrap(), OperandKind::Missing);
     assert!(matches!(
-        host.scalar(0, MissingPolicy::Reject),
+        host.scalar_data(0, MissingPolicy::Reject),
         Err(FunctionFailure::Spreadsheet(CellError::Value))
     ));
-    assert_eq!(host.scalar(0, MissingPolicy::Zero).unwrap(), Number(0.));
-    assert_eq!(host.scalar(0, MissingPolicy::Blank).unwrap(), Blank);
+    assert_eq!(
+        host.scalar_data(0, MissingPolicy::Zero).unwrap().value,
+        Number(0.)
+    );
+    assert_eq!(
+        host.scalar_data(0, MissingPolicy::Blank).unwrap().value,
+        Blank
+    );
     let blank = host.scalar_data(1, MissingPolicy::Reject).unwrap();
     assert_eq!(blank.value, Blank);
     assert!(!blank.missing);
@@ -59,6 +643,28 @@ fn missing_and_blank_and_array_missing_are_distinct() {
         host.argument(2).unwrap().array_missing(),
         &[vec![false, true], vec![true, false]]
     );
+    let sparse = host
+        .collection(2, TraversalPolicy::SparseAggregation)
+        .unwrap();
+    assert_eq!(sparse.len(), 4);
+    assert_eq!(
+        sparse
+            .iter()
+            .map(|member| member.missing)
+            .collect::<Vec<_>>(),
+        [false, true, true, false]
+    );
+    assert!(
+        sparse
+            .iter()
+            .all(|member| member.origin == OperandOrigin::ArrayElement)
+    );
+    let omitted = host
+        .collection(0, TraversalPolicy::SparseAggregation)
+        .unwrap();
+    assert_eq!(omitted.len(), 1);
+    assert!(omitted[0].missing);
+    assert_eq!(omitted[0].value, Blank);
     let last = host.collection(2, TraversalPolicy::LastAreaRow).unwrap();
     assert_eq!(last.len(), 2);
     assert!(last[0].missing);
@@ -70,6 +676,11 @@ fn missing_and_blank_and_array_missing_are_distinct() {
 fn union_is_not_a_dense_rectangle_and_sparse_traversal_retains_origin() {
     let mut workbook = workbook();
     workbook.sheet_mut(0).unwrap().set_value(AT, 3.).unwrap();
+    workbook
+        .sheet_mut(0)
+        .unwrap()
+        .set_value(CellAddress { row: 1, col: 1 }, 5.)
+        .unwrap();
     let arguments = [expression("(A1,B2)")];
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
     let mut host = CallHost::new(&mut session, 0, AT, &arguments);
@@ -80,9 +691,11 @@ fn union_is_not_a_dense_rectangle_and_sparse_traversal_retains_origin() {
     let sparse = host
         .collection(0, TraversalPolicy::SparseAggregation)
         .unwrap();
-    assert_eq!(sparse.len(), 1);
+    assert_eq!(sparse.len(), 2);
     assert_eq!(sparse[0].value, Number(3.));
     assert_eq!(sparse[0].origin, OperandOrigin::ReferencedCell);
+    assert_eq!(sparse[1].value, Number(5.));
+    assert_eq!(sparse[1].origin, OperandOrigin::ReferencedCell);
     assert_eq!(host.argument(0).unwrap().kind(), OperandKind::Reference);
 }
 #[test]
@@ -252,8 +865,9 @@ fn pinned_numeric_conversion_preserves_inputs_and_source_precision() {
     let arguments = [expression("2.9999999999999996"), expression(r#"" 1e2 ""#)];
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
     let mut host = CallHost::new(&mut session, 0, AT, &arguments);
+    let operand = host.scalar_data(0, MissingPolicy::Reject).unwrap();
     let n = host
-        .coercev2_argument_number(0, MissingPolicy::Reject, NumericPolicy::PinnedPoi)
+        .coercev2_scalar_number(&operand.value, NumericPolicy::PinnedPoi)
         .unwrap();
     assert_eq!(
         n.to_bits(),
@@ -271,8 +885,9 @@ fn pinned_numeric_conversion_preserves_inputs_and_source_precision() {
             .unwrap(),
         "3"
     );
+    let operand = host.scalar_data(1, MissingPolicy::Reject).unwrap();
     assert_eq!(
-        host.coercev2_argument_number(1, MissingPolicy::Reject, NumericPolicy::PinnedPoi)
+        host.coercev2_scalar_number(&operand.value, NumericPolicy::PinnedPoi)
             .unwrap(),
         100.
     );
@@ -719,19 +1334,24 @@ fn index_memo_preserves_kind_shape_and_origin_in_both_projection_orders() {
 fn index_scalar_selection_retains_origin_and_array_slice_anchor() {
     let workbook = workbook();
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
-    session.builtin_policy = BuiltinSemanticsPolicy::ExcelDocumentation;
-    for (formula, origin) in [
-        ("INDEX(1,1,1)", OperandOrigin::Direct),
-        ("INDEX({1,2},1,1)", OperandOrigin::ArrayElement),
-        ("INDEX(INDEX({1,2},1,1),1,1)", OperandOrigin::ArrayElement),
+    for policy in [
+        BuiltinSemanticsPolicy::PinnedPoi,
+        BuiltinSemanticsPolicy::ExcelDocumentation,
     ] {
-        let arguments = [expression(formula)];
-        let mut host = CallHost::new(&mut session, 0, AT, &arguments);
-        assert_eq!(host.kind(0).unwrap(), OperandKind::Scalar);
-        assert_eq!(
-            host.scalar_data(0, MissingPolicy::Blank).unwrap().origin,
-            origin
-        );
+        session.builtin_policy = policy;
+        for (formula, origin) in [
+            ("INDEX(1,1,1)", OperandOrigin::Direct),
+            ("INDEX({1,2},1,1)", OperandOrigin::ArrayElement),
+            ("INDEX(INDEX({1,2},1,1),1,1)", OperandOrigin::ArrayElement),
+        ] {
+            let arguments = [expression(formula)];
+            let mut host = CallHost::new(&mut session, 0, AT, &arguments);
+            assert_eq!(host.kind(0).unwrap(), OperandKind::Scalar);
+            assert_eq!(
+                host.scalar_data(0, MissingPolicy::Blank).unwrap().origin,
+                origin
+            );
+        }
     }
     let at = CellAddress { row: 4, col: 5 };
     let plan = expression("INDEX({1,2;3,4},2,0)");

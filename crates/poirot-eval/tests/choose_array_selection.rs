@@ -145,7 +145,7 @@ fn unselected_branches_and_reference_members_are_not_read() {
         ("G1", "G1"),
         ("H1", "H1"),
         ("I1", "2"),
-        ("K1", "COUNTIF(A1:A3,B1:B2)"),
+        ("K1", "COUNTIF(A1:A3,)"),
     ] {
         book.sheet_mut(0)
             .unwrap()
@@ -228,7 +228,9 @@ fn incompatible_extents_reject_without_unused_shape_scanning() {
     );
 }
 #[test]
-fn policy_and_index_edits_invalidate_restored_results() {
+fn modern_selection_survives_policy_labels_and_restored_index_edits() {
+    // Modern CHOOSE uses the independently documented {3,5,7} selection under
+    // both retained policy labels; changing a label no longer scalarizes it.
     let mut book = book();
     for (cell, formula) in [
         ("E1", "SUM(CHOOSE({1,2,1},{3,100,7},5))"),
@@ -253,7 +255,7 @@ fn policy_and_index_edits_invalidate_restored_results() {
             .unwrap()
             .cell(target("E1"))
             .unwrap(),
-        CellValue::Number(110.)
+        CellValue::Number(15.)
     );
     overlay
         .set_policy(OverlayPolicy {
@@ -304,7 +306,7 @@ fn policy_and_index_edits_invalidate_restored_results() {
             .unwrap()
             .cell(target("E1"))
             .unwrap(),
-        CellValue::Number(110.)
+        CellValue::Number(15.)
     );
 }
 #[test]

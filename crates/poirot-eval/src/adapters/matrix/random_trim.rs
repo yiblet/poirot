@@ -1,18 +1,14 @@
 //! Seeded random arrays and blank-border selection over existing host services.
 use super::*;
-use crate::host::MissingPolicy;
 use crate::registry::MatrixFunction as F;
 use poirot_functions_matrix::{TrimBounds, TrimMode, TrimRectangle};
 
 fn number(host: &mut CallHost<'_, '_>, index: usize, default: f64) -> FunctionResult<f64> {
-    if index >= host.len() {
-        return Ok(default);
-    }
-    let value = host.scalar_data(index, MissingPolicy::Blank)?;
-    if value.missing {
-        return Ok(default);
-    }
-    host.coercev2_scalar_number(&value.value, NumericPolicy::PinnedPoi)
+    crate::adapters::elementwise::NumericSignature::new(&[
+        crate::adapters::elementwise::NumericParameter::constant(default),
+    ])
+    .scalars(host, index)?
+    .get(0)
 }
 fn random(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<Value> {
     // Options are forced once, left to right, before output member draws.
@@ -52,44 +48,23 @@ fn random(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<V
     };
     let rows = rows.trunc() as usize;
     let columns = columns.trunc() as usize;
-    let count = rows
-        .checked_mul(columns)
-        .ok_or_else(|| host.size_overflow())?;
-    host.check_values(count)?;
-    host.check_values(rows)?;
-    host.charge_work(count as u64)?;
-    // Reserve every output row before drawing, so allocation failure draws no members.
-    let mut result = Vec::new();
-    result
-        .try_reserve_exact(rows)
-        .map_err(|_| host.allocation_failure())?;
-    for _ in 0..rows {
-        let mut row = Vec::new();
-        row.try_reserve_exact(columns)
-            .map_err(|_| host.allocation_failure())?;
-        // SAFETY: The outer vector reserved rows slots and this loop pushes exactly rows rows.
-        result.push(row);
-    }
-    for row in &mut result {
-        for _ in 0..columns {
-            let draw = host.random_draw(interval)?;
-            let value = if integer {
-                draw
+    matrices::generate(host, rows, columns, address, |host, _, _| {
+        let draw = host.random_draw(interval)?;
+        let value = if integer {
+            draw
+        } else {
+            // Convex interpolation avoids overflow for opposite-sign extreme bounds.
+            let mapped = if minimum.signum() != maximum.signum() {
+                minimum * (1.0 - draw) + maximum * draw
             } else {
-                // Convex interpolation avoids overflow for opposite-sign extreme bounds.
-                let mapped = if minimum.signum() != maximum.signum() {
-                    minimum * (1.0 - draw) + maximum * draw
-                } else {
-                    minimum + (maximum - minimum) * draw
-                };
-                mapped.max(minimum).min(maximum)
+                minimum + (maximum - minimum) * draw
             };
-            // SAFETY: Each row reserved columns slots and this loop pushes exactly columns values.
-            row.push(Number(value));
-        }
-    }
-    Ok(Value::Array(ArrayView::anchored(result, Some(address))))
+            mapped.max(minimum).min(maximum)
+        };
+        Ok(Number(value))
+    })
 }
+
 fn mode(host: &mut CallHost<'_, '_>, index: usize) -> FunctionResult<TrimMode> {
     let value = number(host, index, 3.0)?;
     if !value.is_finite() || !(0.0..4.0).contains(&value) {
@@ -107,32 +82,16 @@ fn trim(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<Val
     let mut bounds =
         TrimBounds::new(shape.rows, shape.columns).map_err(|error| modern::failure(host, error))?;
     if rows != TrimMode::None || columns != TrimMode::None {
-        if let Some(positions) = host.stored_positions(0)? {
-            host.charge_work(positions.len() as u64)?;
-            for (row, column) in positions {
-                if host.read_cell(0, row, column)?.value != Blank {
-                    bounds
-                        .include(row, column)
-                        .map_err(|error| modern::failure(host, error))?;
-                }
+        matrices::visit(host, 0, |host, row, column, operand| {
+            if operand.value != Blank {
+                bounds
+                    .include(row, column)
+                    .map_err(|error| matrices::failure(host, error))?;
             }
-        } else {
-            let count = shape
-                .rows
-                .checked_mul(shape.columns)
-                .ok_or_else(|| host.size_overflow())?;
-            host.charge_work(count as u64)?;
-            for row in 0..shape.rows {
-                for column in 0..shape.columns {
-                    if host.read_cell(0, row, column)?.value != Blank {
-                        bounds
-                            .include(row, column)
-                            .map_err(|error| modern::failure(host, error))?;
-                    }
-                }
-            }
-        }
+            Ok(())
+        })?;
     }
+
     let rectangle = bounds.finish(rows, columns).ok_or(CellError::Calc)?;
     if shape.kind == OperandKind::Reference {
         let value = host.argument(0)?.into_value();
@@ -148,32 +107,18 @@ fn trim(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<Val
         .checked_sub(rectangle.first_column)
         .and_then(|n| n.checked_add(1))
         .ok_or(VALUE_ERROR)?;
-    host.check_values(
-        row_count
-            .checked_mul(columns)
-            .ok_or_else(|| host.size_overflow())?,
-    )?;
-    host.check_values(row_count)?;
-    let mut result = Vec::new();
-    result
-        .try_reserve_exact(row_count)
-        .map_err(|_| host.allocation_failure())?;
-    for row in rectangle.first_row..=rectangle.last_row {
-        let mut output = Vec::new();
-        output
-            .try_reserve_exact(columns)
-            .map_err(|_| host.allocation_failure())?;
-        for column in rectangle.first_column..=rectangle.last_column {
-            // SAFETY: The row reserved columns entries; the checked inclusive rectangle has that width.
-            output.push(poirot_coercionv2::compatibility::coercev2_array_member(
-                host.read_cell(0, row, column)?.value,
-            ));
-        }
-        // SAFETY: The outer vector reserved row_count entries for this checked rectangle.
-        result.push(output);
-    }
-    Ok(Value::Array(ArrayView::anchored(result, Some(address))))
+    matrices::generate(host, row_count, columns, address, |host, row, column| {
+        let row = rectangle.first_row.checked_add(row).ok_or(VALUE_ERROR)?;
+        let column = rectangle
+            .first_column
+            .checked_add(column)
+            .ok_or(VALUE_ERROR)?;
+        Ok(poirot_coercionv2::compatibility::coercev2_array_member(
+            host.read_cell(0, row, column)?.value,
+        ))
+    })
 }
+
 fn crop_reference(
     host: &mut CallHost<'_, '_>,
     value: Value,

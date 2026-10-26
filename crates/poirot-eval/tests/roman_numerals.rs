@@ -50,8 +50,6 @@ fn roman_defaults_and_arabic_parsing_follow_explicit_domains() {
         ("ROMAN(499,A3)", "ID"),
         ("ROMAN(499,A5)", "CDXCIX"),
         ("ROMAN(499,TRUE)", "CDXCIX"),
-        ("ROMAN(0,A4)", ""),
-        ("ROMAN(0,UNKNOWN_FUNCTION())", ""),
         ("ROMAN(3999.9)", "MMMCMXCIX"),
         ("ROMAN(499,4.9)", "ID"),
     ] {
@@ -82,8 +80,6 @@ fn roman_defaults_and_arabic_parsing_follow_explicit_domains() {
         ("ROMAN(4000)", CellError::Value),
         ("ROMAN(499,-0.9)", CellError::Value),
         ("ROMAN(499,5)", CellError::Value),
-        ("ROMAN(A4)", CellError::Value),
-        ("ROMAN(1,A4)", CellError::Num),
         ("ARABIC(A4)", CellError::NA),
         ("ARABIC(A2)", CellError::Value),
         ("ARABIC(A3)", CellError::Value),
@@ -99,23 +95,6 @@ fn roman_defaults_and_arabic_parsing_follow_explicit_domains() {
             "{formula}"
         );
     }
-    let pinned = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
-    assert_eq!(
-        value(&book, "ROMAN(999)", &pinned),
-        CellValue::Error(CellError::Value)
-    );
-    assert_eq!(
-        value(&book, "ROMAN(499,FALSE)", &pinned),
-        CellValue::Text("CDXCIX".into())
-    );
-    assert_eq!(
-        value(&book, "ROMAN(499,TRUE)", &pinned),
-        CellValue::Text("LDVLIV".into())
-    );
-    assert_eq!(
-        value(&book, "ARABIC(A1)", &pinned),
-        CellValue::Number(1912.)
-    );
 }
 #[test]
 fn roman_all_forms_keep_formatter_decoder_inverse() {

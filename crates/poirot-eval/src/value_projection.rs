@@ -298,48 +298,77 @@ impl<'a> Session<'a> {
         // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
         Ok(numeric_outcome::coerce_checked_numeric_result(result))
     }
-    /// Collect sparse members after each existing cell read, without changing read policy.
-    pub(super) fn items_map<T>(
+    /// Fold eager members after admitting each complete batch and preserving read order.
+    pub(super) fn fold_items<T>(
         &mut self,
-        value: Value,
-        mut project: impl FnMut(CellValue, bool) -> T,
-    ) -> EvalResult<Vec<T>> {
-        let mut values = Vec::new();
+        operand: crate::host::HostOperand,
+        mut state: T,
+        mut reserve_storage: impl FnMut(&mut T, usize) -> Result<(), std::collections::TryReserveError>,
+        mut consume: impl FnMut(&mut T, crate::host::ScalarOperand) -> EvalResult<()>,
+    ) -> EvalResult<T> {
+        use crate::host::{OperandOrigin, ScalarOperand};
+        let (value, missing, array_missing) = operand.into_parts();
+        let mut length = 0usize;
         // Keep admission and fallible reservation local to each projected growth.
         macro_rules! reserve {
             ($additional:expr) => {{
                 let additional = $additional;
-                let count = values.len().checked_add(additional).ok_or_else(|| {
-                    EvaluationFailure::Resource {
-                        kind: crate::ResourceFailureKind::SizeOverflow,
-                        capability: CapabilityId::FunctionAdapter,
-                        source: self.consumer,
-                        detail: "aggregate member count overflow".into(),
-                    }
-                })?;
+                let count =
+                    length
+                        .checked_add(additional)
+                        .ok_or_else(|| EvaluationFailure::Resource {
+                            kind: crate::ResourceFailureKind::SizeOverflow,
+                            capability: CapabilityId::FunctionAdapter,
+                            source: self.consumer,
+                            detail: "aggregate member count overflow".into(),
+                        })?;
                 self.budget.check_allocation(count)?;
                 self.budget
                     .charge(WorkKind::Materialization, additional as u64)?;
-                values
-                    .try_reserve(additional)
-                    .map_err(|_| EvaluationFailure::Resource {
+                reserve_storage(&mut state, additional).map_err(|_| {
+                    EvaluationFailure::Resource {
                         kind: crate::ResourceFailureKind::Allocation,
                         capability: CapabilityId::FunctionAdapter,
                         source: self.consumer,
                         detail: "aggregate member allocation failed".into(),
-                    })?;
+                    }
+                })?;
+                count
             }};
         }
         match value {
             Value::Missing => {
                 reserve!(1);
-                // SAFETY: The local reserve! expansion checked len + 1 and successfully reserved that capacity.
-                values.push(project(Blank, false));
+                consume(
+                    &mut state,
+                    ScalarOperand {
+                        value: Blank,
+                        origin: OperandOrigin::Direct,
+                        missing: true,
+                    },
+                )?;
             }
-            Value::Scalar(value) | Value::SelectedScalar(value, _) => {
+            Value::Scalar(value) => {
                 reserve!(1);
-                // SAFETY: The local reserve! expansion checked len + 1 and successfully reserved that capacity.
-                values.push(project(value, false));
+                consume(
+                    &mut state,
+                    ScalarOperand {
+                        value,
+                        origin: OperandOrigin::Direct,
+                        missing,
+                    },
+                )?;
+            }
+            Value::SelectedScalar(value, origin) => {
+                reserve!(1);
+                consume(
+                    &mut state,
+                    ScalarOperand {
+                        value,
+                        origin,
+                        missing,
+                    },
+                )?;
             }
             Value::Array(rows) => {
                 let count = rows
@@ -352,38 +381,180 @@ impl<'a> Session<'a> {
                         detail: "aggregate member count overflow".into(),
                     })?;
                 reserve!(count);
-                // SAFETY: count is the checked total of row lengths; local reserve! reserved that many slots.
-                values.extend(rows.into_iter().flatten().map(|value| project(value, true)));
+                for (row, values) in rows.into_iter().enumerate() {
+                    for (column, value) in values.into_iter().enumerate() {
+                        consume(
+                            &mut state,
+                            ScalarOperand {
+                                value,
+                                origin: OperandOrigin::ArrayElement,
+                                missing: missing
+                                    || array_missing
+                                        .get(row)
+                                        .and_then(|flags| flags.get(column))
+                                        .copied()
+                                        .unwrap_or(false),
+                            },
+                        )?;
+                    }
+                }
             }
             Value::SignedRefs(areas) => {
                 for area in areas {
                     let Some(physical) = area.physical() else {
                         continue;
                     };
-                    let addresses = self.sparse_addresses(physical)?;
-                    reserve!(addresses.len());
-                    for address in addresses {
-                        // SAFETY: The local reserve! expansion reserved one slot per address before this loop; each iteration pushes exactly one member.
-                        values.push(project(self.range_cell(area.sheet, address)?, true));
+                    let members = self.sparse_members(physical)?;
+                    length = reserve!(members.len());
+                    for member in members {
+                        let value = self.sparse_member_value(area.sheet, member)?;
+                        consume(
+                            &mut state,
+                            ScalarOperand {
+                                value,
+                                origin: OperandOrigin::ReferencedCell,
+                                missing: false,
+                            },
+                        )?;
                     }
                 }
             }
-            Value::Refs(areas) | Value::SheetSpan(areas) => {
+            Value::Refs(areas) => {
                 for area in areas {
-                    let addresses = self.sparse_addresses(area)?;
-                    reserve!(addresses.len());
-                    for address in addresses {
-                        // SAFETY: The local reserve! expansion reserved one slot per address before this loop; each iteration pushes exactly one member.
-                        values.push(project(self.range_cell(area.sheet, address)?, true));
+                    let members = self.sparse_members(area)?;
+                    length = reserve!(members.len());
+                    for member in members {
+                        let value = self.sparse_member_value(area.sheet, member)?;
+                        consume(
+                            &mut state,
+                            ScalarOperand {
+                                value,
+                                origin: OperandOrigin::ReferencedCell,
+                                missing: false,
+                            },
+                        )?;
+                    }
+                }
+            }
+            Value::SheetSpan(areas) => {
+                // Sheet spans retain source-sheet order. Their function-specific
+                // semantic error precedence is handled by the ordered consumer.
+                for area in areas {
+                    let members = self.sparse_members(area)?;
+                    length = reserve!(members.len());
+                    for member in members {
+                        let value = self.sparse_member_value(area.sheet, member)?;
+                        consume(
+                            &mut state,
+                            ScalarOperand {
+                                value,
+                                origin: OperandOrigin::ReferencedCell,
+                                missing: false,
+                            },
+                        )?;
                     }
                 }
             }
         }
-        Ok(values)
+        Ok(state)
+    }
+    /// Visit stored sheet-span members in sheet order until the consumer stops.
+    pub(super) fn fold_ordered_sheet_span<T>(
+        &mut self,
+        areas: reference_areas::ReferenceAreas,
+        mut state: T,
+        mut consume: impl FnMut(
+            &mut T,
+            crate::host::ScalarOperand,
+        ) -> EvalResult<std::ops::ControlFlow<()>>,
+    ) -> EvalResult<T> {
+        let mut length = 0usize;
+        for area in areas {
+            let members = self.sparse_members(area)?;
+            length =
+                length
+                    .checked_add(members.len())
+                    .ok_or_else(|| EvaluationFailure::Resource {
+                        kind: crate::ResourceFailureKind::SizeOverflow,
+                        capability: CapabilityId::FunctionAdapter,
+                        source: self.consumer,
+                        detail: "aggregate member count overflow".into(),
+                    })?;
+            self.budget.check_allocation(length)?;
+            self.budget
+                .charge(WorkKind::Materialization, members.len() as u64)?;
+            for member in members {
+                let value = self.sparse_member_value(area.sheet, member)?;
+                let decision = consume(
+                    &mut state,
+                    crate::host::ScalarOperand {
+                        value,
+                        origin: crate::host::OperandOrigin::ReferencedCell,
+                        missing: false,
+                    },
+                )?;
+                if decision.is_break() {
+                    return Ok(state);
+                }
+            }
+        }
+        Ok(state)
+    }
+    /// Collect projected members while reserving the complete batch before its cell reads.
+    #[cfg(test)]
+    pub(super) fn items_map<T>(
+        &mut self,
+        value: Value,
+        mut project: impl FnMut(CellValue, bool) -> T,
+    ) -> EvalResult<Vec<T>> {
+        let selected_scalar = matches!(value, Value::SelectedScalar(_, _));
+        self.fold_items(
+            crate::host::HostOperand::from_value(value),
+            Vec::new(),
+            |values, additional| values.try_reserve(additional),
+            |values, member| {
+                if values.len() >= values.capacity() {
+                    return Err(EvaluationFailure::StalePlan);
+                }
+                // SAFETY: The local capacity check proves this one push cannot grow the vector.
+                values.push(project(
+                    member.value,
+                    !selected_scalar && member.origin != crate::host::OperandOrigin::Direct,
+                ));
+                Ok(())
+            },
+        )
+    }
+    /// Read captured authored content while generated-only members resolve their current source.
+    fn sparse_member_value(
+        &mut self,
+        sheet: usize,
+        member: functions::SparseMember<'a>,
+    ) -> EvalResult<CellValue> {
+        match member.cell {
+            Some(cell) => {
+                let source = self.source_from_cell(sheet, member.address, Some(cell));
+                self.range_cell_from_source(sheet, member.address, source)
+            }
+            None => self.range_cell(sheet, member.address),
+        }
     }
     /// Retain owned sparse members for host traversal contract tests.
     #[cfg(test)]
     pub(super) fn items(&mut self, value: Value) -> EvalResult<Vec<(CellValue, bool)>> {
         self.items_map(value, |value, indirect| (value, indirect))
+    }
+}
+
+impl Session<'_> {
+    /// Evaluate the concatenation operator through checked text services.
+    pub(crate) fn text_concat_operator(
+        &mut self,
+        left: CellValue,
+        right: CellValue,
+    ) -> FunctionResult<CellValue> {
+        let mut host =
+            host::CallHost::new(self, 0, CellAddress { row: 0, col: 0 }, ArgumentsRef::Empty);
+        adapters::text::execution::concat_operator(&mut host, left, right)
     }
 }

@@ -1,11 +1,3 @@
-/// Select pinned implementation behavior or documented Excel behavior at call planning.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum SemanticsPolicy {
-    /// Use the pinned POI function contract.
-    PinnedPoi,
-    /// Use the explicitly supported Excel-documentation contract.
-    ExcelDocumentation,
-}
 use crate::operands::Arguments;
 use crate::{evaluate_arguments, Context, Error, Failure, Value, Workbook};
 /// Search-family function selected by the evaluator's registry.
@@ -18,23 +10,11 @@ pub enum Search {
     /// XMATCH returning a position.
     XMatch,
 }
-/// Reference construction or worksheet-metadata function handled by this family.
+/// Reference construction or explicit scalar intersection handled by this family.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ReferenceFunction {
-    /// Construct an A1/R1C1 address spelling.
-    Address,
-    /// Count reference areas.
-    Areas,
-    /// Return a hyperlink's displayed value.
-    Hyperlink,
     /// Resolve a text-generated reference through the host.
     Indirect,
-    /// Translate reference geometry by row and column offsets.
-    Offset,
-    /// Resolve worksheet identity.
-    Sheet,
-    /// Apply explicit implicit-intersection selection.
-    Single,
 }
 /// Typed family dispatch identity used to prepare a lookup call.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -51,10 +31,6 @@ pub enum DependencyPolicy {
     Ordinary,
     /// Track runtime-selected reference resolution.
     DynamicReference,
-    /// Track workbook or worksheet metadata access.
-    WorkbookMetadata,
-    /// Track caller-coordinate-dependent scalar selection.
-    ImplicitIntersection,
 }
 /// Possible dependency category, reference-return behavior, and scheduling volatility
 /// for a lookup/reference function. This describes possible effects, not consumed reads.
@@ -73,17 +49,15 @@ impl Function {
         use ReferenceFunction::*;
         let dependency = match self {
             Self::Reference(Indirect) => DependencyPolicy::DynamicReference,
-            Self::Reference(Sheet) => DependencyPolicy::WorkbookMetadata,
-            Self::Reference(Single) => DependencyPolicy::ImplicitIntersection,
             _ => DependencyPolicy::Ordinary,
         };
         FunctionPolicy {
             dependency,
             retains_reference: matches!(
                 self,
-                Self::Reference(Offset | Indirect | Hyperlink) | Self::Search(Search::XLookup)
+                Self::Reference(Indirect) | Self::Search(Search::XLookup)
             ),
-            volatile: matches!(self, Self::Reference(Offset | Indirect)),
+            volatile: matches!(self, Self::Reference(Indirect)),
         }
     }
 }
@@ -98,12 +72,7 @@ impl CallPlan {
     pub fn prepare(function: Function, count: usize) -> Result<Self, Failure> {
         use ReferenceFunction::*;
         let valid = match function {
-            Function::Reference(Address) => (2..=5).contains(&count),
-            Function::Reference(Areas) => count >= 1,
-            Function::Reference(Hyperlink) => (1..=2).contains(&count),
             Function::Reference(Indirect) => count >= 1,
-            Function::Reference(Offset) => (1..=5).contains(&count),
-            Function::Reference(Sheet | Single) => true,
             Function::Search(Search::Lookup) => (2..=3).contains(&count),
             Function::Search(Search::XLookup) => count >= 3,
             Function::Search(Search::XMatch) => count >= 2,
@@ -124,15 +93,6 @@ impl CallPlan {
         context: Context,
         workbook: &mut impl Workbook,
     ) -> Result<Value, Failure> {
-        self.execute_with_policy(context, workbook, SemanticsPolicy::PinnedPoi)
-    }
-    /// Execute the admitted call under an explicit semantic contract.
-    pub fn execute_with_policy(
-        &self,
-        context: Context,
-        workbook: &mut impl Workbook,
-        policy: SemanticsPolicy,
-    ) -> Result<Value, Failure> {
         evaluate_arguments(
             self.function,
             &Arguments {
@@ -141,7 +101,6 @@ impl CallPlan {
             },
             context,
             workbook,
-            policy,
         )
     }
 }

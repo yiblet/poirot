@@ -7,19 +7,6 @@ impl CallHost<'_, '_> {
         self.session.coercev2_date_argument(value)
     }
 
-    /// Resolve and numerically coerce one argument under explicit missing and numeric rules.
-    pub(crate) fn coercev2_argument_number(
-        &mut self,
-        index: usize,
-        missing: MissingPolicy,
-        policy: NumericPolicy,
-    ) -> FunctionResult<f64> {
-        let value = self.scalar(index, missing)?;
-        match value {
-            Text(text) => self.coercev2_number_text(&text, policy),
-            value => self.coercev2_scalar_number(&value, policy),
-        }
-    }
     /// Coerce a scalar using shared numeric conversion and attributed date fallback.
     pub(crate) fn coercev2_scalar_number(
         &mut self,

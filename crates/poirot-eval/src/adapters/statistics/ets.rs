@@ -1,5 +1,11 @@
 //! Shared timeline admission and scalar-slot lifting for additive ETS functions.
-use crate::adapters::{elementwise::Lift, failure::operational_only};
+use crate::adapters::{
+    elementwise::{
+        self, Broadcast, Kernel, MemberContext, NumericParameter as P, NumericSignature, Optional,
+        WholeCollection, collections,
+    },
+    failure::operational_only,
+};
 use crate::host::CallHost;
 use crate::*;
 use poirot_coercionv2::date_time::CalendarEpoch;
@@ -26,86 +32,39 @@ fn failure(host: &CallHost<'_, '_>, value: Failure<EvaluationFailure>) -> Functi
         ),
     }
 }
-/// Collect the original paired geometry without independently filtering either axis.
-fn points(
-    host: &mut CallHost<'_, '_>,
-    values: usize,
-    timeline: usize,
-) -> FunctionResult<Vec<(f64, f64)>> {
-    let a = host.describe(values)?;
-    let b = host.describe(timeline)?;
-    if a.sheets != 1 || b.sheets != 1 {
-        return Err(VALUE_ERROR.into());
-    }
-    if a.rows != b.rows || a.columns != b.columns {
-        return Err(NA.into());
-    }
-    let count = host.collection_len(values)?;
-    host.check_values(count.saturating_mul(12))?;
-    host.charge_work((count as u64).saturating_mul(8))?;
-    let mut points = Vec::new();
-    points
-        .try_reserve_exact(count)
-        .map_err(|_| host.allocation_failure())?;
-    for offset in 0..count {
-        let value = host.collection_cell(values, offset)?;
-        let time = host.collection_cell(timeline, offset)?;
-        if let Error(error) = value.value {
-            return Err(error.into());
-        }
-        if let Error(error) = time.value {
-            return Err(error.into());
-        }
-        let (Number(value), Number(time)) = (value.value, time.value) else {
-            return Err(VALUE_ERROR.into());
-        };
-        // SAFETY: count slots reserved and the loop emits exactly count aligned pairs.
-        points.push((time, value));
-    }
-    Ok(points)
-}
-/// Prepare and fit a genuine AAA model for each lifted scalar setting combination.
-pub(super) fn execute(
-    session: &mut Session<'_>,
-    sheet: usize,
-    address: CellAddress,
+/// A prepared timeline and the typed scalar signature for an ETS operation.
+struct Ets<R> {
     function: StatisticsFunction,
-    args: ArgumentsRef<'_>,
-) -> EvalResult<Value> {
-    if !FunctionId::Statistics(function)
-        .descriptor()
-        .arity
-        .accepts(args.len())
-    {
-        return Ok(err(VALUE_ERROR));
+    epoch: CalendarEpoch,
+    observed: Vec<(f64, f64)>,
+    roles: std::marker::PhantomData<R>,
+}
+impl<R> Ets<R> {
+    /// Bind a forecasting operation before shared signature admission.
+    fn new(function: StatisticsFunction, epoch: CalendarEpoch) -> Self {
+        Self {
+            function,
+            epoch,
+            observed: Vec::new(),
+            roles: std::marker::PhantomData,
+        }
     }
-    session.read(DependencyRead::ContextField(run::ContextRead::DateSystem));
-    let epoch = match session.workbook.date_system {
-        poirot_model::DateSystem::Excel1900 => CalendarEpoch::Excel1900,
-        poirot_model::DateSystem::Excel1904 => CalendarEpoch::Excel1904,
-    };
-    let mut host = CallHost::new_array(session, sheet, address, args, args.len());
-    let result = (|| {
-        use StatisticsFunction::*;
-        let forecasting = matches!(function, ForecastEts | ForecastEtsConfint);
-        let base = usize::from(forecasting);
-        let observed = points(&mut host, base, base.checked_add(1).ok_or(VALUE_ERROR)?)?;
-        let selected: &[usize] = match function {
-            ForecastEts => &[0, 3, 4, 5],
-            ForecastEtsConfint => &[0, 3, 4, 5, 6],
-            ForecastEtsSeasonality => &[2, 3],
-            ForecastEtsStat => &[2, 3, 4, 5],
-            _ => return Err(VALUE_ERROR.into()),
-        };
-        let mut actual = poirot_functions_core::ParamVec::new();
-        actual
-            .try_reserve(selected.len())
-            .map_err(|_| host.allocation_failure())?;
-        // SAFETY: selected.len slots reserved for at most selected.len present positions.
-        actual.extend(selected.iter().copied().filter(|i| *i < args.len()));
-        let lift = Lift::new_selected(&mut host, &actual)?;
-        lift.evaluate(&mut host, address, |host, row, column| {
-            let mut n = |index, default| lift.number(host, index, row, column, default);
+}
+macro_rules! ets_kernel {
+    ($roles:ty, $values:tt, $timeline:tt, [$($slot:tt => $optional:ident),*], [$($parameter:expr),*]) => {
+        impl Kernel for Ets<$roles> {
+            type Signature = $roles;
+            fn prepare(&mut self, host: &mut CallHost<'_, '_>, arguments: &Self::Signature) -> FunctionResult<()> {
+                self.observed = collections::points(host, &arguments.$values, &arguments.$timeline)?;
+                Ok(())
+            }
+            fn apply(&self, context: &mut MemberContext<'_, '_, '_>, arguments: &Self::Signature) -> FunctionResult<CellValue> {
+                use StatisticsFunction::*;
+                let function = self.function;
+                let forecasting = matches!(function, ForecastEts | ForecastEtsConfint);
+                let numbers = NumericSignature::new(&[$($parameter),*]).numbers_roles(context, [$(ets_kernel!(@role arguments.$slot, $optional)),*])?;
+                let n = |index, _default: Option<f64>| numbers.get(index);
+                let host = &mut *context.host;
             let target = if forecasting { Some(n(0, None)?) } else { None };
             let selector = if function == ForecastEtsStat {
                 n(0, None)?
@@ -146,20 +105,20 @@ pub(super) fn execute(
                 return Err(Num.into());
             }
             // Preparation can insert at most 3/7 as many missing points as supplied observations.
-            let maximum = observed
+            let maximum = self.observed
                 .len()
                 .saturating_mul(10)
                 .saturating_div(7)
                 .saturating_add(2);
             host.check_values(maximum.saturating_mul(12))?;
-            host.charge_work(observed.len() as u64)?;
+            host.charge_work(self.observed.len() as u64)?;
             let mut copied = Vec::new();
             copied
-                .try_reserve_exact(observed.len())
+                .try_reserve_exact(self.observed.len())
                 .map_err(|_| host.allocation_failure())?;
-            // SAFETY: observed.len slots reserved for exactly observed.len copied pairs.
-            copied.extend(observed.iter().copied());
-            let series = kernel::prepare(copied, aggregation, completion, epoch, maximum, |w| {
+            // SAFETY: self.observed.len slots reserved for exactly self.observed.len copied pairs.
+            copied.extend(self.observed.iter().copied());
+            let series = kernel::prepare(copied, aggregation, completion, self.epoch, maximum, |w| {
                 host.charge_work(w)
             })
             .map_err(|e| failure(host, e))?;
@@ -179,8 +138,95 @@ pub(super) fn execute(
             }
             .map_err(|e| failure(host, e))?;
             Ok(numeric_outcome::coerce_checked_numeric_result(value))
-        })
-    })();
+            }
+        }
+    };
+    (@role $role:expr, required) => { Some($role) };
+    (@role $role:expr, optional) => { $role.0 };
+}
+ets_kernel!((Broadcast, WholeCollection, WholeCollection, Optional<Broadcast>, Optional<Broadcast>, Optional<Broadcast>), 1, 2,
+    [0 => required, 3 => optional, 4 => optional, 5 => optional],
+    [P::required(), P::constant(1.0), P::constant(1.0), P::constant(1.0)]);
+ets_kernel!((Broadcast, WholeCollection, WholeCollection, Optional<Broadcast>, Optional<Broadcast>, Optional<Broadcast>, Optional<Broadcast>), 1, 2,
+    [0 => required, 3 => optional, 4 => optional, 5 => optional, 6 => optional],
+    [P::required(), P::constant(0.95), P::constant(1.0), P::constant(1.0), P::constant(1.0)]);
+ets_kernel!((WholeCollection, WholeCollection, Optional<Broadcast>, Optional<Broadcast>), 0, 1,
+    [2 => optional, 3 => optional], [P::constant(1.0), P::constant(1.0)]);
+ets_kernel!((WholeCollection, WholeCollection, Broadcast, Optional<Broadcast>, Optional<Broadcast>, Optional<Broadcast>), 0, 1,
+    [2 => required, 3 => optional, 4 => optional, 5 => optional],
+    [P::required(), P::constant(1.0), P::constant(1.0), P::constant(1.0)]);
+
+/// Prepare and fit a genuine AAA model for each lifted scalar setting combination.
+pub(super) fn execute(
+    session: &mut Session<'_>,
+    sheet: usize,
+    address: CellAddress,
+    function: StatisticsFunction,
+    args: ArgumentsRef<'_>,
+) -> EvalResult<Value> {
+    if !FunctionId::Statistics(function)
+        .descriptor()
+        .arity
+        .accepts(args.len())
+    {
+        return Ok(err(VALUE_ERROR));
+    }
+    session.read(DependencyRead::ContextField(run::ContextRead::DateSystem));
+    let epoch = match session.workbook.date_system {
+        poirot_model::DateSystem::Excel1900 => CalendarEpoch::Excel1900,
+        poirot_model::DateSystem::Excel1904 => CalendarEpoch::Excel1904,
+    };
+    let mut host = CallHost::new_array(session, sheet, address, args, args.len());
+    let result = match function {
+        StatisticsFunction::ForecastEts => elementwise::execute(
+            &mut host,
+            address,
+            Ets::<(
+                Broadcast,
+                WholeCollection,
+                WholeCollection,
+                Optional<Broadcast>,
+                Optional<Broadcast>,
+                Optional<Broadcast>,
+            )>::new(function, epoch),
+        ),
+        StatisticsFunction::ForecastEtsConfint => elementwise::execute(
+            &mut host,
+            address,
+            Ets::<(
+                Broadcast,
+                WholeCollection,
+                WholeCollection,
+                Optional<Broadcast>,
+                Optional<Broadcast>,
+                Optional<Broadcast>,
+                Optional<Broadcast>,
+            )>::new(function, epoch),
+        ),
+        StatisticsFunction::ForecastEtsSeasonality => elementwise::execute(
+            &mut host,
+            address,
+            Ets::<(
+                WholeCollection,
+                WholeCollection,
+                Optional<Broadcast>,
+                Optional<Broadcast>,
+            )>::new(function, epoch),
+        ),
+        StatisticsFunction::ForecastEtsStat => elementwise::execute(
+            &mut host,
+            address,
+            Ets::<(
+                WholeCollection,
+                WholeCollection,
+                Broadcast,
+                Optional<Broadcast>,
+                Optional<Broadcast>,
+                Optional<Broadcast>,
+            )>::new(function, epoch),
+        ),
+        _ => Err(VALUE_ERROR.into()),
+    };
     match result {
         Ok(value) => Ok(value),
         Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),

@@ -16,8 +16,55 @@
 //! The currency above is deliberately configured by the caller. Default policy
 //! leaves currency unspecified; host locale is never read. Pass this policy to
 //! `run_formula_with_configuration` or the other configured run entrypoints.
-/// Explicit currency symbols, separators, grouping, and affixes.
-pub use crate::adapters::financial::policy::CurrencyContext;
+/// Owned user-locale descriptor: no leaked or assumed static locale strings.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct CurrencyContext {
+    /// Separator between integer and fractional digits.
+    pub decimal_separator: String,
+    /// Separator inserted between integer digit groups.
+    pub grouping_separator: String,
+    /// Size of the rightmost integer digit group.
+    pub primary_group: usize,
+    /// Size of subsequent integer digit groups.
+    pub secondary_group: usize,
+    /// Affix preceding nonnegative amounts.
+    pub positive_prefix: String,
+    /// Affix following nonnegative amounts.
+    pub positive_suffix: String,
+    /// Affix preceding negative amounts.
+    pub negative_prefix: String,
+    /// Affix following negative amounts.
+    pub negative_suffix: String,
+}
+impl CurrencyContext {
+    /// Borrow these owned settings as the financial helper's formatting descriptor.
+    pub fn as_format(&self) -> poirot_functions_financial::CurrencyFormat<'_> {
+        poirot_functions_financial::CurrencyFormat {
+            decimal_separator: &self.decimal_separator,
+            grouping_separator: &self.grouping_separator,
+            primary_group: self.primary_group,
+            secondary_group: self.secondary_group,
+            positive_prefix: &self.positive_prefix,
+            positive_suffix: &self.positive_suffix,
+            negative_prefix: &self.negative_prefix,
+            negative_suffix: &self.negative_suffix,
+        }
+    }
+}
+impl From<poirot_functions_financial::CurrencyFormat<'_>> for CurrencyContext {
+    fn from(f: poirot_functions_financial::CurrencyFormat<'_>) -> Self {
+        Self {
+            decimal_separator: f.decimal_separator.into(),
+            grouping_separator: f.grouping_separator.into(),
+            primary_group: f.primary_group,
+            secondary_group: f.secondary_group,
+            positive_prefix: f.positive_prefix.into(),
+            positive_suffix: f.positive_suffix.into(),
+            negative_prefix: f.negative_prefix.into(),
+            negative_suffix: f.negative_suffix.into(),
+        }
+    }
+}
 use crate::{ContextFingerprint, EvaluationInputs};
 use poirot_text::TextSemanticsPolicy;
 

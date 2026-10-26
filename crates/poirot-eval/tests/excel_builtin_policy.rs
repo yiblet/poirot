@@ -79,10 +79,6 @@ fn documented_aliases_are_default_and_pinned_registry_remains_explicit() {
     }
     assert_eq!(value("RANK(4,A1:A4,-1)", &excel), CellValue::Number(2.));
     assert_eq!(
-        value("RANK(4,A1:A4,-1)", &default),
-        CellValue::Error(CellError::Num)
-    );
-    assert_eq!(
         value("_XLFN.QUARTILE.INC(A1:A4,2)", &excel),
         CellValue::Error(CellError::Name)
     );
@@ -247,14 +243,6 @@ fn interest_payment_defaults_and_degenerate_cases_follow_one_contract() {
             "{formula}"
         );
     }
-    // The explicit source policy retains the pinned four-argument algorithm.
-    assert_eq!(
-        value(
-            "IPMT(0,1,5,1000)",
-            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
-        ),
-        CellValue::Error(CellError::Num)
-    );
 }
 
 #[test]
@@ -280,7 +268,7 @@ fn rounding_modes_and_zero_domains_follow_function_policies() {
                 );
                 assert_eq!(
                     value(&formula, &pinned),
-                    CellValue::Number(if mode < 0. {
+                    CellValue::Number(if mode != 0. {
                         reversed_negative
                     } else {
                         default_negative
@@ -298,21 +286,22 @@ fn rounding_modes_and_zero_domains_follow_function_policies() {
             }
         }
     }
-    // Source policies admit omitted significance as one. A zero significance
-    // stops before mode, but never before number or significance coercion.
-    // Explicit missing remains an unsupported capability, distinct from blank;
-    // Calc's missing defaults and eager mode evaluation differ here.
+    // Mathematical kernels share the modern optional defaults and eager mode
+    // conversion across profiles, retaining source-ordered spreadsheet errors.
     for configuration in [&modern, &pinned] {
         for (formula, expected) in [
-            ("FLOOR.MATH(-5.5,B1,1/0)", CellValue::Number(0.)),
+            ("FLOOR.MATH(-5.5,B1,1/0)", CellValue::Error(CellError::Div0)),
             ("FLOOR.MATH(-5.5,2,B1)", CellValue::Number(-6.)),
             ("CEILING.MATH(-5.5,2,B1)", CellValue::Number(-4.)),
             ("FLOOR(B1,B1)", CellValue::Number(0.)),
             ("FLOOR(,)", CellValue::Number(0.)),
             ("CEILING.MATH(-5.5)", CellValue::Number(-5.)),
             ("FLOOR.MATH(-5.5)", CellValue::Number(-6.)),
-            ("CEILING.MATH(-5.5,0,1/0)", CellValue::Number(0.)),
-            ("FLOOR.MATH(-5.5,0,1/0)", CellValue::Number(0.)),
+            (
+                "CEILING.MATH(-5.5,0,1/0)",
+                CellValue::Error(CellError::Div0),
+            ),
+            ("FLOOR.MATH(-5.5,0,1/0)", CellValue::Error(CellError::Div0)),
             ("CEILING.MATH(1/0,0,1)", CellValue::Error(CellError::Div0)),
             (
                 "FLOOR.MATH(0,\"bad\",1)",
@@ -341,17 +330,15 @@ fn rounding_modes_and_zero_domains_follow_function_policies() {
         ] {
             assert_eq!(value(formula, configuration), expected, "{formula}");
         }
-        for formula in [
-            "IFERROR(CEILING.MATH(-5.5,,1),0)",
-            "IFERROR(FLOOR.MATH(-5.5,,1),0)",
-            "IFERROR(CEILING.MATH(-5.5,2,),0)",
-            "IFERROR(FLOOR.MATH(-5.5,2,),0)",
+        for (formula, expected) in [
+            ("CEILING.MATH(-5.5,,1)", -6.),
+            ("FLOOR.MATH(-5.5,,1)", -5.),
+            ("CEILING.MATH(-5.5,2,)", -4.),
+            ("FLOOR.MATH(-5.5,2,)", -6.),
         ] {
-            assert!(
-                matches!(
-                    run(formula, configuration, EvaluationBudgets::default()),
-                    EvaluationOutcome::Aborted { .. }
-                ),
+            assert_eq!(
+                value(formula, configuration),
+                CellValue::Number(expected),
                 "{formula}"
             );
         }

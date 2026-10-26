@@ -152,29 +152,25 @@ fn rejected_rows_and_later_criteria_ranges_stay_unread() {
     check(&w, "COUNTIF(B1:B3,C1)", 0.0.into());
 }
 #[test]
-fn missing_metadata_formula_criteria_and_budgets_escape_iferror() {
+fn formula_criteria_and_resource_failures_escape_iferror() {
     let w = workbook();
-    for formula in [
-        "IFERROR(SUBTOTAL(109,A1:A3),99)",
-        "IFERROR(DSUM(D1:E4,1,{\"Unknown\";TRUE}),99)",
-        "IFERROR(COUNTIF(A1:A3,B1:B3),99)",
-    ] {
-        assert!(
-            matches!(
-                poirot_eval::run_plan_with_configuration(
-                    &w,
-                    0,
-                    CellAddress { row: 0, col: 10 },
-                    &plan(formula),
-                    &poirot_eval::RunConfiguration::default()
-                        .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi),
-                    EvaluationBudgets::default()
-                ),
-                EvaluationOutcome::Aborted { .. }
+    check(&w, "IFERROR(SUBTOTAL(109,A1:A3),99)", 5.0.into());
+    check(&w, "SUM(COUNTIF(A1:A3,B1:B3))", 0.0.into());
+    let formula = "IFERROR(DSUM(D1:E4,1,{\"Unknown\";TRUE}),99)";
+    assert!(
+        matches!(
+            poirot_eval::run_plan_with_configuration(
+                &w,
+                0,
+                CellAddress { row: 0, col: 10 },
+                &plan(formula),
+                &poirot_eval::RunConfiguration::default(),
+                EvaluationBudgets::default()
             ),
-            "{formula}"
-        );
-    }
+            EvaluationOutcome::Aborted { .. }
+        ),
+        "{formula}"
+    );
     for formula in [
         "IFERROR(COUNTIF(A1:A3,\"*\"),99)",
         "IFERROR(DSUM(D1:E4,1,G1:G2),99)",
@@ -186,10 +182,9 @@ fn missing_metadata_formula_criteria_and_budgets_escape_iferror() {
                     0,
                     CellAddress { row: 0, col: 10 },
                     &plan(formula),
-                    &poirot_eval::RunConfiguration::default()
-                        .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi),
+                    &poirot_eval::RunConfiguration::default(),
                     EvaluationBudgets {
-                        materialized_values: 2,
+                        run_work: 0,
                         ..EvaluationBudgets::default()
                     }
                 ),

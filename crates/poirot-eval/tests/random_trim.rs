@@ -453,7 +453,7 @@ fn custom_reader_fallback_observes_unstored_values() {
 }
 
 #[test]
-fn signed_geometry_and_lossless_array_members_keep_their_channels() {
+fn normalized_offset_geometry_and_lossless_array_members_keep_their_channels() {
     let mut b = book();
     let s = b.sheet_mut(0).unwrap();
     s.set_value(at("A1").address, 2.0).unwrap();
@@ -463,21 +463,21 @@ fn signed_geometry_and_lossless_array_members_keep_their_channels() {
         CellValue::TextUtf16(poirot_model::ExcelText::from_units(vec![0xd83d])),
     )
     .unwrap();
-    // Poirot's existing signed OFFSET channel treats logical off-grid members as blanks.
+    // Negative OFFSET normalization retains A2:B3 here; native Excel is unverified.
     for (call, expected) in [
-        ("ROWS(TRIMRANGE(OFFSET(B3,0,0,-2,-2)))", 2.0.into()),
+        ("ROWS(TRIMRANGE(OFFSET(B3,0,0,-2,-2)))", 1.0.into()),
         (
             "ROW(INDEX(TRIMRANGE(OFFSET(B3,0,0,-2,-2)),1,1))",
-            1.0.into(),
+            2.0.into(),
         ),
         (
             "COLUMN(INDEX(TRIMRANGE(OFFSET(B3,0,0,-2,-2)),1,1))",
-            1.0.into(),
+            2.0.into(),
         ),
-        ("ROWS(TRIMRANGE(OFFSET(B3,0,0,-2,-2),0,0))", 4.0.into()),
+        ("ROWS(TRIMRANGE(OFFSET(B3,0,0,-2,-2),0,0))", 2.0.into()),
         (
             "COLUMN(INDEX(TRIMRANGE(OFFSET(B3,0,0,-2,-2),0,0),1,1))",
-            (-1.0).into(),
+            1.0.into(),
         ),
         (
             "INDEX(TRIMRANGE(HSTACK(F1,7)),1,1)",

@@ -244,12 +244,11 @@ impl<'a> Session<'a> {
         if *op != UnaryOp::ImplicitIntersection && self.retains_array(&value) {
             return self.array_unary(s, at, operation, value);
         }
-        let value = self.select_legacy_scalar(at, value)?;
-        // Selection above materializes references while preserving the scalar type.
-        // The pinned POI numeric contract retains its text-only plus exception.
         if *op == UnaryOp::ImplicitIntersection {
-            return Ok(value.into());
+            return adapters::reference::execution::intersect(self, s, at, value);
         }
+        let value = self.select_legacy_scalar(at, value)?;
+        // Scalar numeric consumers retain their existing coercion contract.
 
         if *op == UnaryOp::Plus {
             self.read(DependencyRead::BuiltinPolicy);

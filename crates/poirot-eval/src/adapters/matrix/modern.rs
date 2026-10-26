@@ -1,62 +1,13 @@
 //! Modern mixed-value array adapters; geometry belongs to the pure matrix crate.
 use super::*;
-use crate::host::MissingPolicy;
+use crate::adapters::elementwise::controls::{EmptyControl, integer_selectors};
+use crate::adapters::elementwise::{FixedScalar, NumericParameter};
 use crate::registry::MatrixFunction as F;
 use poirot_functions_matrix::{Axis, Ignore, Matrix, MemberKind, ScanOrder, Transform};
 
-/// Whether input blanks are retained for filtering or normalized for shaping.
-#[derive(Clone, Copy)]
-pub(super) enum Members {
-    Original,
-    Normalized,
-}
+use crate::adapters::elementwise::matrices;
+pub(super) use crate::adapters::elementwise::matrices::{Members, failure, matrix};
 
-pub(super) fn matrix(
-    host: &mut CallHost<'_, '_>,
-    index: usize,
-    members: Members,
-) -> FunctionResult<Matrix<CellValue>> {
-    let shape = host.describe(index)?;
-    if shape.sheets != 1 {
-        return Err(CellError::Value.into());
-    }
-    let count = shape
-        .rows
-        .checked_mul(shape.columns)
-        .ok_or_else(|| host.size_overflow())?;
-    host.check_values(count)?;
-    let mut values = Vec::new();
-    values
-        .try_reserve_exact(count)
-        .map_err(|_| host.allocation_failure())?;
-    for row in 0..shape.rows {
-        for column in 0..shape.columns {
-            let value = host.read_cell(index, row, column)?.value;
-            values.push(match members {
-                Members::Original => value,
-                Members::Normalized => {
-                    poirot_coercionv2::compatibility::coercev2_array_member(value)
-                }
-            });
-        }
-    }
-    Matrix::new(shape.rows, shape.columns, values).map_err(|_| CellError::Value.into())
-}
-fn count(
-    host: &mut CallHost<'_, '_>,
-    index: usize,
-    blank_default: bool,
-) -> FunctionResult<Option<i64>> {
-    let operand = host.scalar_data(index, MissingPolicy::Blank)?;
-    if operand.missing || blank_default && operand.value == Blank {
-        return Ok(None);
-    }
-    let number = host.coercev2_scalar_number(&operand.value, NumericPolicy::PinnedPoi)?;
-    if !number.is_finite() || number.abs() >= i64::MAX as f64 {
-        return Err(CellError::Num.into());
-    }
-    Ok(Some(number.trunc() as i64))
-}
 fn evaluate(
     host: &mut CallHost<'_, '_>,
     function: F,
@@ -74,7 +25,7 @@ fn evaluate(
         },
     )?;
     if matches!(function, F::Tocol | F::Torow) {
-        return flatten(host, function, length, address, first);
+        return flatten(host, function, address, first);
     }
     let original_rows = first.rows();
     let original_columns = first.cols();
@@ -96,12 +47,16 @@ fn evaluate(
             })
         }
         F::Take | F::Drop => {
-            let rows = count(host, 1, false)?;
-            let columns = if length > 2 {
-                count(host, 2, false)?
-            } else {
-                None
-            };
+            let rows = FixedScalar::at(1).optional_integer(
+                host,
+                EmptyControl::Omission,
+                CellError::Num,
+            )?;
+            let columns = FixedScalar::at(2).optional_integer(
+                host,
+                EmptyControl::Omission,
+                CellError::Num,
+            )?;
             if function == F::Take {
                 Transform::Take { rows, columns }
             } else {
@@ -109,25 +64,7 @@ fn evaluate(
             }
         }
         F::Choosecols | F::Chooserows => {
-            let mut indices = Vec::new();
-            for index in 1..length {
-                let input = matrix(host, index, Members::Normalized)?;
-                let capacity = indices
-                    .len()
-                    .checked_add(input.values().len())
-                    .ok_or_else(|| host.size_overflow())?;
-                host.check_values(capacity)?;
-                indices
-                    .try_reserve(input.values().len())
-                    .map_err(|_| host.allocation_failure())?;
-                for value in input.values() {
-                    let n = host.coercev2_scalar_number(value, NumericPolicy::PinnedPoi)?;
-                    if !n.is_finite() || n.abs() >= i64::MAX as f64 {
-                        return Err(CellError::Value.into());
-                    }
-                    indices.push(n.trunc() as i64);
-                }
-            }
+            let indices = integer_selectors(host, (1..length).map(WholeCollection::at))?;
             Transform::Choose {
                 axis: if function == F::Choosecols {
                     Axis::Columns
@@ -138,22 +75,15 @@ fn evaluate(
             }
         }
         F::Wrapcols | F::Wraprows => {
-            let operand = host.scalar_data(1, MissingPolicy::Blank)?;
-            let n = host
-                .coercev2_scalar_number(&operand.value, NumericPolicy::PinnedPoi)?
+            let n = FixedScalar::at(1)
+                .number(host, NumericParameter::constant(0.0))?
                 .trunc();
             if !n.is_finite() || n < 1.0 {
                 return Err(CellError::Num.into());
             }
             // The documented single-vector result caps large counts before conversion.
             let count = n.min(original_rows.max(original_columns) as f64) as usize;
-            if length > 2 {
-                let operand = host.scalar_data(2, MissingPolicy::Blank)?;
-                if !operand.missing {
-                    padding =
-                        poirot_coercionv2::compatibility::coercev2_array_member(operand.value);
-                }
-            }
+            padding = FixedScalar::at(2).value(host, padding)?;
             Transform::Wrap {
                 axis: if function == F::Wrapcols {
                     Axis::Columns
@@ -170,44 +100,33 @@ fn evaluate(
                     Some(n) => usize::try_from(n).map_err(|_| CellError::Value.into()),
                 }
             };
-            let rows = dimension(count(host, 1, true)?, original_rows)?;
-            let columns = if length > 2 {
-                dimension(count(host, 2, true)?, original_columns)?
-            } else {
-                original_columns
-            };
-            if length > 3 {
-                let operand = host.scalar_data(3, MissingPolicy::Blank)?;
-                if !operand.missing {
-                    padding =
-                        poirot_coercionv2::compatibility::coercev2_array_member(operand.value);
-                }
-            }
+            let rows = dimension(
+                FixedScalar::at(1).optional_integer(
+                    host,
+                    EmptyControl::BlankOrOmission,
+                    CellError::Num,
+                )?,
+                original_rows,
+            )?;
+            let columns = dimension(
+                FixedScalar::at(2).optional_integer(
+                    host,
+                    EmptyControl::BlankOrOmission,
+                    CellError::Num,
+                )?,
+                original_columns,
+            )?;
+            padding = FixedScalar::at(3).value(host, padding)?;
             Transform::Expand { rows, columns }
         }
         _ => return Err(CellError::Value.into()),
     };
     let (rows, columns) = transform.shape(&inputs).map_err(|e| failure(host, e))?;
-    if rows > poirot_model::MAX_ROWS as usize || columns > poirot_model::MAX_COLUMNS as usize {
-        return Err(CellError::Num.into());
-    }
-    let cells = rows
-        .checked_mul(columns)
-        .ok_or_else(|| host.size_overflow())?;
-    host.check_values(cells)?;
-    host.check_values(rows)?;
-    host.charge_work(cells as u64)?;
+    let budget = matrices::admit(host, rows, columns)?;
     let result = transform
-        .apply(
-            &inputs,
-            &padding,
-            poirot_functions_matrix::Budget {
-                max_cells: cells,
-                max_work: cells,
-            },
-        )
+        .apply(&inputs, &padding, budget)
         .map_err(|e| failure(host, e))?;
-    publish(result, address)
+    matrices::publish(host, result, address, |value| value)
 }
 fn classify(value: &CellValue) -> MemberKind {
     match value {
@@ -219,16 +138,10 @@ fn classify(value: &CellValue) -> MemberKind {
 fn flatten(
     host: &mut CallHost<'_, '_>,
     function: F,
-    length: usize,
     address: CellAddress,
     input: Matrix<CellValue>,
 ) -> FunctionResult<Value> {
-    let ignore_number = if length > 1 {
-        let operand = host.scalar_data(1, MissingPolicy::Blank)?;
-        host.coercev2_scalar_number(&operand.value, NumericPolicy::PinnedPoi)?
-    } else {
-        0.0
-    };
+    let ignore_number = FixedScalar::at(1).number(host, NumericParameter::constant(0.0))?;
     let ignore = match ignore_number.trunc() {
         0.0 => Ignore::None,
         1.0 => Ignore::Blanks,
@@ -236,13 +149,8 @@ fn flatten(
         3.0 => Ignore::BlanksAndErrors,
         _ => return Err(CellError::Value.into()),
     };
-    let scan = if length > 2 {
-        let operand = host.scalar_data(2, MissingPolicy::Blank)?;
-        if core_projection::coercev2_operand_boolean(&operand.value)? {
-            ScanOrder::Columns
-        } else {
-            ScanOrder::Rows
-        }
+    let scan = if FixedScalar::at(2).boolean(host, false)? {
+        ScanOrder::Columns
     } else {
         ScanOrder::Rows
     };
@@ -282,42 +190,12 @@ fn flatten(
         },
     )
     .map_err(|e| failure(host, e))?;
-    let rows = result.rows();
-    let cols = result.cols();
-    let values = result
-        .into_values()
-        .into_iter()
-        .map(poirot_coercionv2::compatibility::coercev2_array_member)
-        .collect();
-    let result = Matrix::new(rows, cols, values).map_err(|e| failure(host, e))?;
-    publish(result, address)
-}
-pub(super) fn publish(result: Matrix<CellValue>, address: CellAddress) -> FunctionResult<Value> {
-    if result.cols() == 0 {
-        return Err(CellError::Value.into());
-    }
-    // SAFETY: The preceding local guard rejects a zero chunk width.
-    let values = result
-        .values()
-        .chunks(result.cols())
-        .map(|row| row.to_vec())
-        .collect();
-    Ok(Value::Array(ArrayView::anchored(values, Some(address))))
-}
-/// Preserve each pure matrix failure category at the evaluator boundary.
-pub(super) fn failure(
-    host: &mut CallHost<'_, '_>,
-    error: poirot_functions_matrix::Error,
-) -> FunctionFailure {
-    match error {
-        poirot_functions_matrix::Error::Formula(error) => error.into(),
-        poirot_functions_matrix::Error::SizeOverflow => host.size_overflow().into(),
-        poirot_functions_matrix::Error::AllocationFailure => host.allocation_failure().into(),
-        poirot_functions_matrix::Error::BudgetExceeded => host.budget_exceeded().into(),
-        poirot_functions_matrix::Error::SourceUnsupported(detail) => {
-            host.unsupported(CapabilityId::FunctionAdapter, detail)
-        }
-    }
+    matrices::publish(
+        host,
+        result,
+        address,
+        poirot_coercionv2::compatibility::coercev2_array_member,
+    )
 }
 /// Execute a typed modern array operation, retaining operational failures outside cell errors.
 pub(crate) fn execute(
@@ -327,7 +205,7 @@ pub(crate) fn execute(
     address: CellAddress,
     args: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
-    if matches!(function, F::Growth | F::Linest | F::Logest) {
+    if matches!(function, F::Growth | F::Trend | F::Linest | F::Logest) {
         return super::regression::execute(function, session, sheet, address, args);
     }
     if function == F::Munit {

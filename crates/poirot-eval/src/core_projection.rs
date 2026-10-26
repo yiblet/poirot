@@ -199,14 +199,6 @@ pub(super) fn semantic<T>(result: FunctionResult<T>) -> EvalResult<Result<T, Cel
         Err(FunctionFailure::Operational(error)) => Err(error),
     }
 }
-/// Replace only spreadsheet failures, preserving operational aborts unchanged.
-pub(super) fn remap_semantic(error: FunctionFailure, replacement: CellError) -> FunctionFailure {
-    match error {
-        FunctionFailure::Spreadsheet(_) => replacement.into(),
-        other => other,
-    }
-}
-
 /// Format syntax is semantic; fidelity and renderer resource causes are typed
 /// operational failures. Renderer errors never invent BudgetFailure amounts.
 pub(super) fn format_failure(error: poirot_format::FormatError) -> FunctionFailure {

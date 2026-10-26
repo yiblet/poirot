@@ -13,14 +13,15 @@ fn value(workbook: &Workbook, sheet: usize, source: &str) -> CellValue {
     }
 }
 #[test]
-fn computed_ranges_retain_signed_geometry_through_full_formula_parsing() {
+fn computed_ranges_normalize_offset_geometry_through_full_formula_parsing() {
     let mut w = Workbook::new();
     w.add_sheet("Data").unwrap();
+    // Retained negative-size policy normalizes B3 to A2:B3; native Excel unverified.
     for source in [
         "ROWS(OFFSET(B3,0,0,-2,-2):C4)",
         "COLUMNS(OFFSET(B3,0,0,-2,-2):C4)",
     ] {
-        assert_eq!(value(&w, 0, source), CellValue::Number(5.), "{source}");
+        assert_eq!(value(&w, 0, source), CellValue::Number(3.), "{source}");
     }
     assert_eq!(value(&w, 0, "ROWS((A1:B3) (B2:C4))"), CellValue::Number(2.));
     assert_eq!(

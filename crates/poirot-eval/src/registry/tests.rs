@@ -23,14 +23,7 @@ fn descriptor_contracts_and_family_owned_execution_are_not_stubs() {
                 | LogicalFunction::Ifs
                 | LogicalFunction::Switch,
             ) => EvaluationStrategy::Lazy,
-            FunctionId::Logical(LogicalFunction::Not) => EvaluationStrategy::EagerErrorsBeforeArity,
-            FunctionId::Math(_) | FunctionId::Text(TextFunction::Text) => {
-                EvaluationStrategy::FamilyControlled
-            }
-            FunctionId::Text(function) if function.helper().is_some() => {
-                EvaluationStrategy::FamilyControlled
-            }
-            FunctionId::Text(_) => EvaluationStrategy::EagerErrorsBeforeArity,
+            FunctionId::Math(_) | FunctionId::Text(_) => EvaluationStrategy::FamilyControlled,
             _ => EvaluationStrategy::FamilyControlled,
         };
         assert_eq!(descriptor.strategy, strategy, "{}", descriptor.name);

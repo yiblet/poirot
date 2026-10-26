@@ -59,10 +59,11 @@ fn range_operator_envelopes_chains_and_union_operands() {
         ("SUM(D2:(A1:B3,B2:C4))", 16.),
         ("SUM((A1,A1):B2)", 4.),
         ("SUM((A1,B5):IF(TRUE,C3,D4))", 15.),
-        ("ROWS((OFFSET(B3,0,0,-2,-2),A1):C4)", 5.),
-        ("COLUMNS(C4:(A1,OFFSET(B3,0,0,-2,-2)))", 5.),
-        ("ROW((OFFSET(B3,0,0,-2,-2),A1):C4)", 0.),
-        ("COLUMN(C4:(A1,OFFSET(B3,0,0,-2,-2)))", -1.),
+        // Negative OFFSET normalization is compatibility policy, native Excel unverified.
+        ("ROWS((OFFSET(B3,0,0,-2,-2),A1):C4)", 4.),
+        ("COLUMNS(C4:(A1,OFFSET(B3,0,0,-2,-2)))", 3.),
+        ("ROW((OFFSET(B3,0,0,-2,-2),A1):C4)", 1.),
+        ("COLUMN(C4:(A1,OFFSET(B3,0,0,-2,-2)))", 1.),
     ] {
         assert_eq!(
             value(&w, 0, source),

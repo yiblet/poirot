@@ -204,7 +204,7 @@ fn suites_select_one_builtin_contract_for_both_modes() {
         ),
         (
             Some(json!("PinnedPoi")),
-            json!({"type":"number","value":12}),
+            json!({"type":"error","value":"#VALUE!"}),
             poirot::eval::BuiltinSemanticsPolicy::PinnedPoi,
         ),
         (

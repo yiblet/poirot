@@ -831,6 +831,7 @@ dependencies = [
  "foldhash",
  "poirot-functions-core",
  "serde",
+ "serde_bytes",
 ]
 
 [[package]]

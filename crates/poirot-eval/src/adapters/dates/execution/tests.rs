@@ -5,7 +5,7 @@ fn book(system: DateSystem) -> Workbook {
     w.add_sheet("Sheet1").unwrap();
     w
 }
-// These expectations include the pinned POI phantom-slot and date-parser observations.
+// Modern Excel serial and clock contracts; pure calendar round trips retain internal epoch semantics.
 fn evaluate(w: &Workbook, f: &str) -> CellValue {
     match crate::run_formula_with_configuration(
         w,
@@ -20,7 +20,7 @@ fn evaluate(w: &Workbook, f: &str) -> CellValue {
                 date_order: DateOrder::MonthDayYear,
             },
         })
-        .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
+        .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation),
         Default::default(),
     ) {
         crate::EvaluationOutcome::Complete { value, .. } => value,
@@ -58,13 +58,13 @@ fn calendar_epoch_and_serial_boundaries() {
         ("DATE(4,1,1)", 1462.),
         ("DATE(1900,222,1)", 6727.),
         ("DATE(1900,2,0)", 31.),
-        ("DATE(1900,1,60)", 59.),
+        ("DATE(1900,1,60)", 60.),
         ("YEAR(0)", 1900.),
         ("MONTH(0)", 1.),
         ("DAY(0)", 0.),
-        ("DAY(60)", 1.),
+        ("DAY(60)", 29.),
         ("DAY(61)", 1.),
-        ("DAYS(61,60)", 0.),
+        ("DAYS(61,60)", 1.),
         ("EOMONTH(0,0)", 31.),
         ("EDATE(0,0)", 0.),
     ] {
@@ -246,7 +246,7 @@ fn month_week_and_financial_day_count() {
     ] {
         num(&w, f, n);
     }
-    assert_eq!(evaluate(&w, "EDATE(\"1\",0)"), Error(VALUE_ERROR));
+    num(&w, "EDATE(\"1\",0)", 1.);
     assert_eq!(evaluate(&w, "WEEKNUM(1,18)"), Error(Num));
     assert_eq!(evaluate(&w, "YEARFRAC(1,2,5)"), Error(Num));
 }
@@ -255,7 +255,7 @@ fn business_days_holidays_and_weekends() {
     let mut w = book(DateSystem::Excel1900);
     for (f, n) in [
         ("NETWORKDAYS(0,0)", 0.),
-        ("WORKDAY(0,1)", 1.),
+        ("WORKDAY(0,1)", 2.),
         ("WORKDAY.INTL(\"2013/09/30\",-1)", 41544.),
         ("WORKDAY.INTL(\"2013/09/27\",1)", 41547.),
         ("NETWORKDAYS(DATE(2021,9,27),DATE(2021,10,1))", 5.),
@@ -271,56 +271,16 @@ fn business_days_holidays_and_weekends() {
         .unwrap()
         .set_value("A2".parse().unwrap(), Number(44467.))
         .unwrap();
-    num(&w, "NETWORKDAYS(DATE(2021,9,27),DATE(2021,10,1),A1:A2)", 3.);
+    num(&w, "NETWORKDAYS(DATE(2021,9,27),DATE(2021,10,1),A1:A2)", 4.);
     num(&w, "WORKDAY(DATE(2021,9,27),1,A1:A2)", 44468.);
-    assert_eq!(evaluate(&w, "NETWORKDAYS(2,1)"), Error(Name));
-    assert_eq!(evaluate(&w, "WORKDAY.INTL(1,1,\"1111111\")"), Error(Num));
-    assert_eq!(evaluate(&w, "WORKDAY.INTL(1,1,8)"), Error(Num));
-}
-#[test]
-fn observed_poi_leading_zero_weekend_codes() {
-    let w = book(DateSystem::Excel1900);
-    num(&w, "WORKDAY.INTL(\"2013/09/27\",1,\"0000011\")", 41545.);
+    num(&w, "NETWORKDAYS(2,1)", -1.);
+    // Microsoft WORKDAY.INTL documents all-weekend strings as invalid:
+    // https://support.microsoft.com/en-us/excel/functions/workday-intl-function
     assert_eq!(
-        evaluate(&w, "WORKDAY.INTL(\"2013/09/27\",1,\"0000000\")"),
-        Error(Num)
+        evaluate(&w, "WORKDAY.INTL(1,1,\"1111111\")"),
+        Error(VALUE_ERROR)
     );
-}
-#[test]
-fn observed_poi_permissive_and_phantom_slot_boundaries() {
-    let w = book(DateSystem::Excel1900);
-    for (f, n) in [
-        ("WORKDAY(59,1)", 61.),
-        ("WORKDAY(60,1)", 62.),
-        ("WORKDAY(61,-1)", 59.),
-        ("WORKDAY(59,1,60)", 62.),
-        ("WORKDAY(61,-1,60)", 58.),
-        ("YEARFRAC(\"-1\",\"1\",2)", 2. / 360.),
-        ("YEARFRAC(\"-1\",\"1\",0)", 1. / 360.),
-        ("YEARFRAC(\"2958466\",\"2958467\",2)", 1. / 360.),
-    ] {
-        num(&w, f, n);
-    }
-    assert_eq!(evaluate(&w, "YEARFRAC(-1,1,2)"), Error(Num));
-}
-#[test]
-fn exact_poi_operand_contracts_and_error_order() {
-    let w = book(DateSystem::Excel1900);
-    for f in [
-        "EDATE(1,TRUE)",
-        "EDATE(1,\"1\")",
-        "EDATE(#REF!,0)",
-        "EDATE(-1,\"1\")",
-        "WEEKNUM(#REF!)",
-    ] {
-        assert_eq!(evaluate(&w, f), Error(VALUE_ERROR), "{f}");
-    }
-    assert_eq!(evaluate(&w, "YEARFRAC(#REF!,1,#DIV/0!)"), Error(Div0));
-    num(&w, "WORKDAY(44466.25,1)", 44467.25);
-    num(&w, "WORKDAY.INTL(44466,1,\"1\")", 44467.);
-    num(&w, "DAY(44197.99999999)", 2.);
-    num(&w, "HOUR(44197.99999999)", 0.);
-    assert_eq!(evaluate(&w, "YEARFRAC(1,365,-0.1)"), Error(Num));
+    assert_eq!(evaluate(&w, "WORKDAY.INTL(1,1,8)"), Error(Num));
 }
 #[test]
 fn nom_text_boundaries_and_unused_clock() {
@@ -379,12 +339,15 @@ fn week_skip_matches_independent_day_traversal() {
                     continue;
                 }
                 for mode in [1, 2, 7, 11, 12, 17] {
-                    let mut day = epoch(date(start as f64, system).unwrap());
+                    let mut day = start;
                     let mut remaining: i64 = count;
                     while remaining != 0 {
                         let sign = remaining.signum();
                         day += sign;
-                        let dow = (day + 4).rem_euclid(7);
+                        let dow = match system {
+                            DateSystem::Excel1900 => (day + 6).rem_euclid(7),
+                            DateSystem::Excel1904 => (day + 5).rem_euclid(7),
+                        };
                         let weekend = if mode <= 7 {
                             (dow - (mode + 5) % 7).rem_euclid(7) < 2
                         } else {
@@ -397,7 +360,7 @@ fn week_skip_matches_independent_day_traversal() {
                     num(
                         &w,
                         &format!("WORKDAY.INTL({start},{count},{mode})"),
-                        serial(civil(day), system).unwrap(),
+                        day as f64,
                     );
                 }
             }
@@ -490,7 +453,7 @@ fn shared_policy_formula_and_display_boundaries() {
                 &w,
                 &format!("YEARFRAC(\"{}\",\"{}\",2)", last + 1, last + 2)
             ),
-            Number(1. / 360.)
+            Error(Num)
         );
         assert_eq!(
             evaluate(&w, &format!("YEARFRAC({}, {},2)", last + 1, last + 2)),
@@ -503,7 +466,7 @@ fn shared_policy_formula_and_display_boundaries() {
             [
                 (0, 1900., 1., 0., "1899-12-31"),
                 (59, 1900., 2., 28., "1900-02-28"),
-                (60, 1900., 3., 1., "1900-02-29"),
+                (60, 1900., 2., 29., "1900-02-29"),
                 (61, 1900., 3., 1., "1900-03-01"),
             ],
         ),
@@ -590,4 +553,40 @@ fn datedif_uses_calendar_interval_modes() {
     ] {
         num(&w, formula, expected);
     }
+}
+
+#[test]
+fn typed_date_controls_and_errors() {
+    // https://support.microsoft.com/en-us/office/date-function-e36c0c8c-4104-49da-ab83-82328b832349
+    // https://support.microsoft.com/en-us/office/days-function-57740535-d549-4395-8728-0f07bff0b9df
+    let book = book(DateSystem::Excel1900);
+    for (formula, expected) in [
+        ("DATE(2008,1,2)", 39449.),
+        ("DAYS(61,59)", 2.),
+        ("DAYS(59,61)", -2.),
+        ("DATEDIF(DATE(2001,1,1),DATE(2003,1,1),\"Y\")", 2.),
+        ("YEARFRAC(1,361,2)", 1.),
+    ] {
+        assert_eq!(evaluate(&book, formula), Number(expected), "{formula}");
+    }
+    assert_eq!(evaluate(&book, "YEARFRAC(1/0,2,6)"), Error(Num));
+    assert_eq!(evaluate(&book, "DATE(1/0,1,1)"), Error(Div0));
+}
+#[test]
+fn typed_date_arguments_broadcast_and_holidays_remain_fixed() {
+    // Excel DAYS subtracts serials; NETWORKDAYS excludes whole holiday sets.
+    // https://support.microsoft.com/en-us/office/networkdays-function-48e717bf-a7a3-495f-969e-5005e3eb18e7
+    let book = book(DateSystem::Excel1900);
+    assert_eq!(evaluate(&book, "SUM(DAYS({61;62},{59,60}))"), Number(8.));
+    assert_eq!(
+        evaluate(
+            &book,
+            "SUM(NETWORKDAYS({45292;45293},DATE(2024,1,5),{45292;45293}))"
+        ),
+        Number(6.)
+    );
+    assert_eq!(
+        evaluate(&book, "SUM(WORKDAY({45292;45293},1,{45293;45294}))"),
+        Number(90590.)
+    );
 }

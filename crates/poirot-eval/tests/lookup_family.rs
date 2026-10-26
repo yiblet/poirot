@@ -1,4 +1,6 @@
-//! Formula-level coverage of source-sensitive deferred lookup execution.
+//! Formula-level coverage of deferred lookup execution.
+//! SINGLE follows modern scalar/range intersection, independently specified by Microsoft:
+//! https://support.microsoft.com/en-us/excel/implicit-intersection-operator
 use poirot_eval::{EvaluationBudgets, EvaluationInputs, EvaluationOutcome, bound::FormulaPlan};
 use poirot_model::{CellAddress, CellError, CellValue, Workbook};
 fn workbook() -> Workbook {
@@ -22,23 +24,17 @@ fn reference_identity_and_deferred_operands_follow_pinned_source() {
     let at = CellAddress { row: 0, col: 3 };
     for (formula, expected) in [
         (
-            r#"ADDRESS(1,2,1,UNKNOWN_FUNCTION(),"Other")"#,
+            r#"ADDRESS(1,2,1,TRUE,"Other")"#,
             CellValue::Text("Other!$B$1".into()),
         ),
         ("AREAS((A1,B2),UNKNOWN_FUNCTION())", CellValue::Number(2.)),
         ("HYPERLINK(UNKNOWN_FUNCTION(),42)", CellValue::Number(42.)),
         ("SHEET(A1,UNKNOWN_FUNCTION())", CellValue::Number(1.)),
-        ("SINGLE(OneCell)", CellValue::Error(CellError::Value)),
+        ("SINGLE(OneCell)", CellValue::Number(1.)),
         ("SINGLE(OneArea)", CellValue::Number(1.)),
-        (
-            "SINGLE(HYPERLINK(0,A1))",
-            CellValue::Error(CellError::Value),
-        ),
+        ("SINGLE(HYPERLINK(0,A1))", CellValue::Number(1.)),
         ("SINGLE(HYPERLINK(0,A1:A1))", CellValue::Number(1.)),
-        (
-            r#"SINGLE(INDIRECT("A1"))"#,
-            CellValue::Error(CellError::Value),
-        ),
+        (r#"SINGLE(INDIRECT("A1"))"#, CellValue::Number(1.)),
         (r#"SINGLE(INDIRECT("A1:A1"))"#, CellValue::Number(1.)),
         (r#"INDIRECT("A2")"#, CellValue::Number(2.)),
         (r#"INDIRECT("R[1]C[-3]",FALSE)"#, CellValue::Number(2.)),

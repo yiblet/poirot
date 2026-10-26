@@ -3,7 +3,7 @@
 use super::*;
 
 /// Validated lookup operand geometry with lazy workbook reads preserved.
-pub(super) enum LookupTable {
+pub(crate) enum LookupTable {
     /// Single physical reference area.
     Reference(Area),
     /// Logical area with signed, possibly off-grid coordinates.
@@ -29,7 +29,7 @@ impl LookupTable {
         Ok(Self::Reference(a))
     }
     /// Return logical row and column counts without reading table cells.
-    pub(super) fn shape(&self) -> (usize, usize) {
+    pub(crate) fn shape(&self) -> (usize, usize) {
         match self {
             Self::SheetCells(a) => (a.len(), 1),
             Self::Signed(a) => (a.height() as usize, a.width() as usize),
@@ -38,7 +38,8 @@ impl LookupTable {
         }
     }
     /// Validate source-specific table channels and shape before lookup traversal.
-    pub(super) fn admit(value: Value, is_match: bool) -> Result<Self, CellError> {
+    pub(crate) fn admit(value: Value, kind: host::ClassicLookupKind) -> Result<Self, CellError> {
+        let is_match = kind == host::ClassicLookupKind::Match;
         match value {
             Value::SheetSpan(a) if !a.is_empty() => {
                 // SAFETY: The match guard requires a nonempty vector or exactly one area before reading element zero.
@@ -70,7 +71,7 @@ impl LookupTable {
         }
     }
     /// Select a nonempty row or column vector at a fixed cross-axis offset.
-    pub(super) fn vector(&self, axis: SearchAxis, fixed: usize) -> Result<LookupVector, CellError> {
+    pub(crate) fn vector(&self, axis: SearchAxis, fixed: usize) -> Result<LookupVector, CellError> {
         let (height, width) = self.shape();
         let (len, bound) = match axis {
             SearchAxis::Vertical => (height, width),
@@ -84,7 +85,7 @@ impl LookupTable {
 }
 /// Logical row or column selection within a validated table.
 #[derive(Clone, Copy)]
-pub(super) struct LookupVector {
+pub(crate) struct LookupVector {
     /// Axis along which candidate indices advance.
     pub(super) axis: SearchAxis,
     /// Zero-based position along the other axis.

@@ -127,7 +127,7 @@ fn only_unresolved_conditions_and_selected_reference_members_are_read() {
         ("G1", "G1"),
         ("H1", "H1"),
         ("I1", "2"),
-        ("K1", "COUNTIF(A1:A3,B1:B2)"),
+        ("K1", "COUNTIF(A1:A3,)"),
     ] {
         sheet.set_formula(target(cell).address, formula).unwrap();
     }
@@ -231,7 +231,7 @@ fn incompatible_extents_are_rejected_without_emulating_calc_padding() {
     );
 }
 #[test]
-fn policy_and_condition_edits_invalidate_retained_results_after_restore() {
+fn condition_edits_invalidate_retained_results_after_restore() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
@@ -247,28 +247,8 @@ fn policy_and_condition_edits_invalidate_retained_results_after_restore() {
             "SUMPRODUCT(IFS(C1:C3,A1:A3,TRUE,B1:B3))",
         )
         .unwrap();
-    let mut overlay = Overlay::with_workbook(&book)
-        .with_policy(poirot_eval::overlay::OverlayPolicy {
-            builtin: poirot_eval::BuiltinSemanticsPolicy::PinnedPoi,
-            ..Default::default()
-        })
-        .build()
-        .unwrap();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let context = EvaluationContext::default();
-    assert_eq!(
-        overlay
-            .evaluation(&context)
-            .unwrap()
-            .cell(target("E1"))
-            .unwrap(),
-        CellValue::Error(CellError::Value)
-    );
-    overlay
-        .set_policy(OverlayPolicy {
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
-            ..Default::default()
-        })
-        .unwrap();
     assert_eq!(
         overlay
             .evaluation(&context)
@@ -295,20 +275,6 @@ fn policy_and_condition_edits_invalidate_retained_results_after_restore() {
             .cell(target("E3"))
             .unwrap(),
         CellValue::Number(205.)
-    );
-    overlay
-        .set_policy(OverlayPolicy {
-            builtin: poirot_eval::BuiltinSemanticsPolicy::PinnedPoi,
-            ..Default::default()
-        })
-        .unwrap();
-    assert_eq!(
-        overlay
-            .evaluation(&context)
-            .unwrap()
-            .cell(target("E1"))
-            .unwrap(),
-        CellValue::Error(CellError::Value)
     );
 }
 #[test]
@@ -340,5 +306,89 @@ fn condition_and_selected_result_dimensions_bound_child_first_spills() {
             CellValue::Number(expected),
             "{cell}"
         );
+    }
+}
+
+#[test]
+fn computed_selector_probes_execute_once_with_selected_member_reads() {
+    use poirot_eval::execution_observation::OperationKind;
+    use poirot_eval::execution_retention::{BoundedExecutionTrace, RetainedEvent, RetentionLimits};
+    /// Record every read, including repeated reads of the same physical cell.
+    #[derive(Default)]
+    struct Reads(Vec<ReadEvent>);
+    impl DependencyReadSink for Reads {
+        fn read(&mut self, event: ReadEvent) {
+            self.0.push(event);
+        }
+    }
+    let book = book();
+    let policy = EvaluationPolicy::default();
+    let mut compiler = FormulaCompiler::new();
+    let plan = compiler.compile_workbook(&book, &policy);
+    let configuration = config(ArrayResultPolicy::ScalarIntersection);
+    // The service contract is one execution per demanded probe. RAND is multiplied
+    // by zero, so its draw count observes evaluation without changing the mask.
+    for formula in [
+        "SUMPRODUCT(IFS((A1:A3>2)+RAND()*0,B1:B3,TRUE,A1:A3))",
+        "SUMPRODUCT(SWITCH((A1:A3>2)+RAND()*0,1,B1:B3,0,A1:A3))",
+    ] {
+        for observed in [false, true] {
+            let prepared = compiler.compile_formula(formula, &policy);
+            let mut reads = Reads::default();
+            let mut trace = BoundedExecutionTrace::new(RetentionLimits {
+                events: 1000,
+                scalar_values: 1000,
+                text_bytes: 10000,
+            });
+            let mut run = EvaluationRun::new_with_configuration(
+                WorkbookView::new(&book, &plan, &policy).unwrap(),
+                &configuration,
+                EvaluationBudgets::default(),
+            )
+            .unwrap()
+            .with_dependency_sink(&mut reads);
+            if observed {
+                run = run.with_execution_observer(&mut trace);
+            }
+            let result = run.evaluate_formula(target("Z100"), &prepared);
+            let report = run.finish(result);
+            let members: Vec<_> = reads
+                .0
+                .iter()
+                .filter_map(|event| match event.read {
+                    DependencyRead::Cell(target) => Some(target.address),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(
+                members,
+                ["A1", "A2", "A3", "A1", "B2", "B3"].map(|cell| target(cell).address),
+                "{formula} observed={observed}"
+            );
+            assert_eq!(
+                report
+                    .outcome
+                    .usage()
+                    .random_accesses
+                    .first()
+                    .unwrap()
+                    .draws,
+                1,
+                "{formula} observed={observed}"
+            );
+            assert_eq!(value(report.outcome), CellValue::Number(303.));
+            if observed {
+                let first_probe_observations = trace
+                    .events()
+                    .iter()
+                    .filter(|event| {
+                        matches!(event,
+                    RetainedEvent::Begin(operation) if matches!(operation.kind,
+                        OperationKind::Argument { ordinal: 0, .. }))
+                    })
+                    .count();
+                assert_eq!(first_probe_observations, 1);
+            }
+        }
     }
 }

@@ -70,6 +70,24 @@ fn expect(book: &Workbook, formula: &str, arrays: ArrayResultPolicy, expected: C
     );
 }
 #[test]
+fn information_host_classifies_selected_errors_without_forcing_unselected_branches() {
+    // Microsoft documents ISERR as excluding #N/A and TYPE as reporting errors as 16.
+    for (formula, expected) in [
+        ("ISERROR(IF(FALSE,1/0,5))", CellValue::Boolean(false)),
+        ("ISERROR(IF(TRUE,1/0,5))", CellValue::Boolean(true)),
+        ("ISERR(NA())", CellValue::Boolean(false)),
+        ("ISNA(NA())", CellValue::Boolean(true)),
+        ("TYPE(NA())", CellValue::Number(16.)),
+    ] {
+        expect(
+            &book(),
+            formula,
+            ArrayResultPolicy::ScalarIntersection,
+            expected,
+        );
+    }
+}
+#[test]
 fn mixed_rectangles_inspect_types_without_converting_numbers_text_blanks_booleans_or_errors() {
     // Microsoft IS functions explicitly inspect types without conversion. Fresh Calc
     // corroborates text/blank/error members; Calc array mode converts logical members
@@ -160,10 +178,10 @@ fn scalar_projection_and_missing_rules_survive_array_support() {
     }
     let arrays = ArrayResultPolicy::ScalarIntersection;
     for (at, formula, expected) in [
-        ("B2", "ISNA(A1:B2)", true),
+        ("B2", "ISNA(A1:B2)", false),
         ("A1", "ISNUMBER(A1:B2)", true),
-        ("Z100", "ISERROR(A1:B2)", true),
-        ("Z100", "ISNUMBER(A1:B2)", false),
+        ("Z100", "ISERROR(A1:B2)", false),
+        ("Z100", "ISNUMBER(A1:B2)", true),
     ] {
         assert_eq!(
             value(result(
@@ -176,19 +194,19 @@ fn scalar_projection_and_missing_rules_survive_array_support() {
             CellValue::Boolean(expected)
         );
     }
-    // SUM's reference-expression demand remains scalar; SUMPRODUCT supplies array demand.
+    // Typed predicates produce the same rectangle when nested in an aggregate.
     expect(
         &book(),
         "SUM(--ISNUMBER(A1:D2))",
         arrays,
-        CellValue::Number(0.),
+        CellValue::Number(2.),
     );
 }
 #[test]
-fn pinned_predicate_array_projection_and_nonpredicate_information_functions_are_unchanged() {
+fn typed_information_shapes_are_independent_of_legacy_builtin_policy() {
     for (formula, expected) in [
-        ("ISNA({7,\"text\";TRUE,#N/A})", CellValue::Boolean(true)),
-        ("TYPE({1,2})", CellValue::Number(1.)),
+        ("ISNA({7,\"text\";TRUE,#N/A})", CellValue::Boolean(false)),
+        ("TYPE({1,2})", CellValue::Number(64.)),
         ("N({TRUE,FALSE})", CellValue::Number(1.)),
         ("T({\"x\",1})", CellValue::Text("x".into())),
         ("ISREF(A1:D2)", CellValue::Boolean(true)),
@@ -301,18 +319,12 @@ fn reference_edits_and_builtin_policy_changes_invalidate_retained_predicate_resu
         CellValue::Number(131.)
     );
     for (builtin, expected) in [
-        (
-            BuiltinSemanticsPolicy::PinnedPoi,
-            CellValue::Error(CellError::Value),
-        ),
+        (BuiltinSemanticsPolicy::PinnedPoi, CellValue::Number(131.)),
         (
             BuiltinSemanticsPolicy::ExcelDocumentation,
             CellValue::Number(131.),
         ),
-        (
-            BuiltinSemanticsPolicy::PinnedPoi,
-            CellValue::Error(CellError::Value),
-        ),
+        (BuiltinSemanticsPolicy::PinnedPoi, CellValue::Number(131.)),
     ] {
         overlay
             .set_policy(OverlayPolicy {
@@ -336,7 +348,7 @@ fn spreadsheet_errors_are_data_but_operational_failures_and_limits_escape_iferro
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(target("D1").address, "COUNTIF(A1:A2,B1:B2)")
+        .set_formula(target("D1").address, "COUNTIF(A1:A2,)")
         .unwrap();
     for arrays in [
         ArrayResultPolicy::ScalarIntersection,
@@ -443,5 +455,37 @@ fn named_array_footprints_publish_with_child_first_reads() {
             CellValue::Boolean(true),
             "{cell}"
         );
+    }
+}
+
+#[test]
+fn typed_information_preserves_source_identity_and_broadcasts_conversions() {
+    // TYPE's scalar codes and array-constant 64 are documented by Microsoft:
+    // https://support.microsoft.com/en-us/excel/functions/type-function
+    // Multi-cell references describe the same modern array value without selecting a member.
+    let book = book();
+    assert_eq!(
+        value(result(
+            &book,
+            "A1",
+            "TYPE(@A1:A2)",
+            ArrayResultPolicy::DynamicSpill,
+            EvaluationBudgets::default()
+        )),
+        CellValue::Number(1.)
+    );
+    for (formula, expected) in [
+        ("TYPE(A1)", CellValue::Number(1.)),
+        ("TYPE(B1)", CellValue::Number(2.)),
+        ("TYPE({1,2;3,4})", CellValue::Number(64.)),
+        ("TYPE(A1:B2)", CellValue::Number(64.)),
+        ("TYPE(NA())", CellValue::Number(16.)),
+        ("SUM(N({TRUE,FALSE;2,3}))", CellValue::Number(6.)),
+        (
+            "TEXTJOIN(\"\",TRUE,T({1,\"a\";FALSE,\"b\"}))",
+            CellValue::Text("ab".into()),
+        ),
+    ] {
+        expect(&book, formula, ArrayResultPolicy::DynamicSpill, expected);
     }
 }

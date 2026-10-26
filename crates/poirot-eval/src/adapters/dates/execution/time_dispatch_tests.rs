@@ -13,6 +13,11 @@ fn context() -> EvaluationInputs {
         ..EvaluationInputs::default()
     }
 }
+fn parse_with_host(session: &mut Session<'_>, input: &str) -> FunctionResult<f64> {
+    let mut host =
+        crate::host::CallHost::new(session, 0, "A1".parse().unwrap(), ArgumentsRef::Empty);
+    coercev2_time_text(&mut host, input)
+}
 fn dispatch(book: &Workbook, input: &str, context: EvaluationInputs) -> CellValue {
     match crate::run_formula(
         book,
@@ -106,7 +111,7 @@ fn context_year_is_explicit_lazy_and_invalid_context_propagates() {
         let mut reads = Reads::default();
         let mut session = Session::with_context(&book, context());
         session.dependency_sink = Some(&mut reads);
-        let _ = session.coercev2_time_text(input);
+        let _ = parse_with_host(&mut session, input);
         drop(session);
         let fields: Vec<_> = reads
             .0
@@ -171,7 +176,7 @@ fn each_allocating_host_stage_is_admitted_before_semantic_fallback() {
             ..EvaluationBudgets::default()
         };
         let mut session = Session::new(&book, context(), BudgetMeter::new(budgets).unwrap());
-        let failure = session.coercev2_time_text(input).unwrap_err();
+        let failure = parse_with_host(&mut session, input).unwrap_err();
         let FunctionFailure::Operational(EvaluationFailure::Budget(failure)) = failure else {
             panic!("allocation admission became semantic fallback");
         };
@@ -180,7 +185,7 @@ fn each_allocating_host_stage_is_admitted_before_semantic_fallback() {
         assert_eq!(session.budget.usage.text_bytes, consumed);
     }
     let mut session = Session::with_context(&book, context());
-    assert_eq!(session.coercev2_time_text(input), Ok(0.));
+    assert_eq!(parse_with_host(&mut session, input), Ok(0.));
     let formula = "IFERROR(TIMEVALUE(\"1/01/2000 bad\"),0)";
     let plan = bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap())
         .unwrap();

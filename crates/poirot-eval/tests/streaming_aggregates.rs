@@ -239,3 +239,74 @@ fn ignored_text_keeps_full_observations_and_cold_text_failures() {
         }
     }
 }
+
+#[test]
+fn eager_multi_area_reductions_finish_later_areas_before_reporting_errors() {
+    // The evaluator's eager operand contract includes every area of one union.
+    // An operational failure from its second area must beat a first-area #DIV/0!.
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("S").unwrap();
+    sheet
+        .set_value("A1".parse().unwrap(), CellValue::Error(CellError::Div0))
+        .unwrap();
+    sheet
+        .set_formula("B1".parse().unwrap(), "SUM(U:T!A1)")
+        .unwrap();
+    book.add_sheet("T").unwrap();
+    book.add_sheet("U").unwrap();
+    for function in ["SUMSQ", "AVERAGE", "MIN", "MAX", "PRODUCT"] {
+        assert!(
+            matches!(
+                result(&book, &format!("{function}((A1,B1))"), Default::default()),
+                EvaluationOutcome::Aborted {
+                    failure: EvaluationFailure::UnsupportedCapability { .. },
+                    ..
+                }
+            ),
+            "{function}"
+        );
+    }
+}
+
+#[test]
+fn eager_numeric_reductions_preserve_special_number_and_error_order() {
+    // Non-SUM handlers currently reject raw nonfinite inputs as an unsupported
+    // capability. This pins that compatibility gap and ordered failure policy;
+    // it does not claim Excel reports an operational error for these values.
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("S").unwrap();
+    for (address, value) in [
+        ("A1", CellValue::Number(f64::INFINITY)),
+        ("B1", CellValue::Error(CellError::Div0)),
+        ("A2", CellValue::Error(CellError::Div0)),
+        ("B2", CellValue::Number(f64::INFINITY)),
+    ] {
+        sheet.set_value(address.parse().unwrap(), value).unwrap();
+    }
+    for function in ["SUMSQ", "AVERAGE", "MIN", "MAX", "PRODUCT"] {
+        for operand in ["A1:B1", "CHOOSE({1,2},A1,B1)"] {
+            assert!(
+                matches!(
+                    result(&book, &format!("{function}({operand})"), Default::default()),
+                    EvaluationOutcome::Aborted {
+                        failure: EvaluationFailure::UnsupportedCapability { .. },
+                        ..
+                    }
+                ),
+                "{function}({operand})"
+            );
+        }
+        for operand in ["A2:B2", "CHOOSE({1,2},A2,B2)"] {
+            assert!(
+                matches!(
+                    result(&book, &format!("{function}({operand})"), Default::default()),
+                    EvaluationOutcome::Complete {
+                        value: CellValue::Error(CellError::Div0),
+                        ..
+                    }
+                ),
+                "{function}({operand})"
+            );
+        }
+    }
+}

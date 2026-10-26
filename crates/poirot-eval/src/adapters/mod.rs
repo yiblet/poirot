@@ -38,10 +38,11 @@
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
+mod aggregate;
 /// Date and time execution adapters.
 pub mod dates;
 /// Engineering and complex number execution adapters.
-pub mod engineering;
+mod engineering;
 /// Cash flow, loan, and monetary formatting adapters.
 pub mod financial;
 /// Scalar type and error inspection adapters.
@@ -127,7 +128,8 @@ family_adapter!(
     function,
     context,
     parameters,
-    context.session.date_function(
+    dates::execution::execute(
+        context.session,
         context.target.sheet,
         context.target.address,
         function,
@@ -140,7 +142,8 @@ family_adapter!(
     function,
     context,
     parameters,
-    context.session.logical_function(
+    logical::execution::execute(
+        context.session,
         context.target.sheet,
         context.target.address,
         function,
@@ -153,7 +156,8 @@ family_adapter!(
     function,
     context,
     parameters,
-    context.session.statistics_function(
+    statistics::execution::execute(
+        context.session,
         context.target.sheet,
         context.target.address,
         function,
@@ -166,7 +170,8 @@ family_adapter!(
     function,
     context,
     parameters,
-    context.session.reference_function(
+    reference::execute(
+        context.session,
         context.target.sheet,
         context.target.address,
         function,
@@ -179,7 +184,8 @@ family_adapter!(
     function,
     context,
     parameters,
-    context.session.search_function(
+    search::execute(
+        context.session,
         context.target.sheet,
         context.target.address,
         function,
@@ -192,7 +198,8 @@ family_adapter!(
     function,
     context,
     parameters,
-    context.session.information_function(
+    information::execution::execute(
+        context.session,
         context.target.sheet,
         context.target.address,
         function,
@@ -205,7 +212,8 @@ family_adapter!(
     function,
     context,
     parameters,
-    context.session.math_function(
+    math::execution::execute(
+        context.session,
         context.target.sheet,
         context.target.address,
         function,
@@ -218,7 +226,8 @@ family_adapter!(
     function,
     context,
     parameters,
-    context.session.text_function(
+    text::execution::execute_function(
+        context.session,
         context.target.sheet,
         context.target.address,
         function,
@@ -259,22 +268,13 @@ family_adapter!(
     function,
     context,
     parameters,
-    match function.helper() {
-        Some(helper) => matrix::execute(
-            context.session,
-            context.target.sheet,
-            context.target.address,
-            helper,
-            parameters.0
-        ),
-        None => matrix::modern(
-            function,
-            context.session,
-            context.target.sheet,
-            context.target.address,
-            parameters.0
-        ),
-    }
+    matrix::execute(
+        function,
+        context.session,
+        context.target.sheet,
+        context.target.address,
+        parameters.0
+    )
 );
 family_adapter!(
     CriteriaAdapter,
@@ -286,7 +286,7 @@ family_adapter!(
         context.session,
         context.target.sheet,
         context.target.address,
-        function.helper(),
+        function,
         parameters.0
     )
 );

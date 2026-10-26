@@ -1,126 +1,112 @@
-//! Information family handles error values rather than propagating them uniformly.
-use crate::array_operator::Shape;
-use crate::host::{CallHost, MissingPolicy};
+//! Exact value inspection through shared typed argument and result traversal.
+use crate::adapters::elementwise::{
+    Broadcast, Kernel, MemberContext, SourceIdentity, execute as execute_kernel,
+};
+use crate::host::CallHost;
 use crate::*;
-impl Session<'_> {
-    /// Inspect scalar types and errors using each information builtin's coercion rules.
-    pub(crate) fn information_function(
-        &mut self,
-        s: usize,
-        at: CellAddress,
-        function: InformationFunction,
-        args: ArgumentsRef<'_>,
-    ) -> EvalResult<Value> {
+
+/// Inspect one value without coercing errors, text, blank, or omission.
+struct Information(InformationFunction);
+impl Kernel for Information {
+    type Signature = (Broadcast,);
+    fn apply(
+        &self,
+        context: &mut MemberContext<'_, '_, '_>,
+        (argument,): &Self::Signature,
+    ) -> FunctionResult<CellValue> {
         use InformationFunction::*;
-        if !FunctionId::Information(function)
-            .descriptor()
-            .arity
-            .accepts(args.len())
-        {
-            return Ok(err(VALUE_ERROR));
-        }
-        if function == Na {
-            return Ok(err(NA));
-        }
-        if matches!(
-            function,
-            IsError | IsErr | IsNa | IsNumber | IsText | IsBlank | IsLogical | IsNonText
-        ) {
-            self.read(DependencyRead::BuiltinPolicy);
-            let modern = self.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation;
-            let mut host = if modern {
-                CallHost::new_inheriting(self, s, at, args)
-            } else {
-                CallHost::new(self, s, at, args)
-            };
-            if modern {
-                let retains_array = match semantic(host.retains_array(0))? {
-                    Ok(retains_array) => retains_array,
-                    Err(error) => {
-                        return information_predicate(function, &Error(error), false)
-                            .map(Value::from);
-                    }
-                };
-                if retains_array {
-                    let operand = match semantic(host.argument(0))? {
-                        Ok(operand) => operand,
-                        Err(error) => {
-                            return information_predicate(function, &Error(error), false)
-                                .map(Value::from);
-                        }
-                    };
-                    drop(host);
-                    let shape = Shape::inspect(operand.value()).ok_or_else(|| {
-                        self.spill_unsupported(
-                            s,
-                            at,
-                            "information predicate requires one bounded rectangular operand",
-                        )
-                    })?;
-                    let rows = self.rectangular_array(at, shape, |session, row, column| {
-                        let value =
-                            session.rectangular_element(operand.value(), shape, row, column)?;
-                        information_predicate(function, &value, operand.missing_at(row, column))
-                    })?;
-                    return Ok(Value::Array(rows));
-                }
-            }
-            // MissingArgEval is not BlankEval, including when selected by IFS.
-            // Spreadsheet errors remain inspectable data; operational failures escape.
-            let (value, missing) = match host.scalar_data(0, MissingPolicy::Blank) {
-                Ok(operand) => (operand.value, operand.missing),
-                Err(FunctionFailure::Spreadsheet(error)) => (Error(error), false),
-                Err(FunctionFailure::Operational(failure)) => return Err(failure),
-            };
-            return information_predicate(function, &value, missing).map(Value::from);
-        }
-        let value = self.argument(s, at, args, 0)?;
-        Ok(match function {
-            Na => err(NA),
-            Type => Number(match value {
-                Number(_) | Blank => 1.,
-                Text(_) | CellValue::TextUtf16(_) => 2.,
-                Boolean(_) => 4.,
-                Error(_) => 16.,
-            })
-            .into(),
-            N => coercev2_information_n(value).into(),
-            T => coercev2_information_t(value).into(),
-            IsError | IsErr | IsNa | IsNumber | IsText | IsBlank | IsLogical | IsNonText => {
-                // SAFETY: The classifier-only match is guarded by those exact variants, and that branch returns before the later non-classifier match.
-                unreachable!("classifiers return before legacy coercion")
-            }
+        let operand = match argument.read(context) {
+            Ok(operand) => operand,
+            Err(FunctionFailure::Spreadsheet(error)) => crate::host::ScalarOperand {
+                value: Error(error),
+                missing: false,
+                origin: crate::host::OperandOrigin::Direct,
+            },
+            Err(error) => return Err(error),
+        };
+        let value = operand.value;
+        let present = !operand.missing;
+        Ok(match self.0 {
+            IsError => Boolean(present && matches!(value, Error(_))),
+            IsErr => Boolean(present && matches!(value, Error(error) if error != NA)),
+            IsNa => Boolean(present && value == Error(NA)),
+            IsNumber => Boolean(present && matches!(value, Number(_))),
+            IsText => Boolean(present && value.text_ref().is_some()),
+            IsBlank => Boolean(present && value == Blank),
+            IsLogical => Boolean(present && matches!(value, Boolean(_))),
+            IsNonText => Boolean(!present || value.text_ref().is_none()),
+            N => poirot_coercionv2::compatibility::coercev2_information_n(value),
+            T => poirot_coercionv2::compatibility::coercev2_information_t(value),
+            Type | Na => return Err(EvaluationFailure::StalePlan.into()),
         })
     }
 }
-
-/// Exact type inspection neither parses text nor converts blank, omission, or errors.
-fn information_predicate(
+/// TYPE identifies materialized arrays before requesting scalar source contents.
+struct TypeInformation;
+impl Kernel for TypeInformation {
+    type Signature = (SourceIdentity,);
+    fn apply(
+        &self,
+        context: &mut MemberContext<'_, '_, '_>,
+        (source,): &Self::Signature,
+    ) -> FunctionResult<CellValue> {
+        let kind = source.kind(context.host)?;
+        if kind == crate::host::OperandKind::Array {
+            return Ok(Number(64.));
+        }
+        if kind == crate::host::OperandKind::Reference {
+            let shape = source.describe(context.host)?;
+            if shape.rows > 1 || shape.columns > 1 || shape.sheets > 1 {
+                return Ok(Number(64.));
+            }
+        }
+        let value = match source.scalar(context.host) {
+            Ok(value) => value.value,
+            Err(FunctionFailure::Spreadsheet(error)) => Error(error),
+            Err(error) => return Err(error),
+        };
+        Ok(Number(match value {
+            Number(_) | Blank => 1.,
+            Text(_) | CellValue::TextUtf16(_) => 2.,
+            Boolean(_) => 4.,
+            Error(_) => 16.,
+        }))
+    }
+}
+/// Produce the constant error without preparing any source operand.
+struct NotAvailable;
+impl Kernel for NotAvailable {
+    type Signature = ();
+    fn apply(&self, _: &mut MemberContext<'_, '_, '_>, _: &()) -> FunctionResult<CellValue> {
+        Ok(Error(NA))
+    }
+}
+/// Execute information predicates and conversions over the admitted rectangle.
+pub(crate) fn execute(
+    session: &mut Session<'_>,
+    s: usize,
+    at: CellAddress,
     function: InformationFunction,
-    value: &CellValue,
-    missing: bool,
-) -> EvalResult<CellValue> {
-    use InformationFunction::*;
-    let result = match function {
-        IsError => !missing && matches!(value, Error(_)),
-        IsErr => !missing && matches!(value, Error(error) if *error != NA),
-        IsNa => !missing && *value == Error(NA),
-        IsNumber => !missing && matches!(value, Number(_)),
-        IsText => !missing && value.text_ref().is_some(),
-        IsBlank => !missing && *value == Blank,
-        IsLogical => !missing && matches!(value, Boolean(_)),
-        IsNonText => missing || value.text_ref().is_none(),
-        _ => return Err(EvaluationFailure::StalePlan),
+    args: ArgumentsRef<'_>,
+) -> EvalResult<Value> {
+    if !FunctionId::Information(function)
+        .descriptor()
+        .arity
+        .accepts(args.len())
+    {
+        return Ok(err(VALUE_ERROR));
+    }
+    let mut host = CallHost::new_array(session, s, at, args, args.len());
+    let result = if function == InformationFunction::Na {
+        execute_kernel(&mut host, at, NotAvailable)
+    } else if function == InformationFunction::Type {
+        execute_kernel(&mut host, at, TypeInformation)
+    } else {
+        execute_kernel(&mut host, at, Information(function))
     };
-    Ok(Boolean(result))
-}
-
-/// N converts booleans to numbers and other nonnumeric, nonerror values to zero.
-fn coercev2_information_n(value: CellValue) -> CellValue {
-    poirot_coercionv2::compatibility::coercev2_information_n(value)
-}
-
-/// T retains text/errors and converts every other scalar to empty text.
-fn coercev2_information_t(value: CellValue) -> CellValue {
-    poirot_coercionv2::compatibility::coercev2_information_t(value)
+    match result {
+        Ok(value) => Ok(value),
+        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionFailure::Operational(error)) => Err(error),
+    }
 }

@@ -64,6 +64,9 @@ fn text_and_unary_regressions_work_in_prepared_bound_and_overlay_paths() {
     // also retain the independently authored ClosedXML corpus expectations.
     // https://support.microsoft.com/en-us/excel/functions/search-function
     // https://support.microsoft.com/en-gb/excel/compatibility-versions
+    // NORM.S.DIST with FALSE is the standard normal density exp(-x²/2)/sqrt(2π).
+    // A present omitted logical slot is blank/false, distinct from an absent slot.
+    // https://support.microsoft.com/en-us/excel/functions/norm-s-dist-function
     // Unary plus leaves its value unchanged (MS-XLSB PtgUPlus):
     // https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xlsb/381dd053-7283-4a70-98ea-49ddcc9abfed
     let text = |value: &str| CellValue::Text(value.into());
@@ -85,6 +88,12 @@ fn text_and_unary_regressions_work_in_prepared_bound_and_overlay_paths() {
         (r#"FIND("Z","😀Z")"#, CellValue::Number(2.)),
         (r#"LEFT("👩Z",1)"#, text("👩")),
         (r#"RIGHT("Z👩",1)"#, text("👩")),
+        (
+            "NORM.S.DIST(0,)",
+            CellValue::Number(1. / (2. * std::f64::consts::PI).sqrt()),
+        ),
+        (r#"SEARCH("","abc",)"#, CellValue::Error(CellError::Value)),
+        (r#"FIND("","abc",)"#, CellValue::Error(CellError::Value)),
         (r#"LEFT("edge",)"#, text("")),
         (r#"RIGHT("edge",)"#, text("")),
         (r#"LEFT("edge")"#, text("e")),

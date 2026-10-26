@@ -265,3 +265,46 @@ fn borrowed_bytecode_arguments_force_once_and_skip_other_blocks() {
     assert_eq!(session.budget.usage.random_accesses[0].draws, 1);
     assert!(session.runtime.vm.is_idle());
 }
+
+#[test]
+fn cleaned_family_routes_keep_public_wrappers_and_composition() {
+    let workbook = workbook();
+    let adapters = DateAdapter
+        .chain(ReferenceAdapter)
+        .chain(InformationAdapter)
+        .chain(TextAdapter);
+    // Contract examples use calendar components, reference coordinates, exact type
+    // predicates, and concatenation; expected values follow those public operations.
+    for (name, parameters, expected) in [
+        ("YEAR", vec!["DATE(2024,2,29)"], CellValue::Number(2024.)),
+        ("ROW", vec!["A7"], CellValue::Number(7.)),
+        ("ISERROR", vec!["1/0"], CellValue::Boolean(true)),
+        (
+            "CONCATENATE",
+            vec!["\"a\"", "\"b\""],
+            CellValue::Text("ab".into()),
+        ),
+    ] {
+        assert_eq!(
+            call(&adapters, &workbook, name, &parameters),
+            expected,
+            "{name}"
+        );
+    }
+    assert_eq!(
+        call(&DateAdapter, &workbook, "YEAR", &["DATE(2024,2,29)"]),
+        CellValue::Number(2024.)
+    );
+    assert_eq!(
+        call(&ReferenceAdapter, &workbook, "ROW", &["A7"]),
+        CellValue::Number(7.)
+    );
+    assert_eq!(
+        call(&InformationAdapter, &workbook, "ISERROR", &["1/0"]),
+        CellValue::Boolean(true)
+    );
+    assert_eq!(
+        call(&TextAdapter, &workbook, "CONCATENATE", &["\"a\"", "\"b\""]),
+        CellValue::Text("ab".into())
+    );
+}

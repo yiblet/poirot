@@ -301,14 +301,13 @@ impl Reads {
             self.traces.insert(key, trace);
         }
     }
-}
-impl crate::DependencyReadSink for Reads {
-    fn read(&mut self, event: ReadEvent) {
+    /// Observe a read without copying payloads retained by an external sink.
+    pub(crate) fn record(&mut self, event: &ReadEvent) {
         let Some(consumer) = event.consumer else {
             return;
         };
         let trace = self.trace((consumer.sheet, consumer.address));
-        match event.read {
+        match &event.read {
             DependencyRead::Cell(cell) => {
                 trace.value_read((cell.sheet, cell.address));
                 trace.cell((cell.sheet, cell.address));
@@ -318,6 +317,7 @@ impl crate::DependencyReadSink for Reads {
                 trace.cell((cell.sheet, cell.address));
             }
             DependencyRead::SparseMembership { sheet, first, last } => {
+                let (sheet, first, last) = (*sheet, *first, *last);
                 if first == last {
                     // A point edge invalidates both present and absent coordinates,
                     // including generated publication, exactly like this guard.
@@ -392,6 +392,11 @@ impl crate::DependencyReadSink for Reads {
             DependencyRead::TextPolicy => trace.text_policy = true,
             _ => {}
         }
+    }
+}
+impl crate::DependencyReadSink for Reads {
+    fn read(&mut self, event: ReadEvent) {
+        self.record(&event);
     }
 }
 /// One retained result and the dependencies needed to validate its reuse.

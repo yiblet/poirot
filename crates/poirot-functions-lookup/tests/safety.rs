@@ -71,12 +71,7 @@ impl Workbook for Guard {
         self.reads += 1;
         Ok(Scalar::Number(1.))
     }
-    fn sheet_index(&mut self, _: &str) -> Result<Option<u32>, Failure> {
-        Err(self
-            .query_failure
-            .clone()
-            .unwrap_or(Failure::Unsupported(Unsupported::WorkbookMetadata)))
-    }
+
     fn dynamic_reference(&mut self, _: &DynamicReference, _: Context) -> Result<Value, Failure> {
         Err(self.query_failure.clone().unwrap_or(Error::Name.into()))
     }
@@ -116,58 +111,6 @@ fn indirect_maps_only_semantic_resolution_failures() {
     }
 }
 #[test]
-fn unavailable_sheet_metadata_is_not_na() {
-    assert_eq!(
-        evaluate(
-            Function::Reference(ReferenceFunction::Sheet),
-            &[s("Data")],
-            C,
-            &mut guard()
-        ),
-        Err(Failure::Unsupported(Unsupported::WorkbookMetadata))
-    );
-}
-#[test]
-fn deferred_hyperlink_address_areas_and_sheet_do_not_request_ignored_slots() {
-    let mut w = guard();
-    w.args = vec![n(1.), s("label")];
-    let plan = CallPlan::prepare(Function::Reference(ReferenceFunction::Hyperlink), 2).unwrap();
-    assert_eq!(plan.execute(C, &mut w), Ok(s("label")));
-    assert_eq!(w.requested, vec![1]);
-    w.requested.clear();
-    w.args = vec![
-        n(2.),
-        n(3.),
-        n(1.),
-        Value::Scalar(Scalar::Error(Error::Div0)),
-        s("Data"),
-    ];
-    let plan = CallPlan::prepare(Function::Reference(ReferenceFunction::Address), 5).unwrap();
-    assert_eq!(plan.execute(C, &mut w), Ok(s("Data!$C$2")));
-    assert_eq!(w.requested, vec![0, 1, 2, 4]);
-    w.requested.clear();
-    w.args = vec![n(2.), Value::Scalar(Scalar::Error(Error::Div0))];
-    assert_eq!(
-        CallPlan::prepare(Function::Reference(ReferenceFunction::Areas), 2)
-            .unwrap()
-            .execute(C, &mut w),
-        Ok(n(1.))
-    );
-    assert_eq!(w.requested, vec![0]);
-    w.requested.clear();
-    w.args = vec![
-        reference(0, 1, 1),
-        Value::Scalar(Scalar::Error(Error::Div0)),
-    ];
-    assert_eq!(
-        CallPlan::prepare(Function::Reference(ReferenceFunction::Sheet), 2)
-            .unwrap()
-            .execute(C, &mut w),
-        Ok(n(1.))
-    );
-    assert_eq!(w.requested, vec![0]);
-}
-#[test]
 fn deferred_error_order_requests_only_operands_before_failure() {
     let mut w = guard();
     w.args = vec![
@@ -183,21 +126,6 @@ fn deferred_error_order_requests_only_operands_before_failure() {
         Err(Error::Div0.into())
     );
     assert_eq!(w.requested, vec![3]);
-    w.requested.clear();
-    w.args = vec![
-        reference(0, 1, 1),
-        n(0.),
-        n(0.),
-        Value::Scalar(Scalar::Error(Error::Na)),
-        Value::Scalar(Scalar::Error(Error::Div0)),
-    ];
-    assert_eq!(
-        CallPlan::prepare(Function::Reference(ReferenceFunction::Offset), 5)
-            .unwrap()
-            .execute(C, &mut w),
-        Err(Error::Div0.into())
-    );
-    assert_eq!(w.requested, vec![0, 1, 2, 4]);
 }
 #[test]
 fn vector_budget_fails_before_workbook_cells_are_read() {
@@ -279,19 +207,6 @@ fn query_return_budget_precedes_fallback_row_allocation() {
     );
 }
 #[test]
-fn input_budget_precedes_deferred_operand_materialization() {
-    let mut w = guard();
-    w.args = vec![s("label")];
-    w.deny = Some(Work::InputMaterialization);
-    assert_eq!(
-        CallPlan::prepare(Function::Reference(ReferenceFunction::Hyperlink), 1)
-            .unwrap()
-            .execute(C, &mut w),
-        Err(Failure::Operational(OperationalFailure::BudgetExceeded))
-    );
-    assert!(w.requested.is_empty());
-}
-#[test]
 fn source_exception_regions_are_unsupported_and_short_casts_retain_identity() {
     let mut w = guard();
     let rectangle = Value::Array(Array::new(2, 2, vec![Scalar::Number(1.); 4]).unwrap());
@@ -316,20 +231,6 @@ fn source_exception_regions_are_unsupported_and_short_casts_retain_identity() {
             &mut w
         ),
         Err(Failure::Unsupported(Unsupported::LookupShortResult))
-    );
-    assert!(
-        matches!(evaluate(Function::Reference(ReferenceFunction::Offset),
-        &[reference(0,1,1), n(32768.), n(0.)], C, &mut w), Ok(Value::SignedReference(r))
-        if r.first_row == -32768 && r.last_row == -32768 && r.workbook.as_deref() == Some("book"))
-    );
-    assert_eq!(
-        evaluate(
-            Function::Reference(ReferenceFunction::Offset),
-            &[reference(0, 1, 1)],
-            C,
-            &mut w
-        ),
-        Err(Failure::Unsupported(Unsupported::OffsetMissingOperands))
     );
 }
 
@@ -364,14 +265,5 @@ fn unicode_search_and_unknown_scalar_array_shape_remain_typed() {
             &mut w
         ),
         Err(Error::Na.into())
-    );
-    assert_eq!(
-        evaluate(
-            Function::Reference(ReferenceFunction::Address),
-            &[array(vec![Scalar::Number(1.)]), n(1.)],
-            C,
-            &mut w
-        ),
-        Err(Failure::Unsupported(Unsupported::ScalarArrayIntersection))
     );
 }

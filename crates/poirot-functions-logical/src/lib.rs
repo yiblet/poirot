@@ -12,7 +12,7 @@ pub fn coercev2_logical_test(value: &CellValue) -> Result<bool, CellError> {
     poirot_coercionv2::compatibility::coercev2_logical_test(value)
 }
 
-/// Return the ERROR.TYPE code for a supported spreadsheet error.
+/// Return the documented ERROR.TYPE code, including GETTING_DATA as code eight.
 pub fn error_type(error: CellError) -> Option<u8> {
     match error {
         CellError::Null => Some(1),
@@ -22,7 +22,8 @@ pub fn error_type(error: CellError) -> Option<u8> {
         CellError::Name => Some(5),
         CellError::Num => Some(6),
         CellError::NA => Some(7),
-        CellError::GettingData | CellError::Spill | CellError::Calc => None,
+        CellError::GettingData => Some(8),
+        CellError::Spill | CellError::Calc => None,
     }
 }
 

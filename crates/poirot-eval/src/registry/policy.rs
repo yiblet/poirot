@@ -80,8 +80,8 @@ impl DependencyPolicy {
         .union(Self::LOCALIZATION);
     /// Numeric scalar coercion plus the date system used to prepare calendar grids.
     pub const FORECAST_READS: Self = Self::NUMERIC_COERCION.union(Self::DATE_SYSTEM);
-    /// Argument values and the date system used by text formatting.
-    pub const TEXT_FORMATTING: Self = Self::ARGUMENTS.union(Self::DATE_SYSTEM);
+    /// Numeric text admission and the date system used by text formatting.
+    pub const TEXT_FORMATTING: Self = Self::NUMERIC_COERCION.union(Self::DATE_SYSTEM);
 }
 /// Inclusive minimum and maximum argument counts accepted by a function contract.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]

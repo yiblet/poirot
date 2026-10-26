@@ -264,3 +264,16 @@ fn concentrated_small_shape_beta_cdf_saturates_only_with_a_tail_bound() {
     near(call(&b, "BETA.DIST(0.5,0.01,1E8,TRUE)"), 1.);
     near(call(&b, "BETA.DIST(0.9,0.01,1E8,TRUE)"), 1.);
 }
+
+#[test]
+fn typed_distribution_parameters_preserve_logical_and_prior_defaults() {
+    let b = book();
+    // Bernoulli mass at zero is 1-p; omission of the upper bound repeats the lower.
+    near(call(&b, "BINOM.DIST.RANGE(1,0.25,0,)"), 0.75);
+    // The uniform CDF is x even when its logical selector is supplied as text.
+    near(call(&b, "BETA.DIST(0.25,1,1,\"TRUE\",,)"), 0.25);
+    assert_eq!(
+        call(&b, "BETA.DIST(1/0,1,1,#N/A)"),
+        CellValue::Error(CellError::Div0)
+    );
+}

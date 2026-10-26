@@ -1,5 +1,7 @@
 //! Lazy workbook reads for the pinned POI DStarRunner database family.
-use crate::host::{CallHost, MissingPolicy};
+use crate::adapters::elementwise::rows::{self, Field, Layout, PredicateErrors, Reducer, Rows};
+use crate::adapters::elementwise::{FixedScalar, PreparedSources, Signature, WholeCollection};
+use crate::host::CallHost;
 use crate::*;
 use poirot_functions_database::{
     DatabaseError, DatabaseFunction, FinalizationPolicy, aggregate_selected,
@@ -29,6 +31,11 @@ enum DatabaseMatchFailure {
 impl From<DatabaseError> for DatabaseMatchFailure {
     fn from(error: DatabaseError) -> Self {
         Self::Domain(error)
+    }
+}
+impl From<FunctionFailure> for DatabaseMatchFailure {
+    fn from(error: FunctionFailure) -> Self {
+        Self::Host(error)
     }
 }
 fn database_failure(host: &CallHost<'_, '_>, error: DatabaseError) -> FunctionFailure {
@@ -83,12 +90,14 @@ fn row_matches(
     columns: usize,
     criteria_shape: (usize, usize),
 ) -> FunctionResult<bool> {
-    for cr in 1..criteria_shape.0 {
-        let mut matched = true;
-        for cc in 0..criteria_shape.1 {
+    rows::any_all(
+        host,
+        1..criteria_shape.0,
+        0..criteria_shape.1,
+        |host, cr, cc| {
             let condition = host.read_cell(2, cr, cc)?.value;
             if condition == Blank {
-                continue;
+                return Ok(true);
             }
             let heading = host.read_cell(2, 0, cc)?.value;
             scratch(host, &heading)?;
@@ -116,49 +125,55 @@ fn row_matches(
             };
             let value = host.read_cell(0, row, selected)?.value;
             scratch(host, &value)?;
-            if let Some(pattern) = condition.text_ref() {
+            let wildcard = if let Some(pattern) = condition.text_ref() {
                 let pattern = host.project_text(pattern)?;
                 let (operator, operand) = poirot_parsing::criteria::parse_comparison(&pattern);
                 if operator == poirot_parsing::criteria::Comparison::None
                     && poirot_functions_criteria::has_wildcards(operand)
                 {
-                    let input = coercev2_database_header_text(host, &value)?;
-                    host.admit_wildcard(operand, &input)?;
+                    Some((
+                        operand.to_owned(),
+                        coercev2_database_header_text(host, &value)?,
+                    ))
+                } else {
+                    None
                 }
-            }
-            let mut visited = 0;
-            let selected =
-                condition_matches_metered::<DatabaseMatchFailure>(&value, &condition, &mut || {
-                    host.wildcard_step(&mut visited)
-                        .map_err(DatabaseMatchFailure::Host)
-                })
-                .map_err(|error| match error {
-                    DatabaseMatchFailure::Domain(error) => database_failure(host, error),
-                    DatabaseMatchFailure::Host(error) => error,
-                })?;
-            if !selected {
-                matched = false;
-                break;
-            }
-        }
-        if matched {
-            return Ok(true);
-        }
-    }
-    Ok(false)
+            } else {
+                None
+            };
+            let selected = rows::matching(
+                host,
+                wildcard
+                    .as_ref()
+                    .map(|(pattern, input)| (pattern.as_str(), input.as_str())),
+                |mut visit| {
+                    condition_matches_metered::<DatabaseMatchFailure>(
+                        &value, &condition, &mut visit,
+                    )
+                },
+            )
+            .map_err(|error| match error {
+                DatabaseMatchFailure::Domain(error) => database_failure(host, error),
+                DatabaseMatchFailure::Host(error) => error,
+            })?;
+            Ok(selected)
+        },
+    )
 }
+
 fn evaluate(host: &mut CallHost<'_, '_>, function: DatabaseFunction) -> FunctionResult<CellValue> {
     if host.len() != 3 {
         return Err(VALUE_ERROR.into());
     }
-    // Prepare all three operands in source order, then validate reference classes.
-    let database = host.describe(0)?;
-    host.kind(1)?;
-    let criteria = host.describe(2)?;
+    /// Database and criteria collections retain their original field control between them.
+    type Roles = PreparedSources<(WholeCollection, FixedScalar, WholeCollection)>;
+    let (_, PreparedSources((database_role, field_role, criteria_role))) = Roles::admit(host)?;
+    let database = database_role.describe(host)?;
+    let criteria = criteria_role.describe(host)?;
     if !database.is_area || !criteria.is_area {
         return Err(VALUE_ERROR.into());
     }
-    let scalar = host.scalar_data(1, MissingPolicy::Blank)?;
+    let scalar = field_role.read(host)?;
     let empty = matches!(function, DatabaseFunction::Count | DatabaseFunction::CountA);
     // DStarRunner catches unexpected field types (including MissingArgEval)
     // as VALUE; the two count algorithms instead retain the absent field.
@@ -187,54 +202,74 @@ fn evaluate(host: &mut CallHost<'_, '_>, function: DatabaseFunction) -> Function
     if selected.is_none() && !empty {
         return Err(VALUE_ERROR.into());
     }
-    // Collect only values already selected by lazily evaluated criteria. Unvisited
-    // columns and rejected rows never execute their worksheet formula subtrees.
-    host.check_values(database.rows)?;
-    let mut values = Vec::new();
-    let mut unique = false;
-    for row in 1..database.rows {
-        let matched = match row_matches(
-            host,
-            row,
-            database.columns,
-            (criteria.rows, criteria.columns),
-        ) {
-            Ok(matched) => matched,
-            Err(FunctionFailure::Spreadsheet(_)) => return Err(VALUE_ERROR.into()),
-            Err(failure) => return Err(failure),
-        };
-        if !matched {
-            continue;
-        }
-        let value = if let Some(col) = selected {
-            host.read_cell(0, row, col)?.value
-        } else {
-            Number(0.)
-        };
-        if function == DatabaseFunction::Get && value != Blank {
-            if unique {
-                return Ok(Error(Num));
+    let source = Rows::bind(host, 0, Layout::Records)?;
+    rows::select(
+        host,
+        source,
+        Field::Column(selected),
+        PredicateErrors::Value,
+        |host, row, _| {
+            row_matches(
+                host,
+                row,
+                database.columns,
+                (criteria.rows, criteria.columns),
+            )
+        },
+        Selected {
+            function,
+            values: Vec::new(),
+            unique: false,
+        },
+    )
+}
+/// Database domain reduction over the shared selector's accepted payloads.
+struct Selected {
+    function: DatabaseFunction,
+    values: Vec<CellValue>,
+    unique: bool,
+}
+impl Reducer for Selected {
+    fn push(
+        &mut self,
+        host: &mut CallHost<'_, '_>,
+        value: CellValue,
+    ) -> FunctionResult<Option<CellValue>> {
+        if self.function == DatabaseFunction::Get && value != Blank {
+            if self.unique {
+                return Ok(Some(Error(Num)));
             }
-            unique = true;
+            self.unique = true;
         }
-        values.push(value);
+        host.check_values(self.values.len().saturating_add(1))?;
+        self.values
+            .try_reserve(1)
+            .map_err(|_| host.allocation_failure())?;
+        // SAFETY: one additional slot was reserved immediately above.
+        self.values.push(value);
+        Ok(None)
     }
-    // Finalization visits each selected value once, or twice for variance.
-    let passes = if matches!(
-        function,
-        DatabaseFunction::Stdev
-            | DatabaseFunction::StdevP
-            | DatabaseFunction::Var
-            | DatabaseFunction::VarP
-    ) {
-        2
-    } else {
-        1
-    };
-    host.charge_work((values.len() as u64).saturating_mul(passes))?;
-    let policy = match host.builtin_semantics_policy() {
-        BuiltinSemanticsPolicy::PinnedPoi => FinalizationPolicy::PinnedPoi,
-        BuiltinSemanticsPolicy::ExcelDocumentation => FinalizationPolicy::ExcelDocumentation,
-    };
-    aggregate_selected(function, &values, policy).map_err(|error| database_failure(host, error))
+    fn finish(self, host: &mut CallHost<'_, '_>) -> FunctionResult<CellValue> {
+        let Self {
+            function, values, ..
+        } = self;
+        // Finalization visits each selected value once, or twice for variance.
+        let passes = if matches!(
+            function,
+            DatabaseFunction::Stdev
+                | DatabaseFunction::StdevP
+                | DatabaseFunction::Var
+                | DatabaseFunction::VarP
+        ) {
+            2
+        } else {
+            1
+        };
+        host.charge_work((values.len() as u64).saturating_mul(passes))?;
+        let policy = match host.builtin_semantics_policy() {
+            BuiltinSemanticsPolicy::PinnedPoi => FinalizationPolicy::PinnedPoi,
+            BuiltinSemanticsPolicy::ExcelDocumentation => FinalizationPolicy::ExcelDocumentation,
+        };
+        aggregate_selected(function, &values, policy).map_err(|error| database_failure(host, error))
+    }
 }

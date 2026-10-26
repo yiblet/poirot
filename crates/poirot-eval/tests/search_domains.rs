@@ -86,11 +86,6 @@ fn search_validates_empty_pattern_and_text_domains() {
         }
         let missing = r#"SEARCH("","abc",)"#;
         assert_eq!(value(missing, &config), CellValue::Error(CellError::Value));
-        let pinned = config
-            .clone()
-            .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
-        assert_eq!(value(r#"SEARCH("","")"#, &pinned), CellValue::Number(1.));
-        assert_eq!(value(r#"FIND("","abc",4)"#, &pinned), CellValue::Number(4.));
         assert!(matches!(
             run(
                 r#"IFERROR(SEARCH("long","long text"),0)"#,
@@ -114,40 +109,16 @@ fn search_validates_empty_pattern_and_text_domains() {
 
 #[test]
 fn search_source_matching_and_unicode_contracts_survive_domain_validation() {
-    for builtin in [
-        BuiltinSemanticsPolicy::PinnedPoi,
-        BuiltinSemanticsPolicy::ExcelDocumentation,
-    ] {
+    {
         let poi = RunConfiguration::default()
-            .with_builtin_policy(builtin)
+            .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
             .with_text_policy(TextSemanticsPolicy {
                 source: TextSourceVersion::Poi7321209OpenJdk21Unicode15,
             });
-        assert_eq!(
-            value(r#"SEARCH("*","abc")"#, &poi),
-            if builtin == BuiltinSemanticsPolicy::ExcelDocumentation {
-                CellValue::Number(1.)
-            } else {
-                CellValue::Error(CellError::Value)
-            }
-        );
-        assert_eq!(
-            value(r#"SEARCH("a~*","a*")"#, &poi),
-            if builtin == BuiltinSemanticsPolicy::ExcelDocumentation {
-                CellValue::Number(1.)
-            } else {
-                CellValue::Error(CellError::Value)
-            }
-        );
+        assert_eq!(value(r#"SEARCH("*","abc")"#, &poi), CellValue::Number(1.));
+        assert_eq!(value(r#"SEARCH("a~*","a*")"#, &poi), CellValue::Number(1.));
         assert_eq!(value(r#"FIND("x","😀x")"#, &poi), CellValue::Number(3.));
         assert_eq!(value(r#"SEARCH("x","😀x")"#, &poi), CellValue::Number(3.));
-        assert_eq!(
-            value(r#"SEARCH("x","ßx")"#, &poi),
-            CellValue::Number(if builtin == BuiltinSemanticsPolicy::ExcelDocumentation {
-                2.
-            } else {
-                3.
-            })
-        );
+        assert_eq!(value(r#"SEARCH("x","ßx")"#, &poi), CellValue::Number(2.));
     }
 }

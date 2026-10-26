@@ -88,11 +88,11 @@ fn normal_gamma_iterations_are_charged_after_the_fixed_overhead() {
 }
 
 #[test]
-fn inverse_early_numeric_error_stays_a_spreadsheet_error() {
+fn inverse_invalid_probability_stays_a_spreadsheet_error() {
     let mut book = Workbook::new();
     book.add_sheet("Sheet1").unwrap();
     for name in ["NORMINV", "NORM.INV", "_xlfn.NORM.INV"] {
-        let formula = format!("{name}(-0,1/0,1)");
+        let formula = format!("{name}(-0,0,1)");
         assert!(
             matches!(
                 run(&book, &formula, 128),
@@ -103,7 +103,7 @@ fn inverse_early_numeric_error_stays_a_spreadsheet_error() {
             ),
             "{formula}"
         );
-        let formula = format!("IFERROR({name}(-0,1/0,1),42)");
+        let formula = format!("IFERROR({name}(-0,0,1),42)");
         assert!(
             matches!(
                 run(&book, &formula, 128),
@@ -118,47 +118,24 @@ fn inverse_early_numeric_error_stays_a_spreadsheet_error() {
 }
 
 #[test]
-fn poisson_mean_zero_source_exception_preserves_argument_order() {
+fn zero_mean_poisson_is_a_degenerate_finite_distribution() {
+    // Microsoft's mass/cumulative equations place all probability at zero.
+    // https://support.microsoft.com/en-us/excel/functions/poisson-dist-function
     let mut book = Workbook::new();
     book.add_sheet("Sheet1").unwrap();
     for name in ["POISSON", "POISSON.DIST", "_xlfn.POISSON.DIST"] {
-        for args in ["1,0,TRUE", "0.1,0,FALSE"] {
-            let formula = format!("IFERROR({name}({args}),42)");
+        for (arguments, expected) in [
+            ("0,0,FALSE", 1.),
+            ("0.1,0,FALSE", 1.),
+            ("1,0,FALSE", 0.),
+            ("1.9,0,FALSE", 0.),
+            ("1,0,TRUE", 1.),
+        ] {
+            let formula = format!("{name}({arguments})");
             assert!(
-                matches!(
-                    run(&book, &formula, 128),
-                    EvaluationOutcome::Aborted {
-                        failure: EvaluationFailure::KnownSourceException { .. },
-                        ..
-                    }
-                ),
+                matches!(run(&book,&formula,100_000),EvaluationOutcome::Complete {value:CellValue::Number(n),..} if n==expected),
                 "{formula}"
             );
         }
-        for (args, expected) in [
-            ("1,0,1/0", CellValue::Error(CellError::Div0)),
-            ("0,0,1/0", CellValue::Number(1.0)),
-            ("-1,0,1/0", CellValue::Error(CellError::Num)),
-            ("1,-1,1/0", CellValue::Error(CellError::Num)),
-        ] {
-            let formula = format!("{name}({args})");
-            match run(&book, &formula, 128) {
-                EvaluationOutcome::Complete { value, .. } => {
-                    assert_eq!(value, expected, "{formula}")
-                }
-                other => panic!("{formula}: {other:?}"),
-            }
-        }
-        let formula = format!("{name}(0,1,TRUE)");
-        assert!(
-            matches!(
-                run(&book, &formula, 100_000),
-                EvaluationOutcome::Complete {
-                    value: CellValue::Number(_),
-                    ..
-                }
-            ),
-            "{formula}"
-        );
     }
 }

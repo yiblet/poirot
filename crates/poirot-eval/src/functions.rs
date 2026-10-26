@@ -1,6 +1,14 @@
 //! Common execution adapters; operational failures propagate independently of cell errors.
 use super::*;
-impl Session<'_> {
+/// A sparse coordinate and its already traversed immutable authored source.
+#[derive(Clone, Copy)]
+pub(super) struct SparseMember<'a> {
+    pub(super) address: CellAddress,
+    /// None identifies generated-only spill members, which require ordinary source resolution.
+    pub(super) cell: Option<&'a poirot_model::Cell>,
+}
+
+impl<'a> Session<'a> {
     /// Evaluate and scalarize one argument, observing only the requested position.
     pub(super) fn argument(
         &mut self,
@@ -24,23 +32,6 @@ impl Session<'_> {
             };
         }
         self.observed_scalar_argument(s, at, args, index)
-    }
-    /// Evaluate arguments in order and return their first spreadsheet error separately.
-    pub(super) fn eager_arguments(
-        &mut self,
-        s: usize,
-        at: CellAddress,
-        args: ArgumentsRef<'_>,
-    ) -> EvalResult<Result<Vec<CellValue>, CellError>> {
-        self.runtime.budget.allocation(args.len())?;
-        let values = (0..args.len())
-            .map(|index| self.argument(s, at, args, index))
-            .collect::<EvalResult<Vec<_>>>()?;
-        if let Some(Error(error)) = values.iter().find(|value| matches!(value, Error(_))) {
-            Ok(Err(*error))
-        } else {
-            Ok(Ok(values))
-        }
     }
     /// Materialize a supported scalar, array, or single reference as a budgeted matrix.
     pub(super) fn matrix(
@@ -154,6 +145,31 @@ impl Session<'_> {
         area: Area,
         prefix_members: usize,
     ) -> EvalResult<Vec<CellAddress>> {
+        self.collect_sparse(
+            area,
+            prefix_members,
+            |address, _| address,
+            |address| *address,
+        )
+    }
+    /// Preserve authored cells from the membership prepass for internal value consumers.
+    pub(super) fn sparse_members(&mut self, area: Area) -> EvalResult<Vec<SparseMember<'a>>> {
+        self.prepare_sparse_area(area)?;
+        self.collect_sparse(
+            area,
+            0,
+            |address, cell| SparseMember { address, cell },
+            |member| member.address,
+        )
+    }
+    /// Admit the complete member batch before any referenced body executes.
+    fn collect_sparse<T>(
+        &mut self,
+        area: Area,
+        prefix_members: usize,
+        project: impl Fn(CellAddress, Option<&'a poirot_model::Cell>) -> T,
+        coordinate: impl Fn(&T) -> CellAddress,
+    ) -> EvalResult<Vec<T>> {
         let runtime = &mut *self.runtime;
         let membership = poirot_model::query::RangeMembership::new(
             area.sheet,
@@ -174,7 +190,7 @@ impl Session<'_> {
         let mut cells = view
             .stored(membership)
             .map_err(|_| EvaluationFailure::StalePlan)?;
-        while let Some(address) = sparse_next(&mut cells, &mut runtime.budget)? {
+        while let Some((address, cell)) = sparse_next(&mut cells, &mut runtime.budget)? {
             runtime.budget.check_allocation(
                 prefix_members
                     .saturating_add(addresses.len())
@@ -190,14 +206,14 @@ impl Session<'_> {
                     detail: "sparse coordinate allocation failed".into(),
                 })?;
             // SAFETY: The successful reservation provides room for this one push.
-            addresses.push(address);
+            addresses.push(project(address, Some(cell)));
         }
         // Effective stored coordinates are already unique and row-major. Only
         // merging generated spill cells can disturb that order or add duplicates.
         if self.array_result_policy == ArrayResultPolicy::DynamicSpill
             && runtime.preparation.admitted_cells().len() != 0
         {
-            let mut seen: HashSet<_> = addresses.iter().copied().collect();
+            let mut seen: HashSet<_> = addresses.iter().map(&coordinate).collect();
             for &(sheet, address) in runtime.preparation.admitted_cells() {
                 runtime.budget.charge(WorkKind::SparseScan, 1)?;
                 if sheet == area.sheet && area.contains(address) && !seen.contains(&address) {
@@ -208,11 +224,11 @@ impl Session<'_> {
                     )?;
                     runtime.budget.charge(WorkKind::Materialization, 1)?;
                     seen.insert(address);
-                    addresses.push(address);
+                    addresses.push(project(address, None));
                 }
             }
-            addresses.sort();
-            addresses.dedup();
+            addresses.sort_by_key(&coordinate);
+            addresses.dedup_by_key(|member| coordinate(member));
         }
         Ok(addresses)
     }
@@ -220,12 +236,12 @@ impl Session<'_> {
 
 /// Charge seeks and visits after every iterator step, including the terminating step.
 /// Empty rows/columns can require seeks even when no stored cell is returned.
-fn sparse_next(
-    cells: &mut crate::run_overlay::EffectiveStoredCells<'_>,
+fn sparse_next<'a>(
+    cells: &mut crate::run_overlay::EffectiveStoredCells<'a>,
     budget: &mut BudgetMeter,
-) -> EvalResult<Option<CellAddress>> {
+) -> EvalResult<Option<(CellAddress, &'a poirot_model::Cell)>> {
     let before = cells.counters();
-    let address = cells.next().map(|(address, _)| *address);
+    let address = cells.next().map(|(address, cell)| (*address, cell));
     let after = cells.counters();
     for amount in [
         after.row_seeks - before.row_seeks,
@@ -276,6 +292,124 @@ mod sparse_tests {
                 ..EvaluationBudgets::default()
             },
         )
+    }
+    #[test]
+    fn retained_sparse_sources_remove_one_resolution_per_authored_member() {
+        let mut book = book();
+        let count = 4096u32;
+        for row in 0..count {
+            book.sheet_mut(0)
+                .unwrap()
+                .set_value(CellAddress { row, col: 0 }, f64::from(row + 1))
+                .unwrap();
+        }
+        let mut direct = session(&book, EvaluationBudgets::default());
+        direct.array_result_policy = ArrayResultPolicy::ScalarIntersection;
+        let addresses = direct.sparse_addresses(area(0, count - 1, 0, 0)).unwrap();
+        session_execution::SOURCE_RESOLUTIONS.with(|counter| counter.set(0));
+        let ordinary: f64 = addresses
+            .into_iter()
+            .map(|address| match direct.range_cell(0, address).unwrap() {
+                Number(value) => value,
+                _ => panic!("expected authored numeric literal"),
+            })
+            .sum();
+        let old_count = session_execution::SOURCE_RESOLUTIONS.with(|counter| counter.get());
+        session_execution::SOURCE_RESOLUTIONS.with(|counter| counter.set(0));
+        let projected = direct
+            .items(Value::Refs(vec![area(0, count - 1, 0, 0)].into()))
+            .unwrap();
+        let retained_count = session_execution::SOURCE_RESOLUTIONS.with(|counter| counter.get());
+        let resolved: f64 = projected
+            .into_iter()
+            .map(|(value, indirect)| {
+                assert!(indirect);
+                match value {
+                    Number(value) => value,
+                    _ => panic!("expected authored numeric literal"),
+                }
+            })
+            .sum();
+        let expected = f64::from(count) * f64::from(count + 1) / 2.0;
+        assert_eq!(ordinary, expected);
+        assert_eq!(resolved, expected);
+        assert_eq!(old_count, count as usize);
+        assert_eq!(retained_count, 0);
+    }
+    #[test]
+    fn retained_members_use_overrides_and_deletions_without_source_resolution() {
+        let mut book = book();
+        for row in 0..3 {
+            book.sheet_mut(0)
+                .unwrap()
+                .set_value(CellAddress { row, col: 0 }, 1.0)
+                .unwrap();
+        }
+        let mut inputs = run_overlay::RunInputs::new(
+            &book,
+            [
+                (0, CellAddress { row: 0, col: 0 }, Number(5.0)),
+                (0, CellAddress { row: 3, col: 0 }, Number(7.0)),
+            ],
+            2,
+            std::sync::Arc::new(()),
+        )
+        .unwrap();
+        inputs
+            .sheets
+            .entry(0)
+            .or_default()
+            .set(
+                CellAddress { row: 1, col: 0 },
+                run_overlay::CellEdit::Delete,
+            )
+            .unwrap();
+        let mut direct = session(&book, EvaluationBudgets::default());
+        direct.inputs = Some(&inputs);
+        direct.array_result_policy = ArrayResultPolicy::ScalarIntersection;
+        session_execution::SOURCE_RESOLUTIONS.with(|counter| counter.set(0));
+        assert_eq!(
+            direct
+                .items(Value::Refs(vec![area(0, 3, 0, 0)].into()))
+                .unwrap(),
+            vec![
+                (Number(5.0), true),
+                (Number(1.0), true),
+                (Number(7.0), true)
+            ]
+        );
+        assert_eq!(
+            session_execution::SOURCE_RESOLUTIONS.with(|counter| counter.get()),
+            0
+        );
+    }
+    #[test]
+    fn generated_spill_members_keep_ordinary_source_resolution() {
+        let mut book = book();
+        book.sheet_mut(0)
+            .unwrap()
+            .set_formula(CellAddress { row: 0, col: 0 }, "SEQUENCE(3)")
+            .unwrap();
+        let mut direct = session(&book, EvaluationBudgets::default());
+        let members = direct.sparse_members(area(0, 2, 0, 0)).unwrap();
+        assert_eq!(members.len(), 3);
+        assert!(members[0].cell.is_some());
+        assert!(members[1..].iter().all(|member| member.cell.is_none()));
+        session_execution::SOURCE_RESOLUTIONS.with(|counter| counter.set(0));
+        assert_eq!(
+            direct
+                .items(Value::Refs(vec![area(0, 2, 0, 0)].into()))
+                .unwrap(),
+            vec![
+                (Number(1.0), true),
+                (Number(2.0), true),
+                (Number(3.0), true)
+            ]
+        );
+        assert_eq!(
+            session_execution::SOURCE_RESOLUTIONS.with(|counter| counter.get()),
+            2
+        );
     }
     #[test]
     fn tiny_range_budget_ignores_far_away_stored_cells() {

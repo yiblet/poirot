@@ -186,7 +186,9 @@ fn direct_and_overlay_combine_context_settings_with_workspace_policies() {
         ("A1", CellValue::Text("USD 1.00".into())),
         ("B1", CellValue::Number(1.234)),
         ("C1", CellValue::Number(2.)),
-        ("D1", CellValue::Number(110.)),
+        // Array indices select each position: {3,5,7}, whose sum is 15.
+        // https://support.microsoft.com/en-us/excel/functions/choose-function
+        ("D1", CellValue::Number(15.)),
         ("E1", CellValue::Number(1.)),
         ("F2", CellValue::Blank),
     ] {

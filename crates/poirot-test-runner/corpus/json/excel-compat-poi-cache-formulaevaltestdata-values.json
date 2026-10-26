@@ -20,7 +20,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -59,7 +60,7 @@
           "action": "set",
           "cell": "'EverythingTests'!M96",
           "content": {
-            "formula": "ABS(K7:N7)"
+            "formula": "ABS(@K7:N7)"
           }
         },
         {
@@ -80,7 +81,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -119,7 +121,7 @@
           "action": "set",
           "cell": "'EverythingTests'!P104",
           "content": {
-            "formula": "ACOS(O7:P8)"
+            "formula": "ACOS(@O7:P8)"
           }
         },
         {
@@ -140,7 +142,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -179,7 +182,7 @@
           "action": "set",
           "cell": "'EverythingTests'!O108",
           "content": {
-            "formula": "ACOSH(N9:O10)"
+            "formula": "ACOSH(@N9:O10)"
           }
         },
         {
@@ -235,7 +238,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -288,7 +292,7 @@
           "action": "set",
           "cell": "'EverythingTests'!P160",
           "content": {
-            "formula": "ASINH(O9:P11)"
+            "formula": "ASINH(@O9:P11)"
           }
         },
         {
@@ -309,7 +313,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -348,7 +353,7 @@
           "action": "set",
           "cell": "'EverythingTests'!P164",
           "content": {
-            "formula": "ATAN(O7:P8)"
+            "formula": "ATAN(@O7:P8)"
           }
         },
         {
@@ -369,7 +374,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -408,7 +414,7 @@
           "action": "set",
           "cell": "'EverythingTests'!L168",
           "content": {
-            "formula": "ATAN2(K9:L10,2.0)"
+            "formula": "ATAN2(@K9:L10,2.0)"
           }
         },
         {
@@ -429,7 +435,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -484,7 +491,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N172",
           "content": {
-            "formula": "ATANH(M9:O10)"
+            "formula": "ATANH(@M9:O10)"
           }
         },
         {
@@ -577,7 +584,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -605,7 +613,7 @@
           "action": "set",
           "cell": "'EverythingTests'!G264",
           "content": {
-            "formula": "COMBIN(E13:F13,1.0)"
+            "formula": "COMBIN(@E13:F13,1.0)"
           }
         },
         {
@@ -669,7 +677,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -740,7 +749,7 @@
           "action": "set",
           "cell": "'EverythingTests'!J272",
           "content": {
-            "formula": "CONCATENATE(F13:G15,E16)"
+            "formula": "CONCATENATE(@F13:G15,E16)"
           }
         },
         {
@@ -796,7 +805,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -834,7 +844,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N288",
           "content": {
-            "formula": "COSH(M8:N9)"
+            "formula": "COSH(@M8:N9)"
           }
         },
         {
@@ -1043,7 +1053,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -1081,7 +1092,7 @@
           "action": "set",
           "cell": "'EverythingTests'!O384",
           "content": {
-            "formula": "DEGREES(N8:O9)"
+            "formula": "DEGREES(@N8:O9)"
           }
         },
         {
@@ -1137,7 +1148,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -1167,7 +1179,7 @@
           "action": "set",
           "cell": "'EverythingTests'!J492",
           "content": {
-            "formula": "EXACT(F12:G12,F12:G12)"
+            "formula": "EXACT(@F12:G12,@F12:G12)"
           }
         },
         {
@@ -1296,7 +1308,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -1343,7 +1356,7 @@
           "action": "set",
           "cell": "'EverythingTests'!M564",
           "content": {
-            "formula": "FLOOR(G7:H8,H10)"
+            "formula": "FLOOR(@G7:H8,H10)"
           }
         },
         {
@@ -1428,7 +1441,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -1466,7 +1480,7 @@
           "action": "set",
           "cell": "'EverythingTests'!O788",
           "content": {
-            "formula": "INT(N8:O9)"
+            "formula": "INT(@N8:O9)"
           }
         },
         {
@@ -1786,7 +1800,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -1849,7 +1864,7 @@
           "action": "set",
           "cell": "'EverythingTests'!J856",
           "content": {
-            "formula": "LEFT(G7:H9,H10)"
+            "formula": "LEFT(@G7:H9,H10)"
           }
         },
         {
@@ -1912,7 +1927,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -1957,7 +1973,7 @@
           "action": "set",
           "cell": "'EverythingTests'!O880",
           "content": {
-            "formula": "LN(M9:O9)"
+            "formula": "LN(@M9:O9)"
           }
         },
         {
@@ -1972,7 +1988,7 @@
           "action": "set",
           "cell": "'EverythingTests'!P880",
           "content": {
-            "formula": "LN(O878:O881)"
+            "formula": "LN(@O878:O881)"
           }
         },
         {
@@ -2031,7 +2047,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -2069,7 +2086,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N888",
           "content": {
-            "formula": "LOG10(L9:N9)"
+            "formula": "LOG10(@L9:N9)"
           }
         },
         {
@@ -2084,7 +2101,7 @@
           "action": "set",
           "cell": "'EverythingTests'!O888",
           "content": {
-            "formula": "LOG10(N887:N889)"
+            "formula": "LOG10(@N887:N889)"
           }
         },
         {
@@ -2319,7 +2336,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -2350,7 +2368,7 @@
           "action": "set",
           "cell": "'EverythingTests'!M1040",
           "content": {
-            "formula": "ODD(L7:N7)"
+            "formula": "ODD(@L7:N7)"
           }
         },
         {
@@ -2505,7 +2523,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -2578,7 +2597,7 @@
           "action": "set",
           "cell": "'EverythingTests'!J1208",
           "content": {
-            "formula": "RIGHT(G383:H385,H386)"
+            "formula": "RIGHT(@G383:H385,H386)"
           }
         },
         {
@@ -2677,7 +2696,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -2731,7 +2751,7 @@
           "action": "set",
           "cell": "'EverythingTests'!O1228",
           "content": {
-            "formula": "ROUNDUP(N8:O10,0.0)"
+            "formula": "ROUNDUP(@N8:O10,0.0)"
           }
         },
         {
@@ -2859,7 +2879,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -2897,7 +2918,7 @@
           "action": "set",
           "cell": "'EverythingTests'!O1292",
           "content": {
-            "formula": "SIN(N8:O9)"
+            "formula": "SIN(@N8:O9)"
           }
         },
         {
@@ -2918,7 +2939,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -2956,7 +2978,7 @@
           "action": "set",
           "cell": "'EverythingTests'!O1296",
           "content": {
-            "formula": "SINH(N8:O9)"
+            "formula": "SINH(@N8:O9)"
           }
         },
         {
@@ -2977,7 +2999,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -3016,7 +3039,7 @@
           "action": "set",
           "cell": "'EverythingTests'!P1320",
           "content": {
-            "formula": "SQRT(O7:P8)"
+            "formula": "SQRT(@O7:P8)"
           }
         },
         {
@@ -3100,7 +3123,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -3139,7 +3163,7 @@
           "action": "set",
           "cell": "'EverythingTests'!M1396",
           "content": {
-            "formula": "TAN(L7:M8)"
+            "formula": "TAN(@L7:M8)"
           }
         },
         {
@@ -3160,7 +3184,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -3191,7 +3216,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N1400",
           "content": {
-            "formula": "TANH(I8:K8)"
+            "formula": "TANH(@I8:K8)"
           }
         },
         {
@@ -3212,7 +3237,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -3234,7 +3260,7 @@
           "action": "set",
           "cell": "'EverythingTests'!R1448",
           "content": {
-            "formula": "TRIM(E7:E8)"
+            "formula": "TRIM(@E7:E8)"
           }
         },
         {
@@ -10935,7 +10961,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -10990,7 +11017,7 @@
           "action": "set",
           "cell": "'EverythingTests'!L96",
           "content": {
-            "formula": "ABS(G7:G12)"
+            "formula": "ABS(@G7:G12)"
           }
         },
         {
@@ -11119,7 +11146,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -11158,7 +11186,7 @@
           "action": "set",
           "cell": "'EverythingTests'!M160",
           "content": {
-            "formula": "ASINH(J10:M10)"
+            "formula": "ASINH(@J10:M10)"
           }
         },
         {
@@ -11179,7 +11207,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -11218,7 +11247,7 @@
           "action": "set",
           "cell": "'EverythingTests'!M164",
           "content": {
-            "formula": "ATAN(K10:N10)"
+            "formula": "ATAN(@K10:N10)"
           }
         },
         {
@@ -11239,7 +11268,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -11278,7 +11308,7 @@
           "action": "set",
           "cell": "'EverythingTests'!K168",
           "content": {
-            "formula": "ATAN2(K7:K8,J9:K9)"
+            "formula": "ATAN2(@K7:K8,@J9:K9)"
           }
         },
         {
@@ -11334,7 +11364,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -11373,7 +11404,7 @@
           "action": "set",
           "cell": "'EverythingTests'!K216",
           "content": {
-            "formula": "CEILING(J8:K9,1.0)"
+            "formula": "CEILING(@J8:K9,1.0)"
           }
         },
         {
@@ -11394,7 +11425,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -11429,7 +11461,7 @@
           "action": "set",
           "cell": "'EverythingTests'!F264",
           "content": {
-            "formula": "COMBIN(E13:G13,2.0)"
+            "formula": "COMBIN(@E13:G13,2.0)"
           }
         },
         {
@@ -11494,7 +11526,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -11541,7 +11574,7 @@
           "action": "set",
           "cell": "'EverythingTests'!K272",
           "content": {
-            "formula": "CONCATENATE(K8:L9,K10)"
+            "formula": "CONCATENATE(@K8:L9,K10)"
           }
         },
         {
@@ -11562,7 +11595,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -11593,7 +11627,7 @@
           "action": "set",
           "cell": "'EverythingTests'!O284",
           "content": {
-            "formula": "COS(K8:K10)"
+            "formula": "COS(@K8:K10)"
           }
         },
         {
@@ -11677,7 +11711,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -11785,7 +11820,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N384",
           "content": {
-            "formula": "DEGREES(L374:L385)"
+            "formula": "DEGREES(@L374:L385)"
           }
         },
         {
@@ -11920,7 +11955,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -11943,7 +11979,7 @@
           "action": "set",
           "cell": "'EverythingTests'!T516",
           "content": {
-            "formula": "FACT(I11:J11)"
+            "formula": "FACT(@I11:J11)"
           }
         },
         {
@@ -12000,7 +12036,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -12067,7 +12104,7 @@
           "action": "set",
           "cell": "'EverythingTests'!L564",
           "content": {
-            "formula": "FLOOR(F562:F565,G564)"
+            "formula": "FLOOR(@F562:F565,G564)"
           }
         },
         {
@@ -12188,7 +12225,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -12223,7 +12261,7 @@
           "action": "set",
           "cell": "'EverythingTests'!K804",
           "content": {
-            "formula": "ISBLANK(K13:L14)"
+            "formula": "ISBLANK(@K13:L14)"
           }
         },
         {
@@ -12295,7 +12333,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -12318,7 +12357,7 @@
           "action": "set",
           "cell": "'EverythingTests'!L816",
           "content": {
-            "formula": "ISLOGICAL(B16:B17)"
+            "formula": "ISLOGICAL(@B16:B17)"
           }
         },
         {
@@ -12654,7 +12693,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -12691,7 +12731,7 @@
           "action": "set",
           "cell": "'EverythingTests'!K908",
           "content": {
-            "formula": "LOWER(E11:G11)"
+            "formula": "LOWER(@E11:G11)"
           }
         },
         {
@@ -12776,7 +12816,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -12815,7 +12856,7 @@
           "action": "set",
           "cell": "'EverythingTests'!M964",
           "content": {
-            "formula": "MOD(I8:J9,2.0)"
+            "formula": "MOD(@I8:J9,2.0)"
           }
         },
         {
@@ -12872,7 +12913,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -12911,7 +12953,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N1040",
           "content": {
-            "formula": "ODD(K8:L9)"
+            "formula": "ODD(@K8:L9)"
           }
         },
         {
@@ -13003,7 +13045,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -13042,7 +13085,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N1140",
           "content": {
-            "formula": "RADIANS(K8:L9)"
+            "formula": "RADIANS(@K8:L9)"
           }
         },
         {
@@ -13177,7 +13220,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -13208,7 +13252,7 @@
           "action": "set",
           "cell": "'EverythingTests'!M1224",
           "content": {
-            "formula": "ROUNDDOWN(G7:I7,3.0)"
+            "formula": "ROUNDDOWN(@G7:I7,3.0)"
           }
         },
         {
@@ -13328,7 +13372,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -13367,7 +13412,7 @@
           "action": "set",
           "cell": "'EverythingTests'!O1288",
           "content": {
-            "formula": "SIGN(N9:O10)"
+            "formula": "SIGN(@N9:O10)"
           }
         },
         {
@@ -13602,7 +13647,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -13641,7 +13687,7 @@
           "action": "set",
           "cell": "'EverythingTests'!E1400",
           "content": {
-            "formula": "TANH(B8:C9)"
+            "formula": "TANH(@B8:C9)"
           }
         },
         {
@@ -13754,7 +13800,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -13808,7 +13855,7 @@
           "action": "set",
           "cell": "'EverythingTests'!O1476",
           "content": {
-            "formula": "UPPER(N7:P8)"
+            "formula": "UPPER(@N7:P8)"
           }
         },
         {
@@ -13893,7 +13940,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -13989,14 +14037,14 @@
           "action": "set",
           "cell": "'EverythingTests'!N96",
           "content": {
-            "formula": "ABS(K9:N9)"
+            "formula": "ABS(@K9:N9)"
           }
         },
         {
           "action": "set",
           "cell": "'EverythingTests'!O96",
           "content": {
-            "formula": "ABS(N88:N96)"
+            "formula": "ABS(@N88:N96)"
           }
         },
         {
@@ -14052,7 +14100,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -14090,7 +14139,7 @@
           "action": "set",
           "cell": "'EverythingTests'!M108",
           "content": {
-            "formula": "ACOSH(K8:N8)"
+            "formula": "ACOSH(@K8:N8)"
           }
         },
         {
@@ -14211,7 +14260,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -14257,7 +14307,7 @@
           "action": "set",
           "cell": "'EverythingTests'!I168",
           "content": {
-            "formula": "ATAN2(G12:I12,J9)"
+            "formula": "ATAN2(@G12:I12,J9)"
           }
         },
         {
@@ -14295,7 +14345,7 @@
           "action": "set",
           "cell": "'EverythingTests'!J168",
           "content": {
-            "formula": "ATAN2(I167:I169,I11:K11)"
+            "formula": "ATAN2(@I167:I169,@I11:K11)"
           }
         },
         {
@@ -14396,7 +14446,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -14441,7 +14492,7 @@
           "action": "set",
           "cell": "'EverythingTests'!L264",
           "content": {
-            "formula": "COMBIN(23.0,D263:D265)"
+            "formula": "COMBIN(23.0,@D263:D265)"
           }
         },
         {
@@ -14549,7 +14600,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -14580,7 +14632,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N284",
           "content": {
-            "formula": "COS(I8:K8)"
+            "formula": "COS(@I8:K8)"
           }
         },
         {
@@ -14701,7 +14753,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -14737,7 +14790,7 @@
           "action": "set",
           "cell": "'EverythingTests'!M488",
           "content": {
-            "formula": "EVEN(J11:M11)"
+            "formula": "EVEN(@J11:M11)"
           }
         },
         {
@@ -14981,7 +15034,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -15034,7 +15088,7 @@
           "action": "set",
           "cell": "'EverythingTests'!M788",
           "content": {
-            "formula": "INT(J8:M8)"
+            "formula": "INT(@J8:M8)"
           }
         },
         {
@@ -15049,7 +15103,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N788",
           "content": {
-            "formula": "INT(M786:M789)"
+            "formula": "INT(@M786:M789)"
           }
         },
         {
@@ -15070,7 +15124,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -15099,7 +15154,7 @@
           "action": "set",
           "cell": "'EverythingTests'!H812",
           "content": {
-            "formula": "ISERROR(C16:E16)"
+            "formula": "ISERROR(@C16:E16)"
           }
         },
         {
@@ -15296,7 +15351,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -15351,7 +15407,7 @@
           "action": "set",
           "cell": "'EverythingTests'!K864",
           "content": {
-            "formula": "LEN(K8:L10)"
+            "formula": "LEN(@K8:L10)"
           }
         },
         {
@@ -15372,7 +15428,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -15403,7 +15460,7 @@
           "action": "set",
           "cell": "'EverythingTests'!O880",
           "content": {
-            "formula": "LN(M9:O9)"
+            "formula": "LN(@M9:O9)"
           }
         },
         {
@@ -15461,7 +15518,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -15492,7 +15550,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N888",
           "content": {
-            "formula": "LOG10(L9:N9)"
+            "formula": "LOG10(@L9:N9)"
           }
         },
         {
@@ -15514,7 +15572,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -15579,7 +15638,7 @@
           "action": "set",
           "cell": "'EverythingTests'!L908",
           "content": {
-            "formula": "LOWER(F11:F14)"
+            "formula": "LOWER(@F11:F14)"
           }
         },
         {
@@ -15678,7 +15737,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -15744,7 +15804,7 @@
           "action": "set",
           "cell": "'EverythingTests'!J1040",
           "content": {
-            "formula": "ODD(H11:J11)"
+            "formula": "ODD(@H11:J11)"
           }
         },
         {
@@ -15759,7 +15819,7 @@
           "action": "set",
           "cell": "'EverythingTests'!K1040",
           "content": {
-            "formula": "ODD(J1035:J1041)"
+            "formula": "ODD(@J1035:J1041)"
           }
         },
         {
@@ -15780,7 +15840,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -15854,7 +15915,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N1104",
           "content": {
-            "formula": "POWER(H1102:H1105,L1104)"
+            "formula": "POWER(@H1102:H1105,L1104)"
           }
         },
         {
@@ -15903,7 +15964,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -15975,7 +16037,7 @@
           "action": "set",
           "cell": "'EverythingTests'!M1140",
           "content": {
-            "formula": "RADIANS(I1134:I1141)"
+            "formula": "RADIANS(@I1134:I1141)"
           }
         },
         {
@@ -16052,7 +16114,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -16105,7 +16168,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N1220",
           "content": {
-            "formula": "ROUND(M9:O9,K10)"
+            "formula": "ROUND(@M9:O9,K10)"
           }
         },
         {
@@ -16128,7 +16191,7 @@
           "action": "set",
           "cell": "'EverythingTests'!P1220",
           "content": {
-            "formula": "ROUND(N1218:N1221,O10)"
+            "formula": "ROUND(@N1218:N1221,O10)"
           }
         },
         {
@@ -16149,7 +16212,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -16188,7 +16252,7 @@
           "action": "set",
           "cell": "'EverythingTests'!P1224",
           "content": {
-            "formula": "ROUNDDOWN(K8:L9,2.0)"
+            "formula": "ROUNDDOWN(@K8:L9,2.0)"
           }
         },
         {
@@ -16209,7 +16273,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -16240,7 +16305,7 @@
           "action": "set",
           "cell": "'EverythingTests'!L1228",
           "content": {
-            "formula": "ROUNDUP(G9:I9,2.0)"
+            "formula": "ROUNDUP(@G9:I9,2.0)"
           }
         },
         {
@@ -16341,7 +16406,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -16377,7 +16443,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N1292",
           "content": {
-            "formula": "SIN(L1291:L1293)"
+            "formula": "SIN(@L1291:L1293)"
           }
         },
         {
@@ -16436,7 +16502,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -16473,7 +16540,7 @@
           "action": "set",
           "cell": "'EverythingTests'!O1320",
           "content": {
-            "formula": "SQRT(J1319:J1321)"
+            "formula": "SQRT(@J1319:J1321)"
           }
         },
         {
@@ -16755,7 +16822,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -16794,7 +16862,7 @@
           "action": "set",
           "cell": "'EverythingTests'!P1476",
           "content": {
-            "formula": "UPPER(M9:N10)"
+            "formula": "UPPER(@M9:N10)"
           }
         },
         {
@@ -16914,7 +16982,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -16966,7 +17035,7 @@
           "action": "set",
           "cell": "'EverythingTests'!M108",
           "content": {
-            "formula": "ACOSH(K8:N8)"
+            "formula": "ACOSH(@K8:N8)"
           }
         },
         {
@@ -16981,7 +17050,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N108",
           "content": {
-            "formula": "ACOSH(M106:M109)"
+            "formula": "ACOSH(@M106:M109)"
           }
         },
         {
@@ -17003,7 +17072,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -17034,7 +17104,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N156",
           "content": {
-            "formula": "ASIN(H12:J12)"
+            "formula": "ASIN(@H12:J12)"
           }
         },
         {
@@ -17170,7 +17240,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -17198,7 +17269,7 @@
           "action": "set",
           "cell": "'EverythingTests'!L172",
           "content": {
-            "formula": "ATANH(K11:M11)"
+            "formula": "ATANH(@K11:M11)"
           }
         },
         {
@@ -17425,7 +17496,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -17461,7 +17533,7 @@
           "action": "set",
           "cell": "'EverythingTests'!M288",
           "content": {
-            "formula": "COSH(K287:K289)"
+            "formula": "COSH(@K287:K289)"
           }
         },
         {
@@ -17518,7 +17590,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -17569,7 +17642,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N488",
           "content": {
-            "formula": "EVEN(L486:L489)"
+            "formula": "EVEN(@L486:L489)"
           }
         },
         {
@@ -17618,7 +17691,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -17663,7 +17737,7 @@
           "action": "set",
           "cell": "'EverythingTests'!K504",
           "content": {
-            "formula": "EXP(H12:L12)"
+            "formula": "EXP(@H12:L12)"
           }
         },
         {
@@ -18060,7 +18134,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -18090,7 +18165,7 @@
           "action": "set",
           "cell": "'EverythingTests'!I864",
           "content": {
-            "formula": "LEN(H11:J11)"
+            "formula": "LEN(@H11:J11)"
           }
         },
         {
@@ -18227,7 +18302,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -18281,7 +18357,7 @@
           "action": "set",
           "cell": "'EverythingTests'!O908",
           "content": {
-            "formula": "LOWER(N8:O10)"
+            "formula": "LOWER(@N8:O10)"
           }
         },
         {
@@ -18566,7 +18642,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -18605,7 +18682,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N1224",
           "content": {
-            "formula": "ROUNDDOWN(L9:O9,-2.0)"
+            "formula": "ROUNDDOWN(@L9:O9,-2.0)"
           }
         },
         {
@@ -18627,7 +18704,7 @@
           "action": "set",
           "cell": "'EverythingTests'!O1224",
           "content": {
-            "formula": "ROUNDDOWN(N1224:N1226,-2.0)"
+            "formula": "ROUNDDOWN(@N1224:N1226,-2.0)"
           }
         },
         {
@@ -18756,7 +18833,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-values-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -18800,7 +18878,7 @@
           "action": "set",
           "cell": "'EverythingTests'!N1296",
           "content": {
-            "formula": "SINH(L1295:L1297)"
+            "formula": "SINH(@L1295:L1297)"
           }
         },
         {

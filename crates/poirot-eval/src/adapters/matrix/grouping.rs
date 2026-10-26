@@ -4,7 +4,11 @@
 use super::modern::failure;
 use super::selection::compare;
 use super::*;
-use crate::host::{Aggregators, MissingPolicy, OperandOrigin, ScalarOperand};
+use crate::adapters::elementwise::{
+    FixedScalar,
+    controls::{EmptyControl, IntegerControl},
+};
+use crate::host::{Aggregators, OperandOrigin, ScalarOperand};
 use crate::registry::MatrixFunction as F;
 use poirot_functions_matrix::{Axis, Budget, FieldRelationship, Matrix};
 use poirot_functions_statistics::BuiltinAggregator as A;
@@ -73,18 +77,7 @@ fn ordinal_label(
     )
 }
 fn option(host: &mut CallHost<'_, '_>, index: usize) -> FunctionResult<Option<i64>> {
-    if index >= host.len() {
-        return Ok(None);
-    }
-    let operand = host.scalar_data(index, MissingPolicy::Blank)?;
-    if operand.missing {
-        return Ok(None);
-    }
-    let number = host.coercev2_scalar_number(&operand.value, NumericPolicy::PinnedPoi)?;
-    if !number.is_finite() || number.abs() >= i64::MAX as f64 {
-        return Err(CellError::Value.into());
-    }
-    Ok(Some(number.trunc() as i64))
+    FixedScalar::at(index).optional_integer(host, EmptyControl::Omission, CellError::Value)
 }
 fn normalized(value: CellValue) -> CellValue {
     poirot_coercionv2::compatibility::coercev2_array_member(value)
@@ -218,10 +211,13 @@ fn percentof(host: &mut CallHost<'_, '_>) -> FunctionResult<Value> {
     let mut sums = reserve(host, 2)?;
     for index in 0..2 {
         let count = host.collection_len(index)?;
-        let mut values = reserve(host, count)?;
-        for offset in 0..count {
-            append(&mut values, host.collection_cell(index, offset)?)?;
-        }
+        let values = reserve(host, count)?;
+        let values = collections::fold(
+            host,
+            [WholeCollection::bind(index, 0, true)],
+            values,
+            |_, values, operand| append(values, operand),
+        )?;
         let mut members = reserve(host, values.len())?;
         members
             .try_reserve(values.len())
@@ -299,24 +295,8 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
     {
         return Err(CellError::Value.into());
     }
-    let mut included = reserve(host, key_shape.rows)?;
-    let filter = if host.len() > 6 {
-        host.kind(6)? != OperandKind::Missing
-    } else {
-        false
-    };
-    if filter {
-        let shape = host.describe(6)?;
-        if shape.sheets != 1 || shape.columns != 1 || shape.rows != key_shape.rows {
-            return Err(CellError::Value.into());
-        }
-    }
-    for row in usize::from(headers.consume)..key_shape.rows {
-        if !filter || core_projection::coercev2_operand_boolean(&host.read_cell(6, row, 0)?.value)?
-        {
-            append(&mut included, row)?;
-        }
-    }
+    let included =
+        WholeCollection::at(6).selected_rows(host, key_shape.rows, usize::from(headers.consume))?;
     if included.is_empty() {
         return Err(CellError::Calc.into());
     }
@@ -324,23 +304,16 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
         .len()
         .checked_mul(fields)
         .ok_or_else(|| host.size_overflow())?;
-    let value_count = included
-        .len()
-        .checked_mul(value_columns)
-        .ok_or_else(|| host.size_overflow())?;
-    let mut key_values = reserve(host, key_count)?;
-    let mut values = reserve(host, value_count)?;
-    for &row in &included {
-        for column in 0..fields {
-            append(&mut key_values, host.read_cell(0, row, column)?.value)?;
-        }
-        for column in 0..value_columns {
-            append(&mut values, host.read_cell(1, row, column)?)?;
-        }
-    }
-    let keys = Matrix::new(included.len(), fields, key_values).map_err(|e| failure(host, e))?;
-    let values =
-        Matrix::new(included.len(), value_columns, values).map_err(|e| failure(host, e))?;
+    let keys = matrices::collect(host, 0, included.iter().copied(), fields, |_, operand| {
+        Ok(operand.value)
+    })?;
+    let values = matrices::collect(
+        host,
+        1,
+        included.iter().copied(),
+        value_columns,
+        |_, operand| Ok(operand),
+    )?;
     let work = poirot_functions_matrix::selection_work(key_count, included.len(), fields)
         .ok_or_else(|| host.size_overflow())?;
     host.charge_work(work as u64)?;
@@ -441,28 +414,18 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
         if shape.sheets != 1 || (shape.rows != 1 && shape.columns != 1) {
             return Err(CellError::Value.into());
         }
-        let count = shape
-            .rows
-            .checked_mul(shape.columns)
-            .ok_or_else(|| host.size_overflow())?;
-        host.check_values(count)?;
-        for row in 0..shape.rows {
-            for column in 0..shape.columns {
-                let member = host.read_cell(5, row, column)?;
-                let n = host.coercev2_scalar_number(&member.value, NumericPolicy::PinnedPoi)?;
-                if !n.is_finite()
-                    || n == 0.0
-                    || n.fract() != 0.0
-                    || n.abs() > sortable_columns as f64
-                    || count > 1 && n.abs() > fields as f64
+        let selectors =
+            WholeCollection::at(5).integers(host, IntegerControl::Exact, |n, count| {
+                if n == 0
+                    || n.unsigned_abs() > sortable_columns as u64
+                    || count > 1 && n.unsigned_abs() > fields as u64
                 {
                     return Err(CellError::Value.into());
                 }
-                sorts
-                    .try_reserve(1)
-                    .map_err(|_| host.allocation_failure())?;
-                append(&mut sorts, n as i64)?;
-            }
+                Ok(())
+            })?;
+        for selector in selectors.into_values() {
+            append(&mut sorts, selector)?;
         }
     } else {
         for field in 1..=fields {
@@ -712,16 +675,7 @@ impl Output<'_> {
         if output.len() != count {
             return Err(EvaluationFailure::StalePlan.into());
         }
-        let mut cells = output.into_iter();
-        let mut published = reserve(host, rows)?;
-        for _ in 0..rows {
-            let mut row = reserve(host, columns)?;
-            for _ in 0..columns {
-                append(&mut row, cells.next().ok_or(EvaluationFailure::StalePlan)?)?;
-            }
-            append(&mut published, row)?;
-        }
-        Ok(Value::Array(ArrayView::anchored(published, Some(address))))
+        matrices::array(host, rows, columns, output.into_iter(), address)
     }
 }
 /// Execute grouping or the standalone sum ratio under normal spill and failure policies.

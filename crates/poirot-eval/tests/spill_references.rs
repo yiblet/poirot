@@ -241,7 +241,11 @@ fn quoted_cross_sheet_reference_prepares_the_actual_supplier_only() {
 }
 #[test]
 fn snapshot_retains_complete_footprints_and_allows_source_overrides() {
-    let book = book(&[("A1", "{1,2}"), ("D1", "A1#"), ("G1", "SUM(D1#)")]);
+    let book = book(&[
+        ("A1", "{1,2}"),
+        ("D1", "A1#"),
+        ("G1", "SUM(ANCHORARRAY(D1))"),
+    ]);
     let mut overlay = Overlay::with_workbook(book).build().unwrap();
     let context = EvaluationContext::default();
     assert_eq!(

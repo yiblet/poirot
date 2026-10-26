@@ -59,16 +59,6 @@ fn timevalue_dispatch_preserves_source_cancellation_and_permissive_date_fallback
 fn timevalue_empty_remains_blank_through_public_evaluation() {
     let mut workbook = Workbook::new();
     workbook.add_sheet("Sheet1").unwrap();
-    let mut session = Session::with_context(&workbook, EvaluationInputs::default());
-    assert_eq!(
-        session.date_result(
-            0,
-            "A1".parse().unwrap(),
-            DateFunction::TimeValue,
-            (&[Expr::String(String::new())]).into(),
-        ),
-        Ok(Blank)
-    );
     assert_eq!(
         match crate::run_formula(
             &workbook,

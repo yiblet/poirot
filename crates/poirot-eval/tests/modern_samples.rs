@@ -249,6 +249,34 @@ fn origins_errors_geometry_and_exact_ranks() {
         assert_eq!(call(&b, f), CellValue::Error(e), "{f}");
     }
 }
+
+#[test]
+fn referenced_pairs_preserve_excluded_positions_and_surface_errors() {
+    let mut b = book();
+    for (cell, value) in [
+        ("A1", CellValue::Text("2".into())),
+        ("A2", CellValue::Boolean(true)),
+        ("A3", CellValue::Number(2.)),
+        ("A4", CellValue::Number(6.)),
+        ("A5", CellValue::Error(CellError::Ref)),
+        ("B1", CellValue::Number(99.)),
+        ("B2", CellValue::Number(88.)),
+        ("B3", CellValue::Number(2.)),
+        ("B4", CellValue::Number(3.)),
+        ("B5", CellValue::Number(4.)),
+    ] {
+        b.sheet_mut(0)
+            .unwrap()
+            .set_value(target(cell).address, value)
+            .unwrap();
+    }
+    // Only the two numeric positions survive; both retained pairs lie on a line.
+    near(call(&b, "RSQ(A1:A4,B1:B4)"), 1.);
+    assert_eq!(
+        call(&b, "RSQ(A1:A5,B1:B5)"),
+        CellValue::Error(CellError::Ref)
+    );
+}
 #[test]
 fn mode_spills_edit_shrink_expand_block_and_grouping_aliases() {
     let mut b = book();

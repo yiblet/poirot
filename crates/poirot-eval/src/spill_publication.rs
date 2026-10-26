@@ -640,26 +640,38 @@ impl SpillRole {
         }
     }
 }
+/// Admit one physical spill anchor while retaining scalar error precedence.
+pub(crate) fn source_anchor(value: &Value) -> Result<Area, CellError> {
+    match value {
+        Value::Refs(areas) | Value::SheetSpan(areas) => match areas.as_slice() {
+            [area] if area.size() == 1 => Ok(*area),
+            _ => Err(Ref),
+        },
+        Value::SignedRefs(areas) => match areas.as_slice() {
+            [area] if area.size() == 1 => area.physical().ok_or(Ref),
+            _ => Err(Ref),
+        },
+        Value::Scalar(Error(error)) | Value::SelectedScalar(Error(error), _) => Err(*error),
+        _ => Err(Ref),
+    }
+}
 impl<'a> Session<'a> {
     /// Resolve one anchor to its finalized footprint without materializing referenced values.
     pub(super) fn spill_reference(&mut self, value: Value) -> EvalResult<Value> {
-        let area = match value {
-            Value::Refs(areas) | Value::SheetSpan(areas) => match areas.as_slice() {
-                [area] if area.size() == 1 => *area,
-                _ => return Ok(err(Ref)),
-            },
-            Value::SignedRefs(areas) => match areas.as_slice() {
-                [area] if area.size() == 1 => match area.physical() {
-                    Some(area) => area,
-                    None => return Ok(err(Ref)),
-                },
-                _ => return Ok(err(Ref)),
-            },
-            Value::Scalar(Error(error)) | Value::SelectedScalar(Error(error), _) => {
-                return Ok(err(error));
-            }
-            _ => return Ok(err(Ref)),
+        let area = match source_anchor(&value) {
+            Ok(area) => area,
+            Err(error) => return Ok(err(error)),
         };
+        Ok(match self.spill_extent(area)? {
+            Ok(area) => {
+                self.runtime.budget.allocation(1)?;
+                Value::Refs(ReferenceAreas::One(area))
+            }
+            Err(error) => err(error),
+        })
+    }
+    /// Resolve finalized ownership and extent for an admitted physical anchor.
+    pub(crate) fn spill_extent(&mut self, area: Area) -> EvalResult<Result<Area, CellError>> {
         let anchor = CellAddress {
             row: area.r0,
             col: area.c0,
@@ -677,20 +689,19 @@ impl<'a> Session<'a> {
             .get(&(area.sheet, anchor))
             .and_then(|role| role.last())
         else {
-            return Ok(match value {
-                Error(error) => err(error),
-                _ => err(Ref),
-            });
+            return Ok(Err(match value {
+                Error(error) => error,
+                _ => Ref,
+            }));
         };
-        self.runtime.budget.allocation(1)?;
-        Ok(Value::Refs(ReferenceAreas::One(Area {
+        Ok(Ok(Area {
             kind: AreaKind::Area,
             sheet: area.sheet,
             r0: anchor.row,
             r1: last.row,
             c0: anchor.col,
             c1: last.col,
-        })))
+        }))
     }
 
     /// Restore an entire validated footprint together. A cached scalar child alone

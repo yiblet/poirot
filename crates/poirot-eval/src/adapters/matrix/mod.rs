@@ -1,228 +1,201 @@
-//! Pinned matrix adapter over deferred, memoized Session operands.
-use crate::adapters::failure::{operational_only, project_host};
-use crate::adapters::matrix::policy::{
-    self as helper, Cell, EvaluationPort, Failure, Origin, Shape,
-};
+//! Matrix adapters use shared typed rectangle services and independent numeric algorithms.
+use crate::adapters::elementwise::{ArgumentRole, WholeCollection, collections, matrices};
+use crate::adapters::failure::operational_only;
 use crate::host::{CallHost, NumericPolicy, OperandKind};
+use crate::registry::MatrixFunction as F;
 use crate::*;
+use poirot_functions_matrix as domain;
 
-fn port_failure(failure: FunctionFailure) -> Failure<EvaluationFailure> {
-    project_host(failure, Failure::Spreadsheet, Failure::Operational)
-}
-/// Matrix host bridge exposing lazy shape inspection and individual member reads.
-struct MatrixPort<'call, 'workbook> {
-    host: CallHost<'call, 'workbook>,
-    strict_numeric_matrices: bool,
-}
-impl EvaluationPort for MatrixPort<'_, '_> {
-    /// Deferred argument identity supplied to the family's host port.
-    type Argument = usize;
-    /// Host abort channel kept outside catchable spreadsheet values.
-    type Operational = EvaluationFailure;
-    fn strict_numeric_matrices(&self) -> bool {
-        self.strict_numeric_matrices
-    }
-    fn determined_trend_fit(&self) -> bool {
-        self.strict_numeric_matrices
-    }
-    fn uniform_sumproduct_arrays(&self) -> bool {
-        self.strict_numeric_matrices
-    }
-    fn describe(&mut self, index: &usize) -> Result<Shape, Failure<EvaluationFailure>> {
-        let description = self.host.describe(*index).map_err(port_failure)?;
-        Ok(Shape {
-            rows: description.rows,
-            cols: description.columns,
-            origin: match description.kind {
-                OperandKind::Array => Origin::Array,
-                // AreaKind is retained by the host even for A1:A1. Geometry
-                // alone cannot distinguish POI AreaEval from scalar RefEval.
-                OperandKind::Reference if description.is_area => Origin::Array,
-                OperandKind::Reference => Origin::Reference,
-                OperandKind::Scalar | OperandKind::Missing => Origin::Direct,
+const UNLIMITED: domain::Budget = domain::Budget {
+    max_cells: usize::MAX,
+    max_work: usize::MAX,
+};
+
+/// Execute numeric algebra and shape-preserving transpose through shared matrix services.
+fn algebra(
+    host: &mut CallHost<'_, '_>,
+    function: F,
+    address: CellAddress,
+) -> FunctionResult<Value> {
+    if function == F::Sumproduct {
+        let value = matrices::reduce_aligned(
+            host,
+            0.0,
+            || 1.0,
+            |_, product, operand| {
+                if operand.origin == crate::host::OperandOrigin::Direct && operand.value == Blank {
+                    return Err(VALUE_ERROR.into());
+                }
+                *product *= poirot_coercionv2::collections::coercev2_sumproduct_member(
+                    (&operand.value).into(),
+                    false,
+                )?;
+                Ok(())
             },
-            sheets: description.sheets,
-            missing: description.missing,
-        })
+            |sum, product| *sum += product,
+        )?;
+        return Ok(numeric_outcome::coerce_checked_numeric_result(value).into());
     }
-    fn read_cell(
-        &mut self,
-        index: &usize,
-        row: usize,
-        col: usize,
-    ) -> Result<Cell, Failure<EvaluationFailure>> {
-        let cell = self
-            .host
-            .read_cell(*index, row, col)
-            .map_err(port_failure)?;
-        if cell.missing {
-            return Ok(Cell::Missing);
+    if function == F::Frequency {
+        let mut sample = |index| {
+            collections::collect(
+                host,
+                [WholeCollection::bind(index, 0, true)],
+                collections::Admission::Aggregate,
+            )
+        };
+        let data = sample(0)?;
+        let bins = sample(1)?;
+        let cells = bins
+            .len()
+            .checked_add(1)
+            .ok_or_else(|| host.size_overflow())?;
+        host.check_values(cells)?;
+        host.charge_work((data.len() as u64).saturating_mul(usize::BITS as u64 + 1))?;
+        let result = domain::frequency(&data, &bins, UNLIMITED)
+            .map_err(|error| matrices::failure(host, error))?;
+        return matrices::publish(host, result, address, Number);
+    }
+    if function == F::Transpose {
+        if host.describe(0)?.missing {
+            return Err(VALUE_ERROR.into());
         }
-        Ok(match cell.value {
-            Number(n) => Cell::Number(n),
-            Boolean(b) => Cell::Bool(b),
-            Text(s) => Cell::Text(s),
-            CellValue::TextUtf16(text) => Cell::Text(
-                self.host
-                    .project_text(poirot_model::TextRef::Utf16(text.units()))
-                    .map_err(port_failure)?,
-            ),
-            Blank => Cell::Blank,
-            Error(e) => Cell::Error(e),
-        })
+        let matrix = matrices::matrix(host, 0, matrices::Members::Original)?;
+        let result = domain::transpose(&matrix, UNLIMITED)
+            .map_err(|error| matrices::failure(host, error))?;
+        return matrices::publish(host, result, address, |value| value);
     }
-    fn charge_work(&mut self, units: u64) -> Result<(), EvaluationFailure> {
-        self.host.charge_work(units)
+    let first = if matches!(function, F::Mdeterm | F::Minverse) {
+        matrices::square(host, 0)?
+    } else {
+        matrices::numeric(host, 0)?
+    };
+    if function == F::Mmult {
+        let second = matrices::numeric(host, 1)?;
+        let budget = matrices::admit(host, first.rows(), second.cols())?;
+        host.charge_work((budget.max_cells as u64).saturating_mul(first.cols() as u64))?;
+        let result = domain::multiply(&first, &second, UNLIMITED)
+            .map_err(|error| matrices::failure(host, error))?;
+        return matrices::publish(host, result, address, Number);
     }
-    fn check_collection(&mut self, elements: usize) -> Result<(), EvaluationFailure> {
-        self.host.check_values(elements)
+    let n = first.rows();
+    let scratch = first
+        .values()
+        .len()
+        .checked_mul(3)
+        .and_then(|cells| cells.checked_add(n))
+        .ok_or_else(|| host.size_overflow())?;
+    let work = n
+        .checked_mul(n)
+        .and_then(|n| n.checked_mul(n))
+        .and_then(|n| n.checked_mul(3))
+        .ok_or_else(|| host.size_overflow())?;
+    host.check_values(scratch)?;
+    host.charge_work(work as u64)?;
+    if function == F::Mdeterm {
+        return domain::determinant(&first, UNLIMITED)
+            .map(|number| Number(number).into())
+            .map_err(|error| matrices::failure(host, error));
     }
-    fn check_text(&mut self, bytes: usize) -> Result<(), EvaluationFailure> {
-        self.host.check_text(bytes)
-    }
-    fn coercev2_number_text(&mut self, text: &str) -> Result<f64, Failure<EvaluationFailure>> {
-        self.host
-            .coercev2_number_text(text, NumericPolicy::PinnedPoi)
-            .map_err(port_failure)
-    }
-    fn size_overflow(&mut self) -> EvaluationFailure {
-        self.host.size_overflow()
-    }
-    fn allocation_failure(&mut self) -> EvaluationFailure {
-        self.host.allocation_failure()
-    }
-    fn budget_exceeded(&mut self) -> EvaluationFailure {
-        self.host.budget_exceeded()
-    }
+    let result =
+        domain::inverse(&first, UNLIMITED).map_err(|error| matrices::failure(host, error))?;
+    matrices::publish(host, result, address, Number)
 }
-
-/// Execute matrix helpers with admitted resources and source-preserving result shape.
+/// Dispatch modern matrix execution without a second family policy or operand port.
 pub(crate) fn execute(
+    function: F,
     session: &mut Session<'_>,
     sheet: usize,
     address: CellAddress,
-    function: helper::MatrixFunction,
     args: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
-    if function == helper::MatrixFunction::Trend
-        && session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
-    {
-        session.read(DependencyRead::BuiltinPolicy);
-        return regression::execute(
-            crate::registry::MatrixFunction::Trend,
-            session,
-            sheet,
-            address,
-            args,
-        );
+    if !matches!(
+        function,
+        F::Mdeterm | F::Minverse | F::Mmult | F::Transpose | F::Frequency | F::Sumproduct
+    ) {
+        return modern::execute(function, session, sheet, address, args);
     }
-    // Check arity before allocating argument handles or evaluating expressions.
-    if !function.accepts(args.len()) {
+    let valid = match function {
+        F::Mmult | F::Frequency => args.len() == 2,
+        F::Sumproduct => (1..=255).contains(&args.len()),
+        _ => args.len() == 1,
+    };
+    if !valid {
         return Ok(err(VALUE_ERROR));
     }
-    if function == helper::MatrixFunction::Transpose
-        && session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
-    {
-        let mut host = CallHost::new_array(session, sheet, address, args, args.len());
-        let shape = match host.describe(0) {
-            Ok(shape) => shape,
-            Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
-            Err(FunctionFailure::Operational(error)) => return Err(error),
-        };
-        if shape.sheets != 1 || shape.missing {
-            return Ok(err(VALUE_ERROR));
-        }
-        let count = shape
-            .rows
-            .checked_mul(shape.columns)
-            .ok_or_else(|| host.size_overflow())?;
-        host.check_values(count)?;
-        host.check_values(shape.columns)?;
-        host.charge_work(count as u64)?;
-        let mut rows = vec![Vec::with_capacity(shape.rows); shape.columns];
-        for row in 0..shape.rows {
-            for (col, output) in rows.iter_mut().enumerate() {
-                let value = match host.read_cell(0, row, col) {
-                    Ok(cell) => cell.value,
-                    Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
-                    Err(FunctionFailure::Operational(error)) => return Err(error),
-                };
-                output.push(value);
-            }
-        }
-        return Ok(Value::Array(ArrayView::anchored(rows, Some(address))));
-    }
-    let array_count = if function == helper::MatrixFunction::Trend {
-        3
-    } else {
-        args.len()
-    };
-    if matches!(
-        function,
-        helper::MatrixFunction::Sumproduct
-            | helper::MatrixFunction::Trend
-            | helper::MatrixFunction::Mdeterm
-            | helper::MatrixFunction::Minverse
-    ) {
-        session.read(DependencyRead::BuiltinPolicy);
-    }
-    let strict_numeric_matrices =
-        session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation;
-    let mut port = MatrixPort {
-        strict_numeric_matrices,
-        host: CallHost::new_array(session, sheet, address, args, array_count),
-    };
-    port.host.check_values(args.len())?;
-    let indices: poirot_functions_core::ParamVec<usize> = (0..args.len()).collect();
-    let result = helper::evaluate(&mut port, function, &indices);
-    match result {
-        Ok(helper::Output::Number(n)) => Ok(Number(n).into()),
-        Ok(helper::Output::Array(matrix)) => {
-            // MatrixFunction.OneArrayArg preserves its area's coordinates;
-            // TwoArrayArg uses the first area operand. Frequency and Trend
-            // explicitly construct CacheAreaEval at the formula coordinates.
-            let anchor = match function {
-                helper::MatrixFunction::Frequency | helper::MatrixFunction::Trend => Some(address),
-                helper::MatrixFunction::Transpose | helper::MatrixFunction::Minverse => {
-                    port.host.operand_anchor(0).map_err(operational_only)?
-                }
-                helper::MatrixFunction::Mmult => {
-                    let index = if port.host.is_area(0).map_err(operational_only)? {
-                        0
-                    } else {
-                        1
-                    };
-                    port.host.operand_anchor(index).map_err(operational_only)?
-                }
-                helper::MatrixFunction::Mdeterm | helper::MatrixFunction::Sumproduct => {
-                    return Err(EvaluationFailure::StalePlan);
-                }
-            };
-            // Reserve both rows and values before growing the engine result.
-            port.host.check_values(matrix.values().len())?;
-            port.host.check_values(matrix.rows())?;
-            port.host.charge_work(matrix.values().len() as u64)?;
-            if matrix.cols() == 0 {
-                return Err(EvaluationFailure::StalePlan);
-            }
-            Ok(Value::Array(crate::ArrayView::anchored(
-                // SAFETY: The local guard rejects a zero column count.
-                matrix
-                    .values()
-                    .chunks(matrix.cols())
-                    .map(|row| row.iter().copied().map(Number).collect())
-                    .collect(),
-                anchor,
-            )))
-        }
-        Err(Failure::Spreadsheet(error)) => Ok(err(error)),
-        Err(Failure::Operational(error)) => Err(error),
-        Err(Failure::UnsupportedCapability(capability)) => Err(port.host.capability_failure(
-            CapabilityId::FunctionAdapter,
-            format!("pinned matrix source capability: {capability:?}"),
-        )),
+    let mut host = CallHost::new_array(session, sheet, address, args, args.len());
+    match algebra(&mut host, function, address) {
+        Ok(value) => Ok(value),
+        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionFailure::Operational(error)) => Err(error),
     }
 }
+
+/// Coerce modern SEQUENCE arguments and admit its independently generated numeric array.
+pub(crate) fn sequence(
+    session: &mut Session<'_>,
+    sheet: usize,
+    address: CellAddress,
+    args: ArgumentsRef<'_>,
+) -> EvalResult<Value> {
+    if !(1..=4).contains(&args.len()) {
+        return Ok(err(VALUE_ERROR));
+    }
+    let count = args.len();
+    let mut host = CallHost::new(session, sheet, address, args);
+    let supplied = (0..count).any(|index| !host.selected_is_missing(index));
+    if !supplied {
+        return Ok(err(VALUE_ERROR));
+    }
+    let parameters = [crate::adapters::elementwise::NumericParameter::constant(1.0); 4];
+    let arguments = match crate::adapters::elementwise::NumericSignature::new(&parameters)
+        .scalars(&mut host, 0)
+    {
+        Ok(arguments) => arguments,
+        Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
+        Err(FunctionFailure::Operational(error)) => return Err(error),
+    };
+    let [rows, columns, start, step] = match arguments.as_slice() {
+        &[rows, columns, start, step] => [rows, columns, start, step],
+        _ => return Err(EvaluationFailure::StalePlan),
+    };
+    // Excel's documented grid is also the maximum admissible footprint here.
+    // Fractional positive dimensions follow the existing integer coercion convention.
+    if !rows.is_finite()
+        || !columns.is_finite()
+        || rows < 1.0
+        || columns < 1.0
+        || rows > f64::from(poirot_model::MAX_ROWS)
+        || columns > f64::from(poirot_model::MAX_COLUMNS)
+    {
+        return Ok(err(VALUE_ERROR));
+    }
+    let rows = rows.trunc() as usize;
+    let columns = columns.trunc() as usize;
+    let budget = match matrices::admit(&mut host, rows, columns) {
+        Ok(budget) => budget,
+        Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
+        Err(FunctionFailure::Operational(error)) => return Err(error),
+    };
+    match poirot_functions_matrix::sequence(rows, columns, start, step, budget) {
+        Ok(matrix) => match matrices::publish(&mut host, matrix, address, Number) {
+            Ok(value) => Ok(value),
+            Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
+            Err(FunctionFailure::Operational(error)) => Err(error),
+        },
+        Err(error) => match modern::failure(&mut host, error) {
+            FunctionFailure::Spreadsheet(error) => Ok(err(error)),
+            FunctionFailure::Operational(failure) => Err(failure),
+        },
+    }
+}
+
+mod grouping;
+mod modern;
+mod random_trim;
+mod regression;
+mod selection;
+mod unit;
 
 #[cfg(test)]
 mod lossless_port_tests {
@@ -251,11 +224,7 @@ mod lossless_port_tests {
 
     #[test]
     fn consumed_helper_text_preserves_operational_projection_failure() {
-        for formula in [
-            "IFERROR(PV(A1,1,1),7)",
-            "IFERROR(NORMDIST(A1,0,1,TRUE),7)",
-            "IFERROR(MDETERM(A1:A1),7)",
-        ] {
+        for formula in ["IFERROR(PV(A1,1,1),7)", "IFERROR(NORMDIST(A1,0,1,TRUE),7)"] {
             let literal = CellValue::TextUtf16(poirot_model::ExcelText::from_units(vec![0xd83d]));
             assert!(
                 matches!(
@@ -301,94 +270,3 @@ mod lossless_port_tests {
         );
     }
 }
-
-/// Matrix operation contracts, collection rules, and resource admission plans.
-pub mod policy;
-
-/// Coerce modern SEQUENCE arguments and admit its independently generated numeric array.
-pub(crate) fn sequence(
-    session: &mut Session<'_>,
-    sheet: usize,
-    address: CellAddress,
-    args: ArgumentsRef<'_>,
-) -> EvalResult<Value> {
-    if !(1..=4).contains(&args.len()) {
-        return Ok(err(VALUE_ERROR));
-    }
-    let count = args.len();
-    let mut host = CallHost::new(session, sheet, address, args);
-    let mut arguments = [1.0; 4];
-    let mut supplied = false;
-    for (index, slot) in arguments.iter_mut().enumerate().take(count) {
-        let operand = match host.scalar_data(index, crate::host::MissingPolicy::Blank) {
-            Ok(operand) => operand,
-            Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
-            Err(FunctionFailure::Operational(error)) => return Err(error),
-        };
-        if operand.missing {
-            continue;
-        }
-        supplied = true;
-        *slot = match host.coercev2_scalar_number(&operand.value, NumericPolicy::PinnedPoi) {
-            Ok(value) => value,
-            Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
-            Err(FunctionFailure::Operational(error)) => return Err(error),
-        };
-    }
-    // If rows is omitted, Microsoft's contract requires another supplied argument.
-    if !supplied {
-        return Ok(err(VALUE_ERROR));
-    }
-    let [rows, columns, start, step] = arguments;
-    // Excel's documented grid is also the maximum admissible footprint here.
-    // Fractional positive dimensions follow the existing integer coercion convention.
-    if !rows.is_finite()
-        || !columns.is_finite()
-        || rows < 1.0
-        || columns < 1.0
-        || rows > f64::from(poirot_model::MAX_ROWS)
-        || columns > f64::from(poirot_model::MAX_COLUMNS)
-    {
-        return Ok(err(VALUE_ERROR));
-    }
-    let rows = rows.trunc() as usize;
-    let columns = columns.trunc() as usize;
-    let Some(cells) = rows.checked_mul(columns) else {
-        return Err(host.size_overflow());
-    };
-    host.check_values(cells)?;
-    host.check_values(rows)?;
-    host.charge_work(cells as u64)?;
-    match poirot_functions_matrix::sequence(
-        rows,
-        columns,
-        start,
-        step,
-        poirot_functions_matrix::Budget {
-            max_cells: cells,
-            max_work: cells,
-        },
-    ) {
-        Ok(matrix) => {
-            // SAFETY: columns is positive after the finite dimension checks above.
-            let values = matrix
-                .values()
-                .chunks(columns)
-                .map(|row| row.iter().copied().map(Number).collect())
-                .collect();
-            Ok(Value::Array(ArrayView::anchored(values, Some(address))))
-        }
-        Err(error) => match modern::failure(&mut host, error) {
-            FunctionFailure::Spreadsheet(error) => Ok(err(error)),
-            FunctionFailure::Operational(failure) => Err(failure),
-        },
-    }
-}
-
-mod grouping;
-mod modern;
-mod random_trim;
-mod regression;
-mod selection;
-mod unit;
-pub(crate) use modern::execute as modern;

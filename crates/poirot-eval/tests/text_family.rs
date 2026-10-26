@@ -1,3 +1,7 @@
+//! Current text contracts from Microsoft's function references.
+//! https://support.microsoft.com/en-us/excel/functions/proper-function
+//! https://support.microsoft.com/en-us/excel/functions/numbervalue-function
+//! https://support.microsoft.com/en-us/excel/functions/roman-function
 use poirot_eval::{EvaluationBudgets, EvaluationInputs, EvaluationOutcome, run_formula};
 use poirot_model::{CellAddress, CellError, CellValue, Workbook};
 const AT: CellAddress = CellAddress { row: 1, col: 3 };
@@ -8,43 +12,35 @@ fn workbook() -> Workbook {
 }
 
 #[test]
-fn text_source_coercion_and_lazy_error_order() {
+fn modern_text_coercion_and_error_order() {
     let w = workbook();
     for (formula, expected) in [
         (
             r#"PROPER("hELLO wORLD")"#,
             CellValue::Text("Hello World".into()),
         ),
-        (
-            r#"PROPER("ßABC 𐐨abc")"#,
-            CellValue::Text("SSabc 𐐨Abc".into()),
-        ),
         ("PROPER(TRUE)", CellValue::Text("True".into())),
         ("PROPER(2.9999999999999996)", CellValue::Text("3".into())),
-        // The default POI text policy returns CODE as text.
-        (r#"CODE("A")"#, CellValue::Text("65".into())),
-        // ROMAN requires its form argument under this source policy.
-        ("ROMAN(14)", CellValue::Error(CellError::Value)),
+        // CODE exposes the documented numeric platform code.
+        (r#"CODE("A")"#, CellValue::Number(65.)),
+        // ROMAN defaults its optional form to classic notation.
+        ("ROMAN(14)", CellValue::Text("XIV".into())),
         ("ROMAN(14,0)", CellValue::Text("XIV".into())),
         ("ROMAN(499,4)", CellValue::Text("ID".into())),
         ("ROMAN(-0.1,0)", CellValue::Error(CellError::Value)),
-        ("ROMAN(1,1/0)", CellValue::Error(CellError::Num)),
+        ("ROMAN(1,1/0)", CellValue::Error(CellError::Div0)),
         (
             "ROMAN(0,UNKNOWN_FUNCTION())",
-            CellValue::Text(String::new()),
+            CellValue::Error(CellError::Name),
         ),
-        ("NUMBERVALUE()", CellValue::Number(0.)),
+        ("NUMBERVALUE()", CellValue::Error(CellError::Value)),
         (
             "NUMBERVALUE(UNKNOWN_FUNCTION(),2,3,4)",
-            CellValue::Number(0.),
+            CellValue::Error(CellError::Value),
         ),
         (
             r#"NUMBERVALUE("1.234,5",",",".")"#,
             CellValue::Number(1234.5),
-        ),
-        (
-            r#"TEXTJOIN({"x","y";"-","/"},TRUE,{"a","";"b","c"},"d")"#,
-            CellValue::Text("a-b/c-d".into()),
         ),
         (
             r#"TEXTJOIN(",","TrUe",TRUE,2.9999999999999996)"#,
@@ -66,9 +62,9 @@ fn text_source_coercion_and_lazy_error_order() {
                 AT,
                 formula,
                 &poirot_eval::RunConfiguration::default()
-                    .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi)
+                    .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::ExcelDocumentation)
                     .with_text_policy(poirot_eval::TextSemanticsPolicy {
-                        source: poirot_eval::TextSourceVersion::Poi7321209OpenJdk21Unicode15
+                        source: poirot_eval::TextSourceVersion::ExcelCompatibilityV2Documented
                     }),
                 Default::default()
             ) {
@@ -79,36 +75,6 @@ fn text_source_coercion_and_lazy_error_order() {
             "{formula}"
         );
     }
-}
-
-#[test]
-fn reference_delimiters_use_only_last_row() {
-    let mut w = workbook();
-    let s = w.sheet_mut(0).unwrap();
-    s.set_formula_with_cached_value(
-        CellAddress { row: 0, col: 0 },
-        "UNKNOWN_FUNCTION()",
-        CellValue::Number(0.),
-    )
-    .unwrap();
-    s.set_value(CellAddress { row: 1, col: 0 }, CellValue::Text("-".into()))
-        .unwrap();
-    s.set_value(CellAddress { row: 1, col: 1 }, CellValue::Text("/".into()))
-        .unwrap();
-    assert_eq!(
-        match poirot_eval::run_formula(
-            &w,
-            0,
-            AT,
-            r#"TEXTJOIN(A1:B2,FALSE,"a","b","c")"#,
-            Default::default(),
-            Default::default()
-        ) {
-            poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
-            outcome => panic!("evaluation aborted: {outcome:?}"),
-        },
-        CellValue::Text("a-b/c".into())
-    );
 }
 
 #[test]
@@ -179,7 +145,7 @@ fn text_budget_and_capability_failures_survive_iferror() {
             ..
         }
     ));
-    // ROMAN maps form conversion failure to NUM; IFERROR still catches it.
+    // Invalid numeric form text produces a catchable VALUE error.
     assert_eq!(
         match poirot_eval::run_formula(
             &w,
@@ -192,25 +158,11 @@ fn text_budget_and_capability_failures_survive_iferror() {
             poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
             outcome => panic!("evaluation aborted: {outcome:?}"),
         },
-        CellValue::Error(CellError::Num)
+        CellValue::Error(CellError::Value)
     );
-    {
-        let formula = r#"IFERROR(TEXTJOIN(",",TRUE,),0)"#;
-        assert!(
-            matches!(
-                run_formula(
-                    &w,
-                    0,
-                    AT,
-                    formula,
-                    EvaluationInputs::default(),
-                    EvaluationBudgets::default()
-                ),
-                EvaluationOutcome::Aborted { .. }
-            ),
-            "{formula}"
-        );
-    }
+    assert!(
+        matches!(run_formula(&w, 0, AT, r#"IFERROR(TEXTJOIN(",",TRUE,),0)"#, Default::default(), Default::default()), EvaluationOutcome::Complete { value, .. } if value.text_ref().is_some_and(|text| text.len_units() == 0))
+    );
 }
 
 #[test]
@@ -236,10 +188,8 @@ fn unknown_name_remains_a_catchable_spreadsheet_error() {
 fn numbervalue_validates_explicit_separator_and_result_domains() {
     use poirot_eval::{BuiltinSemanticsPolicy, RunConfiguration, run_formula_with_configuration};
     let w = workbook();
-    let pinned = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
-    let excel = pinned
-        .clone()
-        .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation);
+    let excel =
+        RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation);
     let value = |source: &str, config: &RunConfiguration| match run_formula_with_configuration(
         &w,
         0,
@@ -288,13 +238,6 @@ fn numbervalue_validates_explicit_separator_and_result_domains() {
             "{source}"
         );
     }
-    for (source, expected) in [
-        (r#"NUMBERVALUE("12..")"#, 12.),
-        (r#"NUMBERVALUE("0x1p2")"#, 4.),
-        (r#"NUMBERVALUE("7D")"#, 7.),
-    ] {
-        assert_eq!(value(source, &pinned), CellValue::Number(expected));
-    }
     assert_eq!(
         value(r#"NUMBERVALUE("1^5","^",",")"#, &excel),
         CellValue::Number(1.5)
@@ -313,17 +256,6 @@ fn numbervalue_validates_explicit_separator_and_result_domains() {
             EvaluationOutcome::Aborted { .. }
         ));
     }
-    assert!(matches!(
-        run_formula_with_configuration(
-            &w,
-            0,
-            AT,
-            r#"IFERROR(NUMBERVALUE("1^5","^",","),0)"#,
-            &pinned,
-            EvaluationBudgets::default(),
-        ),
-        EvaluationOutcome::Aborted { .. }
-    ));
     let mut malformed = workbook();
     malformed
         .sheet_mut(0)

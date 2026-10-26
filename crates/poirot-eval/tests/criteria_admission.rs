@@ -1,6 +1,6 @@
 //! Shared Excel criterion admission; pinned POI predicates retain their source behavior.
 use poirot_eval::{
-    overlay::{EvaluationContext, Overlay, OverlayPolicy},
+    overlay::{Evaluation, EvaluationContext, Overlay, OverlayPolicy},
     *,
 };
 use poirot_model::{CellError, CellValue, Workbook};
@@ -92,20 +92,6 @@ fn criteria_admission_distinguishes_empty_references_from_empty_text() {
                 CellValue::Number(empty)
             );
         }
-        // Pinned POI does not compile BlankEval as a numeric predicate.
-        let expected = if matches!(name, "AVERAGEIFS" | "AVERAGEIF") {
-            CellValue::Error(poirot_model::CellError::Div0)
-        } else {
-            0.0.into()
-        };
-        assert_eq!(
-            value(
-                &w,
-                &formula(name, "D1"),
-                &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
-            ),
-            expected
-        );
     }
     assert_eq!(
         value(&w, "ISBLANK(IF({1},D1,0))", &excel()),
@@ -113,80 +99,43 @@ fn criteria_admission_distinguishes_empty_references_from_empty_text() {
     );
 }
 #[test]
-fn policy_switches_invalidate_retained_criteria_results() {
+fn criterion_changes_invalidate_retained_results() {
     let mut w = book();
     w.sheet_mut(0)
         .unwrap()
         .set_formula(target("Z1").address, formula("SUMIFS", "D1"))
         .unwrap();
     let mut overlay = Overlay::with_workbook(&w)
-        .with_policy(poirot_eval::overlay::OverlayPolicy {
-            builtin: poirot_eval::BuiltinSemanticsPolicy::PinnedPoi,
+        .with_policy(OverlayPolicy {
+            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         })
         .build()
         .unwrap();
     let context = EvaluationContext::default();
-    assert_eq!(
-        overlay
-            .evaluation(&context)
-            .unwrap()
-            .cell(target("Z1"))
-            .unwrap(),
-        0.0.into()
-    );
-    overlay
-        .set_policy(OverlayPolicy {
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
-            ..Default::default()
-        })
-        .unwrap();
-    assert_eq!(
-        overlay
-            .evaluation(&context)
-            .unwrap()
-            .cell(target("Z1"))
-            .unwrap(),
-        20.0.into()
-    );
-    overlay.set_value(target("D1"), "").unwrap();
-    assert_eq!(
-        overlay
-            .evaluation(&context)
-            .unwrap()
-            .cell(target("Z1"))
-            .unwrap(),
-        40.0.into()
-    );
-    overlay.set_value(target("D1"), CellValue::Blank).unwrap();
-    assert_eq!(
-        overlay
-            .evaluation(&context)
-            .unwrap()
-            .cell(target("Z1"))
-            .unwrap(),
-        20.0.into()
-    );
-    overlay
-        .set_policy(OverlayPolicy {
-            builtin: BuiltinSemanticsPolicy::PinnedPoi,
-            ..Default::default()
-        })
-        .unwrap();
-    assert_eq!(
-        overlay
-            .evaluation(&context)
-            .unwrap()
-            .cell(target("Z1"))
-            .unwrap(),
-        0.0.into()
-    );
+    // Blank criteria select numeric zero (B2=20); empty text selects A1/A3 (10+30).
+    for (criterion, expected) in [
+        (CellValue::Blank, 20.),
+        ("".into(), 40.),
+        (CellValue::Blank, 20.),
+    ] {
+        overlay.set_value(target("D1"), criterion).unwrap();
+        assert_eq!(
+            overlay
+                .evaluation(&context)
+                .unwrap()
+                .cell(target("Z1"))
+                .unwrap(),
+            CellValue::Number(expected)
+        );
+    }
 }
+
 #[test]
 fn omitted_criteria_and_operational_failures_escape_iferror() {
     let w = book();
     for name in ["MAXIFS", "MINIFS", "SUMIFS", "COUNTIFS", "AVERAGEIFS"] {
-        for criterion in ["", "IFS(TRUE,)", "D1:D2"] {
+        for criterion in ["", "IFS(TRUE,)"] {
             let f = format!("IFERROR({},99)", formula(name, criterion));
             assert!(
                 matches!(
@@ -273,15 +222,6 @@ fn contextual_thresholds_keep_literal_wildcard_boolean_and_error_criteria_typed(
     ] {
         assert_eq!(value(&w, f, &excel()), CellValue::Number(expected), "{f}");
     }
-    // The pinned source profile retains its plain-number threshold grammar.
-    assert_eq!(
-        value(
-            &w,
-            r#"COUNTIF(A1,">3%")"#,
-            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
-        ),
-        0.0.into()
-    );
     let localized = excel().with_number_locale(
         poirot_parsing::number::NumberLocaleV2::new(",", Some("."), Some("€"), "%", ":").unwrap(),
     );
@@ -390,7 +330,7 @@ fn criterion_calendar_threshold_uses_workbook_epoch() {
 }
 
 #[test]
-fn selected_result_errors_follow_the_aggregate_profile_after_row_selection() {
+fn selected_result_errors_propagate_after_row_selection() {
     let mut w = book();
     for (at, v) in [
         ("A1", 1.0.into()),
@@ -405,13 +345,8 @@ fn selected_result_errors_follow_the_aggregate_profile_after_row_selection() {
             .set_value(target(at).address, v)
             .unwrap();
     }
-    for (config, is_excel) in [
-        (excel(), true),
-        (
-            RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
-            false,
-        ),
-    ] {
+    {
+        let config = excel();
         for name in [
             "SUMIF",
             "AVERAGEIF",
@@ -425,11 +360,7 @@ fn selected_result_errors_follow_the_aggregate_profile_after_row_selection() {
             } else {
                 format!("{name}(B1:B3,A1:A3,2)")
             };
-            let expected = if name == "AVERAGEIF" && !is_excel {
-                20.0.into()
-            } else {
-                CellValue::Error(CellError::NA)
-            };
+            let expected = CellValue::Error(CellError::NA);
             assert_eq!(value(&w, &f, &config), expected, "{f}");
         }
         assert_eq!(
@@ -446,24 +377,23 @@ fn selected_result_errors_follow_the_aggregate_profile_after_row_selection() {
 }
 
 #[test]
-fn averageif_preserves_target_read_order_and_operational_failures() {
+fn averageif_skips_rejected_payloads_and_preserves_selected_host_failures() {
     let mut w = book();
-    // This unsupported operation must abort even though the first target row is rejected.
+    // An unsupported selected payload must abort; rejected payloads stay unread.
     w.sheet_mut(0)
         .unwrap()
-        .set_formula(target("B1").address, "COUNTIF(A1:A4,D1:D2)")
+        .set_formula(target("B1").address, "COUNTIF(A1:A4,)")
         .unwrap();
-    for config in [
-        excel(),
-        RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
-    ] {
+    {
+        let config = excel();
         assert_eq!(value(&w, "SUMIF(A1:A4,2,B1:B4)", &config), 40.0.into());
+        assert_eq!(value(&w, "AVERAGEIF(A1:A4,2,B1:B4)", &config), 40.0.into());
         assert!(matches!(
             run_formula_with_configuration(
                 &w,
                 0,
                 target("Z1").address,
-                "IFERROR(AVERAGEIF(A1:A4,2,B1:B4),99)",
+                r#"IFERROR(AVERAGEIF(A1:A4,"",B1:B4),99)"#,
                 &config,
                 EvaluationBudgets::default()
             ),
@@ -483,5 +413,95 @@ fn averageif_preserves_target_read_order_and_operational_failures() {
             ),
             EvaluationOutcome::Aborted { .. }
         ));
+    }
+}
+
+#[test]
+fn conditional_reducers_read_payloads_only_after_selection() {
+    // Microsoft AVERAGEIF specifies the arithmetic mean of matching cells and
+    // permits a smaller average_range anchored at its top-left cell:
+    // https://support.microsoft.com/en-us/excel/functions/averageif-function
+    // Expected mean is (20 + 30) / 2 = 25, independently of the evaluator.
+    let mut w = book();
+    let sheet = w.sheet_mut(0).unwrap();
+    sheet.set_value(target("A1").address, 0.).unwrap();
+    sheet.set_value(target("A2").address, 1.).unwrap();
+    sheet.set_value(target("A3").address, 1.).unwrap();
+    sheet.set_formula(target("B1").address, "B1").unwrap();
+    for formula in ["AVERAGEIF(A1:A3,1,B1)", "AVERAGEIFS(B1:B3,A1:A3,1)"] {
+        assert_eq!(value(&w, formula, &excel()), 25.0.into());
+    }
+    for formula in ["SUMIF(A1:A3,1,B1)", "SUMIFS(B1:B3,A1:A3,1)"] {
+        assert_eq!(value(&w, formula, &excel()), 50.0.into());
+    }
+    w.sheet_mut(0)
+        .unwrap()
+        .set_value(target("B1").address, CellValue::Error(CellError::NA))
+        .unwrap();
+    assert_eq!(
+        value(&w, "AVERAGEIF(A1:A3,0,B1)", &excel()),
+        CellValue::Error(CellError::NA)
+    );
+}
+
+#[test]
+fn criteria_array_results_survive_child_first_compilation() {
+    // Criteria select the numbers 0 and 2 from A2/A4; the corresponding payloads
+    // are 20 and 40. Collection ranges must not determine the output footprint.
+    let w = book();
+    for (formula, expected) in [
+        ("SUM(COUNTIF(A1:A4,{0,2;2,0}))", 4.),
+        ("SUM(COUNTIFS(A1:A4,{0,2}))", 2.),
+        ("SUM(SUMIF(A1:A4,{0,2},B1:B4))", 60.),
+        ("SUM(AVERAGEIF(A1:A4,{0,2},B1:B4))", 60.),
+        ("SUM(SUMIFS(B1:B4,A1:A4,{0,2}))", 60.),
+        ("SUM(AVERAGEIFS(B1:B4,A1:A4,{0,2}))", 60.),
+        ("SUM(MAXIFS(B1:B4,A1:A4,{0,2}))", 60.),
+        ("SUM(MINIFS(B1:B4,A1:A4,{0,2}))", 60.),
+    ] {
+        assert_eq!(value(&w, formula, &excel()), expected.into(), "{formula}");
+    }
+}
+
+#[test]
+fn reference_criterion_controls_spill_when_children_are_requested_first() {
+    // Reference controls participate in the ordinary dynamic-array broadcasting:
+    // https://support.microsoft.com/en-us/excel/dynamic-array-formulas-and-spilled-array-behavior
+    // Criteria 0 and 2 each match once, selecting payloads 20 and 40 respectively.
+    let mut w = book();
+    let sheet = w.sheet_mut(0).unwrap();
+    sheet.set_value(target("D1").address, 0.).unwrap();
+    sheet.set_value(target("D2").address, 2.).unwrap();
+    sheet
+        .set_formula(target("F1").address, "COUNTIF(A1:A4,D1:D2)")
+        .unwrap();
+    sheet
+        .set_formula(target("G1").address, "SUMIFS(B1:B4,A1:A4,D1:D2)")
+        .unwrap();
+    let context = EvaluationContext::default();
+    let mut direct = Evaluation::with_workbook(&w)
+        .build(context.clone())
+        .unwrap();
+    assert_eq!(direct.cell(target("F2")).unwrap(), 1.0.into());
+    assert_eq!(direct.cell(target("G2")).unwrap(), 40.0.into());
+    let mut overlay = Overlay::with_workbook(&w).build().unwrap();
+    assert_eq!(
+        overlay
+            .evaluation(&context)
+            .unwrap()
+            .cell(target("G2"))
+            .unwrap(),
+        40.0.into()
+    );
+    overlay.set_value(target("D2"), 99.).unwrap();
+    for cell in ["F2", "G2"] {
+        assert_eq!(
+            overlay
+                .evaluation(&context)
+                .unwrap()
+                .cell(target(cell))
+                .unwrap(),
+            0.0.into()
+        );
     }
 }

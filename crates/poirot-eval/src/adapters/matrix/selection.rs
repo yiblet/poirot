@@ -3,29 +3,15 @@
 //! <https://support.microsoft.com/en-us/excel/functions/sort-function>
 //! <https://support.microsoft.com/en-us/excel/functions/sortby-function>
 //! <https://support.microsoft.com/en-us/excel/functions/unique-function>
-use super::modern::{Members, failure, matrix, publish};
+use super::modern::{Members, failure, matrix};
 use super::*;
-use crate::host::MissingPolicy;
+use crate::adapters::elementwise::{FixedScalar, NumericParameter};
 use crate::registry::MatrixFunction as F;
 use poirot_functions_matrix::{Axis, Budget, Matrix, SortOrder};
 use std::cmp::Ordering;
 
-fn boolean(host: &mut CallHost<'_, '_>, index: usize, length: usize) -> FunctionResult<bool> {
-    if index >= length {
-        return Ok(false);
-    }
-    let operand = host.scalar_data(index, MissingPolicy::Blank)?;
-    core_projection::coercev2_operand_boolean(&operand.value).map_err(Into::into)
-}
-fn order(host: &mut CallHost<'_, '_>, index: usize, length: usize) -> FunctionResult<SortOrder> {
-    if index >= length {
-        return Ok(SortOrder::Ascending);
-    }
-    let operand = host.scalar_data(index, MissingPolicy::Blank)?;
-    if operand.missing {
-        return Ok(SortOrder::Ascending);
-    }
-    match host.coercev2_scalar_number(&operand.value, NumericPolicy::PinnedPoi)? {
+fn order(host: &mut CallHost<'_, '_>, index: usize) -> FunctionResult<SortOrder> {
+    match FixedScalar::at(index).number(host, NumericParameter::constant(1.0))? {
         1.0 => Ok(SortOrder::Ascending),
         -1.0 => Ok(SortOrder::Descending),
         _ => Err(CellError::Value.into()),
@@ -96,17 +82,16 @@ fn admit(
         max_work: work,
     })
 }
-fn normalized(result: Matrix<CellValue>, address: CellAddress) -> FunctionResult<Value> {
-    let rows = result.rows();
-    let cols = result.cols();
-    let values = result
-        .into_values()
-        .into_iter()
-        .map(poirot_coercionv2::compatibility::coercev2_array_member)
-        .collect();
-    publish(
-        Matrix::new(rows, cols, values).map_err(|_| CellError::Value)?,
+fn normalized(
+    host: &mut CallHost<'_, '_>,
+    result: Matrix<CellValue>,
+    address: CellAddress,
+) -> FunctionResult<Value> {
+    matrices::publish(
+        host,
+        result,
         address,
+        poirot_coercionv2::compatibility::coercev2_array_member,
     )
 }
 fn evaluate(
@@ -117,25 +102,24 @@ fn evaluate(
 ) -> FunctionResult<Value> {
     let input = matrix(host, 0, Members::Original)?;
     if function == F::Filter {
-        let include = matrix(host, 1, Members::Original)?;
-        let axis = if include.cols() == 1 && include.rows() == input.rows() {
-            Axis::Rows
-        } else if include.rows() == 1 && include.cols() == input.cols() {
-            Axis::Columns
-        } else {
-            return Err(CellError::Value.into());
-        };
-        let mut mask = Vec::new();
-        mask.try_reserve_exact(include.values().len())
-            .map_err(|_| host.allocation_failure())?;
-        for value in include.values() {
-            mask.push(core_projection::coercev2_operand_boolean(value)?);
-        }
+        let (axis, include) = WholeCollection::at(1).booleans(host, |rows, columns| {
+            if columns == 1 && rows == input.rows() {
+                Ok(Axis::Rows)
+            } else if rows == 1 && columns == input.cols() {
+                Ok(Axis::Columns)
+            } else {
+                Err(CellError::Value.into())
+            }
+        })?;
+        let mask = include.into_values();
         if !mask.iter().any(|keep| *keep) {
             if length < 3 {
                 return Err(CellError::Calc.into());
             }
-            return normalized(matrix(host, 2, Members::Normalized)?, address);
+            return {
+                let result = matrix(host, 2, Members::Normalized)?;
+                normalized(host, result, address)
+            };
         }
         host.charge_work(input.values().len() as u64)?;
         let budget = Budget {
@@ -144,11 +128,11 @@ fn evaluate(
         };
         let result = poirot_functions_matrix::filter(&input, axis, &mask, budget)
             .map_err(|e| failure(host, e))?;
-        return normalized(result, address);
+        return normalized(host, result, address);
     }
     if function == F::Unique {
-        let axis = axis(boolean(host, 1, length)?);
-        let once = boolean(host, 2, length)?;
+        let axis = axis(FixedScalar::at(1).boolean(host, false)?);
+        let once = FixedScalar::at(2).boolean(host, false)?;
         let keys = if axis == Axis::Rows {
             input.cols()
         } else {
@@ -157,23 +141,13 @@ fn evaluate(
         let budget = admit(host, &input, axis, keys)?;
         let result = poirot_functions_matrix::unique(&input, axis, once, compare, budget)
             .map_err(|e| failure(host, e))?;
-        return normalized(result, address);
+        return normalized(host, result, address);
     }
     let mut keys = Vec::new();
     let mut orders = Vec::new();
     let axis = if function == F::Sort {
-        let axis = axis(boolean(host, 3, length)?);
-        let operand = if length > 1 {
-            Some(host.scalar_data(1, MissingPolicy::Blank)?)
-        } else {
-            None
-        };
-        let index = match operand {
-            Some(operand) if !operand.missing => {
-                host.coercev2_scalar_number(&operand.value, NumericPolicy::PinnedPoi)?
-            }
-            _ => 1.0,
-        };
+        let axis = axis(FixedScalar::at(3).boolean(host, false)?);
+        let index = FixedScalar::at(1).number(host, NumericParameter::constant(1.0))?;
         let key_limit = if axis == Axis::Rows {
             input.cols()
         } else {
@@ -204,7 +178,7 @@ fn evaluate(
             );
         }
         keys.push(Matrix::new(records, 1, values).map_err(|e| failure(host, e))?);
-        orders.push(order(host, 2, length)?);
+        orders.push(order(host, 2)?);
         axis
     } else {
         let mut orientation = None;
@@ -221,7 +195,7 @@ fn evaluate(
                 return Err(CellError::Value.into());
             }
             orientation = Some(current);
-            orders.push(order(host, index + 1, length)?);
+            orders.push(order(host, index + 1)?);
             keys.push(key);
         }
         orientation.ok_or(CellError::Value)?
@@ -254,7 +228,7 @@ fn evaluate(
     budget.max_cells = budget.max_cells.max(count);
     let result = poirot_functions_matrix::sort(&input, axis, &keys, &orders, compare_sort, budget)
         .map_err(|e| failure(host, e))?;
-    normalized(result, address)
+    normalized(host, result, address)
 }
 /// Execute selection calls with deferred operands and operational error separation.
 pub(super) fn execute(

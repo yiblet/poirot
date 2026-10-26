@@ -1,6 +1,6 @@
 use poirot_eval::{
-    EvaluationBudgets, EvaluationFailure, EvaluationOutcome, RunConfiguration, TextSemanticsPolicy,
-    TextSourceVersion, run_formula_with_configuration,
+    EvaluationBudgets, EvaluationOutcome, RunConfiguration, TextSemanticsPolicy, TextSourceVersion,
+    run_formula_with_configuration,
 };
 use poirot_model::{CellAddress, CellValue, Workbook};
 
@@ -34,42 +34,6 @@ fn public_configuration_selects_documented_pairs_or_utf16_len() {
             EvaluationOutcome::Complete { value: CellValue::Number(value), .. } if value == expected));
     }
     assert_ne!(legacy.fingerprint(), poi.fingerprint());
-}
-
-#[test]
-fn configured_poi_boundaries_remain_operational() {
-    let poi = RunConfiguration::default().with_text_policy(TextSemanticsPolicy {
-        source: TextSourceVersion::Poi7321209,
-    });
-    for formula in ["MID(\"abc\",2,2147483647)", "LOWER(\"Ä\")", "UPPER(\"ß\")"] {
-        assert!(
-            matches!(
-                run(formula, &poi),
-                EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::UnsupportedCapability { .. },
-                    ..
-                }
-            ),
-            "{formula}"
-        );
-    }
-}
-
-#[test]
-fn poi_concat_has_no_invented_global_argument_cap() {
-    let poi = RunConfiguration::default().with_text_policy(TextSemanticsPolicy {
-        source: TextSourceVersion::Poi7321209,
-    });
-    let arguments = vec!["\"x\""; 256].join(",");
-    for name in ["CONCAT", "CONCATENATE"] {
-        let formula = format!("{name}({arguments})");
-        assert!(
-            matches!(run(&formula, &poi), EvaluationOutcome::Complete {
-            value, ..
-        } if value == CellValue::Text("x".repeat(256))),
-            "{name}"
-        );
-    }
 }
 
 #[test]
@@ -126,74 +90,5 @@ fn dependency_port_records_actual_text_policy_consumption() {
             consumed,
             "{formula}"
         );
-    }
-}
-
-#[test]
-fn code_retained_ascii_type_is_policy_specific() {
-    let legacy = RunConfiguration::default()
-        .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi);
-    let poi = legacy.clone().with_text_policy(TextSemanticsPolicy {
-        source: TextSourceVersion::Poi7321209,
-    });
-    match run(r#"CODE("A")"#, &poi) {
-        EvaluationOutcome::Complete { value, .. } => {
-            assert_eq!(value, CellValue::Text("65".into()))
-        }
-        outcome => panic!("{outcome:?}"),
-    }
-    assert!(matches!(run(r#"UNICODE("A")"#, &poi),
-        EvaluationOutcome::Complete { value: CellValue::Number(value), .. } if value == 65.));
-}
-
-#[test]
-fn poi_code_decimal_output_is_admitted_before_allocation_and_iferror_cannot_catch_budget() {
-    let configuration = RunConfiguration::default()
-        .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi)
-        .with_text_policy(TextSemanticsPolicy {
-            source: TextSourceVersion::Poi7321209,
-        });
-    let mut workbook = Workbook::new();
-    workbook.add_sheet("Sheet1").unwrap();
-    // Preparation has its own spelling budget. Bind normally so these limits
-    // exercise actual execution, including the one-byte argument admissions.
-    let syntax = poirot_parsing::formula::parse_formula(r#"IFERROR(CODE("A"),7)"#).unwrap();
-    let plan = poirot_eval::bound::FormulaPlan::bind(&syntax).unwrap();
-    let target = poirot_eval::EvaluationTarget {
-        sheet: 0,
-        address: CellAddress { row: 0, col: 0 },
-    };
-    for limit in [1, 2] {
-        let outcome = poirot_eval::run_plan_with_configuration(
-            &workbook,
-            target.sheet,
-            target.address,
-            &plan,
-            &configuration,
-            EvaluationBudgets {
-                text_bytes: limit,
-                ..EvaluationBudgets::default()
-            },
-        );
-        assert!(outcome.usage().expressions > 0, "{outcome:?}");
-        assert!(outcome.usage().text_bytes > 0, "{outcome:?}");
-        if limit == 1 {
-            assert!(
-                matches!(outcome,
-                EvaluationOutcome::Aborted { failure: EvaluationFailure::Budget(ref failure), .. }
-                    if failure.kind == poirot_eval::BudgetKind::TextBytes
-                        && failure.limit == 1
-                        && failure.consumed == 0
-                        && failure.requested == 2
-                        && failure.target == Some(target)),
-                "{outcome:?}"
-            );
-        } else {
-            assert!(
-                matches!(outcome,
-                EvaluationOutcome::Complete { value: CellValue::Text(ref value), .. } if value == "65"),
-                "{outcome:?}"
-            );
-        }
     }
 }

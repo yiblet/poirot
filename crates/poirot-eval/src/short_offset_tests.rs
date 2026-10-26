@@ -1,3 +1,5 @@
+//! Modern OFFSET grid checks follow Microsoft documentation; direct SignedArea
+//! tests retain independent logical padding and overflowed-source invariants.
 use super::*;
 use signed_reference::{GridRead, SignedArea, SourceDimension};
 fn fixture() -> Workbook {
@@ -39,47 +41,45 @@ fn formula(w: &Workbook, expression: &str) -> CellValue {
     }
 }
 #[test]
-fn retained_short_boundary_blank_and_logical_metadata_match_source_geometry() {
+fn modern_offset_crosses_short_boundaries_without_narrowing() {
     let w = fixture();
     for (expression, value) in [
         ("SUM(OFFSET(A1,32768,0,1,1))", 0.),
-        ("ROW(OFFSET(A1,32768,0,1,1))", -32767.),
+        ("ROW(OFFSET(A1,32768,0,1,1))", 32769.),
         ("ROWS(OFFSET(A1,32768,0,1,1))", 1.),
         ("COUNTBLANK(OFFSET(A1,32768,0,1,1))", 1.),
-        ("SUM(OFFSET(A1,65536,0,1,1))", 1.),
-        ("SUM(OFFSET(OFFSET(A1,65535,0,1,1),1,0))", 1.),
-        ("ROWS(OFFSET(A1,32767,0,2,1))", 65536.),
-        ("COUNTBLANK(OFFSET(A1,32767,0,2,1))", 65533.),
-        ("SUM(OFFSET(A1,32767,0,2,1))", 6.),
+        ("SUM(OFFSET(A1,65536,0,1,1))", 0.),
+        ("SUM(OFFSET(OFFSET(A1,65535,0,1,1),1,0))", 0.),
+        ("ROWS(OFFSET(A1,32767,0,2,1))", 2.),
+        ("COUNTBLANK(OFFSET(A1,32767,0,2,1))", 2.),
+        ("SUM(OFFSET(A1,32767,0,2,1))", 0.),
         ("SUM(OFFSET(OFFSET(A1,32768,0,1,1),32768,0))", 0.),
         ("SUMPRODUCT(OFFSET(A1,32768,0,2,1),{1;1})", 0.),
-        ("ROW(OFFSET(A1,2147483647,0,1,1))", 0.),
-        ("ROWS(OFFSET(A1,2147483647,0,-2147483648,1))", 2.),
     ] {
         assert_eq!(formula(&w, expression), Number(value), "{expression}");
     }
-    // Pinned Sumproduct routes 1x1 areas through scalar product; a scalar blank is VALUE.
+    assert_eq!(formula(&w, "ROW(OFFSET(A1,2147483647,0,1,1))"), Error(Ref));
     assert_eq!(
-        formula(&w, "SUMPRODUCT(OFFSET(A1,32768,0,1,1),{1})"),
-        Error(Value)
+        formula(&w, "ROWS(OFFSET(A1,2147483647,0,-2147483648,1))"),
+        Error(Ref)
     );
     assert_eq!(formula(&w, "SUM(OFFSET(A2,2147483647,0,1,1))"), Error(Ref));
     assert_eq!(formula(&w, "SUM(OFFSET(A1,0,0,-2147483648,1))"), Error(Ref));
 }
 #[test]
-fn upper_grid_padding_and_nested_return_keep_reference_shape() {
+fn modern_offset_rejects_upper_grid_and_nested_reentry() {
     let w = fixture();
-    for (expression, expected) in [
-        ("SUM(OFFSET(A1048576,1,0,1,1))", 0.),
-        ("ROW(OFFSET(A1048576,1,0,1,1))", 1048577.),
-        ("COUNTBLANK(OFFSET(A1048576,1,0,1,1))", 1.),
-        ("SUM(OFFSET(OFFSET(A1048576,1,0,1,1),-1,0))", 17.),
-        ("SUM(OFFSET(XFD1,0,16385,1,1))", 0.),
-        ("COLUMN(OFFSET(XFD1,0,16385,1,1))", 32769.),
-        ("COUNTBLANK(OFFSET(XFD1,0,16385,1,1))", 1.),
-        ("SUM(OFFSET(OFFSET(XFD1,0,16385,1,1),0,-16385))", 23.),
+    for expression in [
+        "SUM(OFFSET(A1048576,1,0,1,1))",
+        "ROW(OFFSET(A1048576,1,0,1,1))",
+        "COUNTBLANK(OFFSET(A1048576,1,0,1,1))",
+        "SUM(OFFSET(OFFSET(A1048576,1,0,1,1),-1,0))",
+        "SUM(OFFSET(XFD1,0,16385,1,1))",
+        "COLUMN(OFFSET(XFD1,0,16385,1,1))",
+        "COUNTBLANK(OFFSET(XFD1,0,16385,1,1))",
+        "SUM(OFFSET(OFFSET(XFD1,0,16385,1,1),0,-16385))",
     ] {
-        assert_eq!(formula(&w, expression), Number(expected), "{expression}");
+        assert_eq!(formula(&w, expression), Error(Ref), "{expression}");
     }
     let args = [bound::bind(
         &poirot_parsing::formula::parse_formula("OFFSET(A1048576,1,0,1,1)").unwrap(),
@@ -88,8 +88,7 @@ fn upper_grid_padding_and_nested_return_keep_reference_shape() {
     session.array_result_policy = ArrayResultPolicy::ScalarIntersection;
     let mut host = host::CallHost::new(&mut session, 0, "P1".parse().unwrap(), &args);
     let blank = host.read_cell(0, 0, 0).unwrap();
-    assert_eq!(blank.value, Blank);
-    assert_eq!(blank.origin, host::OperandOrigin::ReferencedCell);
+    assert_eq!(blank.value, Error(Ref));
     assert_eq!(host.shape(0).unwrap(), (1, 1));
 }
 fn area(rows: (i32, i32)) -> SignedArea {
@@ -187,7 +186,7 @@ fn zero_negative_source_dimensions_keep_metadata_and_empty_sparse_loop_policy() 
     }
 }
 #[test]
-fn short_widened_sparse_area_stays_sparse_under_small_materialization_budget() {
+fn modern_offset_small_area_stays_sparse_under_small_materialization_budget() {
     let w = fixture();
     let plan = bound::FormulaPlan::bind(
         &poirot_parsing::formula::parse_formula("SUM(OFFSET(A1,32767,0,2,1))").unwrap(),
@@ -206,32 +205,8 @@ fn short_widened_sparse_area_stays_sparse_under_small_materialization_budget() {
             }
         ),
         EvaluationOutcome::Complete {
-            value: Number(6.),
+            value: Number(0.),
             ..
         }
     ));
-}
-
-#[test]
-fn countblank_positive_int_overflow_remains_sparse() {
-    for (w, expected) in [
-        (fixture(), -7.),
-        (
-            {
-                let mut w = Workbook::new();
-                w.add_sheet("Sheet1").unwrap();
-                w
-            },
-            0.,
-        ),
-    ] {
-        let plan = bound::FormulaPlan::bind(
-            &poirot_parsing::formula::parse_formula("COUNTBLANK(OFFSET(A1,32767,32767,2,2))")
-                .unwrap(),
-        )
-        .unwrap();
-        assert!(matches!(run_plan(&w, 0, "P1".parse().unwrap(), &plan,
-            EvaluationInputs::default(), EvaluationBudgets { materialized_values: 16, ..EvaluationBudgets::default() }),
-            EvaluationOutcome::Complete { value: Number(n), .. } if n == expected));
-    }
 }

@@ -52,7 +52,8 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L23: ImplicitIntersection_TakesReferenceFromHorizontalLine",
         "Expected behavior adapted from this upstream assertion. ImplicitIntersection TakesReferenceFromHorizontalLine. Not derived from Poirot output.",
-        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -67,7 +68,7 @@
           "action": "set",
           "cell": "S!D3",
           "content": {
-            "formula": "ABS(B1:B10)"
+            "formula": "ABS(@B1:B10)"
           }
         },
         {
@@ -85,7 +86,8 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L34: ImplicitIntersection_TakesReferenceFromVerticalLine",
         "Expected behavior adapted from this upstream assertion. ImplicitIntersection TakesReferenceFromVerticalLine. Not derived from Poirot output.",
-        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -100,7 +102,7 @@
           "action": "set",
           "cell": "S!B5",
           "content": {
-            "formula": "ABS(A3:Z3)"
+            "formula": "ABS(@A3:Z3)"
           }
         },
         {
@@ -118,7 +120,8 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L58: ImplicitIntersection_WithoutIntersectionResultsInValueError",
         "Expected behavior adapted from this upstream assertion. ImplicitIntersection WithoutIntersectionResultsInValueError. Not derived from Poirot output.",
-        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -133,7 +136,7 @@
           "action": "set",
           "cell": "S!D5",
           "content": {
-            "formula": "ABS(B1:B4)"
+            "formula": "ABS(@B1:B4)"
           }
         },
         {
@@ -151,7 +154,8 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ReferenceOperatorsTests.cs#L80: ImplicitIntersection_IntersectionMustHaveSpanOfOneCell",
         "Expected behavior adapted from this upstream assertion. ImplicitIntersection IntersectionMustHaveSpanOfOneCell. Not derived from Poirot output.",
-        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
@@ -166,7 +170,7 @@
           "action": "set",
           "cell": "S!D3",
           "content": {
-            "formula": "ABS(A1:B5)"
+            "formula": "ABS(@A1:B5)"
           }
         },
         {

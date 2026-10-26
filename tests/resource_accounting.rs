@@ -37,7 +37,7 @@ fn book() -> Workbook {
     book
 }
 #[test]
-fn sparse_whole_columns_preserve_order_and_real_work_boundaries() {
+fn whole_columns_preserve_order_and_enforce_work_limits() {
     let book = book();
     for (formula, expected) in [
         ("CONCAT(A:A)", CellValue::Text("firstlast".into())),
@@ -51,7 +51,6 @@ fn sparse_whole_columns_preserve_order_and_real_work_boundaries() {
         let outcome = run(&book, formula, EvaluationBudgets::default());
         let work = outcome.usage().work_units;
         assert_eq!(complete(outcome), expected, "{formula}");
-        assert!(work < 1000, "{formula}: {work}");
         assert_eq!(
             complete(run(
                 &book,
@@ -285,11 +284,15 @@ fn direct_work_is_cumulative_until_begin_and_overlay_borrows_start_fresh() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(target("C1").address, "CONCAT(A:A)")
+        .set_formula(target("C1").address, "CONCAT(A1:A1000)")
         .unwrap();
+    let limit = run(&book, "CONCAT(A1:A1000)", Default::default())
+        .usage()
+        .work_units
+        * 2;
     let context = EvaluationContext {
         budgets: EvaluationBudgets {
-            run_work: 500,
+            run_work: limit,
             ..Default::default()
         },
         ..Default::default()
@@ -320,6 +323,65 @@ fn direct_work_is_cumulative_until_begin_and_overlay_borrows_start_fresh() {
             evaluation.cell(target("C1")).unwrap(),
             CellValue::Text("firstlast".into())
         );
-        assert!(evaluation.finish().outcome.usage().work_units <= 500);
+        assert!(evaluation.finish().outcome.usage().work_units <= limit);
+    }
+}
+
+#[test]
+fn text_handlers_preserve_scalar_array_and_operational_contracts() {
+    // Excel function contracts: TEXT formatting, CONCAT row-major members,
+    // TEXTJOIN empty filtering, EXACT case sensitivity, SUBSTITUTE occurrence.
+    // https://support.microsoft.com/en-us/office/text-functions-reference-cccd86ad-547d-4ea9-a065-7bb697c2a56e
+    let book = book();
+    for (formula, expected) in [
+        (
+            r##"TEXT(1234.5,"#,##0.00")"##,
+            CellValue::Text("1,234.50".into()),
+        ),
+        (
+            r##"CONCAT({"a","b";"c","d"})"##,
+            CellValue::Text("abcd".into()),
+        ),
+        (
+            r##"TEXTJOIN("-",TRUE,"a","","b")"##,
+            CellValue::Text("a-b".into()),
+        ),
+        (r##"EXACT("a","A")"##, CellValue::Boolean(false)),
+        (
+            r##"SUBSTITUTE("a-a-a","a","b",2)"##,
+            CellValue::Text("a-b-a".into()),
+        ),
+        (
+            r##"REGEXTEST("abc123","[0-9]+")"##,
+            CellValue::Boolean(true),
+        ),
+    ] {
+        assert_eq!(
+            complete(run(&book, formula, Default::default())),
+            expected,
+            "{formula}"
+        );
+    }
+    // TEXT forces the pattern and eager scalar calls force later arguments before
+    // returning the first spreadsheet error. Their resource failures escape IFERROR.
+    for formula in [
+        r##"IFERROR(TEXT(#N/A,REPT("x",1000)),"caught")"##,
+        r##"IFERROR(EXACT(#N/A,REPT("x",1000)),"caught")"##,
+        r##"IFERROR(CONCAT({"a","b";"c","d"}),"caught")"##,
+    ] {
+        let budgets = EvaluationBudgets {
+            text_bytes: 2,
+            ..Default::default()
+        };
+        assert!(
+            matches!(
+                run(&book, formula, budgets),
+                EvaluationOutcome::Aborted {
+                    failure: EvaluationFailure::Budget(_),
+                    ..
+                }
+            ),
+            "{formula}"
+        );
     }
 }

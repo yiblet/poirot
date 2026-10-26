@@ -5,7 +5,7 @@ fn evaluate(formula: &str, budgets: EvaluationBudgets) -> EvalResult<CellValue> 
     workbook.add_sheet("Sheet1").unwrap();
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
     session.budget = BudgetMeter::new(budgets).unwrap();
-    session.builtin_policy = BuiltinSemanticsPolicy::PinnedPoi;
+    session.builtin_policy = BuiltinSemanticsPolicy::ExcelDocumentation;
     session.text_policy = TextSemanticsPolicy {
         source: TextSourceVersion::Poi7321209OpenJdk21Unicode15,
     };
@@ -39,23 +39,20 @@ fn captured_unit_results_flow_through_handlers() {
 fn source_search_and_ascii_cases_flow_through_handlers() {
     for (formula, expected) in [
         ("LEN(\"😀\")", Number(2.)),
-        ("CODE(\"😀\")", Text("55357".into())),
-        ("CODE(RIGHT(\"😀\",1))", Text("56832".into())),
-        ("CODE(LEFT(\"😀\",1))", Text("55357".into())),
-        ("CODE(\"Ā\")", Text("256".into())),
+        ("CODE(\"A\")", Number(65.)),
         ("CODE(\"\")", Error(VALUE_ERROR)),
         ("FIND(\"Z\",\"😀Z\")", Number(3.)),
-        ("SEARCH(\"*\",\"a*b\")", Number(2.)),
+        ("SEARCH(\"*\",\"a*b\")", Number(1.)),
         ("SEARCH(\"ß\",\"Straße\")", Number(5.)),
-        ("SEARCH(\"Z\",\"ßZ\")", Number(3.)),
-        ("SEARCH(\"\",\"abc\",100)", Number(4.)),
+        ("SEARCH(\"Z\",\"ßZ\")", Number(2.)),
+        ("SEARCH(\"\",\"abc\",100)", Error(VALUE_ERROR)),
         ("LOWER(\"ASCII\")", Text("ascii".into())),
         ("PROPER(\"aBC 12hELLO\")", Text("Abc 12Hello".into())),
-        ("LEFT(\"abc\",2147483648)", Error(Num)),
-        ("FIND(\"x\",\"x\",2147483648)", Error(Num)),
+        ("LEFT(\"abc\",2147483648)", Error(VALUE_ERROR)),
+        ("FIND(\"x\",\"x\",2147483648)", Error(VALUE_ERROR)),
         ("UPPER(\"ascii\")", Text("ASCII".into())),
         ("REPT(\"😀\",16384)", Error(VALUE_ERROR)),
-        ("REPT(\"x\",#N/A)", Error(VALUE_ERROR)),
+        ("REPT(\"x\",#N/A)", Error(NA)),
         ("LEFT(#N/A,#REF!)", Error(NA)),
         ("IF(FALSE,LEFT(\"😀\",1),\"ok\")", Text("ok".into())),
     ] {
@@ -76,15 +73,10 @@ fn budget_failures_are_operational_and_cannot_be_caught() {
         evaluate("IFERROR(UPPER(\"abcdefgh\"),\"caught\")", budgets),
         Err(EvaluationFailure::Budget(_))
     ));
-    let budgets = EvaluationBudgets {
-        cell_work: 1000,
-        run_work: 1000,
-        ..EvaluationBudgets::default()
-    };
-    assert!(matches!(
-        evaluate("IFERROR(REPT(\"\",100000),\"caught\")", budgets),
-        Err(EvaluationFailure::Budget(_))
-    ));
+    assert_eq!(
+        evaluate("REPT(\"\",100000)", EvaluationBudgets::default()).unwrap(),
+        Text(String::new())
+    );
     // Unicode final sigma now supports punctuation and supplementary contexts.
     assert_eq!(
         evaluate(
@@ -107,7 +99,7 @@ fn evaluate_source(
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_value("A1".parse().unwrap(), value(input))
+        .set_value("A1".parse().unwrap(), shared::value(input))
         .unwrap();
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
     session.text_policy = TextSemanticsPolicy { source };
@@ -205,8 +197,8 @@ fn documented_v2_scans_and_replacement_admit_work_and_storage() {
                 TextSourceVersion::ExcelCompatibilityV2Documented,
                 vec![65; 100],
                 EvaluationBudgets {
-                    cell_work: 250,
-                    run_work: 250,
+                    cell_work: 50,
+                    run_work: 50,
                     ..EvaluationBudgets::default()
                 }
             ),

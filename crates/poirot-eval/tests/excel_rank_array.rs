@@ -80,14 +80,8 @@ fn rank_arrays_preserve_ties_nonzero_order_and_ignore_nonnumeric_members() {
     }
 }
 #[test]
-fn rank_array_admission_does_not_admit_scalar_or_missing_lists_or_mask_parameter_errors() {
+fn rank_array_admission_preserves_parameter_errors() {
     for f in ["RANK.EQ", "RANK"] {
-        for args in ["4,4", "4,TRUE", "4,\"4\"", "4,", "4"] {
-            assert_eq!(
-                value(&format!("{f}({args})"), true),
-                CellValue::Error(CellError::Value)
-            );
-        }
         assert_eq!(
             value(&format!("{f}(#DIV/0!,{{1,4}})"), true),
             CellValue::Error(CellError::Div0)
@@ -97,15 +91,6 @@ fn rank_array_admission_does_not_admit_scalar_or_missing_lists_or_mask_parameter
             CellValue::Error(CellError::Ref)
         );
     }
-    assert_eq!(
-        value("RANK(4,{1,4,4})", false),
-        CellValue::Error(CellError::Value)
-    );
-    assert_eq!(value("RANK(4,A1:A3)", false), CellValue::Number(1.));
-    assert_eq!(
-        value("RANK.EQ(4,{1,4,4})", false),
-        CellValue::Error(CellError::Name)
-    );
 }
 #[test]
 fn rank_array_budgets_remain_operational_inside_iferror() {

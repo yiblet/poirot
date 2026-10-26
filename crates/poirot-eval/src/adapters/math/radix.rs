@@ -1,73 +1,64 @@
-//! Deferred general radix functions with explicit central argument policies.
-use super::policy::{EvaluationPort, Failure, Scalar};
+//! General radix operations with typed broadcast argument roles.
+use crate::adapters::elementwise::{
+    Broadcast, Kernel, MemberContext, NumericParameter as P, NumericSignature, Optional,
+};
+use crate::*;
 use poirot_coercionv2::radix::{
     coercev2_base_number, coercev2_base_padding, coercev2_decimal_scalar, coercev2_decimal_text,
-    coercev2_decimal_text_capacity, coercev2_radix, coercev2_radix_number,
+    coercev2_decimal_text_capacity, coercev2_radix,
 };
-use poirot_functions_core::{CellError, CellValue};
+use poirot_functions_core::Scalar;
 
-fn read<P: EvaluationPort>(
-    p: &mut P,
-    argument: &P::Argument,
-) -> Result<Scalar, Failure<P::Operational>> {
-    p.charge_work(1).map_err(Failure::Operational)?;
-    let scalar = p.resolve_scalar(argument)?.value;
-    if let Scalar::Text(text) = &scalar {
-        p.check_text(text.len()).map_err(Failure::Operational)?;
-        p.charge_work(text.len() as u64)
-            .map_err(Failure::Operational)?;
-    }
-    if let Scalar::Error(error) = scalar {
-        return Err(error.into());
-    }
-    Ok(scalar)
-}
-/// Read operands in source order before domain validation. Input errors retain
-/// identity, and operational failures never enter the catchable value channel.
-pub fn evaluate<P: EvaluationPort>(
-    p: &mut P,
-    base: bool,
-    args: &[P::Argument],
-) -> Result<CellValue, Failure<P::Operational>> {
-    if !(if base {
-        (2..=3).contains(&args.len())
-    } else {
-        args.len() == 2
-    }) {
-        return Err(CellError::Value.into());
-    }
-    let first = read(p, args.first().ok_or(CellError::Value)?)?;
-    let number = if base {
-        Some(coercev2_radix_number(&first, |text| {
-            p.coercev2_text_number(text)
-        })?)
-    } else {
-        None
-    };
-    let radix = read(p, args.get(1).ok_or(CellError::Value)?)?;
-    let radix = coercev2_radix_number(&radix, |text| p.coercev2_text_number(text))?;
-    let padding = if let Some(argument) = args.get(2) {
-        coercev2_radix_number(&read(p, argument)?, |text| p.coercev2_text_number(text))?
-    } else {
-        0.0
-    };
-    let radix = coercev2_radix(radix)?;
-    if let Some(number) = number {
-        let number = coercev2_base_number(number)?;
-        let padding = coercev2_base_padding(padding)?;
-        let length = poirot_functions_math::radix::base_length(number, radix, padding)?;
-        p.check_collection(length).map_err(Failure::Operational)?;
-        p.check_text(length).map_err(Failure::Operational)?;
-        p.charge_work(length as u64).map_err(Failure::Operational)?;
-        Ok(CellValue::Text(poirot_functions_math::radix::base(
-            number, radix, padding,
-        )?))
-    } else {
+/// BASE or DECIMAL scalar work within shared rectangular execution.
+pub(super) struct Radix(pub(super) MathFunction);
+impl Kernel for Radix {
+    type Signature = (Broadcast, Broadcast, Optional<Broadcast>);
+    fn apply(
+        &self,
+        context: &mut MemberContext<'_, '_, '_>,
+        (first, radix, padding): &Self::Signature,
+    ) -> FunctionResult<CellValue> {
+        if self.0 == MathFunction::Base {
+            let numbers =
+                NumericSignature::new(&[P::constant(0.0), P::constant(0.0), P::constant(0.0)])
+                    .numbers_roles(context, [Some(*first), Some(*radix), padding.0])?;
+            let radix = coercev2_radix(numbers.get(1)?)?;
+            let number = coercev2_base_number(numbers.get(0)?)?;
+            let padding = coercev2_base_padding(numbers.get(2)?)?;
+            let length = poirot_functions_math::radix::base_length(number, radix, padding)?;
+            context.host.check_values(length)?;
+            context.host.check_text(length)?;
+            context.host.charge_work(length as u64)?;
+            return Ok(Text(poirot_functions_math::radix::base(
+                number, radix, padding,
+            )?));
+        }
+        let first = first.read(context)?;
+        let first = if first.missing {
+            Scalar::Missing
+        } else {
+            match first.value {
+                Number(number) => Scalar::Number(number),
+                Boolean(value) => Scalar::Boolean(value),
+                Text(text) => Scalar::Text(text),
+                CellValue::TextUtf16(text) => Scalar::Text(
+                    context
+                        .host
+                        .project_text(poirot_model::TextRef::Utf16(text.units()))?,
+                ),
+                Blank => Scalar::Blank,
+                Error(error) => return Err(error.into()),
+            }
+        };
+        let radix = radix.number(context, Some(0.0))?;
+        let radix = coercev2_radix(radix)?;
         let bytes = coercev2_decimal_text_capacity(&first);
-        p.check_text(bytes).map_err(Failure::Operational)?;
-        p.check_collection(bytes).map_err(Failure::Operational)?;
-        p.charge_work(bytes as u64).map_err(Failure::Operational)?;
-        let text = coercev2_decimal_scalar(&first)?;
-        Ok(CellValue::Number(coercev2_decimal_text(&text, radix)?))
+        context.host.check_text(bytes)?;
+        context.host.check_values(bytes)?;
+        context.host.charge_work(bytes as u64)?;
+        Ok(Number(coercev2_decimal_text(
+            &coercev2_decimal_scalar(&first)?,
+            radix,
+        )?))
     }
 }

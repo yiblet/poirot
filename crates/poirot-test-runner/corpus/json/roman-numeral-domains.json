@@ -13,7 +13,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -38,7 +38,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -63,7 +63,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -88,7 +88,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -113,7 +113,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -138,7 +138,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -163,7 +163,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -188,7 +188,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -213,7 +213,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -238,7 +238,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -263,7 +263,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -288,7 +288,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -313,7 +313,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -338,7 +338,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -363,7 +363,9 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations.",
+        "Original preexisting error-order expectation {\"type\":\"text\",\"value\":\"\"} was not corroborated by independent Calc. Preserve the original input and recorded oracle in ../../evidence/roman-error-arguments-libreoffice.json; fresh isolated LibreOffice 26.2.6.3 calculation returned #DIV/0!. No Poirot output was used to author this correction.",
+        "The corrected error-propagation inference is corroborated by Calc; native Microsoft Excel behavior has not been independently verified."
       ],
       "actions": [
         {
@@ -377,8 +379,8 @@
           "action": "check",
           "cell": "S!Z100",
           "expected": {
-            "type": "text",
-            "value": ""
+            "type": "error",
+            "value": "#DIV/0!"
           }
         }
       ]
@@ -388,7 +390,9 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations.",
+        "Original preexisting error-order expectation {\"type\":\"error\",\"value\":\"#NUM!\"} was not corroborated by independent Calc. Preserve the original input and recorded oracle in ../../evidence/roman-error-arguments-libreoffice.json; fresh isolated LibreOffice 26.2.6.3 calculation returned #DIV/0!. No Poirot output was used to author this correction.",
+        "The corrected error-propagation inference is corroborated by Calc; native Microsoft Excel behavior has not been independently verified."
       ],
       "actions": [
         {
@@ -403,7 +407,7 @@
           "cell": "S!Z100",
           "expected": {
             "type": "error",
-            "value": "#NUM!"
+            "value": "#DIV/0!"
           }
         }
       ]
@@ -413,7 +417,9 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations.",
+        "Original preexisting error-order expectation {\"type\":\"error\",\"value\":\"#VALUE!\"} was not corroborated by independent Calc. Preserve the original input and recorded oracle in ../../evidence/roman-error-arguments-libreoffice.json; fresh isolated LibreOffice 26.2.6.3 calculation returned #DIV/0!. No Poirot output was used to author this correction.",
+        "The corrected error-propagation inference is corroborated by Calc; native Microsoft Excel behavior has not been independently verified."
       ],
       "actions": [
         {
@@ -428,7 +434,7 @@
           "cell": "S!Z100",
           "expected": {
             "type": "error",
-            "value": "#VALUE!"
+            "value": "#DIV/0!"
           }
         }
       ]
@@ -438,7 +444,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -463,7 +469,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -488,7 +494,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -513,7 +519,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -538,7 +544,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -563,7 +569,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -588,7 +594,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -613,7 +619,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -638,7 +644,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -663,7 +669,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -688,7 +694,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -713,7 +719,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -738,7 +744,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -763,7 +769,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -788,7 +794,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -813,7 +819,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -838,7 +844,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -863,7 +869,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {
@@ -888,7 +894,7 @@
       "evidence": [
         "https://support.microsoft.com/en-us/excel/functions/arabic-function",
         "https://support.microsoft.com/en-us/excel/functions/roman-function",
-        "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        "Documented domains and independently authored examples. Error-argument corrections retain original inputs and independently observed Calc evidence in ../../evidence/roman-error-arguments-libreoffice.json. No Poirot outputs establish expectations."
       ],
       "actions": [
         {

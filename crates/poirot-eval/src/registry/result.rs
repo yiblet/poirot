@@ -44,14 +44,20 @@ pub enum ResultRule {
     ElementwiseBoolean,
     /// Return numbers or errors with rectangular scalar-argument lifting.
     ElementwiseNumber,
-    /// Lift business-day endpoints/weekend options while reducing the holiday set.
-    BusinessDays,
+    /// Lift the first three numeric arguments while reducing later collection operands.
+    FirstThreeNumericArguments,
+    /// Lift two numeric controls while reducing later collection operands.
+    FirstTwoNumericArguments,
     /// Lift the first numeric parameter while consuming later collection operands.
     FirstNumericArgument,
     /// Lift an optional third numeric parameter while consuming earlier collections.
     ThirdNumericArgument,
     /// Lift only the second scalar argument, reducing the first collection.
     SecondNumericArgument,
+    /// Lift alternating criteria after each criteria range.
+    PairedCriteria,
+    /// Lift alternating criteria after a leading payload range.
+    PayloadCriteria,
     /// Lift scalar parameters after the first collection.
     AfterFirstNumericArguments,
     /// Lift scalar parameters after two collections.
@@ -107,7 +113,12 @@ impl ResultRule {
             }
         };
         match self {
-            Self::BusinessDays => Self::ElementwiseNumber.apply(args.get(..3).unwrap_or(args)),
+            Self::FirstTwoNumericArguments => {
+                Self::ElementwiseNumber.apply(args.get(..2).unwrap_or(args))
+            }
+            Self::FirstThreeNumericArguments => {
+                Self::ElementwiseNumber.apply(args.get(..3).unwrap_or(args))
+            }
             Self::FirstNumericArgument => {
                 Self::ElementwiseNumber.apply(args.get(..1).unwrap_or(args))
             }
@@ -116,6 +127,10 @@ impl ResultRule {
             }
             Self::SecondNumericArgument => {
                 Self::ElementwiseNumber.apply(args.get(1..2).unwrap_or(&[]))
+            }
+            Self::PairedCriteria => Self::ElementwiseNumber.apply(&[selected(&|i| i % 2 == 1)]),
+            Self::PayloadCriteria => {
+                Self::ElementwiseNumber.apply(&[selected(&|i| i >= 2 && i.is_multiple_of(2))])
             }
             Self::AfterFirstNumericArguments => {
                 Self::ElementwiseNumber.apply(args.get(1..).unwrap_or(&[]))
@@ -245,10 +260,25 @@ impl ResultRule {
     ) -> poirot_model::ShapeBounds {
         use poirot_model::ShapeBounds as S;
         match self {
-            Self::BusinessDays => args.iter().take(3).copied().fold(S::SCALAR, S::join),
+            Self::FirstTwoNumericArguments => args.iter().take(2).copied().fold(S::SCALAR, S::join),
+            Self::FirstThreeNumericArguments => {
+                args.iter().take(3).copied().fold(S::SCALAR, S::join)
+            }
             Self::FirstNumericArgument => args.first().copied().unwrap_or(S::SCALAR),
             Self::ThirdNumericArgument => args.get(2).copied().unwrap_or(S::SCALAR),
             Self::SecondNumericArgument => args.get(1).copied().unwrap_or(S::SCALAR),
+            Self::PairedCriteria | Self::PayloadCriteria => args
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| {
+                    if self == Self::PairedCriteria {
+                        i % 2 == 1
+                    } else {
+                        *i >= 2 && i.is_multiple_of(2)
+                    }
+                })
+                .map(|(_, shape)| *shape)
+                .fold(S::SCALAR, S::join),
             Self::AfterFirstNumericArguments => {
                 args.iter().skip(1).copied().fold(S::SCALAR, S::join)
             }

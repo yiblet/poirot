@@ -1,4 +1,4 @@
-//! LARGE's positive rank contract; pinned POI and SMALL remain explicit.
+//! Modern LARGE and SMALL rank boundaries and collection contracts.
 use poirot_eval::*;
 use poirot_model::{CellAddress, CellError, CellValue, Workbook};
 
@@ -27,10 +27,7 @@ fn config(policy: BuiltinSemanticsPolicy) -> RunConfiguration {
 #[test]
 fn kth_rank_admission_handles_fractional_boundaries() {
     let book = book();
-    for builtin in [
-        BuiltinSemanticsPolicy::PinnedPoi,
-        BuiltinSemanticsPolicy::ExcelDocumentation,
-    ] {
+    for builtin in [BuiltinSemanticsPolicy::ExcelDocumentation] {
         let config = config(builtin);
         for function in ["LARGE", "SMALL"] {
             let documented_large =
@@ -87,35 +84,14 @@ fn kth_rank_admission_handles_fractional_boundaries() {
 #[test]
 fn kth_rank_preserves_collection_error_order_and_unrelated_consumers() {
     let book = book();
-    for builtin in [
-        BuiltinSemanticsPolicy::PinnedPoi,
-        BuiltinSemanticsPolicy::ExcelDocumentation,
-    ] {
+    for builtin in [BuiltinSemanticsPolicy::ExcelDocumentation] {
         let config = config(builtin);
         for (formula, expected) in [
-            ("LARGE(NA(),0)", CellValue::Error(CellError::Num)),
-            (
-                "LARGE(NA(),0.1)",
-                CellValue::Error(if builtin == BuiltinSemanticsPolicy::ExcelDocumentation {
-                    CellError::NA
-                } else {
-                    CellError::Num
-                }),
-            ),
-            ("SMALL(NA(),0.1)", CellValue::Error(CellError::Num)),
+            ("LARGE(NA(),0.1)", CellValue::Error(CellError::NA)),
             ("LARGE(NA(),3.1)", CellValue::Error(CellError::NA)),
-            ("LARGE(NA(),NA())", CellValue::Error(CellError::Value)),
-            ("SMALL({9,2,6},NA())", CellValue::Error(CellError::Value)),
             ("LARGE({9,2,6},\"bad\")", CellValue::Error(CellError::Value)),
             ("PERCENTILE({2,6,9},0.25)", CellValue::Number(4.)),
-            (
-                "QUARTILE.INC({2,6,9},0.9)",
-                if builtin == BuiltinSemanticsPolicy::ExcelDocumentation {
-                    CellValue::Number(2.)
-                } else {
-                    CellValue::Error(CellError::Name)
-                },
-            ),
+            ("QUARTILE.INC({2,6,9},0.9)", CellValue::Number(2.)),
             ("RANK(6,B1:B3,0.1)", CellValue::Number(2.)),
             ("LARGE({9,\"100\",TRUE,2},1.1)", CellValue::Number(2.)),
             ("SMALL({9,\"100\",TRUE,2},1.1)", CellValue::Number(9.)),
@@ -132,23 +108,6 @@ fn kth_rank_preserves_collection_error_order_and_unrelated_consumers() {
                 matches!(&result, EvaluationOutcome::Complete {value,..} if value == &expected),
                 "{builtin:?} {formula}: {result:?}"
             );
-        }
-        for function in ["LARGE", "SMALL"] {
-            let formula = format!("IFERROR({function}({{9,2,6}},),99)");
-            assert!(matches!(
-                run_formula_with_configuration(
-                    &book,
-                    0,
-                    at(),
-                    &formula,
-                    &config,
-                    Default::default()
-                ),
-                EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::UnsupportedCapability { .. },
-                    ..
-                }
-            ));
         }
     }
 }

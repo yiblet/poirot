@@ -10,7 +10,7 @@ fn workbook() -> Workbook {
     workbook
 }
 fn number(workbook: &Workbook, formula: &str, expected: f64) {
-    let value = match pinned_formula(
+    let value = match modern_formula(
         workbook,
         0,
         AT,
@@ -31,45 +31,32 @@ fn number(workbook: &Workbook, formula: &str, expected: f64) {
 }
 
 #[test]
-fn zero_rate_annuities_and_source_financial_edges() {
+fn zero_rate_annuities_and_documented_financial_domains() {
     let workbook = workbook();
     for (formula, expected) in [
         ("FV(0,10,-20,,)", 200.),
         ("PV(0,10,-20)", 200.),
         ("PMT(0,10,200)", -20.),
         ("NPER(0,-20,200)", 10.),
+        ("IPMT(0,1,12,1000)", 0.),
+        ("PPMT(0,1,12,1000)", -1000. / 12.),
         ("MIRR({-100,121},0.1,0.1)", 0.21),
-        ("MIRR({0,0},0.1,0.1)", 0.),
-        ("MIRR(0.1,0.1)", -1.),
         ("DOLLARDE(1.02,16)", 1.125),
         ("DOLLARFR(1.125,16)", 1.02),
     ] {
         number(&workbook, formula, expected);
     }
     for (formula, expected) in [
-        ("IPMT(0,1,12,1000)", CellError::Num),
-        ("PPMT(0,1,12,1000)", CellError::Num),
+        ("MIRR({0,0},0.1,0.1)", CellError::Div0),
         ("MIRR({10,20},0.1,0.1)", CellError::Div0),
-        ("IPMT(0.1,1,12,1000,1/0)", CellError::Value),
+        ("MIRR({-10,-20},0.1,0.1)", CellError::Div0),
+        ("MIRR(0.1,0.1)", CellError::Value),
+        ("IPMT(0.1,1,12,1000,1/0)", CellError::Div0),
         ("DOLLARDE(TRUE,16)", CellError::Value),
-        ("RATE(\"bad\",1,1/0)", CellError::Div0),
-        ("IPMT(0.1,1,10,1E308)", CellError::Num),
-        ("PPMT(0.1,1,10,1E308)", CellError::Num),
-        ("IPMT(0.1,-2147483648,10,100)", CellError::Num),
+        ("RATE(\"bad\",1,100)", CellError::Value),
     ] {
-        assert_eq!(
-            match pinned_formula(
-                &workbook,
-                0,
-                AT,
-                formula,
-                Default::default(),
-                Default::default()
-            ) {
-                poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
-                outcome => panic!("evaluation aborted: {outcome:?}"),
-            },
-            CellValue::Error(expected),
+        assert!(
+            matches!(modern_formula(&workbook, 0, AT, formula, Default::default(), Default::default()), EvaluationOutcome::Complete { value: CellValue::Error(error), .. } if error == expected),
             "{formula}"
         );
     }
@@ -90,9 +77,25 @@ fn collections_preserve_origins_and_skip_non_numeric_periods() {
     number(&workbook, "NPV(0.1,A1:A4)", 9.09090909090908);
     number(&workbook, "NPV(0,TRUE,\"2\")", 3.);
     number(&workbook, "NPV(0,{TRUE,\"2\",3})", 3.);
-    number(&workbook, "PPMT(0.1,1,2,100,1/0)", -47.61904761904758);
+    // The future balance participates in the annuity payment; it is never an unused input.
+    // https://support.microsoft.com/en-us/excel/functions/ppmt-function
+    number(&workbook, "PPMT(0.1,1,2,100,50)", -71.42857142857143);
+    assert!(matches!(
+        modern_formula(
+            &workbook,
+            0,
+            AT,
+            "PPMT(0.1,1,2,100,1/0)",
+            Default::default(),
+            Default::default()
+        ),
+        EvaluationOutcome::Complete {
+            value: CellValue::Error(CellError::Div0),
+            ..
+        }
+    ));
     assert_eq!(
-        match pinned_formula(
+        match modern_formula(
             &workbook,
             0,
             AT,
@@ -145,7 +148,7 @@ fn resource_and_capability_faults_survive_iferror() {
     }
     // OperandResolver's fpPattern excludes Java hexadecimal floating strings.
     assert_eq!(
-        match pinned_formula(
+        match modern_formula(
             &workbook,
             0,
             AT,
@@ -159,7 +162,7 @@ fn resource_and_capability_faults_survive_iferror() {
         CellValue::Error(CellError::Value)
     );
     assert_eq!(
-        match pinned_formula(
+        match modern_formula(
             &workbook,
             0,
             AT,
@@ -173,7 +176,7 @@ fn resource_and_capability_faults_survive_iferror() {
         CellValue::Number(99.)
     );
     assert_eq!(
-        match pinned_formula(
+        match modern_formula(
             &workbook,
             0,
             AT,
@@ -184,12 +187,12 @@ fn resource_and_capability_faults_survive_iferror() {
             poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
             outcome => panic!("evaluation aborted: {outcome:?}"),
         },
-        CellValue::Number(99.)
+        CellValue::Number(0.)
     );
 }
 
 #[test]
-fn source_string_conversion_and_payment_error_order() {
+fn financial_decimal_strings_and_direct_cashflow_admission() {
     let workbook = workbook();
     for formula in [
         "DOLLARDE(1.02,TRUE)",
@@ -202,7 +205,7 @@ fn source_string_conversion_and_payment_error_order() {
         "NPV(0,\"16d\")",
     ] {
         assert_eq!(
-            match pinned_formula(
+            match modern_formula(
                 &workbook,
                 0,
                 AT,
@@ -214,27 +217,6 @@ fn source_string_conversion_and_payment_error_order() {
                 outcome => panic!("evaluation aborted: {outcome:?}"),
             },
             CellValue::Error(CellError::Value),
-            "{formula}"
-        );
-    }
-    for formula in [
-        "IPMT(\"bad\",1,12,1/0)",
-        "PPMT(\"bad\",1,12,1/0)",
-        "IPMT(0.1,1E30,12,1/0)",
-    ] {
-        assert_eq!(
-            match pinned_formula(
-                &workbook,
-                0,
-                AT,
-                formula,
-                Default::default(),
-                Default::default()
-            ) {
-                poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
-                outcome => panic!("evaluation aborted: {outcome:?}"),
-            },
-            CellValue::Error(CellError::Div0),
             "{formula}"
         );
     }
@@ -280,7 +262,7 @@ fn irr_bound_admits_long_flow_and_preserves_fallback_and_no_root() {
     // This root forces the source's safeguarded fallback after Newton overshoot.
     number(&workbook, "IRR({-100,1})", -0.99);
     assert_eq!(
-        match pinned_formula(
+        match modern_formula(
             &workbook,
             0,
             AT,
@@ -295,8 +277,8 @@ fn irr_bound_admits_long_flow_and_preserves_fallback_and_no_root() {
     );
 }
 
-/// Execute the pinned source controls independently of the public modern defaults.
-fn pinned_formula(
+/// Execute financial controls under the current documented builtin contract.
+fn modern_formula(
     workbook: &Workbook,
     sheet: usize,
     address: CellAddress,
@@ -310,7 +292,7 @@ fn pinned_formula(
         address,
         formula,
         &poirot_eval::RunConfiguration::from(inputs)
-            .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi)
+            .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::ExcelDocumentation)
             .with_array_result_policy(poirot_eval::ArrayResultPolicy::ScalarIntersection),
         budgets,
     )

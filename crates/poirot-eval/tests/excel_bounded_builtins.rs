@@ -64,13 +64,15 @@ fn address_relative_absolute_styles_sheet_escaping_and_errors() {
             CellValue::Error(e)
         );
     }
+    // Both policy labels honor a1 errors and FALSE's R1C1 style with abs_num=2.
+    // https://support.microsoft.com/en-us/excel/functions/address-function
     assert_eq!(
         value("ADDRESS(2,3,2,B4)", false),
-        CellValue::Text("C$2".into())
+        CellValue::Error(CellError::NA)
     );
     assert_eq!(
         value("ADDRESS(2,3,2,FALSE)", false),
-        CellValue::Text("C$2".into())
+        CellValue::Text("R2C[3]".into())
     );
 }
 #[test]
@@ -96,7 +98,7 @@ fn ceiling_nonzero_modes_significance_signs_and_fractional_modes() {
         );
         assert_eq!(
             value("CEILING.MATH(-4.3,0,B4)", excel),
-            CellValue::Number(0.)
+            CellValue::Error(CellError::NA)
         );
         assert_eq!(
             value("CEILING.MATH(-4.3,2,B4)", excel),
@@ -105,7 +107,7 @@ fn ceiling_nonzero_modes_significance_signs_and_fractional_modes() {
     }
     assert_eq!(
         value("CEILING.MATH(-4.3,2,1)", false),
-        CellValue::Number(-4.)
+        CellValue::Number(-6.)
     );
     assert_eq!(
         value("CEILING.MATH(-4.3,2,-1)", false),
@@ -114,6 +116,8 @@ fn ceiling_nonzero_modes_significance_signs_and_fractional_modes() {
 }
 #[test]
 fn sample_covariance_pair_counts_filtering_and_errors() {
+    // Sample covariance divides by n-1 and requires at least two paired observations.
+    // https://support.microsoft.com/en-us/excel/functions/covariance-s-function
     for f in [
         "COVARIANCE.S(A1,A2)",
         "COVARIANCE.S(B1:B3,B1:B3)",
@@ -134,13 +138,11 @@ fn sample_covariance_pair_counts_filtering_and_errors() {
         value("COVARIANCE.S(A1:B4,A1:B4)", true),
         CellValue::Error(CellError::NA)
     );
-    assert_eq!(
-        value("COVARIANCE.S(A1,A2)", false),
-        CellValue::Error(CellError::NA)
-    );
 }
 #[test]
 fn rank_reuses_equal_rank_nonzero_order_ties_absence_and_errors() {
+    // Any nonzero order ranks ascending; 4 is tied at position two in {1,4,4,9}.
+    // https://support.microsoft.com/en-us/excel/functions/rank-eq-function
     for mode in ["-1", "0.1", "-0.1", "2", "B2"] {
         assert_eq!(
             value(&format!("RANK(4,A1:A4,{mode})"), true),
@@ -160,14 +162,9 @@ fn rank_reuses_equal_rank_nonzero_order_ties_absence_and_errors() {
         value("RANK(4,A1:A4,B4)", true),
         CellValue::Error(CellError::NA)
     );
-    assert_eq!(
-        value("RANK(4,A1:A4,-1)", false),
-        CellValue::Error(CellError::Num)
-    );
-    assert_eq!(value("RANK(7,A1:A4,1)", false), CellValue::Number(4.));
 }
 #[test]
-fn roman_boolean_sources_and_numeric_styles_preserve_pinned_contract() {
+fn roman_boolean_sources_and_numeric_styles_follow_documented_forms() {
     for f in ["ROMAN(499,FALSE)", "ROMAN(499,B1)", "ROMAN(499,4)"] {
         assert_eq!(value(f, true), CellValue::Text("ID".into()));
     }
@@ -180,25 +177,16 @@ fn roman_boolean_sources_and_numeric_styles_preserve_pinned_contract() {
             CellValue::Text(text.into())
         );
     }
-    for excel in [true, false] {
-        assert_eq!(value("ROMAN(0,B4)", excel), CellValue::Text("".into()));
-        assert_eq!(
-            value("ROMAN(4000,0)", excel),
-            CellValue::Error(CellError::Value)
-        );
-        assert_eq!(
-            value("ROMAN(499,B4)", excel),
-            CellValue::Error(CellError::Num)
-        );
+    assert_eq!(value("ROMAN(0,0)", true), CellValue::Text("".into()));
+    assert_eq!(
+        value("ROMAN(4000,0)", true),
+        CellValue::Error(CellError::Value)
+    );
+    // Independently authored probes corroborated in LibreOffice 26.2.6.3;
+    // native Excel error-priority behavior has not been independently verified.
+    for formula in ["ROMAN(0,B4)", "ROMAN(499,B4)"] {
+        assert_eq!(value(formula, true), CellValue::Error(CellError::NA));
     }
-    assert_eq!(
-        value("ROMAN(499,FALSE)", false),
-        CellValue::Text("CDXCIX".into())
-    );
-    assert_eq!(
-        value("ROMAN(499,TRUE)", false),
-        CellValue::Text("LDVLIV".into())
-    );
 }
 #[test]
 fn operational_faults_survive_excel_profile_adapters() {

@@ -120,51 +120,8 @@ fn errors_and_invalid_arity_preserve_semantic_order() {
     ] {
         assert_eq!(value(formula, &excel()), expected, "{formula}");
     }
-    // Only DELTA's optional second operand receives the documented zero default.
-    for (formula, config) in [
-        ("DELTA(,0)", excel()),
-        (
-            "DELTA(0,)",
-            RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
-        ),
-    ] {
-        assert!(matches!(
-            run(formula, &config, EvaluationBudgets::default()),
-            EvaluationOutcome::Aborted {
-                failure: EvaluationFailure::UnsupportedCapability { .. },
-                ..
-            }
-        ));
-    }
-}
-
-#[test]
-fn pinned_defaults_keep_text_results_arity_and_permissive_digits() {
-    use CellValue::{Error, Number, Text};
-    let pinned = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
-    for (formula, expected) in [
-        (r#"CODE("A")"#, Text("65".into())),
-        ("IMREAL(A2)", Text("-2".into())),
-        ("IMAGINARY(A2)", Text("3".into())),
-        ("DELTA(0)", Error(CellError::Value)),
-        ("BIN2DEC(A3)", Number(2.)),
-        (r#"BIN2DEC("１２")"#, Number(4.)),
-    ] {
-        assert_eq!(value(formula, &pinned), expected, "{formula}");
-    }
-    let poi_text = pinned.with_text_policy(TextSemanticsPolicy {
-        source: TextSourceVersion::Poi7321209OpenJdk21Unicode15,
-    });
-    assert_eq!(value(r#"CODE("A")"#, &poi_text), Text("65".into()));
-    assert_eq!(
-        poirot_eval::registry::resolve_function(&poirot_parsing::formula::FunctionName::from(
-            "DELTA"
-        ))
-        .unwrap()
-        .arity
-        .minimum,
-        2
-    );
+    // The optional second operand defaults to zero; no legacy missing-argument capability remains.
+    assert_eq!(value("DELTA(0,)", &excel()), CellValue::Number(1.));
 }
 
 #[test]

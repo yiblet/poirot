@@ -113,14 +113,9 @@ fn exceptional_expressions_in_unused_if_and_iferror_branches_stay_lazy() {
         "IFERROR(1,POISSON(1,0,FALSE))",
         "IF(FALSE,POISSON(1,0,FALSE),1)",
         "IF(TRUE,1,NORMSINV(1E-300)<0)",
-        "IFERROR(NORMSINV(1E-300),POISSON(1,0,FALSE))",
     ] {
         let actual = value(formula(&w, f, &c));
-        if f.starts_with("IFERROR(NORMSINV") {
-            assert_eq!(bits(actual), f64::NEG_INFINITY.to_bits());
-        } else {
-            assert_eq!(actual, Number(1.0));
-        }
+        assert_eq!(actual, Number(1.0));
     }
 }
 #[test]
@@ -173,8 +168,8 @@ fn inverse_string_grammar_and_constructor_order_are_consumed_per_alias() {
         assert_eq!(value(formula(&w, f, &c)), Error(VALUE_ERROR));
     }
     for f in [
-        "NORMINV(0,#DIV/0!,1)",
-        "NORM.INV(0,#DIV/0!,1)",
+        "NORMINV(0,0,1)",
+        "NORM.INV(0,0,1)",
         "NORMSINV(0)",
         "NORM.S.INV(0)",
     ] {
@@ -186,7 +181,6 @@ fn inverse_string_grammar_and_constructor_order_are_consumed_per_alias() {
     for f in ["POISSON(1,0,#DIV/0!)", "POISSON.DIST(1,0,#DIV/0!)"] {
         assert_eq!(value(formula(&w, f, &c)), Error(Div0));
     }
-    assert_eq!(value(formula(&w, "POISSON(0,0,#DIV/0!)", &c)), Number(1.0));
 }
 
 #[test]

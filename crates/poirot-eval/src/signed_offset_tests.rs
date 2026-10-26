@@ -1,3 +1,5 @@
+//! Negative-size OFFSET expectations use checked A2:B3 normalization; native Excel
+//! behavior is unverified. Direct SignedArea tests retain off-grid channel contracts.
 use super::*;
 fn fixture() -> Workbook {
     let mut w = Workbook::new();
@@ -39,31 +41,31 @@ fn formula(w: &Workbook, expression: &str) -> CellValue {
     }
 }
 #[test]
-fn retained_native66_and_logical_signed_shape_are_distinct_from_clipping() {
+fn normalized_negative_offset_has_checked_geometry() {
     let w = fixture();
-    assert_eq!(formula(&w, "SUM(OFFSET(B3,0,0,-2,-2))"), Number(66.));
+    assert_eq!(formula(&w, "SUM(OFFSET(B3,0,0,-2,-2))"), Number(55.));
     for (expression, expected) in [
-        ("ROWS(OFFSET(B3,0,0,-2,-2))", 4.),
-        ("COLUMNS(OFFSET(B3,0,0,-2,-2))", 4.),
-        ("ROW(OFFSET(B3,0,0,-2,-2))", 0.),
-        ("COLUMN(OFFSET(B3,0,0,-2,-2))", -1.),
-        ("COUNTBLANK(OFFSET(B3,0,0,-2,-2))", 10.),
-        ("SUM(OFFSET(OFFSET(B3,0,0,-2,-2),2,2,2,2))", 55.),
-        ("ROWS(OFFSET(OFFSET(B3,0,0,-2,-2),2,2))", 4.),
+        ("ROWS(OFFSET(B3,0,0,-2,-2))", 2.),
+        ("COLUMNS(OFFSET(B3,0,0,-2,-2))", 2.),
+        ("ROW(OFFSET(B3,0,0,-2,-2))", 2.),
+        ("COLUMN(OFFSET(B3,0,0,-2,-2))", 1.),
+        ("COUNTBLANK(OFFSET(B3,0,0,-2,-2))", 0.),
+        ("SUM(OFFSET(OFFSET(B3,0,0,-2,-2),2,2,2,2))", 0.),
+        ("ROWS(OFFSET(OFFSET(B3,0,0,-2,-2),2,2))", 2.),
     ] {
         assert_eq!(formula(&w, expression), Number(expected), "{expression}");
     }
 }
 #[test]
-fn signed_index_selection_retains_blank_origin_and_reference_identity() {
+fn normalized_offset_index_retains_reference_identity() {
     let w = fixture();
     for (expression, expected) in [
-        ("SUM(INDEX(OFFSET(B3,0,0,-2,-2),0,3))", 6.),
-        ("SUM(INDEX(OFFSET(B3,0,0,-2,-2),0,1))", 0.),
-        ("ROW(INDEX(OFFSET(B3,0,0,-2,-2),1,1))", 0.),
-        ("COLUMN(INDEX(OFFSET(B3,0,0,-2,-2),1,1))", -1.),
+        ("SUM(INDEX(OFFSET(B3,0,0,-2,-2),0,2))", 50.),
+        ("SUM(INDEX(OFFSET(B3,0,0,-2,-2),0,1))", 5.),
+        ("ROW(INDEX(OFFSET(B3,0,0,-2,-2),1,1))", 2.),
+        ("COLUMN(INDEX(OFFSET(B3,0,0,-2,-2),1,1))", 1.),
         ("SHEET(OFFSET(B3,0,0,-2,-2))", 1.),
-        ("SUM(OFFSET(B3,0,0,-2,-2) A1:B2)", 33.),
+        ("SUM(OFFSET(B3,0,0,-2,-2) A1:B2)", 22.),
     ] {
         assert_eq!(formula(&w, expression), Number(expected), "{expression}");
     }
@@ -71,33 +73,33 @@ fn signed_index_selection_retains_blank_origin_and_reference_identity() {
     assert_eq!(formula(&w, "SUM(OFFSET(A1,0,0,-2,1))"), Error(Ref));
 }
 #[test]
-fn dense_readers_include_out_of_grid_blanks_without_clipped_dimensions() {
+fn normalized_offset_dense_readers_use_checked_dimensions() {
     let w = fixture();
-    // SUMPRODUCT requests a dense shape while MATCH reads a logical signed vector.
+    // SUMPRODUCT and MATCH consume the normalized two-row B2:B3 reference.
     assert_eq!(
-        formula(&w, "SUMPRODUCT(OFFSET(B3,0,0,-2,1),{1;1;1;1})"),
-        Number(60.)
+        formula(&w, "SUMPRODUCT(OFFSET(B3,0,0,-2,1),{1;1})"),
+        Number(50.)
     );
-    assert_eq!(formula(&w, "MATCH(20,OFFSET(B3,0,0,-2,1),0)"), Number(3.));
+    assert_eq!(formula(&w, "MATCH(20,OFFSET(B3,0,0,-2,1),0)"), Number(1.));
     assert_eq!(formula(&w, "SUM(OFFSET(B3,0,0,1,-2))"), Number(33.));
 }
 #[test]
-fn signed_sparse_projection_reads_current_cells_and_excludes_unrelated_regions() {
+fn normalized_offset_sparse_projection_tracks_selected_rectangle() {
     let mut w = fixture();
-    assert_eq!(formula(&w, "SUM(OFFSET(B3,0,0,-2,-2))"), Number(66.));
+    assert_eq!(formula(&w, "SUM(OFFSET(B3,0,0,-2,-2))"), Number(55.));
     w.sheet_mut(0)
         .unwrap()
         .set_value("A2".parse().unwrap(), 200.)
         .unwrap();
-    assert_eq!(formula(&w, "SUM(OFFSET(B3,0,0,-2,-2))"), Number(264.));
+    assert_eq!(formula(&w, "SUM(OFFSET(B3,0,0,-2,-2))"), Number(253.));
     w.sheet_mut(0)
         .unwrap()
         .set_value("C2".parse().unwrap(), 9999.)
         .unwrap();
-    assert_eq!(formula(&w, "SUM(OFFSET(B3,0,0,-2,-2))"), Number(264.));
+    assert_eq!(formula(&w, "SUM(OFFSET(B3,0,0,-2,-2))"), Number(253.));
 }
 #[test]
-fn ordinary_reference_representation_stays_unsigned_and_signed_reads_are_lazy() {
+fn normalized_offset_representation_stays_unsigned_and_reads_are_lazy() {
     let w = fixture();
     let mut session = Session::with_context(&w, EvaluationInputs::default());
     session.array_result_policy = ArrayResultPolicy::ScalarIntersection;
@@ -108,15 +110,15 @@ fn ordinary_reference_representation_stays_unsigned_and_signed_reads_are_lazy() 
     .unwrap();
     assert!(
         matches!(session.expr(0, at, &plan.expression()).unwrap(), Value::Refs(areas)
-        if areas.len() == 1 && (areas[0].r0, areas[0].r1, areas[0].c0, areas[0].c1) == (2,5,5,7))
+        if areas.len() == 1 && (areas[0].r0, areas[0].r1, areas[0].c0, areas[0].c1) == (4,5,5,7))
     );
     let plan = bound::FormulaPlan::bind(
         &poirot_parsing::formula::parse_formula("OFFSET(B3,0,0,-2,-2)").unwrap(),
     )
     .unwrap();
     assert!(
-        matches!(session.expr(0, at, &plan.expression()).unwrap(), Value::SignedRefs(areas)
-        if areas.len() == 1 && (areas[0].r0, areas[0].r1, areas[0].c0, areas[0].c1) == (-1,2,-2,1))
+        matches!(session.expr(0, at, &plan.expression()).unwrap(), Value::Refs(areas)
+        if areas.len() == 1 && (areas[0].r0, areas[0].r1, areas[0].c0, areas[0].c1) == (1,2,0,1))
     );
 }
 
@@ -139,29 +141,32 @@ fn formula_at(w: &Workbook, expression: &str, address: &str, sheet: usize) -> Ce
     }
 }
 #[test]
-fn signed_contained_rectangle_preserves_blank_until_numeric_operators() {
+fn normalized_offset_uses_ordinary_scalar_intersection() {
     let w = fixture();
-    assert_eq!(formula_at(&w, "OFFSET(B3,0,0,-2,-2)", "A2", 0), Number(2.));
+    assert_eq!(
+        formula_at(&w, "OFFSET(B3,0,0,-2,-2)", "A2", 0),
+        Error(VALUE_ERROR)
+    );
     assert_eq!(
         formula_at(&w, "OFFSET(B3,0,0,-2,-2)+1", "A2", 0),
-        Number(3.)
+        Error(VALUE_ERROR)
     );
     assert_eq!(
         formula_at(&w, "OFFSET(B3,0,0,-2,-2)", "C2", 0),
         Error(VALUE_ERROR)
     );
-    // A logical selected reference wholly outside the grid remains a referenced blank.
-    assert_eq!(formula(&w, "INDEX(OFFSET(B3,0,0,-2,-2),1,1)"), Blank);
+    // The normalized top-left is the ordinary referenced A2 value.
+    assert_eq!(formula(&w, "INDEX(OFFSET(B3,0,0,-2,-2),1,1)"), Number(2.));
 }
 #[test]
-fn indirect_transports_signed_workbook_and_sheet_scoped_named_references() {
+fn indirect_transports_normalized_offset_named_references() {
     let mut w = fixture();
     w.define_name("SignedGlobal", "OFFSET(Sheet1!B3,0,0,-2,-2)", None)
         .unwrap();
     w.define_name("SignedLocal", "OFFSET(B3,0,0,-2,-2)", Some(0))
         .unwrap();
     for name in ["SignedGlobal", "Sheet1!SignedLocal"] {
-        for (consumer, expected) in [("SUM", 66.), ("ROWS", 4.), ("COUNTBLANK", 10.)] {
+        for (consumer, expected) in [("SUM", 55.), ("ROWS", 2.), ("COUNTBLANK", 0.)] {
             assert_eq!(
                 formula_at(&w, &format!("{consumer}(INDIRECT(\"{name}\"))"), "P1", 1),
                 Number(expected)
@@ -169,16 +174,16 @@ fn indirect_transports_signed_workbook_and_sheet_scoped_named_references() {
         }
         assert_eq!(
             formula(&w, &format!("COLUMN(INDEX(INDIRECT(\"{name}\"),1,1))")),
-            Number(-1.)
+            Number(1.)
         );
         assert_eq!(
             formula(&w, &format!("SUM(OFFSET(INDIRECT(\"{name}\"),2,2,2,2))")),
-            Number(55.)
+            Number(0.)
         );
     }
 }
 #[test]
-fn signed_countblank_padding_classification_and_union_refusal() {
+fn normalized_offset_countblank_classification_and_union_counting() {
     let mut w = fixture();
     w.sheet_mut(0)
         .unwrap()
@@ -200,21 +205,21 @@ fn signed_countblank_padding_classification_and_union_refusal() {
         .unwrap()
         .set_value("A3".parse().unwrap(), true)
         .unwrap();
-    assert_eq!(formula(&w, "COUNTBLANK(OFFSET(B3,0,0,-2,-2))"), Number(13.));
+    assert_eq!(formula(&w, "COUNTBLANK(OFFSET(B3,0,0,-2,-2))"), Number(1.));
     assert_eq!(
         formula(
             &w,
             "COUNTBLANK((OFFSET(B3,0,0,-2,-2),OFFSET(B3,0,0,-2,-2)))"
         ),
-        Error(VALUE_ERROR)
+        Number(2.)
     );
     assert_eq!(
         formula(&w, "COUNTBLANK(INDEX(OFFSET(B3,0,0,-2,-2),0,1))"),
-        Number(4.)
+        Number(1.)
     );
     assert_eq!(
         formula(&w, "COUNTBLANK((OFFSET(B3,0,0,-2,-2),A1:B1))"),
-        Error(VALUE_ERROR)
+        Number(3.)
     );
 }
 #[derive(Default)]
@@ -250,7 +255,7 @@ fn traced_formula(
     (value, reads.0)
 }
 #[test]
-fn signed_sparse_dependencies_and_overlays_use_only_physical_intersection() {
+fn normalized_offset_sparse_dependencies_and_overlays_use_selected_rectangle() {
     let mut w = fixture();
     w.sheet_mut(0).unwrap().remove("A2".parse().unwrap());
     let inputs = run_overlay::RunInputs::new(
@@ -268,8 +273,8 @@ fn signed_sparse_dependencies_and_overlays_use_only_physical_intersection() {
         ..EvaluationBudgets::default()
     };
     for (expression, expected) in [
-        ("SUM(OFFSET(B3,0,0,-2,-2))", 264.),
-        ("COUNTBLANK(OFFSET(B3,0,0,-2,-2))", 10.),
+        ("SUM(OFFSET(B3,0,0,-2,-2))", 253.),
+        ("COUNTBLANK(OFFSET(B3,0,0,-2,-2))", 0.),
     ] {
         let (value, reads) = traced_formula(&w, expression, Some(&inputs), budgets);
         assert_eq!(value, Number(expected));
@@ -282,7 +287,7 @@ fn signed_sparse_dependencies_and_overlays_use_only_physical_intersection() {
                 _ => None,
             })
             .collect();
-        assert_eq!(ranges, [(0, "A1".parse().unwrap(), "B3".parse().unwrap())]);
+        assert_eq!(ranges, [(0, "A2".parse().unwrap(), "B3".parse().unwrap())]);
         let cells: Vec<_> = reads
             .iter()
             .filter_map(|read| match read {
@@ -290,10 +295,7 @@ fn signed_sparse_dependencies_and_overlays_use_only_physical_intersection() {
                 _ => None,
             })
             .collect();
-        assert_eq!(
-            cells,
-            ["A1", "B1", "A2", "B2", "A3", "B3"].map(|a| a.parse().unwrap())
-        );
+        assert_eq!(cells, ["A2", "B2", "A3", "B3"].map(|a| a.parse().unwrap()));
     }
     let unrelated = run_overlay::RunInputs::new(
         &w,
@@ -304,7 +306,7 @@ fn signed_sparse_dependencies_and_overlays_use_only_physical_intersection() {
     .unwrap();
     assert_eq!(
         traced_formula(&w, "SUM(OFFSET(B3,0,0,-2,-2))", Some(&unrelated), budgets).0,
-        Number(64.)
+        Number(53.)
     );
     assert_eq!(
         traced_formula(
@@ -314,11 +316,11 @@ fn signed_sparse_dependencies_and_overlays_use_only_physical_intersection() {
             budgets
         )
         .0,
-        Number(11.)
+        Number(1.)
     );
 }
 #[test]
-fn signed_sparse_cached_membership_insert_remove_and_unrelated_edit() {
+fn normalized_offset_sparse_membership_insert_remove_and_unrelated_edit() {
     use crate::overlay::{EvaluationContext, Overlay};
     let mut w = fixture();
     w.sheet_mut(0).unwrap().remove("A2".parse().unwrap());
@@ -351,7 +353,7 @@ fn signed_sparse_cached_membership_insert_remove_and_unrelated_edit() {
     assert_eq!(evaluation.usage().formula_executions, 2);
     drop(evaluation);
     let input = overlay.target("Sheet1!A2").unwrap();
-    for (insert, expected) in [(true, [264., 10.]), (false, [64., 11.])] {
+    for (insert, expected) in [(true, [253., 0.]), (false, [53., 1.])] {
         if insert {
             overlay.set_value(input, 200.).unwrap();
         } else {
@@ -407,50 +409,66 @@ fn unsigned_sparse_fastpath_preserves_layout_and_small_materialization_budget() 
     assert_eq!(cells, ["A1".parse().unwrap()]);
 }
 #[test]
-fn signed_host_padding_origin_shape_and_relative_resize_are_preserved() {
-    use crate::host::{CallHost, OperandKind, OperandOrigin};
+fn direct_signed_padding_sparse_dense_origin_and_relative_resize_are_preserved() {
+    use signed_reference::{GridRead, SignedArea};
     let w = fixture();
-    let arguments = [bound::bind(
-        &poirot_parsing::formula::parse_formula("OFFSET(B3,0,0,-2,-2)").unwrap(),
-    )];
+    let area = SignedArea::new(AreaKind::Area, 0, (-1, 2), (-2, 1)).unwrap();
     let mut session = Session::with_context(&w, EvaluationInputs::default());
-    session.array_result_policy = ArrayResultPolicy::ScalarIntersection;
-    let mut host = CallHost::new(&mut session, 0, "P1".parse().unwrap(), &arguments);
-    let description = host.describe(0).unwrap();
+    let matrix = session
+        .matrix(Value::SignedRefs(vec![area]))
+        .unwrap()
+        .unwrap();
+    assert_eq!((matrix.len(), matrix[0].len()), (4, 4));
+    assert_eq!(matrix.iter().flatten().filter(|v| **v == Blank).count(), 10);
+    assert_eq!(matrix[1][2], Number(1.));
+    assert_eq!(matrix[3][3], Number(30.));
     assert_eq!(
-        (description.rows, description.columns, description.sheets),
-        (4, 4, 1)
+        area.relative(2, 4),
+        Some(GridRead::Cell {
+            sheet: 0,
+            address: "C2".parse().unwrap()
+        })
     );
-    assert_eq!(description.kind, OperandKind::Reference);
-    assert!(description.is_area);
-    assert_eq!(host.operand_anchor(0).unwrap(), None);
-    for (row, col, expected) in [
-        (0, 3, Blank),
-        (1, 0, Blank),
-        (1, 2, Number(1.)),
-        (3, 3, Number(30.)),
-    ] {
-        let scalar = host.read_cell(0, row, col).unwrap();
-        assert_eq!(scalar.value, expected);
-        assert_eq!(scalar.origin, OperandOrigin::ReferencedCell);
-        assert!(!scalar.missing);
-    }
-    let scalar = host.read_relative_cell(0, 2, 4).unwrap();
-    assert_eq!(scalar.value, Number(300.));
-    assert_eq!(scalar.origin, OperandOrigin::ReferencedCell);
-    assert_eq!(host.collection_len(0).unwrap(), 16);
-    assert_eq!(host.collection_cell(0, 6).unwrap().value, Number(1.));
-    assert_eq!(host.collection_cell(0, 15).unwrap().value, Number(30.));
+    assert_eq!(
+        session
+            .select_legacy_scalar("A2".parse().unwrap(), Value::SignedRefs(vec![area]))
+            .unwrap(),
+        Number(2.)
+    );
+    assert_eq!(
+        session
+            .select_legacy_scalar(
+                "P1".parse().unwrap(),
+                Value::SignedRefs(vec![area.select(1, 1)])
+            )
+            .unwrap(),
+        Blank
+    );
+    let members = session
+        .fold_items(
+            crate::host::HostOperand::from_value(Value::SignedRefs(vec![area])),
+            Vec::new(),
+            |members, count| members.try_reserve_exact(count),
+            |members, scalar| {
+                members.push(scalar);
+                Ok(())
+            },
+        )
+        .unwrap();
+    assert_eq!(members.len(), 6);
+    assert!(members.iter().all(|member| member.origin
+        == crate::host::OperandOrigin::ReferencedCell
+        && !member.missing));
 }
 #[test]
-fn signed_logical_algebra_retains_padding_union_and_range_geometry() {
+fn normalized_offset_algebra_retains_union_and_range_geometry() {
     let w = fixture();
     for (expression, expected) in [
-        ("SUM(OFFSET(B3,0,0,-2,-2),A1:B2)", 99.),
+        ("SUM(OFFSET(B3,0,0,-2,-2),A1:B2)", 88.),
         ("AREAS((OFFSET(B3,0,0,-2,-2),A1:B2))", 2.),
         (
             "COUNTBLANK(INDEX(OFFSET(B3,0,0,-2,-2),0,1) INDEX(OFFSET(B3,0,0,-2,-2),1,0))",
-            1.,
+            0.,
         ),
     ] {
         assert_eq!(formula(&w, expression), Number(expected), "{expression}");
@@ -470,9 +488,8 @@ fn signed_logical_algebra_retains_padding_union_and_range_geometry() {
     let range = session
         .references(BinaryOp::Range, signed, ordinary)
         .unwrap();
-    assert!(matches!(range, Value::SignedRefs(areas)
-        if areas.len() == 1 && (areas[0].r0, areas[0].r1, areas[0].c0, areas[0].c1) == (-1,3,-2,2)
-        && (areas[0].height(), areas[0].width()) == (5,5)));
+    assert!(matches!(range, Value::Refs(areas)
+        if areas.len() == 1 && (areas[0].r0, areas[0].r1, areas[0].c0, areas[0].c1) == (1,3,0,2)));
     let signed = read(&mut session, "OFFSET(B3,0,0,-2,-2)");
     let other = read(&mut session, "Other!A1");
     assert!(matches!(
@@ -481,37 +498,23 @@ fn signed_logical_algebra_retains_padding_union_and_range_geometry() {
     ));
 }
 #[test]
-fn signed_sum_union_source_throw_is_operational_and_bypasses_masks() {
+fn normalized_offset_union_consumes_ordinary_references_without_signed_source_exception() {
     let w = fixture();
-    let at = "P1".parse().unwrap();
     for expression in [
         "SUM((OFFSET(B3,0,0,-2,-2),A1:B2))",
         "IFERROR(SUM((OFFSET(B3,0,0,-2,-2),A1:B2)),42)",
         "IFNA(SUM((OFFSET(B3,0,0,-2,-2),A1:B2)),42)",
-        "ISERROR(SUM((OFFSET(B3,0,0,-2,-2),A1:B2)))",
         "IF(TRUE,SUM((OFFSET(B3,0,0,-2,-2),A1:B2)),42)",
     ] {
-        let plan =
-            bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(expression).unwrap())
-                .unwrap();
-        assert!(
-            matches!(run_plan(&w, 0, at, &plan, EvaluationInputs::default(), EvaluationBudgets::default()),
-            EvaluationOutcome::Aborted { failure: EvaluationFailure::KnownSourceException {
-                exception: KnownSourceException::AggregateReferenceListConversion,
-                source: Some(EvaluationTarget { sheet: 0, address }),
-            }, .. } if address == at),
-            "{expression}"
-        );
+        assert_eq!(formula(&w, expression), Number(88.), "{expression}");
     }
+    assert_eq!(
+        formula(&w, "ISERROR(SUM((OFFSET(B3,0,0,-2,-2),A1:B2)))"),
+        Boolean(false)
+    );
     assert_eq!(
         formula(&w, "IF(FALSE,SUM((OFFSET(B3,0,0,-2,-2),A1:B2)),42)"),
         Number(42.)
-    );
-    assert_eq!(formula(&w, "SUM(OFFSET(B3,0,0,-2,-2))"), Number(66.));
-    assert_eq!(formula(&w, "SUM(OFFSET(B3,0,0,-2,-2),A1:B2)"), Number(99.));
-    assert_eq!(
-        formula(&w, "AREAS((OFFSET(B3,0,0,-2,-2),A1:B2))"),
-        Number(2.)
     );
     assert_eq!(
         formula(&w, "SUM(1/0,(OFFSET(B3,0,0,-2,-2),A1:B2))"),
@@ -519,31 +522,33 @@ fn signed_sum_union_source_throw_is_operational_and_bypasses_masks() {
     );
 }
 #[test]
-fn signed_sum_union_throw_precedes_physical_area_reads() {
-    let mut w = fixture();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_formula("A1".parse().unwrap(), "UNKNOWN_FUNCTION()")
-        .unwrap();
-    let mut reads = SignedReads::default();
+fn direct_signed_range_algebra_retains_padding_and_sheet_guards() {
+    let w = fixture();
+    let source = || {
+        Value::SignedRefs(vec![
+            signed_reference::SignedArea::new(AreaKind::Area, 0, (-1, 2), (-2, 1)).unwrap(),
+        ])
+    };
     let mut session = Session::with_context(&w, EvaluationInputs::default());
-    session.array_result_policy = ArrayResultPolicy::ScalarIntersection;
-    session.dependency_sink = Some(&mut reads);
-    let expression = bound::bind(
-        &poirot_parsing::formula::parse_formula("SUM((OFFSET(B3,0,0,-2,-2),A1:B2))").unwrap(),
+    let endpoint = |sheet| {
+        Value::Refs(ReferenceAreas::One(Area {
+            kind: AreaKind::Cell,
+            sheet,
+            r0: 3,
+            r1: 3,
+            c0: 2,
+            c1: 2,
+        }))
+    };
+    assert!(
+        matches!(session.references(BinaryOp::Range, source(), endpoint(0)).unwrap(), Value::SignedRefs(areas) if areas.len()==1 && (areas[0].r0,areas[0].r1,areas[0].c0,areas[0].c1)==(-1,3,-2,2))
     );
     assert!(matches!(
-        session.expr(0, "P1".parse().unwrap(), &expression),
-        Err(EvaluationFailure::KnownSourceException {
-            exception: KnownSourceException::AggregateReferenceListConversion,
-            ..
-        })
+        session
+            .references(BinaryOp::Range, source(), endpoint(1))
+            .unwrap(),
+        Value::Scalar(Error(Ref))
     ));
-    drop(session);
-    assert!(!reads.0.iter().any(|read| matches!(
-        read,
-        DependencyRead::Cell(_) | DependencyRead::SparseMembership { .. }
-    )));
 }
 
 #[test]

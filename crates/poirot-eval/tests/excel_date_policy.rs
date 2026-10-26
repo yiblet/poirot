@@ -52,30 +52,59 @@ fn book(system: DateSystem) -> Workbook {
     w
 }
 #[test]
-fn date_serial_overflow_and_errors_preserve_pinned_contract() {
+fn date_host_preserves_text_epoch_and_operational_failure_boundaries() {
+    // Excel's 1904 epoch is 1,462 days after the 1900 epoch; noon is half a day.
+    for (system, serial) in [
+        (DateSystem::Excel1900, 45352.),
+        (DateSystem::Excel1904, 43890.),
+    ] {
+        let w = book(system);
+        assert_eq!(
+            value(&w, "DATEVALUE(\"2024-03-01\")", true),
+            CellValue::Number(serial)
+        );
+        assert_eq!(
+            value(&w, "TIMEVALUE(\"12:00 PM\")", true),
+            CellValue::Number(0.5)
+        );
+        assert_eq!(
+            value(&w, "IFERROR(TIMEVALUE(\"invalid\"),7)", true),
+            CellValue::Number(7.)
+        );
+        assert!(matches!(
+            run(
+                &w,
+                "IFERROR(TIMEVALUE(\"12:00 PM\"),7)",
+                true,
+                EvaluationBudgets {
+                    text_bytes: 2,
+                    ..Default::default()
+                }
+            ),
+            EvaluationOutcome::Aborted { .. }
+        ));
+    }
+}
+#[test]
+fn date_serial_overflow_and_errors_follow_excel_calendar() {
     let w = book(DateSystem::Excel1900);
-    for (formula, excel, pinned) in [
-        ("DATE(1900,1,0)", 0., 0.),
-        ("DATE(1900,1,60)", 60., 59.),
-        ("DATE(1900,2,29)", 60., 60.),
-        ("DATE(1900,3,0)", 60., 59.),
-        ("DATE(0,3,0)", 60., 59.),
-        ("DATE(A1,A2,A3)", 60., 59.),
-        ("DATE(1900,3,-1)", 59., 59.),
-        ("DATE(1900,2,30)", 61., 61.),
-        ("DATE(1900,0,32)", 1., 1.),
-        ("DATE(1900,0.9,32)", 1., 32.),
-        ("DATE(2024,14,0)", 45688., 45688.),
-        ("DATE(9999,12,31)", 2958465., 2958465.),
+    for (formula, expected) in [
+        ("DATE(1900,1,0)", 0.),
+        ("DATE(1900,1,60)", 60.),
+        ("DATE(1900,2,29)", 60.),
+        ("DATE(1900,3,0)", 60.),
+        ("DATE(0,3,0)", 60.),
+        ("DATE(A1,A2,A3)", 60.),
+        ("DATE(1900,3,-1)", 59.),
+        ("DATE(1900,2,30)", 61.),
+        ("DATE(1900,0,32)", 1.),
+        ("DATE(1900,0.9,32)", 1.),
+        ("DATE(2024,14,0)", 45688.),
+        ("DATE(9999,12,31)", 2958465.),
     ] {
         assert_eq!(
             value(&w, formula, true),
-            CellValue::Number(excel),
-            "{formula}"
-        );
-        assert_eq!(
-            value(&w, formula, false),
-            CellValue::Number(pinned),
+            CellValue::Number(expected),
             "{formula}"
         );
     }
@@ -91,10 +120,6 @@ fn date_serial_overflow_and_errors_preserve_pinned_contract() {
             "{formula}"
         );
     }
-    assert_eq!(
-        value(&w, "DATE(-1,1,1)", false),
-        CellValue::Error(CellError::Value)
-    );
     for (formula, error) in [
         ("DATE(#REF!,1,1)", CellError::Ref),
         ("DATE(2024,1/0,1)", CellError::Div0),
@@ -167,12 +192,6 @@ fn days_serial_subtraction_and_workday_signed_truncation() {
         }
     }
     let w = book(DateSystem::Excel1900);
-    assert_eq!(value(&w, "DAYS(A7,A8)", false), CellValue::Number(2.));
-    assert_eq!(value(&w, "DAYS(61,60)", false), CellValue::Number(0.));
-    assert_eq!(
-        value(&w, "WORKDAY(A5,-1.9)", false),
-        CellValue::Number(45350.)
-    );
     assert_eq!(
         value(&w, "WORKDAY(A4,-1.9,A5:A6)", true),
         CellValue::Number(45350.)
@@ -211,16 +230,12 @@ fn iso_week_rolls_into_both_neighboring_years_in_both_epochs() {
             );
         }
         assert_eq!(
-            value(&w, "WEEKNUM(DATE(2021,1,1),21)", false),
-            CellValue::Number(0.)
-        );
-        assert_eq!(
             value(&w, "WEEKNUM(1,18)", true),
             CellValue::Error(CellError::Num)
         );
         assert_eq!(
             value(&w, "WEEKNUM(1,#REF!)", true),
-            CellValue::Error(CellError::Num)
+            CellValue::Error(CellError::Ref)
         );
     }
 }
@@ -243,16 +258,12 @@ fn excel_serial_weekdays_and_iso_week_years_are_explicit() {
         (16, [2, 3, 4, 5, 6, 7, 1]),
         (17, [1, 2, 3, 4, 5, 6, 7]),
     ];
-    for (system, excel_days, pinned_days) in [
-        (DateSystem::Excel1900, [7, 1, 3, 4, 5], [1, 2, 4, 5, 5]),
-        (DateSystem::Excel1904, [6, 7, 2, 3, 4], [6, 7, 2, 3, 4]),
+    for (system, excel_days) in [
+        (DateSystem::Excel1900, [7, 1, 3, 4, 5]),
+        (DateSystem::Excel1904, [6, 7, 2, 3, 4]),
     ] {
         let w = book(system);
-        for ((serial, excel_day), pinned_day) in [0, 1, 59, 60, 61]
-            .into_iter()
-            .zip(excel_days)
-            .zip(pinned_days)
-        {
+        for (serial, excel_day) in [0, 1, 59, 60, 61].into_iter().zip(excel_days) {
             for (mode, outputs) in modes {
                 // Also exercise fractional serial truncation, preserving the day.
                 for suffix in ["", ".99"] {
@@ -261,11 +272,6 @@ fn excel_serial_weekdays_and_iso_week_years_are_explicit() {
                         value(&w, &formula, true),
                         CellValue::Number(outputs[excel_day - 1] as f64),
                         "{system:?}: {formula}"
-                    );
-                    assert_eq!(
-                        value(&w, &formula, false),
-                        CellValue::Number(outputs[pinned_day - 1] as f64),
-                        "pinned {system:?}: {formula}"
                     );
                 }
             }
@@ -333,7 +339,7 @@ fn iso_boundaries_cover_every_leap_and_january_weekday_family() {
 }
 
 #[test]
-fn system_one_week_modes_keep_calendar_year_and_business_days_keep_pinned_calendar() {
+fn system_one_week_modes_keep_calendar_year() {
     // System 1 numbers the week containing Jan 1 as week 1 and stays in that
     // calendar year; every weekday origin is documented by Microsoft. Calc
     // 26.2.6.3 instead rolls most of these Dec 31 modes to 1, so its result
@@ -345,35 +351,14 @@ fn system_one_week_modes_keep_calendar_year_and_business_days_keep_pinned_calend
         for mode in [1, 2, 11, 12, 13, 14, 15, 16, 17] {
             let expected = if mode == 14 { 54. } else { 53. };
             let formula = format!("WEEKNUM(DATE(2020,12,31),{mode})");
-            for excel in [true, false] {
-                assert_eq!(value(&w, &formula, excel), CellValue::Number(expected));
-                let formula = format!("WEEKNUM(DATE(2021,1,1),{mode})");
-                assert_eq!(value(&w, &formula, excel), CellValue::Number(1.));
-            }
+            assert_eq!(value(&w, &formula, true), CellValue::Number(expected));
+            let formula = format!("WEEKNUM(DATE(2021,1,1),{mode})");
+            assert_eq!(value(&w, &formula, true), CellValue::Number(1.));
         }
         assert_eq!(
             value(&w, "WEEKNUM(1,3)", true),
             CellValue::Error(CellError::Num)
         );
-    }
-    // These are POI's Gregorian business-day calculations, explicitly retained
-    // by the pinned policy.
-    // Jan 1, 1900 is Monday in this calendar, and Mar 1 follows Feb 28.
-    let w = book(DateSystem::Excel1900);
-    for excel in [false] {
-        for (formula, expected) in [
-            ("NETWORKDAYS(1,1)", 1.),
-            ("NETWORKDAYS(59,61)", 3.),
-            ("WORKDAY(0,1)", 1.),
-            ("WORKDAY(59,1)", 61.),
-            ("WORKDAY(60,1)", 62.),
-        ] {
-            assert_eq!(
-                value(&w, formula, excel),
-                CellValue::Number(expected),
-                "{formula}"
-            );
-        }
     }
 }
 
@@ -415,13 +400,6 @@ fn early_week_modes_preserve_the_existing_civil_calendar_contract() {
                     CellValue::Number(week as f64),
                     "{system:?}: {formula}"
                 );
-                if mode != 21 {
-                    assert_eq!(
-                        value(&w, &formula, false),
-                        CellValue::Number(week as f64),
-                        "pinned {system:?}: {formula}"
-                    );
-                }
             }
         }
     }
@@ -431,7 +409,7 @@ fn early_week_modes_preserve_the_existing_civil_calendar_contract() {
 fn date_argument_requests_preserve_context_and_error_precedence() {
     // ClosedXML's pinned date-function assertions and fresh Calc OOXML probes
     // independently establish these admission results. Modern numeric arguments
-    // share their calendar continuation; pinned source contracts remain explicit.
+    // share their numeric and calendar continuation.
     let mut w = book(DateSystem::Excel1900);
     w.sheet_mut(0)
         .unwrap()
@@ -483,16 +461,6 @@ fn date_argument_requests_preserve_context_and_error_precedence() {
             "{formula}"
         );
     }
-    for formula in ["VALUE(\"1/2/2020\")", "EDATE(\"2008-03-31\",-1)"] {
-        assert_eq!(
-            value(&w, formula, false),
-            CellValue::Error(CellError::Value)
-        );
-    }
-    assert_eq!(
-        value(&w, "WEEKDAY(5,#N/A)", false),
-        CellValue::Error(CellError::Num)
-    );
     let w = book(DateSystem::Excel1904);
     assert_eq!(
         value(&w, "VALUE(\"1/2/2020\")", true),
@@ -704,7 +672,8 @@ fn datedif_preserves_reference_inputs_policies_and_operational_limits() {
             .unwrap()
             .set_value("B3".parse().unwrap(), "md")
             .unwrap();
-        for excel in [false, true] {
+        {
+            let excel = true;
             assert_eq!(
                 value(&w, "DATEDIF(B1,B2,B3)", excel),
                 CellValue::Number(-1.)

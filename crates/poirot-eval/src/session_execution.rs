@@ -10,6 +10,29 @@ pub(super) struct ResolvedSource<'a> {
     pub(super) accepts_spill: bool,
 }
 
+impl<'a> ResolvedSource<'a> {
+    /// Classify incoming ownership from already selected immutable worksheet content.
+    fn new(
+        worksheet: &poirot_model::Worksheet,
+        address: CellAddress,
+        cell: Option<&'a poirot_model::Cell>,
+        policy: ArrayResultPolicy,
+    ) -> Self {
+        Self {
+            cell,
+            accepts_spill: policy == ArrayResultPolicy::DynamicSpill
+                && (cell.is_none_or(|cell| cell.formula.is_none() && cell.value == Blank)
+                    || worksheet.spill_owner(address).is_some()),
+        }
+    }
+}
+
+#[cfg(test)]
+thread_local! {
+    /// Count source resolution attempts independently on each test thread.
+    pub(super) static SOURCE_RESOLUTIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
 impl<'a> Session<'a> {
     /// Compile a reached source using the overlay's shared compiler when available.
     pub(super) fn prepare_source(&self, source: &str) -> std::sync::Arc<PreparedFormula> {
@@ -302,18 +325,38 @@ impl<'a> Session<'a> {
         sheet: usize,
         address: CellAddress,
     ) -> Option<ResolvedSource<'a>> {
+        #[cfg(test)]
+        SOURCE_RESOLUTIONS.with(|count| count.set(count.get().saturating_add(1)));
         if address.validate().is_err() {
             return None;
         }
         let worksheet = self.workbook.sheet(sheet)?;
         let cell =
             run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs).cell(sheet, address);
-        Some(ResolvedSource {
+        Some(ResolvedSource::new(
+            worksheet,
+            address,
             cell,
-            accepts_spill: self.array_result_policy == ArrayResultPolicy::DynamicSpill
-                && (cell.is_none_or(|cell| cell.formula.is_none() && cell.value == Blank)
-                    || worksheet.spill_owner(address).is_some()),
-        })
+            self.array_result_policy,
+        ))
+    }
+    /// Classify a borrowed authored cell using the ordinary saved-spill eligibility rule.
+    pub(super) fn source_from_cell(
+        &self,
+        sheet: usize,
+        address: CellAddress,
+        cell: Option<&'a poirot_model::Cell>,
+    ) -> Option<ResolvedSource<'a>> {
+        if address.validate().is_err() {
+            return None;
+        }
+        let worksheet = self.workbook.sheet(sheet)?;
+        Some(ResolvedSource::new(
+            worksheet,
+            address,
+            cell,
+            self.array_result_policy,
+        ))
     }
     /// Read an encountered range member without memoizing authored nonblank literals.
     /// Observation ports and spill-owned content retain the ordinary cell protocol.
@@ -321,6 +364,16 @@ impl<'a> Session<'a> {
         &mut self,
         sheet: usize,
         address: CellAddress,
+    ) -> EvalResult<CellValue> {
+        let source = self.resolve_source(sheet, address);
+        self.range_cell_from_source(sheet, address, source)
+    }
+    /// Apply the ordinary range read protocol to a source retained by sparse traversal.
+    pub(super) fn range_cell_from_source(
+        &mut self,
+        sheet: usize,
+        address: CellAddress,
+        source: Option<ResolvedSource<'a>>,
     ) -> EvalResult<CellValue> {
         if self.extensions.is_some()
             || self.dependency_sink.is_some()
@@ -331,9 +384,8 @@ impl<'a> Session<'a> {
             || self.runtime.preparation.failed()
             || self.runtime.preparation.has_admitted_role((sheet, address))
         {
-            return self.cell(sheet, address);
+            return self.cell_from_source(sheet, address, source);
         }
-        let source = self.resolve_source(sheet, address);
         let Some(cell) = source.and_then(|source| {
             source.cell.filter(|cell| {
                 cell.formula.is_none()
@@ -693,16 +745,13 @@ impl CellAttempt {
                 .owner(address)
                 && let Some(reads) = &mut session.overlay_reads
             {
-                crate::DependencyReadSink::read(
-                    reads,
-                    ReadEvent {
-                        consumer: session.runtime.consumer,
-                        read: DependencyRead::Cell(EvaluationTarget {
-                            sheet,
-                            address: owner,
-                        }),
-                    },
-                );
+                reads.record(&ReadEvent {
+                    consumer: session.runtime.consumer,
+                    read: DependencyRead::Cell(EvaluationTarget {
+                        sheet,
+                        address: owner,
+                    }),
+                });
             }
         }
         session.runtime.consumer = previous;
@@ -973,14 +1022,11 @@ fn record_read(
     sink: &mut Option<&mut dyn DependencyReadSink>,
     event: ReadEvent,
 ) {
-    match (reads, sink) {
-        (Some(reads), Some(sink)) => {
-            crate::DependencyReadSink::read(reads, event.clone());
-            sink.read(event);
-        }
-        (Some(reads), None) => crate::DependencyReadSink::read(reads, event),
-        (None, Some(sink)) => sink.read(event),
-        _ => {}
+    if let Some(reads) = reads {
+        reads.record(&event);
+    }
+    if let Some(sink) = sink {
+        sink.read(event);
     }
 }
 

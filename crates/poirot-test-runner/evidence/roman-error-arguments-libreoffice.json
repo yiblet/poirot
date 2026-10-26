@@ -1,0 +1,152 @@
+{
+  "engine": "LibreOffice 26.2.6.3 620(Build:3)",
+  "verified_at": "2026-10-25T21:05:42.075866+00:00",
+  "method": "Fresh OOXML snapshot for every check; hidden import, calculateAll, export; typed cached results. Empty input text is materialized as =\"\". No Poirot results are used.",
+  "scope": "Scalar values only. Rebuilding snapshots verifies values after authored edits; cargo tests verify persistent invalidation and normal/overlay change lists.",
+  "suite_sha256": {
+    "roman-three-original-oracles.json": "f30a2b31b8ba217d65d7c4ce8b220fa834e6e6e0eeb2eba9dd59d0648445c55e"
+  },
+  "results": [
+    {
+      "suite": "roman-three-original-oracles.json",
+      "name": "Roman numeral domains: ROMAN(0,1/0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "roman-three-original-oracles.json",
+      "name": "Roman numeral domains: ROMAN(1,1/0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    },
+    {
+      "suite": "roman-three-original-oracles.json",
+      "name": "Roman numeral domains: ROMAN(1/0,0)",
+      "checks": [
+        {
+          "action": 1,
+          "actual": {
+            "type": "error",
+            "value": "#DIV/0!"
+          },
+          "agrees": false
+        }
+      ],
+      "agrees": false
+    }
+  ],
+  "summary": {
+    "scenarios": 3,
+    "checks": 3,
+    "corroborated_scenarios": 0,
+    "corroborated_checks": 0
+  },
+  "original_source_suite": "../corpus/json/roman-numeral-domains.json",
+  "original_source_suite_sha256": "a91dde9a68c279a91c3efc0026fe8b2335e9ff8cca49478304cc88c7a4bd717c",
+  "inputs": {
+    "schema_version": 1,
+    "builtin_policy": "ExcelDocumentation",
+    "workbook": {
+      "sheets": [
+        "S"
+      ],
+      "cells": []
+    },
+    "scenarios": [
+      {
+        "name": "Roman numeral domains: ROMAN(0,1/0)",
+        "evidence": [
+          "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+          "https://support.microsoft.com/en-us/excel/functions/roman-function",
+          "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "ROMAN(0,1/0)"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "text",
+              "value": ""
+            }
+          }
+        ]
+      },
+      {
+        "name": "Roman numeral domains: ROMAN(1,1/0)",
+        "evidence": [
+          "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+          "https://support.microsoft.com/en-us/excel/functions/roman-function",
+          "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "ROMAN(1,1/0)"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "error",
+              "value": "#NUM!"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Roman numeral domains: ROMAN(1/0,0)",
+        "evidence": [
+          "https://support.microsoft.com/en-us/excel/functions/arabic-function",
+          "https://support.microsoft.com/en-us/excel/functions/roman-function",
+          "Documented domains and independent Calc-supported examples; documented/Calc disagreements and preexisting lazy/error contracts are explicit in ../evidence/roman-numerals-contract.md. No Poirot outputs establish expectations."
+        ],
+        "actions": [
+          {
+            "action": "set",
+            "cell": "S!Z100",
+            "content": {
+              "formula": "ROMAN(1/0,0)"
+            }
+          },
+          {
+            "action": "check",
+            "cell": "S!Z100",
+            "expected": {
+              "type": "error",
+              "value": "#VALUE!"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "native_excel_status": "Not verified against native Microsoft Excel. Error propagation is an inference corroborated by independent Calc, not a native Excel observation. Conflicting original fixture expectations and inputs remain recorded below."
+}

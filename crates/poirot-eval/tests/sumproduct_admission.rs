@@ -1,6 +1,6 @@
 //! Equal-shaped SUMPRODUCT arguments request the same text/blank admission.
 use poirot_eval::{
-    overlay::{EvaluationContext, Overlay, OverlayPolicy},
+    overlay::{EvaluationContext, Overlay},
     *,
 };
 use poirot_model::{CellError, CellValue, Workbook};
@@ -73,15 +73,6 @@ fn singleton_text_and_blank_admission_is_independent_of_argument_origin_and_orde
                 CellValue::Number(0.),
                 "{formula}"
             );
-            assert_eq!(
-                value(result(
-                    &formula,
-                    BuiltinSemanticsPolicy::PinnedPoi,
-                    EvaluationBudgets::default()
-                )),
-                CellValue::Error(CellError::Value),
-                "pinned {formula}"
-            );
         }
     }
     for (formula, expected) in [
@@ -127,24 +118,15 @@ fn conformability_and_errors_remain_explicit_and_operational_failures_escape() {
             "{formula}"
         );
     }
-    // The existing matrix bridge projects UTF-16 before member admission.
-    // Unsupported malformed text remains operational, even after a zero term.
-    for formula in [
-        "IFERROR(SUMPRODUCT(A4),99)",
-        r#"IFERROR(SUMPRODUCT("x",A4),99)"#,
-    ] {
-        assert!(
-            matches!(
-                result(
-                    formula,
-                    BuiltinSemanticsPolicy::ExcelDocumentation,
-                    EvaluationBudgets::default()
-                ),
-                EvaluationOutcome::Aborted { .. }
-            ),
-            "{formula}"
-        );
-    }
+    // Excluded text requires no UTF-16 projection, including malformed units.
+    assert_eq!(
+        value(result(
+            "SUMPRODUCT(A4)",
+            BuiltinSemanticsPolicy::ExcelDocumentation,
+            EvaluationBudgets::default()
+        )),
+        CellValue::Number(0.)
+    );
     assert!(matches!(
         result(
             "IFERROR(SUMPRODUCT(A1:A2,B1:B2),99)",
@@ -158,7 +140,7 @@ fn conformability_and_errors_remain_explicit_and_operational_failures_escape() {
     ));
 }
 #[test]
-fn profile_changes_invalidate_singleton_results_in_both_directions_after_snapshot() {
+fn singleton_source_edits_invalidate_results_after_snapshot() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
@@ -166,26 +148,12 @@ fn profile_changes_invalidate_singleton_results_in_both_directions_after_snapsho
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(poirot_eval::overlay::OverlayPolicy {
-            builtin: poirot_eval::BuiltinSemanticsPolicy::PinnedPoi,
+            builtin: poirot_eval::BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         })
         .build()
         .unwrap();
     let context = EvaluationContext::default();
-    assert_eq!(
-        overlay
-            .evaluation(&context)
-            .unwrap()
-            .cell(target("F1"))
-            .unwrap(),
-        CellValue::Error(CellError::Value)
-    );
-    overlay
-        .set_policy(OverlayPolicy {
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
-            ..Default::default()
-        })
-        .unwrap();
     assert_eq!(
         overlay
             .evaluation(&context)
@@ -213,19 +181,5 @@ fn profile_changes_invalidate_singleton_results_in_both_directions_after_snapsho
             .cell(target("F1"))
             .unwrap(),
         CellValue::Number(0.)
-    );
-    overlay
-        .set_policy(OverlayPolicy {
-            builtin: poirot_eval::BuiltinSemanticsPolicy::PinnedPoi,
-            ..Default::default()
-        })
-        .unwrap();
-    assert_eq!(
-        overlay
-            .evaluation(&context)
-            .unwrap()
-            .cell(target("F1"))
-            .unwrap(),
-        CellValue::Error(CellError::Value)
     );
 }

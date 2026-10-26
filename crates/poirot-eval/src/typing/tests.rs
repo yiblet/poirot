@@ -171,6 +171,8 @@ fn utility_numeric_geometry_excludes_reduced_holiday_sets() {
         ("MUNIT(3)", Some(3), Some(3)),
         ("MUNIT(A1)", None, None),
         ("ACOT({1;2})", Some(2), Some(1)),
+        ("ABS(A1:A3)", Some(3), Some(1)),
+        ("ABS(@A1:A3)", Some(1), Some(1)),
         ("ISO.CEILING({1;2},{1,2,3})", Some(2), Some(3)),
         ("NETWORKDAYS.INTL(45292,45298,1,A1:A10)", Some(1), Some(1)),
         (
@@ -193,7 +195,7 @@ fn utility_numeric_geometry_excludes_reduced_holiday_sets() {
             "{formula}"
         );
     }
-    let t = crate::registry::ResultRule::BusinessDays.apply(&[
+    let t = crate::registry::ResultRule::FirstThreeNumericArguments.apply(&[
         T::scalar(K::NUMBER),
         T::scalar(K::NUMBER),
         T::scalar(K::NUMBER),

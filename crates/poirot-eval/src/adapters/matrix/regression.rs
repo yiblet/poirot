@@ -1,6 +1,6 @@
 //! Modern regression shape admission and typed worksheet presentation.
 use super::*;
-use crate::host::MissingPolicy;
+use crate::adapters::elementwise::matrices::array;
 use crate::registry::MatrixFunction as F;
 use poirot_functions_matrix::{self as kernel, Intercept, Matrix, Statistic};
 
@@ -9,54 +9,16 @@ fn collect(host: &mut CallHost<'_, '_>, index: usize) -> FunctionResult<Option<M
     if shape.missing {
         return Ok(None);
     }
-    if shape.sheets != 1 {
-        return Err(VALUE_ERROR.into());
-    }
-    let count = shape
-        .rows
-        .checked_mul(shape.columns)
-        .ok_or_else(|| host.size_overflow())?;
-    host.check_values(count)?;
-    host.charge_work(count as u64)?;
-    let mut values = Vec::new();
-    values
-        .try_reserve_exact(count)
-        .map_err(|_| host.allocation_failure())?;
-    for r in 0..shape.rows {
-        for c in 0..shape.columns {
-            let cell = host.read_cell(index, r, c)?;
-            let value = match cell.value {
-                Number(v) => v,
-                Error(e) => return Err(e.into()),
-                _ => return Err(VALUE_ERROR.into()),
-            };
-            // SAFETY: count is the checked rectangle size, reserved above; loops append count values.
-            values.push(value);
-        }
-    }
-    Matrix::new(shape.rows, shape.columns, values)
-        .map(Some)
-        .map_err(|e| modern::failure(host, e))
+    crate::adapters::elementwise::matrices::numeric(host, index).map(Some)
 }
-fn option(
-    host: &mut CallHost<'_, '_>,
-    index: usize,
-    length: usize,
-    default: bool,
-) -> FunctionResult<bool> {
-    if index >= length {
-        return Ok(default);
-    }
-    let value = host.scalar_data(index, MissingPolicy::Blank)?;
-    if value.missing {
-        return Ok(default);
-    }
-    match value.value {
-        Boolean(b) => Ok(b),
-        v => host
-            .coercev2_scalar_number(&v, NumericPolicy::PinnedPoi)
-            .map(|n| n != 0.0),
-    }
+
+fn option(host: &mut CallHost<'_, '_>, index: usize, default: bool) -> FunctionResult<bool> {
+    Ok(crate::adapters::elementwise::NumericSignature::new(&[
+        crate::adapters::elementwise::NumericParameter::boolean_default(default),
+    ])
+    .scalars(host, index)?
+    .get(0)?
+        != 0.0)
 }
 /// Normalize worksheet observation axes without filtering or rearranging member associations.
 fn predictors(y: &Matrix<f64>, x: Matrix<f64>) -> kernel::Result<Matrix<f64>> {
@@ -120,11 +82,11 @@ fn evaluate(
     } else {
         None
     };
-    let constant = option(host, if prediction { 3 } else { 2 }, length, true)?;
+    let constant = option(host, if prediction { 3 } else { 2 }, true)?;
     let stats = if prediction {
         false
     } else {
-        option(host, 3, length, false)?
+        option(host, 3, false)?
     };
     let n = y.values().len();
     let predictors_count = x.as_ref().map_or(1, |x| {
@@ -152,17 +114,8 @@ fn evaluate(
     admit(host, n, predictors_count, prediction_bound, stats)?;
     let x = match x {
         Some(x) => predictors(&y, x).map_err(|e| modern::failure(host, e))?,
-        None => {
-            host.check_values(n)?;
-            let mut v = Vec::new();
-            v.try_reserve_exact(n)
-                .map_err(|_| host.allocation_failure())?;
-            for i in 0..n {
-                // SAFETY: n slots reserved; exactly n default observations appended.
-                v.push(i as f64 + 1.0);
-            }
-            Matrix::new(n, 1, v).map_err(|e| modern::failure(host, e))?
-        }
+        None => kernel::sequence(n, 1, 1.0, 1.0, UNLIMITED)
+            .map_err(|error| matrices::failure(host, error))?,
     };
     let p = x.cols();
     let mut output_shape = (y.rows(), y.cols());
@@ -296,34 +249,6 @@ fn evaluate(
         }
     }
     array(host, rows, width, values.into_iter(), address)
-}
-fn array(
-    host: &mut CallHost<'_, '_>,
-    rows: usize,
-    cols: usize,
-    mut values: impl Iterator<Item = CellValue>,
-    address: CellAddress,
-) -> FunctionResult<Value> {
-    host.check_values(rows)?;
-    let mut out = Vec::new();
-    out.try_reserve_exact(rows)
-        .map_err(|_| host.allocation_failure())?;
-    for _ in 0..rows {
-        let mut row = Vec::new();
-        row.try_reserve_exact(cols)
-            .map_err(|_| host.allocation_failure())?;
-        for _ in 0..cols {
-            let v = values.next().ok_or(CellError::Ref)?;
-            // SAFETY: cols slots reserved, exactly cols values appended.
-            row.push(v);
-        }
-        // SAFETY: rows slots reserved, exactly rows records appended.
-        out.push(row);
-    }
-    if values.next().is_some() {
-        return Err(CellError::Ref.into());
-    }
-    Ok(Value::Array(ArrayView::anchored(out, Some(address))))
 }
 /// Run modern fit and prediction functions with admitted scratch and uncatchable host failures.
 pub(super) fn execute(

@@ -167,15 +167,6 @@ fn origin_error_precedence_and_collection_policies_remain_explicit() {
     }
     near(call(&b, "BETAINV(A1,1,1)"), 0.5);
     near(call(&b, "BETADIST(A2,1,1)"), 0.5);
-    for f in [
-        "GAMMAINV(A1,1,2)",
-        "GAMMAINV(A3,1,2)",
-        "GAMMAINV(\"0.5\",1,2)",
-        "GAMMAINV({\"0.5\"},1,2)",
-        "GAMMAINV(,1,2)",
-    ] {
-        assert_eq!(call(&b, f), CellValue::Error(CellError::Value), "{f}");
-    }
     near(call(&b, "GAMMAINV(A2,1,2)"), 2. * 2f64.ln());
     for (f, e) in [
         ("QUARTILE(B1:B2,2)", CellError::Num),

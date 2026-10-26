@@ -19,18 +19,6 @@ impl<Operational, Capability> From<CellError> for AdapterFailure<Operational, Ca
     }
 }
 
-/// Preserve the host's spreadsheet/operational split without touching call order.
-pub(crate) fn project_host<Failure>(
-    failure: FunctionFailure,
-    spreadsheet: impl FnOnce(CellError) -> Failure,
-    operational: impl FnOnce(EvaluationFailure) -> Failure,
-) -> Failure {
-    match failure {
-        FunctionFailure::Spreadsheet(error) => spreadsheet(error),
-        FunctionFailure::Operational(error) => operational(error),
-    }
-}
-
 /// Project legacy mixed-failure call sites that require an operational abort.
 /// Unexpected spreadsheet errors become a stale-plan failure.
 pub(crate) fn operational_only(failure: FunctionFailure) -> EvaluationFailure {

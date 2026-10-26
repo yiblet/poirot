@@ -3,10 +3,6 @@ use super::*;
 use crate::signed_reference::GridRead;
 
 impl CallHost<'_, '_> {
-    /// Whether the documented Excel builtin contract is selected.
-    pub(crate) fn excel_builtins(&self) -> bool {
-        self.session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
-    }
     /// Check subtotal metadata before reading a member, leaving excluded cells unevaluated.
     pub(crate) fn subtotal_cell(
         &mut self,

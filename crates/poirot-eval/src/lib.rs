@@ -253,7 +253,7 @@ mod core_projection;
 mod source_arithmetic;
 use core_projection::{
     checked_text_view, coercev2_arithmetic_number, coercev2_formula_text, coercev2_logical_boolean,
-    compare, remap_semantic, semantic,
+    compare, semantic,
 };
 /// Numeric slash-date parsing policy. Formula grammar remains canonical OOXML syntax.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
@@ -532,12 +532,13 @@ mod reference_areas;
 mod resource;
 mod runtime;
 use reference_areas::ReferenceAreas;
+mod calendar;
 mod criteria_adapter;
 mod functions;
 mod host;
+mod selection;
 // Lookup traversal axis, matching mode, and selection rules.
 pub use adapters::search::execution::{SearchAxis, SearchMode, SearchSelection};
-use adapters::statistics::execution::AggregateFunction;
 
 mod array_operator;
 mod executable;
@@ -554,8 +555,6 @@ use wildcard_engine::wildcard;
 mod identifier_consumer_tests;
 #[cfg(test)]
 mod numeric_admission_tests;
-#[cfg(test)]
-mod numeric_density_tests;
 #[cfg(test)]
 mod numeric_handler_tests;
 #[cfg(test)]

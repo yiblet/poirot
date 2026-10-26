@@ -1,298 +1,123 @@
-use crate::operands::{
-    charge, checked_product, coercev2_lookup_boolean, coercev2_lookup_integer,
-    coercev2_lookup_text, missing, num, scalar, Arguments,
-};
-use crate::{
-    parse_dynamic_reference, Context, Error, Failure, Reference, ReferenceKind, Scalar,
-    Unsupported, Value, Work, Workbook,
-};
+use crate::operands::{charge, coercev2_lookup_boolean, coercev2_lookup_text, scalar, Arguments};
+use crate::{parse_dynamic_reference, Context, Error, Failure, Unsupported, Value, Work, Workbook};
 fn indirect_failure(failure: Failure) -> Failure {
     match failure {
         Failure::Spreadsheet(_) => Error::Ref.into(),
         other => other,
     }
 }
-/// Construct a checked address spelling from admitted arguments.
-pub(super) fn address(
-    args: &Arguments<'_>,
-    c: Context,
-    w: &mut impl Workbook,
-    policy: crate::SemanticsPolicy,
-) -> Result<Value, Failure> {
-    if !(2..=5).contains(&args.len()) {
+/// Absolute axes used when spelling an ADDRESS reference.
+#[derive(Clone, Copy)]
+pub enum AddressAxes {
+    /// Both axes are absolute.
+    Both,
+    /// Only the row is absolute.
+    Row,
+    /// Only the column is absolute.
+    Column,
+    /// Both axes are relative.
+    Relative,
+}
+/// Coordinate notation used by ADDRESS.
+#[derive(Clone, Copy)]
+pub enum AddressStyle {
+    /// Alphabetic column followed by numeric row.
+    A1,
+    /// Explicit numeric row and column components.
+    R1C1,
+}
+/// Format admitted ADDRESS coordinates without workbook access or argument evaluation.
+pub fn address_text(
+    row: u32,
+    col: u32,
+    axes: AddressAxes,
+    style: AddressStyle,
+    sheet: Option<&str>,
+) -> Result<String, Failure> {
+    if !(1..=1_048_576).contains(&row) || !(1..=16_384).contains(&col) {
         return Err(Error::Value.into());
     }
-    let row = coercev2_lookup_integer(scalar(&args.get(0, c, w)?, c, w)?, false, w)?;
-    let col = coercev2_lookup_integer(scalar(&args.get(1, c, w)?, c, w)?, false, w)?;
-    if row < 1 || col < 1 {
-        return Err(Error::Value.into());
-    }
-    let kind = if args.len() > 2 {
-        let value = args.get(2, c, w)?;
-        if missing(&value) {
-            1
-        } else {
-            coercev2_lookup_integer(scalar(&value, c, w)?, false, w)?
-        }
-    } else {
-        1
-    };
-    if !(1..=4).contains(&kind) {
-        return Err(Error::Value.into());
-    }
-    // The pinned source ignores the fourth argument, including its errors.
-    let a1 = if policy == crate::SemanticsPolicy::ExcelDocumentation && args.len() > 3 {
-        let value = args.get(3, c, w)?;
-        if missing(&value) {
-            true
-        } else {
-            coercev2_lookup_boolean(scalar(&value, c, w)?)?
-        }
-    } else {
-        true
-    };
-    charge(w, Work::QueryReturn, 32)?;
+    let absolute_row = matches!(axes, AddressAxes::Both | AddressAxes::Row);
+    let absolute_column = matches!(axes, AddressAxes::Both | AddressAxes::Column);
+    let capacity = sheet
+        .map_or(Some(32), |name| {
+            name.len().checked_mul(4).and_then(|n| n.checked_add(32))
+        })
+        .ok_or(Failure::Operational(
+            crate::OperationalFailure::ResourceOverflow,
+        ))?;
     let mut result = String::new();
-    if args.len() == 5 {
-        let value = args.get(4, c, w)?;
-        if !missing(&value) {
-            let name = coercev2_lookup_text(&scalar(&value, c, w)?, w)?;
-            if name.contains(['\n', '\r', '\t']) {
-                return Err(Failure::Unsupported(
-                    Unsupported::AddressSheetNameControlCharacter,
-                ));
+    result
+        .try_reserve_exact(capacity)
+        .map_err(|_| Failure::Operational(crate::OperationalFailure::HostUnavailable))?;
+    if let Some(name) = sheet {
+        if name.contains(['\n', '\r', '\t']) {
+            return Err(Failure::Unsupported(
+                Unsupported::AddressSheetNameControlCharacter,
+            ));
+        }
+        let quote = crate::syntax::sheet_name_requires_quote(name);
+        // SAFETY: capacity reserves four times the sheet bytes plus 32, enough for doubled apostrophes, quotes and address text.
+        if quote {
+            result.push('\'');
+        }
+        for character in name.chars() {
+            // SAFETY: Every character and doubled apostrophe fits the locally reserved four-times input bound.
+            result.push(character);
+            if quote && character == '\'' {
+                // SAFETY: Each apostrophe occupies at most two reserved bytes.
+                result.push('\'');
             }
-            charge(w, Work::QueryReturn, checked_product(name.len(), 4)?)?;
-            result.push_str(&crate::syntax::format_sheet_name(&name));
-            result.push('!');
         }
-    }
-    if !a1 {
-        result.push('R');
-        if kind == 3 || kind == 4 {
-            result.push('[');
+        // SAFETY: capacity includes both enclosing quotes and the address suffix.
+        if quote {
+            result.push('\'');
         }
-        result.push_str(&row.to_string());
-        if kind == 3 || kind == 4 {
-            result.push(']');
+        // SAFETY: the reservation above includes the sheet separator.
+        result.push('!');
+    }
+    use std::fmt::Write;
+    if matches!(style, AddressStyle::R1C1) {
+        // SAFETY: The local reservation includes 32 bytes for at most two u32 spellings, brackets and axis labels.
+        write!(
+            result,
+            "R{}{}{}C{}{}{}",
+            if !absolute_row { "[" } else { "" },
+            row,
+            if !absolute_row { "]" } else { "" },
+            if !absolute_column { "[" } else { "" },
+            col,
+            if !absolute_column { "]" } else { "" }
+        )
+        .map_err(|_| Failure::Operational(crate::OperationalFailure::HostUnavailable))?;
+    } else {
+        let mut letters = [0u8; 7];
+        let mut position = letters.len();
+        let mut column = col;
+        while column > 0 {
+            // SAFETY: The loop condition proves the column is positive before subtracting one.
+            column -= 1;
+            position = position.checked_sub(1).ok_or(Error::Value)?;
+            // SAFETY: The remainder is at most 25, so adding ASCII A cannot exceed 90.
+            *letters.get_mut(position).ok_or(Error::Value)? = b'A' + (column % 26) as u8;
+            column /= 26;
         }
-        result.push('C');
-        if kind == 2 || kind == 4 {
-            result.push('[');
-        }
-        result.push_str(&col.to_string());
-        if kind == 2 || kind == 4 {
-            result.push(']');
-        }
-        return Ok(Value::Scalar(Scalar::Text(result)));
+        let letters = std::str::from_utf8(letters.get(position..).ok_or(Error::Value)?)
+            .map_err(|_| Error::Value)?;
+        // SAFETY: The local reservation includes 32 bytes for at most two u32 spellings, brackets and axis labels.
+        write!(
+            result,
+            "{}{}{}{}",
+            if absolute_column { "$" } else { "" },
+            letters,
+            if absolute_row { "$" } else { "" },
+            row
+        )
+        .map_err(|_| Failure::Operational(crate::OperationalFailure::HostUnavailable))?;
     }
-    if kind == 1 || kind == 3 {
-        result.push('$');
-    }
-    let mut letters = Vec::new();
-    let mut column = col as u32;
-    while column > 0 {
-        column -= 1;
-        letters.push((b'A' + (column % 26) as u8) as char);
-        column /= 26;
-    }
-    result.extend(letters.iter().rev());
-    if kind == 1 || kind == 2 {
-        result.push('$');
-    }
-    result.push_str(&row.to_string());
-    Ok(Value::Scalar(Scalar::Text(result)))
+    Ok(result)
 }
-/// Resolve a worksheet identifier through the host metadata port.
-pub(super) fn sheet(
-    args: &Arguments<'_>,
-    c: Context,
-    w: &mut impl Workbook,
-) -> Result<Value, Failure> {
-    let index = match if args.is_empty() {
-        None
-    } else {
-        Some(args.get(0, c, w)?)
-    } {
-        None => c.sheet,
-        Some(Value::Reference(r)) => r.first_sheet(),
-        Some(Value::SignedReference(r)) => r.first_sheet,
-        Some(Value::Scalar(Scalar::Text(name)) | Value::SelectedScalar(Scalar::Text(name), _)) => w
-            .sheet_index(&name)?
-            .ok_or(Failure::Spreadsheet(Error::Na))?,
-        _ => return Err(Error::Na.into()),
-    };
-    Ok(num(index as f64 + 1.0))
-}
-/// Select the caller-intersected scalar from a reference or array.
-pub(super) fn single(
-    args: &Arguments<'_>,
-    c: Context,
-    w: &mut impl Workbook,
-) -> Result<Value, Failure> {
-    let mut found = None;
-    for index in 0..args.len() {
-        let value = args.get(index, c, w)?;
-        if let Value::SignedReference(r) = &value {
-            if !r.valid() || r.kind != ReferenceKind::Area {
-                continue;
-            }
-            let (row, col) = (c.row as i32, c.col as i32);
-            let contains_row = (r.first_row..=r.last_row).contains(&row);
-            let contains_col = (r.first_col..=r.last_col).contains(&col);
-            let coordinates = if contains_row && contains_col {
-                Some((row, col))
-            } else if contains_row {
-                Some((row, r.first_col))
-            } else if contains_col {
-                Some((r.first_row, col))
-            } else {
-                None
-            };
-            if let Some((row, col)) = coordinates {
-                if found.is_some() {
-                    return Err(Error::Value.into());
-                }
-                found = Some(Value::SelectedScalar(
-                    r.read(row, col, w)?,
-                    poirot_coercionv2::Origin::Reference,
-                ));
-            }
-            continue;
-        }
-        if let Value::Reference(r) = value {
-            if r.kind() != ReferenceKind::Area {
-                continue;
-            }
-            let coordinates = crate::geometry::single_selection(&r, c);
-            if let Some((row, col)) = coordinates {
-                if found.is_some() {
-                    return Err(Error::Value.into());
-                }
-                found = Some(Value::SelectedScalar(
-                    w.cell(&r, r.first_sheet(), row, col)?,
-                    poirot_coercionv2::Origin::Reference,
-                ));
-            }
-        }
-    }
-    found.ok_or(Failure::Spreadsheet(Error::Value))
-}
-/// Construct displaced reference geometry without eagerly reading its cells.
-pub(super) fn offset(
-    args: &Arguments<'_>,
-    c: Context,
-    w: &mut impl Workbook,
-) -> Result<Value, Failure> {
-    // POI admits 1/2 arguments then indexes absent operands: explicitly unsupported host exception.
-    if (1..=2).contains(&args.len()) {
-        return Err(Failure::Unsupported(Unsupported::OffsetMissingOperands));
-    }
-    if !(3..=5).contains(&args.len()) {
-        return Err(Error::Value.into());
-    }
-    let base_argument = args.get(0, c, w)?;
-    let (workbook, first_sheet, last_sheet, start_row, start_col, base_height, base_width) =
-        match &base_argument {
-            Value::Reference(r) => (
-                r.workbook(),
-                r.first_sheet(),
-                r.last_sheet(),
-                r.first_row() as i32,
-                r.first_col() as i32,
-                r.height() as i32,
-                r.width() as i32,
-            ),
-            Value::SignedReference(r) if r.valid() => (
-                r.workbook.as_deref(),
-                r.first_sheet,
-                r.last_sheet,
-                r.first_row,
-                r.first_col,
-                r.source_height(),
-                r.source_width(),
-            ),
-            Value::Scalar(Scalar::Error(e)) | Value::SelectedScalar(Scalar::Error(e), _) => {
-                return Err((*e).into())
-            }
-            _ => return Err(Error::Value.into()),
-        };
-    let row_value = args.get(1, c, w)?;
-    let row = if missing(&row_value) {
-        0
-    } else {
-        coercev2_lookup_integer(scalar(&row_value, c, w)?, true, w)?
-    };
-    let col_value = args.get(2, c, w)?;
-    let col = if missing(&col_value) {
-        0
-    } else {
-        coercev2_lookup_integer(scalar(&col_value, c, w)?, true, w)?
-    };
-    // POI evaluates width before height.
-    let width = if args.len() > 4 {
-        let value = args.get(4, c, w)?;
-        if missing(&value) {
-            base_width
-        } else {
-            coercev2_lookup_integer(scalar(&value, c, w)?, true, w)?
-        }
-    } else {
-        base_width
-    };
-    let height = if args.len() > 3 {
-        let value = args.get(3, c, w)?;
-        if missing(&value) {
-            base_height
-        } else {
-            coercev2_lookup_integer(scalar(&value, c, w)?, true, w)?
-        }
-    } else {
-        base_height
-    };
-    if width == 0 || height == 0 {
-        return Err(Error::Ref.into());
-    }
-    let rows = crate::geometry::OffsetAxis {
-        start: start_row,
-        delta: row,
-        length: height,
-        limit: 1_048_576,
-    }
-    .plan()?;
-    let cols = crate::geometry::OffsetAxis {
-        start: start_col,
-        delta: col,
-        length: width,
-        limit: 16_384,
-    }
-    .plan()?;
-    if rows.first < 0
-        || cols.first < 0
-        || rows.last >= 1_048_576
-        || cols.last >= 16_384
-        || rows.first > rows.last
-        || cols.first > cols.last
-    {
-        return Ok(Value::SignedReference(crate::SignedReference {
-            kind: ReferenceKind::Area,
-            workbook: workbook.map(str::to_owned),
-            first_sheet,
-            last_sheet,
-            first_row: rows.first,
-            last_row: rows.last,
-            first_col: cols.first,
-            last_col: cols.last,
-        }));
-    }
-    Ok(Value::Reference(Reference::new(
-        ReferenceKind::Area,
-        workbook.map(str::to_owned),
-        first_sheet..=last_sheet,
-        rows.first as u32..=rows.last as u32,
-        cols.first as u32..=cols.last as u32,
-    )?))
-}
+
 /// Parse and resolve a computed reference through the host.
 pub(super) fn indirect(
     args: &Arguments<'_>,

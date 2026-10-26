@@ -9,23 +9,23 @@ fn workbook() -> Workbook {
 const AT: CellAddress = CellAddress { row: 1, col: 2 };
 
 #[test]
-fn math_formulas_preserve_pinned_rounding_and_error_order() {
+fn math_formulas_preserve_rounding_and_source_error_order() {
     let workbook = workbook();
     for (formula, expected) in [
         ("FACT(2.9999999999999996)", CellValue::Number(6.)),
         ("QUOTIENT(880000000*0.00849,3)", CellValue::Number(2490400.)),
         ("CEILING.MATH(-4.3,2,-1)", CellValue::Number(-6.)),
-        ("CEILING.MATH(-4.3,2,1)", CellValue::Number(-4.)),
+        ("CEILING.MATH(-4.3,2,1)", CellValue::Number(-6.)),
         ("FLOOR.MATH(-4.3,2,-1)", CellValue::Number(-4.)),
         ("MROUND(0.45,0.1*3)", CellValue::Number(0.6)),
         ("ATAN2(0,0)", CellValue::Error(CellError::Div0)),
-        ("GCD(1/0,2)", CellValue::Error(CellError::Value)),
+        ("GCD(1/0,2)", CellValue::Error(CellError::Div0)),
         ("GCD(-1,1/0)", CellValue::Error(CellError::Num)),
-        ("QUOTIENT(1/0,2)", CellValue::Error(CellError::Value)),
+        ("QUOTIENT(1/0,2)", CellValue::Error(CellError::Div0)),
         ("FACT(1/0)", CellValue::Error(CellError::Div0)),
         (
             "CEILING.PRECISE(4.3,2,UNKNOWN_FUNCTION())",
-            CellValue::Number(6.),
+            CellValue::Error(CellError::Value),
         ),
         (
             "FACT(UNKNOWN_FUNCTION(),2)",
@@ -33,7 +33,7 @@ fn math_formulas_preserve_pinned_rounding_and_error_order() {
         ),
     ] {
         assert_eq!(
-            match pinned_formula(
+            match math_formula(
                 &workbook,
                 0,
                 AT,
@@ -69,22 +69,24 @@ fn scalar_reference_intersection_reads_only_selected_cell() {
             CellValue::Number(0.),
         )
         .unwrap();
+    for (formula, expected) in [("FACT(@A1:A3)", 120.), ("POWER(@A1:A3,2)", 25.)] {
+        assert_eq!(
+            match math_formula(
+                &workbook,
+                0,
+                AT,
+                formula,
+                Default::default(),
+                Default::default()
+            ) {
+                poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
+                outcome => panic!("evaluation aborted: {outcome:?}"),
+            },
+            CellValue::Number(expected)
+        );
+    }
     assert_eq!(
-        match pinned_formula(
-            &workbook,
-            0,
-            AT,
-            "FACT(A1:A3)",
-            Default::default(),
-            Default::default()
-        ) {
-            poirot_eval::EvaluationOutcome::Complete { value, .. } => value,
-            outcome => panic!("evaluation aborted: {outcome:?}"),
-        },
-        CellValue::Number(120.)
-    );
-    assert_eq!(
-        match pinned_formula(
+        match math_formula(
             &workbook,
             0,
             AT,
@@ -98,7 +100,7 @@ fn scalar_reference_intersection_reads_only_selected_cell() {
         CellValue::Number(1.)
     );
     assert_eq!(
-        match pinned_formula(
+        match math_formula(
             &workbook,
             0,
             AT,
@@ -117,7 +119,7 @@ fn scalar_reference_intersection_reads_only_selected_cell() {
 fn helper_budget_abort_survives_iferror() {
     let workbook = workbook();
     assert!(matches!(
-        pinned_formula(
+        math_formula(
             &workbook,
             0,
             AT,
@@ -153,7 +155,7 @@ fn exact_binary_operands_reach_excel_arithmetic_through_references() {
         )
         .unwrap();
     assert_eq!(
-        match pinned_formula(
+        match math_formula(
             &workbook,
             0,
             AT,
@@ -167,7 +169,7 @@ fn exact_binary_operands_reach_excel_arithmetic_through_references() {
         CellValue::Number(6.)
     );
     assert_eq!(
-        match pinned_formula(
+        match math_formula(
             &workbook,
             0,
             AT,
@@ -181,7 +183,7 @@ fn exact_binary_operands_reach_excel_arithmetic_through_references() {
         CellValue::Number(0.3)
     );
     assert_eq!(
-        match pinned_formula(
+        match math_formula(
             &workbook,
             0,
             AT,
@@ -197,20 +199,20 @@ fn exact_binary_operands_reach_excel_arithmetic_through_references() {
 }
 
 #[test]
-fn lcm_uses_singleton_double_and_pairwise_output_limits() {
-    // Pinned Lcm.evaluate validates every input before reducing, and only
-    // applies MAX_OUTPUT after a pair. A singleton retains its double value.
+fn lcm_enforces_documented_output_limits() {
+    // Microsoft documents #NUM! when the least common multiple is >= 2^53.
+    // https://support.microsoft.com/en-us/excel/functions/lcm-function
     let workbook = workbook();
     for (formula, expected) in [
-        ("LCM(1E30)", CellValue::Number(1e30)),
+        ("LCM(1E30)", CellValue::Error(CellError::Num)),
         ("LCM(1E16,0)", CellValue::Number(0.)),
         ("LCM(1E30,0)", CellValue::Number(0.)),
         ("LCM(1E16,1,0)", CellValue::Error(CellError::Num)),
-        ("LCM(1E16,0,1/0)", CellValue::Error(CellError::Value)),
+        ("LCM(1E16,0,1/0)", CellValue::Error(CellError::Div0)),
         ("LCM(1E16,0,-1)", CellValue::Error(CellError::Num)),
     ] {
         assert_eq!(
-            match pinned_formula(
+            match math_formula(
                 &workbook,
                 0,
                 AT,
@@ -236,7 +238,7 @@ fn mround_sign_validation_uses_source_floating_product() {
         ("MROUND(-1E-100,1E-100)", CellValue::Error(CellError::Num)),
     ] {
         assert_eq!(
-            match pinned_formula(
+            match math_formula(
                 &workbook,
                 0,
                 AT,
@@ -314,7 +316,7 @@ fn seriessum_preserves_term_domains_and_coefficient_order() {
         ),
     ] {
         assert_eq!(
-            match pinned_formula(
+            match math_formula(
                 &workbook,
                 0,
                 AT,
@@ -335,7 +337,7 @@ fn seriessum_preserves_term_domains_and_coefficient_order() {
 fn seriessum_reference_traversal_admission_aborts_outside_iferror() {
     let workbook = workbook();
     assert!(matches!(
-        pinned_formula(
+        math_formula(
             &workbook,
             0,
             AT,
@@ -377,8 +379,8 @@ fn seriessum_scalar_text_uses_real_locale_parser() {
     }
 }
 
-/// Execute the pinned source controls independently of the public modern defaults.
-fn pinned_formula(
+/// Run arithmetic controls with scalar presentation and the modern builtin defaults.
+fn math_formula(
     workbook: &Workbook,
     sheet: usize,
     address: CellAddress,
@@ -392,8 +394,103 @@ fn pinned_formula(
         address,
         formula,
         &poirot_eval::RunConfiguration::from(inputs)
-            .with_builtin_policy(poirot_eval::BuiltinSemanticsPolicy::PinnedPoi)
             .with_array_result_policy(poirot_eval::ArrayResultPolicy::ScalarIntersection),
         budgets,
     )
+}
+
+#[test]
+fn classic_math_preserves_domains_coercion_and_source_error_order() {
+    // Independently authored arithmetic controls; source-order/error rules follow
+    // Apache POI NumericFunction at the pinned revision recorded in LICENSES/ACKNOWLEDGEMENTS:
+    // https://github.com/apache/poi/blob/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/formula/functions/NumericFunction.java
+    // No upstream implementation or test cases copied.
+    let workbook = workbook();
+    for (formula, expected) in [
+        ("POWER(0,0)", CellValue::Error(CellError::Num)),
+        ("POWER(0,-2)", CellValue::Error(CellError::Div0)),
+        ("POWER(-4,0.5)", CellValue::Error(CellError::Num)),
+        ("POWER(2,10)", CellValue::Number(1024.)),
+        ("POWER(\"3\",TRUE)", CellValue::Number(3.)),
+        ("POWER(,2)", CellValue::Number(0.)),
+        ("POWER(#N/A,#REF!)", CellValue::Error(CellError::NA)),
+        ("POWER(#REF!,#N/A)", CellValue::Error(CellError::Ref)),
+        ("POWER(\"bad\",#N/A)", CellValue::Error(CellError::Value)),
+        ("POWER(0,#N/A)", CellValue::Error(CellError::NA)),
+        ("FLOOR(0,0)", CellValue::Number(0.)),
+        ("FLOOR(2,0)", CellValue::Error(CellError::Div0)),
+        ("CEILING(0,#N/A)", CellValue::Error(CellError::NA)),
+        ("LOG(-1,#N/A)", CellValue::Error(CellError::NA)),
+        ("LOG(8,2)", CellValue::Number(3.)),
+        ("LOG(100)", CellValue::Number(2.)),
+        ("TRUNC(-3.75)", CellValue::Number(-3.)),
+        ("TRUNC(-3.75,1)", CellValue::Number(-3.7)),
+        ("MOD(-5,3)", CellValue::Number(1.)),
+    ] {
+        match math_formula(
+            &workbook,
+            0,
+            AT,
+            formula,
+            Default::default(),
+            Default::default(),
+        ) {
+            EvaluationOutcome::Complete { value, .. } => assert_eq!(value, expected, "{formula}"),
+            outcome => panic!("{formula}: {outcome:?}"),
+        }
+    }
+}
+
+#[test]
+fn classic_math_arity_and_coercion_control_argument_demand() {
+    let workbook = workbook();
+    // Arity is rejected before RAND is forced. Valid eager signatures prepare
+    // all operand geometry, then preserve source-ordered spreadsheet errors.
+    for (formula, random_draws, expected) in [
+        ("POWER(RAND())", 0, CellValue::Error(CellError::Value)),
+        ("PI(RAND())", 0, CellValue::Error(CellError::Value)),
+        (
+            "POWER(\"bad\",RAND())",
+            1,
+            CellValue::Error(CellError::Value),
+        ),
+        ("POWER(0,RAND()+1)", 1, CellValue::Number(0.)),
+    ] {
+        let outcome = math_formula(
+            &workbook,
+            0,
+            AT,
+            formula,
+            Default::default(),
+            Default::default(),
+        );
+        assert_eq!(
+            outcome.usage().random_accesses.len(),
+            random_draws,
+            "{formula}"
+        );
+        match outcome {
+            EvaluationOutcome::Complete { value, .. } => {
+                assert_eq!(value, expected, "{formula}")
+            }
+            outcome => panic!("{formula}: {outcome:?}"),
+        }
+    }
+    assert!(matches!(
+        math_formula(
+            &workbook,
+            0,
+            AT,
+            "IFERROR(POWER(2,FACT(170)),99)",
+            Default::default(),
+            EvaluationBudgets {
+                run_work: 100,
+                ..Default::default()
+            }
+        ),
+        EvaluationOutcome::Aborted {
+            failure: poirot_eval::EvaluationFailure::Budget(_),
+            ..
+        }
+    ));
 }

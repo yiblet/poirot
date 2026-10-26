@@ -33,12 +33,8 @@ pub enum Unsupported {
     LookupNonVector,
     /// Result vector is too short for the selected lookup behavior.
     LookupShortResult,
-    /// OFFSET crosses a pinned Java-short coordinate boundary.
-    OffsetJavaShortBoundary,
     /// Reference dimensions cannot represent the pinned source behavior.
     SourceDimension,
-    /// Missing OFFSET operands require unsupported source handling.
-    OffsetMissingOperands,
     /// Scalar selection from this array has no supported coordinate contract.
     ScalarArrayIntersection,
     /// Sheet-name control characters cannot be rendered with supported ADDRESS fidelity.

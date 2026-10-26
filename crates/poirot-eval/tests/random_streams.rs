@@ -81,11 +81,13 @@ fn intervals_precedence_and_preflight() {
     for (formula, error) in [
         ("RAND(1)", CellError::Value),
         ("RANDBETWEEN(3,2)", CellError::Num),
-        ("RANDBETWEEN(1/0,2)", CellError::Value),
+        // A numeric operand error propagates before any random draw (Calc 26.8.1.1).
+        ("RANDBETWEEN(1/0,2)", CellError::Div0),
     ] {
         let out = run(formula, 5, EvaluationBudgets::default());
         assert!(
-            matches!(out, EvaluationOutcome::Complete { value: CellValue::Error(e), .. } if e==error)
+            matches!(out, EvaluationOutcome::Complete { value: CellValue::Error(e), .. } if e==error),
+            "{formula}: {out:?}"
         );
         assert!(out.usage().random_accesses.is_empty());
     }

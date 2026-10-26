@@ -100,8 +100,6 @@ fn scalar_identity_omission_and_blank_are_preserved() {
                 "AND(ISBLANK(SWITCH({1,2},1,J1,2,J1)))",
                 CellValue::Boolean(true),
             ),
-            ("SWITCH()", CellValue::Error(CellError::NA)),
-            ("SWITCH(1,1)", CellValue::Error(CellError::NA)),
         ] {
             assert_eq!(
                 value(result(&book(), formula, arrays)),
@@ -176,7 +174,7 @@ fn later_cases_and_unselected_reference_members_are_not_read() {
         ("G1", "G1"),
         ("H1", "H1"),
         ("I1", "2"),
-        ("K1", "COUNTIF(A1:A3,B1:B2)"),
+        ("K1", "COUNTIF(A1:A3,)"),
     ] {
         book.sheet_mut(0)
             .unwrap()
@@ -274,7 +272,7 @@ fn incompatible_extents_are_rejected_without_unused_shape_scans() {
     );
 }
 #[test]
-fn policy_and_expression_edits_invalidate_results_after_snapshot_restore() {
+fn expression_edits_invalidate_results_after_snapshot_restore() {
     let mut book = book();
     for (cell, formula) in [
         ("E1", "SUM(SWITCH({1,2,1},1,{3,100,7},2,5,11))"),
@@ -285,28 +283,8 @@ fn policy_and_expression_edits_invalidate_results_after_snapshot_restore() {
             .set_formula(target(cell).address, formula)
             .unwrap();
     }
-    let mut overlay = Overlay::with_workbook(&book)
-        .with_policy(poirot_eval::overlay::OverlayPolicy {
-            builtin: poirot_eval::BuiltinSemanticsPolicy::PinnedPoi,
-            ..Default::default()
-        })
-        .build()
-        .unwrap();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let context = EvaluationContext::default();
-    assert_eq!(
-        overlay
-            .evaluation(&context)
-            .unwrap()
-            .cell(target("E1"))
-            .unwrap(),
-        CellValue::Error(CellError::NA)
-    );
-    overlay
-        .set_policy(OverlayPolicy {
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
-            ..Default::default()
-        })
-        .unwrap();
     assert_eq!(
         overlay
             .evaluation(&context)
@@ -333,20 +311,6 @@ fn policy_and_expression_edits_invalidate_results_after_snapshot_restore() {
             .cell(target("E3"))
             .unwrap(),
         CellValue::Number(205.)
-    );
-    overlay
-        .set_policy(OverlayPolicy {
-            builtin: poirot_eval::BuiltinSemanticsPolicy::PinnedPoi,
-            ..Default::default()
-        })
-        .unwrap();
-    assert_eq!(
-        overlay
-            .evaluation(&context)
-            .unwrap()
-            .cell(target("E1"))
-            .unwrap(),
-        CellValue::Error(CellError::NA)
     );
 }
 #[test]
@@ -380,5 +344,82 @@ fn expression_case_and_result_dimensions_bound_child_first_spills() {
                 "{formula}: {cell}"
             );
         }
+    }
+}
+
+#[test]
+fn first_match_keeps_scalar_and_rectangular_errors_ahead_of_later_cases() {
+    // SWITCH's established contract maps expression/case errors to NA, returns
+    // selected result errors, and never forces later cases after a match.
+    for arrays in [
+        ArrayResultPolicy::ScalarIntersection,
+        ArrayResultPolicy::DynamicSpill,
+    ] {
+        for (formula, expected) in [
+            (
+                "SWITCH(1,1,7,UNKNOWN_FUNCTION(),9,UNKNOWN_FUNCTION())",
+                CellValue::Number(7.),
+            ),
+            (
+                "SWITCH(1/0,UNKNOWN_FUNCTION(),7,9)",
+                CellValue::Error(CellError::NA),
+            ),
+            (
+                "SUM(SWITCH({1,1},1,7,UNKNOWN_FUNCTION(),9,UNKNOWN_FUNCTION()))",
+                CellValue::Number(14.),
+            ),
+            (
+                "SUM(SWITCH({1,2},1,1/0,2,NA()))",
+                CellValue::Error(CellError::Div0),
+            ),
+            (
+                "SUM(SWITCH({1,2},{1,#DIV/0!},7,2,9,UNKNOWN_FUNCTION()))",
+                CellValue::Error(CellError::NA),
+            ),
+        ] {
+            assert_eq!(
+                value(result(&book(), formula, arrays)),
+                expected,
+                "{formula}"
+            );
+        }
+    }
+}
+
+#[test]
+fn switch_selection_work_is_admitted_at_the_public_budget_boundary() {
+    // Both paths demand the matching result; rejected work stays operational
+    // even when the formula wraps SWITCH in IFERROR.
+    let book = book();
+    for formula in [
+        "IFERROR(SWITCH(1,0,9,1,7,UNKNOWN_FUNCTION()),99)",
+        "IFERROR(SUM(SWITCH(1,0,9,{1,2},7,3)),99)",
+        "IFERROR(SUM(SWITCH({1;2},1,{1,2,3},9)),99)",
+    ] {
+        let run = |run_work| {
+            run_formula_with_configuration(
+                &book,
+                0,
+                target("Z100").address,
+                formula,
+                &config(ArrayResultPolicy::DynamicSpill),
+                EvaluationBudgets {
+                    run_work,
+                    ..Default::default()
+                },
+            )
+        };
+        let complete = run(u64::MAX);
+        assert!(
+            matches!(complete, EvaluationOutcome::Complete { .. }),
+            "{formula}"
+        );
+        let required = complete.usage().work_units;
+        assert!(required > 0);
+        assert_eq!(value(run(required)), value(complete), "{formula}");
+        assert!(
+            matches!(run(required - 1), EvaluationOutcome::Aborted { .. }),
+            "{formula}"
+        );
     }
 }

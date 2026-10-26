@@ -51,19 +51,22 @@ pub(crate) struct HostOperand {
     pub(super) array_missing: Vec<Vec<bool>>,
 }
 impl HostOperand {
+    /// Wrap an engine value for traversal without syntax omission metadata.
+    #[cfg(test)]
+    pub(crate) fn from_value(value: Value) -> Self {
+        Self {
+            value,
+            missing: false,
+            array_missing: Vec::new(),
+        }
+    }
+    /// Separate a resolved operand into its value and omission metadata.
+    pub(crate) fn into_parts(self) -> (Value, bool, Vec<Vec<bool>>) {
+        (self.value, self.missing, self.array_missing)
+    }
     /// Borrow the resolved value without projecting or dereferencing it.
     pub(crate) fn value(&self) -> &Value {
         &self.value
-    }
-    /// Inspect existing omission metadata at a logical member coordinate.
-    pub(crate) fn missing_at(&self, row: usize, column: usize) -> bool {
-        self.missing
-            || self
-                .array_missing
-                .get(row)
-                .and_then(|flags| flags.get(column))
-                .copied()
-                .unwrap_or(false)
     }
     /// Inspect the value channel without dereferencing it.
     pub(crate) fn kind(&self) -> OperandKind {
@@ -84,14 +87,6 @@ impl HostOperand {
     /// Borrow literal-array omission flags for host tests.
     pub(super) fn array_missing(&self) -> &[Vec<bool>] {
         &self.array_missing
-    }
-    /// Wrap an explicit scalar with no omitted-argument provenance.
-    pub(crate) fn from_scalar(value: CellValue) -> Self {
-        Self {
-            value: value.into(),
-            missing: false,
-            array_missing: Vec::new(),
-        }
     }
     /// Restore the missing marker or return the unprojected engine value.
     pub(crate) fn into_value(self) -> Value {

@@ -7279,7 +7279,8 @@
         "Reconstruct the formula dependency closure from the saved workbook without using Poirot results. Decode BIFF add-in names/named ranges; multi-cell array outputs are observed with an explicit INDEX coordinate. Semantic prototype includes argument origins, shapes and input classes.",
         "Expected authored from independent evidence before running Poirot; independent engine corroboration is required for inclusion.",
         "All retained expected values were independently recalculated through isolated en-US LibreOffice OOXML snapshots, including after source reconstruction and semantic consolidation. No Poirot result was used to author expected values.",
-        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes."
+        "Final hash-bound independent Calc observations: ../evidence/excel-compat-saved-consumers-libreoffice.json. The suite explicitly selects ExcelDocumentation semantics in both Poirot execution modes.",
+        "Legacy scalar input is explicit as DOLLAR(@K9:L10). Microsoft documents @ as the modern spelling of historical implicit intersection (https://support.microsoft.com/en-us/excel/implicit-intersection-operator). M436 does not intersect K9:L10; the original cached and independently recalculated #VALUE! expectation is unchanged. The original Calc observation above predates this explicit-intersection normalization."
       ],
       "actions": [
         {
@@ -7318,7 +7319,7 @@
           "action": "set",
           "cell": "'EverythingTests'!M436",
           "content": {
-            "formula": "DOLLAR(K9:L10)"
+            "formula": "DOLLAR(@K9:L10)"
           }
         },
         {

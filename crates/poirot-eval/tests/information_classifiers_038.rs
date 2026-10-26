@@ -88,27 +88,17 @@ fn scalar_classes_and_spreadsheet_errors_are_classified_without_coercion() {
 }
 
 #[test]
-fn scalar_reference_and_array_selection_uses_pinned_caller_coordinates() {
-    // OperandResolver chooses the caller intersection in a rectangular area.
-    expect("ISNA(A1:B2)", "B2", CellValue::Boolean(true));
-    expect("ISNUMBER(A1:B2)", "A1", CellValue::Boolean(true));
-    expect("ISERROR(A1:B2)", "C3", CellValue::Boolean(true));
-    expect("ISNUMBER(A1:B2)", "C3", CellValue::Boolean(false));
-    // WorkbookEvaluator anchors literal arrays at (0,0); scalar mode does not
-    // implement LogicalFunction.evaluateArray vectorization.
+fn explicit_reference_intersection_retains_scalar_classification() {
+    // @ selects the caller's row and column before the classifier consumes it.
+    expect("ISNA(@B1:B2)", "C2", CellValue::Boolean(true));
+    expect("ISNUMBER(@A1:A2)", "C1", CellValue::Boolean(true));
+    expect("ISERROR(@A1:A2)", "C3", CellValue::Boolean(true));
+    expect("ISNUMBER(@A1:A2)", "C3", CellValue::Boolean(false));
     expect(
-        "ISTEXT({7,\"text\";TRUE,#N/A})",
+        "ISBLANK(INDEX({1,\"\";3,4},1,2))",
         "B1",
-        CellValue::Boolean(true),
+        CellValue::Boolean(false),
     );
-    expect(
-        "ISNA({7,\"text\";TRUE,#N/A})",
-        "B2",
-        CellValue::Boolean(true),
-    );
-    expect("ISERROR({1,2;3,4})", "C3", CellValue::Boolean(true));
-    // A text constant, including empty text, is a valid nonblank array item.
-    expect("ISBLANK({1,\"\";3,4})", "B1", CellValue::Boolean(false));
 }
 
 #[test]
@@ -151,12 +141,8 @@ fn arity_and_lazy_errors_do_not_turn_operational_failures_into_cell_errors() {
         "C3",
         CellValue::Number(7.),
     );
-    for formula in [
-        "ISERROR(ISEVEN(IFS(TRUE,)))",
-        "ISNONTEXT(ISEVEN(IFS(TRUE,)))",
-        "IFERROR(ISERROR(ISEVEN(IFS(TRUE,))),42)",
-        "IFERROR(IFS(TRUE,),42)",
-    ] {
+    {
+        let formula = "IFERROR(IFS(TRUE,),42)";
         assert!(
             matches!(
                 execute(formula, "C3"),

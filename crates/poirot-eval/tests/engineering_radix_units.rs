@@ -89,46 +89,14 @@ fn signed_widths_strict_grammar_places_and_error_order() {
         call(&b, "BIN2HEX(\"bad\",1/0)"),
         CellValue::Error(CellError::Num)
     );
-    assert_eq!(call(&b, "DEC2OCT(-1,1/0)"), "7777777777".into());
-    assert_eq!(call(&b, "DEC2OCT(,3)"), CellValue::Error(CellError::Value));
-}
-#[test]
-fn ignored_places_do_not_consume_randomness_even_for_wholly_negative_arrays() {
-    let b = book();
-    for formula in [
-        "DEC2OCT(-1,RAND())",
-        "SUM(LEN(DEC2OCT({-1;-2},RAND())))",
-        "BIN2HEX(\"1111111111\",RAND())",
-        "IF(FALSE,BITAND(RAND(),2),7)",
-        "BITAND(RAND())",
-    ] {
-        let result = run_formula(
-            &b,
-            0,
-            at("Z100").address,
-            formula,
-            Default::default(),
-            Default::default(),
-        );
-        assert!(result.usage().random_accesses.is_empty(), "{formula}");
-    }
+    // Valid padding widths do not change a negative two's-complement result;
+    // errors in supplied operands still propagate through normal argument preparation.
+    assert_eq!(call(&b, "DEC2OCT(-1,1)"), "7777777777".into());
     assert_eq!(
-        call(&b, "INDEX(DEC2OCT({-1;-2},1/0),2)"),
-        "7777777776".into()
-    );
-    assert_eq!(
-        call(&b, "INDEX(DEC2OCT({-1;8},VSTACK(1/0,4)),1)"),
-        "7777777777".into()
-    );
-    assert_eq!(
-        call(&b, "INDEX(DEC2OCT({-1;8},VSTACK(1/0,4)),2)"),
-        "0010".into()
-    );
-    assert_eq!(
-        call(&b, "INDEX(DEC2OCT({-1;8},VSTACK(1/0,1/0)),2)"),
+        call(&b, "DEC2OCT(-1,1/0)"),
         CellValue::Error(CellError::Div0)
     );
-    assert_eq!(call(&b, "INDEX(DEC2OCT(8,{2;4}),2)"), "0010".into());
+    assert_eq!(call(&b, "DEC2OCT(,3)"), CellValue::Error(CellError::Value));
 }
 #[test]
 fn bit_domains_origins_and_unit_validation() {

@@ -1,5 +1,7 @@
 //! Modern complex scalar lifting and ordered complex collection reductions.
-use crate::adapters::{elementwise::Lift, failure::operational_only};
+use crate::adapters::elementwise::{
+    Broadcast, Kernel, MemberContext, Optional, Variadic, WholeCollection,
+};
 use crate::host::{CallHost, NumericPolicy, ScalarOperand};
 use crate::*;
 use poirot_coercionv2::complex::{self as coercion, ComplexNumber, ComplexSuffix};
@@ -98,34 +100,119 @@ fn unary(function: EngineeringFunction) -> Option<Unary> {
         _ => return None,
     })
 }
-fn reduction(host: &mut CallHost<'_, '_>, product: bool) -> FunctionResult<Value> {
-    let mut result = ComplexNumber {
-        real: if product { 1.0 } else { 0.0 },
-        imaginary: 0.0,
-        suffix: ComplexSuffix::I,
-    };
-    let mut unit = None;
-    for index in 0..host.len() {
-        let length = host.collection_len(index)?;
-        // This bounded dense traversal deliberately includes physically absent
-        // cells and custom-reader values. Shared sparse aggregate admission is
-        // a separate contract audit, not a complex-function shortcut.
-        host.charge_work(length as u64)?;
-        for offset in 0..length {
-            let member = host.collection_cell(index, offset)?;
-            let parsed = parse(host, member)?;
-            unit = combine_unit(unit, parsed.unit)?;
-            result = if product {
-                kernel::multiply(result, parsed.value)?
-            } else {
-                kernel::add(result, parsed.value)?
-            };
-        }
-    }
-    result.suffix = unit.unwrap_or(ComplexSuffix::I);
-    Ok(render(host, result)?.into())
+/// Ordered complex collection reduction prepared once before scalar emission.
+struct Reduction {
+    product: bool,
+    result: Option<CellValue>,
 }
-/// Execute documented complex operations without widening the pinned profile.
+impl Kernel for Reduction {
+    type Signature = Variadic<WholeCollection>;
+    fn prepare(
+        &mut self,
+        host: &mut CallHost<'_, '_>,
+        arguments: &Self::Signature,
+    ) -> FunctionResult<()> {
+        let initial = ComplexNumber {
+            real: if self.product { 1.0 } else { 0.0 },
+            imaginary: 0.0,
+            suffix: ComplexSuffix::I,
+        };
+        let (mut result, unit) = crate::adapters::elementwise::collections::fold(
+            host,
+            arguments.iter(),
+            (initial, None),
+            |host, (result, unit), member| {
+                let parsed = parse(host, member)?;
+                *unit = combine_unit(*unit, parsed.unit)?;
+                *result = if self.product {
+                    kernel::multiply(*result, parsed.value)?
+                } else {
+                    kernel::add(*result, parsed.value)?
+                };
+                Ok(())
+            },
+        )?;
+        result.suffix = unit.unwrap_or(ComplexSuffix::I);
+        self.result = Some(render(host, result)?);
+        Ok(())
+    }
+    fn apply(
+        &self,
+        _context: &mut MemberContext<'_, '_, '_>,
+        _arguments: &Self::Signature,
+    ) -> FunctionResult<CellValue> {
+        self.result.clone().ok_or(VALUE_ERROR.into())
+    }
+}
+/// Complex scalar arithmetic with independently typed optional operands.
+struct Complex(EngineeringFunction);
+impl Kernel for Complex {
+    type Signature = (Broadcast, Optional<Broadcast>, Optional<Broadcast>);
+    fn apply(
+        &self,
+        context: &mut MemberContext<'_, '_, '_>,
+        arguments: &Self::Signature,
+    ) -> FunctionResult<CellValue> {
+        use EngineeringFunction::*;
+        if self.0 == EngineeringFunction::Complex {
+            let real = arguments.0.number(context, None)?;
+            let imaginary = arguments
+                .1
+                .0
+                .as_ref()
+                .ok_or(VALUE_ERROR)?
+                .number(context, None)?;
+            let suffix = match &arguments.2.0 {
+                Some(role) => {
+                    let member = role.read(context)?;
+                    if member.missing {
+                        return Err(VALUE_ERROR.into());
+                    }
+                    let text = context.host.coercev2_scalar_text(&member.value)?;
+                    coercion::coercev2_complex_suffix(&text)?
+                }
+                None => ComplexSuffix::I,
+            };
+            return render(
+                context.host,
+                ComplexNumber {
+                    real,
+                    imaginary,
+                    suffix,
+                },
+            );
+        }
+        let member = arguments.0.read(context)?;
+        let first = parse(context.host, member)?;
+        match self.0 {
+            Imabs => return Ok(Number(kernel::magnitude(first.value)?)),
+            Imargument => return Ok(Number(kernel::argument(first.value)?)),
+            Imreal => return Ok(Number(first.value.real)),
+            Imaginary => return Ok(Number(first.value.imaginary)),
+            _ => {}
+        }
+        if let Some(operation) = unary(self.0) {
+            return render(context.host, kernel::unary(first.value, operation)?);
+        }
+        let second = arguments.1.0.as_ref().ok_or(VALUE_ERROR)?;
+        let result = if self.0 == Impower {
+            kernel::power(first.value, second.number(context, None)?)?
+        } else {
+            let member = second.read(context)?;
+            let second = parse(context.host, member)?;
+            let unit = combine_unit(first.unit, second.unit)?.unwrap_or(ComplexSuffix::I);
+            let mut result = match self.0 {
+                Imdiv => kernel::divide(first.value, second.value)?,
+                Imsub => kernel::subtract(first.value, second.value)?,
+                _ => return Err(VALUE_ERROR.into()),
+            };
+            result.suffix = unit;
+            result
+        };
+        render(context.host, result)
+    }
+}
+/// Execute complex operations using the shared typed executor.
 pub(super) fn execute(
     session: &mut Session<'_>,
     sheet: usize,
@@ -133,59 +220,29 @@ pub(super) fn execute(
     function: EngineeringFunction,
     arguments: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
-    if !FunctionId::Engineering(function)
-        .descriptor()
-        .arity
-        .accepts(arguments.len())
-    {
-        return Ok(err(VALUE_ERROR));
-    }
-    let mut host = CallHost::new_array(session, sheet, address, arguments, arguments.len());
-    let result = if matches!(
+    if matches!(
         function,
         EngineeringFunction::Imsum | EngineeringFunction::Improduct
     ) {
-        reduction(&mut host, function == EngineeringFunction::Improduct)
+        super::run(
+            session,
+            sheet,
+            address,
+            function,
+            arguments,
+            Reduction {
+                product: function == EngineeringFunction::Improduct,
+                result: None,
+            },
+        )
     } else {
-        Lift::new(&mut host, arguments.len()).and_then(|lift| {
-            lift.evaluate(&mut host, address, |host, row, column| {
-                let member = lift.member(host, 0, row, column)?;
-                let first = parse(host, member)?;
-                if function == EngineeringFunction::Imabs {
-                    return Ok(Number(kernel::magnitude(first.value)?));
-                }
-                if function == EngineeringFunction::Imargument {
-                    return Ok(Number(kernel::argument(first.value)?));
-                }
-                if let Some(operation) = unary(function) {
-                    return render(host, kernel::unary(first.value, operation)?);
-                }
-                let result = if function == EngineeringFunction::Impower {
-                    // Real exponents are numeric arguments, not complex text or
-                    // integer options; preserve ordinary attributed coercion.
-                    let exponent = lift.number(host, 1, row, column, None)?;
-                    kernel::power(first.value, exponent)?
-                } else {
-                    let member = lift.member(host, 1, row, column)?;
-                    let second = parse(host, member)?;
-                    let unit = combine_unit(first.unit, second.unit)?.unwrap_or(ComplexSuffix::I);
-                    let mut result = if function == EngineeringFunction::Imdiv {
-                        kernel::divide(first.value, second.value)?
-                    } else if function == EngineeringFunction::Imsub {
-                        kernel::subtract(first.value, second.value)?
-                    } else {
-                        return Err(VALUE_ERROR.into());
-                    };
-                    result.suffix = unit;
-                    result
-                };
-                render(host, result)
-            })
-        })
-    };
-    match result {
-        Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
-        Err(error) => Err(operational_only(error)),
+        super::run(
+            session,
+            sheet,
+            address,
+            function,
+            arguments,
+            Complex(function),
+        )
     }
 }

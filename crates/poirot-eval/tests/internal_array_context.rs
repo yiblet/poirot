@@ -95,8 +95,14 @@ fn scalar_arguments_and_dependency_cells_keep_their_own_demand() {
     .unwrap();
     for (formula, expected) in [
         ("SUM(C2:C2*{1})", 6.),
-        ("SUMPRODUCT(A1:A2*B1:B2)+ABS(A1:A2*2)", 37.),
-        ("ABS(A1:A2*2)+SUMPRODUCT(A1:A2*B1:B2)", 37.),
+        // Documented ABS broadcasts: 2*5 + 3*7 = 31, ABS({4;6}) = {4;6},
+        // so addition gives {35;37}; scalar result publication takes its first member.
+        // https://support.microsoft.com/en-us/excel/dynamic-array-formulas-and-spilled-array-behavior
+        // Explicit @ selects row two independently of array-result publication.
+        ("SUMPRODUCT(A1:A2*B1:B2)+ABS(A1:A2*2)", 35.),
+        ("ABS(A1:A2*2)+SUMPRODUCT(A1:A2*B1:B2)", 35.),
+        ("SUMPRODUCT(A1:A2*B1:B2)+ABS(@A1:A2*2)", 37.),
+        ("ABS(@A1:A2*2)+SUMPRODUCT(A1:A2*B1:B2)", 37.),
         ("SUM(@A1:A2)", 3.),
     ] {
         let prepared = compiler.compile_formula(formula, &policy);
@@ -281,10 +287,9 @@ fn worksheet_publication_remains_independent_of_internal_literal_array_execution
 }
 
 #[test]
-fn nested_scalar_parameter_keeps_pinned_intersection_without_reading_other_rows() {
-    // This preserves the pinned scalar-function parameter contract; automatic
-    // lifting of scalar functions over array arguments is a separate capability.
-    // Native Calc vectorizes ROUND here and would read B1 as well.
+fn explicit_intersection_of_nested_control_skips_other_rows() {
+    // Explicit intersection selects B2 before arithmetic and ROUND, preserving
+    // the reference's row without evaluating the unrelated B1 formula.
     let mut workbook = workbook();
     workbook
         .sheet_mut(0)
@@ -294,7 +299,7 @@ fn nested_scalar_parameter_keeps_pinned_intersection_without_reading_other_rows(
     let policy = EvaluationPolicy::default();
     let mut compiler = FormulaCompiler::new();
     let plan = compiler.compile_workbook(&workbook, &policy);
-    let formula = compiler.compile_formula("SUMPRODUCT(A1:A2*ROUND(1.234,B1:B2-5))", &policy);
+    let formula = compiler.compile_formula("SUMPRODUCT(A1:A2*ROUND(1.234,@B1:B2-5))", &policy);
     let mut reads = Reads::default();
     let mut run = EvaluationRun::new(
         WorkbookView::new(&workbook, &plan, &policy).unwrap(),

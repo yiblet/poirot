@@ -1,7 +1,7 @@
 //! INDEX contracts from Microsoft INDEX documentation and pinned ClosedXML LookupTests.
 //! Calc corroboration is recorded in evidence/index-admission-libreoffice.json.
 use poirot_eval::{
-    overlay::{EvaluationContext, Overlay, OverlayPolicy},
+    overlay::{EvaluationContext, Overlay},
     *,
 };
 use poirot_model::{CellAddress, CellError, CellValue, ExcelText, Workbook};
@@ -114,15 +114,6 @@ fn isref_classifies_selected_representation_under_the_requested_contract() {
             CellValue::Boolean(false),
             "{formula}"
         );
-        assert_eq!(
-            value(
-                &w,
-                &formula,
-                &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
-            ),
-            CellValue::Boolean(true),
-            "pinned {formula}"
-        );
     }
     for source in [
         "A1:B2",
@@ -192,7 +183,7 @@ fn index_preserves_blank_types_utf16_and_deferred_source_reads() {
     }
 }
 #[test]
-fn selected_index_results_refresh_after_source_edits_and_policy_switches() {
+fn selected_index_results_refresh_after_source_edits() {
     let mut w = book();
     for (address, formula) in [
         ("F1", "SUM(INDEX(A1:B2,0,2))"),
@@ -238,20 +229,6 @@ fn selected_index_results_refresh_after_source_edits_and_policy_switches() {
             .cell(target("H1"))
             .unwrap(),
         CellValue::Number(13.)
-    );
-    overlay
-        .set_policy(OverlayPolicy {
-            builtin: poirot_eval::BuiltinSemanticsPolicy::PinnedPoi,
-            ..Default::default()
-        })
-        .unwrap();
-    assert_eq!(
-        overlay
-            .evaluation(&context)
-            .unwrap()
-            .cell(target("G1"))
-            .unwrap(),
-        CellValue::Boolean(true)
     );
 }
 #[test]
@@ -324,4 +301,29 @@ fn index_array_slices_publish_actual_dynamic_footprints() {
         run.evaluate_cell(target("J2")).unwrap(),
         CellValue::Number(3.)
     );
+}
+
+#[test]
+fn intact_index_projection_uses_modern_publication_under_both_policy_labels() {
+    for policy in [
+        BuiltinSemanticsPolicy::PinnedPoi,
+        BuiltinSemanticsPolicy::ExcelDocumentation,
+    ] {
+        let config = RunConfiguration::default().with_builtin_policy(policy);
+        let w = book();
+        for (formula, expected) in [
+            ("INDEX((A1:B2,C1:D2),1,1)", CellValue::Number(1.)),
+            ("INDEX((A1:B2,C1:D2),1,1,2)", CellValue::Number(9.)),
+            ("ISREF(INDEX({1,2;3,4},2,2))", CellValue::Boolean(false)),
+            ("SUM(INDEX(A1:B2,0,2))", CellValue::Number(6.)),
+            ("SUM(INDEX({1,2;3,4},2,0))", CellValue::Number(7.)),
+            ("ISREF(INDEX(A1:B2,2,2))", CellValue::Boolean(true)),
+        ] {
+            assert_eq!(
+                value(&w, formula, &config),
+                expected,
+                "{policy:?}: {formula}"
+            );
+        }
+    }
 }

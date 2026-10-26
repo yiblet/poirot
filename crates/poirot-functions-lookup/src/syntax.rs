@@ -1,27 +1,22 @@
 use crate::operands::{charge, checked_product};
 use crate::{DynamicReference, Error, Failure, Work, Workbook};
-/// Quote and escape a sheet spelling for reference text.
-pub(super) fn format_sheet_name(name: &str) -> String {
-    let requires_quote = name.chars().next().is_some_and(|c| c.is_ascii_digit())
+/// Whether a sheet spelling needs quotes to avoid reference ambiguity.
+pub(super) fn sheet_name_requires_quote(name: &str) -> bool {
+    name.chars().next().is_some_and(|c| c.is_ascii_digit())
         || name
             .chars()
             .any(|c| !(c.is_alphanumeric() || c == '_' || c == '.'))
         || is_a1_cell(name)
         || name.eq_ignore_ascii_case("TRUE")
         || name.eq_ignore_ascii_case("FALSE")
-        || starts_r1c1(name);
-    if requires_quote {
-        format!("'{}'", name.replace('\'', "''"))
-    } else {
-        name.to_owned()
-    }
+        || starts_r1c1(name)
 }
 fn starts_r1c1(name: &str) -> bool {
-    let chars: Vec<char> = name.to_ascii_uppercase().chars().collect();
-    match chars.as_slice() {
-        ['R'] | ['C'] | ['R', 'C'] => true,
-        ['R', 'C', third, ..] => third.is_ascii_digit(),
-        ['R' | 'C', second, ..] => second.is_ascii_digit(),
+    let mut chars = name.chars().map(|c| c.to_ascii_uppercase());
+    match (chars.next(), chars.next(), chars.next()) {
+        (Some('R' | 'C'), None, _) | (Some('R'), Some('C'), None) => true,
+        (Some('R'), Some('C'), Some(third)) => third.is_ascii_digit(),
+        (Some('R' | 'C'), Some(second), _) => second.is_ascii_digit(),
         _ => false,
     }
 }
@@ -39,11 +34,11 @@ fn is_a1_cell(name: &str) -> bool {
             .saturating_mul(26)
             .saturating_add((b.to_ascii_uppercase() - b'A' + 1) as u64);
     }
-    col <= 256
+    col <= 16_384
         // SAFETY: letters counts an initial ASCII byte run, so it is a valid UTF-8 boundary within name.
         && name[letters..]
             .parse::<u32>()
-            .is_ok_and(|r| (1..=65_536).contains(&r))
+            .is_ok_and(|r| (1..=1_048_576).contains(&r))
 }
 /// Decode supported A1/R1C1 reference text without reading workbook cells.
 pub fn parse_dynamic_reference(

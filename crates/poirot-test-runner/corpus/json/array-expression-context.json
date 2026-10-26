@@ -362,14 +362,15 @@
     {
       "name": "Array expression context: scalar consumer requests reference intersection",
       "evidence": [
-        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
           "action": "set",
           "cell": "S!F2",
           "content": {
-            "formula": "ABS(A1:A2*2)"
+            "formula": "ABS(@A1:A2*2)"
           }
         },
         {
@@ -385,14 +386,15 @@
     {
       "name": "Array expression context: scalar sibling does not inherit aggregate demand",
       "evidence": [
-        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim."
+        "Independently recalculated ordinary imported scalar formulas with LibreOffice 26.2.6.3. SUMPRODUCT requests array expression execution; ordinary SUM/ROWS/COLUMNS and scalar functions retain reference intersection. Explicit literal arrays retain shape. See ../evidence/array-expression-context-libreoffice.json. This is a Calc observation, not a native Excel claim.",
+        "Authored normalization: historical implicit-intersection formulas use explicit @ on the same ranges under modern Excel; original source assertions and expected values are preserved. https://support.microsoft.com/en-us/excel/implicit-intersection-operator"
       ],
       "actions": [
         {
           "action": "set",
           "cell": "S!F2",
           "content": {
-            "formula": "SUMPRODUCT(A1:A2*B1:B2)+ABS(A1:A2*2)"
+            "formula": "SUMPRODUCT(A1:A2*B1:B2)+ABS(@A1:A2*2)"
           }
         },
         {

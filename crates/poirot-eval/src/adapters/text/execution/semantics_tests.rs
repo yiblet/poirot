@@ -118,10 +118,10 @@ fn source_concatenation_ceiling_is_independent_of_host_budget() {
         evaluate(TextSourceVersion::Poi7321209, &function).unwrap(),
         Text(operand)
     );
-    assert!(matches!(
-        evaluate(TextSourceVersion::Poi7321209, "MID(\"abc\",2,2147483647)"),
-        Err(EvaluationFailure::UnsupportedCapability { .. })
-    ));
+    assert_eq!(
+        evaluate(TextSourceVersion::Poi7321209, "MID(\"abc\",2,2147483647)").unwrap(),
+        Text("bc".into())
+    );
 }
 
 #[test]
@@ -135,7 +135,11 @@ fn text_integer_admission_precedes_empty_text_and_index_clamping() {
         "REPLACE(\"abc\",1,2147483648,\"x\")",
         "MID(\"abc\",1,\"2147483648\")",
     ] {
-        assert_eq!(evaluate(source, formula).unwrap(), Error(Num), "{formula}");
+        assert_eq!(
+            evaluate(source, formula).unwrap(),
+            Error(VALUE_ERROR),
+            "{formula}"
+        );
     }
     for (formula, expected) in [
         ("LEFT(\"abc\",2147483647)", "abc"),
@@ -148,25 +152,14 @@ fn text_integer_admission_precedes_empty_text_and_index_clamping() {
             "{formula}"
         );
     }
-    // Java's REPT count narrows to i32::MAX and still incurs source work,
-    // even when repeating an empty string.
-    for formula in [
-        "REPT(\"\",2147483648)",
-        "REPT(\"\",2147483647.5)",
-        "REPT(\"\",2147483647)",
-    ] {
-        assert!(matches!(
-            evaluate_with_budgets(
-                source,
-                formula,
-                EvaluationBudgets {
-                    run_work: 1_000_000,
-                    ..Default::default()
-                }
-            ),
-            Err(EvaluationFailure::Budget(_))
-        ));
-    }
+    assert_eq!(
+        evaluate(source, "REPT(\"\",2147483648)").unwrap(),
+        Error(VALUE_ERROR)
+    );
+    assert_eq!(
+        evaluate(source, "REPT(\"\",2147483647)").unwrap(),
+        Text(String::new())
+    );
     // Range admission must not move a function's negative-start validation ahead
     // of conversion of the following count argument.
     assert_eq!(evaluate(source, "MID(\"abc\",-1,#N/A)").unwrap(), Error(NA));

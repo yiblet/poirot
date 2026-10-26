@@ -444,11 +444,11 @@ fn reused_spill_footprints_keep_input_dependencies_after_warm_evaluation() {
     assert_eq!(value(&mut overlay, "H2", &context), CellValue::Blank);
 }
 #[test]
-fn publication_policy_reuses_raw_results_and_changes_only_saved_values() {
+fn publication_policy_reuses_finite_results_and_keeps_cached_identity() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(at("E1").address, "NORMSINV(1E-300)")
+        .set_formula(at("E1").address, "NORM.S.INV(0.5)")
         .unwrap();
     let policy = OverlayPolicy {
         ..Default::default()
@@ -458,19 +458,13 @@ fn publication_policy_reuses_raw_results_and_changes_only_saved_values() {
         .with_policy(policy)
         .build()
         .unwrap();
-    assert_eq!(
-        value(&mut overlay, "E1", &context),
-        CellValue::Number(f64::NEG_INFINITY)
-    );
+    assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(0.));
     let original = overlay.cached_value(at("E1")).unwrap();
     let mut policy = overlay.policy().clone();
     policy.materialization = crate::FormulaCacheMaterializationPolicy::PinnedPoiCellSetter;
     overlay.set_policy(policy).unwrap();
     let mut evaluation = overlay.evaluation(&context).unwrap();
-    assert_eq!(
-        evaluation.cell(at("E1")).unwrap(),
-        CellValue::Number(f64::NEG_INFINITY)
-    );
+    assert_eq!(evaluation.cell(at("E1")).unwrap(), CellValue::Number(0.));
     assert_eq!(evaluation.usage().formula_executions, 0);
     assert!(
         evaluation
@@ -480,7 +474,7 @@ fn publication_policy_reuses_raw_results_and_changes_only_saved_values() {
             .any(|c| matches!(
                 c,
                 WorkbookChange::SetCachedValue {
-                    value: CellValue::Error(poirot_model::CellError::Div0),
+                    value: CellValue::Number(0.),
                     ..
                 }
             ))
@@ -1197,7 +1191,7 @@ fn approximate_match_policy_switch_and_snapshot_restore_recompute_typed_candidat
 }
 
 #[test]
-fn roman_policy_locale_and_arabic_reference_edits_invalidate_after_snapshot_restore() {
+fn roman_locale_and_arabic_reference_edits_invalidate_after_snapshot_restore() {
     let mut workbook = Workbook::new();
     let sheet = workbook.add_sheet("S").unwrap();
     sheet.set_value(at("A1").address, "X").unwrap();
@@ -1206,18 +1200,12 @@ fn roman_policy_locale_and_arabic_reference_edits_invalidate_after_snapshot_rest
     sheet
         .set_formula(at("D1").address, r#"ROMAN("1,234",0)"#)
         .unwrap();
-    let mut overlay = Overlay::with_workbook(&workbook)
-        .with_policy(OverlayPolicy {
-            builtin: crate::BuiltinSemanticsPolicy::PinnedPoi,
-            ..Default::default()
-        })
-        .build()
-        .unwrap();
+    let mut overlay = Overlay::with_workbook(&workbook).build().unwrap();
     let mut context = EvaluationContext::default();
     assert_eq!(value(&mut overlay, "B1", &context), CellValue::Number(10.));
     assert_eq!(
         value(&mut overlay, "C1", &context),
-        CellValue::Error(poirot_model::CellError::Value)
+        CellValue::Text("CMXCIX".into())
     );
     assert_eq!(
         value(&mut overlay, "D1", &context),
@@ -1226,12 +1214,14 @@ fn roman_policy_locale_and_arabic_reference_edits_invalidate_after_snapshot_rest
     let bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
     let (workbook, state) = Overlay::from_snapshot(postcard::from_bytes(&bytes).unwrap()).unwrap();
     let mut overlay = state.attach(&workbook).unwrap();
-    assert_eq!(value(&mut overlay, "B1", &context), CellValue::Number(10.));
+    let mut warm = overlay.evaluation(&context).unwrap();
+    assert_eq!(warm.cell(at("B1")).unwrap(), CellValue::Number(10.));
+    assert_eq!(warm.usage().formula_executions, 0);
+    drop(warm);
+    let unrelated = overlay.cached_value(at("C1")).unwrap();
     overlay.set_value(at("A1"), "xiv").unwrap();
+    assert!(overlay.cached_value(at("B1")).is_none());
     assert_eq!(value(&mut overlay, "B1", &context), CellValue::Number(14.));
-    let mut policy = overlay.policy().clone();
-    policy.builtin = crate::BuiltinSemanticsPolicy::ExcelDocumentation;
-    overlay.set_policy(policy).unwrap();
     assert_eq!(
         value(&mut overlay, "C1", &context),
         CellValue::Text("CMXCIX".into())
@@ -1242,9 +1232,15 @@ fn roman_policy_locale_and_arabic_reference_edits_invalidate_after_snapshot_rest
         CellValue::Text("I".into())
     );
     assert_eq!(value(&mut overlay, "B1", &context), CellValue::Number(14.));
+    assert!(Arc::ptr_eq(
+        &unrelated,
+        &overlay.cached_value(at("C1")).unwrap()
+    ));
 }
 
 #[test]
+// Both starts exceed their text domain under the documented Excel rules;
+// policy-label changes must still invalidate and safely restore cached errors.
 fn search_start_policy_switch_invalidates_restored_values_for_both_text_routes() {
     for source in [
         crate::TextSourceVersion::Poi7321209,
@@ -1267,8 +1263,14 @@ fn search_start_policy_switch_invalidates_restored_values_for_both_text_routes()
             })
             .build()
             .unwrap();
-        assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(1.));
-        assert_eq!(value(&mut overlay, "F1", &context), CellValue::Number(4.));
+        assert_eq!(
+            value(&mut overlay, "E1", &context),
+            CellValue::Error(poirot_model::CellError::Value)
+        );
+        assert_eq!(
+            value(&mut overlay, "F1", &context),
+            CellValue::Error(poirot_model::CellError::Value)
+        );
         let bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
         let (workbook, state) =
             Overlay::from_snapshot(postcard::from_bytes(&bytes).unwrap()).unwrap();
@@ -1276,6 +1278,7 @@ fn search_start_policy_switch_invalidates_restored_values_for_both_text_routes()
         let mut policy = overlay.policy().clone();
         policy.builtin = crate::BuiltinSemanticsPolicy::ExcelDocumentation;
         overlay.set_policy(policy.clone()).unwrap();
+        assert!(overlay.cached_value(at("E1")).is_none());
         for cell in ["E1", "F1"] {
             assert_eq!(
                 value(&mut overlay, cell, &context),
@@ -1284,8 +1287,15 @@ fn search_start_policy_switch_invalidates_restored_values_for_both_text_routes()
         }
         policy.builtin = crate::BuiltinSemanticsPolicy::PinnedPoi;
         overlay.set_policy(policy).unwrap();
-        assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(1.));
-        assert_eq!(value(&mut overlay, "F1", &context), CellValue::Number(4.));
+        assert!(overlay.cached_value(at("F1")).is_none());
+        assert_eq!(
+            value(&mut overlay, "E1", &context),
+            CellValue::Error(poirot_model::CellError::Value)
+        );
+        assert_eq!(
+            value(&mut overlay, "F1", &context),
+            CellValue::Error(poirot_model::CellError::Value)
+        );
     }
 }
 

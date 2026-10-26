@@ -5,10 +5,7 @@ use poirot_functions_lookup as helper;
 
 /// Lazy lookup bridge preserving reference results and deferred operational failures.
 struct Port<'a, 'w> {
-    session: &'a mut Session<'w>,
-    sheet: usize,
-    address: CellAddress,
-    arguments: ArgumentsRef<'a>,
+    host: CallHost<'a, 'w>,
     failure: Option<EvaluationFailure>,
 }
 fn error(error: CellError) -> Result<helper::Error, helper::Failure> {
@@ -39,6 +36,21 @@ fn cell_error(error: helper::Error) -> CellError {
     }
 }
 impl Port<'_, '_> {
+    /// Resolve local sheet text while recording namespace dependencies for INDIRECT.
+    fn sheet_index(&mut self, name: &str) -> Result<Option<u32>, helper::Failure> {
+        let result = self.host.check_text(name.len());
+        self.operational(result)?;
+        let mut owned = String::new();
+        let result = owned
+            .try_reserve_exact(name.len())
+            .map_err(|_| self.host.allocation_failure());
+        self.operational(result)?;
+        // SAFETY: name.len() bytes were reserved immediately above for this empty string.
+        owned.push_str(name);
+        let result = self.host.resolve_sheet(owned);
+        self.operational(result).map(|v| v.map(|s| s as u32))
+    }
+
     fn operational<T>(&mut self, result: EvalResult<T>) -> Result<T, helper::Failure> {
         result.map_err(|failure| {
             self.failure = Some(failure);
@@ -57,10 +69,9 @@ impl Port<'_, '_> {
             Number(n) => helper::Scalar::Number(n),
             Text(s) => helper::Scalar::Text(s),
             CellValue::TextUtf16(text) => {
-                let result = checked_text_view(
-                    poirot_model::TextRef::Utf16(text.units()),
-                    &mut self.session.budget,
-                );
+                let result = self
+                    .host
+                    .scalar_text_view(poirot_model::TextRef::Utf16(text.units()));
                 helper::Scalar::Text(self.function(result)?.into_owned())
             }
             Boolean(b) => helper::Scalar::Bool(b),
@@ -71,13 +82,10 @@ impl Port<'_, '_> {
     fn convert(&mut self, value: Value) -> Result<helper::Value, helper::Failure> {
         Ok(match value {
             Value::SignedRefs(areas) => {
-                self.session
-                    .budget
-                    .allocation(areas.len())
-                    .map_err(|failure| {
-                        self.failure = Some(failure);
-                        helper::Failure::Operational(helper::OperationalFailure::HostUnavailable)
-                    })?;
+                self.host.check_values(areas.len()).map_err(|failure| {
+                    self.failure = Some(failure);
+                    helper::Failure::Operational(helper::OperationalFailure::HostUnavailable)
+                })?;
                 let mut refs = Vec::with_capacity(areas.len());
                 for area in areas {
                     refs.push(helper::SignedReference {
@@ -129,7 +137,7 @@ impl Port<'_, '_> {
                 )?)
             }
             Value::Refs(areas) => {
-                let result = self.session.budget.allocation(areas.len());
+                let result = self.host.check_values(areas.len());
                 self.operational(result)?;
                 let refs: Vec<_> = areas
                     .into_iter()
@@ -158,10 +166,7 @@ impl Port<'_, '_> {
                 if rows.iter().any(|r| r.len() != columns) {
                     return Err(helper::Failure::Spreadsheet(helper::Error::Value));
                 }
-                let result = self
-                    .session
-                    .budget
-                    .allocation(rows.len().saturating_mul(columns));
+                let result = self.host.check_values(rows.len().saturating_mul(columns));
                 self.operational(result)?;
                 let count = rows.len();
                 let values = rows
@@ -198,7 +203,7 @@ impl Port<'_, '_> {
                 },
             ),
             helper::Value::Array(a) => {
-                self.session.budget.allocation(a.values().len())?;
+                self.host.check_values(a.values().len())?;
                 let (row_count, columns) = (a.rows(), a.cols());
                 let mut values = a.into_values().into_iter();
                 let mut rows = Vec::with_capacity(row_count);
@@ -214,7 +219,7 @@ impl Port<'_, '_> {
         })
     }
     fn signed_output(&mut self, refs: Vec<helper::SignedReference>) -> EvalResult<Value> {
-        self.session.budget.allocation(refs.len())?;
+        self.host.check_values(refs.len())?;
         if refs
             .iter()
             .any(|r| !r.valid() || r.workbook.is_some() || r.first_sheet != r.last_sheet)
@@ -237,7 +242,7 @@ impl Port<'_, '_> {
         ))
     }
     fn reference_output(&mut self, refs: Vec<helper::Reference>) -> EvalResult<Value> {
-        self.session.budget.allocation(refs.len())?;
+        self.host.check_values(refs.len())?;
         if refs
             .iter()
             .any(|r| r.workbook().is_some() || r.first_sheet() != r.last_sheet())
@@ -262,25 +267,16 @@ impl Port<'_, '_> {
         ))
     }
     fn unsupported(&self, detail: impl Into<String>) -> EvaluationFailure {
-        EvaluationFailure::UnsupportedCapability {
-            capability: CapabilityId::FunctionAdapter,
-            source: Some(EvaluationTarget {
-                sheet: self.sheet,
-                address: self.address,
-            }),
-            detail: detail.into(),
-        }
+        self.host
+            .capability_failure(CapabilityId::FunctionAdapter, detail)
     }
 }
 impl helper::Workbook for Port<'_, '_> {
     fn preflight(&mut self, request: helper::BudgetRequest) -> Result<(), helper::Failure> {
         let result = match request.work {
-            helper::Work::SearchText => self.session.budget.text(request.units),
-            helper::Work::SearchSteps => self
-                .session
-                .budget
-                .charge(WorkKind::HelperOperation, request.units as u64),
-            _ => self.session.budget.allocation(request.units),
+            helper::Work::SearchText => self.host.check_text(request.units),
+            helper::Work::SearchSteps => self.host.charge_work(request.units as u64),
+            _ => self.host.check_values(request.units),
         };
         self.operational(result)
     }
@@ -289,38 +285,41 @@ impl helper::Workbook for Port<'_, '_> {
         index: usize,
         _: helper::Context,
     ) -> Result<helper::Value, helper::Failure> {
-        let expression = self
-            .arguments
-            .get(index)
-            .ok_or(helper::Failure::Spreadsheet(helper::Error::Value))?;
-        if expression.is_missing() {
+        if index >= self.host.len() {
+            return Err(helper::Failure::Spreadsheet(helper::Error::Value));
+        }
+        if self.host.selected_is_missing(index) {
             return Ok(helper::Value::Scalar(helper::Scalar::Missing));
         }
-        let result = self.session.expr(self.sheet, self.address, expression);
+        let result = self.host.raw_argument(index);
         let value = self.operational(result)?;
         let mut value = self.convert(value)?;
         if let helper::Value::Array(array) = &mut value {
-            let missing = expression.visit_array_missing(|index, missing| {
-                if missing {
-                    let value = array
-                        .values_mut()
-                        .get_mut(index)
-                        .ok_or(EvaluationFailure::StalePlan)?;
-                    *value = helper::Scalar::Missing;
-                }
-                Ok(())
-            });
+            let missing = self
+                .host
+                .visit_argument_array_missing(index, |index, missing| {
+                    if missing {
+                        let value = array
+                            .values_mut()
+                            .get_mut(index)
+                            .ok_or(EvaluationFailure::StalePlan)?;
+                        *value = helper::Scalar::Missing;
+                    }
+                    Ok(())
+                });
             self.operational(missing)?;
         }
         Ok(value)
     }
     fn coercev2_numeric_text(&mut self, text: &str) -> Result<f64, helper::Failure> {
-        let result = CallHost::new(self.session, self.sheet, self.address, ArgumentsRef::Empty)
+        let result = self
+            .host
             .coercev2_number_text(text, NumericPolicy::PinnedPoi);
         self.function(result)
     }
     fn coercev2_number_to_text(&mut self, number: f64) -> Result<String, helper::Failure> {
-        let result = CallHost::new(self.session, self.sheet, self.address, ArgumentsRef::Empty)
+        let result = self
+            .host
             .coercev2_number_to_text(number, NumericPolicy::PinnedPoi);
         self.function(result)
     }
@@ -336,7 +335,9 @@ impl helper::Workbook for Port<'_, '_> {
                 helper::Unsupported::DynamicReference,
             ));
         }
-        let result = self.session.cell(sheet as usize, CellAddress { row, col });
+        let result = self
+            .host
+            .sheet_cell(sheet as usize, CellAddress { row, col });
         let value = self.operational(result)?;
         self.scalar(value)
     }
@@ -355,7 +356,7 @@ impl helper::Workbook for Port<'_, '_> {
         if !(0..1_048_576).contains(&row) || !(0..16_384).contains(&col) {
             return Ok(helper::Scalar::Blank);
         }
-        let result = self.session.cell(
+        let result = self.host.sheet_cell(
             sheet as usize,
             CellAddress {
                 row: row as u32,
@@ -365,12 +366,7 @@ impl helper::Workbook for Port<'_, '_> {
         let value = self.operational(result)?;
         self.scalar(value)
     }
-    fn sheet_index(&mut self, name: &str) -> Result<Option<u32>, helper::Failure> {
-        let result = self.session.budget.text(name.len());
-        self.operational(result)?;
-        let result = self.session.sheet(self.sheet, &Some(name.to_owned()));
-        self.operational(result).map(|v| v.map(|s| s as u32))
-    }
+
     fn dynamic_reference(
         &mut self,
         query: &helper::DynamicReference,
@@ -396,25 +392,16 @@ impl helper::Workbook for Port<'_, '_> {
             .ok_or(helper::Failure::Operational(
                 helper::OperationalFailure::ResourceOverflow,
             ))?;
-        let result = self.session.budget.text(bytes);
+        let result = self.host.check_text(bytes);
         self.operational(result)?;
-        let parse_policy = self.session.plan.map_or_else(
-            poirot_parsing::formula::FormulaParsePolicy::default,
-            |plan| plan.policy().parse,
-        );
+        let parse_policy = self.host.parse_policy();
         let mut endpoint = |text: &str| -> Result<poirot_parsing::formula::Expr, helper::Failure> {
             let text = if query.a1 {
                 text.to_owned()
             } else {
                 r1c1(text, context)?
             };
-            if self.session.budget.profiling {
-                self.session.run_usage.dynamic_parse_attempts = self
-                    .session
-                    .run_usage
-                    .dynamic_parse_attempts
-                    .saturating_add(1);
-            }
+            self.host.record_dynamic_parse();
             let syntax = if text.contains(':') {
                 match poirot_parsing::formula::parse_formula_with_policy(&text, parse_policy)
                     .map(poirot_parsing::formula::ParsedFormula::into_expression)
@@ -469,12 +456,8 @@ impl helper::Workbook for Port<'_, '_> {
         } else {
             first
         };
-        let program = crate::bytecode::compile_with_registry(&syntax, self.session.extensions)
-            .map_err(|_| helper::Failure::Spreadsheet(helper::Error::Ref))?;
-        let result = self
-            .session
-            .bytecode_expr(sheet as usize, self.address, &program);
-        let value = self.operational(result)?;
+        let result = self.host.dynamic_reference(sheet as usize, &syntax);
+        let value = self.function(result)?;
         match value {
             Value::Refs(_) | Value::SheetSpan(_) | Value::SignedRefs(_) => self.convert(value),
             _ => Err(helper::Failure::Spreadsheet(helper::Error::Ref)),
@@ -553,33 +536,24 @@ fn r1c1(text: &str, context: helper::Context) -> Result<String, helper::Failure>
     }
     Ok(format!("{letters}{}", row + 1))
 }
-/// Execute lookup helpers while retaining lazy arguments and reference-valued results.
-pub(crate) fn execute(
-    session: &mut Session<'_>,
-    sheet: usize,
-    address: CellAddress,
+/// Execute the helper plan through checked services, retaining lazy and reference channels.
+pub(crate) fn execute_host(
+    host: CallHost<'_, '_>,
     function: helper::Function,
-    arguments: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
-    let policy = if session.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation {
-        helper::SemanticsPolicy::ExcelDocumentation
-    } else {
-        helper::SemanticsPolicy::PinnedPoi
-    };
+    let target = host.target();
+    let count = host.len();
     let mut port = Port {
-        session,
-        sheet,
-        address,
-        arguments,
+        host,
         failure: None,
     };
     let context = helper::Context {
-        sheet: sheet as u32,
-        row: address.row,
-        col: address.col,
+        sheet: target.sheet as u32,
+        row: target.address.row,
+        col: target.address.col,
     };
-    match helper::CallPlan::prepare(function, arguments.len())
-        .and_then(|plan| plan.execute_with_policy(context, &mut port, policy))
+    match helper::CallPlan::prepare(function, count)
+        .and_then(|plan| plan.execute(context, &mut port))
     {
         Ok(value) => port.output(value),
         Err(helper::Failure::Spreadsheet(e)) => Ok(err(cell_error(e))),

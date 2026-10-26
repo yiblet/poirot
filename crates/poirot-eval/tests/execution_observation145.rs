@@ -209,6 +209,12 @@ fn observation_preserves_output_usage_rng_and_lazy_execution() {
         "IF(TRUE,RAND(),NOW())",
         "IFERROR(1,RAND())",
         "IFERROR(IFNA(#N/A,RAND()),NOW())",
+        "SUM(IFERROR({2,3},RAND()))",
+        "SUM(IFNA(#N/A,{2,3}))",
+        "NOT(#REF!,RAND())",
+        "POWER(RAND(),2)",
+        "IFERROR(POWER(0,0),RAND())",
+        "POWER(RAND())",
     ] {
         let without = evaluate(formula, None, EvaluationBudgets::default());
         let mut trace = BoundedExecutionTrace::new(limits());
@@ -320,48 +326,165 @@ fn read_events_match_with_observation_enabled_and_disabled() {
             self.0.push(event);
         }
     }
-    let mut workbook = Workbook::new();
-    workbook.add_sheet("Sheet1").unwrap();
-    workbook
-        .sheet_mut(0)
+    for formula in [
+        "IF(TRUE,B1,C1)",
+        "IFERROR(B1,C1)",
+        "IFNA(B1,C1)",
+        "IFERROR(#REF!,B1)",
+        "IFNA(#N/A,B1)",
+    ] {
+        let mut workbook = Workbook::new();
+        workbook.add_sheet("Sheet1").unwrap();
+        workbook
+            .sheet_mut(0)
+            .unwrap()
+            .set_formula(AT, formula)
+            .unwrap();
+        let policy = EvaluationPolicy::default();
+        let plan = FormulaCompiler::new().compile_workbook(&workbook, &policy);
+        let target = EvaluationTarget {
+            sheet: 0,
+            address: AT,
+        };
+        let mut without_reads = Reads::default();
+        let mut without = EvaluationRun::new(
+            WorkbookView::new(&workbook, &plan, &policy).unwrap(),
+            EvaluationInputs::default(),
+            EvaluationBudgets::default(),
+        )
         .unwrap()
-        .set_formula(AT, "IF(TRUE,B1,C1)")
-        .unwrap();
-    let policy = EvaluationPolicy::default();
-    let plan = FormulaCompiler::new().compile_workbook(&workbook, &policy);
-    let target = EvaluationTarget {
-        sheet: 0,
-        address: AT,
-    };
-    let mut without_reads = Reads::default();
-    let mut without = EvaluationRun::new(
-        WorkbookView::new(&workbook, &plan, &policy).unwrap(),
-        EvaluationInputs::default(),
-        EvaluationBudgets::default(),
-    )
-    .unwrap()
-    .with_dependency_sink(&mut without_reads);
-    let a = without.evaluate_cell(target);
-    let a = without.finish(a);
-    let mut with_reads = Reads::default();
+        .with_dependency_sink(&mut without_reads);
+        let a = without.evaluate_cell(target);
+        let a = without.finish(a);
+        let mut with_reads = Reads::default();
+        let mut trace = BoundedExecutionTrace::new(limits());
+        let mut with = EvaluationRun::new(
+            WorkbookView::new(&workbook, &plan, &policy).unwrap(),
+            EvaluationInputs::default(),
+            EvaluationBudgets::default(),
+        )
+        .unwrap()
+        .with_dependency_sink(&mut with_reads)
+        .with_execution_observer(&mut trace);
+        let b = with.evaluate_cell(target);
+        let b = with.finish(b);
+        assert_eq!(a.outcome, b.outcome);
+        assert_eq!(a.execution, b.execution);
+        assert_eq!(without_reads.0, with_reads.0);
+        assert!(
+            !with_reads
+                .0
+                .iter()
+                .any(|e| matches!(e.read, DependencyRead::Cell(t) if t.address.col == 2))
+        );
+        assert!(
+            with_reads
+                .0
+                .iter()
+                .any(|e| matches!(e.read, DependencyRead::Cell(t) if t.address.col == 1))
+        );
+    }
+}
+
+#[test]
+fn scalar_mask_decision_retains_the_array_source_operation() {
     let mut trace = BoundedExecutionTrace::new(limits());
-    let mut with = EvaluationRun::new(
-        WorkbookView::new(&workbook, &plan, &policy).unwrap(),
-        EvaluationInputs::default(),
-        EvaluationBudgets::default(),
-    )
-    .unwrap()
-    .with_dependency_sink(&mut with_reads)
-    .with_execution_observer(&mut trace);
-    let b = with.evaluate_cell(target);
-    let b = with.finish(b);
-    assert_eq!(a.outcome, b.outcome);
-    assert_eq!(a.execution, b.execution);
-    assert_eq!(without_reads.0, with_reads.0);
-    assert!(
-        !with_reads
-            .0
-            .iter()
-            .any(|e| matches!(e.read, DependencyRead::Cell(t) if t.address.col == 2))
+    assert_eq!(
+        value(evaluate(
+            "SUM(IFERROR({2,3},RAND()))",
+            Some(&mut trace),
+            EvaluationBudgets::default()
+        )),
+        CellValue::Number(5.)
     );
+    let source = trace
+        .events()
+        .iter()
+        .find_map(|event| match event {
+            RetainedEvent::MaskDecision {
+                source_argument,
+                checked: CellValue::Number(2.),
+                caught: None,
+                selected_fallback_operation: None,
+                ..
+            } => Some(*source_argument),
+            _ => None,
+        })
+        .unwrap();
+    assert!(trace.events().iter().any(|event| matches!(
+        event,
+        RetainedEvent::Complete { operation, result: Ok(RetainedValue::Array { rows: 1, values: 2 }) }
+            if operation.id == source
+    )));
+}
+
+#[test]
+fn classic_math_observes_eager_admission_in_source_order() {
+    use registry::{FunctionId, MathFunction};
+    for (formula, expected) in [
+        (
+            "POWER(ABS(-2),SIGN(3))",
+            vec![MathFunction::Power, MathFunction::Abs, MathFunction::Sign],
+        ),
+        // Ordinary math admits all supplied source geometry before coercing
+        // individual members; admission therefore observes this RAND source.
+        (
+            "POWER(\"bad\",RAND())",
+            vec![MathFunction::Power, MathFunction::Rand],
+        ),
+        ("POWER(RAND())", vec![MathFunction::Power]),
+    ] {
+        let mut trace = BoundedExecutionTrace::new(limits());
+        let result = value(evaluate(
+            formula,
+            Some(&mut trace),
+            EvaluationBudgets::default(),
+        ));
+        if formula == "POWER(\"bad\",RAND())" {
+            assert_eq!(result, CellValue::Error(CellError::Value));
+        }
+        let functions: Vec<_> = trace
+            .events()
+            .iter()
+            .filter_map(|event| match event {
+                RetainedEvent::Begin(Operation {
+                    kind:
+                        OperationKind::Expression {
+                            handler: Some(FunctionId::Math(function)),
+                        },
+                    ..
+                }) => Some(*function),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(functions, expected, "{formula}");
+    }
+}
+
+#[test]
+fn member_recovery_retains_observed_array_source_and_selected_fallback_identity() {
+    let mut trace = BoundedExecutionTrace::new(limits());
+    assert_eq!(
+        value(evaluate(
+            "SUM(IFERROR({#N/A,2},{7,8}))",
+            Some(&mut trace),
+            Default::default()
+        )),
+        CellValue::Number(9.)
+    );
+    let (source, fallback) = trace
+        .events()
+        .iter()
+        .find_map(|event| match event {
+            RetainedEvent::MaskDecision {
+                source_argument,
+                caught: Some(CellError::NA),
+                selected_fallback_operation: Some(fallback),
+                ..
+            } => Some((*source_argument, *fallback)),
+            _ => None,
+        })
+        .unwrap();
+    assert!(trace.events().iter().any(|event| matches!(event, RetainedEvent::Complete {operation, result: Ok(RetainedValue::Array { rows: 1, values: 2 })} if operation.id == source)));
+    assert!(trace.events().iter().any(|event| matches!(event, RetainedEvent::Begin(operation) if operation.id == fallback && matches!(operation.kind, OperationKind::Argument {ordinal:1, ..}))));
 }

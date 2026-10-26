@@ -1,6 +1,11 @@
 //! Indexed criteria aggregation following pinned POI Countif, Sumif and Baseifs.
-use crate::criteria_adapter::{Function, cell, error};
-use crate::host::{CallHost, MissingPolicy, NumericPolicy, OperandKind};
+use crate::adapters::elementwise::rows::{
+    self, Numbers, Numeric, PairLayout, PairedCollections, PredicateErrors,
+};
+use crate::adapters::elementwise::{FixedScalar, NumericParameter, NumericSignature};
+use crate::criteria_adapter::{cell, error};
+use crate::host::{CallHost, NumericPolicy};
+use crate::registry::CriteriaFunction as Function;
 use crate::*;
 use poirot_functions_criteria::{Cell, Criterion};
 use poirot_parsing::criteria::Comparison;
@@ -13,24 +18,12 @@ pub(crate) fn execute(
     function: Function,
     arguments: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
-    if function != Function::Subtotal {
-        session.read(DependencyRead::BuiltinPolicy);
-    }
     let mut host = CallHost::new(session, sheet, address, arguments);
-    match evaluate(&mut host, function) {
+    match evaluate(&mut host, address, function) {
         Ok(value) => Ok(value),
         Err(FunctionFailure::Spreadsheet(e)) => Ok(err(e)),
         Err(FunctionFailure::Operational(e)) => Err(e),
     }
-}
-fn range(host: &mut CallHost<'_, '_>, index: usize) -> FunctionResult<(usize, usize)> {
-    if !matches!(
-        host.kind(index)?,
-        OperandKind::Reference | OperandKind::Array
-    ) {
-        return Err(VALUE_ERROR.into());
-    }
-    host.shape(index)
 }
 /// Admit text payloads and reject error kinds unsupported by criteria helpers.
 pub(super) fn preflight(host: &mut CallHost<'_, '_>, values: &[&CellValue]) -> FunctionResult<()> {
@@ -48,309 +41,159 @@ pub(super) fn preflight(host: &mut CallHost<'_, '_>, values: &[&CellValue]) -> F
     }
     Ok(())
 }
-fn evaluate(host: &mut CallHost<'_, '_>, function: Function) -> FunctionResult<Value> {
+fn evaluate(
+    host: &mut CallHost<'_, '_>,
+    address: CellAddress,
+    function: Function,
+) -> FunctionResult<Value> {
     use Function::*;
     if function == Subtotal {
         return subtotal(host);
     }
-    let single = matches!(function, CountIf | SumIf | AverageIf);
-    let count = matches!(function, CountIf | CountIfs);
-    let n = host.len();
-    if (single && (n < 2 || (function != AverageIf && n > if count { 2 } else { 3 })))
-        || (!single
-            && (n < if count { 2 } else { 3 } || !(n - usize::from(!count)).is_multiple_of(2)))
-    {
-        return Err(VALUE_ERROR.into());
-    }
-    let start = usize::from(!single && !count);
-    let mut target = if !single && !count {
-        range(host, 0)?;
-        Some(0)
-    } else {
-        None
+    let layout = match function {
+        CountIf => PairLayout::Single,
+        SumIf | AverageIf => PairLayout::OptionalPayload,
+        CountIfs => PairLayout::Repeated,
+        SumIfs | AverageIfs | MaxIfs | MinIfs => PairLayout::LeadingPayload,
+        Subtotal => return Err(VALUE_ERROR.into()),
     };
-    host.check_values(n)?;
-    let mut ranges = Vec::new();
-    let mut criteria = Vec::new();
-    // SAFETY: The step is the nonzero literal 2.
-    for i in (start..if single { 2 } else { n }).step_by(2) {
-        let shape = range(host, i)?;
-        ranges.push((i, shape));
-        if single && !count {
-            target = Some(if n == 3 {
-                range(host, 2)?;
-                2
-            } else {
-                0
-            });
+    let roles = PairedCollections::<crate::adapters::elementwise::Broadcast>::admit(host, layout)?;
+    roles.evaluate(host, address, compile, |host, roles, predicates| {
+        if !matches!(function, CountIf | SumIf)
+            && let Some(domain_error) =
+                predicates
+                    .iter()
+                    .find_map(|predicate| match predicate.value {
+                        Cell::Error(error) => Some(error),
+                        _ => None,
+                    })
+        {
+            return Ok(error(domain_error));
         }
-        // Argument expression preparation does not read referenced criterion cells.
-        let description = host.describe(i + 1)?;
-        criteria.push((i + 1, description));
-    }
-    let shape = ranges.first().ok_or(VALUE_ERROR)?.1;
-    if ranges.iter().any(|(_, s)| *s != shape)
-        || (!single && target.is_some() && host.shape(target.ok_or(VALUE_ERROR)?)? != shape)
-    {
-        return Err(VALUE_ERROR.into());
-    }
-    let mut output_shape = (1, 1);
-    for (_, d) in &criteria {
-        if d.kind == OperandKind::Array && (d.rows, d.columns) != (1, 1) {
-            if output_shape != (1, 1) && output_shape != (d.rows, d.columns) {
-                return Err(VALUE_ERROR.into());
-            }
-            output_shape = (d.rows, d.columns);
-        } else if d.kind == OperandKind::Reference && d.rows.saturating_mul(d.columns) > 1 {
-            return Err(host.unsupported(
-                CapabilityId::FunctionAdapter,
-                "reference criterion array context is unavailable",
-            ));
-        }
-    }
-    let output_len = output_shape.0.checked_mul(output_shape.1).ok_or(Num)?;
-    host.check_values(output_len)?;
-    let mut output = Vec::with_capacity(output_len);
-    for out in 0..output_len {
-        let mut predicates = Vec::with_capacity(criteria.len());
-        let mut criterion_error = None;
-        for (index, d) in &criteria {
-            let scalar = if d.kind == OperandKind::Array && d.rows * d.columns > 1 {
-                host.read_cell(*index, out / output_shape.1, out % output_shape.1)?
-            } else {
-                host.scalar_data(*index, MissingPolicy::Blank)?
-            };
-            // Countif.createCriteriaPredicate preserves MissingArgEval and throws;
-            // it must not be confused with a real BlankEval criterion.
-            if scalar.missing {
-                return Err(host.unsupported(
-                    CapabilityId::FunctionAdapter,
-                    "pinned MissingArgEval criteria predicate throws a source exception",
-                ));
-            }
-            let v = scalar.value;
-            preflight(host, &[&v])?;
-            let projected = cell(host, &v)?;
-            let admitted = if host.excel_builtins() {
-                poirot_coercionv2::criteria::coercev2_criteria_excel_operand(projected)
-            } else {
-                projected
-            };
-            let mut predicate = Criterion::parse(&admitted);
-            if host.excel_builtins() {
-                predicate.value =
-                    poirot_coercionv2::criteria::coercev2_criteria_accounting_threshold(
-                        predicate.value,
-                    );
-            }
-            // Equality and inequality otherwise retain literal text matching. Contextual
-            // interpretation here is limited to ordered numeric thresholds.
-            if host.excel_builtins()
-                && matches!(
-                    predicate.comparison,
-                    Comparison::Lt | Comparison::Le | Comparison::Gt | Comparison::Ge
-                )
-            {
-                predicate.value = poirot_coercionv2::criteria::coercev2_criteria_ordered_threshold(
-                    predicate.value,
-                    |text| match host.coercev2_number_text(text, NumericPolicy::PinnedPoi) {
-                        Ok(number) => Ok(Some(number)),
-                        Err(FunctionFailure::Spreadsheet(_)) => Ok(None),
-                        Err(failure) => Err(failure),
-                    },
-                )?;
-            }
-            if (!single || function == AverageIf)
-                && let Cell::Error(e) = predicate.value
-                && criterion_error.is_none()
-            {
-                criterion_error = Some(error(e));
-            }
-            predicates.push(predicate);
-        }
-        let value = if let Some(e) = criterion_error {
-            e
-        } else {
-            aggregate(host, function, &ranges, &predicates, target)?
-        };
-        output.push(value);
-    }
-    if output_shape == (1, 1) {
-        Ok(output.pop().ok_or(VALUE_ERROR)?.into())
-    } else {
-        host.check_values(output_shape.0)?;
-        if output_shape.1 == 0 {
-            return Err(VALUE_ERROR.into());
-        }
-        Ok(Value::Array(crate::ArrayView::unknown(
-            // SAFETY: The local guard rejects a zero chunk width.
-            output.chunks(output_shape.1).map(|r| r.to_vec()).collect(),
-        )))
-    }
+        aggregate(host, function, roles, predicates)
+    })
 }
+/// Compile one admitted control without binding or traversing workbook arguments.
+fn compile(host: &mut CallHost<'_, '_>, value: CellValue) -> FunctionResult<Criterion> {
+    preflight(host, &[&value])?;
+    let admitted =
+        poirot_coercionv2::criteria::coercev2_criteria_excel_operand(cell(host, &value)?);
+    let mut predicate = Criterion::parse(&admitted);
+    predicate.value =
+        poirot_coercionv2::criteria::coercev2_criteria_accounting_threshold(predicate.value);
+    if matches!(
+        predicate.comparison,
+        Comparison::Lt | Comparison::Le | Comparison::Gt | Comparison::Ge
+    ) {
+        predicate.value = poirot_coercionv2::criteria::coercev2_criteria_ordered_threshold(
+            predicate.value,
+            |text| match host.coercev2_number_text(text, NumericPolicy::PinnedPoi) {
+                Ok(number) => Ok(Some(number)),
+                Err(FunctionFailure::Spreadsheet(_)) => Ok(None),
+                Err(failure) => Err(failure),
+            },
+        )?;
+    }
+    Ok(predicate)
+}
+
 fn aggregate(
     host: &mut CallHost<'_, '_>,
     function: Function,
-    ranges: &[(usize, (usize, usize))],
+    roles: &PairedCollections,
     criteria: &[Criterion],
-    target: Option<usize>,
 ) -> FunctionResult<CellValue> {
     use Function::*;
-    let (rows, columns) = ranges.first().ok_or(VALUE_ERROR)?.1;
-    let (mut sum, mut count, mut extremum) = (0., 0usize, None::<f64>);
-    // Only the first predicate may prove implicit blanks irrelevant: selecting
-    // a later range would bypass earlier errors and dependencies. AverageIf
-    // reads even rejected targets, so it must retain dense traversal.
-    let positions = if function != AverageIf
-        && criteria
-            .first()
-            .is_some_and(|criterion| !criterion.matches(&Cell::Blank))
-    {
-        host.stored_positions(ranges.first().ok_or(VALUE_ERROR)?.0)?
-    } else {
-        None
-    };
-    let dense_len = if positions.is_some() {
-        0
-    } else {
-        rows.checked_mul(columns).ok_or(Num)?
-    };
-    if columns == 0 {
-        return Err(VALUE_ERROR.into());
-    }
-    let selected = positions
-        .into_iter()
-        .flatten()
-        .chain((0..dense_len).map(|index| (index / columns, index % columns)));
-    for (r, c) in selected {
-        let mut matched = true;
-        for ((index, _), criterion) in ranges.iter().zip(criteria) {
-            if function != AverageIf && matches!(criterion.value, Cell::Blank) {
-                matched = false;
-                break;
-            }
-            let v = host.read_cell(*index, r, c)?.value;
-            let cv = match &criterion.value {
-                Cell::Text(s) => Text(s.clone()),
-                _ => Blank,
-            };
-            preflight(host, &[&v, &cv])?;
-            if let (Cell::Text(pattern), Some(input)) = (&criterion.value, v.text_ref()) {
-                let input = host.project_text(input)?;
-                if matches!(
-                    criterion.comparison,
-                    Comparison::None | Comparison::Eq | Comparison::Ne
-                ) {
-                    host.admit_wildcard(pattern, &input)?;
-                }
-            }
-            let projected = cell(host, &v)?;
-            let mut visited = 0;
-            if !criterion.matches_metered(&projected, &mut || host.wildcard_step(&mut visited))? {
-                matched = false;
-                break;
-            }
-        }
-        // AverageIf reads the target even for nonmatches; other functions stay lazy.
-        let value = if function == AverageIf {
-            Some(
-                host.read_relative_cell(target.ok_or(VALUE_ERROR)?, r, c)?
-                    .value,
-            )
-        } else {
-            None
-        };
-        if !matched {
-            continue;
-        }
-        if matches!(function, CountIf | CountIfs) {
-            count += 1;
-            continue;
-        }
-        let v = match value {
-            Some(v) => v,
-            None => {
-                host.read_relative_cell(target.ok_or(VALUE_ERROR)?, r, c)?
-                    .value
-            }
-        };
-        // Pinned POI AverageIf admits only numeric targets; Excel forwards selected errors.
-        if let Error(e) = v
-            && (function != AverageIf || host.excel_builtins())
-        {
-            return Ok(Error(e));
-        }
-        if let Number(n) = v {
-            sum += n;
-            count += 1;
-        }
-        let numeric = if let Number(n) = v { n } else { 0. };
-        extremum = Some(match extremum {
-            None => numeric,
-            Some(old) if function == MinIfs => old.min(numeric),
-            Some(old) => old.max(numeric),
-        });
-    }
-    Ok(match function {
-        CountIf | CountIfs => Number(count as f64),
-        SumIf | SumIfs => finite(sum),
-        AverageIf | AverageIfs if count == 0 => Error(Div0),
-        AverageIf | AverageIfs => finite(sum / count as f64),
-        MaxIfs | MinIfs => finite(extremum.unwrap_or(0.)),
+    let operation = match function {
+        CountIf | CountIfs => Numeric::Count,
+        SumIf | SumIfs => Numeric::Sum,
+        AverageIf => Numeric::AverageIf,
+        AverageIfs => Numeric::Average,
+        MinIfs => Numeric::Min,
+        MaxIfs => Numeric::Max,
         Subtotal => return Err(VALUE_ERROR.into()),
-    })
+    };
+    let source = roles.source(
+        host,
+        criteria
+            .first()
+            .is_some_and(|criterion| !criterion.matches(&Cell::Blank)),
+    )?;
+    rows::select(
+        host,
+        source,
+        roles.field(),
+        PredicateErrors::Preserve,
+        |host, r, c| {
+            rows::any_all(host, 0..1, 0..roles.pairs().len(), |host, _, term| {
+                let (range, _) = roles.pairs().get(term).ok_or(VALUE_ERROR)?;
+                let criterion = criteria.get(term).ok_or(VALUE_ERROR)?;
+                let v = range.read_at(host, r, c)?.value;
+                let cv = match &criterion.value {
+                    Cell::Text(s) => Text(s.clone()),
+                    _ => Blank,
+                };
+                preflight(host, &[&v, &cv])?;
+                let wildcard =
+                    if let (Cell::Text(pattern), Some(input)) = (&criterion.value, v.text_ref()) {
+                        if matches!(
+                            criterion.comparison,
+                            Comparison::None | Comparison::Eq | Comparison::Ne
+                        ) {
+                            Some((pattern.as_str(), host.project_text(input)?))
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    };
+                let projected = cell(host, &v)?;
+                rows::matching(
+                    host,
+                    wildcard
+                        .as_ref()
+                        .map(|(pattern, input)| (*pattern, input.as_str())),
+                    |mut visit| criterion.matches_metered(&projected, &mut visit),
+                )
+            })
+        },
+        Numbers::new(operation),
+    )
 }
+
 fn subtotal(host: &mut CallHost<'_, '_>) -> FunctionResult<Value> {
     if host.len() < 2 {
         return Err(VALUE_ERROR.into());
     }
-    // Subtotal uses OperandResolver.coerceValueToInt, including its i32
-    // range check. MissingArgEval is outside its supported coercion types.
-    let scalar = host.scalar_data(0, MissingPolicy::Blank)?;
+    // SUBTOTAL selectors have an i32 domain; omitted selectors remain unsupported.
+    let scalar = FixedScalar::at(0).read(host)?;
     if scalar.missing {
-        return Err(host.unsupported(
-            CapabilityId::NumericConversion,
-            "pinned MissingArgEval SUBTOTAL code coercion throws a source exception",
-        ));
+        return Err(host.unsupported(CapabilityId::NumericConversion, "omitted SUBTOTAL selector"));
     }
-    let code = match scalar.value {
-        Text(text) => host.coercev2_number_text(&text, NumericPolicy::PinnedPoi)?,
-        value => host.coercev2_scalar_number(&value, NumericPolicy::PinnedPoi)?,
-    }
-    .floor();
+    let code = NumericSignature::new(&[NumericParameter::required()])
+        .scalars(host, 0)?
+        .get(0)?
+        .floor();
     if code.is_nan() || code > i32::MAX as f64 || code < i32::MIN as f64 {
         return Err(Num.into());
     }
     if !((1. ..=11.).contains(&code) || (101. ..=111.).contains(&code)) {
         return Err(VALUE_ERROR.into());
     }
-    let mut cells = Vec::new();
-    for index in 1..host.len() {
-        if host.kind(index)? == OperandKind::Reference && !host.excel_builtins() {
-            return Err(host.unsupported(
-                CapabilityId::FunctionAdapter,
-                "SUBTOTAL needs workbook visibility and nested subtotal metadata",
-            ));
-        }
-        let len = host.collection_len(index)?;
-        host.check_values(cells.len().saturating_add(len))?;
-        for position in 0..len {
-            let v = if host.excel_builtins() {
-                let Some(value) = host.subtotal_cell(index, position, code > 100.)? else {
-                    continue;
-                };
-                value
-            } else {
-                host.collection_cell(index, position)?
-            };
-            let value = if v.missing { Number(0.) } else { v.value };
-            preflight(host, &[&value])?;
-            cells.push((
-                cell(host, &value)?,
-                v.origin != crate::host::OperandOrigin::Direct,
-            ));
-        }
-    }
+    let cells = rows::visible_fold(host, 1, code > 100., Vec::new(), |host, cells, v| {
+        let value = if v.missing { Number(0.) } else { v.value };
+        preflight(host, &[&value])?;
+        host.check_values(cells.len().saturating_add(1))?;
+        cells
+            .try_reserve(1)
+            .map_err(|_| host.allocation_failure())?;
+        // SAFETY: one additional slot was reserved immediately above.
+        cells.push((
+            cell(host, &value)?,
+            v.origin != crate::host::OperandOrigin::Direct,
+        ));
+        Ok(())
+    })?;
     host.check_values(cells.len())?;
     let supplied: Vec<_> = cells
         .iter()

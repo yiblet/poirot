@@ -23,28 +23,23 @@ impl CallHost<'_, '_> {
     ) -> FunctionResult<Vec<ScalarOperand>> {
         let mut operand = self.argument(index)?;
         if policy == TraversalPolicy::SparseAggregation {
-            let origin = if matches!(operand.value, Value::Array(_)) {
-                OperandOrigin::ArrayElement
-            } else {
-                OperandOrigin::Direct
-            };
-            let values = self.session.items(operand.value)?;
+            let flag_count = operand.array_missing.iter().map(Vec::len).sum();
+            let values = self.session.fold_items(
+                operand,
+                Vec::new(),
+                |values, additional| values.try_reserve(additional),
+                |values, member| {
+                    if values.len() >= values.capacity() {
+                        return Err(EvaluationFailure::StalePlan);
+                    }
+                    // SAFETY: Capacity was checked for this member before the push.
+                    values.push(member);
+                    Ok(())
+                },
+            )?;
             self.check_values(values.len())?;
-            self.check_values(operand.array_missing.iter().map(Vec::len).sum())?;
-            let flags: Vec<_> = operand.array_missing.iter().flatten().copied().collect();
-            return Ok(values
-                .into_iter()
-                .enumerate()
-                .map(|(index, (value, reference))| ScalarOperand {
-                    value,
-                    origin: if reference {
-                        OperandOrigin::ReferencedCell
-                    } else {
-                        origin
-                    },
-                    missing: operand.missing || flags.get(index).copied().unwrap_or(false),
-                })
-                .collect());
+            self.check_values(flag_count)?;
+            return Ok(values);
         }
         if policy == TraversalPolicy::LastAreaRow {
             match &mut operand.value {

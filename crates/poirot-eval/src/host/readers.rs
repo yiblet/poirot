@@ -32,24 +32,6 @@ impl CallHost<'_, '_> {
             missing: operand.missing,
         })
     }
-    /// Source coordinates of an AreaEval operand, without traversing its cells.
-    /// Unknown computed-array coordinates remain unknown.
-    pub(crate) fn operand_anchor(&mut self, index: usize) -> FunctionResult<Option<CellAddress>> {
-        self.prepare(index)?;
-        Ok(match &self.operand(index).ok_or(VALUE_ERROR)?.value {
-            Value::Array(view) => view.anchor,
-            // SAFETY: The match guard checks areas.len() == 1 before reading any first-area fields.
-            Value::Refs(areas) if areas.len() == 1 && areas[0].kind == AreaKind::Area => {
-                Some(CellAddress {
-                    // SAFETY: The match guard checks areas.len() == 1 before reading any first-area fields.
-                    row: areas[0].r0,
-                    // SAFETY: The match guard checks areas.len() == 1 before reading any first-area fields.
-                    col: areas[0].c0,
-                })
-            }
-            _ => None,
-        })
-    }
     /// Enumerate stored reference positions, recording membership for future edits.
     /// Arrays and scalars return `None` and retain their existing dense traversal.
     pub(crate) fn stored_positions(

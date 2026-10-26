@@ -56,8 +56,6 @@ pub trait Workbook {
         let _ = (reference, sheet, row, col);
         Err(Failure::Unsupported(crate::Unsupported::WorkbookMetadata))
     }
-    /// Resolve a sheet spelling through the host's name policy.
-    fn sheet_index(&mut self, name: &str) -> Result<Option<u32>, Failure>;
     /// Resolve a computed reference while retaining namespace dependencies.
     fn dynamic_reference(
         &mut self,
