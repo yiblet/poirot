@@ -13,6 +13,7 @@ fn at(address: &str) -> EvaluationTarget {
 fn style(format: &str) -> CellStyle {
     CellStyle {
         number_format: Some(format.into()),
+        ..Default::default()
     }
 }
 fn book() -> Workbook {

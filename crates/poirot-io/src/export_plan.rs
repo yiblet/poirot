@@ -27,6 +27,8 @@ pub struct ExportFeatures {
     pub names: bool,
     /// Whether source cells contain custom number formats.
     pub number_formats: bool,
+    /// Whether ordinary typed cell visuals and workbook color context are serialized.
+    pub visual_styles: bool,
 }
 /// Pure inspection of an immutable source. Its borrow prevents stale snapshots.
 /// Source bytes count UTF-8 payloads for scalar text and two bytes per unit for raw UTF16 text, eight bytes per scalar and 24 bytes per
@@ -80,6 +82,7 @@ impl<'a> ExportPlan<'a> {
             typed_caches: true,
             names: true,
             number_formats: true,
+            visual_styles: true,
         }
     }
     /// Serialize the validated source without mutating or recalculating it.
@@ -113,6 +116,12 @@ pub fn plan_xlsx_export(
         }
         Ok(())
     };
+    charge(
+        workbook
+            .style_context
+            .retained_bytes()
+            .ok_or_else(|| IoError::Limit("style context size overflow".into()))?,
+    )?;
     for sheet in workbook.sheets() {
         let mut sheet_text_bytes = 0u64;
         charge(sheet.name().len())?;
@@ -160,9 +169,11 @@ pub fn plan_xlsx_export(
             if let Some(formula) = &cell.formula {
                 charge(formula.len())?;
             }
-            if let Some(format) = &cell.style.number_format {
-                charge(format.len())?;
-            }
+            charge(
+                cell.style
+                    .text_bytes()
+                    .ok_or_else(|| IoError::Limit("style size overflow".into()))?,
+            )?;
             crate::numeric_representation::check(sheet.name(), *address, cell)?;
         }
     }

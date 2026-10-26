@@ -80,6 +80,11 @@ Poirot targets modern Excel and is useful today for known spreadsheet models.
 Validate the input cases your application uses. The [compatibility guide](docs/compatibility.md)
 covers function and file support, known gaps, test evidence, and reporting issues.
 
+XLSX files retain ordinary cell fonts, pattern fills, borders, alignment and number
+formats, including styled blank cells. Edit `Cell::style` with `CellStyle` and a
+shared `VisualStyle`, or use an overlay's `set_style`. Theme and indexed colors
+retain their source identities; Poirot does not render workbook layout.
+
 ## Roadmap and contributing
 
 We want to build the fastest Excel calculation engine, so developers can use AI

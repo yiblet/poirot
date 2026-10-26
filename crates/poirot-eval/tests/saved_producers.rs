@@ -222,6 +222,7 @@ fn style_only_edits_preserve_saved_contents_and_policy_switch_recomputes() {
     );
     let style = poirot_model::CellStyle {
         number_format: Some("0.00".into()),
+        ..Default::default()
     };
     overlay.set_style(at("B2"), style).unwrap();
     assert_eq!(
@@ -426,6 +427,7 @@ fn style_reset_roundtrip_recovery_and_flush_preserve_saved_ownership() {
                 at(address),
                 poirot_model::CellStyle {
                     number_format: Some("0.00".into()),
+                    ..Default::default()
                 },
             )
             .unwrap();
@@ -491,6 +493,7 @@ fn explicit_blank_content_dominates_style_edits_in_either_order() {
             .unwrap();
         let style = poirot_model::CellStyle {
             number_format: Some("0.00".into()),
+            ..Default::default()
         };
         if style_first {
             overlay.set_style(at("B2"), style).unwrap();
@@ -634,6 +637,7 @@ fn byte_equal_blank_content_after_style_flush_declines_old_saved_ownership() {
             at("B2"),
             poirot_model::CellStyle {
                 number_format: Some("0.00".into()),
+                ..Default::default()
             },
         )
         .unwrap();

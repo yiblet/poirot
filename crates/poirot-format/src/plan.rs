@@ -5,6 +5,17 @@ mod compile;
 mod execute;
 mod fingerprint;
 
+/// Recognize text substitution without interpreting mixed numeric or date tokens.
+fn is_text_section(tokens: &[Token]) -> bool {
+    tokens.iter().any(|token| matches!(token, Token::Text))
+        && tokens.iter().all(|token| {
+            matches!(
+                token,
+                Token::Text | Token::Literal(_) | Token::Padding(_) | Token::Fill(_)
+            )
+        })
+}
+
 pub use compile::{
     compile_format, compile_format_with_source, compile_program, compile_program_with_source,
 };
@@ -133,7 +144,7 @@ pub enum SectionKind {
     Scientific,
     /// General-value formatting with literal fragments.
     General,
-    /// Literal-only section.
+    /// Literal or text-placeholder section.
     Literal,
     /// Fraction layout, such as `# ?/?`.
     Fraction,

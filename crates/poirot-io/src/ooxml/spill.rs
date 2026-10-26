@@ -262,6 +262,7 @@ mod tests {
         let plan = OpcReadPlan {
             workbook_part: "book.xml".into(),
             styles_part: None,
+            theme_part: None,
             shared_strings_part: None,
             warnings: vec![],
             sheets: vec![crate::opc::SheetIdentity {

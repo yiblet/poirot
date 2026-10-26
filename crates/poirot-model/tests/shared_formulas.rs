@@ -85,6 +85,7 @@ fn cache_and_style_edits_preserve_shared_provenance() {
             address: at("B2"),
             style: CellStyle {
                 number_format: Some("0.00".into()),
+                ..Default::default()
             },
         },
     ])

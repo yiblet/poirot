@@ -20,5 +20,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+Integer masks such as `000-00-0000` support `0`, `#`, `?` and literal separators;
+interleaved decimal, scientific, fraction, grouping and scaling layouts are unsupported.
+
 Unsupported formats return errors. Date rendering uses the supplied workbook
 calendar; locale and width are explicit rendering options.

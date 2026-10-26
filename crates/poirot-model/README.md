@@ -23,9 +23,16 @@ Shared groups are independent of array/spill ownership and evaluator templates.
 
 Construct cell records with constructors or `..Cell::default()` to default optional
 metadata. Exhaustive `Cell` struct literals must now include `shared_formula`.
-Source snapshot schema 5 includes provenance and the Arc-backed compressed
-legacy XLSX package; artifact envelopes reject older
-source revisions explicitly rather than decoding them as the current layout.
+Source snapshot schema 7 stores shared cell styles and workbook theme/palette context;
+artifact envelopes reject older source revisions explicitly.
 
 Current XLSX imports do not retain original packages, and saves ignore legacy
 `retained_xlsx` bytes carried by a source snapshot.
+
+`CellStyle` keeps number formats alongside an optional `Arc<VisualStyle>` for font,
+pattern fill, four borders, and alignment. Use `..CellStyle::default()` when
+constructing records. Cloning shares visual payloads; equality compares values.
+`FontSize`, `Tint`, `IndexedColor`, and `RotationDegrees` validate numeric fields.
+`Workbook::style_context` retains theme bytes and a custom indexed palette without
+resolving color identities. These native model fields survive source snapshots;
+XLSX visual-style import and export are not yet supported.

@@ -21,6 +21,8 @@
 use std::{collections::BTreeMap, fmt, str::FromStr};
 
 mod formula_types;
+mod styles;
+pub use styles::*;
 // Possible formula-result vocabulary, independent of parsing and execution.
 pub use formula_types::{FormulaType, ScalarKinds, ShapeBounds};
 mod numeric_fidelity;
@@ -136,11 +138,23 @@ impl FromStr for CellAddress {
 ///
 /// A number format changes display, not the stored value. Absence selects the
 /// consumer's default format.
-#[derive(Debug, Clone, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Default, serde::Serialize, serde::Deserialize)]
 pub struct CellStyle {
     /// Optional Excel format spelling; affects display rather than stored value.
     pub number_format: Option<String>,
+    /// Optional shared visual presentation.
+    pub visual: Option<std::sync::Arc<VisualStyle>>,
 }
+impl CellStyle {
+    /// Count logical format and font-name bytes, including shared visual payloads per cell.
+    pub fn text_bytes(&self) -> Option<usize> {
+        self.number_format
+            .as_ref()
+            .map_or(0, String::len)
+            .checked_add(self.visual.as_ref().map_or(0, |style| style.text_bytes()))
+    }
+}
+
 /// Worksheet-local identity of an imported XLSX shared-formula group.
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
@@ -525,6 +539,8 @@ impl std::fmt::Debug for RetainedXlsx {
 /// Use `poirot_eval` for calculation and `poirot_io` for file import/export.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Workbook {
+    /// Theme and indexed palette source context.
+    pub style_context: StyleContext,
     /// Legacy source bytes; current imports leave this empty and saves ignore it.
     pub retained_xlsx: Option<RetainedXlsx>,
     /// Optional provenance and diagnostics retained from file import.

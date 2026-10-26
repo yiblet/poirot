@@ -2,7 +2,8 @@
 use super::fingerprint::program_fingerprint;
 use super::{
     Format, FormatCompileError, FormatCompilePolicy, FormatError, FormatPlan, FormatSourcePolicy,
-    NumberPlan, SectionKind, SectionPlan, SectionProgram, Token, date, error, number, parse_format,
+    NumberPlan, SectionKind, SectionPlan, SectionProgram, Token, date, error, is_text_section,
+    number, parse_format,
 };
 
 fn diagnostic(section: usize, token: Option<usize>, source: FormatError) -> FormatCompileError {
@@ -111,7 +112,14 @@ pub fn compile_program_with_source(
             let decimal_source = kind == SectionKind::Decimal
                 && format.sections.len() <= 2
                 && format.sections.iter().all(|s| s.condition.is_none());
-            match NumberPlan::compile_with_source(&section.tokens, decimal_source) {
+            // A standalone text format preserves numeric content. Its affixes
+            // belong to text substitution, while numbers use General display.
+            let numeric_tokens = if format.sections.len() == 1 && is_text_section(&section.tokens) {
+                &[Token::General]
+            } else {
+                section.tokens.as_slice()
+            };
+            match NumberPlan::compile_with_source(numeric_tokens, decimal_source) {
                 Ok(p) => (kind, SectionProgram::Number(p)),
                 Err(e) => return Err(diagnostic(index, None, e)),
             }

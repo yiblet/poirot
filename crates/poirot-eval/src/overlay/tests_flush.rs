@@ -24,6 +24,7 @@ fn owned_flush_preserves_allocations_bytecode_results_and_followup_dependencies(
             at("A1"),
             CellStyle {
                 number_format: Some("0.00".into()),
+                ..Default::default()
             },
         )
         .unwrap();

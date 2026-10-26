@@ -127,6 +127,12 @@ impl Parser<'_> {
     fn peek(&self) -> Option<char> {
         self.input.get(self.pos..)?.chars().next()
     }
+    /// Recognize an explicit qualifier using the existing unquoted-name grammar.
+    fn starts_unquoted_sheet(&self) -> bool {
+        self.input
+            .get(self.pos..)
+            .is_some_and(|input| identifier(input).is_ok_and(|(rest, _)| rest.starts_with('!')))
+    }
     fn tail(&self) -> Result<&str, ParseError> {
         self.input.get(self.pos..).ok_or_else(|| ParseError {
             kind: super::ParseErrorKind::Syntax,
@@ -277,9 +283,9 @@ impl Parser<'_> {
             let (op, precedence, length) = if let Some((text, op, precedence)) = operator {
                 (op, precedence, text.len())
             } else if whitespace
-                && self.peek().is_some_and(|c| {
+                && (self.peek().is_some_and(|c| {
                     c.is_alphabetic() || matches!(c, '(' | '$' | '\'' | '_' | '\\')
-                })
+                }) || self.starts_unquoted_sheet())
             {
                 (
                     BinaryOp::Intersection,
@@ -402,6 +408,11 @@ impl Parser<'_> {
         }
         let start = self.pos;
         if self.peek().is_some_and(|c| c.is_ascii_digit() || c == '.') {
+            // Explicit sheet qualification takes priority over a numeric prefix,
+            // including exponent-shaped names. Without '!', retain number syntax.
+            if self.starts_unquoted_sheet() {
+                return self.reference(None);
+            }
             let (rest, number) = number_token(self.input.get(start..).ok_or_else(|| {
                 ParseError {
                     kind: super::ParseErrorKind::Syntax,

@@ -49,6 +49,7 @@ pub(crate) fn serialize_fresh(
         .ok_or_else(|| {
             IoError::Unsupported("cannot export workbook without a visible worksheet".into())
         })?;
+    let mut styles = ooxml::StyleExport::new(&workbook.style_context)?;
     let mut writer = rxls::Workbook::new();
     writer.set_active_sheet(active);
     writer.date1904 = workbook.date_system == poirot_model::DateSystem::Excel1904;
@@ -67,11 +68,8 @@ pub(crate) fn serialize_fresh(
             crate::numeric_representation::check(sheet.name(), *address, cell)?;
             let col = u16::try_from(address.col)
                 .map_err(|_| IoError::Unsupported("column exceeds XLSX grid".into()))?;
-            let format = cell
-                .style
-                .number_format
-                .as_ref()
-                .map_or_else(Format::new, |f| Format::new().set_num_format(f));
+            styles.register(&cell.style)?;
+            let format = Format::new();
             // Canonical XML projection below restores exact text, caches, spills,
             // presentation and errors; author only scalar placeholders here.
             if let Some(formula) = &cell.formula {
@@ -91,7 +89,7 @@ pub(crate) fn serialize_fresh(
         }
     }
     let generated = writer.to_xlsx_checked()?;
-    ooxml::patch_export(&generated, workbook, options)
+    ooxml::patch_export(&generated, workbook, options, &styles)
 }
 /// Plan and serialize XLSX before writing the completed bytes to a file.
 pub fn write_xlsx(workbook: &Workbook, path: impl AsRef<Path>) -> Result<(), IoError> {

@@ -4,7 +4,12 @@ Read XLSX with MIT-licensed Calamine streaming cells; read XLS and write fresh X
 with MIT-licensed rxls.
 
 Calamine streams XLSX cells directly into Poirot, avoiding a second full workbook
-model. Poirot recovers number formats, names, date system and presentation.
+model. Poirot recovers names, date system and ordinary XLSX cell presentation:
+number formats, fonts, pattern fills, four-sided borders and common alignment.
+Styles share immutable `VisualStyle` payloads; `Workbook::style_context` retains
+the default style, theme bytes and indexed palette. Colors retain their source
+identities rather than resolved RGB values. XLS imports retain number formats,
+but do not recover visual styles.
 Original shared group IDs and anchors are not retained. Imported formulas remain
 independent through edits and calculation, and the compiler can still share its
 executable templates. Optional manually supplied shared provenance is checked on
@@ -13,7 +18,7 @@ export before formula text is omitted.
 Two existing XML recovery operations protect supported calculation behavior:
 exact Excel UTF-16 text, XML line endings and missing/empty caches; and array/spill
 ownership so saved derived cells cannot become authored blockers. The first pass
-also preserves sparse physical rows, row visibility and cell number formats. The spill pass runs only when
+also preserves sparse physical rows, row visibility and cell styles. The spill pass runs only when
 the first pass encounters array formulas or modern spill/calculation errors.
 There is no separate original shared-group validation or reconstruction pass.
 
@@ -47,7 +52,7 @@ Most applications should use [poirot](https://docs.rs/poirot), which provides th
 same file operations alongside editing and calculation.
 
 Saves always author a fresh XLSX package from the modeled values, formulas, cached
-results, date system, names and number formats. See the
+results, date system, names and supported cell styles. See the
 [compatibility guide](https://github.com/yiblet/poirot/blob/master/docs/compatibility.md)
 for preservation limits. Original shared encoding and unknown formula attributes
 are not preserved. Supported structural edits do not encounter a retained-package gate.
@@ -78,5 +83,7 @@ not allocate a dense table. Original shared encoding is not retained. Malformed
 shared ranges and duplicate masters are not separately validated. The three reserved
 print-area, print-title and filter-database names are omitted because those features
 are not modeled; other defined-name identities remain intact.
-Raw cell-XF number formats, including styled blanks, are recovered during the
-existing text pass; unsupported built-in formats and rich styling may be lost.
+Raw cell-XF styles, including styled blanks, are recovered during the existing
+text pass. Unsupported features such as conditional formatting, gradient fills,
+diagonal borders and row/column style inheritance are not preserved; inspect
+import warnings. Layout and font rendering are outside this crate's scope.

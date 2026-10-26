@@ -122,6 +122,7 @@ impl<'a> Session<'a> {
         let target = self.target(cell)?;
         let style = CellStyle {
             number_format: number_format.clone(),
+            ..Default::default()
         };
         match self {
             Self::Normal(e) => e.set_style(target, style),

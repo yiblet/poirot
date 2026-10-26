@@ -76,6 +76,8 @@ pub struct OpcReadPlan {
     pub workbook_part: String,
     /// Optional resolved style-table part.
     pub styles_part: Option<String>,
+    /// Optional resolved workbook theme part.
+    pub theme_part: Option<String>,
     /// Optional resolved shared-string part.
     pub shared_strings_part: Option<String>,
     /// Checked source worksheet identities in workbook order.
@@ -345,6 +347,7 @@ impl PackageInventory {
             })?;
         let rels = self.relationships(&workbook_part, &mut warnings, policy)?;
         let styles_part = select_relationship(&rels, "styles", false)?;
+        let theme_part = select_relationship(&rels, "theme", false)?;
         let shared_strings_part = select_relationship(&rels, "sharedStrings", false)?;
         let mut reader = NsReader::from_reader(self.part(&workbook_part)?);
         reader.config_mut().expand_empty_elements = true;
@@ -450,6 +453,7 @@ impl PackageInventory {
         Ok(OpcReadPlan {
             workbook_part,
             styles_part,
+            theme_part,
             shared_strings_part,
             sheets,
             warnings,

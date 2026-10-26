@@ -126,7 +126,7 @@ fn unsupported_numeric_token_placements_are_rejected() {
             "{pattern}"
         );
     }
-    for pattern in ["0.0.0", "0E+00E+00", "0\"x\"0"] {
+    for pattern in ["0.0.0", "0E+00E+00", "0\"x\"0.0"] {
         assert!(
             compile_format(pattern, FormatCompilePolicy::default()).is_err(),
             "{pattern}"

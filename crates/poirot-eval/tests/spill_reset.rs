@@ -75,6 +75,7 @@ impl<'a> Workspace<'a> {
     fn metadata(&mut self, target: EvaluationTarget) {
         let style = CellStyle {
             number_format: Some("0.00".into()),
+            ..Default::default()
         };
         match self {
             Self::Direct(eval) => {

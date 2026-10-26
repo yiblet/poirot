@@ -6,7 +6,7 @@ use std::borrow::Cow;
 /// Source snapshot wire revision, checked by the public artifact envelope before decoding.
 /// Bump whenever the serialized source layout changes; provide an explicit migration or
 /// reject older revisions. Prepared engine compatibility is versioned separately.
-pub const SCHEMA_VERSION: u16 = 6;
+pub const SCHEMA_VERSION: u16 = 7;
 
 /// Borrowed-or-owned Serde transport for source state, separate from runtime workbook types.
 #[derive(Serialize, Deserialize)]
@@ -16,13 +16,15 @@ pub struct Snapshot<'a> {
     date_system: DateSystem,
     names: Cow<'a, [NamedRange]>,
     file_metadata: Option<FileMetadata>,
+    styles: Vec<Cow<'a, CellStyle>>,
+    style_context: StyleContext,
 }
 /// Coordinate and serialized cell payload within a sheet snapshot.
 type SnapshotCell<'a> = (
     CellAddress,
     Value<'a>,
     Option<Cow<'a, str>>,
-    Option<Cow<'a, str>>,
+    usize,
     Option<SharedFormula>,
 );
 
@@ -59,6 +61,8 @@ impl<'a> Snapshot<'a> {
     pub fn matches(&self, workbook: &Workbook) -> bool {
         let other = Snapshot::capture(workbook);
         self.retained_xlsx == other.retained_xlsx
+            && self.styles == other.styles
+            && self.style_context == other.style_context
             && self.date_system == other.date_system
             && self.names == other.names
             && self.sheets.len() == other.sheets.len()
@@ -88,6 +92,8 @@ impl<'a> Snapshot<'a> {
     }
     /// Borrow source records for serialization without requiring Workbook itself to implement Serde.
     pub fn capture(workbook: &'a Workbook) -> Self {
+        let mut style_ids = std::collections::HashMap::new();
+        let mut styles = Vec::new();
         Self {
             retained_xlsx: workbook
                 .retained_xlsx
@@ -117,6 +123,11 @@ impl<'a> Snapshot<'a> {
                         .cells()
                         .into_iter()
                         .map(|(a, c)| {
+                            let next = styles.len();
+                            let style_id = *style_ids.entry(&c.style).or_insert_with(|| {
+                                styles.push(Cow::Borrowed(&c.style));
+                                next
+                            });
                             (
                                 *a,
                                 match &c.value {
@@ -130,7 +141,7 @@ impl<'a> Snapshot<'a> {
                                     CellValue::Error(e) => Value::Error(*e),
                                 },
                                 c.formula.as_deref().map(Cow::Borrowed),
-                                c.style.number_format.as_deref().map(Cow::Borrowed),
+                                style_id,
                                 c.shared_formula,
                             )
                         })
@@ -140,6 +151,8 @@ impl<'a> Snapshot<'a> {
             date_system: workbook.date_system,
             names: Cow::Borrowed(&workbook.named_ranges),
             file_metadata: workbook.file_metadata.clone(),
+            styles,
+            style_context: workbook.style_context.clone(),
         }
     }
     /// Copy borrowed payloads only when an independently owned snapshot is needed.
@@ -179,7 +192,7 @@ impl<'a> Snapshot<'a> {
                                     Value::Error(e) => Value::Error(e),
                                 },
                                 f.map(|v| Cow::Owned(v.into_owned())),
-                                n.map(|v| Cow::Owned(v.into_owned())),
+                                n,
                                 shared,
                             )
                         })
@@ -189,6 +202,12 @@ impl<'a> Snapshot<'a> {
             date_system: self.date_system,
             names: Cow::Owned(self.names.into_owned()),
             file_metadata: self.file_metadata,
+            styles: self
+                .styles
+                .into_iter()
+                .map(|s| Cow::Owned(s.into_owned()))
+                .collect(),
+            style_context: self.style_context,
         }
     }
     /// Validate and construct an owned workbook from serialized source records.
@@ -202,6 +221,7 @@ impl<'a> Snapshot<'a> {
             .map(|source| RetainedXlsx::new(source.into_owned()));
         workbook.date_system = self.date_system;
         workbook.file_metadata = self.file_metadata;
+        workbook.style_context = self.style_context;
         for s in self.sheets {
             if s.cells.len() > 10_000_000
                 || s.spill_extents.len() > 10_000_000
@@ -219,7 +239,13 @@ impl<'a> Snapshot<'a> {
             for (row, flags) in s.visibility {
                 sheet.set_row_visibility(row, flags)?;
             }
-            for (a, v, formula, number_format, shared_formula) in s.cells {
+            for (a, v, formula, style_id, shared_formula) in s.cells {
+                let style = self
+                    .styles
+                    .get(style_id)
+                    .ok_or_else(|| ModelError("invalid snapshot style reference".into()))?
+                    .as_ref()
+                    .clone();
                 let value = match v {
                     Value::Blank => CellValue::Blank,
                     Value::Number(b) => CellValue::Number(f64::from_bits(b)),
@@ -235,9 +261,7 @@ impl<'a> Snapshot<'a> {
                             value,
                             formula: formula.map(Cow::into_owned),
                             shared_formula,
-                            style: CellStyle {
-                                number_format: number_format.map(Cow::into_owned),
-                            },
+                            style,
                         },
                     )?
                     .is_some()
@@ -351,6 +375,7 @@ mod tests {
                     shared_formula: None,
                     style: CellStyle {
                         number_format: Some("0.00".into()),
+                        ..Default::default()
                     },
                 },
             )
@@ -364,13 +389,8 @@ mod tests {
         let dto = Snapshot::capture(&w);
         assert!(matches!(dto.names, Cow::Borrowed(_)));
         assert!(matches!(dto.sheets[0].name, Cow::Borrowed(_)));
-        let (
-            _,
-            Value::Text(Cow::Borrowed(text)),
-            Some(Cow::Borrowed(formula)),
-            Some(Cow::Borrowed(style)),
-            _,
-        ) = &dto.sheets[0].cells[0]
+        let (_, Value::Text(Cow::Borrowed(text)), Some(Cow::Borrowed(formula)), style_id, _) =
+            &dto.sheets[0].cells[0]
         else {
             panic!("text fields copied")
         };
@@ -388,7 +408,11 @@ mod tests {
             original.formula.as_ref().unwrap().as_ptr()
         );
         assert_eq!(
-            style.as_ptr(),
+            dto.styles[*style_id]
+                .number_format
+                .as_ref()
+                .unwrap()
+                .as_ptr(),
             original.style.number_format.as_ref().unwrap().as_ptr()
         );
         assert!(matches!(
@@ -440,6 +464,7 @@ mod tests {
                 shared_formula: None,
                 style: CellStyle {
                     number_format: Some("0.000".into()),
+                    ..Default::default()
                 },
             },
         )
@@ -576,5 +601,21 @@ mod spill_extent_validation_tests {
             Some("{1}")
         );
         assert_eq!(restored.sheet(0).unwrap().spill_extent(at("A1")), None);
+    }
+}
+
+#[cfg(test)]
+mod style_reference_tests {
+    use super::*;
+    #[test]
+    fn invalid_style_reference_rejects_instead_of_defaulting() {
+        let mut book = Workbook::new();
+        book.add_sheet("S")
+            .unwrap()
+            .set_style("A1".parse().unwrap(), CellStyle::default())
+            .unwrap();
+        let mut snapshot = Snapshot::capture(&book).into_owned();
+        snapshot.sheets[0].cells[0].3 = snapshot.styles.len();
+        assert!(snapshot.restore().is_err());
     }
 }

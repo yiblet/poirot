@@ -4,8 +4,10 @@ mod budget;
 pub(crate) use backend::{backend_package, needs_backend_adapter};
 mod dynamic;
 mod metadata;
+mod styles;
+pub(crate) use styles::{StyleExport, read_styles};
 mod package;
-pub(crate) use metadata::{apply_workbook_metadata, number_formats};
+pub(crate) use metadata::apply_workbook_metadata;
 mod shared;
 mod spill;
 mod text;
@@ -33,6 +35,7 @@ pub(crate) fn patch_export(
     bytes: &[u8],
     workbook: &Workbook,
     options: crate::WriteOptions,
+    styles: &StyleExport<'_>,
 ) -> Result<Vec<u8>, IoError> {
     package::check_generated_claims(bytes, options)?;
     let package = read_package_with_options(
@@ -76,12 +79,34 @@ pub(crate) fn patch_export(
             bytes: original,
             sheet,
             shared: &shared,
+            styles,
         };
         let size = patch.execute(SizeCounter::default())?.0;
         patched_total = next_total(size, original.len() as u64, patched_total, options)?;
         let updated = patch.execute(Vec::new())?;
         package.insert(path, updated);
     }
+    let path = plan
+        .styles_part
+        .as_ref()
+        .ok_or_else(|| IoError::Read("generated package has no styles part".into()))?;
+    let original = part(&package, path)?;
+    let size = styles
+        .execute(SizeCounter::default(), &workbook.style_context)?
+        .0;
+    patched_total = next_total(size, original.len() as u64, patched_total, options)?;
+    package.insert(
+        path.clone(),
+        styles.execute(Vec::new(), &workbook.style_context)?,
+    );
+    styles::write::install_theme(
+        &mut package,
+        &plan.workbook_part,
+        plan.theme_part.as_deref(),
+        &workbook.style_context,
+        options,
+        &mut patched_total,
+    )?;
     let original = part(&package, &plan.workbook_part)?;
     let patch = WorkbookPatch {
         bytes: original,

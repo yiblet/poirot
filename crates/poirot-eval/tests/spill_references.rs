@@ -383,6 +383,7 @@ fn overlay_flush_preserves_singleton_extent_and_authored_child_style() {
                 formula: None,
                 style: poirot_model::CellStyle {
                     number_format: Some("0.00".into()),
+                    ..Default::default()
                 },
             },
         )

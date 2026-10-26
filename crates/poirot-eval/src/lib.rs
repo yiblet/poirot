@@ -444,7 +444,7 @@ impl Session<'_> {
         let formatting = run_overlay::EffectiveWorkbook::new(self.workbook, self.inputs)
             .cell(target.sheet, target.address)
             .map(|cell| &cell.style)
-            .filter(|style| style.number_format.is_some())
+            .filter(|style| style.number_format.is_some() || style.visual.is_some())
             .cloned();
         CellEvaluation {
             target,

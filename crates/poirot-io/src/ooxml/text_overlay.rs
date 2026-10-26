@@ -49,9 +49,11 @@ pub(crate) fn apply_sheet_text(
     bytes: &[u8],
     shared: &[ExcelText],
     sheet: &mut poirot_model::Worksheet,
-    formats: &[Option<String>],
+    styles: &[poirot_model::CellStyle],
+    warnings: &mut Vec<poirot_model::ImportDiagnostic>,
 ) -> Result<bool, IoError> {
     let mut needs_spills = false;
+    let mut range_styles = false;
     let mut reader = events(bytes);
     let mut next_row = 0;
     let mut row = 0;
@@ -69,7 +71,11 @@ pub(crate) fn apply_sheet_text(
                     sheet.set_presentation(presentation);
                 }
             }
+            Event::Start(e) if e.local_name().as_ref() == "col" => {
+                range_styles |= attr(&e, "style")?.is_some();
+            }
             Event::Start(e) if e.local_name().as_ref() == "row" => {
+                range_styles |= attr(&e, "s")?.is_some();
                 row = match attr(&e, "r")? {
                     Some(r) => r
                         .parse::<u32>()
@@ -168,12 +174,25 @@ pub(crate) fn apply_sheet_text(
                     return Err(IoError::Read("backend omitted a stored cell value".into()));
                 }
                 if let Some(cell) = sheet.get_mut(address) {
-                    cell.style.number_format = formats.get(style).cloned().flatten();
+                    cell.style = if styles.is_empty() && style == 0 {
+                        poirot_model::CellStyle::default()
+                    } else {
+                        styles
+                            .get(style)
+                            .cloned()
+                            .ok_or_else(|| IoError::Read("cell style index out of range".into()))?
+                    };
                 }
             }
             Event::Eof => break,
             _ => {}
         }
+    }
+    if range_styles {
+        warnings.push(poirot_model::ImportDiagnostic {
+            kind: poirot_model::ImportDiagnosticKind::RepresentationLoss,
+            detail: "XLSX row/column style inheritance is omitted".into(),
+        });
     }
     Ok(needs_spills)
 }
@@ -203,7 +222,13 @@ mod tests {
             let sheet = workbook
                 .sheet_by_name_mut(&identity.name)
                 .ok_or_else(|| IoError::Read("missing text worksheet".into()))?;
-            apply_sheet_text(part(package, &identity.part)?, &shared, sheet, &[])?;
+            apply_sheet_text(
+                part(package, &identity.part)?,
+                &shared,
+                sheet,
+                &[],
+                &mut vec![],
+            )?;
         }
         Ok(())
     }
@@ -217,6 +242,7 @@ mod tests {
         let plan = OpcReadPlan {
             workbook_part: "book.xml".into(),
             styles_part: None,
+            theme_part: None,
             shared_strings_part: Some("shared.xml".into()),
             warnings: vec![],
             sheets: vec![crate::opc::SheetIdentity {

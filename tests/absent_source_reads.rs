@@ -70,7 +70,7 @@ macro_rules! source_read_test {
             runtime.set_formula(at("Z100"), "ISBLANK(A2)").unwrap();
             assert_eq!(read(&mut runtime, at("Z100")).unwrap(), CellValue::Boolean(false));
             runtime.set_value(at("A2"), CellValue::Blank).unwrap();
-            runtime.set_style(at("A2"), CellStyle { number_format: Some("0.00".into()) }).unwrap();
+            runtime.set_style(at("A2"), CellStyle { number_format: Some("0.00".into()) , ..Default::default()}).unwrap();
             assert_eq!(read(&mut runtime, at("Z100")).unwrap(), CellValue::Boolean(true));
             let changes = runtime.changes();
             assert!(changes.iter().any(|change| matches!(change,

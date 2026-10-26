@@ -452,6 +452,7 @@ mod tests {
             .unwrap();
         let style = CellStyle {
             number_format: Some("0.00".into()),
+            ..Default::default()
         };
         s.set(
             at("C1"),
@@ -544,6 +545,7 @@ mod tests {
             Cell {
                 style: CellStyle {
                     number_format: Some("0.00".into()),
+                    ..Default::default()
                 },
                 ..Default::default()
             },

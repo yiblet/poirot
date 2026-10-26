@@ -224,10 +224,13 @@ pub use poirot_parsing as parsing;
 pub use poirot_workbook as workbook;
 
 pub use poirot_model::{
-    Cell, CellAddress, CellError, CellStyle, CellValue, DateSystem, ExcelText, FileFormat,
-    FileMetadata, ImportDiagnostic, ImportDiagnosticKind, ModelError, RetainedXlsx, SharedFormula,
-    SharedFormulaId, SheetPresentation, SheetVisibility, TextRef, TextUnits, TextUnitsError,
-    WorkbookChange, Worksheet,
+    Alignment, BorderLine, BorderSide, Borders, Cell, CellAddress, CellError, CellStyle, CellValue,
+    ColorSource, DateSystem, ExcelText, FileFormat, FileMetadata, FontFamily, FontScheme, FontSize,
+    FontStyle, HorizontalAlignment, ImportDiagnostic, ImportDiagnosticKind, IndexedColor,
+    ModelError, PatternFill, PatternType, ReadingOrder, RetainedXlsx, RotationDegrees,
+    SharedFormula, SharedFormulaId, SheetPresentation, SheetVisibility, StyleColor, StyleContext,
+    TextRef, TextRotation, TextUnits, TextUnitsError, ThemeColor, Tint, Underline,
+    VerticalAlignment, VisualStyle, WorkbookChange, Worksheet,
 };
 pub use poirot_workbook::{
     CalculationError, CellEvaluation, CompilationUsage, Evaluation, EvaluationBuilder,

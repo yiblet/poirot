@@ -46,6 +46,7 @@ fn batching_matches_sequential_edits_and_preserves_unaffected_results() {
     let unaffected = batch.cached_value(at("D1")).unwrap();
     let style = CellStyle {
         number_format: Some("0.00".into()),
+        ..Default::default()
     };
     sequential.set_value(at("A1"), 5.).unwrap();
     sequential.set_value(at("A1"), 8.).unwrap();

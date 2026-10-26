@@ -42,9 +42,20 @@ Saved formula results can be stale. Reading or writing a file does not itself
 recalculate its formulas. Formula correctness and preservation of workbook
 presentation are separate concerns.
 
-Charts, macros, drawings, rich styles, data validation and merge layout are not
-preserved. Number-format strings are represented, but visual fidelity is limited.
-External relationships are neither followed nor preserved.
+XLSX imports and exports preserve ordinary cell fonts, pattern fills, four-sided
+borders, common alignment and number-format strings, including styled blanks.
+`CellStyle::visual` shares a `VisualStyle` payload; evaluation outputs expose the
+cell's style as presentation metadata. `Workbook::style_context` retains source
+theme bytes, indexed palettes and the default cell style. Colors retain their
+ARGB, theme, indexed or automatic identity and tint; they are not resolved to
+rendered colors. Native snapshots retain these styles and their context.
+
+Conditional formatting, gradient fills, diagonal borders, named-style provenance
+and row/column style inheritance are unsupported. Other unrepresented style
+features are reported in import warnings. XLS imports retain number formats but
+not these visual styles. Charts, macros, drawings, data validation and merge
+layout are not preserved. Poirot does not render workbook layout. External
+relationships are neither followed nor preserved.
 
 ## Checking your workbook
 

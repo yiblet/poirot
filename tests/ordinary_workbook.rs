@@ -210,6 +210,7 @@ fn ordinary_formula_setter_clears_cache_and_preserves_style() {
     let mut sheet = Worksheet::new("Inputs").unwrap();
     let style = CellStyle {
         number_format: Some("0.00".into()),
+        ..Default::default()
     };
     let mut cell = Cell::new(17.);
     cell.style = style.clone();

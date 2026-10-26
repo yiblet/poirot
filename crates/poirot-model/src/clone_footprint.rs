@@ -16,7 +16,8 @@ pub struct CloneFootprint {
     pub row_visibility: usize,
     /// Defined-name records included in a workbook clone.
     pub named_ranges: usize,
-    /// Every owned textual payload cloned by Workbook: names, formulas, formats
+    /// Every logical textual payload retained by Workbook: names, formulas, formats
+    /// and font names (counted per cell), plus theme/palette metadata bytes
     /// and cell text (including physical UTF-16 bytes).
     pub text_bytes: usize,
 }
@@ -49,6 +50,20 @@ impl CloneFootprint {
                 result.text_bytes = result.text_bytes.checked_sub(extent.formula.len())?;
             }
         }
+        for (sheet, worksheet) in workbook.sheets().iter().enumerate() {
+            for (address, spill) in &worksheet.spill_cache {
+                let removed_style = if final_values.contains_key(&(sheet, spill.owner)) {
+                    worksheet.get(*address).map(|cell| &cell.style)
+                } else if final_values.contains_key(&(sheet, *address)) {
+                    spill.source.as_ref().map(|cell| &cell.style)
+                } else {
+                    None
+                };
+                if let Some(style) = removed_style {
+                    result.text_bytes = result.text_bytes.checked_sub(style.text_bytes()?)?;
+                }
+            }
+        }
         let mut added_rows = std::collections::BTreeSet::new();
         for ((sheet, address), value) in final_values {
             let worksheet = workbook.sheet(sheet)?;
@@ -75,6 +90,7 @@ impl CloneFootprint {
         let mut result = Self {
             sheets: workbook.sheets.len(),
             named_ranges: workbook.named_ranges.len(),
+            text_bytes: workbook.style_context.retained_bytes()?,
             ..Self::default()
         };
         for sheet in &workbook.sheets {
@@ -85,6 +101,13 @@ impl CloneFootprint {
             for extent in sheet.spill_extents.values() {
                 result.text_bytes = result.text_bytes.checked_add(extent.formula.len())?;
             }
+            for cell in sheet
+                .spill_cache
+                .values()
+                .filter_map(|spill| spill.source.as_ref())
+            {
+                result.text_bytes = result.text_bytes.checked_add(cell.style.text_bytes()?)?;
+            }
             for cell in sheet.cells().values() {
                 result.text_bytes = result
                     .text_bytes
@@ -92,9 +115,7 @@ impl CloneFootprint {
                 result.text_bytes = result
                     .text_bytes
                     .checked_add(cell.formula.as_ref().map_or(0, String::len))?;
-                result.text_bytes = result
-                    .text_bytes
-                    .checked_add(cell.style.number_format.as_ref().map_or(0, String::len))?;
+                result.text_bytes = result.text_bytes.checked_add(cell.style.text_bytes()?)?;
             }
         }
         for name in &workbook.named_ranges {

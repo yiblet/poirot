@@ -76,6 +76,19 @@ pub fn read_workbook_bytes_with_options(
 fn read_xlsx(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
     let mut package = ooxml::ImportPackage::new(bytes, options)?;
     let plan = package.plan(options.xlsx_policy)?;
+    let mut warnings = fidelity_warnings(FileFormat::Xlsx);
+    warnings.extend(plan.warnings.iter().cloned());
+    let styles = plan
+        .styles_part
+        .as_ref()
+        .map(|p| package.read(p))
+        .transpose()?;
+    let theme = plan
+        .theme_part
+        .as_ref()
+        .map(|p| package.read(p))
+        .transpose()?;
+    let styles = ooxml::read_styles(styles.as_deref(), theme, &mut warnings)?;
     let adapted = if ooxml::needs_backend_adapter(&plan) {
         Some(ooxml::backend_package(&mut package, &plan)?)
     } else {
@@ -89,22 +102,13 @@ fn read_xlsx(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
         result => result.map_err(XlsxDecodeError::into_io)?,
     };
     drop(adapted);
-    let mut warnings = fidelity_warnings(FileFormat::Xlsx);
-    warnings.extend(plan.warnings.iter().cloned());
+    workbook.style_context = styles.context;
     ooxml::apply_workbook_metadata(
         &package.read(&plan.workbook_part)?,
         &plan,
         &mut workbook,
         &mut warnings,
     )?;
-    let formats = {
-        let styles = plan
-            .styles_part
-            .as_ref()
-            .map(|path| package.read(path))
-            .transpose()?;
-        ooxml::number_formats(styles.as_deref())?
-    };
     let shared = {
         let bytes = plan
             .shared_strings_part
@@ -118,7 +122,7 @@ fn read_xlsx(bytes: &[u8], options: ReadOptions) -> Result<Workbook, IoError> {
         let sheet = workbook
             .sheet_by_name_mut(&identity.name)
             .ok_or_else(|| IoError::Read("missing text worksheet".into()))?;
-        if ooxml::apply_sheet_text(&bytes, &shared, sheet, &formats)? {
+        if ooxml::apply_sheet_text(&bytes, &shared, sheet, &styles.cells, &mut warnings)? {
             ooxml::apply_sheet_spills(&bytes, &identity.name, &mut workbook)?;
         }
     }

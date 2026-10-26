@@ -3,8 +3,7 @@ use super::xml::{attr, events, text, xml};
 use crate::IoError;
 use poirot_model::{ImportDiagnostic, ImportDiagnosticKind, NamedRange, Workbook};
 use quick_xml::events::Event;
-use std::collections::BTreeMap;
-fn builtin(id: u32) -> Option<&'static str> {
+pub(super) fn builtin(id: u32) -> Option<&'static str> {
     Some(match id {
         0 => "General",
         1 => "0",
@@ -130,46 +129,4 @@ pub(crate) fn apply_workbook_metadata(
         }
     }
     Ok(())
-}
-/// Decode raw cell-XF number formats once for the existing worksheet recovery pass.
-pub(crate) fn number_formats(styles: Option<&[u8]>) -> Result<Vec<Option<String>>, IoError> {
-    let Some(styles) = styles else {
-        return Ok(Vec::new());
-    };
-    let mut formats = BTreeMap::new();
-    let mut xf = Vec::new();
-    let mut in_cell_xfs = false;
-    let mut reader = events(styles);
-    loop {
-        match reader.read_event().map_err(xml)? {
-            Event::Start(e) if e.local_name().as_ref() == "numFmt" => {
-                if let (Some(id), Some(code)) = (attr(&e, "numFmtId")?, attr(&e, "formatCode")?) {
-                    formats.insert(id.parse::<u32>().map_err(xml)?, code);
-                }
-            }
-            Event::Start(e) if e.local_name().as_ref() == "cellXfs" => in_cell_xfs = true,
-            Event::End(e) if e.local_name().as_ref() == "cellXfs" => in_cell_xfs = false,
-            Event::Start(e) if in_cell_xfs && e.local_name().as_ref() == "xf" => xf.push(
-                attr(&e, "numFmtId")?
-                    .unwrap_or_else(|| "0".into())
-                    .parse::<u32>()
-                    .map_err(xml)?,
-            ),
-            Event::Eof => break,
-            _ => {}
-        }
-    }
-    Ok(xf
-        .into_iter()
-        .map(|id| {
-            if id == 0 {
-                None
-            } else {
-                formats
-                    .get(&id)
-                    .cloned()
-                    .or_else(|| builtin(id).map(str::to_owned))
-            }
-        })
-        .collect())
 }

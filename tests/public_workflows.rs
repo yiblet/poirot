@@ -80,6 +80,7 @@ fn evaluated_formats_preserve_precision_text_and_overlay_edits_through_xlsx() {
                     at(cell),
                     CellStyle {
                         number_format: Some("$#,##0.00".into()),
+                        ..Default::default()
                     },
                 )
                 .unwrap();
@@ -238,4 +239,129 @@ fn flushed_sources_export_materialized_formula_and_spill_caches_to_xlsx() {
     );
     // File-format spill ownership fidelity is separate from the workspace snapshot;
     // exported visible values must still be correct.
+}
+
+#[test]
+fn text_placeholder_styles_preserve_values_through_xlsx() {
+    use poirot::{CellStyle, format};
+    // Microsoft documents @ substitution and Text-format numeric visibility:
+    // https://support.microsoft.com/en-us/excel/review-guidelines-for-customizing-a-number-format
+    // https://support.microsoft.com/en-us/excel/get-started/available-number-formats-in-excel
+    let mut model = Workbook::new();
+    let sheet = model.add_sheet("Inputs").unwrap();
+    sheet.set_value(at("A1").address, 123.).unwrap();
+    sheet.set_value(at("B1").address, "hello").unwrap();
+    sheet
+        .set_formula(at("C1").address, "TEXT(A1,\"@\")")
+        .unwrap();
+    for (cell, pattern) in [("A1", "@"), ("B1", "\"Item: \"@")] {
+        sheet.get_mut(at(cell).address).unwrap().style = CellStyle {
+            number_format: Some(pattern.into()),
+            ..Default::default()
+        };
+    }
+    let before = model.clone();
+    for book in [
+        model.clone(),
+        Workbook::from_bytes(&model.save_xlsx().to_buffer().unwrap()).unwrap(),
+    ] {
+        let context = EvaluationContext::default();
+        let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+        let outputs = overlay
+            .evaluation(&context)
+            .unwrap()
+            .outputs(&[at("A1"), at("B1"), at("C1")])
+            .unwrap();
+        for (index, expected) in ["123", "Item: hello"].iter().enumerate() {
+            let output = &outputs[index];
+            let pattern = output
+                .formatting
+                .as_ref()
+                .unwrap()
+                .number_format
+                .as_deref()
+                .unwrap();
+            let plan = format::compile_format(pattern, Default::default()).unwrap();
+            assert_eq!(
+                &format::render_value(&output.value, &plan, Default::default())
+                    .unwrap()
+                    .text,
+                expected
+            );
+        }
+        assert_eq!(outputs[0].value, CellValue::Number(123.));
+        assert_eq!(outputs[1].value, CellValue::Text("hello".into()));
+        assert_eq!(outputs[2].value, CellValue::Text("123".into()));
+        assert_eq!(
+            book.sheet(0).unwrap().get(at("A1").address).unwrap().value,
+            CellValue::Number(123.)
+        );
+        assert_eq!(
+            book.sheet(0).unwrap().get(at("B1").address).unwrap().value,
+            CellValue::Text("hello".into())
+        );
+    }
+    assert_eq!(model, before);
+}
+
+#[test]
+fn integer_mask_text_and_styles_preserve_numbers_through_xlsx() {
+    use poirot::{CellStyle, format};
+    // Microsoft documents digit separators for stored numbers and TEXT results:
+    // https://support.microsoft.com/en-us/excel/keeping-leading-zeros-and-large-numbers
+    // Independent inputs below partition decimal digits from the right.
+    let mut model = Workbook::new();
+    let sheet = model.add_sheet("Inputs").unwrap();
+    let rows = [
+        ("A1", "B1", 24681357., "000-00-0000", "024-68-1357"),
+        ("A2", "B2", 2468135790., "(000) 000-0000", "(246) 813-5790"),
+        ("A3", "B3", 12345., "00000-0000", "00001-2345"),
+    ];
+    for (input, result, value, pattern, _) in rows {
+        sheet.set_value(at(input).address, value).unwrap();
+        sheet.get_mut(at(input).address).unwrap().style = CellStyle {
+            number_format: Some(pattern.into()),
+            ..Default::default()
+        };
+        sheet
+            .set_formula(at(result).address, format!("TEXT({input},\"{pattern}\")"))
+            .unwrap();
+    }
+    let before = model.clone();
+    for book in [
+        model.clone(),
+        Workbook::from_bytes(&model.save_xlsx().to_buffer().unwrap()).unwrap(),
+    ] {
+        let context = EvaluationContext::default();
+        let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+        for (input, result, value, pattern, expected) in rows {
+            let outputs = overlay
+                .evaluation(&context)
+                .unwrap()
+                .outputs(&[at(input), at(result)])
+                .unwrap();
+            assert_eq!(outputs[0].value, CellValue::Number(value));
+            assert_eq!(outputs[1].value, CellValue::Text(expected.into()));
+            let saved_pattern = outputs[0]
+                .formatting
+                .as_ref()
+                .unwrap()
+                .number_format
+                .as_deref()
+                .unwrap();
+            assert_eq!(saved_pattern, pattern);
+            let plan = format::compile_format(saved_pattern, Default::default()).unwrap();
+            assert_eq!(
+                format::render_value(&outputs[0].value, &plan, Default::default())
+                    .unwrap()
+                    .text,
+                expected
+            );
+            assert_eq!(
+                book.sheet(0).unwrap().get(at(input).address).unwrap().value,
+                CellValue::Number(value)
+            );
+        }
+    }
+    assert_eq!(model, before);
 }

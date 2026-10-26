@@ -1,7 +1,8 @@
 //! Select a format section and render a value within the compiled output limits.
 use super::{
     CellValue, FormatError, FormatPlan, FormatRenderContext, FormattedValue, RenderedText,
-    SectionPlan, SectionProgram, Token, error, fidelity_error, render_text, resource_error,
+    SectionPlan, SectionProgram, Token, error, fidelity_error, is_text_section, render_text,
+    resource_error,
 };
 
 impl FormatPlan {
@@ -79,7 +80,9 @@ fn select(plan: &FormatPlan, n: f64) -> Result<(&SectionPlan, bool), FormatError
 }
 /// Render a cell value with a compiled number format.
 ///
-/// The original value is unchanged.
+/// A single section containing only text placeholders and literal/spacing
+/// tokens substitutes text; numbers retain General display. Otherwise text
+/// uses the fourth section when present. The original value is unchanged.
 pub fn render_value(
     value: &CellValue,
     plan: &FormatPlan,
@@ -96,7 +99,14 @@ pub fn render_value(
             let (s, a) = select(plan, *n)?;
             (Some(s), a)
         }
-        CellValue::Text(_) | CellValue::TextUtf16(_) => (plan.sections.get(3), false),
+        CellValue::Text(_) | CellValue::TextUtf16(_) => (
+            plan.sections.get(3).or_else(|| {
+                plan.sections
+                    .first()
+                    .filter(|s| plan.sections.len() == 1 && is_text_section(&s.text_adapter))
+            }),
+            false,
+        ),
         _ => (plan.sections.first(), false),
     };
     let text = match value {

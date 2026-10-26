@@ -34,7 +34,7 @@ rxls = { version = "=0.1.4", default-features = false, features = ["xlsx"] }
 rayon = "1.12.0"
 roxmltree = "0.21.1"
 clap = { version = "4.6.7", features = ["derive"] }
-serde = { version = "1.0.229", features = ["derive"] }
+serde = { version = "1.0.229", features = ["derive", "rc"] }
 
 [package]
 name = "poirot"

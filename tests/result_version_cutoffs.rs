@@ -220,6 +220,7 @@ fn formula_metadata_changes_do_not_use_scalar_equality_as_a_certificate() {
                 at("B1"),
                 CellStyle {
                     number_format: Some("0.00".into()),
+                    ..Default::default()
                 },
             )
             .unwrap();
@@ -491,6 +492,7 @@ fn style_edits_force_direct_readers_but_unchanged_values_stop_downstream_work() 
                 at("A1"),
                 CellStyle {
                     number_format: Some("0.00".into()),
+                    ..Default::default()
                 },
             )
             .unwrap();

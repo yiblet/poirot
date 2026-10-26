@@ -14,6 +14,8 @@ pub(super) struct SheetPatch<'a> {
     pub(super) bytes: &'a [u8],
     /// Canonical source sheet supplying formulas, caches, and metadata.
     pub(super) sheet: &'a Worksheet,
+    /// Canonical source style identities registered by the fresh writer.
+    pub(super) styles: &'a super::StyleExport<'a>,
     /// Shared-source equivalence proof reused for sizing and actual serialization.
     pub(super) shared: &'a super::shared::SharedExport,
 }
@@ -67,7 +69,7 @@ fn style_map(bytes: &[u8], key: &str) -> Result<BTreeMap<CellAddress, String>, I
 fn write_cells<W: Write>(
     writer: &mut Writer<W>,
     sheet: &Worksheet,
-    styles: &BTreeMap<CellAddress, String>,
+    styles: &super::StyleExport<'_>,
     metadata: &BTreeMap<CellAddress, String>,
     shared: &super::shared::SharedExport,
 ) -> Result<(), IoError> {
@@ -89,7 +91,9 @@ fn write_cells<W: Write>(
             let mut start = BytesStart::new("c");
             let reference = address.to_string();
             start.push_attribute(("r", reference.as_str()));
-            if let Some(style) = styles.get(address) {
+            let style = styles.id(&cell.style)?;
+            if style != 0 {
+                let style = style.to_string();
                 start.push_attribute(("s", style.as_str()));
             }
             if spills.contains_key(address) {
@@ -166,8 +170,8 @@ impl SheetPatch<'_> {
             bytes,
             sheet,
             shared,
+            styles,
         } = *self;
-        let styles = style_map(bytes, "s")?;
         let metadata = style_map(bytes, "cm")?;
         let mut reader = events(bytes);
         let mut writer = Writer::new(output);
@@ -177,7 +181,7 @@ impl SheetPatch<'_> {
                 Event::Start(e) if e.local_name().as_ref() == "sheetData" => {
                     write_event(&mut writer, Event::Start(e.clone().into_owned()))?;
                     reader.read_to_end(e.name()).map_err(xml)?;
-                    write_cells(&mut writer, sheet, &styles, &metadata, shared)?;
+                    write_cells(&mut writer, sheet, styles, &metadata, shared)?;
                     write_event(&mut writer, Event::End(BytesEnd::new("sheetData")))?;
                 }
                 Event::Eof => break,

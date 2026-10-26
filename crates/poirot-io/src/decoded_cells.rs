@@ -38,8 +38,19 @@ pub(super) fn identifier_warnings(workbook: &Workbook, warnings: &mut Vec<Import
     }
 }
 /// Collect source features whose decoding cannot preserve full fidelity.
-pub(super) fn fidelity_warnings(_format: poirot_model::FileFormat) -> Vec<ImportDiagnostic> {
-    vec![ImportDiagnostic { kind: ImportDiagnosticKind::OmittedFeatures, detail: "Only sparse rows/cells/formulas/cached values/date system/names/number-format strings are represented; charts, macros, drawings, rich styles, validations, links, merge layout and opaque records are not preserved".into() }]
+pub(super) fn fidelity_warnings(format: poirot_model::FileFormat) -> Vec<ImportDiagnostic> {
+    let detail = match format {
+        poirot_model::FileFormat::Xlsx => {
+            "XLSX charts, macros, drawings, conditional formats, validations, links, merge layout and opaque records are not preserved; ordinary cell styles retain the supported typed subset"
+        }
+        poirot_model::FileFormat::Xls => {
+            "XLS charts, macros, drawings, rich styles, validations, links, merge layout and opaque records are not preserved"
+        }
+    };
+    vec![ImportDiagnostic {
+        kind: ImportDiagnosticKind::OmittedFeatures,
+        detail: detail.into(),
+    }]
 }
 
 /// Project a backend cell into canonical values with explicit fidelity handling.

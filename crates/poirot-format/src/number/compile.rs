@@ -93,19 +93,35 @@ impl NumberPlan {
         {
             return Err(error("unsupported numeric token order"));
         }
-        // SAFETY: positions is nonempty here; first/last and exponent/decimal positions come from this tokens slice, numeric_start <= last, and both scan cursors are bounded locally.
-        if tokens[numeric_start..=last].iter().any(|t| {
+        let numeric_tokens = tokens.get(numeric_start..=last).unwrap_or(&[]);
+        let embedded_literals = numeric_tokens
+            .iter()
+            .any(|t| matches!(t, Token::Literal(_)));
+        let mut integer_literals = Vec::new();
+        if embedded_literals {
+            // Only integer slots and literal runs have an unambiguous mask layout.
+            if tokens
+                .iter()
+                .any(|t| !matches!(t, Token::Digit(_) | Token::Literal(_)))
+            {
+                return Err(error("integer masks require only digits and literals"));
+            }
+            let mut literal = String::new();
+            for token in numeric_tokens {
+                match token {
+                    Token::Literal(text) => literal.push_str(text),
+                    Token::Digit(_) => integer_literals.push(std::mem::take(&mut literal)),
+                    _ => {}
+                }
+            }
+        } else if numeric_tokens.iter().any(|t| {
             matches!(
                 t,
-                Token::Literal(_)
-                    | Token::Padding(_)
-                    | Token::Fill(_)
-                    | Token::Text
-                    | Token::Percent
+                Token::Padding(_) | Token::Fill(_) | Token::Text | Token::Percent
             )
         }) {
             return Err(error(
-                "embedded literals among numeric placeholders unsupported",
+                "embedded directives among numeric placeholders unsupported",
             ));
         }
         let decimals: Vec<_> = if let Some(d) = decimal {
@@ -190,6 +206,7 @@ impl NumberPlan {
                 min_integer: integer.iter().filter(|c| **c == '0').count(),
                 question_count: integer.iter().filter(|c| **c == '?').count(),
                 integer,
+                integer_literals,
                 decimal: decimals,
                 has_decimal: decimal.is_some(),
                 grouping,

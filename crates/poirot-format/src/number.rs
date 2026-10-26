@@ -28,6 +28,7 @@ enum GeneralPart {
 #[derive(Debug, Clone, PartialEq)]
 struct NumericPlan {
     integer: Vec<char>,
+    integer_literals: Vec<String>,
     decimal: Vec<char>,
     has_decimal: bool,
     min_integer: usize,
@@ -45,6 +46,9 @@ struct NumericPlan {
 pub struct NumberLayout<'a> {
     /// Integral digit placeholders in display order.
     pub integer_placeholders: &'a [char],
+    /// One literal run before each integer placeholder in a mask; empty for ordinary numbers.
+    /// Leading and trailing affixes remain in `prefix` and `suffix`.
+    pub integer_literals: &'a [String],
     /// Fractional digit placeholders in display order.
     pub decimal_placeholders: &'a [char],
     /// Whether integer digits use thousands grouping.
@@ -66,6 +70,7 @@ impl NumberPlan {
         match &self.program {
             NumberProgram::Numeric(p) => Some(NumberLayout {
                 integer_placeholders: &p.integer,
+                integer_literals: &p.integer_literals,
                 decimal_placeholders: &p.decimal,
                 grouping: p.grouping,
                 scaling_commas: p.scaling,
@@ -83,7 +88,10 @@ impl NumberPlan {
         decimal_format: bool,
     ) -> Result<Self, FormatError> {
         let mut plan = Self::compile_numeric(tokens)?;
-        if decimal_format && let NumberProgram::Numeric(p) = &mut plan.program {
+        if decimal_format
+            && let NumberProgram::Numeric(p) = &mut plan.program
+            && p.integer_literals.is_empty()
+        {
             // DecimalFormat normalization excludes spacing placeholders.
             if !p.integer.contains(&'?') && !p.decimal.contains(&'?') {
                 p.minimum_visible_digit = true;
@@ -106,6 +114,10 @@ impl NumberPlan {
         else {
             return None;
         };
+        // Integer masks retain their section-specific digit and literal positions.
+        if !positive.integer_literals.is_empty() || !negative.integer_literals.is_empty() {
+            return None;
+        }
         let mut layout = positive.clone();
         layout.prefix = negative.prefix.clone();
         layout.suffix = negative.suffix.clone();

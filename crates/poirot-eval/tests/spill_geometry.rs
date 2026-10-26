@@ -329,6 +329,7 @@ fn bounds_follow_formula_edits_style_changes_and_overlay_snapshot_retention() {
             at("A1"),
             poirot_model::CellStyle {
                 number_format: Some("0.00".into()),
+                ..Default::default()
             },
         )
         .unwrap();

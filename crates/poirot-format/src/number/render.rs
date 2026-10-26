@@ -84,8 +84,43 @@ impl NumberPlan {
         let (mut integer, fraction) = number
             .split_once('.')
             .map_or((number.as_str(), ""), |(a, b)| (a, b));
-        if integer == "0" && p.min_integer == 0 {
+        if integer == "0" && (p.min_integer == 0 || !p.integer_literals.is_empty()) {
             integer = "";
+        }
+        if !p.integer_literals.is_empty() {
+            // Fixed notation produces ASCII digits, so byte and slot counts agree.
+            let missing = p.integer.len().saturating_sub(integer.len());
+            let extra = integer.len().saturating_sub(p.integer.len());
+            let mut digits = integer.chars();
+            let mut out = RenderedText::default();
+            if negative {
+                out.push_str("-");
+            }
+            out.append(&p.prefix);
+            for digit in digits.by_ref().take(extra) {
+                // SAFETY: The local four-byte buffer fits the UTF-8 encoding of every char.
+                out.push_str(digit.encode_utf8(&mut [0; 4]));
+            }
+            for (index, (placeholder, literal)) in
+                p.integer.iter().zip(&p.integer_literals).enumerate()
+            {
+                out.push_str(literal);
+                let digit = if index >= missing {
+                    digits.next()
+                } else {
+                    match placeholder {
+                        '0' => Some('0'),
+                        '?' => Some(' '),
+                        _ => None,
+                    }
+                };
+                if let Some(digit) = digit {
+                    // SAFETY: The local four-byte buffer fits the UTF-8 encoding of every char.
+                    out.push_str(digit.encode_utf8(&mut [0; 4]));
+                }
+            }
+            out.append(&p.suffix);
+            return Ok(out);
         }
         let mut integer = format!("{:0>width$}", integer, width = p.min_integer);
         if p.question_count > 0 && integer.len() < p.integer.len() {

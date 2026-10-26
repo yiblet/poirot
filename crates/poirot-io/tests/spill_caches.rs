@@ -17,6 +17,7 @@ fn dynamic_metadata_typed_children_and_blank_source_style_roundtrip() {
             Cell {
                 style: CellStyle {
                     number_format: Some("0.00".into()),
+                    ..Default::default()
                 },
                 ..Default::default()
             },
@@ -96,6 +97,7 @@ fn export_refuses_authored_holes_and_overlapping_or_nested_spill_owners() {
             Cell {
                 style: CellStyle {
                     number_format: Some("0.00".into()),
+                    ..Default::default()
                 },
                 ..Default::default()
             },

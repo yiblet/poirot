@@ -428,3 +428,112 @@ fn durable_source_and_prepared_metadata_must_agree_even_without_calculation_iden
         ))
     ));
 }
+
+#[test]
+fn native_visual_style_context_and_sparse_edits_obey_payload_quotas() {
+    use poirot_model::{CellStyle, FontStyle, StyleContext, VisualStyle};
+    use std::sync::Arc;
+    let style = CellStyle {
+        visual: Some(Arc::new(VisualStyle {
+            font: Some(FontStyle {
+                name: Some("authored family".repeat(20).into()),
+                bold: true,
+                ..Default::default()
+            }),
+            ..Default::default()
+        })),
+        ..Default::default()
+    };
+    let mut sparse = Overlay::with_workbook(workbook()).build().unwrap();
+    sparse
+        .set_style(
+            crate::EvaluationTarget {
+                sheet: 0,
+                address: "E1".parse().unwrap(),
+            },
+            style.clone(),
+        )
+        .unwrap();
+    let sparse_bytes = encode_workspace(sparse.snapshot(), Default::default()).unwrap();
+    let sparse_limits = SnapshotLimits {
+        max_decoded_bytes: style.text_bytes().unwrap() + 100,
+        ..Default::default()
+    };
+    assert!(decode(&sparse_bytes, sparse_limits, PreparedPolicy::SourceOnly).is_ok());
+    assert!(
+        decode(
+            &sparse_bytes,
+            sparse_limits,
+            PreparedPolicy::ReuseCompatible
+        )
+        .is_err()
+    );
+    let mut book = workbook();
+    book.style_context = StyleContext::new(Some(vec![b'x'; 2048]), vec![[255, 1, 2, 3]])
+        .unwrap()
+        .with_default_style(style.clone());
+    book.sheet_mut(0)
+        .unwrap()
+        .set_style("D1".parse().unwrap(), style.clone())
+        .unwrap();
+    let bytes = encode_workbook(&book, Default::default()).unwrap();
+    assert_eq!(decode_default(&bytes).unwrap().workbook, book);
+    assert!(
+        decode(
+            &bytes,
+            SnapshotLimits {
+                max_decoded_bytes: 2047,
+                ..Default::default()
+            },
+            PreparedPolicy::ReuseCompatible
+        )
+        .is_err()
+    );
+    let mut overlay = Overlay::with_workbook(book).build().unwrap();
+    overlay
+        .set_style(
+            crate::EvaluationTarget {
+                sheet: 0,
+                address: "E1".parse().unwrap(),
+            },
+            style.clone(),
+        )
+        .unwrap();
+    let bytes = encode_workspace(overlay.snapshot(), Default::default()).unwrap();
+    let restored = decode_default(&bytes).unwrap();
+    let effective = restored
+        .workspace
+        .unwrap()
+        .source_workbook(&restored.workbook)
+        .unwrap();
+    assert_eq!(
+        effective
+            .sheet(0)
+            .unwrap()
+            .get("E1".parse().unwrap())
+            .unwrap()
+            .style,
+        style
+    );
+    assert!(
+        decode(
+            &bytes,
+            SnapshotLimits {
+                max_decoded_bytes: 4096,
+                ..Default::default()
+            },
+            PreparedPolicy::ReuseCompatible
+        )
+        .is_err()
+    );
+    assert!(
+        encode_workspace(
+            overlay.snapshot(),
+            SnapshotLimits {
+                max_file_bytes: bytes.len() - 1,
+                ..Default::default()
+            }
+        )
+        .is_err()
+    );
+}
