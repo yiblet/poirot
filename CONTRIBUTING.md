@@ -107,3 +107,9 @@ Offline verification requires dependencies already cached by Cargo. Omit
 reviewing uncommitted changes. Run again from a clean checkout before release.
 This does not upload anything or check crates.io name availability, ownership or
 registry acceptance. Those checks and publication are a separate release step.
+
+To publish a release, set the four production crate versions and their internal
+dependency requirements, commit the changes, then push a matching tag such as
+`v0.1.1`. The release workflow checks that the tag matches every production crate,
+runs the full CI workflow, publishes in dependency order, and creates a GitHub
+release. Publishing requires the repository's `CARGO_REGISTRY_TOKEN` Actions secret.
