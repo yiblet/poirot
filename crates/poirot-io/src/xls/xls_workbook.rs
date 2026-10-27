@@ -1,57 +1,43 @@
-//! Bounded BIFF8 fidelity overlay. Layout references: pinned Apache POI
-//! StringPtg, NameRecord, AreaPtg, Ref3DPtg and StringRecord serializers.
-//! Unknown token families remain backend-owned and produce a fidelity warning.
-//!
-//! The overlay is an internal import stage with no standalone public operations.
-//! Use [`crate::read_workbook_bytes`] with [`crate::ReadOptions`] to import XLS;
-//! fidelity omissions are reported through the returned workbook metadata.
-use crate::biff_preflight::{PreflightError, ResourceBudget, records, workbook_stream};
+//! Decoded XLS workbook contents and their projection into a workbook sink.
 use crate::data::{SheetSink, SheetSource, WorkbookSink};
+use crate::xls::preflight::{PreflightError, ResourceBudget, admit, workbook_stream};
+use crate::xls::reconstruction::reconstruct;
+use crate::xls::result::Result;
+use crate::xls::sheet_formula::SheetFormula;
 use crate::{Cell, CellAddress, CellValue, ExcelText, NamedRange};
+use std::collections::BTreeMap;
 
-mod formula;
-mod reconstruct;
-mod sst;
-mod text;
-
-/// BIFF fidelity-overlay result sharing preflight structural/resource diagnostics.
-type Result<T> = std::result::Result<T, PreflightError>;
-
-/// Reconstructed source formula to restore after backend workbook decoding.
-struct Formula {
-    sheet: usize,
-    address: CellAddress,
-    text: String,
-}
-/// Checked BIFF source details used to restore fidelity after decoding.
-pub(crate) struct Overlay {
+/// Checked BIFF8 workbook records decoded into sparse cells, names and metadata.
+pub(crate) struct XlsWorkbook {
     /// Source sheet names in workbook order.
     pub sheet_names: Vec<String>,
+    /// DATEMODE selects the 1904 calendar.
+    pub date1904: bool,
     visibility: Vec<crate::SheetVisibility>,
     names: Vec<NamedRange>,
-    formulas: Vec<Formula>,
+    values: Vec<(usize, CellAddress, CellValue)>,
+    formulas: Vec<SheetFormula>,
     caches: Vec<(usize, CellAddress, ExcelText)>,
     /// Inspectable fidelity omissions discovered during reconstruction.
     pub warnings: Vec<String>,
+    /// Explicit ROW records and their hidden flags recovered by preflight for each sheet.
+    pub rows: Vec<BTreeMap<u32, crate::RowVisibility>>,
 }
-impl Overlay {
-    /// Preflight BIFF8 and reconstruct source details under the import budget.
+
+impl XlsWorkbook {
+    /// Preflight BIFF8 and decode workbook records under the import budget.
+    /// Decoding reads only the records and sheet traversals preflight admitted.
     pub fn read(bytes: &[u8], budget: ResourceBudget) -> Result<Self> {
         let stream = workbook_stream(bytes, budget)?;
-        let rs = records(&stream, budget)?;
+        let (rs, plan) = admit(&stream, budget)?;
         if rs
             .iter()
             .find(|r| r.id == 0x809)
             .is_none_or(|r| r.data.get(..2) != Some(&[0, 6]))
         {
-            return Ok(Self {
-                sheet_names: Vec::new(),
-                visibility: Vec::new(),
-                names: Vec::new(),
-                formulas: Vec::new(),
-                caches: Vec::new(),
-                warnings: vec!["BIFF fidelity overlay supports BIFF8 only".into()],
-            });
+            return Err(PreflightError::Representation(
+                "only BIFF8 (Excel 97-2003) XLS workbooks are supported",
+            ));
         }
         let visibility = rs
             .iter()
@@ -66,21 +52,25 @@ impl Overlay {
                 )),
             })
             .collect::<Result<Vec<_>>>()?;
-        let mut plan = reconstruct::reconstruct(&rs, budget)?;
-        plan.warnings.push(
+        let mut decoded = reconstruct(&rs, &plan.sheet_starts, budget)?;
+        decoded.warnings.push(
             "XLS tab colors are not retained; palette and extension tab colors remain unsupported"
                 .into(),
         );
         Ok(Self {
-            sheet_names: plan.sheets,
+            sheet_names: decoded.sheets,
+            date1904: decoded.date1904,
             visibility,
-            names: plan.names,
-            formulas: plan.formulas,
-            caches: plan.caches,
-            warnings: plan.warnings,
+            names: decoded.names,
+            values: decoded.values,
+            formulas: decoded.formulas,
+            caches: decoded.caches,
+            warnings: decoded.warnings,
+            rows: plan.rows,
         })
     }
-    /// Restore reconstructed formulas, names, and exact cached text into the decoded model.
+
+    /// Store decoded values, formulas, names, visibility and exact cached text.
     pub fn apply(
         self,
         workbook: &mut impl WorkbookSink<Sheet: SheetSink>,
@@ -90,6 +80,11 @@ impl Overlay {
                 let mut p = sheet.presentation();
                 p.visibility = visibility;
                 sheet.set_presentation(p);
+            }
+        }
+        for (index, address, value) in self.values {
+            if let Some(sheet) = workbook.sheet_mut(index) {
+                sheet.set(address, Cell::new(value))?;
             }
         }
         for f in self.formulas {
@@ -118,15 +113,18 @@ impl Overlay {
 
 #[cfg(test)]
 mod tests {
-    use super::formula::formula;
     use super::*;
     use crate::data::{SheetSource, WorkbookSource};
+    use crate::xls::formula::formula;
+    use crate::xls::preflight::records;
     use std::io::{Cursor, Write};
+
     fn record(stream: &mut Vec<u8>, id: u16, data: &[u8]) {
         stream.extend(id.to_le_bytes());
         stream.extend((data.len() as u16).to_le_bytes());
         stream.extend(data);
     }
+
     fn compound(tokens: &[u8], cache: Option<(&[u8], &[u8])>) -> Vec<u8> {
         let mut stream = Vec::new();
         let mut bof = vec![0; 16];
@@ -166,6 +164,7 @@ mod tests {
             .unwrap();
         c.into_inner().into_inner()
     }
+
     #[test]
     fn independent_boundsheet_flags_preserve_hidden_and_very_hidden() {
         for (flag, expected) in [
@@ -202,6 +201,7 @@ mod tests {
             );
         }
     }
+
     #[test]
     fn actual_import_keeps_unicode_name_identity_and_local_scopes() {
         let mut stream = Vec::new();
@@ -285,6 +285,7 @@ mod tests {
             assert_eq!(cell.formula.as_deref(), Some("名称"));
         }
     }
+
     #[test]
     fn raw_imported_sheet_grammar_is_preserved() {
         let bytes = compound(&[0x1e, 1, 0], None);
@@ -301,9 +302,10 @@ mod tests {
         let report = crate::read_workbook_bytes::<crate::test_support::Workbook>(&bytes).unwrap();
         assert_eq!(report.sheet(0).unwrap().name(), "A/?B");
     }
+
     #[test]
     fn independent_poi_formula_fixture_actual_import() {
-        let bytes = include_bytes!("../tests/fixtures/poi-StringFormulas.xls");
+        let bytes = include_bytes!("../../tests/fixtures/poi-StringFormulas.xls");
         let stream = workbook_stream(bytes, ResourceBudget::default()).unwrap();
         let raw = records(&stream, ResourceBudget::default()).unwrap();
         assert!(raw.iter().any(|r| {
@@ -320,12 +322,14 @@ mod tests {
             .unwrap();
         assert_eq!(cell.formula.as_deref(), Some("UPPER(\"xyz\")"));
     }
+
     #[test]
     fn independent_poi_unicode_name_fixture_actual_import() {
-        let bytes = include_bytes!("../tests/fixtures/poi-unicodeNameRecord.xls");
+        let bytes = include_bytes!("../../tests/fixtures/poi-unicodeNameRecord.xls");
         let report = crate::read_workbook_bytes::<crate::test_support::Workbook>(bytes).unwrap();
         assert!(!report.sheets().is_empty());
     }
+
     #[test]
     fn unicode_string_token_raw_units_and_actual_import() {
         // Independent BIFF StringPtg: two UTF16 units, surrogate pair U+1F600.
@@ -348,6 +352,7 @@ mod tests {
             original
         );
     }
+
     #[test]
     fn original_sst_labelsst_lone_units_and_pairs_survive_import() {
         let seed = compound(&[0x1e, 1, 0], None);
@@ -408,6 +413,7 @@ mod tests {
             stream
         );
     }
+
     #[test]
     fn original_cached_string_lone_unit_survives_backend_projection() {
         let bytes = compound(&[0x1e, 1, 0], Some((&[2, 0, 1, 0x3d, 0xd8], &[1, 65, 0])));
@@ -444,6 +450,7 @@ mod tests {
             ))
         ));
     }
+
     #[test]
     fn cache_continuation_switch_preserves_all_codepoints() {
         let bytes = compound(
@@ -459,6 +466,7 @@ mod tests {
         assert_eq!(cell.value, CellValue::Text("a😀é".into()));
         assert_eq!(cell.formula.as_deref(), Some("1"));
     }
+
     #[test]
     fn long_unicode_cached_string_survives_actual_import() {
         let expected = "a😀é".repeat(2000);
@@ -490,6 +498,7 @@ mod tests {
             CellValue::Text(expected)
         );
     }
+
     #[test]
     fn independent_area_flags_and_quoted_xti_are_reconstructed() {
         let names = [];
@@ -512,6 +521,7 @@ mod tests {
             Some("'O''Brien Data'!$A$1".into())
         );
     }
+
     #[test]
     fn truncated_tokens_and_string_continuations_are_typed_errors() {
         for token in [&[0x17, 2, 1, 0x3d][..], &[0x25, 0, 0][..], &[3][..]] {

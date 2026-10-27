@@ -1,15 +1,15 @@
 # poirot-io
 
-Read XLSX with MIT-licensed Calamine streaming cells; read XLS and write fresh XLSX
-with MIT-licensed rxls.
+Read XLSX with MIT-licensed Calamine streaming cells, read BIFF8 XLS with Poirot's
+own sparse decoder, and write fresh XLSX with rust_xlsxwriter (used under MIT).
 
 Calamine streams XLSX cells directly into Poirot, avoiding a second full workbook
 model. Poirot recovers names, date system and ordinary XLSX cell presentation:
 number formats, fonts, pattern fills, four-sided borders and common alignment.
 Styles share immutable `VisualStyle` payloads; `Workbook::style_context` retains
 the default style, theme bytes and indexed palette. Colors retain their source
-identities rather than resolved RGB values. XLS imports retain number formats,
-but do not recover visual styles.
+identities rather than resolved RGB values. XLS imports recover neither number
+formats nor visual styles.
 Original shared group IDs and anchors are not retained. Imported formulas remain
 independent through edits and calculation, and the compiler can still share its
 executable templates. Optional manually supplied shared provenance is checked on
@@ -22,8 +22,10 @@ also preserves sparse physical rows, row visibility and cell styles. The spill p
 the first pass encounters array formulas or modern spill/calculation errors.
 There is no separate original shared-group validation or reconstruction pass.
 
-Fresh authoring uses `rxls::Workbook::to_xlsx_checked`; XML projection restores
-canonical saved values, typed caches and array metadata without recalculation.
+Fresh authoring uses rust_xlsxwriter for the package skeleton (sheets, order,
+visibility, tab colors and used ranges); XML projection writes canonical cells,
+saved values, typed caches, styles, names and array metadata without
+recalculation. Only Poirot's `WriteOptions` limit output size.
 
 This crate owns file records and codecs. Implement `data::WorkbookSink` for direct
 streaming import and `data::WorkbookSource` for borrowed export; Poirot implements
@@ -67,9 +69,10 @@ The remaining adapter work has a specific purpose:
   that adapter rather than resuming a partially consumed cell. XLS decoding is sparse.
 - XLSX text recovery preserves values, formula source and cache distinctions.
   Array recovery preserves calculation ownership, not untouched feature layout.
-- BIFF recovery restores raw UTF-16 strings, formula tokens, scoped names and sheet
-  identity that backend APIs cannot fully represent. Original bytes go directly
-  to rxls without a compound-file clone.
+- BIFF8 decoding reads sparse cell records, exact UTF-16 strings, formula tokens
+  (including shared formulas), scoped names, sheet identity and the date system.
+  Unsupported formula token families keep saved values and add an import warning.
+  BIFF5 and earlier, and encrypted workbooks, are refused.
 - XLSX export projection writes canonical numeric values, text, typed caches,
   source metadata and dynamic-array records.
 

@@ -6,7 +6,8 @@
 //! retain saved formula results and record unsupported or altered content in workbook
 //! metadata. Writing preserves saved results; it does not calculate formulas.
 //!
-//! Calamine streams XLSX decoding; rxls supplies XLS decoding and fresh XLSX authoring.
+//! Calamine streams XLSX decoding; Poirot decodes BIFF8 XLS sparsely; rust_xlsxwriter
+//! authors the fresh XLSX package skeleton.
 //! Imports project backend cells,
 //! number formats, names and presentation directly. Existing focused XML recovery
 //! preserves calculation-visible text units, missing caches and array/spill ownership.
@@ -37,11 +38,6 @@
 //! XLS is supported as input only; saves produce XLSX.
 //! Most applications should use [poirot](https://docs.rs/poirot), which provides the
 //! same file operations alongside editing and calculation.
-/// Checked BIFF fidelity recovery around the backend XLS decoder.
-pub mod biff_overlay;
-mod biff_preflight;
-// Pre-decode BIFF/CFB resource admission and structural diagnostics.
-pub use biff_preflight::{BiffPlan, PreflightError, ResourceBudget};
 mod ooxml;
 /// XLSX package identity, relationship, and external-link policy validation.
 pub mod opc;
@@ -52,7 +48,10 @@ mod export_execution;
 mod export_plan;
 mod import_conversion;
 mod numeric_representation;
+mod xls;
 
+// XLS admission limits and structural/resource diagnostics.
+pub use xls::{PreflightError, ResourceBudget};
 // Import errors and read/write options.
 pub use contract::{IoError, IoQuotaFailure, IoResource, ReadOptions, WriteOptions};
 // XLSX serialization to a complete byte buffer before file publication.

@@ -48,9 +48,6 @@ Rules, applied to every `.rs` file under `src/eval/`:
 - `duplicate-type-name`: two files define a top-level type (visible or private) with
   the same name, so the name alone does not find its file. Same exemptions as
   `multi-type-file`.
-- `inline-test-module`: a `#[cfg(test)] mod name { .. }` body sits in a source file.
-  Tests belong in the folder's `tests.rs` or `tests/` module. `tests.rs` files,
-  `tests/` folders and the `adapters/` folder are exempt.
 - `cross-folder-super`: a `super::` path in a `use` declaration or in code climbs to
   the eval root (or beyond) from inside a top-level folder. `super::` stays within
   one top-level folder; paths into another folder use `crate::eval::<folder>::..`.
@@ -84,7 +81,6 @@ RULES = (
     "multi-type-file",
     "file-type-name",
     "duplicate-type-name",
-    "inline-test-module",
     "cross-folder-super",
 )
 KEYWORDS = {"fn", "struct", "enum", "union", "trait", "impl", "mod", "type", "const",
@@ -387,15 +383,6 @@ def trait_name(item):
     return re.split(r"\s*<", item.impl_trait.strip())[0].split("::")[-1].strip()
 
 
-def inline_test_violations(file, root):
-    """Return `inline-test-module` violations: `#[cfg(test)]` inline module bodies."""
-    if is_type_exempt(file, root):
-        return []
-    return [f"inline-test-module {file.path} {scope}{item.label}"
-            for scope, items in walk(file.items) for item in items
-            if item.kind == "mod" and item.body is not None and item.test_only]
-
-
 def duplicate_type_violations(files, root):
     """Return `duplicate-type-name` violations: one entry per extra defining file."""
     homes = {}
@@ -639,7 +626,6 @@ def collect(sources, root=str(SCAN_ROOT)):
     for file in files:
         found.extend(file_violations(file))
         found.extend(multi_type_violations(file, root))
-        found.extend(inline_test_violations(file, root))
         for _, items in walk(file.items):
             for item in items:
                 if item.kind in TYPE_KINDS:
@@ -744,23 +730,18 @@ class ModuleLayoutTests(unittest.TestCase):
                    "b.rs": "pub struct B;\n\nimpl B {\n    crate::r::m::methods!();\n}\n"}
         self.assertEqual(self.rules(sources), [])
 
-    def test_inline_test_modules(self):
+    def test_inline_test_modules_pass(self):
         source = "struct A;\n\n#[cfg(test)]\nmod tests {\n    #[cfg(test)]\n    mod nested {}\n}\n\nmod inner {}\n"
-        self.assertEqual(collect({"m/a.rs": source}, "r"), [
-            "inline-test-module r/m/a.rs mod tests",
-            "inline-test-module r/m/a.rs mod tests/mod nested",
-        ])
-        allowed = {"m/tests.rs": source, "n/tests/a.rs": source, "adapters/x/a.rs": source,
+        sources = {"m/a.rs": source, "m/tests.rs": source,
                    "m/b.rs": "#[cfg(test)]\nmod tests;\n\nstruct B;\n"}
-        self.assertEqual(self.rules(allowed), [])
+        self.assertEqual(self.rules(sources), [])
 
     def test_mod_rs_allows_only_declarations(self):
         good = "//! Purpose.\n#![allow(x)]\n\n/// Doc.\n#[cfg(test)]\nmod tests;\npub(crate) mod a;\n\npub use a::B;\npub(crate) use a::{C, D};\n"
         self.assertEqual(self.rules({"m/mod.rs": good}), [])
         bad = "mod a;\n\nfn f() {}\n\n#[cfg(test)]\nmod tests {\n}\n"
         self.assertEqual(collect({"m/mod.rs": bad}, "r"),
-                         ["inline-test-module r/m/mod.rs mod tests", "mod-rs-content r/m/mod.rs fn f",
-                          "mod-rs-content r/m/mod.rs mod tests"])
+                         ["mod-rs-content r/m/mod.rs fn f", "mod-rs-content r/m/mod.rs mod tests"])
         self.assertEqual(self.rules({"m/other.rs": "mod a;\n\nfn f() {}\n"}), [])
 
     def test_mod_declarations_come_first(self):

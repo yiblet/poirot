@@ -1,8 +1,11 @@
 //! Complete borrowed record inventory, including records after logical EOF.
-use super::{PreflightError, Record, ResourceBudget, check, u16at};
+use super::checks::{check, u16at};
+use super::preflight_error::PreflightError;
+use super::record::Record;
+use super::resource_budget::ResourceBudget;
 
 /// Validate BIFF record boundaries before any payload-specific decoding.
-pub(super) fn records(
+pub(in crate::xls) fn records(
     bytes: &[u8],
     budget: ResourceBudget,
 ) -> Result<Vec<Record<'_>>, PreflightError> {

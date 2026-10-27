@@ -153,7 +153,7 @@ for lifecycle details.
 ## Acknowledgements
 
 - [Calamine](https://github.com/tafia/calamine) provides streaming XLSX decoding and shared-formula translation.
-- [rxls](https://github.com/HyunjoJung/rxls) provides XLS decoding and checked XLSX authoring.
+- [rust_xlsxwriter](https://github.com/jmcnamara/rust_xlsxwriter) authors fresh XLSX packages.
 - [Apache POI](https://poi.apache.org/) shaped Poirot from the start: our first few
   commits translated portions of its code into Rust. Our name is a nod to the
   project. Statistical kernels also adapt

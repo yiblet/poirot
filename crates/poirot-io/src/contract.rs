@@ -43,14 +43,15 @@ pub enum IoError {
     /// Backend workbook-decoding failure.
     Read(String),
     /// Backend workbook-encoding failure.
-    Write(rxls::WriteError),
+    Write(rust_xlsxwriter::XlsxError),
     /// Decoded content cannot be represented by the workbook model.
     Model(ModelError),
     /// OOXML parsing or writing failure.
     Xml(String),
     /// Package identity, relationship, or namespace validation failure.
     Opc(opc::OpcError),
-    /// XLS record validation or a resource check failed before decoding.
+    /// Compound-file (XLS) validation or a resource check failed before decoding,
+    /// including a compound file that holds an encrypted XLSX package.
     BiffPreflight(PreflightError),
     /// Configured import/export resource limit exceeded.
     Limit(String),
@@ -93,6 +94,8 @@ impl fmt::Display for IoError {
             Self::Model(e) => write!(f, "workbook model: {e}"),
             Self::Xml(e) => write!(f, "OOXML: {e}"),
             Self::Opc(e) => write!(f, "OPC: {e}"),
+            // An encrypted XLSX is not an XLS, so its message has no XLS stage label.
+            Self::BiffPreflight(e @ PreflightError::EncryptedXlsx) => write!(f, "{e}"),
             Self::BiffPreflight(e) => write!(f, "XLS preflight: {e}"),
             Self::Limit(e) => write!(f, "resource limit: {e}"),
             Self::NumericFidelity(e) => write!(f, "{e}"),
@@ -132,8 +135,8 @@ impl From<ModelError> for IoError {
         Self::Model(e)
     }
 }
-impl From<rxls::WriteError> for IoError {
-    fn from(e: rxls::WriteError) -> Self {
+impl From<rust_xlsxwriter::XlsxError> for IoError {
+    fn from(e: rust_xlsxwriter::XlsxError) -> Self {
         Self::Write(e)
     }
 }

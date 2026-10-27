@@ -64,6 +64,7 @@ fn loading_defaults_and_independent_named_overrides_have_no_hidden_quotas() {
     assert_eq!(xls.string_bytes_limit(), None);
     assert_eq!(xls.continuations_limit(), None);
     assert_eq!(xls.cell_text_bytes_limit(), None);
+    assert_eq!(xls.cells_limit(), None);
     let options = options
         .max_input_bytes(0)
         .max_zip_entries(5)

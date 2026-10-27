@@ -33,7 +33,8 @@
 //! [`files::XlsxSaveBuilder::to_buffer`] when you need bytes instead of a file. Saves
 //! produce XLSX; legacy XLS is supported as input only.
 //!
-//! Calamine streams XLSX input; rxls handles XLS input and XLSX authoring. Saves encode the modeled calculation
+//! Calamine streams XLSX input, Poirot decodes BIFF8 XLS input, and rust_xlsxwriter
+//! authors XLSX packages. Saves encode the modeled calculation
 //! data; charts, drawings, macros, rich styling and other unmodeled features are
 //! omitted. Review import warnings before relying on an exported copy.
 //!

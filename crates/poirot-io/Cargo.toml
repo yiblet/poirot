@@ -15,7 +15,7 @@ serde.workspace = true
 poirot-functions = { version = "0.1.0", path = "../poirot-functions" }
 cfb.workspace = true
 calamine.workspace = true
-rxls.workspace = true
+rust_xlsxwriter.workspace = true
 poirot-parsing = { version = "0.1.0", path = "../poirot-parsing" }
 quick-xml.workspace = true
 zip.workspace = true

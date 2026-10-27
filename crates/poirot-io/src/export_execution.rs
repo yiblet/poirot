@@ -1,9 +1,8 @@
 //! XLSX serializer execution and write-after-success filesystem egress.
-use crate::CellValue;
+use crate::CellAddress;
 use crate::data::{SheetSource, WorkbookSource};
 use crate::{IoError, WriteOptions, ooxml, plan_xlsx_export};
-use rxls::Format;
-use std::{fs, path::Path};
+use std::{borrow::Cow, collections::BTreeMap, fs, path::Path};
 
 /// Writes XLSX with explicit writer budgets; no recalculation is performed.
 pub fn write_xlsx_to_buffer_with_options(
@@ -51,46 +50,68 @@ pub(crate) fn serialize_fresh(
             IoError::Unsupported("cannot export workbook without a visible worksheet".into())
         })?;
     let mut styles = ooxml::StyleExport::new(workbook.style_context())?;
-    let mut writer = rxls::Workbook::new();
-    writer.set_active_sheet(active);
-    writer.date1904 = workbook.date_system() == crate::DateSystem::Excel1904;
-    for sheet in workbook.sheets() {
-        let out = writer.add_sheet(sheet.name());
+    let mut writer = rust_xlsxwriter::Workbook::new();
+    // Storage spellings differing from source text, computed once for both
+    // projection passes; other formulas are written from their source.
+    let mut stored_formulas = Vec::new();
+    for (index, sheet) in workbook.sheets().iter().enumerate() {
+        let out = writer.add_worksheet();
+        out.set_name(sheet.name())?;
+        if index == active {
+            out.set_active(true);
+            out.set_first_tab(true);
+        }
         match sheet.presentation().visibility {
             crate::SheetVisibility::Visible => {}
-            crate::SheetVisibility::Hidden => out.hide(),
-            crate::SheetVisibility::VeryHidden => out.hide_very(),
+            crate::SheetVisibility::Hidden => {
+                out.set_hidden(true);
+            }
+            crate::SheetVisibility::VeryHidden => {
+                out.set_very_hidden(true);
+            }
         }
         if let Some([r, g, b]) = sheet.presentation().tab_color {
-            out.set_tab_color(rxls::Color::rgb(r, g, b));
+            out.set_tab_color(rust_xlsxwriter::Color::RGB(
+                (u32::from(r) << 16) | (u32::from(g) << 8) | u32::from(b),
+            ));
         }
+        let mut bounds: Option<(CellAddress, CellAddress)> = None;
+        let mut rewritten_formulas = BTreeMap::new();
         for (address, cell) in sheet.cells() {
             address.validate()?;
             crate::numeric_representation::check(sheet.name(), *address, cell)?;
-            let col = u16::try_from(address.col)
-                .map_err(|_| IoError::Unsupported("column exceeds XLSX grid".into()))?;
             styles.register(&cell.style)?;
-            let format = Format::new();
-            // Canonical XML projection below restores exact text, caches, spills,
-            // presentation and errors; author only scalar placeholders here.
-            if let Some(formula) = &cell.formula {
-                let stored = crate::ooxml::formula::stored_formula(formula)?;
-                out.write_formula_with_format(address.row, col, stored.as_str(), 0., &format);
-            } else {
-                match &cell.value {
-                    CellValue::Number(n) => {
-                        out.write_number_with_format(address.row, col, *n, &format)
-                    }
-                    CellValue::Boolean(b) => {
-                        out.write_boolean_with_format(address.row, col, *b, &format)
-                    }
-                    _ => out.write_number_with_format(address.row, col, 0., &format),
-                }
+            if let Some(formula) = &cell.formula
+                && let Cow::Owned(rewritten) = ooxml::formula::stored_formula(formula)?
+            {
+                rewritten_formulas.insert(*address, rewritten);
+            }
+            bounds = Some(bounds.map_or((*address, *address), |(first, last)| {
+                (
+                    CellAddress {
+                        row: first.row.min(address.row),
+                        col: first.col.min(address.col),
+                    },
+                    CellAddress {
+                        row: last.row.max(address.row),
+                        col: last.col.max(address.col),
+                    },
+                )
+            }));
+        }
+        // The XML projection replaces sheetData with canonical cells; the backend
+        // only needs the used-range corners to author the worksheet dimension.
+        if let Some((first, last)) = bounds {
+            for corner in [first, last] {
+                let col = u16::try_from(corner.col)
+                    .map_err(|_| IoError::Unsupported("column exceeds XLSX grid".into()))?;
+                out.write_number(corner.row, col, 0.)?;
             }
         }
+        stored_formulas.push(rewritten_formulas);
     }
-    let generated = writer.to_xlsx_checked()?;
-    ooxml::patch_export(&generated, workbook, options, &styles)
+    let generated = writer.save_to_buffer()?;
+    ooxml::patch_export(&generated, workbook, options, &styles, &stored_formulas)
 }
 /// Plan and serialize XLSX before writing the completed bytes to a file.
 pub fn write_xlsx(workbook: &impl WorkbookSource, path: impl AsRef<Path>) -> Result<(), IoError> {

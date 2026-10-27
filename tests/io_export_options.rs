@@ -39,7 +39,7 @@ fn plan_is_pure_borrowed_and_wrapper_content_matches_except_creation_clock() {
             .read_to_end(&mut expected)
             .unwrap();
         part.read_to_end(&mut actual).unwrap();
-        // rxls fresh authoring has no wall-clock defaults: every part is deterministic.
+        // Backend creation clocks are removed: every part is deterministic.
         assert_eq!(actual, expected, "{}", name);
     }
     assert_eq!(format!("{workbook:?}"), before);
@@ -179,4 +179,142 @@ fn repeated_literals_and_formula_caches_use_budgeted_inline_text() {
             Err(IoError::Limit(_))
         ));
     }
+}
+
+/// Build a workbook whose cells share a few styles, like realistic models.
+fn styled_grid(rows: u32, cols: u32) -> Workbook {
+    use poirot::model::{CellAddress, CellStyle, FontStyle, VisualStyle};
+    use std::sync::Arc;
+    let bold = Arc::new(VisualStyle {
+        font: Some(FontStyle {
+            bold: true,
+            ..FontStyle::default()
+        }),
+        ..VisualStyle::default()
+    });
+    let styles = [
+        CellStyle {
+            number_format: Some("0.00".into()),
+            visual: None,
+        },
+        CellStyle {
+            number_format: None,
+            visual: Some(bold.clone()),
+        },
+        CellStyle {
+            number_format: Some("#,##0".into()),
+            visual: Some(bold),
+        },
+    ];
+    let mut workbook = Workbook::new();
+    let sheet = workbook.add_sheet("Model").unwrap();
+    for row in 0..rows {
+        for col in 0..cols {
+            let address = CellAddress::new(row, col).unwrap();
+            let mut cell = match col % 3 {
+                0 => Cell::new(CellValue::Number(f64::from(row * cols + col))),
+                1 => Cell::new(CellValue::Text(format!("r{row}"))),
+                _ => {
+                    let mut cell = Cell::new(CellValue::Number(f64::from(row + 1)));
+                    cell.formula = Some(format!("ROW({address})"));
+                    cell
+                }
+            };
+            cell.style = styles[((row + col) % 3) as usize].clone();
+            sheet.set(address, cell).unwrap();
+        }
+    }
+    workbook
+}
+
+#[test]
+fn large_styled_workbook_exports_and_round_trips_without_a_hidden_cap() {
+    // rxls 0.1.4 charged at least 512 B per cell plus 1 KiB per styled cell
+    // against a fixed 256 MiB cap (write/validate.rs estimated_output_size), so
+    // 180,000 styled cells were refused although the real package is small.
+    let workbook = styled_grid(600, 300);
+    let bytes = write_xlsx_to_buffer_with_options(&workbook, WriteOptions::default()).unwrap();
+    assert!(bytes.len() < 4 * 1024 * 1024, "{}", bytes.len());
+    let restored = poirot_io::read_workbook_bytes::<Workbook>(&bytes).unwrap();
+    let (source, restored) = (workbook.sheet(0).unwrap(), restored.sheet(0).unwrap());
+    assert_eq!(restored.name(), "Model");
+    assert_eq!(restored.cells().len(), 180_000);
+    assert!(source.cells() == restored.cells());
+}
+
+#[test]
+fn write_options_still_refuse_oversize_output_before_returning_bytes() {
+    let workbook = styled_grid(200, 30);
+    let unrestricted = write_xlsx_to_buffer_with_options(&workbook, WriteOptions::default())
+        .unwrap()
+        .len() as u64;
+    for options in [
+        WriteOptions {
+            max_output_bytes: unrestricted - 1,
+            ..WriteOptions::default()
+        },
+        WriteOptions {
+            max_zip_entry_bytes: 64 * 1024,
+            ..WriteOptions::default()
+        },
+        WriteOptions {
+            max_zip_total_bytes: 64 * 1024,
+            ..WriteOptions::default()
+        },
+        WriteOptions {
+            max_zip_entries: 4,
+            ..WriteOptions::default()
+        },
+    ] {
+        assert!(
+            matches!(
+                write_xlsx_to_buffer_with_options(&workbook, options),
+                Err(IoError::Limit(_))
+            ),
+            "{options:?}"
+        );
+    }
+    let exact = WriteOptions {
+        max_output_bytes: unrestricted,
+        ..WriteOptions::default()
+    };
+    assert_eq!(
+        write_xlsx_to_buffer_with_options(&workbook, exact)
+            .unwrap()
+            .len() as u64,
+        unrestricted
+    );
+}
+
+#[test]
+fn exports_omit_backend_theme_and_creation_clock() {
+    use std::io::Read;
+    let workbook = styled_grid(2, 3);
+    let bytes = write_xlsx_to_buffer_with_options(&workbook, WriteOptions::default()).unwrap();
+    let mut zip = zip::ZipArchive::new(Cursor::new(&bytes)).unwrap();
+    let names: Vec<String> = zip
+        .file_names()
+        .map(|name| name.unwrap().into_owned())
+        .collect();
+    assert!(
+        !names.iter().any(|name| name.starts_with("xl/theme/")),
+        "{names:?}"
+    );
+    let mut part = |name: &str| {
+        let mut text = String::new();
+        zip.by_name(name)
+            .unwrap()
+            .read_to_string(&mut text)
+            .unwrap();
+        text
+    };
+    assert!(!part("[Content_Types].xml").contains("theme"));
+    assert!(!part("xl/_rels/workbook.xml.rels").contains("theme"));
+    let core = part("docProps/core.xml");
+    assert!(
+        !core.contains("created") && !core.contains("modified"),
+        "{core}"
+    );
+    let restored = poirot_io::read_workbook_bytes::<Workbook>(&bytes).unwrap();
+    assert_eq!(restored.style_context.theme(), None);
 }

@@ -1,4 +1,4 @@
-//! Dynamic-array metadata absent from rxls fresh authoring.
+//! Dynamic-array metadata added to the fresh backend package.
 use super::{
     package::Package,
     xml::{events, write_event, xml},

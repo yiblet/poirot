@@ -41,6 +41,8 @@ jobs:
         run: |
           python3 tools/test_function_architecture.py
           python3 tools/test_coercion_architecture.py
+          python3 tools/test_module_layout.py
+          python3 tools/test_eval_dependencies.py
           python3 crates/poirot-test-excel-specs/tools/maintain.py --check
 
   msrv:

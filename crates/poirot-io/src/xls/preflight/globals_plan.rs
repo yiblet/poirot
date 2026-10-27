@@ -1,6 +1,9 @@
 //! Ordered workbook globals and cumulative shared-string accounting.
-use super::strings::{SstAccounting, sst};
-use super::{PreflightError, Record, ResourceBudget, u16at, u32at};
+use super::checks::{u16at, u32at};
+use super::preflight_error::PreflightError;
+use super::record::Record;
+use super::resource_budget::ResourceBudget;
+use super::sst_accounting::{SstAccounting, sst};
 
 /// Checked sheet positions and shared-string accounting recovered from BIFF globals.
 pub(super) struct GlobalsPlan {
@@ -15,6 +18,13 @@ pub(super) fn globals(
     rs: &[Record<'_>],
     budget: ResourceBudget,
 ) -> Result<GlobalsPlan, PreflightError> {
+    // FILEPASS (MS-XLS 2.4.117) encrypts every later record payload, including
+    // the SST, so refuse it before any payload is parsed.
+    if rs.iter().take_while(|r| r.id != 0xa).any(|r| r.id == 0x2f) {
+        return Err(PreflightError::Representation(
+            "encrypted XLS workbooks are not supported",
+        ));
+    }
     let mut positions = Vec::new();
     let mut accounting = SstAccounting::default();
     let mut i = 0;

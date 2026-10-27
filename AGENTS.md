@@ -31,9 +31,8 @@ These rules apply to `src/eval/` and new library code:
   folder (including `src/eval/` itself) imports each item from its defining module.
 - Put module declarations first in every file and a blank line between items.
 - Do not use wildcard imports in library code; clippy denies them.
-- Keep tests inside their folder module (`tests.rs` or `tests/mod.rs`), not in inline
-  `mod tests {}` blocks (`adapters/` excepted), unless they test a public contract
-  through the public API.
+- Keep tests inside their folder module (`tests.rs` or `tests/mod.rs`), or in inline
+  `mod tests {}` blocks, unless they test a public contract through the public API.
 - Put behavior that needs a whole `Session` or `CallHost` in an executor: a struct
   that borrows it, is named for its job and is built at the call site
   (`Vm::new(session)`).

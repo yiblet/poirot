@@ -86,6 +86,56 @@ fn tiny_budget_refuses_invalid_cfb_before_backend_decode() {
         }))
     ));
 }
+/// Replace directory entry `entry` of [`compound`] with a named entry of `kind`
+/// (2 = stream, 0 = free); the entry keeps the Workbook stream's sectors.
+fn name_entry(b: &mut [u8], entry: usize, name: &str, kind: u8) {
+    let d = 1024 + entry * 128;
+    b[d..d + 64].fill(0);
+    let units: Vec<u16> = name.encode_utf16().collect();
+    for (i, c) in units.iter().enumerate() {
+        b[d + i * 2..d + i * 2 + 2].copy_from_slice(&c.to_le_bytes());
+    }
+    b[d + 64..d + 66].copy_from_slice(&((units.len() as u16 + 1) * 2).to_le_bytes());
+    b[d + 66] = kind;
+}
+#[test]
+fn encrypted_xlsx_container_is_reported_as_encrypted() {
+    // MS-OFFCRYPTO 2.3.4: an encrypted OOXML package is a compound file holding
+    // EncryptionInfo and EncryptedPackage streams instead of a Workbook stream.
+    let mut b = compound(&[]);
+    name_entry(&mut b, 1, "EncryptionInfo", 2);
+    name_entry(&mut b, 2, "EncryptedPackage", 2);
+    let error = read_workbook_bytes::<poirot::model::Workbook>(&b).unwrap_err();
+    assert_eq!(
+        error.to_string(),
+        "encrypted (password-protected) XLSX workbooks are not supported"
+    );
+    assert!(matches!(
+        error,
+        IoError::BiffPreflight(PreflightError::EncryptedXlsx)
+    ));
+}
+#[test]
+fn compound_without_workbook_or_encrypted_package_stays_malformed() {
+    let missing = IoError::BiffPreflight(PreflightError::Malformed("missing Workbook/Book stream"))
+        .to_string();
+    let mut neither = compound(&[]);
+    name_entry(&mut neither, 1, "Contents", 2);
+    let mut info_only = compound(&[]);
+    name_entry(&mut info_only, 1, "EncryptionInfo", 2);
+    // A free entry's stale name does not count as a stream.
+    let mut free_package = compound(&[]);
+    name_entry(&mut free_package, 1, "EncryptionInfo", 2);
+    name_entry(&mut free_package, 2, "EncryptedPackage", 0);
+    for b in [neither, info_only, free_package] {
+        let error = read_workbook_bytes::<poirot::model::Workbook>(&b).unwrap_err();
+        assert_eq!(error.to_string(), missing);
+        assert!(matches!(
+            error,
+            IoError::BiffPreflight(PreflightError::Malformed("missing Workbook/Book stream"))
+        ));
+    }
+}
 #[test]
 fn malformed_chain_is_typed_and_does_not_panic() {
     let mut b = compound(&[]);
@@ -115,7 +165,7 @@ fn huge_extent_does_not_allocate_a_dense_rectangle() {
         stream.extend(record(0x200, &dimensions));
         stream.extend(record(0xa, &[]));
         let actual = read_workbook_bytes::<poirot::model::Workbook>(&compound(&stream));
-        // rxls ignores Dimensions reservations and stores actual cells only.
+        // Decoding ignores Dimensions reservations and stores actual cells only.
         let workbook = actual.unwrap();
         assert_eq!(workbook.sheets().len(), 1);
         assert!(workbook.sheet(0).unwrap().cells().is_empty());
@@ -190,4 +240,44 @@ fn ordinary_unicode_and_cached_string_fixtures_keep_default_imports_and_warnings
             "{path}"
         );
     }
+}
+
+#[test]
+fn row_hidden_flag_imports_as_manually_hidden_rows() {
+    use poirot::model::RowVisibility;
+    let mut bound = vec![0; 9];
+    bound[..4].copy_from_slice(&25u32.to_le_bytes());
+    bound[6] = 1;
+    bound[8] = b'S';
+    let mut stream = record(0x809, &[0, 6, 5, 0]);
+    stream.extend(record(0x85, &bound));
+    stream.extend(record(0xa, &[]));
+    stream.extend(record(0x809, &[0, 6, 16, 0]));
+    // ROW (MS-XLS 2.4.221): rw at offset 0; fDyZero is bit 5 of the flags at offset 12.
+    for (rw, flags) in [(1u16, 0x20u8), (2, 0), (5, 0x20 | 0x10 | 0x01)] {
+        let mut row = vec![0; 16];
+        row[..2].copy_from_slice(&rw.to_le_bytes());
+        row[12] = flags;
+        stream.extend(record(0x0208, &row));
+    }
+    let mut number = vec![0; 14];
+    number[..2].copy_from_slice(&1u16.to_le_bytes());
+    number[6..].copy_from_slice(&4.0f64.to_le_bytes());
+    stream.extend(record(0x203, &number));
+    stream.extend(record(0xa, &[]));
+    let workbook = read_workbook_bytes::<poirot::model::Workbook>(&compound(&stream)).unwrap();
+    let sheet = workbook.sheet(0).unwrap();
+    let hidden = RowVisibility {
+        manually_hidden: true,
+        filtered_out: false,
+    };
+    assert_eq!(sheet.row_indices().collect::<Vec<_>>(), vec![1, 2, 5]);
+    assert_eq!(
+        sheet.row_visibility_entries().collect::<Vec<_>>(),
+        vec![(1, hidden), (5, hidden)]
+    );
+    assert_eq!(
+        sheet.get("A2".parse().unwrap()).map(|c| c.value.clone()),
+        Some(poirot::model::CellValue::Number(4.0))
+    );
 }

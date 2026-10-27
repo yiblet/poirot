@@ -4,6 +4,7 @@ mod backend;
 mod budget;
 pub(crate) use backend::{backend_package, needs_backend_adapter};
 mod dynamic;
+mod generated;
 mod metadata;
 mod styles;
 pub(crate) use styles::{StyleExport, read_styles};
@@ -36,9 +37,10 @@ pub(crate) fn patch_export(
     workbook: &impl WorkbookSource,
     options: crate::WriteOptions,
     styles: &StyleExport<'_>,
+    stored_formulas: &[std::collections::BTreeMap<crate::CellAddress, String>],
 ) -> Result<Vec<u8>, IoError> {
     package::check_generated_claims(bytes, options)?;
-    let package = read_package_with_options(
+    let mut package = read_package_with_options(
         bytes,
         ReadOptions {
             max_input_bytes: options.max_output_bytes,
@@ -56,6 +58,7 @@ pub(crate) fn patch_export(
         )),
         other => other,
     })?;
+    generated::normalize(&mut package)?;
     let inventory = crate::opc::PackageInventory { parts: package };
     let plan = inventory.plan()?;
     let mut package = inventory.parts;
@@ -65,7 +68,7 @@ pub(crate) fn patch_export(
         )));
     }
     let mut patched_total = package.values().map(|part| part.len() as u64).sum();
-    for sheet in workbook.sheets() {
+    for (index, sheet) in workbook.sheets().iter().enumerate() {
         let path = plan
             .sheets
             .iter()
@@ -80,6 +83,9 @@ pub(crate) fn patch_export(
             sheet,
             shared: &shared,
             styles,
+            stored_formulas: stored_formulas.get(index).ok_or_else(|| {
+                IoError::Unsupported("export formula spellings do not match sheets".into())
+            })?,
         };
         let size = patch.execute(SizeCounter::default())?.0;
         patched_total = next_total(size, original.len() as u64, patched_total, options)?;

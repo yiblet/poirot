@@ -1,12 +1,12 @@
 //! BIFF token reconstruction and reference rendering.
-use super::text::{take, text, word};
-use super::{PreflightError, ResourceBudget, Result};
-use crate::NamedRange;
-
-/// BIFF external-name bookkeeping used to reconstruct add-in function spellings.
-pub(super) mod addins;
-mod metadata;
-use metadata::function_metadata;
+use super::add_ins::{AddIns, arity};
+use super::array_constant::array_constant;
+use super::metadata::function_metadata;
+use super::parsed_formula::ParsedFormula;
+use crate::xls::preflight::{PreflightError, ResourceBudget};
+use crate::xls::result::Result;
+use crate::xls::text::{take, text, word};
+use crate::{CellAddress, NamedRange};
 
 fn reference(row: u16, col: u16) -> String {
     let mut n = (col & 0x3fff) as u32 + 1;
@@ -25,11 +25,55 @@ fn reference(row: u16, col: u16) -> String {
         row as u32 + 1
     )
 }
+
+/// Resolve a PtgRefN/PtgAreaN location against the shared-formula cell.
+/// Relative offsets wrap within the BIFF8 grid, matching Excel's storage of
+/// negative offsets as 16-bit rows and 8-bit columns (MS-XLS 2.5.198.88).
+fn relative(base: CellAddress, row: u16, col: u16) -> (u16, u16) {
+    let row = if col & 0x8000 != 0 {
+        (base.row as u16).wrapping_add(row)
+    } else {
+        row
+    };
+    let column = if col & 0x4000 != 0 {
+        ((base.col as u16).wrapping_add(col & 0xff)) & 0xff
+    } else {
+        col & 0x3fff
+    };
+    (row, column | (col & 0xc000))
+}
+
+/// Render a single-sheet XTI reference prefix, or `None` for external/multi-sheet XTIs.
+fn sheet_prefix(xti: u16, sheets: &[String], xtis: &[(u16, u16, u16)]) -> Option<String> {
+    let (sup, first, last) = xtis.get(xti as usize)?;
+    if *sup != 0 || first != last {
+        return None;
+    }
+    let sheet = sheets.get(*first as usize)?;
+    Some(format!("'{}'!", sheet.replace('\'', "''")))
+}
+
+/// Spell a BIFF8 BErr error code (MS-XLS 2.5.10).
+pub(in crate::xls) fn error_text(code: u8) -> Result<&'static str> {
+    Ok(match code {
+        0x00 => "#NULL!",
+        0x07 => "#DIV/0!",
+        0x0f => "#VALUE!",
+        0x17 => "#REF!",
+        0x1d => "#NAME?",
+        0x24 => "#NUM!",
+        0x2a => "#N/A",
+        0x2b => "#GETTING_DATA",
+        _ => return Err(PreflightError::Malformed("unknown BIFF error code")),
+    })
+}
+
 /// Formula reconstruction stack member retaining text and grouping state.
 enum Item {
     Expression(String),
     AddIn(String),
 }
+
 fn pop(s: &mut Vec<Item>) -> Result<String> {
     match s.pop() {
         Some(Item::Expression(value)) => Ok(value),
@@ -39,29 +83,47 @@ fn pop(s: &mut Vec<Item>) -> Result<String> {
         None => Err(PreflightError::Malformed("formula stack underflow")),
     }
 }
+
 /// Reconstruct supported RPN tokens into formula source without add-in bindings.
 #[cfg(test)]
-pub(super) fn formula(
+pub(in crate::xls) fn formula(
     b: &[u8],
     sheets: &[String],
     names: &[NamedRange],
     xtis: &[(u16, u16, u16)],
     budget: ResourceBudget,
 ) -> Result<Option<String>> {
-    formula_with_addins(b, sheets, names, xtis, &addins::AddIns::default(), budget)
+    formula_with_addins(
+        ParsedFormula { rgce: b, rgcb: &[] },
+        sheets,
+        names,
+        xtis,
+        &AddIns::default(),
+        None,
+        budget,
+    )
 }
+
 /// Reconstruct RPN source using checked add-in function identities.
-pub(super) fn formula_with_addins(
-    mut b: &[u8],
+/// `base` anchors relative PtgRefN/PtgAreaN tokens of shared formulas; ordinary
+/// cell and name formulas pass `None` and reject those tokens. PtgArray values
+/// are read from `tokens.rgcb`.
+pub(in crate::xls) fn formula_with_addins(
+    tokens: ParsedFormula<'_>,
     sheets: &[String],
     names: &[NamedRange],
     xtis: &[(u16, u16, u16)],
-    addins: &addins::AddIns,
+    addins: &AddIns,
+    base: Option<CellAddress>,
     budget: ResourceBudget,
 ) -> Result<Option<String>> {
+    let mut b = tokens.rgce;
     if b.is_empty() {
         return Ok(None);
     }
+    // RgbExtra holds one entry per PtgArray and PtgMemArea, in token order.
+    let mut extra = tokens.rgcb;
+    let mut pending_memory_areas = 0usize;
     let mut s = Vec::new();
     let mut token_count = 0usize;
     while !b.is_empty() {
@@ -72,7 +134,7 @@ pub(super) fn formula_with_addins(
             ))?;
         if token_count > budget.max_metadata_entries {
             return Err(PreflightError::Resource {
-                resource: "overlay formula tokens",
+                resource: "BIFF formula tokens",
                 requested: token_count as u64,
                 limit: budget.max_metadata_entries as u64,
             });
@@ -89,9 +151,14 @@ pub(super) fn formula_with_addins(
             // Pinned MemArea/MemFunc payloads annotate, but do not consume,
             // the following reference expression. Decode it normally and retain
             // all per-token and stack-text budget checks.
-            0x26 | 0x29 => {
-                if id == 0x26 {
+            0x26..=0x29 | 0x2e | 0x2f => {
+                if matches!(id, 0x26..=0x28) {
                     take(&mut b, 4)?;
+                }
+                if id == 0x26 {
+                    // PtgMemArea's PtgExtraMem is skipped only when a later
+                    // PtgArray needs the extra data after it.
+                    pending_memory_areas = pending_memory_areas.saturating_add(1);
                 }
                 let _subexpression_bytes = word(&mut b)?;
             }
@@ -114,6 +181,27 @@ pub(super) fn formula_with_addins(
                 }));
             }
             0x16 => s.push(Item::Expression(String::new())),
+            // PtgArray: seven unused bytes; its values are the next
+            // PtgExtraArray in RgbExtra, after any earlier PtgExtraMem
+            // (a count of Ref8U ranges, eight bytes each).
+            0x20 => {
+                take(&mut b, 7)?;
+                for _ in 0..pending_memory_areas {
+                    let ranges = usize::from(word(&mut extra)?);
+                    take(
+                        &mut extra,
+                        ranges
+                            .checked_mul(8)
+                            .ok_or(PreflightError::Representation("PtgExtraMem size overflow"))?,
+                    )?;
+                }
+                pending_memory_areas = 0;
+                s.push(Item::Expression(array_constant(
+                    &mut extra,
+                    &mut token_count,
+                    budget,
+                )?));
+            }
             0x17 => {
                 let n = *take(&mut b, 1)?
                     .first()
@@ -169,33 +257,54 @@ pub(super) fn formula_with_addins(
                 };
                 s.push(Item::Expression(name.name.clone()));
             }
-            0x24 | 0x25 | 0x3a | 0x3b => {
+            0x24 | 0x25 | 0x2c | 0x2d | 0x3a | 0x3b => {
                 let prefix = if id >= 0x3a {
-                    let i = word(&mut b)? as usize;
-                    let Some((sup, first, last)) = xtis.get(i) else {
+                    let Some(prefix) = sheet_prefix(word(&mut b)?, sheets, xtis) else {
                         return Ok(None);
                     };
-                    if *sup != 0 || first != last {
-                        return Ok(None);
-                    }
-                    let Some(sheet) = sheets.get(*first as usize) else {
-                        return Ok(None);
-                    };
-                    format!("'{}'!", sheet.replace('\'', "''"))
+                    prefix
                 } else {
                     String::new()
                 };
-                let area = id == 0x25 || id == 0x3b;
+                let area = matches!(id, 0x25 | 0x2d | 0x3b);
                 let r1 = word(&mut b)?;
                 let r2 = if area { word(&mut b)? } else { r1 };
                 let c1 = word(&mut b)?;
                 let c2 = if area { word(&mut b)? } else { c1 };
+                let ((r1, c1), (r2, c2)) = if matches!(id, 0x2c | 0x2d) {
+                    let Some(base) = base else {
+                        return Ok(None);
+                    };
+                    (relative(base, r1, c1), relative(base, r2, c2))
+                } else {
+                    ((r1, c1), (r2, c2))
+                };
                 let a = reference(r1, c1);
                 s.push(Item::Expression(if area {
                     format!("{prefix}{a}:{}", reference(r2, c2))
                 } else {
                     format!("{prefix}{a}")
                 }));
+            }
+            // PtgErr carries one BErr code (MS-XLS 2.5.198.52).
+            0x1c => {
+                let code = *take(&mut b, 1)?
+                    .first()
+                    .ok_or(PreflightError::Malformed("missing byte"))?;
+                s.push(Item::Expression(error_text(code)?.into()));
+            }
+            // PtgRefErr/PtgAreaErr and their 3-D forms keep unused location bytes.
+            0x2a | 0x2b | 0x3c | 0x3d => {
+                let prefix = if id >= 0x3c {
+                    let Some(prefix) = sheet_prefix(word(&mut b)?, sheets, xtis) else {
+                        return Ok(None);
+                    };
+                    prefix
+                } else {
+                    String::new()
+                };
+                take(&mut b, if matches!(id, 0x2b | 0x3d) { 8 } else { 4 })?;
+                s.push(Item::Expression(format!("{prefix}#REF!")));
             }
             0x39 => {
                 let xti = word(&mut b)? as usize;
@@ -210,7 +319,7 @@ pub(super) fn formula_with_addins(
                 let name = addins.resolve(xti, slot)?;
                 if name.len() > budget.max_string_bytes {
                     return Err(PreflightError::Resource {
-                        resource: "overlay formula bytes",
+                        resource: "BIFF formula bytes",
                         requested: name.len() as u64,
                         limit: budget.max_string_bytes as u64,
                     });
@@ -242,7 +351,7 @@ pub(super) fn formula_with_addins(
                             "UDF function identity unsupported",
                         ));
                     };
-                    let (min, max) = addins::arity(name).ok_or(PreflightError::Representation(
+                    let (min, max) = arity(name).ok_or(PreflightError::Representation(
                         "unsupported add-in function identity",
                     ))?;
                     if count == 0 || count - 1 < min || count - 1 > max {
@@ -267,7 +376,7 @@ pub(super) fn formula_with_addins(
                     // Includes name, arguments, commas and parentheses before split/join/format allocations.
                     if bytes > budget.max_string_bytes {
                         return Err(PreflightError::Resource {
-                            resource: "overlay formula bytes",
+                            resource: "BIFF formula bytes",
                             requested: bytes as u64,
                             limit: budget.max_string_bytes as u64,
                         });
@@ -296,7 +405,7 @@ pub(super) fn formula_with_addins(
                         .ok_or(PreflightError::Representation("formula text overflow"))?;
                     if retained > budget.max_string_bytes {
                         return Err(PreflightError::Resource {
-                            resource: "overlay formula bytes",
+                            resource: "BIFF formula bytes",
                             requested: retained as u64,
                             limit: budget.max_string_bytes as u64,
                         });
@@ -347,7 +456,7 @@ pub(super) fn formula_with_addins(
             .ok_or(PreflightError::Representation("formula text overflow"))?;
         if bytes > budget.max_string_bytes {
             return Err(PreflightError::Resource {
-                resource: "overlay formula bytes",
+                resource: "BIFF formula bytes",
                 requested: bytes as u64,
                 limit: budget.max_string_bytes as u64,
             });
@@ -362,6 +471,7 @@ pub(super) fn formula_with_addins(
 #[cfg(test)]
 mod memory_wrapper_tests {
     use super::*;
+
     #[test]
     fn memory_tokens_annotate_without_skipping_or_changing_the_stack() {
         for prefix in [vec![0x29, 3, 0], vec![0x26, 0, 0, 0, 0, 3, 0]] {

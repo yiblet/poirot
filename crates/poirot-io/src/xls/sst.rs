@@ -1,24 +1,39 @@
-//! Segmented SST accounting; totals accumulate while active lookup sizes replace.
-use super::{PreflightError, Record, ResourceBudget, check, u32at};
+//! Lossless SST/CONTINUE units from original BIFF records.
+use crate::ExcelText;
+use crate::xls::preflight::{PreflightError, Record, ResourceBudget};
 
-/// Validated shared-string counts and sizes used to admit backend decoding.
-#[derive(Default)]
-pub(super) struct SstAccounting {
-    /// Per-string storage claims recovered without constructing decoded values.
-    pub(super) sizes: Vec<usize>,
-    /// Number of shared strings inspected.
-    pub(super) strings: usize,
-    /// Combined admitted shared-string storage estimate.
-    pub(super) string_bytes: usize,
+fn check(resource: &'static str, requested: u64, limit: u64) -> Result<(), PreflightError> {
+    if requested > limit {
+        Err(PreflightError::Resource {
+            resource,
+            requested,
+            limit,
+        })
+    } else {
+        Ok(())
+    }
 }
 
-/// Budgeted cursor over SST continuation payloads and encoding boundaries.
-struct Segments<'a> {
+fn u32at(data: &[u8], at: usize) -> Result<u32, PreflightError> {
+    let bytes = data
+        .get(
+            at..at
+                .checked_add(4)
+                .ok_or(PreflightError::Malformed("integer offset overflow"))?,
+        )
+        .ok_or(PreflightError::Malformed("truncated SST counts"))?;
+    // SAFETY: get above selects exactly four bytes or returns an error, so [u8; 4] conversion succeeds.
+    Ok(u32::from_le_bytes(bytes.try_into().expect("four bytes")))
+}
+
+/// Cursor over SST/CONTINUE payloads preserving per-segment encoding switches.
+struct SstCursor<'a> {
     parts: Vec<&'a [u8]>,
     part: usize,
     at: usize,
 }
-impl Segments<'_> {
+
+impl SstCursor<'_> {
     fn advance(&mut self) -> bool {
         if self.part + 1 < self.parts.len() {
             self.part += 1;
@@ -28,11 +43,13 @@ impl Segments<'_> {
             false
         }
     }
+
     fn remaining(&self) -> usize {
         self.parts
             .get(self.part)
             .map_or(0, |part| part.len().saturating_sub(self.at))
     }
+
     fn byte(&mut self) -> Result<u8, PreflightError> {
         if self.remaining() == 0 && !self.advance() {
             return Err(PreflightError::Malformed("truncated shared string"));
@@ -46,6 +63,7 @@ impl Segments<'_> {
         self.at += 1;
         Ok(b)
     }
+
     fn integer(&mut self, n: usize) -> Result<u32, PreflightError> {
         let mut value = 0;
         for i in 0..n {
@@ -53,6 +71,7 @@ impl Segments<'_> {
         }
         Ok(value)
     }
+
     fn skip(&mut self, mut n: usize) -> Result<(), PreflightError> {
         while n > 0 {
             if self.remaining() == 0 && !self.advance() {
@@ -64,21 +83,22 @@ impl Segments<'_> {
         }
         Ok(())
     }
+
     fn more(&self) -> bool {
         self.remaining() > 0 || self.part + 1 < self.parts.len()
     }
 }
-/// Inspect shared-string framing and resource claims without decoding the workbook.
-pub(super) fn sst(
+
+/// Decode the shared-string table while preserving exact UTF-16 units.
+pub(in crate::xls) fn sst(
     rs: &[Record<'_>],
     budget: ResourceBudget,
-    mut plan: SstAccounting,
-) -> Result<SstAccounting, PreflightError> {
-    let mut sizes = std::mem::take(&mut plan.sizes);
-    sizes.clear();
+) -> Result<Vec<ExcelText>, PreflightError> {
+    let mut strings = Vec::new();
+    let mut string_bytes = 0usize;
     let first = rs
         .first()
-        .ok_or(PreflightError::Malformed("missing SST record"))?
+        .ok_or(PreflightError::Malformed("missing SST"))?
         .data;
     let unique = u32at(first, 4)? as usize;
     check(
@@ -97,7 +117,7 @@ pub(super) fn sst(
             .ok_or(PreflightError::Malformed("truncated SST counts"))?,
     ];
     parts.extend(rs.iter().skip(1).map(|r| r.data));
-    let mut cursor = Segments {
+    let mut cursor = SstCursor {
         parts,
         part: 0,
         at: 0,
@@ -135,6 +155,7 @@ pub(super) fn sst(
         )?;
         let mut wide = flags & 1 != 0;
         let mut left = chars;
+        let mut units = Vec::with_capacity(chars);
         while left > 0 {
             if cursor.remaining() == 0 {
                 if !cursor.advance() {
@@ -147,35 +168,73 @@ pub(super) fn sst(
             if take == 0 {
                 return Err(PreflightError::Malformed("split UTF16 code unit"));
             }
-            cursor.skip(take * width)?;
+            for _ in 0..take {
+                units.push(cursor.integer(width)? as u16);
+            }
             left -= take;
         }
         cursor.skip(runs * 4)?;
         cursor.skip(ext)?;
         check(
             "decoded strings",
-            (plan.strings + 1) as u64,
+            (strings.len() + 1) as u64,
             budget.max_strings as u64,
         )?;
-        sizes.push(chars * 4);
-        plan.strings += 1;
-        plan.string_bytes =
-            plan.string_bytes
+        strings.push(ExcelText::from_units(units));
+        string_bytes =
+            string_bytes
                 .checked_add(chars * 4)
                 .ok_or(PreflightError::Representation(
                     "decoded string bytes overflow",
                 ))?;
         check(
             "decoded strings",
-            plan.strings as u64,
+            strings.len() as u64,
             budget.max_strings as u64,
         )?;
         check(
             "decoded string bytes",
-            plan.string_bytes as u64,
+            string_bytes as u64,
             budget.max_string_bytes as u64,
         )?;
     }
-    plan.sizes = sizes;
-    Ok(plan)
+    Ok(strings)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn raw_sst_units_and_compression_switch_do_not_repair_surrogates() {
+        let first = [3, 0, 0, 0, 3, 0, 0, 0, 2, 0, 1, 0x3d, 0xd8];
+        let next = [1, 0, 0xde, 1, 0, 1, 0x3d, 0xd8, 1, 0, 0, 65];
+        let rs = [
+            Record {
+                id: 0xfc,
+                at: 0,
+                data: &first,
+            },
+            Record {
+                id: 0x3c,
+                at: 18,
+                data: &next,
+            },
+        ];
+        let strings = sst(&rs, ResourceBudget::default()).unwrap();
+        assert_eq!(strings[0].units(), &[0xd83d, 0xde00]);
+        assert_eq!(strings[1].units(), &[0xd83d]);
+        assert_eq!(strings[2].units(), &[65]);
+        let budget = ResourceBudget {
+            max_string_chars: 1,
+            ..ResourceBudget::default()
+        };
+        assert!(matches!(
+            sst(&rs, budget),
+            Err(PreflightError::Resource {
+                resource: "shared string characters",
+                ..
+            })
+        ));
+    }
 }

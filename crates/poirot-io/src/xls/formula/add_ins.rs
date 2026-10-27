@@ -1,23 +1,26 @@
 //! Checked original SUPBOOK/EXTERNNAME identity, restricted to supported add-ins.
-use super::super::text::{take, text, word};
-use super::super::{PreflightError, ResourceBudget, Result};
+use crate::xls::preflight::{PreflightError, ResourceBudget};
+use crate::xls::result::Result;
+use crate::xls::text::{take, text, word};
 
 /// External-book/name bindings collected from BIFF globals for formula reconstruction.
 #[derive(Default)]
-pub(in crate::biff_overlay) struct AddIns {
+pub(in crate::xls) struct AddIns {
     books: Vec<Book>,
     declarations: usize,
     bytes: usize,
 }
+
 /// External-book classification distinguishing add-in names from ordinary workbook links.
 enum Book {
     Internal,
     AddIn(Vec<String>),
     External,
 }
+
 impl AddIns {
     /// Record supported external-book and name metadata from one BIFF record.
-    pub(in crate::biff_overlay) fn observe(
+    pub(in crate::xls) fn observe(
         &mut self,
         id: u16,
         mut data: &[u8],
@@ -97,8 +100,9 @@ impl AddIns {
         }
         Ok(())
     }
+
     /// Resolve a stored add-in index to its source function spelling.
-    pub(in crate::biff_overlay) fn resolve(&self, xti: (u16, u16, u16), slot: u32) -> Result<&str> {
+    pub(in crate::xls) fn resolve(&self, xti: (u16, u16, u16), slot: u32) -> Result<&str> {
         if xti.1 != 0xfffe || xti.2 != 0xfffe {
             return Err(PreflightError::Representation(
                 "external NameX scope unsupported",
@@ -121,8 +125,9 @@ impl AddIns {
         Ok(name)
     }
 }
+
 /// Return the supported argument contract for a reconstructed function token.
-pub(in crate::biff_overlay) fn arity(name: &str) -> Option<(usize, usize)> {
+pub(in crate::xls) fn arity(name: &str) -> Option<(usize, usize)> {
     let name = if let Some(suffix) = name.strip_prefix("_xlfn.") {
         if !suffix.eq_ignore_ascii_case("IFERROR") {
             return None;
@@ -143,6 +148,7 @@ pub(in crate::biff_overlay) fn arity(name: &str) -> Option<(usize, usize)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     fn declaration(name: &str) -> Vec<u8> {
         let mut data = vec![0; 6];
         data.extend([name.len() as u8, 0]);
@@ -150,6 +156,7 @@ mod tests {
         data.extend([2, 0, 0x1c, 0x17]);
         data
     }
+
     fn plan(name: &str) -> AddIns {
         let mut plan = AddIns::default();
         let budget = ResourceBudget::default();
@@ -158,6 +165,7 @@ mod tests {
         plan.observe(0x23, &declaration(name), budget).unwrap();
         plan
     }
+
     #[test]
     fn exact_original_identity_and_checked_slots() {
         let identities = plan("edate");
@@ -173,6 +181,7 @@ mod tests {
         assert!(plan("UNKNOWN").resolve((1, 0xfffe, 0xfffe), 1).is_err());
         assert!(plan("_xlfn.EDATE").resolve((1, 0xfffe, 0xfffe), 1).is_err());
     }
+
     #[test]
     fn bounded_declarations_and_malformed_records_refuse_before_decode() {
         let mut plan = AddIns::default();
@@ -201,6 +210,7 @@ mod tests {
             Err(PreflightError::Resource { .. })
         ));
     }
+
     #[test]
     fn original_namex_funcvar_reconstructs_and_rejects_bad_arity_or_value_use() {
         let plan = plan("IFERROR");
@@ -209,12 +219,16 @@ mod tests {
             0x59, 0, 0, 1, 0, 0, 0, 0x1e, 1, 0, 0x1e, 0, 0, 3, 0x1e, 7, 0, 0x42, 3, 255, 0,
         ];
         assert_eq!(
-            super::super::formula_with_addins(
-                &tokens,
+            super::super::decompile::formula_with_addins(
+                super::super::parsed_formula::ParsedFormula {
+                    rgce: &tokens,
+                    rgcb: &[],
+                },
                 &[],
                 &[],
                 &xtis,
                 &plan,
+                None,
                 ResourceBudget::default()
             )
             .unwrap(),
@@ -223,23 +237,31 @@ mod tests {
         let mut wrong = tokens;
         wrong[18] = 2;
         assert!(
-            super::super::formula_with_addins(
-                &wrong,
+            super::super::decompile::formula_with_addins(
+                super::super::parsed_formula::ParsedFormula {
+                    rgce: &wrong,
+                    rgcb: &[],
+                },
                 &[],
                 &[],
                 &xtis,
                 &plan,
+                None,
                 ResourceBudget::default()
             )
             .is_err()
         );
         assert!(
-            super::super::formula_with_addins(
-                &tokens[..7],
+            super::super::decompile::formula_with_addins(
+                super::super::parsed_formula::ParsedFormula {
+                    rgce: &tokens[..7],
+                    rgcb: &[],
+                },
                 &[],
                 &[],
                 &xtis,
                 &plan,
+                None,
                 ResourceBudget::default()
             )
             .is_err()

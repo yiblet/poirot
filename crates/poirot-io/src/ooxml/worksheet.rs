@@ -19,6 +19,8 @@ pub(super) struct SheetPatch<'a, S: SheetSource> {
     pub(super) styles: &'a super::StyleExport<'a>,
     /// Shared-source equivalence proof reused for sizing and actual serialization.
     pub(super) shared: &'a super::shared::SharedExport,
+    /// Storage spellings that differ from source formula text, by cell.
+    pub(super) stored_formulas: &'a BTreeMap<CellAddress, String>,
 }
 
 /// Resolved OOXML type and payload for one canonical source cell.
@@ -73,6 +75,7 @@ fn write_cells<W: Write>(
     styles: &super::StyleExport<'_>,
     metadata: &BTreeMap<CellAddress, String>,
     shared: &super::shared::SharedExport,
+    stored_formulas: &BTreeMap<CellAddress, String>,
 ) -> Result<(), IoError> {
     let spills = super::spill::bounds(sheet)?;
     for index in sheet.row_indices() {
@@ -83,6 +86,11 @@ fn write_cells<W: Write>(
             .ok_or_else(|| IoError::Unsupported("row index overflow".into()))?
             .to_string();
         start.push_attribute(("r", number.as_str()));
+        // OOXML has one row-hiding flag; the reader maps it back to `manually_hidden`.
+        let visibility = sheet.row_visibility(index);
+        if visibility.manually_hidden || visibility.filtered_out {
+            start.push_attribute(("hidden", "1"));
+        }
         write_event(writer, Event::Start(start))?;
         for (address, cell) in sheet.stored_range(
             CellAddress { row: index, col: 0 },
@@ -112,7 +120,9 @@ fn write_cells<W: Write>(
             }
             write_event(writer, Event::Start(start))?;
             if let Some(formula) = &cell.formula {
-                let formula = super::formula::stored_formula(formula)?;
+                let formula = stored_formulas
+                    .get(address)
+                    .map_or_else(|| formula.trim_start_matches('='), String::as_str);
                 if let Some(last) = spills.get(address) {
                     let mut start = BytesStart::new("f");
                     start.push_attribute(("t", "array"));
@@ -175,6 +185,7 @@ impl<S: SheetSource> SheetPatch<'_, S> {
             sheet,
             shared,
             styles,
+            stored_formulas,
         } = *self;
         let metadata = style_map(bytes, "cm")?;
         let mut reader = events(bytes);
@@ -185,7 +196,14 @@ impl<S: SheetSource> SheetPatch<'_, S> {
                 Event::Start(e) if e.local_name().as_ref() == "sheetData" => {
                     write_event(&mut writer, Event::Start(e.clone().into_owned()))?;
                     reader.read_to_end(e.name()).map_err(xml)?;
-                    write_cells(&mut writer, sheet, styles, &metadata, shared)?;
+                    write_cells(
+                        &mut writer,
+                        sheet,
+                        styles,
+                        &metadata,
+                        shared,
+                        stored_formulas,
+                    )?;
                     write_event(&mut writer, Event::End(BytesEnd::new("sheetData")))?;
                 }
                 Event::Eof => break,
@@ -210,7 +228,14 @@ mod custom_row_tests {
             let styles = super::super::StyleExport::new(&context).unwrap();
             let shared = super::super::shared::SharedExport::new(&source).unwrap();
             let mut writer = Writer::new(Vec::new());
-            let result = write_cells(&mut writer, &source, &styles, &BTreeMap::new(), &shared);
+            let result = write_cells(
+                &mut writer,
+                &source,
+                &styles,
+                &BTreeMap::new(),
+                &shared,
+                &BTreeMap::new(),
+            );
             assert!(matches!(result, Err(IoError::Model(_))), "row={row}");
             assert!(writer.into_inner().is_empty());
         }

@@ -1,9 +1,10 @@
 //! Bounded file ingress and ordered XLSX/BIFF backend import execution.
 use crate::data::{SheetSink, SheetSource, WorkbookSink};
-use crate::decoded_cells::{fidelity_warnings, identifier_warnings, value};
+use crate::decoded_cells::{fidelity_warnings, identifier_warnings};
+use crate::xls::XlsWorkbook;
 use crate::{Cell, CellAddress, DateSystem};
 use crate::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
-use crate::{IoError, PreflightError, ReadOptions, biff_overlay, biff_preflight, ooxml};
+use crate::{IoError, PreflightError, ReadOptions, ooxml};
 use std::{fs, path::Path};
 
 fn read_bytes(path: &Path, options: ReadOptions) -> Result<Vec<u8>, IoError> {
@@ -250,29 +251,16 @@ fn read_xls<W: WorkbookSink<Sheet: SheetSink>>(
     options: ReadOptions,
 ) -> Result<W, IoError> {
     let budget = options.xls_budget;
-    let row_plan = biff_preflight::inspect_xls(bytes, budget)?;
-    let overlay = biff_overlay::Overlay::read(bytes, budget)?;
-    let mut reader = rxls::Workbook::open(bytes).map_err(|e| IoError::Read(e.to_string()))?;
-    if reader.text_truncated {
-        return Err(IoError::Limit(
-            "backend text allocation budget exceeded".into(),
-        ));
-    }
+    let xls = XlsWorkbook::read(bytes, budget)?;
     let mut workbook = W::default();
-    workbook.set_date_system(if reader.date1904 {
+    workbook.set_date_system(if xls.date1904 {
         DateSystem::Excel1904
     } else {
         DateSystem::Excel1900
     });
     let mut identity_warnings = Vec::new();
     let mut identity_comparisons = 0u64;
-    for (index, decoded) in std::mem::take(&mut reader.sheets).into_iter().enumerate() {
-        let backend_name = decoded.name.clone();
-        let name = overlay
-            .sheet_names
-            .get(index)
-            .unwrap_or(&backend_name)
-            .clone();
+    for name in &xls.sheet_names {
         for existing in workbook.sheets() {
             identity_comparisons += 1;
             if identity_comparisons > budget.max_records as u64 {
@@ -283,59 +271,37 @@ fn read_xls<W: WorkbookSink<Sheet: SheetSink>>(
                 }
                 .into());
             }
-            if let Err(error) = crate::identifiers::checked_matches(existing.name(), &name) {
+            if let Err(error) = crate::identifiers::checked_matches(existing.name(), name) {
                 identity_warnings.push(ImportDiagnostic {
                     kind: ImportDiagnosticKind::IdentifierIdentity,
                     detail: error.to_string(),
                 });
             }
         }
-        let sheet = workbook.import_sheet(&name)?;
-        for (row, col, data) in decoded.cells() {
-            let address = CellAddress::new(row, u32::from(col))?;
-            let (formula, cached) = match data {
-                rxls::Cell::Formula { formula, cached } => (Some(formula.clone()), cached.as_ref()),
-                other => (None, other),
-            };
-            let mut cell = Cell::new(value(cached)?);
-            cell.formula = formula;
-            sheet.set(address, cell)?;
-        }
+        workbook.import_sheet(name)?;
     }
-    for (index, rows) in row_plan.row_indices.iter().enumerate() {
+    for (index, rows) in xls.rows.iter().enumerate() {
         if let Some(sheet) = workbook.sheet_mut(index) {
-            for &row in rows {
+            for (&row, &visibility) in rows {
                 sheet.create_row(row)?;
+                if visibility != crate::RowVisibility::default() {
+                    sheet.set_row_visibility(row, visibility)?;
+                }
             }
         }
     }
     let mut warnings = fidelity_warnings(FileFormat::Xls);
     warnings.extend(identity_warnings);
-    warnings.extend(
-        overlay
-            .warnings
-            .iter()
-            .cloned()
-            .map(|detail| ImportDiagnostic {
-                kind: ImportDiagnosticKind::RepresentationLoss,
-                detail,
-            }),
-    );
+    warnings.extend(xls.warnings.iter().cloned().map(|detail| ImportDiagnostic {
+        kind: ImportDiagnosticKind::RepresentationLoss,
+        detail,
+    }));
     warnings.push(ImportDiagnostic {
         kind: ImportDiagnosticKind::RepresentationLoss,
-        detail: "XLS raw number formats and unsupported BIFF token families remain backend-limited"
+        detail: "XLS raw number formats are not retained; unsupported BIFF token families keep saved values without formula source"
             .into(),
     });
-    for (name, formula) in reader.defined_names() {
-        // Keep backend-supported names without revalidating Excel's name grammar.
-        workbook.named_ranges_mut().push(crate::NamedRange {
-            name: name.clone(),
-            formula: formula.trim_start_matches('=').into(),
-            sheet_scope: None,
-        });
-    }
-    drop(reader);
-    overlay.apply(&mut workbook)?;
+    xls.apply(&mut workbook)?;
     for (index, name) in workbook.named_ranges().iter().enumerate() {
         // SAFETY: index comes from enumerating the same named_ranges vector, which is not mutated during this loop.
         for existing in &workbook.named_ranges()[..index] {

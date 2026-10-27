@@ -166,7 +166,7 @@ pub(super) fn run(args: &[String]) -> Result<()> {
     rows.push(measure("xlsx.open", repetitions, Some(xlsx.len()), || {
         open(&xlsx)
     })?);
-    // The XLSX writer may refuse large workbooks even with options lifted; report it.
+    // Report an export refusal as a row instead of aborting the remaining measurements.
     match book.save_xlsx().options(write).to_buffer() {
         Ok(saved) => {
             rows.push(measure(

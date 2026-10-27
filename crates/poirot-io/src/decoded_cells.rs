@@ -4,17 +4,6 @@ use crate::data::{SheetSource, WorkbookSource};
 use crate::{CellError, CellValue};
 use crate::{ImportDiagnostic, ImportDiagnosticKind};
 
-/// Project a backend cell into canonical values with explicit fidelity handling.
-pub(super) fn value(data: &rxls::Cell) -> Result<CellValue, IoError> {
-    Ok(match data {
-        rxls::Cell::Number(n) | rxls::Cell::Date(n) => CellValue::Number(*n),
-        rxls::Cell::Text(s) => CellValue::Text(s.clone()),
-        rxls::Cell::Bool(b) => CellValue::Boolean(*b),
-        rxls::Cell::Error(e) => CellValue::Error(e.parse::<CellError>()?),
-        rxls::Cell::Formula { .. } => return Err(IoError::Read("nested formula cache".into())),
-    })
-}
-
 /// Report identifier spellings outside supported comparison fidelity.
 pub(super) fn identifier_warnings(
     workbook: &impl WorkbookSource,

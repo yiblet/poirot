@@ -1,6 +1,7 @@
 //! AST-aware storage spelling for modern functions and spill-range references.
 use crate::IoError;
 use poirot_parsing::formula::{Expr, FormulaPrinter, UnaryOp, parse_formula};
+use std::borrow::Cow;
 
 /// Encode modern function names and postfix spill syntax for XLSX storage.
 /// Format evidence: rust_xlsxwriter 0.101.0 Formula documentation, section
@@ -8,15 +9,19 @@ use poirot_parsing::formula::{Expr, FormulaPrinter, UnaryOp, parse_formula};
 /// <https://docs.rs/rust_xlsxwriter/0.101.0/rust_xlsxwriter/struct.Formula.html>
 /// This is writer-author format documentation, not Microsoft normative proof.
 /// No upstream implementation or tests were copied or adapted.
-pub(crate) fn stored_formula(source: &str) -> Result<String, IoError> {
+/// Unchanged formulas borrow the source without its leading `=`.
+pub(crate) fn stored_formula(source: &str) -> Result<Cow<'_, str>, IoError> {
+    let unchanged = Cow::Borrowed(source.trim_start_matches('='));
     let Ok(mut expression) = parse_formula(source) else {
         // Existing export accepts formulas beyond Poirot's executable grammar.
-        return Ok(source.trim_start_matches('=').into());
+        return Ok(unchanged);
     };
     if !rewrite(&mut expression)? {
-        return Ok(source.trim_start_matches('=').into());
+        return Ok(unchanged);
     }
-    FormulaPrinter::print(&expression).map_err(|error| IoError::Unsupported(error.to_string()))
+    FormulaPrinter::print(&expression)
+        .map(Cow::Owned)
+        .map_err(|error| IoError::Unsupported(error.to_string()))
 }
 /// Assign XLSX storage names independently of the evaluator's support catalog.
 /// MS-XLSX §2.2.3 lists the future-function spellings, retrieved 2026-10-21:

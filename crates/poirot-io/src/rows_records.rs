@@ -1,6 +1,7 @@
 //! Stored spreadsheet file metadata.
 /// Author-supplied row hiding and filtering state, kept independently of cell presence.
-/// File adapters currently do not retain these flags.
+/// XLSX and XLS store one hidden flag per row: readers set `manually_hidden`, and the
+/// XLSX writer saves either flag as a hidden row.
 #[derive(
     Clone, Copy, Debug, Default, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize,
 )]

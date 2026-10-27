@@ -20,8 +20,8 @@ calamine 0.37.0 — MIT (MIT.txt); streaming XLSX decoding/shared-formula transl
 https://github.com/tafia/calamine/tree/f2c5948242fdfe390e292313a1f87f9db19b9633
 https://github.com/tafia/calamine/tree/0a24c2a9f1e38c0932c1299e633270dc730db505
 
-rxls 0.1.4 — MIT (rxls-MIT.txt); production XLS reader and checked XLSX authoring dependency.
-https://github.com/HyunjoJung/rxls/tree/c708e80d9b79fcfa0d172ec4ca8786885cdfc202
+rust_xlsxwriter 0.101.0 — MIT OR Apache-2.0, used under MIT (MIT.txt); XLSX package authoring dependency.
+https://github.com/jmcnamara/rust_xlsxwriter/tree/7d7a2ad88da602294658d489eb0275b24b3216c6
 No upstream source code or test fixtures copied.
 
 casefold — MIT (MIT.txt); adapted character lookup and Unicode 16 folding tables.
@@ -52,6 +52,9 @@ Copyright (c) 2019 Jiangang Zhuang
 
 calamine
 Copyright (c) 2016 Johann Tuffe
+
+rust_xlsxwriter
+Copyright 2022-2026, John McNamara, jmcnamara@cpan.org
 
 casefold
 Copyright (c) 2023 GitHub Inc.

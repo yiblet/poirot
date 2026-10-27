@@ -1,4 +1,4 @@
-//! Original synthetic regressions for the canonical projection around rxls.
+//! Original synthetic regressions for the canonical XML projection around backend cells.
 use poirot::model::{CellValue, Workbook};
 use poirot_io::{read_workbook_bytes, write_xlsx_to_buffer};
 use std::io::{Cursor, Read, Write};

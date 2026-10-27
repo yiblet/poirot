@@ -27,7 +27,7 @@ Loading defaults now impose no input-byte, expanded ZIP, entry-count, XLS claim,
 | `max_zip_entry_bytes` | Expanded bytes in each ZIP entry | Each entry | Catalog claims and actual recovery expansion; `IoError::Quota` |
 | `max_zip_total_bytes` | Sum of declared expanded entry bytes | One package | Catalog, before expanding parts; `IoError::Quota` |
 | `max_zip_entries` | ZIP catalog entries | One package | Before recovery expansion; `IoError::Quota` |
-| XLS `ResourceBudget` | Named stream, record, metadata, string and decoded cell-text claims | One load; string/record options retain their documented per-object or aggregate meanings | Preflight before backend decode; `PreflightError::Resource` |
+| XLS `ResourceBudget` | Named stream, record, metadata, string, decoded cell and cell-text claims; `max_records` also bounds worksheet scan work, charged per BoundSheet traversal | One load; string/record options retain their documented per-object or aggregate meanings | Preflight before backend decode; `PreflightError::Resource` |
 | Snapshot file/decoded quotas | File bytes, cumulative typed values, or cumulative copied text/bytes | One load, shared across source and prepared sections | Before typed collection admission or owned copy; `SnapshotError::Quota` |
 | `EvaluationLimits::max_work` | Engine operations actually charged, including admitted kernel estimates | One explicit cycle | Before the operation; `EvaluationFailure::Budget` |
 | `max_formula_work` | Direct work in a formula, excluding dependency formulas | Each formula frame | Before the operation; `EvaluationFailure::Budget` |

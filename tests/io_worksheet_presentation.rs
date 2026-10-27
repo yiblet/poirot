@@ -100,7 +100,7 @@ fn independent_xml_and_reload_preserve_first_hidden_very_hidden_and_rgb() {
             .tab_color,
         Some([0x12, 0x34, 0xab])
     );
-    // Non-RGB color resolution follows rxls; exact source styling is not retained.
+    // Non-RGB tab colors are not resolved; exact source styling is not retained.
     // Imports preserve all-hidden source; exporter refuses rather than exposing it.
     let changed = rewrite(&bytes, |name, b| {
         if name == "xl/workbook.xml" {
@@ -166,4 +166,82 @@ fn prefixed_presentation_and_cell_styles_use_backend_metadata() {
             original.get("A1".parse().unwrap())
         );
     }
+}
+
+#[test]
+fn hidden_rows_with_and_without_cells_survive_save_and_keep_subtotal_109() {
+    use poirot::eval::{
+        EvaluationBudgets, EvaluationOutcome, RunConfiguration, run_formula_with_configuration,
+    };
+    use poirot::model::{CellValue, RowVisibility};
+    let manual = RowVisibility {
+        manually_hidden: true,
+        filtered_out: false,
+    };
+    let mut w = Workbook::new();
+    let s = w.add_sheet("Data").unwrap();
+    for (at, n) in [("A1", 2.), ("A2", 3.), ("A3", 5.), ("A4", 7.)] {
+        s.set_value(at.parse().unwrap(), n).unwrap();
+    }
+    s.set_row_visibility(1, manual).unwrap();
+    s.set_row_visibility(
+        3,
+        RowVisibility {
+            manually_hidden: false,
+            filtered_out: true,
+        },
+    )
+    .unwrap();
+    // Rows 10 and 20 hold no cells; the hidden flag alone must create the saved row.
+    s.set_row_visibility(9, manual).unwrap();
+    s.set_row_visibility(19, manual).unwrap();
+    let subtotal = |w: &Workbook| match run_formula_with_configuration(
+        w,
+        0,
+        "Z1".parse().unwrap(),
+        "SUBTOTAL(109,A1:A20)",
+        &RunConfiguration::default(),
+        EvaluationBudgets::default(),
+    ) {
+        EvaluationOutcome::Complete { value, .. } => value,
+        other => panic!("{other:?}"),
+    };
+    // Function numbers 101-111 ignore manually hidden rows, and every SUBTOTAL ignores
+    // filtered-out rows (Microsoft SUBTOTAL documentation): only 2 + 5 remain.
+    assert_eq!(subtotal(&w), CellValue::Number(7.));
+
+    let bytes = write_xlsx_to_buffer(&w).unwrap();
+    let xml = String::from_utf8(
+        parts(&bytes)
+            .into_iter()
+            .find(|(n, _)| n == "xl/worksheets/sheet1.xml")
+            .unwrap()
+            .1,
+    )
+    .unwrap();
+    for row in ["2", "4", "10", "20"] {
+        assert!(
+            xml.contains(&format!("<row r=\"{row}\" hidden=\"1\">")),
+            "{xml}"
+        );
+    }
+    assert!(xml.contains("<row r=\"3\">"), "{xml}");
+
+    let reopened = read_workbook_bytes::<Workbook>(&bytes).unwrap();
+    let sheet = reopened.sheet(0).unwrap();
+    // OOXML has a single row `hidden` flag, which the reader maps to `manually_hidden`.
+    assert_eq!(
+        sheet.row_visibility_entries().collect::<Vec<_>>(),
+        vec![(1, manual), (3, manual), (9, manual), (19, manual)]
+    );
+    assert_eq!(
+        sheet.row_indices().collect::<Vec<_>>(),
+        vec![0, 1, 2, 3, 9, 19]
+    );
+    assert_eq!(subtotal(&reopened), CellValue::Number(7.));
+    // Manually hidden rows already round-trip exactly, so a second save is stable.
+    assert_eq!(
+        read_workbook_bytes::<Workbook>(&write_xlsx_to_buffer(&reopened).unwrap()).unwrap(),
+        reopened
+    );
 }

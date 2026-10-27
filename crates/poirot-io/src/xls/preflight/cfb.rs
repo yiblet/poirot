@@ -1,9 +1,12 @@
-//! Bounded CFB metadata, chain traversal, and Workbook/Book acquisition.
+//! Bounded CFB metadata, chain traversal, Workbook/Book acquisition, and encrypted-XLSX detection.
 use std::collections::BTreeSet;
 
-use super::{PreflightError, ResourceBudget, check, u16at, u32at};
+use super::checks::{check, u16at, u32at};
+use super::preflight_error::PreflightError;
+use super::resource_budget::ResourceBudget;
 
 const END: u32 = 0xffff_fffe;
+
 fn sector(bytes: &[u8], size: usize, id: u32) -> Result<&[u8], PreflightError> {
     let start = (id as usize)
         .checked_add(1)
@@ -16,6 +19,7 @@ fn sector(bytes: &[u8], size: usize, id: u32) -> Result<&[u8], PreflightError> {
         .get(start..end)
         .ok_or(PreflightError::Malformed("sector beyond input"))
 }
+
 fn chain(
     data: &[u8],
     size: usize,
@@ -76,8 +80,9 @@ fn chain(
     }
     Ok(out)
 }
+
 /// Validate compound-file stream metadata and extract admitted workbook bytes.
-pub(super) fn workbook_stream(
+pub(in crate::xls) fn workbook_stream(
     bytes: &[u8],
     budget: ResourceBudget,
 ) -> Result<Vec<u8>, PreflightError> {
@@ -208,7 +213,10 @@ pub(super) fn workbook_stream(
     } else {
         (Vec::new(), Vec::new())
     };
-    let mut workbook = None;
+    let utf16 = |s: &str| s.encode_utf16().collect::<Vec<_>>();
+    let (workbook_name, book_name) = (utf16("Workbook"), utf16("Book"));
+    let (info_name, package_name) = (utf16("EncryptionInfo"), utf16("EncryptedPackage"));
+    let (mut info, mut package) = (false, false);
     // SAFETY: The chunk size is the nonzero literal 128.
     for d in dirs.as_chunks::<128>().0 {
         let name: Vec<u16> = (0..64)
@@ -218,18 +226,24 @@ pub(super) fn workbook_stream(
             .map(|at| u16at(d, at).unwrap())
             .take_while(|c| *c != 0)
             .collect();
-        if name == "Workbook".encode_utf16().collect::<Vec<_>>()
-            || name == "Book".encode_utf16().collect::<Vec<_>>()
-        {
+        if name == workbook_name || name == book_name {
             let n = length(d)?;
-            let stream = if n < 4096 {
-                chain(&mini, 64, u32at(d, 116)?, &mini_fat, Some(n), budget, false)?
+            return if n < 4096 {
+                chain(&mini, 64, u32at(d, 116)?, &mini_fat, Some(n), budget, false)
             } else {
-                chain(bytes, size, u32at(d, 116)?, &fat, Some(n), budget, true)?
+                chain(bytes, size, u32at(d, 116)?, &fat, Some(n), budget, true)
             };
-            workbook = Some(stream);
-            break;
+        }
+        // Object type 2 is a stream (MS-CFB 2.6.1); free entries may keep stale names.
+        if d.get(66) == Some(&2) {
+            info |= name == info_name;
+            package |= name == package_name;
         }
     }
-    workbook.ok_or(PreflightError::Malformed("missing Workbook/Book stream"))
+    // MS-OFFCRYPTO 2.3.4 (ECMA-376 document encryption) stores encrypted OOXML in these two streams.
+    Err(if info && package {
+        PreflightError::EncryptedXlsx
+    } else {
+        PreflightError::Malformed("missing Workbook/Book stream")
+    })
 }
